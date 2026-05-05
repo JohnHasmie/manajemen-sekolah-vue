@@ -1,0 +1,398 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 1500" font-family="Inter, -apple-system, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="adminHero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#143068"/>
+      <stop offset="1" stop-color="#1F4A8F"/>
+    </linearGradient>
+    <linearGradient id="boyAvatar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="girlAvatar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EC4899"/>
+      <stop offset="1" stop-color="#BE185D"/>
+    </linearGradient>
+    <filter id="phoneShadow" x="-10%" y="-5%" width="120%" height="115%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.12"/>
+    </filter>
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+    <filter id="sheetShadow" x="-20%" y="-5%" width="140%" height="115%">
+      <feDropShadow dx="0" dy="-12" stdDeviation="14" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect width="1320" height="1500" fill="#F8FAFC"/>
+
+  <!-- TITLE -->
+  <text x="60" y="58" font-weight="800" font-size="26" fill="#0F172A">Admin Mockup 02 · Manajemen Siswa  <tspan font-weight="500" fill="#64748B">— v2 (parent visual language)</tspan></text>
+  <text x="60" y="84" font-size="13" fill="#64748B">Anchored to ParentInboxScreen: brand hero · horizontal filter chips · section-grouped list · BillingRow-style cards</text>
+  <rect x="60" y="100" width="1200" height="1" fill="#E2E8F0"/>
+
+  <!-- ╔════════════════════════════════════════════════╗ -->
+  <!-- ║  FRAME A — main list (parent-style scaffold)    ║ -->
+  <!-- ╚════════════════════════════════════════════════╝ -->
+  <text x="80" y="138" font-weight="800" font-size="14" fill="#0F172A">A · Default state · 1,248 siswa</text>
+  <text x="80" y="156" font-size="11" fill="#64748B">Hero (admin navy) · breadcrumb + big title + counter chip · horizontal filter chips · section-grouped cards</text>
+
+  <g transform="translate(80, 174)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <!-- Status bar -->
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+
+    <!-- HERO (parent ParentInboxScreen pattern) -->
+    <g transform="translate(0, 44)">
+      <!-- gradient with rounded bottom 28px -->
+      <path d="M 0 0 H 380 V 196 Q 380 224 352 224 H 28 Q 0 224 0 196 Z" fill="url(#adminHero)"/>
+
+      <!-- Back arrow + spacer + search icon -->
+      <g transform="translate(16, 16)">
+        <rect width="40" height="40" rx="14" fill="rgba(255,255,255,0.18)"/>
+        <path d="M22 14 L14 20 L22 26" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g transform="translate(316, 16)">
+        <rect width="40" height="40" rx="14" fill="rgba(255,255,255,0.18)"/>
+        <g transform="translate(13, 13)" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="6" cy="6" r="5"/>
+          <path d="M10 10 L14 14"/>
+        </g>
+      </g>
+
+      <!-- Breadcrumb -->
+      <text x="20" y="84" font-size="11" font-weight="500" fill="rgba(255,255,255,0.85)">Beranda · Manajemen Data</text>
+      <!-- Big title -->
+      <text x="20" y="118" font-weight="800" font-size="24" fill="white">Siswa</text>
+      <!-- Counter chip -->
+      <g transform="translate(20, 138)">
+        <rect width="120" height="24" rx="11" fill="rgba(255,255,255,0.18)"/>
+        <text x="60" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="white">1,248 siswa total</text>
+      </g>
+
+      <!-- Year + tingkat hint -->
+      <text x="148" y="156" font-size="10" fill="rgba(255,255,255,0.7)">2025/2026 · 4 tingkat</text>
+    </g>
+
+    <!-- HORIZONTAL FILTER CHIPS (parent-inbox style) -->
+    <g transform="translate(0, 280)">
+      <!-- Semua (active) -->
+      <g transform="translate(16, 0)">
+        <rect width="76" height="36" rx="13" fill="#143068" filter="url(#cardShadow)"/>
+        <text x="20" y="22" font-size="11" font-weight="800" fill="white">Semua</text>
+        <rect x="50" y="10" width="20" height="16" rx="8" fill="rgba(255,255,255,0.22)"/>
+        <text x="60" y="22" text-anchor="middle" font-size="9" font-weight="800" fill="white">1248</text>
+      </g>
+      <!-- Tingkat 7 -->
+      <g transform="translate(100, 0)">
+        <rect width="86" height="36" rx="13" fill="white" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <text x="14" y="22" font-size="11" font-weight="700" fill="#475569">Tingkat 7</text>
+        <rect x="64" y="10" width="14" height="16" rx="7" fill="#F1F5F9"/>
+        <text x="71" y="22" text-anchor="middle" font-size="9" font-weight="800" fill="#475569">35</text>
+      </g>
+      <!-- Tingkat 8 -->
+      <g transform="translate(194, 0)">
+        <rect width="86" height="36" rx="13" fill="white" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <text x="14" y="22" font-size="11" font-weight="700" fill="#475569">Tingkat 8</text>
+        <rect x="64" y="10" width="14" height="16" rx="7" fill="#F1F5F9"/>
+        <text x="71" y="22" text-anchor="middle" font-size="9" font-weight="800" fill="#475569">23</text>
+      </g>
+      <!-- Tingkat 9 (peek) -->
+      <g transform="translate(288, 0)">
+        <rect width="86" height="36" rx="13" fill="white" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+        <text x="14" y="22" font-size="11" font-weight="700" fill="#475569">Tingkat 9</text>
+        <rect x="64" y="10" width="14" height="16" rx="7" fill="#F1F5F9"/>
+        <text x="71" y="22" text-anchor="middle" font-size="9" font-weight="800" fill="#475569">10</text>
+      </g>
+    </g>
+
+    <!-- SECTION HEADER (parent style — uppercase slate caption) -->
+    <text x="20" y="348" font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.6">TINGKAT 7 · 35 SISWA</text>
+
+    <!-- Cards (parent _BillingRow / _InboxRow style) -->
+    <!-- Card 1 -->
+    <g transform="translate(16, 360)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#boyAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">AY</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">7A · NIS 1234567</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Ahmad Yahya Hasymi</text>
+      <!-- status pill -->
+      <g transform="translate(64, 52)">
+        <rect width="40" height="14" rx="7" fill="#DCFCE7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#15803D"/>
+        <text x="22" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#15803D">Aktif</text>
+      </g>
+      <!-- right action: Detail link -->
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <!-- Card 2 -->
+    <g transform="translate(16, 442)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#girlAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">AS</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">7A · NIS 1234568</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Aisyah Salsabila</text>
+      <g transform="translate(64, 52)">
+        <rect width="40" height="14" rx="7" fill="#DCFCE7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#15803D"/>
+        <text x="22" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#15803D">Aktif</text>
+      </g>
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <!-- Card 3 (with pending verification — orange ring like parent overdue) -->
+    <g transform="translate(16, 524)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#FCD34D" stroke-width="1.2"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#boyAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">BR</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">7B · NIS 1234569</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Budi Rahman</text>
+      <g transform="translate(64, 52)">
+        <rect width="76" height="14" rx="7" fill="#FEF3C7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#B45309"/>
+        <text x="40" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#B45309">Belum diverif</text>
+      </g>
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <!-- Section break -->
+    <text x="20" y="630" font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.6">TINGKAT 8 · 23 SISWA</text>
+
+    <!-- Card 4 -->
+    <g transform="translate(16, 642)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#boyAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">CD</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">8A · NIS 1234570</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Candra Dewangga</text>
+      <g transform="translate(64, 52)">
+        <rect width="40" height="14" rx="7" fill="#DCFCE7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#15803D"/>
+        <text x="22" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#15803D">Aktif</text>
+      </g>
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <!-- FAB (navy, matches admin role color) -->
+    <g transform="translate(308, 696)" filter="url(#cardShadow)">
+      <circle cx="28" cy="28" r="28" fill="#143068"/>
+      <g transform="translate(28, 28)" stroke="white" stroke-width="2.5" stroke-linecap="round">
+        <line x1="-8" y1="0" x2="8" y2="0"/>
+        <line x1="0" y1="-8" x2="0" y2="8"/>
+      </g>
+    </g>
+
+    <!-- iPhone home indicator -->
+    <rect x="120" y="762" width="140" height="4" rx="2" fill="#0F172A" opacity="0.85"/>
+  </g>
+
+  <!-- ╔════════════════════════════════════════════════╗ -->
+  <!-- ║  FRAME B — Filter sheet (BrandHeroSheet)        ║ -->
+  <!-- ╚════════════════════════════════════════════════╝ -->
+  <text x="540" y="138" font-weight="800" font-size="14" fill="#0F172A">B · Filter bottom sheet — same BrandHeroSheet pattern as parent</text>
+  <text x="540" y="156" font-size="11" fill="#64748B">Tinted icon header · section labels · chip grids · sticky footer</text>
+
+  <g transform="translate(540, 174)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <rect x="0" y="44" width="380" height="380" fill="#F1F5F9"/>
+    <rect x="0" y="44" width="380" height="380" fill="#0F172A" opacity="0.45"/>
+
+    <!-- Sheet (BrandHeroSheet) -->
+    <g filter="url(#sheetShadow)">
+      <path d="M 0 360 L 0 780 L 380 780 L 380 360 Q 380 332 352 332 L 28 332 Q 0 332 0 360 Z" fill="white"/>
+    </g>
+    <rect x="170" y="346" width="40" height="4" rx="2" fill="#CBD5E1"/>
+
+    <!-- Header — brand-azure tinted icon (consistent with all switcher sheets) -->
+    <g transform="translate(20, 366)">
+      <rect width="40" height="40" rx="13" fill="#21AFE6" opacity="0.12"/>
+      <g transform="translate(13, 13)" fill="none" stroke="#1A8FBE" stroke-width="2" stroke-linecap="round">
+        <path d="M2 3 H12 M4 8 H10 M6 13 H8"/>
+      </g>
+      <text x="52" y="18" font-weight="800" font-size="16" fill="#0F172A">Filter Siswa</text>
+      <text x="52" y="34" font-size="11" fill="#64748B">Pilih kriteria untuk mempersempit</text>
+    </g>
+
+    <!-- TINGKAT section -->
+    <text x="20" y="438" font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.6">TINGKAT</text>
+    <g transform="translate(20, 450)">
+      <rect width="64" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="32" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Semua</text>
+
+      <rect x="72" width="64" height="32" rx="11" fill="#143068"/>
+      <text x="104" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="white">Tingkat 7</text>
+
+      <rect x="144" width="64" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="176" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Tingkat 8</text>
+
+      <rect x="216" width="64" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="248" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Tingkat 9</text>
+    </g>
+
+    <!-- KELAS section -->
+    <text x="20" y="514" font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.6">KELAS</text>
+    <g transform="translate(20, 526)">
+      <rect width="44" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="22" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">7A</text>
+      <rect x="52" width="44" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="74" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">7B</text>
+      <rect x="104" width="44" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="126" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">7C</text>
+      <rect x="156" width="44" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="178" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">7D</text>
+    </g>
+
+    <!-- JENIS KELAMIN section -->
+    <text x="20" y="590" font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.6">JENIS KELAMIN</text>
+    <g transform="translate(20, 602)">
+      <rect width="64" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="32" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Semua</text>
+      <rect x="72" width="78" height="32" rx="11" fill="#143068"/>
+      <text x="111" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="white">Laki-laki</text>
+      <rect x="158" width="78" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="197" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Perempuan</text>
+    </g>
+
+    <!-- STATUS section -->
+    <text x="20" y="666" font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.6">STATUS</text>
+    <g transform="translate(20, 678)">
+      <rect width="58" height="32" rx="11" fill="#DCFCE7" stroke="#15803D" stroke-width="1.2"/>
+      <circle cx="14" cy="16" r="3" fill="#15803D"/>
+      <text x="38" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="#15803D">Aktif</text>
+
+      <rect x="66" width="86" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="109" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Belum verif</text>
+
+      <rect x="160" width="62" height="32" rx="11" fill="white" stroke="#CBD5E1"/>
+      <text x="191" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">Pindah</text>
+    </g>
+
+    <!-- Footer (parent BottomSheetFooter) -->
+    <g transform="translate(0, 712)">
+      <rect width="380" height="68" fill="white" stroke="#F1F5F9"/>
+      <rect x="20" y="14" width="156" height="40" rx="13" fill="#F1F5F9"/>
+      <text x="98" y="38" text-anchor="middle" font-size="12" font-weight="800" fill="#475569">Reset</text>
+      <rect x="184" y="14" width="176" height="40" rx="13" fill="#143068"/>
+      <text x="272" y="38" text-anchor="middle" font-size="12" font-weight="800" fill="white">Terapkan (35)</text>
+    </g>
+
+    <rect x="120" y="762" width="140" height="4" rx="2" fill="white" opacity="0.85"/>
+  </g>
+
+  <!-- ╔════════════════════════════════════════════════╗ -->
+  <!-- ║  FRAME C — Detail / Edit (BrandHeroSheet style) ║ -->
+  <!-- ╚════════════════════════════════════════════════╝ -->
+  <text x="80" y="990" font-weight="800" font-size="14" fill="#0F172A">C · Tambah / Edit Siswa — same brand-bottom-sheet pattern as parent's bayar / language pickers</text>
+  <text x="80" y="1008" font-size="11" fill="#64748B">AppEditBottomSheet · BottomSheetFooter · same shape as parent forms</text>
+
+  <g transform="translate(80, 1026)" filter="url(#phoneShadow)">
+    <rect width="380" height="440" rx="36" fill="white"/>
+    <rect x="0" y="0" width="380" height="80" fill="#F1F5F9"/>
+    <rect x="0" y="0" width="380" height="80" fill="#0F172A" opacity="0.45"/>
+
+    <g filter="url(#sheetShadow)">
+      <path d="M 0 60 L 0 440 L 380 440 L 380 60 Q 380 32 352 32 L 28 32 Q 0 32 0 60 Z" fill="white"/>
+    </g>
+    <rect x="170" y="46" width="40" height="4" rx="2" fill="#CBD5E1"/>
+
+    <!-- Header -->
+    <g transform="translate(20, 64)">
+      <rect width="40" height="40" rx="13" fill="#143068" opacity="0.12"/>
+      <g transform="translate(14, 13)" fill="none" stroke="#143068" stroke-width="2" stroke-linecap="round">
+        <circle cx="6" cy="4" r="3"/>
+        <path d="M0 13 C0 9 3 7 6 7 C9 7 12 9 12 13"/>
+      </g>
+      <text x="52" y="18" font-weight="800" font-size="16" fill="#0F172A">Tambah Siswa</text>
+      <text x="52" y="34" font-size="11" fill="#64748B">Lengkapi data dasar siswa baru</text>
+    </g>
+
+    <!-- Form fields -->
+    <g transform="translate(20, 130)">
+      <text x="0" y="0" font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.4">NAMA LENGKAP *</text>
+      <rect x="0" y="8" width="340" height="40" rx="11" fill="#F8FAFC" stroke="#E2E8F0"/>
+      <text x="14" y="33" font-size="12" fill="#94A3B8">Masukkan nama lengkap</text>
+    </g>
+    <g transform="translate(20, 196)">
+      <text x="0" y="0" font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.4">NIS / NISN *</text>
+      <g>
+        <rect x="0" y="8" width="160" height="40" rx="11" fill="white" stroke="#143068" stroke-width="1.5"/>
+        <text x="14" y="33" font-size="12" font-weight="700" fill="#0F172A">1234567</text>
+        <rect x="180" y="8" width="160" height="40" rx="11" fill="#F8FAFC" stroke="#E2E8F0"/>
+        <text x="194" y="33" font-size="12" fill="#94A3B8">NISN</text>
+      </g>
+    </g>
+    <g transform="translate(20, 262)">
+      <text x="0" y="0" font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.4">KELAS *</text>
+      <rect x="0" y="8" width="340" height="40" rx="11" fill="#F8FAFC" stroke="#E2E8F0"/>
+      <text x="14" y="33" font-size="12" fill="#0F172A" font-weight="700">7A — Wali: Pak Yahya</text>
+      <text x="316" y="33" font-size="12" fill="#94A3B8">⌄</text>
+    </g>
+
+    <!-- Footer (BottomSheetFooter) -->
+    <g transform="translate(0, 360)">
+      <rect width="380" height="80" fill="white" stroke="#F1F5F9"/>
+      <rect x="20" y="20" width="120" height="44" rx="13" fill="#F1F5F9"/>
+      <text x="80" y="46" text-anchor="middle" font-size="13" font-weight="800" fill="#475569">Batal</text>
+      <rect x="148" y="20" width="212" height="44" rx="13" fill="#143068"/>
+      <text x="254" y="46" text-anchor="middle" font-size="13" font-weight="800" fill="white">Simpan Siswa</text>
+    </g>
+    <rect x="120" y="422" width="140" height="4" rx="2" fill="#0F172A" opacity="0.85"/>
+  </g>
+
+  <!-- ╔════════════════════════════════════════════════╗ -->
+  <!-- ║  SHARED COMPONENT INVENTORY                     ║ -->
+  <!-- ╚════════════════════════════════════════════════╝ -->
+  <g transform="translate(540, 990)" filter="url(#cardShadow)">
+    <rect width="700" height="476" rx="20" fill="white" stroke="#E2E8F0"/>
+    <text x="20" y="36" font-weight="800" font-size="14" fill="#0F172A">Shared component map (parent → admin)</text>
+    <rect x="20" y="48" width="660" height="1" fill="#F1F5F9"/>
+
+    <g transform="translate(20, 70)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#0F172A">NEW shared widget proposal</text>
+      <rect width="6" height="6" rx="3" fill="#DC2626" y="0"/>
+      <text x="0" y="38" font-size="12" font-weight="800" fill="#143068">BrandListScaffold</text>
+      <text x="0" y="56" font-size="10.5" fill="#64748B">Hosts: gradient hero (with breadcrumb + big title +</text>
+      <text x="0" y="72" font-size="10.5" fill="#64748B">counter chip + back/search) + horizontal filter chip</text>
+      <text x="0" y="88" font-size="10.5" fill="#64748B">strip + section-grouped list + FAB. Generic over</text>
+      <text x="0" y="104" font-size="10.5" fill="#64748B">role color (admin navy / teacher cobalt / parent azure).</text>
+      <text x="0" y="124" font-size="10.5" fill="#64748B">→ replaces AdminCrudScaffold's icon-button + sheet</text>
+      <text x="0" y="140" font-size="10.5" fill="#64748B">  filter pattern with parent's chip strip pattern</text>
+      <text x="0" y="156" font-size="10.5" fill="#64748B">→ ParentInboxScreen migrates onto it (was bespoke)</text>
+    </g>
+
+    <g transform="translate(360, 70)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#0F172A">Reused as-is</text>
+      <text x="0" y="34" font-size="10.5" fill="#64748B">• InitialsAvatar (gradient variant)</text>
+      <text x="0" y="50" font-size="10.5" fill="#64748B">• BrandHeroSheet (filter + edit forms)</text>
+      <text x="0" y="66" font-size="10.5" fill="#64748B">• BottomSheetFooter</text>
+      <text x="0" y="82" font-size="10.5" fill="#64748B">• ConfirmationDialog (destructive)</text>
+      <text x="0" y="98" font-size="10.5" fill="#64748B">• PaginatedListView (infinite scroll)</text>
+      <text x="0" y="114" font-size="10.5" fill="#64748B">• EmptyState · BrandEmptyState</text>
+      <text x="0" y="130" font-size="10.5" fill="#64748B">• AppRefreshIndicator (pull-to-refresh)</text>
+      <text x="0" y="146" font-size="10.5" fill="#64748B">• BulkActionBar</text>
+      <text x="0" y="162" font-size="10.5" fill="#64748B">• role_labels.dart (Bahasa labels)</text>
+    </g>
+
+    <rect x="20" y="246" width="660" height="1" fill="#F1F5F9"/>
+
+    <text x="20" y="272" font-weight="800" font-size="14" fill="#0F172A">Visual parity rules (same across parent / admin / teacher)</text>
+
+    <g transform="translate(20, 294)">
+      <text x="0" y="14" font-size="10.5" fill="#64748B">• Hero: 28px rounded bottom · breadcrumb (11pt 500) · title (24pt 800) · counter chip</text>
+      <text x="0" y="32" font-size="10.5" fill="#64748B">• Filter chips: 36px tall · 13px border-radius · count badge 14×16 right-aligned</text>
+      <text x="0" y="50" font-size="10.5" fill="#64748B">• Section header: 9.5pt 800 slate-500 letter-spacing 0.6 — UPPERCASE</text>
+      <text x="0" y="68" font-size="10.5" fill="#64748B">• Card: 14px radius · 0.75 slate200 border · 44×44 avatar disc · "Detail →" link right</text>
+      <text x="0" y="86" font-size="10.5" fill="#64748B">• Status pill: 14px tall · 7px radius · color-tinted bg + dot + label (Aktif / Belum / etc.)</text>
+      <text x="0" y="104" font-size="10.5" fill="#64748B">• Card border on alert: 1.2px amber/red — same as parent overdue billing rows</text>
+      <text x="0" y="122" font-size="10.5" fill="#64748B">• FAB: 56px circle in role color · drop-shadow · navy for admin, azure for parent</text>
+      <text x="0" y="140" font-size="10.5" fill="#64748B">• Filter sheet: BrandHeroSheet · brand-azure tinted icon · footer with Reset + Terapkan(N)</text>
+    </g>
+
+    <rect x="20" y="446" width="660" height="1" fill="#F1F5F9"/>
+    <g transform="translate(20, 460)">
+      <text x="0" y="0" font-size="10" font-weight="800" fill="#B45309">⚡ migration impact</text>
+      <text x="0" y="14" font-size="10" fill="#92400E">Building BrandListScaffold replaces AdminCrudScaffold for 5 admin screens (Siswa/Guru/Kelas/Mapel/Jadwal). Big diff but unlocks parent ↔ admin visual parity for all CRUD lists.</text>
+    </g>
+  </g>
+</svg>

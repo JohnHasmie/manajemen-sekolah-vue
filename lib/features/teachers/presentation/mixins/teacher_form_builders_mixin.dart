@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/admin_form_components.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_form_ui_mixin.dart';
 
@@ -31,53 +31,25 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
     );
   }
 
+  /// "Ganti akun wali" toggle — uses the shared [AdminFormToggle] in
+  /// warning tone since toggling on flips the save behaviour from "update
+  /// current user" to "link to a different user".
   Widget buildChangeUserSwitch(LanguageProvider languageProvider) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: ColorUtils.warning600.withValues(alpha: 0.05),
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        border: Border.all(color: ColorUtils.warning600.withValues(alpha: 0.2)),
-      ),
-      child: SwitchListTile(
-        title: _buildChangeUserTitle(languageProvider),
-        subtitle: _buildChangeUserSubtitle(languageProvider),
-        value: isChangeUserMode,
-        activeThumbColor: ColorUtils.warning600,
-        onChanged: (val) {
-          setState(() {
-            isChangeUserMode = val;
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildChangeUserTitle(LanguageProvider languageProvider) {
-    return Text(
-      languageProvider.getTranslatedText({
-        'en': 'Use Another User / Change Account',
-        'id': 'Ganti Akun / Gunakan User Lain',
+    return AdminFormToggle(
+      tone: AdminToggleTone.warning,
+      title: languageProvider.getTranslatedText({
+        'en': 'Change linked account',
+        'id': 'Ganti akun terkait',
       }),
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.bold,
-        color: ColorUtils.warning600,
-      ),
-    );
-  }
-
-  Widget _buildChangeUserSubtitle(LanguageProvider languageProvider) {
-    return Text(
-      languageProvider.getTranslatedText({
+      subtitle: languageProvider.getTranslatedText({
         'en':
             'Link this teacher to a different user account based on the '
-            'email below (does not edit the current linked user).',
+            'email below.',
         'id':
-            'Pindahkan guru ini ke akun user lain berdasarkan email di '
-            'bawah (tidak merubah data user saat ini).',
+            'Pindahkan guru ini ke akun lain berdasarkan email di bawah.',
       }),
-      style: TextStyle(fontSize: 11, color: ColorUtils.slate600),
+      value: isChangeUserMode,
+      onChanged: (val) => setState(() => isChangeUserMode = val),
     );
   }
 
@@ -135,54 +107,71 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
     ];
   }
 
+  /// Multi-select chip pills for the teacher's subjects (Mata Pelajaran).
+  /// Replaces the old checkbox list — selected chips fill admin navy /
+  /// white text, unselected stay white / slate border. Wrap layout flows
+  /// across rows so the form stays compact even with many subjects.
   Widget buildSubjectsSection(LanguageProvider languageProvider) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle(languageProvider),
-          const SizedBox(height: AppSpacing.sm),
-          ..._buildSubjectCheckboxes(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(LanguageProvider languageProvider) {
-    return Text(
-      languageProvider.getTranslatedText({
-        'en': 'Subjects:',
-        'id': 'Mata Pelajaran:',
-      }),
-      style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: Colors.grey.shade700,
-      ),
-    );
-  }
-
-  List<Widget> _buildSubjectCheckboxes() {
-    return widget.subjects
+    final adminNavy = ColorUtils.getRoleColor('admin');
+    final models = widget.subjects
         .map((subject) => Subject.fromJson(subject as Map<String, dynamic>))
         .where((model) => model.id.isNotEmpty && model.name.isNotEmpty)
-        .map(
-          (model) => CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(model.name, style: const TextStyle(fontSize: 14)),
-            value: selectedSubjectIds.contains(model.id),
-            onChanged: (value) => _toggleSubject(model, value),
-            controlAffinity: ListTileControlAffinity.leading,
-          ),
-        )
         .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            children: [
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Subjects',
+                  'id': 'Mata Pelajaran',
+                }),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: ColorUtils.slate900,
+                ),
+              ),
+              const SizedBox(width: 6),
+              if (selectedSubjectIds.isNotEmpty)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: adminNavy.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${selectedSubjectIds.length}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: adminNavy,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: models
+              .map((m) => _SubjectChip(
+                    label: m.name,
+                    selected: selectedSubjectIds.contains(m.id),
+                    accent: adminNavy,
+                    onTap: () => _toggleSubject(m, !selectedSubjectIds.contains(m.id)),
+                  ))
+              .toList(),
+        ),
+      ],
+    );
   }
 
   void _toggleSubject(Subject subject, bool? value) {
@@ -198,22 +187,92 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
     });
   }
 
+  /// Homeroom class — wrap of selectable chips. Single-select; tapping
+  /// the active chip again clears it (same affordance as Employment
+  /// Status). The label includes a small "(Opsional)" hint and a count
+  /// badge once a class is picked.
   Widget buildHomeroomClassDropdown(LanguageProvider languageProvider) {
-    return buildDialogDropdown(
-      value: selectedWaliKelasId,
-      label: languageProvider.getTranslatedText({
-        'en': 'Homeroom Class (Optional)',
-        'id': 'Wali Kelas (Opsional)',
-      }),
-      icon: Icons.class_,
-      items: _buildClassItems(languageProvider),
-      onChanged: (value) {
-        setState(() => selectedWaliKelasId = value);
-      },
+    final adminNavy = ColorUtils.getRoleColor('admin');
+    final classes = widget.classes
+        .where((c) => c['id'] != null && c['name'] != null)
+        .fold<Map<String, Map<String, dynamic>>>({}, (map, item) {
+          map[item['id'].toString()] = item;
+          return map;
+        })
+        .values
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            children: [
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Homeroom Class',
+                  'id': 'Wali Kelas',
+                }),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: ColorUtils.slate900,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': '(Optional)',
+                  'id': '(Opsional)',
+                }),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: ColorUtils.slate500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (classes.isEmpty)
+          Text(
+            languageProvider.getTranslatedText({
+              'en': 'No classes available',
+              'id': 'Belum ada kelas',
+            }),
+            style: TextStyle(
+              fontSize: 11.5,
+              color: ColorUtils.slate500,
+              fontStyle: FontStyle.italic,
+            ),
+          )
+        else
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: classes.map((c) {
+              final id = c['id'].toString();
+              final name = (c['name'] ?? '').toString();
+              final isSelected =
+                  selectedWaliKelasId != null && selectedWaliKelasId == id;
+              return _SubjectChip(
+                label: name,
+                selected: isSelected,
+                accent: adminNavy,
+                onTap: () => setState(
+                  () => selectedWaliKelasId = isSelected ? '' : id,
+                ),
+              );
+            }).toList(),
+          ),
+      ],
     );
   }
 
-  List<DropdownMenuItem<String>> _buildClassItems(
+  // ignore: unused_element
+  List<DropdownMenuItem<String>> _legacyClassItems(
     LanguageProvider languageProvider,
   ) {
     final noneItem = DropdownMenuItem<String>(
@@ -242,47 +301,99 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
         .toList();
   }
 
+  /// Employment-status chip selector. Three values + an implicit "none"
+  /// state when nothing is selected (chip can be tapped again to clear).
   Widget buildEmploymentStatusDropdown(LanguageProvider languageProvider) {
-    return buildDialogDropdown(
-      value: selectedStatus,
-      label: languageProvider.getTranslatedText({
-        'en': 'Employment Status (Optional)',
-        'id': 'Status Kepegawaian (Opsional)',
-      }),
-      icon: Icons.work_outline,
-      items: _buildStatusItems(languageProvider),
-      onChanged: (value) {
-        setState(() => selectedStatus = value);
-      },
+    String t(Map<String, String> m) => languageProvider.getTranslatedText(m);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AdminFormFieldLabel(
+          text: t(const {
+            'en': 'Employment Status',
+            'id': 'Status Kepegawaian',
+          }),
+        ),
+        AdminFormChoiceChips<String?>(
+          value: selectedStatus,
+          onChanged: (v) =>
+              setState(() => selectedStatus = (selectedStatus == v) ? null : v),
+          choices: [
+            AdminFormChoice(
+              value: 'permanent',
+              label: t(const {'en': 'Permanent', 'id': 'Tetap'}),
+              icon: Icons.workspace_premium_rounded,
+            ),
+            AdminFormChoice(
+              value: 'contract',
+              label: t(const {'en': 'Contract', 'id': 'Kontrak'}),
+              icon: Icons.assignment_rounded,
+            ),
+            AdminFormChoice(
+              value: 'temporary',
+              label: t(const {'en': 'Honorary', 'id': 'Honor'}),
+              icon: Icons.schedule_rounded,
+            ),
+          ],
+        ),
+      ],
     );
   }
+}
 
-  List<DropdownMenuItem<String>> _buildStatusItems(
-    LanguageProvider languageProvider,
-  ) {
-    return [
-      _buildStatusMenuItem(null, 'None', 'Tidak ada', languageProvider),
-      _buildStatusMenuItem('permanent', 'Permanent', 'Tetap', languageProvider),
-      _buildStatusMenuItem('contract', 'Contract', 'Kontrak', languageProvider),
-      _buildStatusMenuItem(
-        'temporary',
-        'Temporary/Honorary',
-        'Honor',
-        languageProvider,
-      ),
-    ];
-  }
+/// Single subject pill — used by [buildSubjectsSection]. Solid-fill
+/// admin navy when selected, bordered slate when not.
+class _SubjectChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final Color accent;
+  final VoidCallback onTap;
 
-  DropdownMenuItem<String> _buildStatusMenuItem(
-    String? value,
-    String enText,
-    String idText,
-    LanguageProvider languageProvider,
-  ) {
-    return DropdownMenuItem(
-      value: value,
-      child: Text(
-        languageProvider.getTranslatedText({'en': enText, 'id': idText}),
+  const _SubjectChip({
+    required this.label,
+    required this.selected,
+    required this.accent,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = selected ? Colors.white : ColorUtils.slate700;
+    final bg = selected ? accent : Colors.white;
+    final border = selected ? accent : ColorUtils.slate200;
+
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(
+            border: Border.all(color: border, width: selected ? 1.4 : 1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (selected) ...[
+                const Icon(Icons.check_rounded, size: 14, color: Colors.white),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: fg,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

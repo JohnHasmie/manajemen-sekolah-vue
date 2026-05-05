@@ -1,25 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/features/finance/presentation/widgets/finance_dashboard_tab.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_payment_types_tab.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_verification_tab.dart';
-import 'package:manajemensekolah/features/finance/presentation/widgets/class_report_tab.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/tagihan_tab.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 
 /// Widget for building tab content.
+///
+/// v3 layout (Mockup #13 Phase Final):
+///   Tab 0 — Tagihan       (TagihanTab with sub-filters + InvoiceRows)
+///   Tab 1 — Pembayaran    (FinanceVerificationTab — pending payments)
+///   Tab 2 — Jenis         (FinancePaymentTypesTab)
+///
+/// The legacy 4-tab `Dashboard / Payment Types / Verification /
+/// ClassReport` IndexedStack has been folded down — Dashboard's stat
+/// strip / generated-batches strip moves out of the hub (the v3 hero
+/// covers the same KPIs) and ClassFinanceReport is now reachable via
+/// the navy-tinted [ClassReportDrillCard] pinned at the bottom of
+/// Tagihan rather than its own tab.
 class FinanceTabContent extends StatelessWidget {
   final int currentTabIndex;
-  final Map<String, dynamic> dashboardData;
   final List<dynamic> pendingPaymentList;
   final List<dynamic> billList;
   final LanguageProvider languageProvider;
   final Color primaryColor;
   final bool isReadOnly;
-  final VoidCallback onVerifyNow;
-  final List<dynamic> Function() calculateBatchesFromBills;
-  final String Function(String?) formatMonth;
   final String Function(dynamic) formatCurrency;
-  final Future<void> Function(Map<String, dynamic>) onDeleteBatch;
   final Future<void> Function() onRefresh;
   final List<dynamic> filteredPaymentTypes;
   final TextEditingController searchController;
@@ -29,31 +35,35 @@ class FinanceTabContent extends StatelessWidget {
   final List<ActiveFilter> Function() buildFilterChips;
   final String Function(dynamic) getGoalDescription;
   final String Function(String?) getTranslatedPeriod;
-  final Function(int) onGenerateBills;
   final Function(int) onEdit;
   final Function(int) onDelete;
   final ScrollController pendingScrollController;
   final bool hasMorePending;
   final Function(int) onVerify;
   final Function(int) onShowProof;
-  final List<dynamic> classList;
-  final Map<String, List<dynamic>> studentsByClass;
-  final Map<String, List<dynamic>> billsByStudent;
-  final bool isLoading;
+
+  // Tagihan tab wiring (Mockup #13)
+  final String tagihanFilterKey;
+  final ValueChanged<String> onTagihanFilterChanged;
+  final int overdueCount;
+  final void Function(Map<String, dynamic> bill)? onTagihBill;
+  final void Function(Map<String, dynamic> bill)? onTapBill;
+  final VoidCallback onClassReportTap;
+
+  // Tagihan jenis + bulan filter wiring
+  final Set<String> tagihanSelectedJenisIds;
+  final String? tagihanSelectedMonth;
+  final VoidCallback onOpenTagihanFilter;
+  final VoidCallback onClearTagihanFilter;
 
   const FinanceTabContent({
     required this.currentTabIndex,
-    required this.dashboardData,
     required this.pendingPaymentList,
     required this.billList,
     required this.languageProvider,
     required this.primaryColor,
     required this.isReadOnly,
-    required this.onVerifyNow,
-    required this.calculateBatchesFromBills,
-    required this.formatMonth,
     required this.formatCurrency,
-    required this.onDeleteBatch,
     required this.onRefresh,
     required this.filteredPaymentTypes,
     required this.searchController,
@@ -63,38 +73,54 @@ class FinanceTabContent extends StatelessWidget {
     required this.buildFilterChips,
     required this.getGoalDescription,
     required this.getTranslatedPeriod,
-    required this.onGenerateBills,
     required this.onEdit,
     required this.onDelete,
     required this.pendingScrollController,
     required this.hasMorePending,
     required this.onVerify,
     required this.onShowProof,
-    required this.classList,
-    required this.studentsByClass,
-    required this.billsByStudent,
-    required this.isLoading,
+    required this.tagihanFilterKey,
+    required this.onTagihanFilterChanged,
+    required this.overdueCount,
+    required this.onClassReportTap,
+    required this.tagihanSelectedJenisIds,
+    required this.tagihanSelectedMonth,
+    required this.onOpenTagihanFilter,
+    required this.onClearTagihanFilter,
+    this.onTagihBill,
+    this.onTapBill,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     return IndexedStack(
-      index: currentTabIndex,
+      index: currentTabIndex.clamp(0, 2),
       children: [
-        FinanceDashboardTab(
-          dashboardData: dashboardData,
-          pendingPaymentList: pendingPaymentList,
+        TagihanTab(
           billList: billList,
-          languageProvider: languageProvider,
-          primaryColor: primaryColor,
-          isReadOnly: isReadOnly,
-          onVerifyNow: onVerifyNow,
-          calculateBatchesFromBills: calculateBatchesFromBills,
-          formatMonth: formatMonth,
-          formatCurrency: formatCurrency,
-          onDeleteBatch: onDeleteBatch,
+          activeFilterKey: tagihanFilterKey,
+          onFilterChanged: onTagihanFilterChanged,
+          overdueCount: overdueCount,
+          onTagih: onTagihBill,
+          onTap: onTapBill,
+          onClassReportTap: onClassReportTap,
           onRefresh: onRefresh,
+          selectedJenisIds: tagihanSelectedJenisIds,
+          selectedMonth: tagihanSelectedMonth,
+          onOpenFilterSheet: onOpenTagihanFilter,
+          onClearFilters: onClearTagihanFilter,
+          primaryColor: primaryColor,
+        ),
+        FinanceVerificationTab(
+          pendingPaymentList: pendingPaymentList,
+          hasMorePending: hasMorePending,
+          isReadOnly: isReadOnly,
+          scrollController: pendingScrollController,
+          formatCurrency: formatCurrency,
+          primaryColor: primaryColor,
+          onVerify: onVerify,
+          onShowProof: onShowProof,
         ),
         FinancePaymentTypesTab(
           filteredPaymentTypes: filteredPaymentTypes,
@@ -107,26 +133,9 @@ class FinanceTabContent extends StatelessWidget {
           formatCurrency: formatCurrency,
           getGoalDescription: getGoalDescription,
           getTranslatedPeriod: getTranslatedPeriod,
-          onGenerateBills: onGenerateBills,
           onEdit: onEdit,
           onDelete: onDelete,
           onRefresh: onRefresh,
-        ),
-        FinanceVerificationTab(
-          pendingPaymentList: pendingPaymentList,
-          hasMorePending: hasMorePending,
-          isReadOnly: isReadOnly,
-          scrollController: pendingScrollController,
-          formatCurrency: formatCurrency,
-          primaryColor: primaryColor,
-          onVerify: onVerify,
-          onShowProof: onShowProof,
-        ),
-        ClassReportTab(
-          isLoading: isLoading,
-          classList: classList,
-          studentsByClass: studentsByClass,
-          billsByStudent: billsByStudent,
         ),
       ],
     );

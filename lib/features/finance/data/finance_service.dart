@@ -245,4 +245,25 @@ class FinanceService {
       return [];
     }
   }
+
+  /// POST /api/finance/bills/{id}/remind
+  ///
+  /// Records a reminder send for [billId] on [channel] (`whatsapp` |
+  /// `email`). Backend increments the bill's `reminder_count` and
+  /// stamps `last_reminded_at`. Returns the parsed response payload
+  /// — the caller bumps the local row's `reminder_count` from
+  /// `data.reminder_count` so the InvoiceRow's "Reminder ke-N" pill
+  /// stays in sync.
+  static Future<Map<String, dynamic>> remindBill({
+    required String billId,
+    required String channel,
+  }) async {
+    final response = await dioClient.post(
+      '/finance/bills/$billId/remind',
+      data: {'channel': channel},
+    );
+    final raw = response.data;
+    if (raw is Map<String, dynamic>) return raw;
+    return {'success': true, 'data': const {}};
+  }
 }

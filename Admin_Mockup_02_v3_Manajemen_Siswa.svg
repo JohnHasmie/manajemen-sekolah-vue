@@ -1,0 +1,477 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 1500" font-family="Inter, -apple-system, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="adminHero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#143068"/>
+      <stop offset="1" stop-color="#1F4A8F"/>
+    </linearGradient>
+    <linearGradient id="boyAvatar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="girlAvatar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EC4899"/>
+      <stop offset="1" stop-color="#BE185D"/>
+    </linearGradient>
+    <filter id="phoneShadow" x="-10%" y="-5%" width="120%" height="115%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.12"/>
+    </filter>
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+    <filter id="sheetShadow" x="-20%" y="-5%" width="140%" height="115%">
+      <feDropShadow dx="0" dy="-12" stdDeviation="14" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect width="1320" height="1500" fill="#F8FAFC"/>
+
+  <!-- TITLE -->
+  <text x="60" y="58" font-weight="800" font-size="26" fill="#0F172A">Admin Mockup 02 · Manajemen Siswa  <tspan font-weight="500" fill="#64748B">— v3 (sticky filter chips inside hero)</tspan></text>
+  <text x="60" y="84" font-size="13" fill="#64748B">BrandPageHeader + BrandFilterChipStrip · same pattern as parent Nilai / Tagihan / Kehadiran</text>
+  <rect x="60" y="100" width="1200" height="1" fill="#E2E8F0"/>
+
+  <!-- ╔════════════════════════════════════════════════╗ -->
+  <!-- ║  FRAME A — Default state                        ║ -->
+  <!-- ╚════════════════════════════════════════════════╝ -->
+  <text x="80" y="138" font-weight="800" font-size="14" fill="#0F172A">A · Default state · all filters at default values</text>
+  <text x="80" y="156" font-size="11" fill="#64748B">"Periode" applied (current AY) · others are dashed placeholders</text>
+
+  <g transform="translate(80, 174)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+
+    <!-- HERO (BrandPageHeader) -->
+    <g transform="translate(0, 44)">
+      <path d="M 0 0 H 380 V 240 Q 380 268 352 268 H 28 Q 0 268 0 240 Z" fill="url(#adminHero)"/>
+
+      <!-- Top row: back + spacer + actions (filter button with badge + meatball) -->
+      <g transform="translate(16, 16)">
+        <rect width="40" height="40" rx="14" fill="rgba(255,255,255,0.18)"/>
+        <path d="M22 14 L14 20 L22 26" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <!-- filter (tune) icon + badge -->
+      <g transform="translate(272, 16)">
+        <rect width="40" height="40" rx="14" fill="rgba(255,255,255,0.18)"/>
+        <g transform="translate(13, 13)" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round">
+          <path d="M2 4 H12 M5 9 H9 M7 14 H7"/>
+          <circle cx="9" cy="4" r="2.5" fill="white" stroke="none"/>
+        </g>
+        <circle cx="32" cy="8" r="6" fill="#DC2626"/>
+        <text x="32" y="11" text-anchor="middle" font-size="8" font-weight="800" fill="white">1</text>
+      </g>
+      <g transform="translate(316, 16)">
+        <rect width="40" height="40" rx="14" fill="rgba(255,255,255,0.18)"/>
+        <g transform="translate(20, 20)" fill="white">
+          <circle cx="0" cy="-6" r="2"/>
+          <circle cx="0" cy="0" r="2"/>
+          <circle cx="0" cy="6" r="2"/>
+        </g>
+      </g>
+
+      <!-- Subtitle (breadcrumb) + title -->
+      <text x="20" y="84" font-size="11" font-weight="500" fill="rgba(255,255,255,0.85)">Manajemen Data</text>
+      <text x="20" y="118" font-weight="800" font-size="24" fill="white">Siswa</text>
+
+      <!-- Realtime pill -->
+      <g transform="translate(20, 132)">
+        <rect width="116" height="22" rx="10" fill="rgba(255,255,255,0.18)"/>
+        <circle cx="12" cy="11" r="3" fill="#22C55E"/>
+        <text x="22" y="15" font-size="10" font-weight="700" fill="white">Sinkron · 1m lalu</text>
+      </g>
+      <!-- Counter on right -->
+      <g transform="translate(244, 132)">
+        <rect width="116" height="22" rx="10" fill="rgba(255,255,255,0.18)"/>
+        <text x="58" y="15" text-anchor="middle" font-size="10" font-weight="800" fill="white">1,248 siswa total</text>
+      </g>
+
+      <!-- BRAND FILTER CHIP STRIP — inside hero, scrollable -->
+      <g transform="translate(0, 178)">
+        <!-- Chip 1: Periode (applied) -->
+        <g transform="translate(16, 0)">
+          <rect width="172" height="36" rx="13" fill="rgba(255,255,255,0.18)"/>
+          <text x="14" y="14" font-size="9" font-weight="500" fill="rgba(255,255,255,0.7)">Periode</text>
+          <text x="14" y="28" font-size="11" font-weight="800" fill="white">2025/2026 · Ganjil</text>
+          <path d="M158 17 L162 21 L166 17" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+        <!-- Chip 2: Tingkat (placeholder dashed) -->
+        <g transform="translate(196, 0)">
+          <rect width="92" height="36" rx="13" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="14" y="22" font-size="11" font-weight="700" fill="rgba(255,255,255,0.78)">+ Tingkat</text>
+        </g>
+        <!-- Chip 3: Status (placeholder, peek) -->
+        <g transform="translate(296, 0)">
+          <rect width="80" height="36" rx="13" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="14" y="22" font-size="11" font-weight="700" fill="rgba(255,255,255,0.78)">+ Status</text>
+        </g>
+      </g>
+
+      <!-- Search bar overlapping bottom edge -->
+      <g transform="translate(16, 232)" filter="url(#cardShadow)">
+        <rect width="348" height="44" rx="14" fill="white"/>
+        <g transform="translate(14, 14)" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round">
+          <circle cx="8" cy="8" r="6"/>
+          <path d="M13 13 L17 17"/>
+        </g>
+        <text x="44" y="28" font-size="12" fill="#94A3B8">Cari siswa…</text>
+      </g>
+    </g>
+
+    <!-- SECTION HEADER -->
+    <text x="20" y="356" font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.6">SEMUA TINGKAT · 1,248 SISWA</text>
+
+    <!-- Cards -->
+    <g transform="translate(16, 368)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#boyAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">AY</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">7A · NIS 1234567</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Ahmad Yahya Hasymi</text>
+      <g transform="translate(64, 52)">
+        <rect width="40" height="14" rx="7" fill="#DCFCE7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#15803D"/>
+        <text x="22" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#15803D">Aktif</text>
+      </g>
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <g transform="translate(16, 450)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#girlAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">AS</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">7A · NIS 1234568</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Aisyah Salsabila</text>
+      <g transform="translate(64, 52)">
+        <rect width="40" height="14" rx="7" fill="#DCFCE7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#15803D"/>
+        <text x="22" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#15803D">Aktif</text>
+      </g>
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <g transform="translate(16, 532)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#boyAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">BR</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">7B · NIS 1234569</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Budi Rahman</text>
+      <g transform="translate(64, 52)">
+        <rect width="76" height="14" rx="7" fill="#FEF3C7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#B45309"/>
+        <text x="40" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#B45309">Belum diverif</text>
+      </g>
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <g transform="translate(16, 614)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#E2E8F0" stroke-width="0.75"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#boyAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">CD</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">7B · NIS 1234570</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Candra Dewangga</text>
+      <g transform="translate(64, 52)">
+        <rect width="40" height="14" rx="7" fill="#DCFCE7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#15803D"/>
+        <text x="22" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#15803D">Aktif</text>
+      </g>
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <!-- FAB -->
+    <g transform="translate(308, 700)" filter="url(#cardShadow)">
+      <circle cx="28" cy="28" r="28" fill="#143068"/>
+      <g transform="translate(28, 28)" stroke="white" stroke-width="2.5" stroke-linecap="round">
+        <line x1="-8" y1="0" x2="8" y2="0"/>
+        <line x1="0" y1="-8" x2="0" y2="8"/>
+      </g>
+    </g>
+
+    <rect x="120" y="762" width="140" height="4" rx="2" fill="#0F172A" opacity="0.85"/>
+  </g>
+
+  <!-- ╔════════════════════════════════════════════════╗ -->
+  <!-- ║  FRAME B — With filters applied                 ║ -->
+  <!-- ╚════════════════════════════════════════════════╝ -->
+  <text x="540" y="138" font-weight="800" font-size="14" fill="#0F172A">B · Filters applied · "Tingkat 7" + "Belum diverif"</text>
+  <text x="540" y="156" font-size="11" fill="#64748B">All chips show their value · all stay sticky inside the hero · tap a chip to edit just that filter</text>
+
+  <g transform="translate(540, 174)" filter="url(#phoneShadow)">
+    <rect width="380" height="780" rx="36" fill="white"/>
+    <text x="28" y="32" font-size="12" font-weight="700" fill="#0F172A">9:41</text>
+
+    <!-- HERO -->
+    <g transform="translate(0, 44)">
+      <path d="M 0 0 H 380 V 240 Q 380 268 352 268 H 28 Q 0 268 0 240 Z" fill="url(#adminHero)"/>
+
+      <!-- Top row -->
+      <g transform="translate(16, 16)">
+        <rect width="40" height="40" rx="14" fill="rgba(255,255,255,0.18)"/>
+        <path d="M22 14 L14 20 L22 26" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <g transform="translate(272, 16)">
+        <rect width="40" height="40" rx="14" fill="rgba(255,255,255,0.18)"/>
+        <g transform="translate(13, 13)" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round">
+          <path d="M2 4 H12 M5 9 H9 M7 14 H7"/>
+          <circle cx="9" cy="4" r="2.5" fill="white" stroke="none"/>
+        </g>
+        <circle cx="32" cy="8" r="6" fill="#DC2626"/>
+        <text x="32" y="11" text-anchor="middle" font-size="8" font-weight="800" fill="white">3</text>
+      </g>
+      <g transform="translate(316, 16)">
+        <rect width="40" height="40" rx="14" fill="rgba(255,255,255,0.18)"/>
+        <g transform="translate(20, 20)" fill="white">
+          <circle cx="0" cy="-6" r="2"/>
+          <circle cx="0" cy="0" r="2"/>
+          <circle cx="0" cy="6" r="2"/>
+        </g>
+      </g>
+
+      <text x="20" y="84" font-size="11" font-weight="500" fill="rgba(255,255,255,0.85)">Manajemen Data</text>
+      <text x="20" y="118" font-weight="800" font-size="24" fill="white">Siswa</text>
+
+      <g transform="translate(20, 132)">
+        <rect width="116" height="22" rx="10" fill="rgba(255,255,255,0.18)"/>
+        <circle cx="12" cy="11" r="3" fill="#22C55E"/>
+        <text x="22" y="15" font-size="10" font-weight="700" fill="white">Sinkron · 1m lalu</text>
+      </g>
+      <g transform="translate(244, 132)">
+        <rect width="116" height="22" rx="10" fill="rgba(255,255,255,0.18)"/>
+        <text x="58" y="15" text-anchor="middle" font-size="10" font-weight="800" fill="white">35 dari 1,248</text>
+      </g>
+
+      <!-- ALL FILTERS APPLIED — strip shows all values -->
+      <g transform="translate(0, 178)">
+        <!-- Chip 1: Periode -->
+        <g transform="translate(16, 0)">
+          <rect width="160" height="36" rx="13" fill="rgba(255,255,255,0.22)"/>
+          <text x="14" y="14" font-size="9" font-weight="500" fill="rgba(255,255,255,0.78)">Periode</text>
+          <text x="14" y="28" font-size="11" font-weight="800" fill="white">2025/2026 · Ganjil</text>
+          <path d="M146 17 L150 21 L154 17" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+        <!-- Chip 2: Tingkat (applied) -->
+        <g transform="translate(184, 0)">
+          <rect width="100" height="36" rx="13" fill="rgba(255,255,255,0.22)"/>
+          <text x="14" y="14" font-size="9" font-weight="500" fill="rgba(255,255,255,0.78)">Tingkat</text>
+          <text x="14" y="28" font-size="11" font-weight="800" fill="white">Tingkat 7</text>
+          <path d="M86 17 L90 21 L94 17" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+        <!-- Chip 3: Status (applied) -->
+        <g transform="translate(292, 0)">
+          <rect width="120" height="36" rx="13" fill="rgba(255,255,255,0.22)"/>
+          <text x="14" y="14" font-size="9" font-weight="500" fill="rgba(255,255,255,0.78)">Status</text>
+          <text x="14" y="28" font-size="11" font-weight="800" fill="white">Belum diverif</text>
+          <path d="M106 17 L110 21 L114 17" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+        </g>
+      </g>
+
+      <!-- Search bar -->
+      <g transform="translate(16, 232)" filter="url(#cardShadow)">
+        <rect width="348" height="44" rx="14" fill="white"/>
+        <g transform="translate(14, 14)" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round">
+          <circle cx="8" cy="8" r="6"/>
+          <path d="M13 13 L17 17"/>
+        </g>
+        <text x="44" y="28" font-size="12" fill="#94A3B8">Cari siswa…</text>
+      </g>
+    </g>
+
+    <!-- Section header reflects filter -->
+    <text x="20" y="356" font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.6">TINGKAT 7 · BELUM DIVERIF · 3 SISWA</text>
+
+    <!-- Filtered cards (only Tingkat 7 + Belum diverif) -->
+    <g transform="translate(16, 368)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#FCD34D" stroke-width="1.2"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#boyAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">BR</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">7B · NIS 1234569</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Budi Rahman</text>
+      <g transform="translate(64, 52)">
+        <rect width="76" height="14" rx="7" fill="#FEF3C7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#B45309"/>
+        <text x="40" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#B45309">Belum diverif</text>
+      </g>
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <g transform="translate(16, 450)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#FCD34D" stroke-width="1.2"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#girlAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">DT</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">7A · NIS 1234571</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Diah Tirta</text>
+      <g transform="translate(64, 52)">
+        <rect width="76" height="14" rx="7" fill="#FEF3C7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#B45309"/>
+        <text x="40" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#B45309">Belum diverif</text>
+      </g>
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <g transform="translate(16, 532)">
+      <rect width="348" height="72" rx="14" fill="white" stroke="#FCD34D" stroke-width="1.2"/>
+      <rect x="10" y="10" width="44" height="44" rx="12" fill="url(#boyAvatar)"/>
+      <text x="32" y="38" text-anchor="middle" font-weight="800" font-size="13" fill="white">EH</text>
+      <text x="64" y="28" font-size="11" font-weight="500" fill="#475569">7C · NIS 1234572</text>
+      <text x="64" y="46" font-weight="800" font-size="14" fill="#0F172A">Eka Hartanto</text>
+      <g transform="translate(64, 52)">
+        <rect width="76" height="14" rx="7" fill="#FEF3C7"/>
+        <circle cx="6" cy="7" r="2.5" fill="#B45309"/>
+        <text x="40" y="11" text-anchor="middle" font-size="8.5" font-weight="800" fill="#B45309">Belum diverif</text>
+      </g>
+      <text x="332" y="42" text-anchor="end" font-size="11.5" font-weight="800" fill="#143068">Detail →</text>
+    </g>
+
+    <!-- "Reset filter" hint at bottom -->
+    <g transform="translate(16, 622)">
+      <rect width="348" height="44" rx="14" fill="#FEF3C7"/>
+      <g transform="translate(14, 14)" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 5 V13 M2 5 L6 9 M2 5 L-2 9"/>
+      </g>
+      <text x="40" y="22" font-size="11" font-weight="700" fill="#92400E">Filter aktif menyaring 35 dari 1,248 siswa</text>
+      <text x="40" y="36" font-size="10" font-weight="800" fill="#B45309">Reset semua filter →</text>
+    </g>
+
+    <!-- FAB -->
+    <g transform="translate(308, 700)" filter="url(#cardShadow)">
+      <circle cx="28" cy="28" r="28" fill="#143068"/>
+      <g transform="translate(28, 28)" stroke="white" stroke-width="2.5" stroke-linecap="round">
+        <line x1="-8" y1="0" x2="8" y2="0"/>
+        <line x1="0" y1="-8" x2="0" y2="8"/>
+      </g>
+    </g>
+
+    <rect x="120" y="762" width="140" height="4" rx="2" fill="#0F172A" opacity="0.85"/>
+  </g>
+
+  <!-- ╔════════════════════════════════════════════════╗ -->
+  <!-- ║  FRAME C — Single-filter picker (chip tap)      ║ -->
+  <!-- ╚════════════════════════════════════════════════╝ -->
+  <text x="80" y="990" font-weight="800" font-size="14" fill="#0F172A">C · Tap "Tingkat" chip → focused picker (BrandHeroSheet single-axis)</text>
+  <text x="80" y="1008" font-size="11" fill="#64748B">Single-dimension picker · same widget as Pilih Sekolah / Pilih Peran · tap any option to apply + auto-dismiss</text>
+
+  <g transform="translate(80, 1026)" filter="url(#phoneShadow)">
+    <rect width="380" height="440" rx="36" fill="white"/>
+    <rect x="0" y="0" width="380" height="80" fill="#F1F5F9"/>
+    <rect x="0" y="0" width="380" height="80" fill="#0F172A" opacity="0.45"/>
+
+    <g filter="url(#sheetShadow)">
+      <path d="M 0 60 L 0 440 L 380 440 L 380 60 Q 380 32 352 32 L 28 32 Q 0 32 0 60 Z" fill="white"/>
+    </g>
+    <rect x="170" y="46" width="40" height="4" rx="2" fill="#CBD5E1"/>
+
+    <!-- Header -->
+    <g transform="translate(20, 64)">
+      <rect width="40" height="40" rx="13" fill="#21AFE6" opacity="0.12"/>
+      <g transform="translate(13, 13)" fill="none" stroke="#1A8FBE" stroke-width="2" stroke-linecap="round">
+        <rect x="2" y="2" width="10" height="10" rx="1"/>
+        <path d="M4 6 H10 M4 9 H8"/>
+      </g>
+      <text x="52" y="18" font-weight="800" font-size="16" fill="#0F172A">Pilih Tingkat</text>
+      <text x="52" y="34" font-size="11" fill="#64748B">4 tingkat tersedia di sekolah ini</text>
+    </g>
+
+    <!-- "Saat ini" hero card showing active selection -->
+    <g transform="translate(20, 122)">
+      <rect width="340" height="68" rx="16" fill="url(#adminHero)"/>
+      <text x="14" y="22" font-size="9" font-weight="800" fill="rgba(255,255,255,0.7)" letter-spacing="0.6">SAAT INI</text>
+      <text x="14" y="46" font-weight="800" font-size="18" fill="white">Tingkat 7</text>
+      <text x="14" y="60" font-size="10" fill="rgba(255,255,255,0.85)">35 siswa · 4 kelas</text>
+      <rect x="278" y="22" width="48" height="22" rx="11" fill="rgba(255,255,255,0.22)"/>
+      <text x="302" y="36" text-anchor="middle" font-size="9.5" font-weight="800" fill="white">AKTIF</text>
+    </g>
+
+    <!-- Section "Pilih lain" -->
+    <text x="32" y="216" font-size="9.5" font-weight="800" fill="#94A3B8" letter-spacing="0.6">PILIH LAIN</text>
+
+    <!-- Tingkat options -->
+    <g transform="translate(20, 228)">
+      <rect width="340" height="48" rx="14" fill="white" stroke="#E2E8F0"/>
+      <text x="14" y="20" font-weight="800" font-size="13" fill="#0F172A">Semua tingkat</text>
+      <text x="14" y="36" font-size="10" fill="#64748B">1,248 siswa · 10 kelas</text>
+    </g>
+    <g transform="translate(20, 286)">
+      <rect width="340" height="48" rx="14" fill="white" stroke="#E2E8F0"/>
+      <text x="14" y="20" font-weight="800" font-size="13" fill="#0F172A">Tingkat 8</text>
+      <text x="14" y="36" font-size="10" fill="#64748B">23 siswa · 3 kelas</text>
+    </g>
+    <g transform="translate(20, 344)">
+      <rect width="340" height="48" rx="14" fill="white" stroke="#E2E8F0"/>
+      <text x="14" y="20" font-weight="800" font-size="13" fill="#0F172A">Tingkat 9</text>
+      <text x="14" y="36" font-size="10" fill="#64748B">10 siswa · 1 kelas</text>
+    </g>
+
+    <rect x="120" y="422" width="140" height="4" rx="2" fill="#0F172A" opacity="0.85"/>
+  </g>
+
+  <!-- ╔════════════════════════════════════════════════╗ -->
+  <!-- ║  SPEC PANEL                                     ║ -->
+  <!-- ╚════════════════════════════════════════════════╝ -->
+  <g transform="translate(540, 990)" filter="url(#cardShadow)">
+    <rect width="700" height="476" rx="20" fill="white" stroke="#E2E8F0"/>
+    <text x="20" y="36" font-weight="800" font-size="14" fill="#0F172A">Sticky filter pattern · same widget admin/teacher/parent share</text>
+    <rect x="20" y="48" width="660" height="1" fill="#F1F5F9"/>
+
+    <g transform="translate(20, 70)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#0F172A">Already shared (lib/core/widgets/)</text>
+      <text x="0" y="34" font-size="11" font-weight="800" fill="#143068">BrandPageHeader</text>
+      <text x="0" y="50" font-size="10.5" fill="#64748B">role-aware gradient · subtitle · title · actionIcons</text>
+      <text x="0" y="64" font-size="10.5" fill="#64748B">slot · realtimeIndicator · childSelector · bottomSlot</text>
+
+      <text x="0" y="90" font-size="11" font-weight="800" fill="#143068">BrandFilterChipStrip + BrandFilterChip</text>
+      <text x="0" y="106" font-size="10.5" fill="#64748B">Horizontal scrollable. Each chip: label + value</text>
+      <text x="0" y="120" font-size="10.5" fill="#64748B">when set, dashed `+ label` when unset.</text>
+      <text x="0" y="134" font-size="10.5" fill="#64748B">18% white-tint applied · 14% white-tint placeholder.</text>
+
+      <text x="0" y="160" font-size="11" font-weight="800" fill="#143068">BrandHeroSheet (single-axis picker)</text>
+      <text x="0" y="176" font-size="10.5" fill="#64748B">Tap a chip → opens this sheet for that one filter.</text>
+      <text x="0" y="190" font-size="10.5" fill="#64748B">Identical to Pilih Sekolah / Pilih Peran sheets.</text>
+    </g>
+
+    <g transform="translate(360, 70)">
+      <text x="0" y="14" font-size="11" font-weight="800" fill="#0F172A">Wiring (admin Manajemen Siswa)</text>
+      <text x="0" y="36" font-size="10.5" fill="#64748B">BrandPageHeader(</text>
+      <text x="0" y="50" font-size="10.5" fill="#64748B">  role: 'admin',</text>
+      <text x="0" y="64" font-size="10.5" fill="#64748B">  subtitle: 'Manajemen Data',</text>
+      <text x="0" y="78" font-size="10.5" fill="#64748B">  title: 'Siswa',</text>
+      <text x="0" y="92" font-size="10.5" fill="#64748B">  realtimeIndicator: BrandRealtimePill(...)</text>
+      <text x="0" y="106" font-size="10.5" fill="#64748B">  bottomSlot: BrandFilterChipStrip(chips: [</text>
+      <text x="0" y="120" font-size="10.5" fill="#64748B">    BrandFilterChip(label:'Periode', ...),</text>
+      <text x="0" y="134" font-size="10.5" fill="#64748B">    BrandFilterChip(label:'Tingkat', ...),</text>
+      <text x="0" y="148" font-size="10.5" fill="#64748B">    BrandFilterChip(label:'Status', ...),</text>
+      <text x="0" y="162" font-size="10.5" fill="#64748B">  ]),</text>
+      <text x="0" y="176" font-size="10.5" fill="#64748B">)</text>
+    </g>
+
+    <rect x="20" y="270" width="660" height="1" fill="#F1F5F9"/>
+
+    <text x="20" y="296" font-weight="800" font-size="14" fill="#0F172A">Why filters live in the hero (not below it)</text>
+
+    <g transform="translate(20, 320)">
+      <rect width="6" height="6" rx="3" fill="#15803D"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Always visible</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Filters scroll up with the hero · user always knows what's applied</text>
+    </g>
+    <g transform="translate(20, 354)">
+      <rect width="6" height="6" rx="3" fill="#15803D"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Tap-to-edit</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Each chip is its own picker · single-axis sheet · no full filter form</text>
+    </g>
+    <g transform="translate(360, 320)">
+      <rect width="6" height="6" rx="3" fill="#15803D"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Discoverable</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Dashed `+ Tingkat` placeholder reveals available filters</text>
+    </g>
+    <g transform="translate(360, 354)">
+      <rect width="6" height="6" rx="3" fill="#15803D"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Cross-role parity</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Same shape parent uses on Nilai, Tagihan, Kehadiran, Aktivitas</text>
+    </g>
+
+    <rect x="20" y="404" width="660" height="1" fill="#F1F5F9"/>
+
+    <g transform="translate(20, 422)">
+      <text x="0" y="14" font-weight="800" font-size="13" fill="#0F172A">Migration</text>
+      <text x="0" y="34" font-size="10.5" fill="#64748B">AdminCrudScaffold continues to host the search bar + body + FAB · just swaps its</text>
+      <text x="0" y="48" font-size="10.5" fill="#64748B">internal header for BrandPageHeader. The filter button → bottom-sheet flow becomes the chip strip.</text>
+    </g>
+  </g>
+</svg>

@@ -157,60 +157,53 @@ class BrandPageHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Top row: back + title block + action icons
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (showBack) ...[
-                _HeaderBackButton(
-                  onTap: onBackPressed ?? () => AppNavigator.pop(context),
-                ),
-                const SizedBox(width: AppSpacing.md),
-              ],
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (subtitle != null) ...[
-                      Text(
-                        subtitle!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          // Solid white — hard color, no semi-transparent
-                          // greys. Reads cleanly on the brand gradient.
-                          color: Colors.white,
-                          letterSpacing: 0.1,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        letterSpacing: 0.1,
-                        height: 1.2,
-                      ),
-                    ),
+          // Top toolbar row — back button left, action icons right. Kept
+          // separate from the title block so all icons share a single
+          // vertical baseline regardless of how tall the title block is.
+          if (showBack || (actionIcons != null && actionIcons!.isNotEmpty))
+            Row(
+              children: [
+                if (showBack)
+                  _HeaderBackButton(
+                    onTap: onBackPressed ?? () => AppNavigator.pop(context),
+                  ),
+                const Spacer(),
+                if (actionIcons != null && actionIcons!.isNotEmpty)
+                  for (int i = 0; i < actionIcons!.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    actionIcons![i],
                   ],
-                ),
-              ),
-              if (actionIcons != null && actionIcons!.isNotEmpty) ...[
-                const SizedBox(width: AppSpacing.sm),
-                for (int i = 0; i < actionIcons!.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 6),
-                  actionIcons![i],
-                ],
               ],
-            ],
+            ),
+          if (showBack || (actionIcons != null && actionIcons!.isNotEmpty))
+            const SizedBox(height: 12),
+          // Title block — kicker (subtitle) + big title. Sits below the
+          // toolbar so it can grow without pushing the icons.
+          if (subtitle != null) ...[
+            Text(
+              subtitle!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: 0.1,
+              height: 1.2,
+            ),
           ),
           if (realtimeIndicator != null) ...[
             const SizedBox(height: AppSpacing.md),

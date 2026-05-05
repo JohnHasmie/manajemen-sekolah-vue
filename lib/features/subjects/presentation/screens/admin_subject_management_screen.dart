@@ -20,9 +20,13 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/action_confirm_sheet.dart';
 import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/bulk_action_bar.dart';
+import 'package:manajemensekolah/core/widgets/bulk_delete_confirm_dialog.dart';
 import 'package:manajemensekolah/core/widgets/admin_data_menu.dart';
 import 'package:manajemensekolah/core/widgets/paginated_list_view.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
@@ -74,6 +78,10 @@ class AdminSubjectManagementScreenState
   String? _selectedGradeLevelFilter;
   String? _selectedClassNameFilter;
   bool _hasActiveFilter = false;
+
+  // Bulk-select state.
+  final Set<String> _selectedIds = <String>{};
+  bool get _bulkMode => _selectedIds.isNotEmpty;
 
   // Search debounce — avoids spamming the API on every keystroke.
   Timer? _searchDebounce;
@@ -292,32 +300,6 @@ class AdminSubjectManagementScreenState
     _loadSubjects();
   }
 
-  // Per-chip removal callbacks — each chip carries its own targeted
-  // callback so the × on one chip only removes that filter.
-  void _removeStatusFilter() {
-    setState(() => _selectedStatusFilter = null);
-    _refreshHasActiveFilter();
-    _loadSubjects();
-  }
-
-  void _removeClassesStatusFilter() {
-    setState(() => _selectedClassesStatusFilter = null);
-    _refreshHasActiveFilter();
-    _loadSubjects();
-  }
-
-  void _removeGradeLevelFilter() {
-    setState(() => _selectedGradeLevelFilter = null);
-    _refreshHasActiveFilter();
-    _loadSubjects();
-  }
-
-  void _removeClassNameFilter() {
-    setState(() => _selectedClassNameFilter = null);
-    _refreshHasActiveFilter();
-    _loadSubjects();
-  }
-
   // ── Row-level actions ───────────────────────────────────────────────
 
   void _openAddEditSheet({Map<String, dynamic>? subject}) {
@@ -374,6 +356,73 @@ class AdminSubjectManagementScreenState
       });
       ctrl.showErrorSnackBar(context, '$prefix$errorMsg');
     }
+  }
+
+  // ── Bulk-select actions ──
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _clearSelection() {
+    if (_selectedIds.isEmpty) return;
+    setState(_selectedIds.clear);
+  }
+
+  Future<void> _bulkDeleteSelected() async {
+    if (_selectedIds.isEmpty) return;
+    final lang = ref.read(languageRiverpod);
+    final selected = _subjects
+        .cast<Map<String, dynamic>>()
+        .where((s) => _selectedIds.contains(s['id']?.toString()))
+        .toList();
+
+    final ok = await showBulkDeleteConfirm(
+      context,
+      entityNoun: lang.getTranslatedText(const {
+        'en': 'subjects',
+        'id': 'mapel',
+      }),
+      items: selected
+          .map(
+            (s) => BulkDeleteItem(
+              id: s['id'].toString(),
+              title: (s['name'] ?? '?').toString(),
+              subtitle: (s['code'] ?? '').toString().isEmpty
+                  ? null
+                  : 'Kode ${s['code']}',
+            ),
+          )
+          .toList(),
+    );
+    if (ok != true || !mounted) return;
+
+    final ctrl = ref.read(adminSubjectControllerProvider);
+    final ids = List<Map<String, dynamic>>.from(selected);
+    setState(_selectedIds.clear);
+
+    var deleted = 0;
+    for (final s in ids) {
+      final errorMsg = await ctrl.deleteSubject(s['id'].toString());
+      if (errorMsg == null) deleted++;
+      if (!mounted) return;
+    }
+    if (!mounted) return;
+    await _loadSubjects();
+    if (!mounted) return;
+    SnackBarUtils.showSuccess(
+      context,
+      lang.getTranslatedText({
+        'en': '$deleted of ${ids.length} subjects deleted',
+        'id': '$deleted dari ${ids.length} mapel terhapus',
+      }),
+    );
   }
 
   void _openSubjectClassManagement(Map<String, dynamic> subject) {
@@ -439,24 +488,49 @@ class AdminSubjectManagementScreenState
           selectedClassNameFilter: _selectedClassNameFilter,
         );
 
-    final activeFilters = ref
-        .read(adminSubjectControllerProvider)
-        .buildActiveFilterChips(
-          selectedStatusFilter: _selectedStatusFilter,
-          selectedClassesStatusFilter: _selectedClassesStatusFilter,
-          selectedGradeLevelFilter: _selectedGradeLevelFilter,
-          selectedClassNameFilter: _selectedClassNameFilter,
-          languageProvider: lang,
-          onClearStatus: _removeStatusFilter,
-          onClearClassesStatus: _removeClassesStatusFilter,
-          onClearGradeLevel: _removeGradeLevelFilter,
-          onClearClassName: _removeClassNameFilter,
-        );
+    // v3 brand chips — sticky inside hero (parent Tagihan/Nilai pattern).
+    final brandChips = <BrandFilterChip>[
+      BrandFilterChip(
+        label: lang.getTranslatedText(const {
+          'en': 'Status',
+          'id': 'Status',
+        }),
+        value: _selectedStatusFilter == null
+            ? null
+            : lang.getTranslatedText(switch (_selectedStatusFilter) {
+                'active' => const {'en': 'Active', 'id': 'Aktif'},
+                'inactive' => const {'en': 'Inactive', 'id': 'Nonaktif'},
+                _ => {
+                    'en': _selectedStatusFilter!,
+                    'id': _selectedStatusFilter!,
+                  },
+              }),
+        onTap: _openFilterSheet,
+      ),
+      BrandFilterChip(
+        label: lang.getTranslatedText(const {
+          'en': 'Grade',
+          'id': 'Tingkat',
+        }),
+        value: _selectedGradeLevelFilter == null
+            ? null
+            : 'Tingkat $_selectedGradeLevelFilter',
+        onTap: _openFilterSheet,
+      ),
+      BrandFilterChip(
+        label: lang.getTranslatedText(const {
+          'en': 'Class',
+          'id': 'Kelas',
+        }),
+        value: _selectedClassNameFilter,
+        onTap: _openFilterSheet,
+      ),
+    ];
 
     return AdminCrudScaffold(
       title: lang.getTranslatedText(const {
-        'en': 'Subject Management',
-        'id': 'Manajemen Mata Pelajaran',
+        'en': 'Subjects',
+        'id': 'Mapel',
       }),
       subtitle: lang.getTranslatedText(const {
         'en': 'Manage and monitor subjects',
@@ -472,7 +546,15 @@ class AdminSubjectManagementScreenState
       onSearchSubmitted: (_) => _loadSubjects(),
       onFilterTap: _openFilterSheet,
       hasActiveFilter: _hasActiveFilter,
-      activeFilters: activeFilters,
+      brandChips: brandChips,
+      headerKicker: lang.getTranslatedText(const {
+        'en': 'DATA MANAGEMENT',
+        'id': 'MANAJEMEN DATA',
+      }),
+      counterLabel: '${filteredSubjects.length} ${lang.getTranslatedText(const {
+        'en': 'subjects',
+        'id': 'mapel',
+      })}',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,
@@ -501,14 +583,22 @@ class AdminSubjectManagementScreenState
       emptyIcon: Icons.book_outlined,
       childBuilder: () => PaginatedListView<dynamic>(
         items: filteredSubjects,
-        itemBuilder: (context, subject, index) => SubjectCard(
-          subject: subject,
-          index: index,
-          primaryColor: primaryColor,
-          onTap: () => _openSubjectClassManagement(subject),
-          onEdit: () => _openAddEditSheet(subject: subject),
-          onDelete: () => _deleteSubject(subject),
-        ),
+        itemBuilder: (context, subject, index) {
+          final id = subject['id']?.toString() ?? '';
+          final isSelected = _selectedIds.contains(id);
+          return SubjectCard(
+            subject: subject,
+            index: index,
+            primaryColor: primaryColor,
+            onTap: () => _bulkMode
+                ? _toggleSelection(id)
+                : _openSubjectClassManagement(subject),
+            onLongPress: () => _toggleSelection(id),
+            selected: isSelected,
+            onEdit: () => _openAddEditSheet(subject: subject),
+            onDelete: () => _deleteSubject(subject),
+          );
+        },
         onLoadMore: _loadMoreSubjects,
         hasMore: _hasMoreData,
         isLoadingMore: _isLoadingMore,
@@ -517,6 +607,23 @@ class AdminSubjectManagementScreenState
       onFabTap: _openAddEditSheet,
       fabIcon: Icons.add,
       hideFab: academicYear.isReadOnly,
+      selectedCount: _selectedIds.length,
+      onClearSelection: _clearSelection,
+      bulkItemNoun: lang.getTranslatedText(const {
+        'en': 'subject',
+        'id': 'mapel',
+      }),
+      bulkActions: [
+        BulkAction(
+          icon: Icons.delete_outline_rounded,
+          label: lang.getTranslatedText(const {
+            'en': 'Delete',
+            'id': 'Hapus',
+          }),
+          onTap: _bulkDeleteSelected,
+          isDestructive: true,
+        ),
+      ],
     );
   }
 }

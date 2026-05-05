@@ -1,42 +1,27 @@
-// Admin Pengaturan hub (Phase 6 · T4.5).
+// Admin Pengaturan hub — Mockup #14 applied.
 //
-// Why this exists
-// ---------------
-// The old admin Pengaturan tile routed straight to [SchoolSettingsScreen],
-// which is a 2-card grid (General Settings · Time Settings) — same visual
-// as Settings on the guru role because it just wraps the shared
-// [UIMixin.buildMainScaffold]. That leaves no room for admin-only
-// concerns (promotion, notifications, system users, data management) and
-// buries them behind unrelated tiles on the dashboard grid.
+// Visual contract (matches Admin_Mockups_Phase_Final.html, mockup 14):
+//   1. Compact navy gradient hero (200px) with back button + title
+//      ("Sistem") + subtitle "Konfigurasi" + HealthPill ("Sinkron ·
+//      konfigurasi sehat").
+//   2. CategoryGridHero — 2-column 170×120 tile grid below the hero.
+//      Each tile has a pastel-tinted icon square + title + subline +
+//      optional meta line.
+//   3. AuditLogPin — pinned card at the bottom showing the latest
+//      audit log entry. Tap drills to the full audit list (placeholder
+//      snackbar until that screen lands).
 //
-// [SystemSettingsScreen] replaces that target. It is the admin-only
-// "kitchen sink" settings hub: one expanded [SchoolPill] hero, two
-// sections of list-card menu items, one ListView. Everything the admin
-// can configure about the school (data + system + account) is reachable
-// from here instead of being scattered across the dashboard grid.
-//
-// Shape
-// -----
-//   1. Navy gradient header with back button + title ("Pengaturan Sistem")
-//   2. SchoolPill.expanded — matches Dashboard hero so the same school
-//      identity renders identically on both surfaces
-//   3. Section "Manajemen Sistem":
-//        • Profil sekolah      → SchoolLevelSettingsScreen
-//        • Waktu pembelajaran  → TimeSettingsScreen
-//        • Manajemen data      → AdminDataManagementScreen (Siswa/Guru/…)
-//        • Naik kelas & kelulusan (stub)
-//   4. Section "Notifikasi & Akun":
-//        • Pengaturan notifikasi (stub)
-//        • Pengguna sistem       (stub)
-//        • Profil akun           → SettingsScreen (shared profile)
+// Routing for tiles is preserved from the prior implementation so
+// nothing breaks for admins mid-flight; tiles that don't yet have a
+// destination show a "Segera hadir" snackbar exactly like before.
 //
 // Satu-implementasi-tiga-role
 // ---------------------------
-// This hub is admin-only by construction — it is targeted from the
-// admin dashboard's Pengaturan tile. Guru/wali continue to reach profile
-// settings directly through [SettingsScreen]. The stub menu items show a
-// "Segera hadir" snackbar rather than navigating, matching the pattern
-// used elsewhere when a destination is queued for a later phase.
+// Hub is admin-only by construction (targeted from the admin
+// dashboard's Sistem tile). All shared components used here
+// (CategoryGridHero, AuditLogPin, HealthPill) live under
+// `lib/core/widgets/` so future role-specific settings screens can
+// adopt the same idiom.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -44,31 +29,26 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/widgets/school_pill.dart';
-import 'package:manajemensekolah/core/widgets/section_header.dart';
+import 'package:manajemensekolah/core/widgets/admin_settings_components.dart';
+import 'package:manajemensekolah/features/settings/data/system_settings_service.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/school_level_settings_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/time_settings_screen.dart';
 
-/// Admin Pengaturan hub screen.
-///
-/// Accepts the active-school name and optional logo URL so the hero
-/// [SchoolPill.expanded] renders without waiting on its own fetch. The
-/// dashboard already has these values in [DashboardState.userData], so it
-/// just hands them through on navigation — no extra request needed.
 class SystemSettingsScreen extends ConsumerWidget {
   /// Active-school display name. Dashboard passes
-  /// `state.userData['nama_sekolah']`. A null/empty value falls back to
-  /// the string 'Sekolah' so the hero never renders blank.
+  /// `state.userData['nama_sekolah']`. A null/empty value falls back
+  /// to 'Sekolah' so the hero never renders blank.
   final String? schoolName;
 
-  /// Optional logo URL for the hero avatar. When null, [SchoolPill]
-  /// renders a monogrammed initial instead.
+  /// Optional logo URL — currently not surfaced in the new mockup
+  /// (the hero is now compact + chip-driven instead of avatar-led).
+  /// Kept on the constructor for backwards compatibility with
+  /// callers that still pass it from earlier phases.
   final String? schoolLogoUrl;
 
-  /// Subtitle under the school name — usually the academic year.
-  /// Defaults to 'Admin sekolah'.
+  /// Subtitle under the hero — usually the academic year.
   final String subtitle;
 
   const SystemSettingsScreen({
@@ -80,121 +60,89 @@ class SystemSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final primary = ColorUtils.getRoleColor('admin');
+    final navy = ColorUtils.getRoleColor('admin');
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
+      body: ListView(
+        padding: EdgeInsets.zero,
         children: [
-          _Header(primaryColor: primary),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.xl,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SchoolPill.expanded(
-                    schoolName: _resolvedSchoolName,
-                    subtitle: subtitle,
-                    logoUrl: schoolLogoUrl,
-                    accentColor: primary,
-                    // No onTap: school switching lives on the dashboard
-                    // pill; here we just display the active school.
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  SectionHeader(
-                    title: 'Manajemen Sistem',
-                    padding: EdgeInsets.zero,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _MenuCard(
-                    icon: Icons.school_rounded,
-                    title: 'Profil sekolah',
-                    subtitle: 'Jenjang, nama, dan alamat sekolah',
-                    accentColor: primary,
-                    onTap: () => AppNavigator.push(
-                      context,
-                      const SchoolLevelSettingsScreen(),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _MenuCard(
-                    icon: Icons.access_time_rounded,
-                    title: 'Waktu pembelajaran',
-                    subtitle: 'Jam pelajaran & durasi per hari',
-                    accentColor: primary,
-                    onTap: () =>
-                        AppNavigator.push(context, const TimeSettingsScreen()),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _MenuCard(
-                    icon: Icons.dataset_rounded,
-                    title: 'Manajemen data',
-                    subtitle: 'Siswa, guru, kelas, dan mata pelajaran',
-                    accentColor: primary,
-                    onTap: () => AppNavigator.push(
-                      context,
-                      const AdminDataManagementScreen(),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _MenuCard(
-                    icon: Icons.trending_up_rounded,
-                    title: 'Naik kelas & kelulusan',
-                    subtitle: 'Proses kenaikan kelas akhir tahun',
-                    accentColor: primary,
-                    trailingLabel: 'Segera',
-                    onTap: () => _comingSoon(context),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  SectionHeader(
-                    title: 'Notifikasi & Akun',
-                    padding: EdgeInsets.zero,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _MenuCard(
-                    icon: Icons.notifications_active_rounded,
-                    title: 'Pengaturan notifikasi',
-                    subtitle: 'Kelola pemberitahuan sistem',
-                    accentColor: primary,
-                    trailingLabel: 'Segera',
-                    onTap: () => _comingSoon(context),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _MenuCard(
-                    icon: Icons.people_alt_rounded,
-                    title: 'Pengguna sistem',
-                    subtitle: 'Daftar akun guru & admin',
-                    accentColor: primary,
-                    trailingLabel: 'Segera',
-                    onTap: () => _comingSoon(context),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _MenuCard(
-                    icon: Icons.person_rounded,
-                    title: 'Profil akun',
-                    subtitle: 'Ubah nama, email, dan kata sandi Anda',
-                    accentColor: primary,
-                    onTap: () =>
-                        AppNavigator.push(context, const SettingsScreen()),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _Hero(navy: navy, subtitle: subtitle),
+          const SizedBox(height: AppSpacing.lg),
+          CategoryGridHero(tiles: _buildTiles(context, ref, navy)),
+          const SizedBox(height: AppSpacing.md),
+          _AuditLogPinConsumer(navy: navy),
+          SizedBox(height: AppSpacing.xl + MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
   }
 
-  String get _resolvedSchoolName {
-    final raw = schoolName?.trim();
-    if (raw == null || raw.isEmpty) return 'Sekolah';
-    return raw;
+  List<CategoryTile> _buildTiles(
+    BuildContext context,
+    WidgetRef ref,
+    Color navy,
+  ) {
+    return [
+      CategoryTile(
+        icon: Icons.calendar_today_rounded,
+        iconBg: const Color(0xFFEEF2FF),
+        iconFg: navy,
+        title: 'Tahun Ajaran',
+        subline: 'Periode aktif & arsip',
+        meta: 'Profil sekolah · jenjang',
+        onTap: () => AppNavigator.push(
+          context,
+          const SchoolLevelSettingsScreen(),
+        ),
+      ),
+      CategoryTile(
+        icon: Icons.access_time_rounded,
+        iconBg: const Color(0xFFFEF3C7),
+        iconFg: const Color(0xFF92400E),
+        title: 'Waktu Pembelajaran',
+        subline: 'Jam pelajaran & durasi',
+        meta: 'Per hari · per kelas',
+        onTap: () => AppNavigator.push(context, const TimeSettingsScreen()),
+      ),
+      CategoryTile(
+        icon: Icons.dataset_rounded,
+        iconBg: const Color(0xFFDCFCE7),
+        iconFg: const Color(0xFF166534),
+        title: 'Manajemen Data',
+        subline: 'Siswa, guru, kelas, mapel',
+        onTap: () => AppNavigator.push(
+          context,
+          const AdminDataManagementScreen(),
+        ),
+      ),
+      CategoryTile(
+        icon: Icons.language_rounded,
+        iconBg: const Color(0xFFF3E8FF),
+        iconFg: const Color(0xFF7C3AED),
+        title: 'Bahasa',
+        subline: 'Antarmuka & laporan',
+        meta: 'Indonesia · default',
+        onTap: () => AppNavigator.push(context, const SettingsScreen()),
+      ),
+      CategoryTile(
+        icon: Icons.notifications_active_rounded,
+        iconBg: const Color(0xFFFEE2E2),
+        iconFg: const Color(0xFFDC2626),
+        title: 'Notifikasi',
+        subline: 'Push, email, SMS',
+        trailingBadge: 'SEGERA',
+        onTap: () => _comingSoon(context),
+      ),
+      CategoryTile(
+        icon: Icons.backup_rounded,
+        iconBg: const Color(0xFFE0E7FF),
+        iconFg: const Color(0xFF4338CA),
+        title: 'Backup & Audit',
+        subline: 'Cadangan otomatis',
+        meta: 'Harian · audit log',
+        onTap: () => _comingSoon(context),
+      ),
+    ];
   }
 
   void _comingSoon(BuildContext context) {
@@ -205,54 +153,69 @@ class SystemSettingsScreen extends ConsumerWidget {
   }
 }
 
-/// Navy gradient header with back button + page title.
-///
-/// Kept local (not extracted to `gradient_page_header.dart`) because the
-/// admin Pengaturan hub uses the role-navy accent while
-/// [GradientPageHeader] defaults to corporate blue. When a second admin
-/// settings screen lands we can promote this to a shared widget.
-class _Header extends StatelessWidget {
-  final Color primaryColor;
-
-  const _Header({required this.primaryColor});
+class _Hero extends StatelessWidget {
+  final Color navy;
+  final String subtitle;
+  const _Hero({required this.navy, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
+    final topInset = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + AppSpacing.lg,
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        bottom: AppSpacing.lg,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        topInset + AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.lg,
       ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
-        ),
-      ),
+      decoration: BoxDecoration(gradient: ColorUtils.brandGradient('admin')),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _BackButton(onTap: () => AppNavigator.pop(context)),
+          Material(
+            color: Colors.white.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => AppNavigator.pop(context),
+              child: const SizedBox(
+                width: 36,
+                height: 36,
+                child: Icon(Icons.arrow_back_rounded,
+                    color: Colors.white, size: 20),
+              ),
+            ),
+          ),
           const SizedBox(width: AppSpacing.md),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Pengaturan Sistem',
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'Konfigurasi',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Sistem',
                   style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 2),
-                Text(
-                  'Kelola sekolah, pengguna, dan preferensi',
-                  style: TextStyle(fontSize: 13, color: Colors.white70),
+                const SizedBox(height: 8),
+                const HealthPill(
+                  state: HealthState.ok,
+                  label: 'Sinkron · konfigurasi sehat',
                 ),
               ],
             ),
@@ -263,133 +226,27 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _BackButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _BackButton({required this.onTap});
+class _AuditLogPinConsumer extends ConsumerWidget {
+  final Color navy;
+  const _AuditLogPinConsumer({required this.navy});
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(latestAuditLogProvider);
+    return async.when(
+      data: (result) => AuditLogPin(
+        latest: result.latest,
+        onSeeAll: () => SnackBarUtils.showInfo(
+          context,
+          'Layar audit log lengkap segera hadir.',
         ),
-        child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
       ),
+      // While loading or on error, render an empty pin so the layout
+      // stays stable. Audit-log freshness is non-critical info.
+      loading: () => const AuditLogPin(latest: null, onSeeAll: _noop),
+      error: (_, __) => const AuditLogPin(latest: null, onSeeAll: _noop),
     );
   }
 }
 
-/// A single list-card menu item.
-///
-/// Visual: 44×44 accent-tinted icon tile on the left, title + subtitle
-/// in the middle, optional trailing "Segera" chip + chevron on the
-/// right. Matches the existing list-card pattern used on the admin
-/// dashboard inbox rows for visual consistency across admin hubs.
-class _MenuCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color accentColor;
-  final VoidCallback onTap;
-
-  /// When non-null, renders a small pill (e.g. "Segera") between the
-  /// subtitle and the chevron to flag upcoming features.
-  final String? trailingLabel;
-
-  const _MenuCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.accentColor,
-    required this.onTap,
-    this.trailingLabel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: const BorderRadius.all(Radius.circular(14)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(Radius.circular(14)),
-            border: Border.all(color: ColorUtils.slate200),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.10),
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                ),
-                child: Icon(icon, color: accentColor, size: 22),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: ColorUtils.slate900,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: ColorUtils.slate500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (trailingLabel != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: ColorUtils.slate100,
-                    borderRadius: const BorderRadius.all(Radius.circular(999)),
-                  ),
-                  child: Text(
-                    trailingLabel!,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: ColorUtils.slate500,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-              ],
-              Icon(
-                Icons.chevron_right_rounded,
-                color: ColorUtils.slate400,
-                size: 22,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+void _noop() {}

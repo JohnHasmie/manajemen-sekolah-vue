@@ -81,8 +81,18 @@ class BillingCard extends StatelessWidget {
       return '';
     }
     const monthsId = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${parsed.day} ${monthsId[parsed.month - 1]} ${parsed.year}';
   }
@@ -294,7 +304,8 @@ class BillingCard extends StatelessWidget {
                 // may return; render only when present.
                 Builder(
                   builder: (_) {
-                    final dueRaw = billing['due_date'] ??
+                    final dueRaw =
+                        billing['due_date'] ??
                         billing['jatuh_tempo'] ??
                         billing['tanggal_jatuh_tempo'];
                     final formatted = _formatDueDate(dueRaw);

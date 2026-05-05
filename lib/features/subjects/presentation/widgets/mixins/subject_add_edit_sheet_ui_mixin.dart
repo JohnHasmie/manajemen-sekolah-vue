@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/admin_form_components.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_add_edit_sheet.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_dialog_text_field.dart';
 
@@ -16,26 +17,76 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
   bool get isActive;
   set isActive(bool value);
 
-  /// Build the main form body with all fields
+  /// Build the main form body — sectioned into Data Pokok / Status.
   Widget buildFormBody(BuildContext context) {
     final lang = ref.watch(languageRiverpod);
-    return Expanded(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildCodeField(lang),
-            const SizedBox(height: AppSpacing.md),
-            _buildMasterSubjectAutocomplete(lang),
-            const SizedBox(height: AppSpacing.md),
-            _buildNameField(lang),
-            const SizedBox(height: AppSpacing.md),
-            _buildDescriptionField(lang),
-            const SizedBox(height: AppSpacing.md),
-            _buildActiveStatusToggle(lang),
-          ],
-        ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        4,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AdminFormSection(
+            label: lang.getTranslatedText({
+              'en': 'BASIC DATA',
+              'id': 'DATA POKOK',
+            }) as String,
+            children: [
+              _buildCodeField(lang),
+              _buildMasterSubjectAutocomplete(lang),
+              _buildNameField(lang),
+              _buildDescriptionField(lang),
+            ],
+          ),
+          AdminFormSection(
+            label: lang.getTranslatedText({
+              'en': 'STATUS',
+              'id': 'STATUS',
+            }) as String,
+            bottomGap: 4,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AdminFormFieldLabel(
+                    text: lang.getTranslatedText({
+                      'en': 'Active status',
+                      'id': 'Status aktif',
+                    }) as String,
+                  ),
+                  AdminFormChoiceChips<bool>(
+                    value: isActive,
+                    onChanged: (v) => setState(() => isActive = v),
+                    choices: [
+                      AdminFormChoice(
+                        value: true,
+                        label: lang.getTranslatedText({
+                          'en': 'Active',
+                          'id': 'Aktif',
+                        }) as String,
+                        icon: Icons.check_circle_rounded,
+                      ),
+                      AdminFormChoice(
+                        value: false,
+                        label: lang.getTranslatedText({
+                          'en': 'Inactive',
+                          'id': 'Nonaktif',
+                        }) as String,
+                        icon: Icons.cancel_outlined,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -146,6 +146,7 @@ class _BrandKpiCarouselState extends ConsumerState<BrandKpiCarousel> {
     if (!widget.autoSlideCards || totalPages <= 1) return;
     _autoSlideTimer = Timer.periodic(widget.autoSlideDuration, (_) {
       if (!mounted || _autoSlidePaused) return;
+      if (!_pageCtrl.hasClients) return;
       final next = (_currentPage + 1) % totalPages;
       _pageCtrl.animateToPage(
         next,

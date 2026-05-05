@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
@@ -115,11 +117,15 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
   }
 
   Future<void> viewReportCardDetail(Map<String, dynamic> student) async {
-    showDialog(
+    // Track the dialog route so we can reliably dismiss it later
+    // even after pushing new routes.
+    final dialogCompleter = showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
+    // ignore the future — we manually pop below
+    unawaited(dialogCompleter);
 
     try {
       final academicYearProvider = ref.read(academicYearRiverpod);
@@ -189,7 +195,9 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
       }
 
       if (!mounted) return;
-      AppNavigator.pop(context);
+      // Dismiss the loading dialog via Navigator (not AppNavigator)
+      // to ensure we pop the dialog overlay, not a route.
+      Navigator.of(context, rootNavigator: true).pop();
 
       if (detail != null) {
         final model = Student.fromJson(student);
@@ -210,7 +218,7 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppNavigator.pop(context);
+        Navigator.of(context, rootNavigator: true).pop();
         SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     }

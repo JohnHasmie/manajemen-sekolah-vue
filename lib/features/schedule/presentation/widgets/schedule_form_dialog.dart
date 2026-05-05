@@ -9,7 +9,7 @@ import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart'
     as sched;
 import 'package:manajemensekolah/features/schedule/presentation/mixins/schedule_form_mixin.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_header.dart';
+import 'package:manajemensekolah/core/widgets/admin_form_sheet_header.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_footer.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_teacher_dropdown.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_subject_dropdown.dart';
@@ -349,35 +349,65 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog>
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.92,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              ScheduleFormHeader(
-                isEdit: widget.schedule != null,
-                primaryColor: _getPrimaryColor(),
-                languageProvider: lang,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: Material(
+            color: Colors.white,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  AdminFormSheetHeader(
+                    title: widget.schedule != null
+                        ? lang.getTranslatedText(const {
+                            'en': 'Edit Schedule',
+                            'id': 'Edit Jadwal',
+                          })
+                        : lang.getTranslatedText(const {
+                            'en': 'Add Schedule',
+                            'id': 'Tambah Jadwal',
+                          }),
+                    isEditMode: widget.schedule != null,
+                    kicker: widget.schedule != null
+                        ? 'EDIT DATA'
+                        : 'TAMBAH BARU',
+                  ),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        4,
+                        AppSpacing.lg,
+                        AppSpacing.lg,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: _buildFormFields(lang),
+                      ),
+                    ),
+                  ),
+                  ScheduleFormFooter(
+                    onSave: _saveSchedule,
+                    primaryColor: _getPrimaryColor(),
+                    languageProvider: lang,
+                  ),
+                ],
               ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Form(key: _formKey, child: _buildFormFields(lang)),
-                ),
-              ),
-              ScheduleFormFooter(
-                onSave: _saveSchedule,
-                primaryColor: _getPrimaryColor(),
-                languageProvider: lang,
-              ),
-            ],
+            ),
           ),
         ),
       ),

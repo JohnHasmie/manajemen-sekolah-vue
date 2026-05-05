@@ -52,6 +52,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
+import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 import 'package:manajemensekolah/core/widgets/pending_inbox_card.dart';
@@ -60,13 +61,17 @@ import 'package:manajemensekolah/core/widgets/school_pill.dart';
 
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_report_screen.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_dashboard_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/admin_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/admin_finance_screen.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_list_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_overview_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_rpp_review_hub_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_raport_hub_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/admin_schedule_management_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/system_settings_screen.dart';
@@ -251,11 +256,21 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   // ── Navigation — filter-scoped inbox taps (T3.2) ─────
 
   void _openFinanceVerification() {
-    AppNavigator.push(context, const FinanceScreen(initialTabIndex: 2));
+    // v3 (Mockup #13) layout: Pembayaran is tab index 1. Was 2 in
+    // the legacy 4-tab Dashboard/PaymentTypes/Verification/ClassReport
+    // layout — the index moved when Dashboard was folded out of the
+    // hub.
+    AppNavigator.push(context, const FinanceScreen(initialTabIndex: 1));
   }
 
   void _openFinanceClassReport() {
-    AppNavigator.push(context, const FinanceScreen(initialTabIndex: 3));
+    // ClassFinanceReport is no longer a tab inside the Keuangan hub —
+    // it lives behind the navy-tinted ClassReportDrillCard at the
+    // bottom of the Tagihan tab. Push the class-list screen first so
+    // the admin can pick which kelas to drill into; the legacy single-
+    // class report ([ClassFinanceReportScreen]) requires a classId so
+    // it can't be pushed directly from a top-level inbox tap.
+    AppNavigator.push(context, const ClassFinanceListScreen());
   }
 
   void _openLessonPlanReview() {
@@ -275,8 +290,11 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   void _openSiswa() =>
       AppNavigator.push(context, const AdminDataManagementScreen());
   void _openKeuangan() => AppNavigator.push(context, const FinanceScreen());
+  // Mockup #08 v3 hub — pipeline strip + per-tingkat group cards.
+  // The legacy AdminReportCardScreen still exists for direct class
+  // drill-downs; the hub becomes the menu entry point.
   void _openLaporanRaport() =>
-      AppNavigator.push(context, const AdminReportCardScreen());
+      AppNavigator.push(context, const AdminRaportHubScreen());
   void _openPengaturan() => AppNavigator.push(
     context,
     SystemSettingsScreen(
@@ -350,12 +368,16 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     final statusBarHeight = MediaQuery.of(context).viewPadding.top;
     final notifBadge = _asInt(widget.state.stats['unread_notifications']) +
         _asInt(widget.state.stats['unread_announcements']);
-    return Stack(
+    return ExcludeSemantics(
+     child: Stack(
       clipBehavior: Clip.none,
       children: [
-        // Gradient hero — full width, edge-to-edge, rounded bottom corners
+        // Gradient hero — full width, edge-to-edge, rounded bottom corners.
+        // 100dp bottom padding leaves an empty navy band where the KPI
+        // strip floats. Matches parent_dashboard_body.dart so admin and
+        // parent dashboards land the cards at the same vertical anchor.
         Padding(
-          padding: const EdgeInsets.only(bottom: 70),
+          padding: const EdgeInsets.only(bottom: 100),
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -462,56 +484,157 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
             ),
           ),
         ),
-        // KPI strip floating at the bottom of the gradient
+        // KPI strip floating at the bottom of the gradient. Positioned
+        // edge-to-edge (left: 0, right: 0) — BrandKpiCarousel applies
+        // its own 16dp horizontal padding so we don't double-pad.
         Positioned(
           key: widget.statsSectionKey,
-          left: 16,
-          right: 16,
+          left: 0,
+          right: 0,
           bottom: 0,
           child: _buildHeroStats(),
         ),
       ],
+    ),
     );
   }
 
-  // ── Hero stats — 2 cards in a row, matching the Phase 3 mockup ────
-
+  // ── Hero stats — paired auto-slide via the shared BrandKpiCarousel ──
+  //
+  // Why BrandKpiCarousel
+  // --------------------
+  // Same widget the parent dashboard uses — matches the v3 mockup
+  // (2 cards per page, auto-slide, top progress strip when slices
+  // exist, capsule/dot page indicator below, no "Page 1 of N" text).
+  //
+  // Slice schema (target)
+  // ---------------------
+  // Slice 0 = SEMUA (school-wide aggregate, what we ship today).
+  // Slices 1+ = per Tingkat (Tingkat 7, 8, 9). When the backend adds
+  // `slices` to the admin stats payload (mirroring
+  // `DashboardController::buildParentChildSlices`), bump
+  // `sliceCount` and the carousel auto-engages the cycle. Until
+  // then `sliceCount: 1` keeps the strip flat — exactly what
+  // BrandKpiCarousel does in the no-slices case.
+  //
+  // Card pages (4 cards × perPage = 2 → 2 pages auto-slide):
+  //   Page 1: Kehadiran hari ini · Siswa aktif
+  //   Page 2: Nilai rata-rata     · RPP menunggu
   Widget _buildHeroStats() {
     final stats = widget.state.stats;
-    final attendanceRate = _asInt(stats['attendance_rate_today']);
-    final attendanceDelta = _asInt(stats['attendance_delta_pct']);
-    final classCount = _asInt(stats['total_classes']);
-    return HeroStatsRow(
-      cards: [
-        HeroStatsCard(
-          // TODO(backend): wire stats['attendance_rate_today'] (today's
-          // school-wide attendance %) and stats['attendance_delta_pct']
-          // (signed delta vs yesterday). Until then both default to 0.
-          label: AppLocalizations.dbPresenceToday.tr,
-          value: '$attendanceRate%',
-          icon: Icons.check_rounded,
-          accentColor: ColorUtils.success600,
-          trend: attendanceDelta == 0
-              ? null
-              : StatTrend(
-                  direction: attendanceDelta > 0
-                      ? StatTrendDirection.up
-                      : StatTrendDirection.down,
-                  label:
-                      '${attendanceDelta > 0 ? '+' : ''}$attendanceDelta%',
-                ),
-          onTap: _openSiswa,
-        ),
-        HeroStatsCard(
-          label: AppLocalizations.dbActiveStudents.tr,
-          value: _formatNumber(_asInt(stats['total_students'])),
-          icon: Icons.people_outline_rounded,
-          accentColor: ColorUtils.corporateBlue600,
-          caption: classCount > 0 ? '· $classCount ${AppLocalizations.dbClasses.tr}' : null,
-          onTap: _openSiswa,
-        ),
-      ],
+    final slices = _parseAdminSlices(stats);
+
+    return BrandKpiCarousel(
+      scope: 'admin_dashboard',
+      sliceCount: slices.length,
+      autoSlideCards: true,
+      cardBuilder: (sliceIndex) {
+        final slice = slices[sliceIndex.clamp(0, slices.length - 1)];
+        final ctxLabel = slice.label;
+
+        return [
+          // 1. Kehadiran hari ini
+          HeroStatsCard(
+            label: AppLocalizations.dbPresenceToday.tr,
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: slice.isAggregate,
+            value: '${slice.attendanceRate}%',
+            icon: Icons.check_rounded,
+            accentColor: ColorUtils.success600,
+            trend: slice.attendanceDelta == 0
+                ? null
+                : StatTrend(
+                    direction: slice.attendanceDelta > 0
+                        ? StatTrendDirection.up
+                        : StatTrendDirection.down,
+                    label:
+                        '${slice.attendanceDelta > 0 ? '+' : ''}${slice.attendanceDelta}%',
+                  ),
+            onTap: _openSiswa,
+          ),
+          // 2. Siswa aktif
+          HeroStatsCard(
+            label: AppLocalizations.dbActiveStudents.tr,
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: slice.isAggregate,
+            value: _formatNumber(slice.totalStudents),
+            icon: Icons.people_outline_rounded,
+            accentColor: ColorUtils.corporateBlue600,
+            caption: slice.totalClasses > 0
+                ? '· ${slice.totalClasses} ${AppLocalizations.dbClasses.tr}'
+                : null,
+            onTap: _openSiswa,
+          ),
+          // 3. Nilai rata-rata sekolah
+          // TODO(i18n): promote 'Rata-rata Nilai', 'Semester ini',
+          // 'Belum ada data' to AppLocalizations once the EN copy
+          // is signed off.
+          HeroStatsCard(
+            label: 'Rata-rata Nilai',
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: slice.isAggregate,
+            value: slice.avgGrade != null
+                ? slice.avgGrade!.toStringAsFixed(1)
+                : '—',
+            icon: Icons.bar_chart_rounded,
+            accentColor: const Color(0xFF6366F1),
+            caption:
+                slice.avgGrade != null ? 'Semester ini' : 'Belum ada data',
+            onTap: _openNilai,
+          ),
+          // 4. RPP menunggu persetujuan
+          // TODO(i18n): promote 'RPP Menunggu', 'Perlu ditinjau',
+          // 'Semua disetujui' to AppLocalizations.
+          HeroStatsCard(
+            label: 'RPP Menunggu',
+            sliceLabel: ctxLabel,
+            sliceLabelMuted: slice.isAggregate,
+            value: _formatNumber(slice.pendingLessonPlans),
+            icon: Icons.assignment_outlined,
+            accentColor: ColorUtils.warning600,
+            caption: slice.pendingLessonPlans > 0
+                ? 'Perlu ditinjau'
+                : 'Semua disetujui',
+            onTap: _openLessonPlanReview,
+          ),
+        ];
+      },
     );
+  }
+
+  /// Parse the admin `slices` array out of [DashboardState.stats]. The
+  /// backend ships an array of per-Tingkat slice records (see
+  /// `DashboardController::buildAdminTingkatSlices`); when it's missing
+  /// (older backend or no enrolment yet), synthesise a single
+  /// "Semua tingkat" slice from the top-level stat fields so the
+  /// carousel always has at least one entry to render.
+  List<_AdminSlice> _parseAdminSlices(Map<String, dynamic> stats) {
+    final raw = stats['slices'];
+    if (raw is List && raw.isNotEmpty) {
+      final parsed = raw
+          .whereType<Map>()
+          .map((e) => _AdminSlice.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+      if (parsed.isNotEmpty) return parsed;
+    }
+    // Fallback — synthesise a single "Semua" slice from top-level fields
+    // so the migration ships gracefully even when the backend hasn't
+    // yet emitted the slices array.
+    return [
+      _AdminSlice(
+        key: 'all',
+        label: 'Semua tingkat',
+        attendanceRate: _asInt(stats['attendance_rate_today']),
+        attendanceDelta: _asInt(stats['attendance_delta_pct']),
+        totalStudents: _asInt(stats['total_students']),
+        totalClasses: _asInt(stats['total_classes']),
+        pendingLessonPlans: _asInt(stats['pending_lesson_plans']),
+        avgGrade: () {
+          final v = stats['avg_grade_school'] ?? stats['avg_grade'];
+          return v is num ? v.toDouble() : null;
+        }(),
+      ),
+    ];
   }
 
   /// Narrow number formatter: thousands separator only. Avoids pulling in
@@ -635,8 +758,14 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   void _openNilai() =>
       AppNavigator.push(context, const AdminGradeOverviewScreen());
 
-  void _openPresensi() =>
-      AppNavigator.push(context, const AdminAttendanceReportScreen());
+  // Mockup #11 v3 dashboard — ring + KPI strip + per-tingkat trend.
+  // Tap a tingkat row → drills into per-student CalendarHeatmap
+  // (Mockup #12). Legacy class-list AdminAttendanceReportScreen
+  // still reachable from elsewhere if needed.
+  void _openPresensi() => AppNavigator.push(
+    context,
+    const AdminAttendanceDashboardScreen(),
+  );
 
   void _openAktivitasKelas() =>
       AppNavigator.push(context, const AdminClassActivityScreen());
@@ -684,8 +813,11 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
         ModulLainStripItem(
           label: 'RPP',
           icon: Icons.description_outlined,
+          // Mockup #09 v3 — review queue with 3-tier hero counts
+          // and inline approve. Old AdminLessonPlanScreen still
+          // reachable from inbox deep-links (initialStatusFilter).
           onTap: () =>
-              AppNavigator.push(context, const AdminLessonPlanScreen()),
+              AppNavigator.push(context, const AdminRppReviewHubScreen()),
         ),
         ModulLainStripItem(
           label: 'Akun',
@@ -760,62 +892,29 @@ class _PulsingDot extends StatefulWidget {
   State<_PulsingDot> createState() => _PulsingDotState();
 }
 
-class _PulsingDotState extends State<_PulsingDot>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-    if (widget.animate) _controller.repeat(reverse: true);
-  }
-
-  @override
-  void didUpdateWidget(covariant _PulsingDot oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.animate && !_controller.isAnimating) {
-      _controller.repeat(reverse: true);
-    } else if (!widget.animate && _controller.isAnimating) {
-      _controller.stop();
-      _controller.value = 1;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+class _PulsingDotState extends State<_PulsingDot> {
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        final alpha = widget.animate ? (0.55 + 0.45 * _controller.value) : 1.0;
-        return Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: widget.color.withValues(alpha: alpha),
-            shape: BoxShape.circle,
-            boxShadow: widget.animate
-                ? [
-                    BoxShadow(
-                      color: widget.color.withValues(alpha: 0.4),
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                    ),
+    // Static dot — the pulsing animation was causing parentDataDirty
+    // framework assertions when the dashboard stayed mounted behind
+    // pushed screens. A static dot is visually equivalent at 8px.
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: widget.color,
+        shape: BoxShape.circle,
+        boxShadow: widget.animate
+            ? [
+                BoxShadow(
+                  color: widget.color.withValues(alpha: 0.4),
+                  blurRadius: 6,
+                  spreadRadius: 1,
+                ),
                   ]
                 : null,
           ),
         );
-      },
-    );
   }
 }
 
@@ -872,6 +971,61 @@ class _HeroIconButton extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// One slice of the admin BrandKpiCarousel — either the school-wide
+/// aggregate (`'all'`) or a per-Tingkat breakdown. Mirrors the shape
+/// of the `slices` array emitted by
+/// `DashboardController::buildAdminTingkatSlices` on the backend.
+///
+/// Fields that the backend hasn't filled (e.g., `avg_grade` when the
+/// per-Tingkat grade query is skipped) come through as null and the
+/// card renders an em-dash.
+class _AdminSlice {
+  final String key;
+  final String label;
+  final int attendanceRate;
+  final int attendanceDelta;
+  final int totalStudents;
+  final int totalClasses;
+  final int pendingLessonPlans;
+  final double? avgGrade;
+
+  const _AdminSlice({
+    required this.key,
+    required this.label,
+    required this.attendanceRate,
+    required this.attendanceDelta,
+    required this.totalStudents,
+    required this.totalClasses,
+    required this.pendingLessonPlans,
+    required this.avgGrade,
+  });
+
+  /// True when this slice represents the school-wide aggregate.
+  /// Used to grey out the slice label so "Semua tingkat" reads as
+  /// muted context rather than competing with the primary value.
+  bool get isAggregate => key == 'all';
+
+  factory _AdminSlice.fromJson(Map<String, dynamic> json) {
+    int asInt(Object? v) {
+      if (v is int) return v;
+      if (v is double) return v.round();
+      return int.tryParse('$v') ?? 0;
+    }
+
+    final avg = json['avg_grade'];
+    return _AdminSlice(
+      key: (json['key'] ?? 'unknown').toString(),
+      label: (json['label'] ?? '').toString(),
+      attendanceRate: asInt(json['attendance_rate']),
+      attendanceDelta: asInt(json['attendance_delta']),
+      totalStudents: asInt(json['total_students']),
+      totalClasses: asInt(json['total_classes']),
+      pendingLessonPlans: asInt(json['pending_lesson_plans']),
+      avgGrade: avg is num ? avg.toDouble() : null,
     );
   }
 }

@@ -97,6 +97,13 @@ class LogService {
 
       await logDio.post(_logApiUrl, data: body);
     } catch (e) {
+      // Suppress connection errors in debug to avoid flooding the
+      // console when the logging microservice (port 5009) is down.
+      final msg = e.toString();
+      if (msg.contains('Connection refused') ||
+          msg.contains('SocketException')) {
+        return;
+      }
       AppLogger.error('log', 'Failed to send error log: $e');
     }
   }

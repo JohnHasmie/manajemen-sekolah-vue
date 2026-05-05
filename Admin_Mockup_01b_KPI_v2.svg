@@ -1,0 +1,410 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 1280" font-family="Inter, -apple-system, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="adminHero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#143068"/>
+      <stop offset="1" stop-color="#1F4A8F"/>
+    </linearGradient>
+    <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10B981"/>
+      <stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="violetGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#6D28D9"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#B45309"/>
+    </linearGradient>
+    <filter id="phoneShadow" x="-10%" y="-5%" width="120%" height="115%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.12"/>
+    </filter>
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+    <filter id="kpiShadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <rect width="1320" height="1280" fill="#F8FAFC"/>
+
+  <!-- TITLE -->
+  <text x="60" y="58" font-weight="800" font-size="26" fill="#0F172A">Admin Mockup 01b · KPI Carousel v2</text>
+  <text x="60" y="84" font-size="13" fill="#64748B">2 cards per row · each card is a swipeable mini-carousel · slices: Semua → per Kelas / per Mapel / per Tingkat</text>
+  <rect x="60" y="100" width="1200" height="1" fill="#E2E8F0"/>
+
+  <!-- ╔════════════════════════════════════════════════════════════════╗ -->
+  <!-- ║  PANEL A — IN-CONTEXT (hero + KPI section + nav)               ║ -->
+  <!-- ╚════════════════════════════════════════════════════════════════╝ -->
+  <text x="80" y="138" font-weight="800" font-size="14" fill="#0F172A">A · In-context (current slice = Semua)</text>
+
+  <g transform="translate(80, 154)" filter="url(#phoneShadow)">
+    <rect width="380" height="540" rx="36" fill="white"/>
+    <rect width="380" height="540" rx="36" fill="none" stroke="#E2E8F0" stroke-width="1"/>
+
+    <!-- Hero -->
+    <rect x="0" y="0" width="380" height="180" rx="36" fill="url(#adminHero)"/>
+    <rect x="0" y="36" width="380" height="144" fill="url(#adminHero)"/>
+    <text x="20" y="68" font-size="11" fill="rgba(255,255,255,0.72)">Selamat pagi, Admin</text>
+    <text x="20" y="98" font-weight="800" font-size="22" fill="white">Pantau hari ini</text>
+    <text x="20" y="122" font-size="11" fill="rgba(255,255,255,0.85)">SMP Kamil Edu A · 2025/2026 Ganjil</text>
+
+    <!-- ============= 2-UP KPI ROW ============= -->
+    <!-- Card A: KEHADIRAN -->
+    <g transform="translate(16, 198)" filter="url(#kpiShadow)">
+      <rect width="170" height="140" rx="18" fill="white"/>
+      <!-- icon disc -->
+      <rect x="14" y="14" width="32" height="32" rx="11" fill="url(#emeraldGrad)"/>
+      <g transform="translate(22, 22)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 9 L7 14 L14 4"/>
+      </g>
+      <!-- label + active slice chip -->
+      <text x="54" y="24" font-size="9" font-weight="800" fill="#64748B" letter-spacing="0.4">KEHADIRAN</text>
+      <rect x="54" y="30" width="44" height="14" rx="7" fill="#DCFCE7"/>
+      <text x="76" y="40" text-anchor="middle" font-size="9" font-weight="800" fill="#15803D">SEMUA</text>
+      <!-- big value -->
+      <text x="14" y="78" font-weight="800" font-size="28" fill="#0F172A">94%</text>
+      <text x="14" y="92" font-size="10" fill="#64748B">1,173 / 1,248 siswa</text>
+      <!-- progress bar -->
+      <rect x="14" y="100" width="142" height="6" rx="3" fill="#F1F5F9"/>
+      <rect x="14" y="100" width="133" height="6" rx="3" fill="url(#emeraldGrad)"/>
+      <!-- dot indicators -->
+      <g transform="translate(14, 122)">
+        <circle r="3" cx="0" cy="0" fill="#15803D"/>
+        <circle r="3" cx="10" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="20" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="30" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="40" cy="0" fill="#CBD5E1"/>
+        <text x="100" y="3" text-anchor="end" font-size="9" font-weight="700" fill="#94A3B8">1 / 5</text>
+      </g>
+    </g>
+
+    <!-- Card B: NILAI RATA-RATA -->
+    <g transform="translate(194, 198)" filter="url(#kpiShadow)">
+      <rect width="170" height="140" rx="18" fill="white"/>
+      <rect x="14" y="14" width="32" height="32" rx="11" fill="url(#violetGrad)"/>
+      <g transform="translate(22, 22)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 14 L6 9 L9 11 L14 4"/>
+      </g>
+      <text x="54" y="24" font-size="9" font-weight="800" fill="#64748B" letter-spacing="0.4">NILAI RATA-RATA</text>
+      <rect x="54" y="30" width="44" height="14" rx="7" fill="#EDE9FE"/>
+      <text x="76" y="40" text-anchor="middle" font-size="9" font-weight="800" fill="#6D28D9">SEMUA</text>
+      <text x="14" y="78" font-weight="800" font-size="28" fill="#0F172A">82.4</text>
+      <text x="14" y="92" font-size="10" fill="#64748B">14 mapel · semua tingkat</text>
+      <rect x="14" y="100" width="142" height="6" rx="3" fill="#F1F5F9"/>
+      <rect x="14" y="100" width="117" height="6" rx="3" fill="url(#violetGrad)"/>
+      <g transform="translate(14, 122)">
+        <circle r="3" cx="0" cy="0" fill="#6D28D9"/>
+        <circle r="3" cx="10" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="20" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="30" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="40" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="50" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="60" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="70" cy="0" fill="#CBD5E1"/>
+        <text x="125" y="3" text-anchor="end" font-size="9" font-weight="700" fill="#94A3B8">1 / 8</text>
+      </g>
+    </g>
+
+    <!-- Row 2 of KPIs (peek) -->
+    <g transform="translate(16, 354)" filter="url(#kpiShadow)">
+      <rect width="170" height="140" rx="18" fill="white"/>
+      <rect x="14" y="14" width="32" height="32" rx="11" fill="url(#blueGrad)"/>
+      <g transform="translate(22, 22)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+        <circle cx="8" cy="5" r="3"/>
+        <path d="M2 14 C2 10 5 8 8 8 C11 8 14 10 14 14"/>
+      </g>
+      <text x="54" y="24" font-size="9" font-weight="800" fill="#64748B" letter-spacing="0.4">SISWA</text>
+      <rect x="54" y="30" width="44" height="14" rx="7" fill="#DBEAFE"/>
+      <text x="76" y="40" text-anchor="middle" font-size="9" font-weight="800" fill="#1E40AF">SEMUA</text>
+      <text x="14" y="78" font-weight="800" font-size="28" fill="#0F172A">1,248</text>
+      <text x="14" y="92" font-size="10" fill="#10B981" font-weight="700">+12 minggu ini</text>
+      <text x="14" y="106" font-size="9" fill="#94A3B8">36 kelas · 3 tingkat</text>
+      <g transform="translate(14, 122)">
+        <circle r="3" cx="0" cy="0" fill="#1E40AF"/>
+        <circle r="3" cx="10" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="20" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="30" cy="0" fill="#CBD5E1"/>
+        <text x="100" y="3" text-anchor="end" font-size="9" font-weight="700" fill="#94A3B8">1 / 4</text>
+      </g>
+    </g>
+
+    <!-- Card 4: RPP backlog -->
+    <g transform="translate(194, 354)" filter="url(#kpiShadow)">
+      <rect width="170" height="140" rx="18" fill="white"/>
+      <rect x="14" y="14" width="32" height="32" rx="11" fill="url(#amberGrad)"/>
+      <g transform="translate(22, 22)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 2 V14 H13 V4 L11 2 Z"/>
+        <path d="M5 7 H11 M5 10 H9"/>
+      </g>
+      <text x="54" y="24" font-size="9" font-weight="800" fill="#64748B" letter-spacing="0.4">RPP MENUNGGU</text>
+      <rect x="54" y="30" width="44" height="14" rx="7" fill="#FEF3C7"/>
+      <text x="76" y="40" text-anchor="middle" font-size="9" font-weight="800" fill="#B45309">SEMUA</text>
+      <text x="14" y="78" font-weight="800" font-size="28" fill="#0F172A">37</text>
+      <text x="14" y="92" font-size="10" fill="#64748B">dari 124 RPP semester ini</text>
+      <rect x="14" y="100" width="142" height="6" rx="3" fill="#F1F5F9"/>
+      <rect x="14" y="100" width="42" height="6" rx="3" fill="url(#amberGrad)"/>
+      <g transform="translate(14, 122)">
+        <circle r="3" cx="0" cy="0" fill="#B45309"/>
+        <circle r="3" cx="10" cy="0" fill="#CBD5E1"/>
+        <circle r="3" cx="20" cy="0" fill="#CBD5E1"/>
+        <text x="100" y="3" text-anchor="end" font-size="9" font-weight="700" fill="#94A3B8">1 / 3</text>
+      </g>
+    </g>
+
+    <!-- iPhone home indicator -->
+    <rect x="120" y="522" width="140" height="4" rx="2" fill="#0F172A" opacity="0.85"/>
+  </g>
+
+  <!-- ╔════════════════════════════════════════════════════════════════╗ -->
+  <!-- ║  PANEL B — SLICE STATES (anatomy of a single card)             ║ -->
+  <!-- ╚════════════════════════════════════════════════════════════════╝ -->
+  <text x="540" y="138" font-weight="800" font-size="14" fill="#0F172A">B · Same card, different slices (swipe gesture)</text>
+
+  <!-- frame 1: SEMUA -->
+  <g transform="translate(540, 158)" filter="url(#kpiShadow)">
+    <rect width="220" height="180" rx="20" fill="white"/>
+    <text x="14" y="22" font-size="9" font-weight="800" fill="#94A3B8" letter-spacing="0.6">SLICE 1 · agregat</text>
+    <rect x="14" y="34" width="40" height="40" rx="13" fill="url(#emeraldGrad)"/>
+    <g transform="translate(24, 44)" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 11 L9 17 L18 5"/>
+    </g>
+    <text x="64" y="52" font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.4">KEHADIRAN</text>
+    <rect x="64" y="60" width="60" height="16" rx="8" fill="#DCFCE7"/>
+    <text x="94" y="71" text-anchor="middle" font-size="9.5" font-weight="800" fill="#15803D">SEMUA</text>
+    <text x="14" y="120" font-weight="800" font-size="34" fill="#0F172A">94%</text>
+    <text x="14" y="138" font-size="11" fill="#64748B">1,173 / 1,248 siswa</text>
+    <rect x="14" y="148" width="192" height="6" rx="3" fill="#F1F5F9"/>
+    <rect x="14" y="148" width="180" height="6" rx="3" fill="url(#emeraldGrad)"/>
+    <g transform="translate(14, 168)">
+      <circle r="3.5" cx="0" cy="0" fill="#15803D"/>
+      <circle r="3.5" cx="12" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="24" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="36" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="48" cy="0" fill="#CBD5E1"/>
+    </g>
+  </g>
+
+  <!-- swipe arrow → -->
+  <g transform="translate(770, 248)">
+    <path d="M0 0 H20 M14 -6 L20 0 L14 6" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="10" y="-12" text-anchor="middle" font-size="9" fill="#94A3B8">swipe</text>
+  </g>
+
+  <!-- frame 2: KELAS 7A -->
+  <g transform="translate(800, 158)" filter="url(#kpiShadow)">
+    <rect width="220" height="180" rx="20" fill="white"/>
+    <text x="14" y="22" font-size="9" font-weight="800" fill="#94A3B8" letter-spacing="0.6">SLICE 2 · per kelas</text>
+    <rect x="14" y="34" width="40" height="40" rx="13" fill="url(#emeraldGrad)"/>
+    <g transform="translate(24, 44)" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 11 L9 17 L18 5"/>
+    </g>
+    <text x="64" y="52" font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.4">KEHADIRAN</text>
+    <rect x="64" y="60" width="60" height="16" rx="8" fill="#DCFCE7"/>
+    <text x="94" y="71" text-anchor="middle" font-size="9.5" font-weight="800" fill="#15803D">KELAS 7A</text>
+    <text x="14" y="120" font-weight="800" font-size="34" fill="#0F172A">92%</text>
+    <text x="14" y="138" font-size="11" fill="#64748B">28 / 30 siswa</text>
+    <rect x="14" y="148" width="192" height="6" rx="3" fill="#F1F5F9"/>
+    <rect x="14" y="148" width="177" height="6" rx="3" fill="url(#emeraldGrad)"/>
+    <g transform="translate(14, 168)">
+      <circle r="3.5" cx="0" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="12" cy="0" fill="#15803D"/>
+      <circle r="3.5" cx="24" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="36" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="48" cy="0" fill="#CBD5E1"/>
+    </g>
+  </g>
+
+  <!-- second row of slice frames -->
+  <!-- frame 3: KELAS 7B -->
+  <g transform="translate(540, 358)" filter="url(#kpiShadow)">
+    <rect width="220" height="180" rx="20" fill="white"/>
+    <text x="14" y="22" font-size="9" font-weight="800" fill="#94A3B8" letter-spacing="0.6">SLICE 3 · per kelas</text>
+    <rect x="14" y="34" width="40" height="40" rx="13" fill="url(#emeraldGrad)"/>
+    <g transform="translate(24, 44)" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 11 L9 17 L18 5"/>
+    </g>
+    <text x="64" y="52" font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.4">KEHADIRAN</text>
+    <rect x="64" y="60" width="60" height="16" rx="8" fill="#DCFCE7"/>
+    <text x="94" y="71" text-anchor="middle" font-size="9.5" font-weight="800" fill="#15803D">KELAS 7B</text>
+    <text x="14" y="120" font-weight="800" font-size="34" fill="#0F172A">96%</text>
+    <text x="14" y="138" font-size="11" fill="#64748B">29 / 30 siswa</text>
+    <rect x="14" y="148" width="192" height="6" rx="3" fill="#F1F5F9"/>
+    <rect x="14" y="148" width="184" height="6" rx="3" fill="url(#emeraldGrad)"/>
+    <g transform="translate(14, 168)">
+      <circle r="3.5" cx="0" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="12" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="24" cy="0" fill="#15803D"/>
+      <circle r="3.5" cx="36" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="48" cy="0" fill="#CBD5E1"/>
+    </g>
+  </g>
+
+  <g transform="translate(770, 448)">
+    <path d="M0 0 H20 M14 -6 L20 0 L14 6" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="10" y="-12" text-anchor="middle" font-size="9" fill="#94A3B8">swipe</text>
+  </g>
+
+  <!-- frame 4: TINGKAT 7 -->
+  <g transform="translate(800, 358)" filter="url(#kpiShadow)">
+    <rect width="220" height="180" rx="20" fill="white"/>
+    <text x="14" y="22" font-size="9" font-weight="800" fill="#94A3B8" letter-spacing="0.6">SLICE 4 · per tingkat</text>
+    <rect x="14" y="34" width="40" height="40" rx="13" fill="url(#emeraldGrad)"/>
+    <g transform="translate(24, 44)" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 11 L9 17 L18 5"/>
+    </g>
+    <text x="64" y="52" font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.4">KEHADIRAN</text>
+    <rect x="64" y="60" width="60" height="16" rx="8" fill="#DCFCE7"/>
+    <text x="94" y="71" text-anchor="middle" font-size="9.5" font-weight="800" fill="#15803D">TINGKAT 7</text>
+    <text x="14" y="120" font-weight="800" font-size="34" fill="#0F172A">93%</text>
+    <text x="14" y="138" font-size="11" fill="#64748B">377 / 405 siswa · 14 kelas</text>
+    <rect x="14" y="148" width="192" height="6" rx="3" fill="#F1F5F9"/>
+    <rect x="14" y="148" width="178" height="6" rx="3" fill="url(#emeraldGrad)"/>
+    <g transform="translate(14, 168)">
+      <circle r="3.5" cx="0" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="12" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="24" cy="0" fill="#CBD5E1"/>
+      <circle r="3.5" cx="36" cy="0" fill="#15803D"/>
+      <circle r="3.5" cx="48" cy="0" fill="#CBD5E1"/>
+    </g>
+  </g>
+
+  <!-- ╔════════════════════════════════════════════════════════════════╗ -->
+  <!-- ║  PANEL C — Anatomy + Behavior spec                             ║ -->
+  <!-- ╚════════════════════════════════════════════════════════════════╝ -->
+  <g transform="translate(80, 720)" filter="url(#cardShadow)">
+    <rect width="600" height="440" rx="20" fill="white" stroke="#E2E8F0"/>
+    <text x="20" y="36" font-weight="800" font-size="14" fill="#0F172A">Card anatomy</text>
+    <rect x="20" y="48" width="560" height="1" fill="#F1F5F9"/>
+
+    <!-- annotated card sketch -->
+    <g transform="translate(40, 76)">
+      <rect width="240" height="180" rx="18" fill="#F8FAFC" stroke="#CBD5E1" stroke-dasharray="3 3"/>
+      <rect x="14" y="14" width="32" height="32" rx="11" fill="url(#emeraldGrad)"/>
+      <rect x="54" y="20" width="60" height="10" rx="5" fill="#94A3B8" opacity="0.4"/>
+      <rect x="54" y="36" width="44" height="14" rx="7" fill="#DCFCE7"/>
+      <rect x="14" y="84" width="100" height="22" rx="3" fill="#0F172A" opacity="0.9"/>
+      <rect x="14" y="116" width="160" height="8" rx="2" fill="#94A3B8" opacity="0.4"/>
+      <rect x="14" y="138" width="200" height="6" rx="3" fill="#F1F5F9"/>
+      <rect x="14" y="138" width="180" height="6" rx="3" fill="url(#emeraldGrad)"/>
+      <g transform="translate(14, 162)">
+        <circle r="3.5" cx="0" cy="0" fill="#15803D"/>
+        <circle r="3.5" cx="12" cy="0" fill="#CBD5E1"/>
+        <circle r="3.5" cx="24" cy="0" fill="#CBD5E1"/>
+        <circle r="3.5" cx="36" cy="0" fill="#CBD5E1"/>
+      </g>
+    </g>
+
+    <!-- callout lines + labels -->
+    <g font-size="10.5" fill="#0F172A">
+      <!-- 1 — icon -->
+      <line x1="78" y1="106" x2="320" y2="106" stroke="#94A3B8" stroke-width="0.75"/>
+      <text x="328" y="110" font-weight="800">1. Metric icon</text>
+      <text x="328" y="124" fill="#64748B" font-size="10">Color matches the entity (kehadiran=emerald,</text>
+      <text x="328" y="138" fill="#64748B" font-size="10">nilai=violet, siswa=blue, RPP=amber).</text>
+
+      <!-- 2 — slice chip -->
+      <line x1="120" y1="124" x2="320" y2="170" stroke="#94A3B8" stroke-width="0.75"/>
+      <text x="328" y="170" font-weight="800">2. Active slice chip</text>
+      <text x="328" y="184" fill="#64748B" font-size="10">Tinted in the metric's color · "SEMUA" /</text>
+      <text x="328" y="198" fill="#64748B" font-size="10">"KELAS 7A" / "MATEMATIKA" / "TINGKAT 7".</text>
+
+      <!-- 3 — value -->
+      <line x1="100" y1="172" x2="320" y2="232" stroke="#94A3B8" stroke-width="0.75"/>
+      <text x="328" y="232" font-weight="800">3. Big value</text>
+      <text x="328" y="246" fill="#64748B" font-size="10">28pt weight 800 · slate-900. Same scale</text>
+      <text x="328" y="260" fill="#64748B" font-size="10">as parent's BrandKpiCarousel hero.</text>
+
+      <!-- 4 — caption -->
+      <line x1="180" y1="200" x2="320" y2="294" stroke="#94A3B8" stroke-width="0.75"/>
+      <text x="328" y="294" font-weight="800">4. Caption</text>
+      <text x="328" y="308" fill="#64748B" font-size="10">Per-slice context ("28 / 30 siswa", "5 mapel").</text>
+      <text x="328" y="322" fill="#64748B" font-size="10">Optional growth delta (+12 minggu ini).</text>
+
+      <!-- 5 — progress -->
+      <line x1="180" y1="222" x2="320" y2="356" stroke="#94A3B8" stroke-width="0.75"/>
+      <text x="328" y="356" font-weight="800">5. Progress bar</text>
+      <text x="328" y="370" fill="#64748B" font-size="10">Visual scale of the metric · gradient in the</text>
+      <text x="328" y="384" fill="#64748B" font-size="10">metric's color · grey track.</text>
+
+      <!-- 6 — dots -->
+      <line x1="76" y1="246" x2="320" y2="412" stroke="#94A3B8" stroke-width="0.75"/>
+      <text x="328" y="412" font-weight="800">6. Slice dots (1/N)</text>
+      <text x="328" y="426" fill="#64748B" font-size="10">Active dot in the metric's color, others slate.</text>
+    </g>
+  </g>
+
+  <!-- behavior spec on the right -->
+  <g transform="translate(700, 720)" filter="url(#cardShadow)">
+    <rect width="540" height="440" rx="20" fill="white" stroke="#E2E8F0"/>
+    <text x="20" y="36" font-weight="800" font-size="14" fill="#0F172A">Behavior spec</text>
+    <rect x="20" y="48" width="500" height="1" fill="#F1F5F9"/>
+
+    <g transform="translate(20, 70)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Layout</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">2-column grid · 12px gap · 170×140 each</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Vertical scroll for more KPI rows</text>
+      <text x="0" y="52" font-size="10.5" fill="#64748B">Replaces the 1-up + peek pattern</text>
+    </g>
+
+    <g transform="translate(20, 130)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Slice swipe</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Each card has its own PageView</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Horizontal swipe inside the card boundary</text>
+      <text x="0" y="52" font-size="10.5" fill="#64748B">Card A and Card B swipe independently</text>
+    </g>
+
+    <g transform="translate(20, 200)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Slice schema (per metric)</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Always: SEMUA (aggregate)</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">Then: dimension breakdown — config per metric</text>
+    </g>
+
+    <g transform="translate(20, 264)">
+      <rect width="6" height="6" rx="3" fill="#15803D"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Kehadiran</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">SEMUA → per Kelas (top 3) → per Tingkat (3)</text>
+    </g>
+    <g transform="translate(280, 264)">
+      <rect width="6" height="6" rx="3" fill="#6D28D9"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Nilai Rata-rata</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">SEMUA → per Mapel (top 5) → per Kelas</text>
+    </g>
+    <g transform="translate(20, 308)">
+      <rect width="6" height="6" rx="3" fill="#1E40AF"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Siswa</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">SEMUA → per Tingkat (3) — total + new + churn</text>
+    </g>
+    <g transform="translate(280, 308)">
+      <rect width="6" height="6" rx="3" fill="#B45309"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">RPP Menunggu</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">SEMUA → per Tingkat — count + oldest age</text>
+    </g>
+
+    <g transform="translate(20, 360)">
+      <rect width="6" height="6" rx="3" fill="#143068"/>
+      <text x="14" y="7" font-size="11" font-weight="800" fill="#0F172A">Tap target</text>
+      <text x="0" y="24" font-size="10.5" fill="#64748B">Tapping a card with an active sub-slice routes</text>
+      <text x="0" y="38" font-size="10.5" fill="#64748B">to that filter (e.g. Kelas 7A → Kehadiran 7A)</text>
+    </g>
+  </g>
+
+  <!-- footer -->
+  <g transform="translate(80, 1190)">
+    <rect width="1160" height="60" rx="14" fill="#FEF3C7"/>
+    <g transform="translate(20, 18)" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="11"/>
+      <path d="M12 7 V13 M12 16 V16.1"/>
+    </g>
+    <text x="60" y="28" font-size="11.5" font-weight="800" fill="#92400E">Backend impact</text>
+    <text x="60" y="46" font-size="10.5" fill="#92400E">/dashboard/full slice schema becomes a list of (key, label, value, caption, progress) per metric. ParentBrandKpiCarousel already eats this shape — admin reuses the same payload, just with admin slice keys.</text>
+  </g>
+</svg>

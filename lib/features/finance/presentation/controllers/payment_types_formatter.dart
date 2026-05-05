@@ -148,31 +148,76 @@ class PaymentTypesFormatter {
 
   /// Filters [paymentTypeList] by [searchTerm], [statusFilter], and
   /// [periodFilter]. Pure function — no side effects.
+  ///
+  /// Filter values are translated to backend tokens:
+  ///   * statusFilter: `'aktif'` → backend `'active'`,
+  ///                   `'non_aktif'` → backend `'inactive'`.
+  ///     Earlier revisions compared `'aktif'` directly to
+  ///     `item['status']`, but the backend stores `'active'` /
+  ///     `'inactive'` (English), so the comparison never matched and
+  ///     the chip filter silently emptied the list.
+  ///   * periodFilter: accepts both Indonesian (`'bulanan'`,
+  ///     `'tahunan'`, `'sekali bayar'`, `'semester'`) and the
+  ///     uppercase English variants seen in legacy backend rows
+  ///     (`'MONTHLY'`, `'YEARLY'`, etc.) — see
+  ///     `app/Console/Commands/GenerateBills.php` which checks both.
   List<dynamic> getFilteredPaymentTypes({
     required List<dynamic> paymentTypeList,
     required String searchTerm,
     String? statusFilter,
     String? periodFilter,
   }) {
+    String? expectedStatus;
+    if (statusFilter == 'aktif' || statusFilter == 'active') {
+      expectedStatus = 'active';
+    } else if (statusFilter == 'non_aktif' ||
+        statusFilter == 'non-aktif' ||
+        statusFilter == 'inactive') {
+      expectedStatus = 'inactive';
+    }
+
+    Set<String>? acceptedPeriods;
+    if (periodFilter != null) {
+      switch (periodFilter.toLowerCase()) {
+        case 'bulanan':
+        case 'monthly':
+          acceptedPeriods = {'bulanan', 'monthly'};
+          break;
+        case 'tahunan':
+        case 'yearly':
+          acceptedPeriods = {'tahunan', 'yearly'};
+          break;
+        case 'sekali bayar':
+        case 'sekali':
+        case 'once':
+          acceptedPeriods = {'sekali bayar', 'sekali', 'once'};
+          break;
+        case 'semester':
+          acceptedPeriods = {'semester'};
+          break;
+        default:
+          acceptedPeriods = {periodFilter.toLowerCase()};
+      }
+    }
+
+    final lowerSearch = searchTerm.toLowerCase();
+
     return paymentTypeList.where((item) {
       final name = item['name']?.toString().toLowerCase() ?? '';
       final description = item['description']?.toString().toLowerCase() ?? '';
-      final lower = searchTerm.toLowerCase();
 
       final matchesSearch =
           searchTerm.isEmpty ||
-          name.contains(lower) ||
-          description.contains(lower);
+          name.contains(lowerSearch) ||
+          description.contains(lowerSearch);
 
+      final itemStatus = item['status']?.toString().toLowerCase() ?? '';
       final matchesStatus =
-          statusFilter == null ||
-          (statusFilter == 'aktif' && item['status'] == 'aktif') ||
-          (statusFilter == 'non_aktif' && item['status'] == 'non-aktif');
+          expectedStatus == null || itemStatus == expectedStatus;
 
+      final itemPeriod = item['periode']?.toString().toLowerCase() ?? '';
       final matchesPeriod =
-          periodFilter == null ||
-          (periodFilter == 'bulanan' && item['periode'] == 'bulanan') ||
-          (periodFilter == 'tahunan' && item['periode'] == 'tahunan');
+          acceptedPeriods == null || acceptedPeriods.contains(itemPeriod);
 
       return matchesSearch && matchesStatus && matchesPeriod;
     }).toList();

@@ -127,18 +127,14 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Icon(
-              isManualPending
-                  ? Icons.access_time_rounded
-                  : Icons.check_rounded,
+              isManualPending ? Icons.access_time_rounded : Icons.check_rounded,
               color: iconColor,
               size: 48,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            isManualPending
-                ? 'Menunggu Verifikasi'
-                : 'Pembayaran Berhasil',
+            isManualPending ? 'Menunggu Verifikasi' : 'Pembayaran Berhasil',
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -267,10 +263,8 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
           child: _SecondaryButton(
             icon: Icons.download_rounded,
             label: 'Unduh PDF',
-            onTap: () => SnackBarUtils.showInfo(
-              context,
-              'Fitur unduh PDF segera hadir',
-            ),
+            onTap: () =>
+                SnackBarUtils.showInfo(context, 'Fitur unduh PDF segera hadir'),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -454,8 +448,18 @@ String _formatRupiah(double amount) {
 String _formatTodayShort() {
   final n = DateTime.now();
   final months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
   ];
   return '${n.day} ${months[n.month - 1]} ${n.year}';
 }

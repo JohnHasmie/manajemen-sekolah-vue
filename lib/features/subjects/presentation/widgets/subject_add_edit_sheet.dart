@@ -191,27 +191,39 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet>
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.92,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              buildHeader(
-                context,
-                isEditing ? 'edit' : 'add',
-                isEditing ? 'edit' : 'add',
-                isEditing,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: Material(
+            color: Colors.white,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  buildHeader(
+                    context,
+                    isEditing ? 'edit' : 'add',
+                    isEditing ? 'edit' : 'add',
+                    isEditing,
+                  ),
+                  Flexible(child: buildFormBody(context)),
+                  buildFooterButtons(context),
+                ],
               ),
-              buildFormBody(context),
-              buildFooterButtons(context),
-            ],
+            ),
           ),
         ),
       ),

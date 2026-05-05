@@ -14,12 +14,12 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
-import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_report_screen.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_dashboard_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/admin_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_overview_screen.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_rpp_review_hub_screen.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_raport_hub_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/admin_schedule_management_screen.dart';
 import 'package:manajemensekolah/features/subjects/presentation/screens/admin_subject_management_screen.dart';
 
@@ -78,7 +78,7 @@ class AdminAcademicHub extends StatelessWidget {
                   primaryColor: accent,
                   onTap: () => AppNavigator.push(
                     context,
-                    const AdminLessonPlanScreen(),
+                    const AdminRppReviewHubScreen(),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -88,7 +88,7 @@ class AdminAcademicHub extends StatelessWidget {
                   primaryColor: accent,
                   onTap: () => AppNavigator.push(
                     context,
-                    const AdminReportCardScreen(),
+                    const AdminRaportHubScreen(),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -118,7 +118,7 @@ class AdminAcademicHub extends StatelessWidget {
                   primaryColor: accent,
                   onTap: () => AppNavigator.push(
                     context,
-                    const AdminAttendanceReportScreen(),
+                    const AdminAttendanceDashboardScreen(),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xxl),

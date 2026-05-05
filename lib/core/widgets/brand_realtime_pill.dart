@@ -87,61 +87,25 @@ class _PulsingDot extends StatefulWidget {
   State<_PulsingDot> createState() => _PulsingDotState();
 }
 
-class _PulsingDotState extends State<_PulsingDot>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-    if (widget.animate) _controller.repeat(reverse: true);
-  }
-
-  @override
-  void didUpdateWidget(covariant _PulsingDot oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.animate && !_controller.isAnimating) {
-      _controller.repeat(reverse: true);
-    } else if (!widget.animate && _controller.isAnimating) {
-      _controller.stop();
-      _controller.value = 1;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+class _PulsingDotState extends State<_PulsingDot> {
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        final alpha = widget.animate ? (0.55 + 0.45 * _controller.value) : 1.0;
-        return Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: widget.color.withValues(alpha: alpha),
-            shape: BoxShape.circle,
-            boxShadow: widget.animate
-                ? [
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: widget.color,
+        shape: BoxShape.circle,
+        boxShadow: widget.animate
+            ? [
                     BoxShadow(
                       color: widget.color.withValues(alpha: 0.4),
                       blurRadius: 6,
                       spreadRadius: 1,
                     ),
-                  ]
-                : null,
-          ),
-        );
-      },
+              ]
+            : null,
+      ),
     );
   }
 }

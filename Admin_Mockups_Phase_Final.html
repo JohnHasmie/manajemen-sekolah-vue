@@ -1,0 +1,1366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Admin Mockups · Final Phase (08–16)</title>
+<style>
+  :root{
+    --navy:#143068; --navy2:#1F4A8F;
+    --bg:#F8FAFC; --card:#FFFFFF;
+    --slate900:#0F172A; --slate700:#334155; --slate500:#64748B;
+    --slate300:#CBD5E1; --slate200:#E2E8F0; --slate100:#F1F5F9;
+    --accent:#1F4A8F; --good:#10B981; --warn:#F59E0B; --bad:#DC2626;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--slate900);font:14px/1.5 Inter,-apple-system,system-ui,sans-serif}
+  header.top{
+    position:sticky;top:0;z-index:50;background:rgba(248,250,252,.92);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--slate200);
+    padding:12px 24px;
+  }
+  header.top h1{margin:0;font-size:16px;font-weight:800;color:var(--slate900)}
+  header.top p{margin:2px 0 0;font-size:12px;color:var(--slate500)}
+  nav.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+  nav.tabs a{
+    text-decoration:none;font-size:11.5px;font-weight:700;color:var(--slate500);
+    padding:6px 10px;border-radius:8px;border:1px solid var(--slate200);
+    background:#fff;transition:.15s;
+  }
+  nav.tabs a:hover{color:var(--navy);border-color:var(--navy);background:#EEF2FF}
+  main{max-width:1360px;margin:0 auto;padding:24px}
+  section.screen{
+    background:#fff;border:1px solid var(--slate200);border-radius:20px;
+    padding:24px;margin-bottom:32px;
+    box-shadow:0 6px 20px rgba(15,23,42,.04);
+  }
+  section.screen h2{
+    margin:0;font-size:20px;font-weight:800;color:var(--slate900);
+    display:flex;align-items:baseline;gap:10px;
+  }
+  section.screen h2 .num{
+    font-size:11px;font-weight:800;color:var(--navy);
+    background:#EEF2FF;padding:3px 8px;border-radius:6px;letter-spacing:.4px;
+  }
+  section.screen h2 .tag{
+    font-size:10.5px;font-weight:700;color:var(--slate500);
+    background:var(--slate100);padding:3px 8px;border-radius:6px;letter-spacing:.4px;
+  }
+  section.screen p.lede{margin:6px 0 16px;color:var(--slate500);font-size:13px;max-width:920px}
+  .frames{display:flex;gap:24px;flex-wrap:wrap;margin-top:8px}
+  .frame{flex:0 0 auto}
+  .frame .cap{
+    font-size:11px;font-weight:700;color:var(--slate500);letter-spacing:.5px;
+    margin:0 0 8px;text-transform:uppercase;
+  }
+  .grid-spec{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:12px;margin-top:18px;
+  }
+  .spec-card{
+    background:var(--slate100);border-radius:12px;padding:12px 14px;
+    border:1px solid var(--slate200);
+  }
+  .spec-card h4{margin:0 0 4px;font-size:12px;font-weight:800;color:var(--slate900)}
+  .spec-card p{margin:0;font-size:11.5px;color:var(--slate700);line-height:1.45}
+  .spec-card code{font-size:10.5px;background:#fff;padding:1px 5px;border-radius:4px;color:var(--navy)}
+  .pill-new{
+    display:inline-block;font-size:10px;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,var(--navy),var(--navy2));
+    padding:3px 8px;border-radius:6px;letter-spacing:.4px;margin-left:8px;
+  }
+  footer.bot{
+    text-align:center;padding:32px 16px;color:var(--slate500);font-size:12px;
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Admin Mockups · Final Phase (Screens 08–16)</h1>
+  <p>Push-the-system pass · introduces 5 new shared patterns where the existing v3 vocabulary doesn't fit the data shape</p>
+  <nav class="tabs">
+    <a href="#m08">08 · Raport</a>
+    <a href="#m09">09 · RPP</a>
+    <a href="#m10">10 · Pengumuman</a>
+    <a href="#m11">11 · Kehadiran Report</a>
+    <a href="#m12">12 · Kehadiran Detail</a>
+    <a href="#m13">13 · Keuangan Hub</a>
+    <a href="#m14">14 · Sistem Settings</a>
+    <a href="#m15">15 · Profil Admin</a>
+    <a href="#m16">16 · Shared Dialogs</a>
+  </nav>
+</header>
+<main>
+<!-- SCREENS WILL BE INJECTED BELOW -->
+<section class="screen" id="m08">
+  <h2><span class="num">08</span> Raport admin <span class="tag">PUBLICATION PIPELINE</span><span class="pill-new">NEW · Status Pipeline header</span></h2>
+  <p class="lede">Rapor moves through 4 lifecycle states (Draft → Diperiksa → Diterbitkan → Dibagikan). The new <code>StatusPipelineStrip</code> in the hero replaces a generic counter and lets admins jump straight into a stuck state. Per-tingkat group cards then drill into per-kelas raport readiness, with a sticky bulk-publish bar when ≥1 kelas is selected.</p>
+  <div class="frames">
+    <div class="frame">
+      <p class="cap">A · Default · Tingkat collapsed</p>
+      <svg viewBox="0 0 380 820" width="380" height="820" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navy08" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient>
+          <filter id="sh08" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter>
+        </defs>
+        <rect width="380" height="820" rx="24" fill="white" stroke="#E2E8F0"/>
+        <!-- HERO -->
+        <path d="M0 0 H380 V300 Q380 320 360 320 H20 Q0 320 0 300 Z" fill="url(#navy08)"/>
+        <!-- top row -->
+        <g transform="translate(16,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M20 12 L13 18 L20 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></g>
+        <g transform="translate(284,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M11 13 H25 M14 19 H22 M16 25 H20" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" transform="translate(0,0)"/></g>
+        <g transform="translate(326,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><circle cx="18" cy="12" r="2" fill="white"/><circle cx="18" cy="18" r="2" fill="white"/><circle cx="18" cy="24" r="2" fill="white"/></g>
+        <!-- title -->
+        <text x="20" y="78" font-size="11" font-weight="500" fill="rgba(255,255,255,.85)">Akademik · Penilaian</text>
+        <text x="20" y="108" font-size="22" font-weight="800" fill="white">Raport</text>
+        <!-- pill -->
+        <g transform="translate(20,124)"><rect width="158" height="22" rx="11" fill="rgba(255,255,255,.18)"/><text x="79" y="15" text-anchor="middle" font-size="10" font-weight="700" fill="white">Periode 2025/2026 · Ganjil</text></g>
+        <!-- STATUS PIPELINE STRIP (new pattern) -->
+        <g transform="translate(16,158)">
+          <text x="0" y="-2" font-size="9.5" font-weight="700" fill="rgba(255,255,255,.7)" letter-spacing="0.5">PIPELINE STATUS</text>
+          <!-- 4 nodes -->
+          <g transform="translate(0,8)">
+            <!-- Draft -->
+            <g><circle cx="14" cy="14" r="14" fill="rgba(255,255,255,.22)"/><text x="14" y="18" text-anchor="middle" font-size="11" font-weight="800" fill="white">42</text><text x="14" y="44" text-anchor="middle" font-size="9" font-weight="700" fill="white">Draft</text></g>
+            <line x1="28" y1="14" x2="74" y2="14" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+            <!-- Reviewed (active) -->
+            <g><circle cx="88" cy="14" r="16" fill="white" stroke="white" stroke-width="2"/><text x="88" y="19" text-anchor="middle" font-size="13" font-weight="800" fill="#143068">128</text><text x="88" y="46" text-anchor="middle" font-size="9.5" font-weight="800" fill="white">Diperiksa</text></g>
+            <line x1="104" y1="14" x2="160" y2="14" stroke="rgba(255,255,255,.18)" stroke-dasharray="3 3" stroke-width="2"/>
+            <!-- Published -->
+            <g><circle cx="174" cy="14" r="14" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/><text x="174" y="18" text-anchor="middle" font-size="11" font-weight="800" fill="white">67</text><text x="174" y="44" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(255,255,255,.85)">Terbit</text></g>
+            <line x1="188" y1="14" x2="244" y2="14" stroke="rgba(255,255,255,.18)" stroke-dasharray="3 3" stroke-width="2"/>
+            <!-- Distributed -->
+            <g><circle cx="258" cy="14" r="14" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/><text x="258" y="18" text-anchor="middle" font-size="11" font-weight="800" fill="white">11</text><text x="258" y="44" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(255,255,255,.85)">Dibagikan</text></g>
+            <!-- export pill -->
+            <g transform="translate(296,2)"><rect width="48" height="24" rx="10" fill="white"/><text x="24" y="16" text-anchor="middle" font-size="10" font-weight="800" fill="#143068">Cetak</text></g>
+          </g>
+        </g>
+        <!-- search bar -->
+        <g transform="translate(16,272)" filter="url(#sh08)"><rect width="348" height="40" rx="12" fill="white"/><circle cx="22" cy="20" r="6" fill="none" stroke="#94A3B8" stroke-width="2"/><path d="M27 25 L31 29" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/><text x="40" y="24" font-size="11" fill="#94A3B8">Cari kelas atau wali kelas…</text></g>
+        <!-- SECTION header -->
+        <text x="20" y="346" font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.6">PER TINGKAT · 12 KELAS</text>
+        <!-- Tingkat 7 (expanded) -->
+        <g transform="translate(16,358)" filter="url(#sh08)">
+          <rect width="348" height="118" rx="14" fill="white"/>
+          <text x="14" y="22" font-size="13" font-weight="800" fill="#0F172A">Tingkat 7</text>
+          <text x="14" y="38" font-size="10.5" fill="#64748B">4 kelas · 124 siswa · 88% diperiksa</text>
+          <!-- bar -->
+          <g transform="translate(14,48)">
+            <rect width="320" height="6" rx="3" fill="#E2E8F0"/>
+            <rect width="282" height="6" rx="3" fill="#10B981"/>
+          </g>
+          <!-- mini chips -->
+          <g transform="translate(14,66)">
+            <g><rect width="68" height="36" rx="10" fill="#F1F5F9"/><text x="8" y="14" font-size="9" font-weight="700" fill="#64748B">7A</text><text x="8" y="29" font-size="11" font-weight="800" fill="#0F172A">Terbit</text></g>
+            <g transform="translate(76,0)"><rect width="68" height="36" rx="10" fill="#FFFBEB"/><text x="8" y="14" font-size="9" font-weight="700" fill="#92400E">7B</text><text x="8" y="29" font-size="11" font-weight="800" fill="#92400E">Diperiksa</text></g>
+            <g transform="translate(152,0)"><rect width="68" height="36" rx="10" fill="#F1F5F9"/><text x="8" y="14" font-size="9" font-weight="700" fill="#64748B">7C</text><text x="8" y="29" font-size="11" font-weight="800" fill="#0F172A">Terbit</text></g>
+            <g transform="translate(228,0)"><rect width="68" height="36" rx="10" fill="#FEF2F2"/><text x="8" y="14" font-size="9" font-weight="700" fill="#991B1B">7D</text><text x="8" y="29" font-size="11" font-weight="800" fill="#991B1B">Draft</text></g>
+          </g>
+        </g>
+        <!-- Tingkat 8 (collapsed) -->
+        <g transform="translate(16,486)" filter="url(#sh08)">
+          <rect width="348" height="68" rx="14" fill="white"/>
+          <text x="14" y="22" font-size="13" font-weight="800" fill="#0F172A">Tingkat 8</text>
+          <text x="14" y="38" font-size="10.5" fill="#64748B">4 kelas · 132 siswa · 65% diperiksa</text>
+          <g transform="translate(14,48)"><rect width="320" height="6" rx="3" fill="#E2E8F0"/><rect width="208" height="6" rx="3" fill="#F59E0B"/></g>
+          <g transform="translate(316,28)"><path d="M0 0 L6 4 L0 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></g>
+        </g>
+        <!-- Tingkat 9 (collapsed, alert) -->
+        <g transform="translate(16,564)" filter="url(#sh08)">
+          <rect width="348" height="68" rx="14" fill="white" stroke="#FEE2E2" stroke-width="1.5"/>
+          <circle cx="14" cy="14" r="3" fill="#DC2626" transform="translate(330,18)"/>
+          <text x="14" y="22" font-size="13" font-weight="800" fill="#0F172A">Tingkat 9</text>
+          <text x="14" y="38" font-size="10.5" fill="#DC2626">4 kelas · 28% diperiksa · butuh perhatian</text>
+          <g transform="translate(14,48)"><rect width="320" height="6" rx="3" fill="#E2E8F0"/><rect width="90" height="6" rx="3" fill="#DC2626"/></g>
+        </g>
+        <!-- BULK BAR (peek) -->
+        <g transform="translate(16,650)" filter="url(#sh08)">
+          <rect width="348" height="56" rx="16" fill="#143068"/>
+          <text x="16" y="22" font-size="11" font-weight="800" fill="white">3 kelas dipilih</text>
+          <text x="16" y="40" font-size="10" fill="rgba(255,255,255,.7)">Tingkat 7 · 7A, 7B, 7C</text>
+          <g transform="translate(220,12)"><rect width="56" height="32" rx="10" fill="rgba(255,255,255,.16)"/><text x="28" y="21" text-anchor="middle" font-size="11" font-weight="800" fill="white">Cetak</text></g>
+          <g transform="translate(282,12)"><rect width="56" height="32" rx="10" fill="white"/><text x="28" y="21" text-anchor="middle" font-size="11" font-weight="800" fill="#143068">Terbit</text></g>
+        </g>
+        <!-- bottom nav -->
+        <g transform="translate(0,758)"><rect width="380" height="62" fill="white"/><line x1="0" y1="0" x2="380" y2="0" stroke="#E2E8F0"/></g>
+      </svg>
+    </div>
+    <div class="frame">
+      <p class="cap">B · Bulk publish confirm sheet</p>
+      <svg viewBox="0 0 380 820" width="380" height="820" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="navy08b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient></defs>
+        <rect width="380" height="820" rx="24" fill="#0F172A" opacity="0.45"/>
+        <rect width="380" height="820" rx="24" fill="white" stroke="#E2E8F0"/>
+        <!-- backdrop -->
+        <rect width="380" height="820" fill="rgba(15,23,42,.55)"/>
+        <!-- sheet -->
+        <g transform="translate(0,200)">
+          <path d="M0 24 Q0 0 24 0 H356 Q380 0 380 24 V620 H0 Z" fill="white"/>
+          <rect x="170" y="10" width="40" height="4" rx="2" fill="#CBD5E1"/>
+          <!-- Hero band (pipeline focus) -->
+          <path d="M0 24 Q0 0 24 0 H356 Q380 0 380 24 V160 H0 Z" fill="url(#navy08b)"/>
+          <text x="24" y="56" font-size="11" font-weight="700" fill="rgba(255,255,255,.7)">TERBITKAN RAPOR</text>
+          <text x="24" y="84" font-size="22" font-weight="800" fill="white">3 kelas siap terbit</text>
+          <text x="24" y="106" font-size="12" font-weight="500" fill="rgba(255,255,255,.85)">Tingkat 7 · 7A, 7B, 7C · 86 siswa</text>
+          <!-- Mini pipeline preview -->
+          <g transform="translate(24,124)">
+            <rect width="332" height="28" rx="14" fill="rgba(255,255,255,.18)"/>
+            <text x="14" y="18" font-size="10" font-weight="700" fill="rgba(255,255,255,.85)">Diperiksa</text>
+            <text x="80" y="18" font-size="10" font-weight="800" fill="white">→ Terbit</text>
+            <g transform="translate(232,4)"><rect width="92" height="20" rx="10" fill="white"/><text x="46" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#143068">Notifikasi wali</text></g>
+          </g>
+          <!-- body -->
+          <g transform="translate(24,184)">
+            <text x="0" y="0" font-size="11" font-weight="800" fill="#64748B" letter-spacing="0.5">DAMPAK</text>
+            <g transform="translate(0,14)">
+              <g><rect width="332" height="56" rx="12" fill="#F1F5F9"/><text x="14" y="22" font-size="11.5" font-weight="800" fill="#0F172A">Notifikasi otomatis</text><text x="14" y="40" font-size="10.5" fill="#64748B">86 wali murid akan menerima push</text></g>
+              <g transform="translate(0,68)"><rect width="332" height="56" rx="12" fill="#F1F5F9"/><text x="14" y="22" font-size="11.5" font-weight="800" fill="#0F172A">Akses parent role</text><text x="14" y="40" font-size="10.5" fill="#64748B">Rapor lengkap + ringkasan terbuka</text></g>
+              <g transform="translate(0,136)"><rect width="332" height="56" rx="12" fill="#FFFBEB"/><text x="14" y="22" font-size="11.5" font-weight="800" fill="#92400E">Tindakan tidak dapat dibatalkan</text><text x="14" y="40" font-size="10.5" fill="#92400E">Ubah ke Diperiksa harus manual per kelas</text></g>
+            </g>
+            <!-- toggle -->
+            <g transform="translate(0,360)">
+              <rect width="332" height="44" rx="12" fill="white" stroke="#E2E8F0"/>
+              <text x="14" y="22" font-size="11.5" font-weight="800" fill="#0F172A">Kirim notifikasi push</text>
+              <text x="14" y="36" font-size="10" fill="#64748B">Wali murid akan menerima alert</text>
+              <g transform="translate(280,10)"><rect width="44" height="24" rx="12" fill="#143068"/><circle cx="32" cy="12" r="9" fill="white"/></g>
+            </g>
+          </g>
+          <!-- footer -->
+          <g transform="translate(24,556)">
+            <g><rect width="124" height="44" rx="12" fill="white" stroke="#CBD5E1"/><text x="62" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="#334155">Batal</text></g>
+            <g transform="translate(132,0)"><rect width="200" height="44" rx="12" fill="#143068"/><text x="100" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="white">Terbitkan 3 kelas</text></g>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="grid-spec">
+    <div class="spec-card"><h4>StatusPipelineStrip <span style="color:var(--navy)">[NEW]</span></h4><p>4 circular nodes connected by lines; active node enlarges to 32px and inverts to white-fill / navy-text. Tap a node → filter list to that state. Lives inside <code>BrandPageHeader</code>.</p></div>
+    <div class="spec-card"><h4>TingkatGroupCard</h4><p>Collapsible. Header shows %-checked progress bar. Expanded view exposes per-kelas mini-chips with state color (slate / amber / red). Long-press any kelas chip → bulk select.</p></div>
+    <div class="spec-card"><h4>BulkActionBar (variant)</h4><p>Reuses existing <code>BulkActionBar</code> with two primary slots: outline "Cetak" (PDF batch) + filled "Terbit" → opens confirm sheet B.</p></div>
+    <div class="spec-card"><h4>Confirm sheet B</h4><p>Hero band itself, not a dialog. Pipeline preview row → impact list (slate cards + amber irreversible warning) → notification toggle → footer.</p></div>
+    <div class="spec-card"><h4>Empty / partial states</h4><p>Tingkat with 0% checked shows red border + "Butuh perhatian" copy and a micro CTA "Lihat sub-status".</p></div>
+    <div class="spec-card"><h4>Edge: cross-semester</h4><p>Period chip in hero is the single source of truth — switching period reloads the entire pipeline + tingkat list.</p></div>
+  </div>
+</section>
+<section class="screen" id="m09">
+  <h2><span class="num">09</span> RPP admin overview <span class="tag">REVIEW QUEUE</span><span class="pill-new">NEW · ReviewQueueColumn</span></h2>
+  <p class="lede">Admins live in the rejection/approval loop. The new <code>ReviewQueueColumn</code> turns the screen into a single Kanban-like vertical with three urgency tiers (Perlu review · Sudah disetujui · Ditolak) — counts in the hero, swipeable card actions for one-tap status flip, and an inline AI-regen sheet when the rejection reason is "minta perbaiki".</p>
+  <div class="frames">
+    <div class="frame">
+      <p class="cap">A · Default · Perlu review tier expanded</p>
+      <svg viewBox="0 0 380 820" width="380" height="820" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navy09" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient>
+          <filter id="sh09" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter>
+        </defs>
+        <rect width="380" height="820" rx="24" fill="white" stroke="#E2E8F0"/>
+        <path d="M0 0 H380 V260 Q380 280 360 280 H20 Q0 280 0 260 Z" fill="url(#navy09)"/>
+        <!-- back -->
+        <g transform="translate(16,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M20 12 L13 18 L20 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></g>
+        <!-- title -->
+        <text x="20" y="78" font-size="11" font-weight="500" fill="rgba(255,255,255,.85)">Akademik · Pembelajaran</text>
+        <text x="20" y="108" font-size="22" font-weight="800" fill="white">RPP</text>
+        <!-- queue counts (3 tiles) -->
+        <g transform="translate(16,134)">
+          <g><rect width="106" height="76" rx="14" fill="rgba(255,255,255,.18)"/><text x="14" y="22" font-size="10" font-weight="700" fill="rgba(255,255,255,.7)">PERLU REVIEW</text><text x="14" y="48" font-size="26" font-weight="800" fill="white">14</text><text x="14" y="64" font-size="10" font-weight="600" fill="#FBBF24">+3 hari ini</text></g>
+          <g transform="translate(118,0)"><rect width="106" height="76" rx="14" fill="rgba(255,255,255,.10)"/><text x="14" y="22" font-size="10" font-weight="700" fill="rgba(255,255,255,.7)">DISETUJUI</text><text x="14" y="48" font-size="26" font-weight="800" fill="white">186</text><text x="14" y="64" font-size="10" font-weight="600" fill="#86EFAC">minggu ini</text></g>
+          <g transform="translate(236,0)"><rect width="116" height="76" rx="14" fill="rgba(255,255,255,.10)"/><text x="14" y="22" font-size="10" font-weight="700" fill="rgba(255,255,255,.7)">DITOLAK</text><text x="14" y="48" font-size="26" font-weight="800" fill="white">7</text><text x="14" y="64" font-size="10" font-weight="600" fill="#FCA5A5">menunggu regen</text></g>
+        </g>
+        <!-- search -->
+        <g transform="translate(16,232)" filter="url(#sh09)"><rect width="348" height="40" rx="12" fill="white"/><circle cx="22" cy="20" r="6" fill="none" stroke="#94A3B8" stroke-width="2"/><path d="M27 25 L31 29" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/><text x="40" y="24" font-size="11" fill="#94A3B8">Cari guru, mapel, atau bab…</text></g>
+        <!-- TIER HEADER -->
+        <g transform="translate(20,308)"><circle cx="4" cy="-3" r="4" fill="#F59E0B"/><text x="14" y="0" font-size="11" font-weight="800" fill="#0F172A">Perlu review</text><text x="86" y="0" font-size="10.5" fill="#64748B">14</text></g>
+        <!-- card 1 (swipeable) -->
+        <g transform="translate(16,322)" filter="url(#sh09)">
+          <rect width="348" height="92" rx="14" fill="white"/>
+          <!-- swipe affordance left tab -->
+          <rect width="4" height="92" rx="2" fill="#F59E0B"/>
+          <g transform="translate(14,14)">
+            <text font-size="10.5" font-weight="700" fill="#64748B">Bahasa Arab · Kelas 8B</text>
+            <text y="20" font-size="13" font-weight="800" fill="#0F172A">Bab 3 · Hiwar tentang sekolah</text>
+            <g transform="translate(0,30)">
+              <rect width="62" height="20" rx="6" fill="#FFFBEB"/>
+              <text x="31" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#92400E">Submitted</text>
+              <text x="72" y="14" font-size="10.5" fill="#64748B">2 jam lalu</text>
+            </g>
+            <text y="68" font-size="10" fill="#94A3B8">Yahya Hasymi · 14 sub-bab · 1,287 kata</text>
+          </g>
+          <!-- right action chip (swipe peek) -->
+          <g transform="translate(296,30)"><rect width="40" height="32" rx="10" fill="#10B981"/><path d="M14 16 L19 21 L26 12" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+        </g>
+        <!-- card 2 -->
+        <g transform="translate(16,422)" filter="url(#sh09)">
+          <rect width="348" height="92" rx="14" fill="white"/>
+          <rect width="4" height="92" rx="2" fill="#F59E0B"/>
+          <g transform="translate(14,14)">
+            <text font-size="10.5" font-weight="700" fill="#64748B">Matematika · Kelas 7A</text>
+            <text y="20" font-size="13" font-weight="800" fill="#0F172A">Bab 2 · Bilangan Bulat</text>
+            <g transform="translate(0,30)">
+              <rect width="62" height="20" rx="6" fill="#FFFBEB"/><text x="31" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#92400E">Submitted</text>
+              <rect x="68" width="46" height="20" rx="6" fill="#EEF2FF"/><text x="91" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#143068">AI v2</text>
+              <text x="118" y="14" font-size="10.5" fill="#64748B">5 jam lalu</text>
+            </g>
+            <text y="68" font-size="10" fill="#94A3B8">Bu Sari · 8 sub-bab · 956 kata</text>
+          </g>
+          <g transform="translate(296,30)"><rect width="40" height="32" rx="10" fill="#10B981"/><path d="M14 16 L19 21 L26 12" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+        </g>
+        <!-- TIER 2 HEADER -->
+        <g transform="translate(20,532)"><circle cx="4" cy="-3" r="4" fill="#DC2626"/><text x="14" y="0" font-size="11" font-weight="800" fill="#0F172A">Ditolak — menunggu regen</text><text x="186" y="0" font-size="10.5" fill="#64748B">7</text></g>
+        <!-- card 3 (rejected, regen CTA) -->
+        <g transform="translate(16,546)" filter="url(#sh09)">
+          <rect width="348" height="92" rx="14" fill="white" stroke="#FEE2E2" stroke-width="1.5"/>
+          <rect width="4" height="92" rx="2" fill="#DC2626"/>
+          <g transform="translate(14,14)">
+            <text font-size="10.5" font-weight="700" fill="#64748B">IPA · Kelas 9C</text>
+            <text y="20" font-size="13" font-weight="800" fill="#0F172A">Bab 1 · Sistem Reproduksi</text>
+            <g transform="translate(0,30)">
+              <rect width="56" height="20" rx="6" fill="#FEF2F2"/><text x="28" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#991B1B">Ditolak</text>
+              <text x="62" y="14" font-size="10" fill="#991B1B">"Bab 1 belum mencakup IPK 3.2"</text>
+            </g>
+            <g transform="translate(0,58)"><rect width="124" height="22" rx="8" fill="#143068"/><text x="62" y="15" text-anchor="middle" font-size="10" font-weight="800" fill="white">⟳ Regen via AI</text></g>
+            <g transform="translate(132,58)"><rect width="80" height="22" rx="8" fill="white" stroke="#CBD5E1"/><text x="40" y="15" text-anchor="middle" font-size="10" font-weight="800" fill="#334155">Edit manual</text></g>
+          </g>
+        </g>
+        <!-- TIER 3 partial -->
+        <g transform="translate(20,658)"><circle cx="4" cy="-3" r="4" fill="#10B981"/><text x="14" y="0" font-size="11" font-weight="800" fill="#0F172A">Disetujui</text><text x="80" y="0" font-size="10.5" fill="#64748B">186 minggu ini · lihat semua →</text></g>
+        <!-- card 4 (collapsed approved) -->
+        <g transform="translate(16,672)" filter="url(#sh09)">
+          <rect width="348" height="56" rx="14" fill="white" opacity="0.85"/>
+          <rect width="4" height="56" rx="2" fill="#10B981"/>
+          <text x="14" y="22" font-size="12" font-weight="800" fill="#0F172A">PKn · Kelas 8A · Bab 4 Demokrasi</text>
+          <text x="14" y="40" font-size="10" fill="#64748B">Pak Adi · disetujui kemarin</text>
+        </g>
+        <!-- bottom nav -->
+        <g transform="translate(0,758)"><rect width="380" height="62" fill="white"/><line x1="0" y1="0" x2="380" y2="0" stroke="#E2E8F0"/></g>
+      </svg>
+    </div>
+    <div class="frame">
+      <p class="cap">B · Inline regen sheet (no full dialog)</p>
+      <svg viewBox="0 0 380 820" width="380" height="820" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="navy09b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient></defs>
+        <rect width="380" height="820" rx="24" fill="white" stroke="#E2E8F0"/>
+        <rect width="380" height="820" fill="rgba(15,23,42,.55)"/>
+        <g transform="translate(0,180)">
+          <path d="M0 24 Q0 0 24 0 H356 Q380 0 380 24 V640 H0 Z" fill="white"/>
+          <rect x="170" y="10" width="40" height="4" rx="2" fill="#CBD5E1"/>
+          <path d="M0 24 Q0 0 24 0 H356 Q380 0 380 24 V148 H0 Z" fill="url(#navy09b)"/>
+          <text x="24" y="56" font-size="11" font-weight="700" fill="rgba(255,255,255,.7)">REGEN VIA AI</text>
+          <text x="24" y="84" font-size="20" font-weight="800" fill="white">Bab 1 · Sistem Reproduksi</text>
+          <text x="24" y="106" font-size="11.5" fill="rgba(255,255,255,.85)">Bu Sari · IPA Kelas 9C · 1 percobaan tersisa</text>
+          <g transform="translate(24,124)"><rect width="332" height="22" rx="11" fill="rgba(220,38,38,.18)"/><text x="14" y="15" font-size="10" font-weight="800" fill="white">⚠  Catatan reject: belum mencakup IPK 3.2</text></g>
+          <!-- body -->
+          <g transform="translate(24,176)">
+            <text font-size="11" font-weight="800" fill="#64748B" letter-spacing="0.5">FOKUS REGEN</text>
+            <g transform="translate(0,14)">
+              <!-- chip group -->
+              <g><rect width="100" height="38" rx="12" fill="#143068"/><text x="50" y="24" text-anchor="middle" font-size="11" font-weight="800" fill="white">IPK 3.2</text></g>
+              <g transform="translate(108,0)"><rect width="100" height="38" rx="12" fill="white" stroke="#CBD5E1"/><text x="50" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Tujuan</text></g>
+              <g transform="translate(216,0)"><rect width="116" height="38" rx="12" fill="white" stroke="#CBD5E1"/><text x="58" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Asesmen</text></g>
+            </g>
+            <text y="80" font-size="11" font-weight="800" fill="#64748B" letter-spacing="0.5">CATATAN UNTUK AI</text>
+            <g transform="translate(0,94)">
+              <rect width="332" height="84" rx="12" fill="white" stroke="#E2E8F0"/>
+              <text x="14" y="22" font-size="11" fill="#0F172A">Tambahkan diagram organ reproduksi pria &amp; wanita,</text>
+              <text x="14" y="40" font-size="11" fill="#0F172A">serta link IPK 3.2 ke tujuan pembelajaran.</text>
+              <text x="14" y="74" font-size="9.5" fill="#94A3B8">128 / 500 karakter</text>
+            </g>
+            <!-- preview cost -->
+            <g transform="translate(0,196)">
+              <rect width="332" height="60" rx="12" fill="#F1F5F9"/>
+              <text x="14" y="22" font-size="11" font-weight="800" fill="#0F172A">Estimasi token</text>
+              <text x="14" y="38" font-size="10" fill="#64748B">~3,400 token · ~12 detik</text>
+              <text x="14" y="54" font-size="10" fill="#94A3B8">Anthropic claude-sonnet-4-6</text>
+            </g>
+          </g>
+          <!-- footer -->
+          <g transform="translate(24,532)">
+            <g><rect width="124" height="44" rx="12" fill="white" stroke="#CBD5E1"/><text x="62" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="#334155">Batal</text></g>
+            <g transform="translate(132,0)"><rect width="200" height="44" rx="12" fill="#143068"/><text x="100" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="white">⟳ Mulai regen</text></g>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="grid-spec">
+    <div class="spec-card"><h4>ReviewQueueColumn <span style="color:var(--navy)">[NEW]</span></h4><p>Sectioned vertical list with tier headers (color dot + label + count). Each tier collapses to its first 5 cards with an inline "lihat semua →".</p></div>
+    <div class="spec-card"><h4>SwipeableQueueCard <span style="color:var(--navy)">[NEW]</span></h4><p>Card with a 4px left edge in tier color. Right swipe reveals approve (green) / reject (red) action. Long-press → bulk select.</p></div>
+    <div class="spec-card"><h4>QueueCountTile</h4><p>Three tiles inside the hero: Perlu review (warn), Disetujui (good), Ditolak (bad). Sub-text shows weekly delta in tier-tinted accent.</p></div>
+    <div class="spec-card"><h4>RejectReasonBadge</h4><p>Inline italic quote of the rejection reason on the rejected card so admins don't have to drill in to remember why.</p></div>
+    <div class="spec-card"><h4>RegenSheet (B)</h4><p>Reuses <code>AppBottomSheet</code> + warning-tinted hero band. "Fokus regen" is a single-select chip group binding which IPK section AI should rewrite.</p></div>
+    <div class="spec-card"><h4>Edge: cooldown</h4><p>If the teacher already regen'd 2× this lesson plan, the primary CTA disables and shows "Tunggu 24 jam" with a countdown chip.</p></div>
+  </div>
+</section>
+<section class="screen" id="m10">
+  <h2><span class="num">10</span> Pengumuman admin <span class="tag">COMPOSE + LIST</span><span class="pill-new">NEW · AudienceMatrix</span></h2>
+  <p class="lede">Two surfaces. The list keeps the v3 admin shell but groups posts by lifecycle: Pinned · Terjadwal · Terkirim · Draft. The compose sheet introduces the <code>AudienceMatrix</code> — a grid picker (rows = role, columns = tingkat/kelas) so admins can broadcast to "Wali Kelas 7+8" or "Semua guru" in two taps without reaching for nested dropdowns.</p>
+  <div class="frames">
+    <div class="frame">
+      <p class="cap">A · List · grouped by lifecycle</p>
+      <svg viewBox="0 0 380 820" width="380" height="820" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navy10" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient>
+          <filter id="sh10" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter>
+        </defs>
+        <rect width="380" height="820" rx="24" fill="white" stroke="#E2E8F0"/>
+        <path d="M0 0 H380 V230 Q380 250 360 250 H20 Q0 250 0 230 Z" fill="url(#navy10)"/>
+        <g transform="translate(16,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M20 12 L13 18 L20 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></g>
+        <g transform="translate(284,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M11 13 H25 M14 19 H22 M16 25 H20" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/></g>
+        <g transform="translate(326,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><circle cx="18" cy="12" r="2" fill="white"/><circle cx="18" cy="18" r="2" fill="white"/><circle cx="18" cy="24" r="2" fill="white"/></g>
+        <text x="20" y="78" font-size="11" font-weight="500" fill="rgba(255,255,255,.85)">Komunikasi</text>
+        <text x="20" y="108" font-size="22" font-weight="800" fill="white">Pengumuman</text>
+        <!-- chips: lifecycle filter -->
+        <g transform="translate(16,138)">
+          <g><rect width="64" height="32" rx="11" fill="white"/><text x="32" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="#143068">Semua</text></g>
+          <g transform="translate(72,0)"><rect width="78" height="32" rx="11" fill="rgba(255,255,255,.18)"/><text x="39" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="white">📌 Disematkan</text></g>
+          <g transform="translate(158,0)"><rect width="80" height="32" rx="11" fill="rgba(255,255,255,.18)"/><text x="40" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="white">Terjadwal</text></g>
+          <g transform="translate(246,0)"><rect width="78" height="32" rx="11" fill="rgba(255,255,255,.18)"/><text x="39" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="white">Terkirim</text></g>
+        </g>
+        <!-- search -->
+        <g transform="translate(16,200)" filter="url(#sh10)"><rect width="348" height="40" rx="12" fill="white"/><circle cx="22" cy="20" r="6" fill="none" stroke="#94A3B8" stroke-width="2"/><path d="M27 25 L31 29" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/><text x="40" y="24" font-size="11" fill="#94A3B8">Cari judul atau audiens…</text></g>
+        <!-- PIN section -->
+        <g transform="translate(20,278)"><text font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.5">📌 DISEMATKAN · 1</text></g>
+        <g transform="translate(16,290)" filter="url(#sh10)">
+          <rect width="348" height="92" rx="14" fill="white" stroke="#FEF3C7" stroke-width="1.5"/>
+          <g transform="translate(14,14)">
+            <text font-size="13" font-weight="800" fill="#0F172A">Libur Maulid Nabi</text>
+            <text y="20" font-size="11" fill="#64748B">Sekolah libur Senin 22 September</text>
+            <g transform="translate(0,30)">
+              <g><rect width="58" height="20" rx="6" fill="#EEF2FF"/><text x="29" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#143068">Semua role</text></g>
+              <g transform="translate(64,0)"><rect width="62" height="20" rx="6" fill="#FFFBEB"/><text x="31" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#92400E">📌 7 hari</text></g>
+              <text x="132" y="14" font-size="10" fill="#94A3B8">1,408 dilihat · 92%</text>
+            </g>
+            <text y="68" font-size="10" fill="#94A3B8">Diposting Yahya · 3 hari lalu</text>
+          </g>
+        </g>
+        <!-- Scheduled section -->
+        <g transform="translate(20,402)"><text font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.5">TERJADWAL · 2</text></g>
+        <g transform="translate(16,414)" filter="url(#sh10)">
+          <rect width="348" height="76" rx="14" fill="white"/>
+          <g transform="translate(14,14)">
+            <text font-size="12.5" font-weight="800" fill="#0F172A">Pembagian Rapor Ganjil</text>
+            <text y="18" font-size="10.5" fill="#64748B">Sabtu, 13 Desember · 09:00 WIB</text>
+            <g transform="translate(0,30)">
+              <rect width="92" height="20" rx="6" fill="#EFF6FF"/><text x="46" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#1D4ED8">⏰ 6 hari lagi</text>
+              <rect x="98" width="64" height="20" rx="6" fill="#F1F5F9"/><text x="130" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#334155">Wali murid</text>
+            </g>
+          </g>
+        </g>
+        <!-- Sent section -->
+        <g transform="translate(20,510)"><text font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.5">TERKIRIM · 24</text></g>
+        <g transform="translate(16,522)" filter="url(#sh10)">
+          <rect width="348" height="76" rx="14" fill="white"/>
+          <g transform="translate(14,14)">
+            <text font-size="12.5" font-weight="800" fill="#0F172A">Briefing Guru Pekan ke-12</text>
+            <text y="18" font-size="10.5" fill="#64748B">Rapat dewan guru Jumat sore</text>
+            <g transform="translate(0,30)">
+              <rect width="60" height="20" rx="6" fill="#F0FDF4"/><text x="30" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#166534">Terkirim</text>
+              <text x="68" y="14" font-size="10" fill="#94A3B8">42 dari 48 dibaca · 88%</text>
+            </g>
+          </g>
+        </g>
+        <!-- Draft -->
+        <g transform="translate(16,612)" filter="url(#sh10)">
+          <rect width="348" height="56" rx="14" fill="#F8FAFC" stroke="#E2E8F0"/>
+          <g transform="translate(14,14)">
+            <text font-size="12" font-weight="700" fill="#94A3B8" font-style="italic">Draft · Persiapan PAS</text>
+            <text y="18" font-size="10" fill="#94A3B8">Tersimpan kemarin · belum dipublikasikan</text>
+          </g>
+        </g>
+        <!-- FAB -->
+        <g transform="translate(304,694)" filter="url(#sh10)"><circle cx="28" cy="28" r="28" fill="#143068"/><path d="M28 16 V40 M16 28 H40" stroke="white" stroke-width="2.5" stroke-linecap="round"/></g>
+        <g transform="translate(0,758)"><rect width="380" height="62" fill="white"/><line x1="0" y1="0" x2="380" y2="0" stroke="#E2E8F0"/></g>
+      </svg>
+    </div>
+    <div class="frame">
+      <p class="cap">B · Compose · AudienceMatrix open</p>
+      <svg viewBox="0 0 380 820" width="380" height="820" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="navy10b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient></defs>
+        <rect width="380" height="820" rx="24" fill="white" stroke="#E2E8F0"/>
+        <path d="M0 0 H380 V120 Q380 140 360 140 H20 Q0 140 0 120 Z" fill="url(#navy10b)"/>
+        <g transform="translate(16,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M14 14 L26 26 M26 14 L14 26" stroke="white" stroke-width="2.2" stroke-linecap="round"/></g>
+        <text x="20" y="78" font-size="11" font-weight="500" fill="rgba(255,255,255,.85)">TULIS BARU</text>
+        <text x="20" y="104" font-size="20" font-weight="800" fill="white">Pengumuman</text>
+        <!-- title input -->
+        <g transform="translate(16,160)">
+          <text font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.5">JUDUL</text>
+          <rect y="14" width="348" height="48" rx="12" fill="white" stroke="#143068" stroke-width="1.5"/>
+          <text x="14" y="44" font-size="13" font-weight="700" fill="#0F172A">Persiapan PAS Ganjil 2025</text>
+        </g>
+        <!-- AUDIENCE MATRIX -->
+        <g transform="translate(16,238)">
+          <text font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.5">AUDIENS · matriks</text>
+          <g transform="translate(0,16)" filter="url(#sh10)">
+            <rect width="348" height="190" rx="14" fill="white"/>
+            <!-- header row (tingkats) -->
+            <g transform="translate(70,14)">
+              <text x="20" y="12" text-anchor="middle" font-size="10" font-weight="800" fill="#64748B">Semua</text>
+              <text x="80" y="12" text-anchor="middle" font-size="10" font-weight="800" fill="#64748B">7</text>
+              <text x="130" y="12" text-anchor="middle" font-size="10" font-weight="800" fill="#64748B">8</text>
+              <text x="180" y="12" text-anchor="middle" font-size="10" font-weight="800" fill="#64748B">9</text>
+              <text x="240" y="12" text-anchor="middle" font-size="10" font-weight="800" fill="#64748B">Custom</text>
+            </g>
+            <line x1="14" y1="34" x2="334" y2="34" stroke="#E2E8F0"/>
+            <!-- row: Guru -->
+            <g transform="translate(14,46)">
+              <text x="0" y="14" font-size="11" font-weight="800" fill="#0F172A">Guru</text>
+              <!-- cells -->
+              <g transform="translate(60,0)"><rect width="40" height="22" rx="6" fill="#143068"/><path d="M14 12 L18 16 L26 8" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+              <g transform="translate(110,0)"><rect width="40" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+              <g transform="translate(160,0)"><rect width="40" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+              <g transform="translate(210,0)"><rect width="40" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+              <g transform="translate(260,0)"><rect width="60" height="22" rx="6" fill="white" stroke="#CBD5E1"/><text x="30" y="14" text-anchor="middle" font-size="9" fill="#94A3B8">…</text></g>
+            </g>
+            <!-- row: Wali kelas -->
+            <g transform="translate(14,80)">
+              <text x="0" y="14" font-size="11" font-weight="800" fill="#0F172A">Wali Kelas</text>
+              <g transform="translate(60,0)"><rect width="40" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+              <g transform="translate(110,0)"><rect width="40" height="22" rx="6" fill="#143068"/><path d="M14 12 L18 16 L26 8" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+              <g transform="translate(160,0)"><rect width="40" height="22" rx="6" fill="#143068"/><path d="M14 12 L18 16 L26 8" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+              <g transform="translate(210,0)"><rect width="40" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+              <g transform="translate(260,0)"><rect width="60" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+            </g>
+            <!-- row: Wali murid -->
+            <g transform="translate(14,114)">
+              <text x="0" y="14" font-size="11" font-weight="800" fill="#0F172A">Wali Murid</text>
+              <g transform="translate(60,0)"><rect width="40" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+              <g transform="translate(110,0)"><rect width="40" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+              <g transform="translate(160,0)"><rect width="40" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+              <g transform="translate(210,0)"><rect width="40" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+              <g transform="translate(260,0)"><rect width="60" height="22" rx="6" fill="white" stroke="#CBD5E1"/></g>
+            </g>
+            <!-- summary -->
+            <g transform="translate(14,148)">
+              <rect width="320" height="32" rx="10" fill="#EEF2FF"/>
+              <text x="14" y="20" font-size="11" font-weight="800" fill="#143068">Audiens · 48 guru + 8 wali kelas (7,8) = 56 orang</text>
+            </g>
+          </g>
+        </g>
+        <!-- schedule + pin chips -->
+        <g transform="translate(16,452)">
+          <text font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.5">PENJADWALAN</text>
+          <g transform="translate(0,14)" filter="url(#sh10)">
+            <rect width="348" height="56" rx="12" fill="white"/>
+            <text x="14" y="22" font-size="11.5" font-weight="800" fill="#0F172A">Kirim sekarang</text>
+            <text x="14" y="40" font-size="10.5" fill="#64748B">Notifikasi push langsung dikirim</text>
+            <g transform="translate(304,16)"><rect width="36" height="24" rx="12" fill="#143068"/><circle cx="24" cy="12" r="9" fill="white"/></g>
+          </g>
+        </g>
+        <g transform="translate(16,532)" filter="url(#sh10)">
+          <rect width="348" height="56" rx="12" fill="#FFFBEB"/>
+          <g transform="translate(14,14)">
+            <text font-size="11.5" font-weight="800" fill="#92400E">📌 Sematkan</text>
+            <text y="18" font-size="10.5" fill="#92400E">Tampil di atas list selama 7 hari</text>
+          </g>
+          <g transform="translate(304,16)"><rect width="36" height="24" rx="12" fill="#92400E"/><circle cx="24" cy="12" r="9" fill="white"/></g>
+        </g>
+        <!-- footer -->
+        <g transform="translate(16,608)">
+          <g><rect width="124" height="44" rx="12" fill="white" stroke="#CBD5E1"/><text x="62" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="#334155">Simpan draft</text></g>
+          <g transform="translate(132,0)"><rect width="216" height="44" rx="12" fill="#143068"/><text x="108" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="white">Kirim ke 56 orang</text></g>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="grid-spec">
+    <div class="spec-card"><h4>LifecycleChipBar</h4><p>White-fill active chip + translucent inactive in hero. Pinned chip carries 📌 glyph, scheduled chip uses ⏰ in card body.</p></div>
+    <div class="spec-card"><h4>AudienceMatrix <span style="color:var(--navy)">[NEW]</span></h4><p>Rows = role (Guru / Wali Kelas / Wali Murid). Columns = Semua + tingkats + Custom. Cell tap toggles fill (navy = on). "Custom" opens nested <code>AppFilterBottomSheet</code> for per-kelas picking.</p></div>
+    <div class="spec-card"><h4>AudienceSummaryStrip</h4><p>Live navy-tinted band at the bottom of the matrix counting computed reach: "48 guru + 8 wali kelas = 56 orang". Updates as cells flip.</p></div>
+    <div class="spec-card"><h4>PinScheduleToggle</h4><p>Two stacked <code>AdminFormToggle</code>s — neutral for "Kirim sekarang", warning amber for "📌 Sematkan" (warns in subtitle that pinning displaces other posts).</p></div>
+    <div class="spec-card"><h4>ReadReceiptBadge</h4><p>"42 dari 48 dibaca · 88%" stat on terkirim cards — taps drill into a per-recipient read tracker.</p></div>
+    <div class="spec-card"><h4>Edge: empty audience</h4><p>If matrix has 0 cells active, primary CTA disables and audience strip turns red: "Pilih minimal 1 audiens".</p></div>
+  </div>
+</section>
+<section class="screen" id="m11">
+  <h2><span class="num">11</span> Kehadiran report admin <span class="tag">SCHOOL-WIDE</span><span class="pill-new">NEW · TrendSparkRow</span></h2>
+  <p class="lede">A pure analytics surface — no list rows, just dense aggregates. Two new patterns: <code>AttendanceRingHero</code> stretches the parent <code>AttendanceRingKpi</code> to span the entire hero, and <code>TrendSparkRow</code> renders a per-tingkat sparkline so admins spot dipping classes at a glance. Tapping a sparkline drills into Mockup 12.</p>
+  <div class="frames">
+    <div class="frame">
+      <p class="cap">A · Hari ini · school-wide</p>
+      <svg viewBox="0 0 380 920" width="380" height="920" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navy11" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient>
+          <filter id="sh11" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter>
+        </defs>
+        <rect width="380" height="920" rx="24" fill="white" stroke="#E2E8F0"/>
+        <path d="M0 0 H380 V340 Q380 360 360 360 H20 Q0 360 0 340 Z" fill="url(#navy11)"/>
+        <g transform="translate(16,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M20 12 L13 18 L20 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></g>
+        <g transform="translate(284,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M11 13 H25 M14 19 H22 M16 25 H20" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/></g>
+        <g transform="translate(326,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><circle cx="18" cy="12" r="2" fill="white"/><circle cx="18" cy="18" r="2" fill="white"/><circle cx="18" cy="24" r="2" fill="white"/></g>
+        <text x="20" y="78" font-size="11" font-weight="500" fill="rgba(255,255,255,.85)">Akademik · Kehadiran</text>
+        <text x="20" y="104" font-size="20" font-weight="800" fill="white">Laporan harian</text>
+        <!-- date chips inside hero -->
+        <g transform="translate(16,124)">
+          <g><rect width="64" height="28" rx="10" fill="white"/><text x="32" y="18" text-anchor="middle" font-size="11" font-weight="800" fill="#143068">Hari ini</text></g>
+          <g transform="translate(72,0)"><rect width="80" height="28" rx="10" fill="rgba(255,255,255,.18)"/><text x="40" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="white">Minggu ini</text></g>
+          <g transform="translate(160,0)"><rect width="78" height="28" rx="10" fill="rgba(255,255,255,.18)"/><text x="39" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="white">Bulan ini</text></g>
+          <g transform="translate(246,0)"><rect width="78" height="28" rx="10" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.35)" stroke-dasharray="3 3"/><text x="39" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="white">Custom</text></g>
+        </g>
+        <!-- ATTENDANCE RING HERO -->
+        <g transform="translate(190,250)">
+          <!-- ring -->
+          <circle cx="0" cy="0" r="64" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="14"/>
+          <!-- present (92%) -->
+          <circle cx="0" cy="0" r="64" fill="none" stroke="#10B981" stroke-width="14" stroke-linecap="round" stroke-dasharray="370 402" transform="rotate(-90)"/>
+          <text x="0" y="-2" text-anchor="middle" font-size="32" font-weight="800" fill="white">92%</text>
+          <text x="0" y="22" text-anchor="middle" font-size="11" font-weight="700" fill="rgba(255,255,255,.85)">Hadir hari ini</text>
+        </g>
+        <!-- legend (left + right) -->
+        <g transform="translate(20,224)">
+          <g><circle cx="6" cy="6" r="4" fill="#10B981"/><text x="16" y="10" font-size="10" font-weight="700" fill="white">Hadir</text><text x="16" y="26" font-size="14" font-weight="800" fill="white">1,148</text></g>
+          <g transform="translate(0,42)"><circle cx="6" cy="6" r="4" fill="#F59E0B"/><text x="16" y="10" font-size="10" font-weight="700" fill="white">Izin</text><text x="16" y="26" font-size="14" font-weight="800" fill="white">42</text></g>
+        </g>
+        <g transform="translate(282,224)">
+          <g><circle cx="6" cy="6" r="4" fill="#3B82F6"/><text x="16" y="10" font-size="10" font-weight="700" fill="white">Sakit</text><text x="16" y="26" font-size="14" font-weight="800" fill="white">38</text></g>
+          <g transform="translate(0,42)"><circle cx="6" cy="6" r="4" fill="#DC2626"/><text x="16" y="10" font-size="10" font-weight="700" fill="white">Alpa</text><text x="16" y="26" font-size="14" font-weight="800" fill="white">20</text></g>
+        </g>
+        <!-- KPI strip -->
+        <g transform="translate(16,376)">
+          <g filter="url(#sh11)"><rect width="170" height="76" rx="14" fill="white"/><text x="14" y="22" font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.5">RATA KEHADIRAN</text><text x="14" y="48" font-size="22" font-weight="800" fill="#0F172A">93.4%</text><g transform="translate(14,56)"><polyline points="0,12 18,8 36,10 54,4 72,7 90,2" fill="none" stroke="#10B981" stroke-width="2"/></g></g>
+          <g transform="translate(178,0)" filter="url(#sh11)"><rect width="170" height="76" rx="14" fill="white"/><text x="14" y="22" font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.5">SISWA TIDAK HADIR</text><text x="14" y="48" font-size="22" font-weight="800" fill="#DC2626">100</text><text x="14" y="64" font-size="10" font-weight="700" fill="#94A3B8">↑ 12 dari kemarin</text></g>
+        </g>
+        <!-- TREND SPARK ROW -->
+        <g transform="translate(20,478)"><text font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.5">TREN PER TINGKAT · 7 HARI</text></g>
+        <g transform="translate(16,494)" filter="url(#sh11)">
+          <rect width="348" height="226" rx="14" fill="white"/>
+          <!-- row 1 -->
+          <g transform="translate(14,16)">
+            <text font-size="11.5" font-weight="800" fill="#0F172A">Tingkat 7</text>
+            <text x="56" y="0" font-size="10.5" font-weight="700" fill="#10B981">95.2%</text>
+            <polyline points="120,10 144,8 168,12 192,6 216,4 240,7 264,3" fill="none" stroke="#10B981" stroke-width="2"/>
+            <text x="296" y="3" font-size="10" font-weight="700" fill="#94A3B8">↑0.4</text>
+          </g>
+          <line x1="14" y1="50" x2="334" y2="50" stroke="#F1F5F9"/>
+          <!-- row 2 -->
+          <g transform="translate(14,68)">
+            <text font-size="11.5" font-weight="800" fill="#0F172A">Tingkat 8</text>
+            <text x="56" y="0" font-size="10.5" font-weight="700" fill="#10B981">93.8%</text>
+            <polyline points="120,8 144,12 168,10 192,14 216,10 240,8 264,6" fill="none" stroke="#10B981" stroke-width="2"/>
+            <text x="296" y="3" font-size="10" font-weight="700" fill="#94A3B8">↑0.2</text>
+          </g>
+          <line x1="14" y1="102" x2="334" y2="102" stroke="#F1F5F9"/>
+          <!-- row 3 ALERT -->
+          <g transform="translate(14,120)">
+            <text font-size="11.5" font-weight="800" fill="#0F172A">Tingkat 9</text>
+            <text x="56" y="0" font-size="10.5" font-weight="700" fill="#DC2626">87.1%</text>
+            <polyline points="120,4 144,8 168,12 192,18 216,22 240,26 264,30" fill="none" stroke="#DC2626" stroke-width="2.5"/>
+            <text x="296" y="3" font-size="10" font-weight="700" fill="#DC2626">↓2.8</text>
+          </g>
+          <g transform="translate(14,138)"><rect width="320" height="22" rx="8" fill="#FEF2F2"/><text x="14" y="15" font-size="10" font-weight="800" fill="#991B1B">⚠ Penurunan signifikan · 9C dropping fastest</text></g>
+          <line x1="14" y1="170" x2="334" y2="170" stroke="#F1F5F9"/>
+          <!-- row 4 -->
+          <g transform="translate(14,188)">
+            <text font-size="11.5" font-weight="800" fill="#0F172A">Tingkat 10</text>
+            <text x="56" y="0" font-size="10.5" font-weight="700" fill="#10B981">94.7%</text>
+            <polyline points="120,8 144,6 168,8 192,10 216,8 240,6 264,4" fill="none" stroke="#10B981" stroke-width="2"/>
+            <text x="296" y="3" font-size="10" font-weight="700" fill="#94A3B8">↑0.6</text>
+          </g>
+        </g>
+        <!-- export bar -->
+        <g transform="translate(16,742)" filter="url(#sh11)">
+          <rect width="348" height="48" rx="14" fill="white"/>
+          <g transform="translate(14,14)" fill="none" stroke="#143068" stroke-width="2" stroke-linecap="round"><path d="M2 12 V4 M2 4 H10 M2 4 L8 10 M14 12 H22"/></g>
+          <text x="46" y="30" font-size="12" font-weight="800" fill="#143068">Ekspor laporan</text>
+          <text x="158" y="30" font-size="11" fill="#64748B">PDF · Excel · CSV</text>
+          <g transform="translate(296,12)"><rect width="40" height="24" rx="8" fill="#143068"/><text x="20" y="16" text-anchor="middle" font-size="10" font-weight="800" fill="white">Buat</text></g>
+        </g>
+        <g transform="translate(0,858)"><rect width="380" height="62" fill="white"/><line x1="0" y1="0" x2="380" y2="0" stroke="#E2E8F0"/></g>
+      </svg>
+    </div>
+  </div>
+  <div class="grid-spec">
+    <div class="spec-card"><h4>AttendanceRingHero <span style="color:var(--navy)">[NEW]</span></h4><p>Centered SVG ring at 64-radius inside the hero. Two-column legend brackets the ring (Hadir/Izin left, Sakit/Alpa right). Color tokens: <code>#10B981 / #F59E0B / #3B82F6 / #DC2626</code>.</p></div>
+    <div class="spec-card"><h4>DateRangeChipBar</h4><p>Hari ini / Minggu ini / Bulan ini / Custom. Custom uses dashed outline to advertise it opens a date picker. Active chip = white fill / navy text.</p></div>
+    <div class="spec-card"><h4>TrendSparkRow <span style="color:var(--navy)">[NEW]</span></h4><p>Per-tingkat row: label · % · 7-day sparkline · delta. Sparkline color follows %: ≥90% green, 80–89% amber, &lt;80% red. Tap row → drills to Mockup 12 filtered to that tingkat.</p></div>
+    <div class="spec-card"><h4>InlineAlertBand</h4><p>Red-tinted ribbon below a row that drops &gt;2 points week-over-week. Copy is auto-generated: "Penurunan signifikan · {worst-class} dropping fastest".</p></div>
+    <div class="spec-card"><h4>ExportSheet</h4><p>The footer "Buat" opens an <code>ActionConfirmSheet</code> with PDF/Excel/CSV chips and a date-range echo. Email-on-export toggle uses <code>AdminFormToggle</code>.</p></div>
+    <div class="spec-card"><h4>Edge: weekend / holiday</h4><p>If today is a non-school day, the ring fades to 40% opacity and a subtitle reads "Tidak ada sesi · libur Maulid". KPI strip pins to last school day.</p></div>
+  </div>
+</section>
+<section class="screen" id="m12">
+  <h2><span class="num">12</span> Kehadiran detail admin <span class="tag">DRILL DOWN</span><span class="pill-new">NEW · CalendarHeatmap row</span></h2>
+  <p class="lede">Drilled in from a TrendSparkRow tap. The new <code>CalendarHeatmap</code> shows per-student attendance at a glance — 30-day grid where each cell is a session, color-coded by status. Selecting a cell opens a correction sheet (admin-only) so HR can fix bad records without leaving the screen.</p>
+  <div class="frames">
+    <div class="frame">
+      <p class="cap">A · Per-siswa heatmap</p>
+      <svg viewBox="0 0 380 920" width="380" height="920" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navy12" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient>
+          <filter id="sh12" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter>
+        </defs>
+        <rect width="380" height="920" rx="24" fill="white" stroke="#E2E8F0"/>
+        <path d="M0 0 H380 V232 Q380 252 360 252 H20 Q0 252 0 232 Z" fill="url(#navy12)"/>
+        <g transform="translate(16,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M20 12 L13 18 L20 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></g>
+        <g transform="translate(326,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><circle cx="18" cy="12" r="2" fill="white"/><circle cx="18" cy="18" r="2" fill="white"/><circle cx="18" cy="24" r="2" fill="white"/></g>
+        <text x="20" y="78" font-size="11" font-weight="500" fill="rgba(255,255,255,.85)">Tingkat 9 · Kelas 9C</text>
+        <text x="20" y="104" font-size="20" font-weight="800" fill="white">28 siswa · 87.1% bulan ini</text>
+        <!-- filter chips -->
+        <g transform="translate(16,124)">
+          <g><rect width="80" height="28" rx="10" fill="white"/><text x="40" y="18" text-anchor="middle" font-size="11" font-weight="800" fill="#143068">30 hari</text></g>
+          <g transform="translate(88,0)"><rect width="92" height="28" rx="10" fill="rgba(255,255,255,.18)"/><text x="46" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="white">Semester ini</text></g>
+          <g transform="translate(188,0)"><rect width="78" height="28" rx="10" fill="rgba(255,255,255,.18)"/><text x="39" y="18" text-anchor="middle" font-size="11" font-weight="700" fill="white">Mata pel.</text></g>
+        </g>
+        <!-- legend strip -->
+        <g transform="translate(16,170)">
+          <text font-size="10" font-weight="700" fill="rgba(255,255,255,.8)" letter-spacing="0.5">LEGENDA</text>
+          <g transform="translate(0,12)">
+            <g><rect width="14" height="14" rx="3" fill="#10B981"/><text x="20" y="11" font-size="10" font-weight="700" fill="white">Hadir</text></g>
+            <g transform="translate(72,0)"><rect width="14" height="14" rx="3" fill="#F59E0B"/><text x="20" y="11" font-size="10" font-weight="700" fill="white">Izin</text></g>
+            <g transform="translate(132,0)"><rect width="14" height="14" rx="3" fill="#3B82F6"/><text x="20" y="11" font-size="10" font-weight="700" fill="white">Sakit</text></g>
+            <g transform="translate(196,0)"><rect width="14" height="14" rx="3" fill="#DC2626"/><text x="20" y="11" font-size="10" font-weight="700" fill="white">Alpa</text></g>
+            <g transform="translate(260,0)"><rect width="14" height="14" rx="3" fill="rgba(255,255,255,.15)"/><text x="20" y="11" font-size="10" font-weight="700" fill="white">Libur</text></g>
+          </g>
+        </g>
+        <!-- search -->
+        <g transform="translate(16,272)" filter="url(#sh12)"><rect width="348" height="40" rx="12" fill="white"/><circle cx="22" cy="20" r="6" fill="none" stroke="#94A3B8" stroke-width="2"/><path d="M27 25 L31 29" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/><text x="40" y="24" font-size="11" fill="#94A3B8">Cari nama siswa…</text></g>
+        <!-- HEATMAP ROW 1 -->
+        <g transform="translate(16,332)" filter="url(#sh12)">
+          <rect width="348" height="92" rx="14" fill="white"/>
+          <g transform="translate(14,14)">
+            <circle cx="14" cy="14" r="14" fill="#3B82F6"/>
+            <text x="14" y="18" text-anchor="middle" font-size="11" font-weight="800" fill="white">AS</text>
+          </g>
+          <g transform="translate(56,18)">
+            <text font-size="12.5" font-weight="800" fill="#0F172A">Ahmad Saputra</text>
+            <text y="18" font-size="10.5" fill="#64748B">9C · No. absen 03</text>
+          </g>
+          <g transform="translate(290,18)">
+            <text font-size="11" font-weight="800" fill="#10B981">96%</text>
+            <text y="14" font-size="9" fill="#64748B">28/30</text>
+          </g>
+          <!-- 30 cells row -->
+          <g transform="translate(14,56)">
+            <!-- 30 cells, 9.4 wide each, 3 gap -->
+            <!-- pre-compute: row of cells; H always except 2 -->
+            <g><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(11,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(22,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(33,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(44,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(55,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(66,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(77,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(88,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(99,0)"><rect width="9" height="20" rx="2" fill="#3B82F6"/></g>
+            <g transform="translate(110,0)"><rect width="9" height="20" rx="2" fill="#3B82F6"/></g>
+            <g transform="translate(121,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(132,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(143,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(154,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(165,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(176,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(187,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(198,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(209,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(220,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(231,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(242,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(253,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(264,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(275,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(286,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(297,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(308,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(319,0)"><rect width="9" height="20" rx="2" fill="#10B981" stroke="#143068" stroke-width="2"/></g>
+          </g>
+        </g>
+        <!-- HEATMAP ROW 2 (alert) -->
+        <g transform="translate(16,432)" filter="url(#sh12)">
+          <rect width="348" height="92" rx="14" fill="white" stroke="#FEE2E2" stroke-width="1.5"/>
+          <g transform="translate(14,14)"><circle cx="14" cy="14" r="14" fill="#EC4899"/><text x="14" y="18" text-anchor="middle" font-size="11" font-weight="800" fill="white">RA</text></g>
+          <g transform="translate(56,18)"><text font-size="12.5" font-weight="800" fill="#0F172A">Rania Putri</text><text y="18" font-size="10.5" fill="#DC2626">⚠ 4× alpa berturut</text></g>
+          <g transform="translate(290,18)"><text font-size="11" font-weight="800" fill="#DC2626">73%</text><text y="14" font-size="9" fill="#64748B">22/30</text></g>
+          <!-- mostly green with red streak in middle -->
+          <g transform="translate(14,56)">
+            <g><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(11,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(22,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(33,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(44,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(55,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(66,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(77,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(88,0)"><rect width="9" height="20" rx="2" fill="#F59E0B"/></g>
+            <g transform="translate(99,0)"><rect width="9" height="20" rx="2" fill="#F59E0B"/></g>
+            <g transform="translate(110,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(121,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(132,0)"><rect width="9" height="20" rx="2" fill="#3B82F6"/></g>
+            <g transform="translate(143,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(154,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(165,0)"><rect width="9" height="20" rx="2" fill="#DC2626"/></g>
+            <g transform="translate(176,0)"><rect width="9" height="20" rx="2" fill="#DC2626"/></g>
+            <g transform="translate(187,0)"><rect width="9" height="20" rx="2" fill="#DC2626"/></g>
+            <g transform="translate(198,0)"><rect width="9" height="20" rx="2" fill="#DC2626"/></g>
+            <g transform="translate(209,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(220,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(231,0)"><rect width="9" height="20" rx="2" fill="#E2E8F0"/></g>
+            <g transform="translate(242,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(253,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(264,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(275,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(286,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(297,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(308,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+            <g transform="translate(319,0)"><rect width="9" height="20" rx="2" fill="#10B981"/></g>
+          </g>
+        </g>
+        <!-- CORRECTION SHEET callout (peek) -->
+        <g transform="translate(16,538)" filter="url(#sh12)">
+          <rect width="348" height="200" rx="14" fill="white" stroke="#143068" stroke-width="1.5"/>
+          <text x="14" y="22" font-size="10" font-weight="800" fill="#143068" letter-spacing="0.5">CELL DIPILIH · 12 NOV</text>
+          <text x="14" y="44" font-size="14" font-weight="800" fill="#0F172A">Ahmad Saputra · Hadir</text>
+          <text x="14" y="62" font-size="11" fill="#64748B">Mata pelajaran: Bahasa Arab · Sesi 1</text>
+          <!-- status chips -->
+          <g transform="translate(14,76)">
+            <text font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.5">UBAH STATUS KE</text>
+          </g>
+          <g transform="translate(14,90)">
+            <g><rect width="68" height="32" rx="10" fill="#10B981"/><text x="34" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="white">Hadir</text></g>
+            <g transform="translate(76,0)"><rect width="60" height="32" rx="10" fill="white" stroke="#CBD5E1"/><text x="30" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Izin</text></g>
+            <g transform="translate(144,0)"><rect width="60" height="32" rx="10" fill="white" stroke="#CBD5E1"/><text x="30" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Sakit</text></g>
+            <g transform="translate(212,0)"><rect width="60" height="32" rx="10" fill="white" stroke="#CBD5E1"/><text x="30" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Alpa</text></g>
+          </g>
+          <!-- reason input hint -->
+          <g transform="translate(14,140)">
+            <rect width="320" height="44" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <text x="14" y="20" font-size="11" fill="#94A3B8">Catatan koreksi (opsional)</text>
+            <text x="14" y="36" font-size="10" fill="#94A3B8">Audit log akan mencatat siapa &amp; kapan</text>
+          </g>
+        </g>
+        <!-- footer Save -->
+        <g transform="translate(16,756)">
+          <g><rect width="124" height="44" rx="12" fill="white" stroke="#CBD5E1"/><text x="62" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="#334155">Batal</text></g>
+          <g transform="translate(132,0)"><rect width="216" height="44" rx="12" fill="#143068"/><text x="108" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="white">Simpan koreksi</text></g>
+        </g>
+        <g transform="translate(0,858)"><rect width="380" height="62" fill="white"/><line x1="0" y1="0" x2="380" y2="0" stroke="#E2E8F0"/></g>
+      </svg>
+    </div>
+  </div>
+  <div class="grid-spec">
+    <div class="spec-card"><h4>CalendarHeatmap <span style="color:var(--navy)">[NEW]</span></h4><p>Per-student row of N cells (default 30). Cell width auto-fits row. Status colors map to <code>#10B981 / #F59E0B / #3B82F6 / #DC2626</code>; off-day uses <code>#E2E8F0</code>. Selected cell gets a 2px navy stroke.</p></div>
+    <div class="spec-card"><h4>StudentRowHeader</h4><p>Avatar + name + per-student %. Card border turns red if streak ≥3 alpa. Sub-text auto-generates "⚠ 4× alpa berturut" / "↑ 1.2 vs last month".</p></div>
+    <div class="spec-card"><h4>CellDetailSheet</h4><p>Inline expansion under the row when a cell is tapped (not a modal). Status chip group (mutex) + optional note + footer. Closes when the same cell is tapped again or another row is opened.</p></div>
+    <div class="spec-card"><h4>AuditTrailSidecar</h4><p>Saving a correction prepends an audit row visible from the row's overflow menu — "Diubah Yahya · 14:03 · Sakit → Hadir". Read-only.</p></div>
+    <div class="spec-card"><h4>FilterChipBar</h4><p>30 hari · Semester ini · Custom range · Mata pel.; tapping "Mata pel." opens an <code>AppFilterBottomSheet</code> filtered by what's been taught for that class.</p></div>
+    <div class="spec-card"><h4>Edge: locked period</h4><p>If the cell falls outside the active semester, status chips render disabled and the helper text reads "Periode dikunci · admin SU diperlukan".</p></div>
+  </div>
+</section>
+<section class="screen" id="m13">
+  <h2><span class="num">13</span> Keuangan hub admin <span class="tag">UNIFIED HUB</span><span class="pill-new">NEW · MoneyFlowStrip</span></h2>
+  <p class="lede">The unified hub gets a hero <code>MoneyFlowStrip</code> — incoming / outstanding / overdue split into 3 navy-banded tiles with a Sankey-style mini-flow that visualizes how this month's billings land. Tabs underneath (Tagihan · Pembayaran · Jenis) keep the existing v3 tabs but now with sticky sub-filters per tab.</p>
+  <div class="frames">
+    <div class="frame">
+      <p class="cap">A · Hub default · Tagihan tab</p>
+      <svg viewBox="0 0 380 920" width="380" height="920" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navy13" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient>
+          <filter id="sh13" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter>
+        </defs>
+        <rect width="380" height="920" rx="24" fill="white" stroke="#E2E8F0"/>
+        <path d="M0 0 H380 V340 Q380 360 360 360 H20 Q0 360 0 340 Z" fill="url(#navy13)"/>
+        <g transform="translate(16,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M20 12 L13 18 L20 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></g>
+        <g transform="translate(326,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><circle cx="18" cy="12" r="2" fill="white"/><circle cx="18" cy="18" r="2" fill="white"/><circle cx="18" cy="24" r="2" fill="white"/></g>
+        <text x="20" y="78" font-size="11" font-weight="500" fill="rgba(255,255,255,.85)">Operasional</text>
+        <text x="20" y="108" font-size="22" font-weight="800" fill="white">Keuangan</text>
+        <!-- period -->
+        <g transform="translate(20,124)"><rect width="160" height="22" rx="11" fill="rgba(255,255,255,.18)"/><text x="80" y="15" text-anchor="middle" font-size="10" font-weight="700" fill="white">November 2025 · ▼</text></g>
+        <!-- MONEY FLOW STRIP -->
+        <g transform="translate(16,164)">
+          <!-- masuk tile -->
+          <g><rect width="108" height="92" rx="14" fill="rgba(255,255,255,.18)"/><text x="14" y="22" font-size="9.5" font-weight="700" fill="rgba(255,255,255,.7)" letter-spacing="0.4">MASUK</text><text x="14" y="48" font-size="18" font-weight="800" fill="white">Rp 184jt</text><text x="14" y="68" font-size="10" font-weight="700" fill="#86EFAC">↑ 12% vs bulan lalu</text><text x="14" y="84" font-size="9" fill="rgba(255,255,255,.7)">412 transaksi</text></g>
+          <!-- outstanding tile -->
+          <g transform="translate(120,0)"><rect width="108" height="92" rx="14" fill="rgba(255,255,255,.18)"/><text x="14" y="22" font-size="9.5" font-weight="700" fill="rgba(255,255,255,.7)" letter-spacing="0.4">TERUTANG</text><text x="14" y="48" font-size="18" font-weight="800" fill="white">Rp 92jt</text><text x="14" y="68" font-size="10" font-weight="700" fill="#FCD34D">⏰ jatuh tempo</text><text x="14" y="84" font-size="9" fill="rgba(255,255,255,.7)">128 tagihan</text></g>
+          <!-- overdue tile -->
+          <g transform="translate(240,0)"><rect width="108" height="92" rx="14" fill="rgba(220,38,38,.32)"/><text x="14" y="22" font-size="9.5" font-weight="700" fill="rgba(255,255,255,.85)" letter-spacing="0.4">JATUH TEMPO</text><text x="14" y="48" font-size="18" font-weight="800" fill="white">Rp 28jt</text><text x="14" y="68" font-size="10" font-weight="700" fill="white">⚠ 32 wali murid</text><text x="14" y="84" font-size="9" fill="rgba(255,255,255,.85)">tindakan diperlukan</text></g>
+        </g>
+        <!-- Sankey-style mini-flow -->
+        <g transform="translate(16,272)">
+          <text x="0" y="0" font-size="9" font-weight="700" fill="rgba(255,255,255,.7)" letter-spacing="0.5">ALIRAN ↓</text>
+          <!-- bars: total -> split -->
+          <g transform="translate(0,8)">
+            <rect width="348" height="14" rx="4" fill="rgba(255,255,255,.18)"/>
+            <rect width="226" height="14" rx="4" fill="#10B981"/>
+            <rect x="226" width="80" height="14" fill="#FCD34D"/>
+            <rect x="306" width="42" height="14" rx="0" fill="#DC2626"/>
+            <text x="6" y="10" font-size="9" font-weight="800" fill="white">65% terbayar</text>
+            <text x="232" y="10" font-size="9" font-weight="800" fill="#92400E">23%</text>
+            <text x="312" y="10" font-size="9" font-weight="800" fill="white">12%</text>
+          </g>
+        </g>
+        <!-- TABS -->
+        <g transform="translate(16,372)" filter="url(#sh13)">
+          <rect width="348" height="48" rx="14" fill="white"/>
+          <g><rect width="116" height="48" rx="14" fill="#143068"/><text x="58" y="30" text-anchor="middle" font-size="12" font-weight="800" fill="white">Tagihan</text><circle cx="98" cy="14" r="9" fill="#DC2626"/><text x="98" y="17" text-anchor="middle" font-size="9" font-weight="800" fill="white">32</text></g>
+          <g transform="translate(116,0)"><text x="58" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#64748B">Pembayaran</text></g>
+          <g transform="translate(232,0)"><text x="58" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#64748B">Jenis</text></g>
+        </g>
+        <!-- sub-filters -->
+        <g transform="translate(16,432)">
+          <g><rect width="76" height="32" rx="10" fill="#143068"/><text x="38" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="white">Semua</text></g>
+          <g transform="translate(82,0)"><rect width="98" height="32" rx="10" fill="white" stroke="#CBD5E1"/><text x="49" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Belum bayar</text></g>
+          <g transform="translate(188,0)"><rect width="116" height="32" rx="10" fill="#FEF2F2" stroke="#FCA5A5"/><text x="58" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="#991B1B">Jatuh tempo · 32</text></g>
+        </g>
+        <!-- BILL ROW (overdue) -->
+        <g transform="translate(16,484)" filter="url(#sh13)">
+          <rect width="348" height="84" rx="14" fill="white" stroke="#FEE2E2" stroke-width="1.5"/>
+          <rect width="4" height="84" rx="2" fill="#DC2626"/>
+          <g transform="translate(14,14)">
+            <text font-size="13" font-weight="800" fill="#0F172A">SPP November · 8B</text>
+            <text y="18" font-size="10.5" fill="#64748B">Rania Putri · #INV-2025-1142</text>
+            <text y="40" font-size="14" font-weight="800" fill="#DC2626">Rp 1.250.000</text>
+            <text x="100" y="40" font-size="10" font-weight="700" fill="#DC2626">⚠ Lewat 14 hari</text>
+            <g transform="translate(0,52)">
+              <rect width="80" height="20" rx="6" fill="#FEF2F2"/><text x="40" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#991B1B">Reminder ke-3</text>
+            </g>
+          </g>
+          <g transform="translate(296,28)"><rect width="40" height="32" rx="10" fill="#143068"/><text x="20" y="21" text-anchor="middle" font-size="10" font-weight="800" fill="white">Tagih</text></g>
+        </g>
+        <!-- BILL ROW (paid) -->
+        <g transform="translate(16,584)" filter="url(#sh13)">
+          <rect width="348" height="76" rx="14" fill="white"/>
+          <rect width="4" height="76" rx="2" fill="#10B981"/>
+          <g transform="translate(14,14)">
+            <text font-size="13" font-weight="800" fill="#0F172A">SPP November · 7A</text>
+            <text y="18" font-size="10.5" fill="#64748B">Ahmad Saputra · #INV-2025-1098</text>
+            <text y="40" font-size="14" font-weight="800" fill="#0F172A">Rp 1.250.000</text>
+            <g transform="translate(100,28)"><rect width="64" height="20" rx="6" fill="#F0FDF4"/><text x="32" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#166534">Lunas · 5 Nov</text></g>
+            <text y="60" font-size="10" fill="#94A3B8">Transfer BCA · 14:32</text>
+          </g>
+        </g>
+        <!-- DRILL link -->
+        <g transform="translate(16,676)" filter="url(#sh13)">
+          <rect width="348" height="64" rx="14" fill="#EEF2FF"/>
+          <text x="14" y="22" font-size="11.5" font-weight="800" fill="#143068">📊 Laporan per kelas</text>
+          <text x="14" y="40" font-size="10.5" fill="#143068">Drill ke ClassFinanceReport untuk breakdown lengkap</text>
+          <g transform="translate(308,20)"><path d="M0 0 L8 12 L0 24" stroke="#143068" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>
+        </g>
+        <!-- FAB -->
+        <g transform="translate(304,756)" filter="url(#sh13)"><circle cx="28" cy="28" r="28" fill="#143068"/><path d="M28 16 V40 M16 28 H40" stroke="white" stroke-width="2.5" stroke-linecap="round"/></g>
+        <g transform="translate(0,858)"><rect width="380" height="62" fill="white"/><line x1="0" y1="0" x2="380" y2="0" stroke="#E2E8F0"/></g>
+      </svg>
+    </div>
+  </div>
+  <div class="grid-spec">
+    <div class="spec-card"><h4>MoneyFlowStrip <span style="color:var(--navy)">[NEW]</span></h4><p>3 horizontal tiles inside hero: Masuk (white-on-navy), Terutang (white-on-navy), Jatuh Tempo (red-tinted overlay). Each tile has primary value, delta, and secondary count.</p></div>
+    <div class="spec-card"><h4>FlowBar <span style="color:var(--navy)">[NEW]</span></h4><p>Single-row stacked bar at the bottom of the hero: green (paid) · amber (terutang) · red (overdue). Tap any segment → filters Tagihan tab to that bucket.</p></div>
+    <div class="spec-card"><h4>FinanceTabBar (variant)</h4><p>Existing tab bar gets a red badge on Tagihan when overdue ≥1. Active tab fills navy.</p></div>
+    <div class="spec-card"><h4>InvoiceRow</h4><p>4-px left edge in status color. Inline "Reminder ke-N" pill increments and the row turns red-bordered after 7 days overdue. Right "Tagih" mini-button opens reminder sheet.</p></div>
+    <div class="spec-card"><h4>ClassReportDrillCard</h4><p>Soft navy-tinted card linking into per-kelas finance report (re-uses existing <code>ClassFinanceTable</code>). Always pinned at the bottom of the list.</p></div>
+    <div class="spec-card"><h4>Edge: zero overdue</h4><p>Jatuh-Tempo tile collapses to half width, gives space to "Masuk" tile. Tab badge hidden. Sub-filter chip "Jatuh tempo · 32" disappears.</p></div>
+  </div>
+</section>
+<section class="screen" id="m14">
+  <h2><span class="num">14</span> Sistem · Settings hub <span class="tag">CONFIG SURFACE</span><span class="pill-new">NEW · CategoryGridHero</span></h2>
+  <p class="lede">Settings is the only admin surface where the v3 list+filter pattern actively hurts. The new <code>CategoryGridHero</code> swaps it for a 2-column tile grid inside the hero, then lets each tile push to its own narrow sub-screen. Audit log is always pinned at the bottom because admins reach for it daily.</p>
+  <div class="frames">
+    <div class="frame">
+      <p class="cap">A · Hub · 6 categories</p>
+      <svg viewBox="0 0 380 820" width="380" height="820" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navy14" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient>
+          <filter id="sh14" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter>
+        </defs>
+        <rect width="380" height="820" rx="24" fill="white" stroke="#E2E8F0"/>
+        <path d="M0 0 H380 V200 Q380 220 360 220 H20 Q0 220 0 200 Z" fill="url(#navy14)"/>
+        <g transform="translate(16,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M20 12 L13 18 L20 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></g>
+        <text x="20" y="78" font-size="11" font-weight="500" fill="rgba(255,255,255,.85)">Konfigurasi</text>
+        <text x="20" y="108" font-size="22" font-weight="800" fill="white">Sistem</text>
+        <g transform="translate(20,124)"><rect width="200" height="22" rx="11" fill="rgba(255,255,255,.18)"/><circle cx="12" cy="11" r="3" fill="#22C55E"/><text x="22" y="15" font-size="10" font-weight="700" fill="white">Sinkron · konfigurasi sehat</text></g>
+        <!-- CATEGORY GRID HERO -->
+        <g transform="translate(16,242)">
+          <!-- Tahun ajaran -->
+          <g filter="url(#sh14)"><rect width="170" height="120" rx="16" fill="white"/><g transform="translate(14,14)"><rect width="40" height="40" rx="12" fill="#EEF2FF"/><g transform="translate(8,8)" stroke="#143068" stroke-width="2" fill="none" stroke-linecap="round"><rect x="2" y="4" width="20" height="18" rx="2"/><path d="M2 10 H22 M8 1 V7 M16 1 V7"/></g></g><text x="14" y="76" font-size="13" font-weight="800" fill="#0F172A">Tahun Ajaran</text><text x="14" y="92" font-size="10.5" fill="#64748B">2025/2026 · aktif</text><text x="14" y="108" font-size="10" fill="#94A3B8">Ganjil · 4 minggu lagi</text></g>
+          <g transform="translate(178,0)" filter="url(#sh14)"><rect width="170" height="120" rx="16" fill="white"/><g transform="translate(14,14)"><rect width="40" height="40" rx="12" fill="#FEF3C7"/><g transform="translate(10,10)" stroke="#92400E" stroke-width="2" fill="none" stroke-linecap="round"><circle cx="10" cy="10" r="8"/><path d="M10 5 V10 L13 13"/></g></g><text x="14" y="76" font-size="13" font-weight="800" fill="#0F172A">Semester</text><text x="14" y="92" font-size="10.5" fill="#64748B">Ganjil · pekan ke-12</text><text x="14" y="108" font-size="10" fill="#94A3B8">PAS dimulai 8 Des</text></g>
+          <!-- Kalender -->
+          <g transform="translate(0,134)" filter="url(#sh14)"><rect width="170" height="120" rx="16" fill="white"/><g transform="translate(14,14)"><rect width="40" height="40" rx="12" fill="#DCFCE7"/><g transform="translate(10,10)" stroke="#166534" stroke-width="2" fill="none" stroke-linecap="round"><rect x="0" y="2" width="20" height="18" rx="2"/><path d="M0 8 H20 M5 0 V4 M15 0 V4 M5 13 L7 15 L11 11"/></g></g><text x="14" y="76" font-size="13" font-weight="800" fill="#0F172A">Kalender</text><text x="14" y="92" font-size="10.5" fill="#64748B">2 hari libur Q4</text><text x="14" y="108" font-size="10" fill="#94A3B8">Maulid · Natal</text></g>
+          <!-- Bahasa -->
+          <g transform="translate(178,134)" filter="url(#sh14)"><rect width="170" height="120" rx="16" fill="white"/><g transform="translate(14,14)"><rect width="40" height="40" rx="12" fill="#F3E8FF"/><g transform="translate(8,8)" stroke="#7C3AED" stroke-width="2" fill="none" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12 H22 M12 2 Q4 12 12 22 Q20 12 12 2"/></g></g><text x="14" y="76" font-size="13" font-weight="800" fill="#0F172A">Bahasa</text><text x="14" y="92" font-size="10.5" fill="#64748B">Indonesia · default</text><text x="14" y="108" font-size="10" fill="#94A3B8">English tersedia</text></g>
+          <!-- Notifikasi -->
+          <g transform="translate(0,268)" filter="url(#sh14)"><rect width="170" height="120" rx="16" fill="white"/><g transform="translate(14,14)"><rect width="40" height="40" rx="12" fill="#FEE2E2"/><g transform="translate(10,10)" stroke="#DC2626" stroke-width="2" fill="none" stroke-linecap="round"><path d="M3 14 V10 Q3 4 10 4 Q17 4 17 10 V14 L19 16 H1 Z M8 18 Q10 20 12 18"/></g></g><text x="14" y="76" font-size="13" font-weight="800" fill="#0F172A">Notifikasi</text><text x="14" y="92" font-size="10.5" fill="#64748B">Push · Email aktif</text><text x="14" y="108" font-size="10" fill="#94A3B8">SMS opsional</text></g>
+          <!-- Backup -->
+          <g transform="translate(178,268)" filter="url(#sh14)"><rect width="170" height="120" rx="16" fill="white"/><g transform="translate(14,14)"><rect width="40" height="40" rx="12" fill="#E0E7FF"/><g transform="translate(8,8)" stroke="#4338CA" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 4 V18 M5 11 L12 18 L19 11 M2 22 H22"/></g></g><text x="14" y="76" font-size="13" font-weight="800" fill="#0F172A">Backup &amp; Audit</text><text x="14" y="92" font-size="10.5" fill="#64748B">Otomatis harian</text><text x="14" y="108" font-size="10" fill="#94A3B8">Terakhir 03:00</text></g>
+        </g>
+        <!-- AUDIT LOG (pinned) -->
+        <g transform="translate(16,652)" filter="url(#sh14)">
+          <rect width="348" height="84" rx="16" fill="white" stroke="#E2E8F0"/>
+          <text x="14" y="22" font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.5">AUDIT LOG · 14 ENTRI HARI INI</text>
+          <g transform="translate(14,30)">
+            <circle cx="6" cy="14" r="4" fill="#10B981"/>
+            <text x="20" y="18" font-size="11.5" font-weight="700" fill="#0F172A">Yahya · ubah Tahun Ajaran ke 2025/2026</text>
+            <text x="20" y="34" font-size="10" fill="#94A3B8">14:03 · IP 192.168.1.42</text>
+          </g>
+          <g transform="translate(308,30)"><path d="M0 0 L8 12 L0 24" stroke="#143068" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>
+        </g>
+        <g transform="translate(0,758)"><rect width="380" height="62" fill="white"/><line x1="0" y1="0" x2="380" y2="0" stroke="#E2E8F0"/></g>
+      </svg>
+    </div>
+    <div class="frame">
+      <p class="cap">B · Tahun Ajaran sub-screen</p>
+      <svg viewBox="0 0 380 820" width="380" height="820" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="navy14b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient><filter id="sh14b" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter></defs>
+        <rect width="380" height="820" rx="24" fill="white" stroke="#E2E8F0"/>
+        <path d="M0 0 H380 V160 Q380 180 360 180 H20 Q0 180 0 160 Z" fill="url(#navy14b)"/>
+        <g transform="translate(16,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M20 12 L13 18 L20 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></g>
+        <text x="20" y="78" font-size="11" font-weight="500" fill="rgba(255,255,255,.85)">Sistem</text>
+        <text x="20" y="106" font-size="22" font-weight="800" fill="white">Tahun Ajaran</text>
+        <text x="20" y="124" font-size="11" fill="rgba(255,255,255,.7)">3 entri tersimpan</text>
+        <!-- Active card -->
+        <g transform="translate(16,200)" filter="url(#sh14b)">
+          <rect width="348" height="116" rx="16" fill="white" stroke="#143068" stroke-width="1.5"/>
+          <g transform="translate(14,14)">
+            <rect width="64" height="22" rx="8" fill="#143068"/><text x="32" y="15" text-anchor="middle" font-size="9.5" font-weight="800" fill="white">AKTIF</text>
+            <text x="74" y="16" font-size="13" font-weight="800" fill="#0F172A">2025 / 2026</text>
+            <text y="44" font-size="10.5" fill="#64748B">Mulai · 14 Jul 2025</text>
+            <text x="146" y="44" font-size="10.5" fill="#64748B">Selesai · 27 Jun 2026</text>
+            <!-- timeline bar -->
+            <g transform="translate(0,58)">
+              <rect width="320" height="6" rx="3" fill="#E2E8F0"/>
+              <rect width="138" height="6" rx="3" fill="#143068"/>
+              <circle cx="138" cy="3" r="6" fill="#143068"/>
+            </g>
+            <text y="84" font-size="10" font-weight="700" fill="#143068">Pekan ke-12 dari 26 · 43% selesai</text>
+          </g>
+        </g>
+        <!-- semester ribbon -->
+        <g transform="translate(16,332)" filter="url(#sh14b)">
+          <rect width="348" height="60" rx="14" fill="white"/>
+          <g transform="translate(14,14)">
+            <rect width="60" height="32" rx="10" fill="#FEF3C7"/><text x="30" y="20" text-anchor="middle" font-size="10.5" font-weight="800" fill="#92400E">Ganjil</text>
+            <rect x="68" width="60" height="32" rx="10" fill="white" stroke="#CBD5E1"/><text x="98" y="20" text-anchor="middle" font-size="10.5" font-weight="700" fill="#94A3B8">Genap</text>
+            <text x="148" y="22" font-size="11" fill="#64748B">Semester aktif</text>
+          </g>
+        </g>
+        <!-- Inactive list -->
+        <g transform="translate(20,406)"><text font-size="9.5" font-weight="800" fill="#64748B" letter-spacing="0.5">RIWAYAT · 2 ENTRI</text></g>
+        <g transform="translate(16,420)" filter="url(#sh14b)">
+          <rect width="348" height="64" rx="14" fill="white" opacity="0.85"/>
+          <g transform="translate(14,14)">
+            <rect width="56" height="20" rx="6" fill="#F1F5F9"/><text x="28" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#64748B">Selesai</text>
+            <text x="66" y="14" font-size="13" font-weight="800" fill="#0F172A">2024 / 2025</text>
+            <text y="38" font-size="10" fill="#94A3B8">Jul 2024 — Jun 2025 · arsipkan</text>
+          </g>
+        </g>
+        <g transform="translate(16,500)" filter="url(#sh14b)">
+          <rect width="348" height="64" rx="14" fill="white" opacity="0.85"/>
+          <g transform="translate(14,14)">
+            <rect width="56" height="20" rx="6" fill="#F1F5F9"/><text x="28" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#64748B">Selesai</text>
+            <text x="66" y="14" font-size="13" font-weight="800" fill="#0F172A">2023 / 2024</text>
+            <text y="38" font-size="10" fill="#94A3B8">Jul 2023 — Jun 2024 · diarsipkan</text>
+          </g>
+        </g>
+        <!-- Add CTA -->
+        <g transform="translate(16,584)" filter="url(#sh14b)">
+          <rect width="348" height="56" rx="14" fill="#EEF2FF" stroke="#143068" stroke-dasharray="4 4"/>
+          <text x="174" y="34" text-anchor="middle" font-size="12" font-weight="800" fill="#143068">+ Tambah Tahun Ajaran 2026/2027</text>
+        </g>
+        <!-- Danger zone -->
+        <g transform="translate(16,656)" filter="url(#sh14b)">
+          <rect width="348" height="80" rx="14" fill="#FEF2F2"/>
+          <text x="14" y="22" font-size="11" font-weight="800" fill="#991B1B" letter-spacing="0.5">⚠ ZONA BERBAHAYA</text>
+          <text x="14" y="40" font-size="11" fill="#7F1D1D">Akhiri tahun ajaran aktif sebelum waktunya</text>
+          <g transform="translate(14,52)"><rect width="116" height="20" rx="6" fill="white" stroke="#FCA5A5"/><text x="58" y="14" text-anchor="middle" font-size="10" font-weight="800" fill="#991B1B">Akhiri sekarang</text></g>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="grid-spec">
+    <div class="spec-card"><h4>CategoryGridHero <span style="color:var(--navy)">[NEW]</span></h4><p>2-column 170×120 tile grid below the hero. Each tile: pastel-tinted icon square + title + subline + meta. Tap → push sub-screen using same hero color but narrower height (160px).</p></div>
+    <div class="spec-card"><h4>HealthPill</h4><p>"Sinkron · konfigurasi sehat" reuses the realtime indicator pattern from Mockup 02 hero. Turns amber if any setting is in invalid state.</p></div>
+    <div class="spec-card"><h4>AuditLogPin</h4><p>Pinned bottom card preview of latest audit row. Always visible regardless of scroll. Tap → full audit log screen with date filters.</p></div>
+    <div class="spec-card"><h4>TimelineProgressCard</h4><p>Active TA card has a progress bar with the today-marker as a circle on the bar. Auto-computes "Pekan ke-N dari M".</p></div>
+    <div class="spec-card"><h4>DangerZoneCard</h4><p>Red-tinted card pinned at bottom of sub-screens that allow destructive ops (Akhiri TA, Reset semester). Outline button styling so it's never the primary affordance.</p></div>
+    <div class="spec-card"><h4>Edge: no archive</h4><p>If no historic TA exists, "Riwayat" section hides entirely; the AddCTA card moves up to fill the gap.</p></div>
+  </div>
+</section>
+<section class="screen" id="m15">
+  <h2><span class="num">15</span> Profil admin <span class="tag">ACCOUNT + IDENTITY</span><span class="pill-new">NEW · IdentityHero + RoleScopeChips</span></h2>
+  <p class="lede">Two surfaces. The account sheet (peek from any header avatar) gets a denser, navy-tinted hero with role/sekolah switcher built in. The full Profil page reuses the parent <code>ProfileScreen</code> shell but introduces <code>RoleScopeChips</code> so admins can see every school they manage without leaving the page — and <code>SecurityChecklistCard</code> turns 2FA / fresh-password reminders into a single nudge tile.</p>
+  <div class="frames">
+    <div class="frame">
+      <p class="cap">A · Account sheet (peek)</p>
+      <svg viewBox="0 0 380 820" width="380" height="820" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navy15" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient>
+          <filter id="sh15" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter>
+        </defs>
+        <rect width="380" height="820" rx="24" fill="white" stroke="#E2E8F0"/>
+        <rect width="380" height="820" fill="rgba(15,23,42,.55)"/>
+        <g transform="translate(0,150)">
+          <path d="M0 24 Q0 0 24 0 H356 Q380 0 380 24 V680 H0 Z" fill="white"/>
+          <rect x="170" y="10" width="40" height="4" rx="2" fill="#CBD5E1"/>
+          <!-- IDENTITY HERO -->
+          <path d="M0 24 Q0 0 24 0 H356 Q380 0 380 24 V178 H0 Z" fill="url(#navy15)"/>
+          <!-- avatar -->
+          <g transform="translate(24,42)"><circle cx="32" cy="32" r="32" fill="white"/><text x="32" y="42" text-anchor="middle" font-size="22" font-weight="800" fill="#143068">YH</text></g>
+          <!-- name -->
+          <g transform="translate(96,52)">
+            <text font-size="18" font-weight="800" fill="white">Yahya Hasymi</text>
+            <text y="20" font-size="12" font-weight="500" fill="rgba(255,255,255,.85)">yahyahasymi@gmail.com</text>
+            <g transform="translate(0,30)">
+              <rect width="56" height="22" rx="8" fill="rgba(255,255,255,.22)"/><text x="28" y="15" text-anchor="middle" font-size="10" font-weight="800" fill="white">Admin</text>
+              <text x="64" y="15" font-size="10.5" fill="rgba(255,255,255,.85)">SU · 2FA aktif</text>
+            </g>
+          </g>
+          <!-- ROLE SCOPE CHIPS -->
+          <g transform="translate(24,170)">
+            <text font-size="9.5" font-weight="700" fill="rgba(255,255,255,.7)" letter-spacing="0.5">SEKOLAH YANG DIKELOLA</text>
+            <g transform="translate(0,12)">
+              <g><rect width="148" height="36" rx="11" fill="white"/><text x="14" y="14" font-size="9" font-weight="700" fill="#94A3B8">AKTIF</text><text x="14" y="28" font-size="11" font-weight="800" fill="#143068">SMP Al Azhar</text></g>
+              <g transform="translate(156,0)"><rect width="116" height="36" rx="11" fill="rgba(255,255,255,.18)"/><text x="14" y="14" font-size="9" font-weight="700" fill="rgba(255,255,255,.7)">CABANG 2</text><text x="14" y="28" font-size="11" font-weight="800" fill="white">SMP Az-Zahra</text></g>
+              <g transform="translate(280,0)"><rect width="56" height="36" rx="11" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.35)" stroke-dasharray="3 3"/><text x="28" y="22" text-anchor="middle" font-size="11" font-weight="700" fill="white">+1</text></g>
+            </g>
+          </g>
+          <!-- body -->
+          <g transform="translate(20,260)">
+            <text font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.5">PERAN SAYA</text>
+            <g transform="translate(0,16)" filter="url(#sh15)">
+              <rect width="340" height="56" rx="12" fill="white"/>
+              <g transform="translate(14,14)" stroke="#143068" stroke-width="2" fill="none" stroke-linecap="round"><circle cx="14" cy="14" r="14"/><path d="M8 14 L13 19 L21 9"/></g>
+              <text x="46" y="24" font-size="13" font-weight="800" fill="#0F172A">Admin Sekolah</text>
+              <text x="46" y="42" font-size="10.5" fill="#64748B">Pengaturan, data master, finansial</text>
+            </g>
+            <g transform="translate(0,82)" filter="url(#sh15)">
+              <rect width="340" height="56" rx="12" fill="white"/>
+              <g transform="translate(14,14)" stroke="#0EA5E9" stroke-width="2" fill="none" stroke-linecap="round"><circle cx="14" cy="14" r="14"/><path d="M14 8 V14 L19 16"/></g>
+              <text x="46" y="24" font-size="13" font-weight="800" fill="#0F172A">Guru</text>
+              <text x="46" y="42" font-size="10.5" fill="#64748B">Bahasa Arab · 7B, 8B, 9C</text>
+              <g transform="translate(280,16)"><rect width="50" height="24" rx="8" fill="#EEF2FF"/><text x="25" y="16" text-anchor="middle" font-size="10" font-weight="800" fill="#143068">Beralih</text></g>
+            </g>
+          </g>
+          <!-- divider -->
+          <line x1="20" y1="430" x2="360" y2="430" stroke="#E2E8F0"/>
+          <!-- account links -->
+          <g transform="translate(20,448)">
+            <g><circle cx="14" cy="14" r="14" fill="#F1F5F9"/><g transform="translate(8,8)" stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round"><circle cx="6" cy="5" r="3"/><path d="M0 14 Q6 8 12 14"/></g><text x="40" y="20" font-size="13" font-weight="800" fill="#0F172A">Profil lengkap</text></g>
+            <g transform="translate(0,46)"><circle cx="14" cy="14" r="14" fill="#F1F5F9"/><g transform="translate(7,7)" stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round"><rect x="2" y="6" width="10" height="8" rx="2"/><path d="M5 6 V4 Q5 1 7 1 Q9 1 9 4 V6"/></g><text x="40" y="20" font-size="13" font-weight="800" fill="#0F172A">Keamanan</text><text x="40" y="36" font-size="10" fill="#64748B">2FA aktif · password 14 hari lalu</text></g>
+            <g transform="translate(0,108)"><circle cx="14" cy="14" r="14" fill="#FEF2F2"/><g transform="translate(7,9)" stroke="#DC2626" stroke-width="2" fill="none" stroke-linecap="round"><path d="M2 4 V12 M10 4 V12 M0 4 H12 M4 4 V2 H8 V4"/></g><text x="40" y="20" font-size="13" font-weight="800" fill="#DC2626">Keluar</text></g>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="frame">
+      <p class="cap">B · Profil page · Security checklist</p>
+      <svg viewBox="0 0 380 820" width="380" height="820" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="navy15b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient><filter id="sh15b" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter></defs>
+        <rect width="380" height="820" rx="24" fill="white" stroke="#E2E8F0"/>
+        <path d="M0 0 H380 V200 Q380 220 360 220 H20 Q0 220 0 200 Z" fill="url(#navy15b)"/>
+        <g transform="translate(16,18)"><rect width="36" height="36" rx="12" fill="rgba(255,255,255,.18)"/><path d="M20 12 L13 18 L20 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/></g>
+        <text x="20" y="78" font-size="11" font-weight="500" fill="rgba(255,255,255,.85)">Akun saya</text>
+        <text x="20" y="106" font-size="22" font-weight="800" fill="white">Profil</text>
+        <!-- avatar large -->
+        <g transform="translate(154,124)"><circle cx="36" cy="36" r="36" fill="white"/><text x="36" y="46" text-anchor="middle" font-size="24" font-weight="800" fill="#143068">YH</text></g>
+        <!-- name + role tag -->
+        <g transform="translate(190,232)" text-anchor="middle">
+          <text font-size="18" font-weight="800" fill="#0F172A">Yahya Hasymi</text>
+          <text y="20" font-size="12" fill="#64748B">Admin · SMP Al Azhar</text>
+        </g>
+        <!-- SECURITY CHECKLIST CARD -->
+        <g transform="translate(16,294)" filter="url(#sh15b)">
+          <rect width="348" height="156" rx="16" fill="white" stroke="#143068" stroke-width="1.5"/>
+          <g transform="translate(14,14)">
+            <rect width="100" height="22" rx="8" fill="#EEF2FF"/>
+            <text x="50" y="15" text-anchor="middle" font-size="10" font-weight="800" fill="#143068">⚡ Cek keamanan</text>
+            <text y="42" font-size="13" font-weight="800" fill="#0F172A">Akun Anda 80% aman</text>
+            <g transform="translate(0,52)">
+              <rect width="320" height="6" rx="3" fill="#E2E8F0"/>
+              <rect width="256" height="6" rx="3" fill="#10B981"/>
+            </g>
+            <!-- items -->
+            <g transform="translate(0,72)">
+              <g><circle cx="6" cy="6" r="6" fill="#10B981"/><path d="M3 6 L5 8 L9 4" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>
+              <text x="20" y="10" font-size="11" font-weight="700" fill="#0F172A">2FA aktif</text>
+            </g>
+            <g transform="translate(0,90)">
+              <g><circle cx="6" cy="6" r="6" fill="#10B981"/><path d="M3 6 L5 8 L9 4" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>
+              <text x="20" y="10" font-size="11" font-weight="700" fill="#0F172A">Email terverifikasi</text>
+            </g>
+            <g transform="translate(0,108)">
+              <g><circle cx="6" cy="6" r="6" fill="#F59E0B"/><text x="6" y="10" text-anchor="middle" font-size="9" font-weight="800" fill="white">!</text></g>
+              <text x="20" y="10" font-size="11" font-weight="700" fill="#92400E">Password 60+ hari · pertimbangkan ganti</text>
+              <g transform="translate(220,0)"><rect width="84" height="20" rx="6" fill="#92400E"/><text x="42" y="14" text-anchor="middle" font-size="10" font-weight="800" fill="white">Ganti sekarang</text></g>
+            </g>
+          </g>
+        </g>
+        <!-- LIST: Profil rows -->
+        <g transform="translate(16,476)" filter="url(#sh15b)">
+          <rect width="348" height="180" rx="16" fill="white"/>
+          <g transform="translate(14,14)">
+            <text font-size="10" font-weight="800" fill="#64748B" letter-spacing="0.5">DATA AKUN</text>
+            <g transform="translate(0,18)">
+              <text font-size="10" fill="#94A3B8">Nama lengkap</text>
+              <text y="18" font-size="12" font-weight="700" fill="#0F172A">Yahya Hasymi, S.Pd.</text>
+            </g>
+            <line y1="50" x2="320" y2="50" stroke="#F1F5F9"/>
+            <g transform="translate(0,62)">
+              <text font-size="10" fill="#94A3B8">No. WhatsApp</text>
+              <text y="18" font-size="12" font-weight="700" fill="#0F172A">+62 813-XXXX-1234</text>
+            </g>
+            <line y1="94" x2="320" y2="94" stroke="#F1F5F9"/>
+            <g transform="translate(0,106)">
+              <text font-size="10" fill="#94A3B8">Bahasa antarmuka</text>
+              <text y="18" font-size="12" font-weight="700" fill="#0F172A">Bahasa Indonesia</text>
+              <g transform="translate(220,2)"><rect width="80" height="22" rx="8" fill="#F1F5F9"/><text x="40" y="15" text-anchor="middle" font-size="10" font-weight="800" fill="#334155">Ubah</text></g>
+            </g>
+          </g>
+        </g>
+        <!-- footer -->
+        <g transform="translate(16,684)" filter="url(#sh15b)">
+          <rect width="348" height="56" rx="14" fill="#FEF2F2"/>
+          <text x="20" y="32" font-size="13" font-weight="800" fill="#991B1B">Keluar dari semua perangkat</text>
+          <g transform="translate(308,16)"><path d="M0 12 H20 M14 6 L20 12 L14 18" stroke="#991B1B" stroke-width="2" fill="none" stroke-linecap="round"/></g>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="grid-spec">
+    <div class="spec-card"><h4>IdentityHero <span style="color:var(--navy)">[NEW]</span></h4><p>Sheet variant of <code>BrandHeroSheet</code>. Avatar + name + email + role badge cluster. Always navy gradient regardless of which role is currently active.</p></div>
+    <div class="spec-card"><h4>RoleScopeChips <span style="color:var(--navy)">[NEW]</span></h4><p>Horizontal scroll of school chips. Active school is white-fill / navy text. Adjacent chips are translucent. "+1" trailing chip opens picker if admin manages &gt;3 schools.</p></div>
+    <div class="spec-card"><h4>RolePickerRow</h4><p>For admins who also teach. Each role gets a row with icon + label + scope (e.g. "Bahasa Arab · 7B, 8B, 9C") and a "Beralih" mini-CTA. Tapping switches the entire app's role context.</p></div>
+    <div class="spec-card"><h4>SecurityChecklistCard <span style="color:var(--navy)">[NEW]</span></h4><p>Navy-bordered card with progress bar + bulleted checklist (✓ green / ! amber / × red). Items with action expose a tiny inline button (e.g. "Ganti sekarang").</p></div>
+    <div class="spec-card"><h4>ProfileFieldList</h4><p>Reusable read-only data display: label (slate500 10px) + value (slate900 12px-bold). Tap row → field-edit sheet using <code>AppEditBottomSheet</code>.</p></div>
+    <div class="spec-card"><h4>Edge: single school admin</h4><p>RoleScopeChips section hides entirely. The role picker rows still render but only show admin row.</p></div>
+  </div>
+</section>
+<section class="screen" id="m16">
+  <h2><span class="num">16</span> Shared dialogs polish <span class="tag">DESIGN-SYSTEM</span><span class="pill-new">CANONICAL GALLERY</span></h2>
+  <p class="lede">Single-page reference for every interactive admin chrome element. Use this when adding a new screen — pick from this gallery rather than inventing a new sheet/toggle/footer. Each element here is already shipped in <code>lib/core/widgets/admin_form_components.dart</code>; this mockup is the visual contract.</p>
+  <div class="frames">
+    <div class="frame">
+      <p class="cap">Atomic gallery</p>
+      <svg viewBox="0 0 760 1280" width="760" height="1280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="navy16" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#143068"/><stop offset="1" stop-color="#1F4A8F"/></linearGradient>
+          <filter id="sh16" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0F172A" flood-opacity="0.08"/></filter>
+        </defs>
+        <rect width="760" height="1280" rx="20" fill="#F8FAFC" stroke="#E2E8F0"/>
+        <text x="32" y="46" font-size="20" font-weight="800" fill="#0F172A">Admin shared dialogs · canonical gallery</text>
+        <text x="32" y="68" font-size="12" fill="#64748B">All elements live in lib/core/widgets/admin_form_components.dart unless noted</text>
+        <!-- ROW 1: AdminFormFooter -->
+        <text x="32" y="108" font-size="11" font-weight="800" fill="#143068" letter-spacing="0.5">A · ADMINFORMFOOTER</text>
+        <g transform="translate(32,124)" filter="url(#sh16)">
+          <rect width="340" height="68" rx="14" fill="white"/>
+          <g transform="translate(14,14)">
+            <rect width="118" height="40" rx="12" fill="white" stroke="#CBD5E1"/><text x="59" y="26" text-anchor="middle" font-size="13" font-weight="800" fill="#334155">Batal</text>
+          </g>
+          <g transform="translate(140,14)"><rect width="186" height="40" rx="12" fill="#143068"/><text x="93" y="26" text-anchor="middle" font-size="13" font-weight="800" fill="white">Simpan</text></g>
+        </g>
+        <text x="32" y="216" font-size="10" font-weight="700" fill="#64748B">DEFAULT · 40/60 split, navy primary</text>
+        <!-- variant: saving -->
+        <g transform="translate(396,124)" filter="url(#sh16)">
+          <rect width="340" height="68" rx="14" fill="white"/>
+          <g transform="translate(14,14)"><rect width="118" height="40" rx="12" fill="white" stroke="#CBD5E1"/><text x="59" y="26" text-anchor="middle" font-size="13" font-weight="800" fill="#94A3B8">Batal</text></g>
+          <g transform="translate(140,14)"><rect width="186" height="40" rx="12" fill="#1F4A8F" opacity="0.7"/><circle cx="79" cy="20" r="6" fill="none" stroke="white" stroke-width="2" stroke-dasharray="6 4"/><text x="106" y="26" font-size="13" font-weight="800" fill="white">Menyimpan…</text></g>
+        </g>
+        <text x="396" y="216" font-size="10" font-weight="700" fill="#64748B">SAVING · primary disabled + spinner glyph</text>
+
+        <!-- ROW 2: AdminFormToggle -->
+        <text x="32" y="262" font-size="11" font-weight="800" fill="#143068" letter-spacing="0.5">B · ADMINFORMTOGGLE</text>
+        <g transform="translate(32,278)" filter="url(#sh16)">
+          <rect width="340" height="64" rx="14" fill="white"/>
+          <g transform="translate(14,14)">
+            <text font-size="13" font-weight="800" fill="#0F172A">Notifikasi push</text>
+            <text y="20" font-size="10.5" fill="#64748B">Wali murid menerima alert langsung</text>
+          </g>
+          <g transform="translate(284,20)"><rect width="44" height="24" rx="12" fill="#143068"/><circle cx="32" cy="12" r="9" fill="white"/></g>
+        </g>
+        <text x="32" y="362" font-size="10" font-weight="700" fill="#64748B">NEUTRAL · default tone for benign flips</text>
+        <g transform="translate(396,278)" filter="url(#sh16)">
+          <rect width="340" height="64" rx="14" fill="#FFFBEB"/>
+          <g transform="translate(14,14)">
+            <text font-size="13" font-weight="800" fill="#92400E">Ganti akun terkait</text>
+            <text y="20" font-size="10.5" fill="#92400E">Pindahkan ke akun lain (destruktif)</text>
+          </g>
+          <g transform="translate(284,20)"><rect width="44" height="24" rx="12" fill="#92400E"/><circle cx="32" cy="12" r="9" fill="white"/></g>
+        </g>
+        <text x="396" y="362" font-size="10" font-weight="700" fill="#64748B">WARNING · amber for state-changing flips</text>
+
+        <!-- ROW 3: AdminFormChoiceChips -->
+        <text x="32" y="408" font-size="11" font-weight="800" fill="#143068" letter-spacing="0.5">C · ADMINFORMCHOICECHIPS · single-select</text>
+        <g transform="translate(32,424)" filter="url(#sh16)">
+          <rect width="704" height="80" rx="14" fill="white"/>
+          <g transform="translate(14,14)">
+            <text font-size="11" font-weight="800" fill="#64748B" letter-spacing="0.5">STATUS KEPEGAWAIAN</text>
+            <g transform="translate(0,18)">
+              <g><rect width="100" height="38" rx="12" fill="#143068"/><g transform="translate(12,12)" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"><path d="M2 8 L6 12 L14 4"/></g><text x="58" y="24" text-anchor="middle" font-size="11" font-weight="800" fill="white">Tetap</text></g>
+              <g transform="translate(108,0)"><rect width="100" height="38" rx="12" fill="white" stroke="#CBD5E1"/><text x="50" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Kontrak</text></g>
+              <g transform="translate(216,0)"><rect width="100" height="38" rx="12" fill="white" stroke="#CBD5E1"/><text x="50" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Honor</text></g>
+            </g>
+          </g>
+        </g>
+        <text x="32" y="528" font-size="10" font-weight="700" fill="#64748B">Tap selected chip again → clears (set to null)</text>
+
+        <!-- ROW 4: ConfirmationDialog -->
+        <text x="32" y="572" font-size="11" font-weight="800" fill="#143068" letter-spacing="0.5">D · CONFIRMATIONDIALOG · destructive</text>
+        <g transform="translate(32,588)" filter="url(#sh16)">
+          <rect width="340" height="244" rx="20" fill="white"/>
+          <g transform="translate(132,24)"><circle cx="38" cy="38" r="38" fill="#FEF2F2"/><g transform="translate(28,24)" stroke="#DC2626" stroke-width="2.4" fill="none" stroke-linecap="round"><path d="M2 4 V18 M18 4 V18 M0 4 H20 M6 4 V2 H14 V4"/></g></g>
+          <text x="170" y="132" text-anchor="middle" font-size="16" font-weight="800" fill="#0F172A">Hapus 3 siswa?</text>
+          <text x="170" y="156" text-anchor="middle" font-size="11.5" fill="#64748B">Tindakan ini permanen dan tidak dapat dibatalkan</text>
+          <g transform="translate(20,184)">
+            <g><rect width="142" height="44" rx="12" fill="white" stroke="#CBD5E1"/><text x="71" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="#334155">Batal</text></g>
+            <g transform="translate(150,0)"><rect width="150" height="44" rx="12" fill="#DC2626"/><text x="75" y="28" text-anchor="middle" font-size="13" font-weight="800" fill="white">Hapus 3 siswa</text></g>
+          </g>
+        </g>
+        <text x="32" y="850" font-size="10" font-weight="700" fill="#64748B">Centered icon · Title · Subtitle · Cancel/Confirm</text>
+
+        <!-- ROW 5: BulkActionBar -->
+        <g transform="translate(396,588)" filter="url(#sh16)">
+          <rect width="340" height="76" rx="20" fill="#143068"/>
+          <text x="20" y="30" font-size="13" font-weight="800" fill="white">3 siswa dipilih</text>
+          <text x="20" y="48" font-size="10.5" fill="rgba(255,255,255,.7)">7B · Ahmad, Rania, Syifa</text>
+          <g transform="translate(180,18)"><rect width="60" height="40" rx="12" fill="rgba(255,255,255,.18)"/><text x="30" y="25" text-anchor="middle" font-size="12" font-weight="800" fill="white">Pindah</text></g>
+          <g transform="translate(248,18)"><rect width="76" height="40" rx="12" fill="white"/><text x="38" y="25" text-anchor="middle" font-size="12" font-weight="800" fill="#DC2626">Hapus</text></g>
+        </g>
+        <text x="396" y="682" font-size="11" font-weight="800" fill="#143068" letter-spacing="0.5">E · BULKACTIONBAR · long-press triggered</text>
+        <text x="396" y="698" font-size="10" font-weight="700" fill="#64748B">Floats above bottom nav · 16px shadow</text>
+
+        <!-- ROW 6: ActiveFilterChips -->
+        <text x="32" y="884" font-size="11" font-weight="800" fill="#143068" letter-spacing="0.5">F · ACTIVEFILTERCHIPS · sticky in hero</text>
+        <g transform="translate(32,900)">
+          <rect width="704" height="56" rx="14" fill="url(#navy16)"/>
+          <g transform="translate(14,12)">
+            <g><rect width="158" height="32" rx="11" fill="white"/><text x="14" y="14" font-size="9" font-weight="500" fill="#94A3B8">Periode</text><text x="14" y="26" font-size="11" font-weight="800" fill="#143068">2025/26 · Ganjil ▾</text></g>
+            <g transform="translate(168,0)"><rect width="100" height="32" rx="11" fill="rgba(255,255,255,.18)"/><text x="14" y="20" font-size="11" font-weight="700" fill="white">Tingkat 7</text><g transform="translate(82,8)" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M0 0 L8 8 M8 0 L0 8"/></g></g>
+            <g transform="translate(278,0)"><rect width="84" height="32" rx="11" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.35)" stroke-dasharray="3 3"/><text x="42" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="rgba(255,255,255,.85)">+ Status</text></g>
+            <g transform="translate(372,0)"><rect width="64" height="32" rx="11" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.35)" stroke-dasharray="3 3"/><text x="32" y="20" text-anchor="middle" font-size="11" font-weight="700" fill="rgba(255,255,255,.85)">+ Mapel</text></g>
+            <g transform="translate(584,0)"><rect width="92" height="32" rx="11" fill="white"/><text x="46" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="#DC2626">Reset filter</text></g>
+          </g>
+        </g>
+        <text x="32" y="978" font-size="10" font-weight="700" fill="#64748B">Active = white fill · Placeholder = dashed translucent · Reset chip turns red when ≥1 active</text>
+
+        <!-- ROW 7: AdminFormSheetHeader -->
+        <text x="32" y="1018" font-size="11" font-weight="800" fill="#143068" letter-spacing="0.5">G · ADMINFORMSHEETHEADER · with editing context</text>
+        <g transform="translate(32,1034)" filter="url(#sh16)">
+          <path d="M0 14 Q0 0 14 0 H690 Q704 0 704 14 V148 H0 Z" fill="url(#navy16)"/>
+          <g transform="translate(20,30)">
+            <rect width="80" height="20" rx="6" fill="rgba(255,255,255,.22)"/><text x="40" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="white" letter-spacing="0.4">EDIT DATA</text>
+          </g>
+          <text x="20" y="84" font-size="22" font-weight="800" fill="white">Edit Siswa</text>
+          <g transform="translate(20,98)">
+            <rect width="280" height="32" rx="10" fill="rgba(255,255,255,.18)"/>
+            <circle cx="14" cy="16" r="9" fill="white"/><text x="14" y="20" text-anchor="middle" font-size="9" font-weight="800" fill="#143068">RA</text>
+            <text x="32" y="20" font-size="11.5" font-weight="700" fill="white">Rania Putri · NISN 0098234471</text>
+          </g>
+        </g>
+        <text x="32" y="1206" font-size="10" font-weight="700" fill="#64748B">EDIT DATA kicker chip + name + initials avatar pill (NEW: editingContext slot)</text>
+
+        <!-- footer note -->
+        <text x="32" y="1252" font-size="10" font-weight="700" fill="#64748B" font-style="italic">All elements: 12px corner radius · 6dp shadow · Inter font · navy = #143068 → #1F4A8F</text>
+      </svg>
+    </div>
+  </div>
+  <div class="grid-spec">
+    <div class="spec-card"><h4>AdminFormFooter</h4><p>40/60 outline-Batal + filled-Simpan. <code>isSaving</code> swaps primary to spinner + "Menyimpan…" and disables Batal. Samsung-safe via internal SafeArea.</p></div>
+    <div class="spec-card"><h4>AdminFormToggle</h4><p>Two tones — <code>neutral</code> (slate text on white) and <code>warning</code> (amber on FFFBEB tinted card). Switch is a custom 44×24 pill with 9px white knob + 4px shadow.</p></div>
+    <div class="spec-card"><h4>AdminFormChoiceChips</h4><p>Generic over <code>T</code>; pass <code>List&lt;AdminFormChoice&lt;T&gt;&gt;</code>. Tap selected chip again → calls <code>onChanged(null)</code> to clear.</p></div>
+    <div class="spec-card"><h4>ConfirmationDialog</h4><p>Always centered icon-circle (red for delete, amber for warn, navy for confirm). Title 16/800, subtitle 11.5/500. Two-button footer matches AdminFormFooter ratios.</p></div>
+    <div class="spec-card"><h4>BulkActionBar</h4><p>Navy filled bar floating above bottom nav. Up to 3 actions: 2 secondary (translucent white) + 1 primary (white fill, action-tinted text). Bottom-safe inset.</p></div>
+    <div class="spec-card"><h4>ActiveFilterChips</h4><p>Lives inside <code>BrandPageHeader</code>. Active = white fill / navy text / value tspan. Placeholder = dashed translucent. "Reset filter" chip appears (white fill / red text) when ≥1 active.</p></div>
+    <div class="spec-card"><h4>AdminFormSheetHeader</h4><p>Now supports an <code>editingContext</code> slot (label + initials) that renders an inline pill below the title. Replaces ad-hoc subtitle strings.</p></div>
+    <div class="spec-card"><h4>BrandPageHeader (canonical)</h4><p>Hero gradient + back/actions row + breadcrumb subtitle + 22-pt title + chip strip + overlapping search bar. All admin screens start here.</p></div>
+  </div>
+</section>
+</main>
+<footer class="bot">KamilEdu · Admin v3 final mockup phase · Inter / system-ui · navy <code style="background:#fff;padding:1px 4px;border-radius:3px">#143068 → #1F4A8F</code></footer>
+</body>
+</html>

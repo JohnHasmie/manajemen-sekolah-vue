@@ -114,10 +114,24 @@ class _FinanceFilterSheetState extends State<FinanceFilterSheet> {
               FilterChipGrid<String?>(
                 options: [
                   FilterOption(
+                    value: 'sekali bayar',
+                    label: lang.getTranslatedText({
+                      'en': 'One Time',
+                      'id': 'Sekali',
+                    }),
+                  ),
+                  FilterOption(
                     value: 'bulanan',
                     label: lang.getTranslatedText({
                       'en': 'Monthly',
                       'id': 'Bulanan',
+                    }),
+                  ),
+                  FilterOption(
+                    value: 'semester',
+                    label: lang.getTranslatedText({
+                      'en': 'Semester',
+                      'id': 'Semester',
                     }),
                   ),
                   FilterOption(
