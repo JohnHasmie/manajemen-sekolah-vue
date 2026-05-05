@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/widgets/action_confirm_sheet.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/payment_type_detail_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/payment_type_form_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/target_selection_modal.dart';
-import 'package:manajemensekolah/features/finance/presentation/widgets/generate_bills_dialog.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/verification_dialog.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/payment_proof_dialog.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/admin_finance_controller.dart';
@@ -92,16 +92,35 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
     }
   }
 
-  void confirmGenerateBills(Map<String, dynamic> paymentType) {
-    showDialog(
-      context: context,
-      builder: (context) => GenerateBillsDialog(
-        paymentType: paymentType,
-        primaryColor: getPrimaryColor(),
-        cardGradient: getCardGradient(),
-        onGenerated: loadDataAfterAction,
-      ),
+  /// Tap on a Jenis row → opens the read-only detail sheet, which
+  /// returns either `PaymentTypeDetailAction.edit`,
+  /// `PaymentTypeDetailAction.delete`, or `null` (dismissed). We
+  /// fan out to the existing edit form / destructive confirm sheet
+  /// so the row card itself stays a thin presentation widget.
+  ///
+  /// Manual bill generation is no longer surfaced here — the Laravel
+  /// scheduler in `routes/console.php` runs `finance:generate-bills`
+  /// daily at 01:00, so the row's "Generate" mini-button used to be a
+  /// race-prone manual override that confused admins. The detail
+  /// sheet's helper line tells the admin what's happening.
+  Future<void> showPaymentTypeDetail(Map<String, dynamic> paymentType) async {
+    final action = await showPaymentTypeDetailSheet(
+      context,
+      paymentType: paymentType,
+      primaryColor: getPrimaryColor(),
+      formatCurrency: formatCurrency,
+      getTranslatedPeriod: getTranslatedPeriod,
+      getGoalDescription: getGoalDescription,
     );
+    if (!mounted || action == null) return;
+    switch (action) {
+      case PaymentTypeDetailAction.edit:
+        showAddEditPaymentType(paymentType: paymentType);
+        break;
+      case PaymentTypeDetailAction.delete:
+        await deletePaymentType(paymentType);
+        break;
+    }
   }
 
   void showVerificationDialog(Map<String, dynamic> payment) {

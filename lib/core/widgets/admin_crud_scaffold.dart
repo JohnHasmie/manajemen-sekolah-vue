@@ -28,9 +28,14 @@
 // body) plus [BulkActionBar]. Everything else (spacing, shadows, FAB radius,
 // safe area) is baked in.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/bulk_action_bar.dart';
 import 'package:manajemensekolah/core/widgets/school_pill.dart';
+import 'package:manajemensekolah/core/widgets/search_filter_bar.dart';
 import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
 import 'package:manajemensekolah/core/widgets/teacher_page_header.dart';
 
@@ -224,6 +229,39 @@ class AdminCrudScaffold extends StatelessWidget {
   /// the bulk-bar hide behavior.
   final Widget? customFab;
 
+  // ── v3 brand-aligned mode ──
+  //
+  // When [brandChips] is non-null the scaffold renders the parent-aligned
+  // v3 hero (BrandPageHeader with embedded BrandFilterChipStrip) and a
+  // white search bar that overlaps the hero's bottom rounded edge —
+  // matching the parent Tagihan/Nilai/Kehadiran visual language.
+  //
+  // When [brandChips] is null the scaffold falls back to the legacy
+  // [TeacherPageHeader] + active-filter-chips bar so older callers keep
+  // working unchanged.
+
+  /// Filter chips rendered inside the gradient header (v3 mode). When
+  /// provided, the scaffold uses [BrandPageHeader] instead of
+  /// [TeacherPageHeader] and hides the legacy [activeFilters] white bar.
+  final List<BrandFilterChip>? brandChips;
+
+  /// Optional small kicker line above the title (e.g. `MANAJEMEN DATA`).
+  /// Only used in v3 mode. Falls back to [subtitle] when null.
+  final String? headerKicker;
+
+  /// Role driving the brand gradient when v3 mode is active. Defaults to
+  /// `'admin'` (navy). Pass `'guru'` / `'wali'` if the same scaffold ever
+  /// needs to render under teacher / parent.
+  final String role;
+
+  /// Whether to render the green "REAL-TIME" pill in the v3 hero. Default
+  /// true. Only used when [brandChips] is non-null.
+  final bool showRealtimePill;
+
+  /// Optional total-counter chip rendered next to the realtime pill in the
+  /// v3 hero. E.g. `"86 GURU"`, `"1.248 SISWA"`. Hidden when null.
+  final String? counterLabel;
+
   const AdminCrudScaffold({
     super.key,
     required this.title,
@@ -267,6 +305,11 @@ class AdminCrudScaffold extends StatelessWidget {
     this.renderHeader = true,
     this.actionMenu,
     this.customFab,
+    this.brandChips,
+    this.headerKicker,
+    this.role = 'admin',
+    this.showRealtimePill = true,
+    this.counterLabel,
   });
 
   bool get _showSearch =>
@@ -278,6 +321,8 @@ class AdminCrudScaffold extends StatelessWidget {
   bool get _showBulkBar =>
       selectedCount > 0 && onClearSelection != null && bulkActions.isNotEmpty;
 
+  bool get _useBrandHeader => brandChips != null;
+
   @override
   Widget build(BuildContext context) {
     final trailing = _buildTrailing();
@@ -287,7 +332,9 @@ class AdminCrudScaffold extends StatelessWidget {
       body: Column(
         children: [
           if (topBanner != null) topBanner!,
-          if (renderHeader)
+          if (renderHeader && _useBrandHeader)
+            _buildBrandHeader()
+          else if (renderHeader)
             TeacherPageHeader(
               title: title,
               subtitle: subtitle,
@@ -305,6 +352,8 @@ class AdminCrudScaffold extends StatelessWidget {
               activeFilters: activeFilters,
               onClearAllFilters: onClearAllFilters,
             ),
+          if (renderHeader && _useBrandHeader && _showSearch)
+            _buildBrandSearchBar(),
           if (toolbar != null) toolbar!,
           Expanded(
             child: MediaQuery.removePadding(
@@ -315,7 +364,7 @@ class AdminCrudScaffold extends StatelessWidget {
                 errorMessage: errorMessage,
                 isEmpty: isEmpty,
                 onRefresh: onRefresh,
-                role: 'admin',
+                role: role,
                 emptyTitle: emptyTitle,
                 emptySubtitle: emptySubtitle,
                 emptyIcon: emptyIcon,
@@ -376,6 +425,81 @@ class AdminCrudScaffold extends StatelessWidget {
 
     // Only actionMenu.
     return Padding(padding: const EdgeInsets.only(left: 8), child: actionMenu!);
+  }
+
+  /// Build the v3 brand-aligned hero — matches parent Tagihan/Nilai pattern.
+  /// Renders: BrandPageHeader with kicker / big title / realtime pill +
+  /// counter / embedded BrandFilterChipStrip. Filter & action menu icons
+  /// sit at top-right.
+  Widget _buildBrandHeader() {
+    final actions = <Widget>[];
+    if (onFilterTap != null) {
+      actions.add(BrandHeaderIconButton(
+        icon: Icons.tune_rounded,
+        onTap: onFilterTap!,
+        badgeCount: hasActiveFilter ? _activeFilterCount() : null,
+        badgeBorderColor: primaryColor,
+      ));
+    }
+    if (actionMenu != null) actions.add(actionMenu!);
+
+    return BrandPageHeader(
+      role: role,
+      title: title,
+      subtitle: headerKicker ?? subtitle,
+      onBackPressed: onBackPressed,
+      showBackButton: showBackButton,
+      actionIcons: actions.isEmpty ? null : actions,
+      realtimeIndicator: _buildRealtimeRow(),
+      bottomSlot: BrandFilterChipStrip(chips: brandChips!),
+    );
+  }
+
+  /// Realtime row — just the pulsing-green pill. The total count chip was
+  /// dropped because pagination only ever returns the current page so the
+  /// number was misleading. The [counterLabel] prop is preserved for API
+  /// compatibility but no longer renders.
+  Widget? _buildRealtimeRow() {
+    if (!showRealtimePill) return null;
+    return BrandRealtimePill(isFresh: true, lastSync: DateTime.now());
+  }
+
+  /// White search bar rendered just below the gradient hero in v3 mode.
+  ///
+  /// Drops the earlier negative-offset overlap — on real devices the
+  /// translate created an inconsistent gap with the chip strip above. A
+  /// flat 12 px top / 8 px bottom padding gives the chips room to breathe
+  /// and the section header / list below room to read.
+  Widget _buildBrandSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        12,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      child: Material(
+        elevation: 2,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        shadowColor: Colors.black.withValues(alpha: 0.10),
+        child: SearchFilterBar(
+          controller: searchController!,
+          hintText: searchHint,
+          onChanged: onSearchChanged,
+          onSubmitted: onSearchSubmitted,
+          onFilterTap: null,
+          hasActiveFilter: false,
+          activeFilterCount: 0,
+          transparentStyle: false,
+          primaryColor: primaryColor,
+        ),
+      ),
+    );
+  }
+
+  int _activeFilterCount() {
+    if (brandChips == null) return 0;
+    return brandChips!.where((c) => c.value != null).length;
   }
 
   Widget? _buildFab() {

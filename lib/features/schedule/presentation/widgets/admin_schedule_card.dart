@@ -1,23 +1,16 @@
-// Admin schedule card widget extracted from
-// TeachingScheduleManagementScreenState._buildScheduleCard().
+// AdminScheduleCard — single schedule entry row in the admin list view
+// (v3 — SS2 layout).
 //
-// Like a Vue `<AdminScheduleCard :schedule="..." :index="..." />` component —
-// purely presentational, all data and action callbacks are passed in as
-// constructor params. No providers are read here.
-
+// Top row: meta (day · time) + "Detail →" CTA.
+// Title:   bold subject name.
+// Status:  inline info-dot teacher · class.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_card_widgets.dart';
 
-/// A single schedule entry card for the admin list view.
-///
-/// Displays subject, teacher, class, day, and time; with optional Edit/Delete
-/// action buttons (hidden when [isReadOnly] is true).
-///
-/// In Laravel terms: like a Blade partial
-/// `@include('schedule.partials.admin-card', ['schedule' => $s])`.
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_list_row.dart';
+import 'package:manajemensekolah/core/widgets/initials_avatar.dart';
+import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
+
 class AdminScheduleCard extends StatelessWidget {
   const AdminScheduleCard({
     super.key,
@@ -30,38 +23,25 @@ class AdminScheduleCard extends StatelessWidget {
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    this.onLongPress,
+    this.selected = false,
   });
 
-  /// The raw schedule map from the API.
   final Map<String, dynamic> schedule;
-
-  /// Zero-based position in the list — used to determine the card's accent color.
   final int index;
-
-  /// When true, the Edit and Delete buttons are hidden.
   final bool isReadOnly;
-
-  /// Role-specific accent colour (admin blue).
   final Color primaryColor;
-
-  /// Pre-formatted day label (e.g. "Senin, Rabu") built by the parent.
   final String dayLabel;
-
-  /// Pre-formatted time range (e.g. "07:00 - 08:30") built by the parent.
   final String timeLabel;
-
-  /// Called when the user taps the card body — opens the detail dialog.
   final VoidCallback onTap;
-
-  /// Called when the user taps the edit icon button.
   final VoidCallback onEdit;
-
-  /// Called when the user taps the delete icon button.
   final VoidCallback onDelete;
+  final VoidCallback? onLongPress;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
-    final color = ColorUtils.getColorForIndex(index);
+    final accent = ColorUtils.getRoleColor('admin');
     final model = Schedule.fromJson(schedule);
     final subjectName = (model.subjectName ?? '').isEmpty
         ? 'No Subject'
@@ -69,104 +49,27 @@ class AdminScheduleCard extends StatelessWidget {
     final teacherName = (model.teacherName ?? '').isEmpty
         ? '-'
         : model.teacherName!;
-    final className = (model.className ?? '').isEmpty ? '-' : model.className!;
+    final className = (model.className ?? '').isEmpty
+        ? '-'
+        : model.className!;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.all(Radius.circular(14)),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
-              boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Colored icon container
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: const BorderRadius.all(Radius.circular(11)),
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.calendar_today_rounded,
-                    color: color,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                // Main content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Subject name
-                      Text(
-                        subjectName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      // Teacher name
-                      Text(
-                        teacherName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorUtils.slate500,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      // Info tags row
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          ScheduleInfoTag(
-                            icon: Icons.school_outlined,
-                            text: className,
-                          ),
-                          ScheduleInfoTag(
-                            icon: Icons.today_outlined,
-                            text: dayLabel,
-                          ),
-                          ScheduleInfoTag(
-                            icon: Icons.access_time_outlined,
-                            text: timeLabel,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // Per-row edit/delete affordances removed (PR-7 / Audit
-                // Theme 7). Tap-to-detail / bulk-mode / 3-dot overflow take
-                // over. `onEdit` and `onDelete` props kept on the constructor.
-              ],
-            ),
-          ),
-        ),
+    final topMeta = '$dayLabel · $timeLabel';
+
+    return BrandListRow(
+      leading: InitialsAvatar(
+        name: subjectName,
+        size: 44,
+        color: accent,
+        borderRadius: 12,
       ),
+      topMeta: topMeta,
+      title: subjectName,
+      status: BrandRowStatus.info('$teacherName · $className'),
+      trailingActionLabel: selected ? null : 'Detail',
+      trailingActionColor: accent,
+      onTap: onTap,
+      onLongPress: onLongPress ?? (isReadOnly ? null : onEdit),
+      selected: selected,
     );
   }
 }

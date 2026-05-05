@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/admin_form_components.dart';
 import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_form_builders_mixin.dart';
 import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_form_init_mixin.dart';
 import 'package:manajemensekolah/features/teachers/presentation/mixins/teacher_form_layout_mixin.dart';
@@ -43,22 +43,39 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog>
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.92,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
+      // Sheet sizes naturally to its content (capped at 88 % so users
+      // can still see the dimmed list behind). The form body inside
+      // buildFormContent() handles its own scrolling when needed.
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              buildHeader(languageProvider),
-              buildFormContent(languageProvider, _buildFormBody),
-              buildFooter(saveTeacher),
-            ],
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: Material(
+            color: Colors.white,
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  buildHeader(languageProvider),
+                  Flexible(
+                    child: buildFormContent(languageProvider, _buildFormBody),
+                  ),
+                  buildFooter(saveTeacher),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -66,23 +83,59 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog>
   }
 
   Widget _buildFormBody(LanguageProvider languageProvider) {
+    String t(Map<String, String> m) => languageProvider.getTranslatedText(m);
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        buildNameField(languageProvider),
-        const SizedBox(height: AppSpacing.md),
-        if (widget.teacher != null) buildChangeUserSwitch(languageProvider),
-        buildEmailField(languageProvider),
-        const SizedBox(height: AppSpacing.md),
-        buildNipField(),
-        const SizedBox(height: AppSpacing.md),
-        buildGenderDropdown(languageProvider),
-        const SizedBox(height: AppSpacing.lg),
-        buildSubjectsSection(languageProvider),
-        const SizedBox(height: AppSpacing.md),
-        buildHomeroomClassDropdown(languageProvider),
-        const SizedBox(height: AppSpacing.md),
-        buildEmploymentStatusDropdown(languageProvider),
+        AdminFormSection(
+          label: t(const {'en': 'BASIC DATA', 'id': 'DATA POKOK'}),
+          children: [
+            buildNameField(languageProvider),
+            buildEmailField(languageProvider),
+            buildNipField(),
+          ],
+        ),
+        AdminFormSection(
+          label: t(const {'en': 'PERSONAL DATA', 'id': 'DATA PRIBADI'}),
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AdminFormFieldLabel(
+                  text: t(const {'en': 'Gender', 'id': 'Jenis kelamin'}),
+                ),
+                AdminFormChoiceChips<String>(
+                  value: selectedGender,
+                  onChanged: (v) => setState(() => selectedGender = v),
+                  choices: [
+                    AdminFormChoice(
+                      value: 'L',
+                      label: t(const {'en': 'Male', 'id': 'Laki-laki'}),
+                      icon: Icons.male_rounded,
+                    ),
+                    AdminFormChoice(
+                      value: 'P',
+                      label: t(const {'en': 'Female', 'id': 'Perempuan'}),
+                      icon: Icons.female_rounded,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            buildEmploymentStatusDropdown(languageProvider),
+          ],
+        ),
+        AdminFormSection(
+          label: t(const {'en': 'ASSIGNMENT', 'id': 'PENUGASAN'}),
+          bottomGap: 4,
+          children: [
+            buildSubjectsSection(languageProvider),
+            buildHomeroomClassDropdown(languageProvider),
+            if (widget.teacher != null) buildChangeUserSwitch(languageProvider),
+          ],
+        ),
       ],
     );
   }

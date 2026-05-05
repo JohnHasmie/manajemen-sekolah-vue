@@ -21,8 +21,13 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
 import 'package:manajemensekolah/core/widgets/admin_data_menu.dart';
+import 'package:manajemensekolah/core/widgets/admin_entity_detail_sheet.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/bulk_action_bar.dart';
+import 'package:manajemensekolah/core/widgets/bulk_delete_confirm_dialog.dart';
 import 'package:manajemensekolah/core/widgets/paginated_list_view.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
+import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 import 'package:manajemensekolah/features/teachers/presentation/controllers/admin_teacher_controller.dart';
 import 'package:manajemensekolah/features/teachers/presentation/controllers/helpers/teacher_filter_helper.dart';
 import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_card.dart';
@@ -66,6 +71,10 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
   String? _selectedTeachingClassId;
   bool _showAllTeachers = false;
   bool _hasActiveFilter = false;
+
+  // Bulk-select state — long-press a card to enter, tap to toggle.
+  final Set<String> _selectedIds = <String>{};
+  bool get _bulkMode => _selectedIds.isNotEmpty;
 
   // Filter-option lists (populated once from /filter-options).
   List<dynamic> _availableClass = [];
@@ -285,36 +294,160 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     _loadData();
   }
 
-  // Per-chip removal callbacks — each chip carries its own targeted
-  // callback so the × on one chip only removes that filter.
-  void _removeHomeroomFilter() {
-    setState(() => _selectedHomeroomFilter = null);
-    _refreshHasActiveFilter();
-    _loadData();
+  // ── Bulk-select actions ─────────────────────────────────────────────
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
   }
 
-  void _removeGenderFilter() {
-    setState(() => _selectedGender = null);
-    _refreshHasActiveFilter();
-    _loadData();
+  void _clearSelection() {
+    if (_selectedIds.isEmpty) return;
+    setState(_selectedIds.clear);
   }
 
-  void _removeEmploymentFilter() {
-    setState(() => _selectedEmploymentStatus = null);
-    _refreshHasActiveFilter();
-    _loadData();
-  }
+  Future<void> _bulkDeleteSelected() async {
+    if (_selectedIds.isEmpty) return;
+    final lang = ref.read(languageRiverpod);
+    final selected = _teachers
+        .cast<Map<String, dynamic>>()
+        .where((t) => _selectedIds.contains(t['id']?.toString()))
+        .toList();
 
-  void _removeTeachingClassFilter() {
-    setState(() => _selectedTeachingClassId = null);
-    _refreshHasActiveFilter();
-    _loadData();
+    final ok = await showBulkDeleteConfirm(
+      context,
+      entityNoun: lang.getTranslatedText(const {
+        'en': 'teachers',
+        'id': 'guru',
+      }),
+      items: selected
+          .map(
+            (t) => BulkDeleteItem(
+              id: t['id'].toString(),
+              title: (t['name'] ?? t['user']?['name'] ?? '?').toString(),
+              subtitle: (t['email'] ?? '').toString().isEmpty
+                  ? null
+                  : t['email'].toString(),
+            ),
+          )
+          .toList(),
+    );
+    if (ok != true || !mounted) return;
+
+    final ctrl = ref.read(adminTeacherControllerProvider);
+    final ids = List<Map<String, dynamic>>.from(selected);
+    setState(_selectedIds.clear);
+
+    var deleted = 0;
+    for (final t in ids) {
+      final removed = await ctrl.deleteTeacher(t, context);
+      if (removed) deleted++;
+      if (!mounted) return;
+    }
+    if (!mounted) return;
+    await _loadData();
+    if (!mounted) return;
+    SnackBarUtils.showSuccess(
+      context,
+      lang.getTranslatedText({
+        'en': '$deleted of ${ids.length} teachers deleted',
+        'id': '$deleted dari ${ids.length} guru terhapus',
+      }),
+    );
   }
 
   // ── Row-level actions ───────────────────────────────────────────────
 
   void _openTeacherDetail(Map<String, dynamic> teacher) {
-    ref.read(adminTeacherControllerProvider).navigateToDetail(context, teacher);
+    final lang = ref.read(languageRiverpod);
+    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
+    final model = Teacher.fromJson(teacher);
+    final name = model.name.isNotEmpty ? model.name : 'No Name';
+    final nip = (teacher['nip'] ?? teacher['nuptk'] ?? '').toString();
+    final email = model.email.isNotEmpty ? model.email : '-';
+    final phone = (teacher['phone'] ?? teacher['user']?['phone'] ?? '-')
+        .toString();
+    final employmentStatus =
+        (teacher['employment_status'] ?? '-').toString();
+    final isHomeroom = model.isHomeroomTeacher;
+    final homeroomClass = model.homeroomClassName ?? '-';
+    final subjects = (teacher['subjects'] as List<dynamic>?)
+            ?.map((s) => (s is Map ? s['name'] : s).toString())
+            .where((s) => s.isNotEmpty)
+            .join(', ') ??
+        '-';
+
+    showAdminEntityDetailSheet(
+      context,
+      kicker: lang.getTranslatedText(const {'en': 'TEACHER', 'id': 'GURU'}),
+      title: name,
+      meta: nip.isNotEmpty ? 'NIP $nip' : email,
+      initials: name,
+      status: EntityStatus.success(
+        lang.getTranslatedText(const {'en': 'Active', 'id': 'Aktif'}),
+      ),
+      sections: [
+        EntityDetailSection(
+          label: lang.getTranslatedText(const {
+            'en': 'Identity',
+            'id': 'Identitas',
+          }),
+          rows: [
+            EntityDetailRow(label: 'NIP / NUPTK', value: nip.isEmpty ? '-' : nip),
+            EntityDetailRow(label: 'Email', value: email),
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Phone',
+                'id': 'No. HP',
+              }),
+              value: phone,
+            ),
+          ],
+        ),
+        EntityDetailSection(
+          label: lang.getTranslatedText(const {
+            'en': 'Assignment',
+            'id': 'Penugasan',
+          }),
+          rows: [
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Role',
+                'id': 'Peran',
+              }),
+              value: isHomeroom
+                  ? '${lang.getTranslatedText(const {'en': 'Homeroom', 'id': 'Wali Kelas'})} $homeroomClass'
+                  : lang.getTranslatedText(const {
+                      'en': 'Subject Teacher',
+                      'id': 'Guru Mapel',
+                    }),
+            ),
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Subjects',
+                'id': 'Mapel',
+              }),
+              value: subjects,
+            ),
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Employment',
+                'id': 'Status Kerja',
+              }),
+              value: employmentStatus,
+            ),
+          ],
+        ),
+      ],
+      onEdit: () => _openAddEditSheet(teacher: teacher),
+      onDelete: () => _deleteTeacher(teacher),
+      isReadOnly: isReadOnly,
+    );
   }
 
   void _openAddEditSheet({Map<String, dynamic>? teacher}) {
@@ -378,24 +511,63 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     final academicYear = ref.watch(academicYearRiverpod);
     final primaryColor = ColorUtils.getRoleColor('admin');
 
-    final activeFilters = TeacherFilterHelper.buildFilterChips(
-      selectedHomeroomFilter: _selectedHomeroomFilter,
-      selectedGender: _selectedGender,
-      selectedEmploymentStatus: _selectedEmploymentStatus,
-      selectedTeachingClassId: _selectedTeachingClassId,
-      availableClass: _availableClass,
-      availableEmploymentStatus: _availableEmploymentStatus,
-      languageProvider: lang,
-      onClearHomeroom: _removeHomeroomFilter,
-      onClearGender: _removeGenderFilter,
-      onClearEmploymentStatus: _removeEmploymentFilter,
-      onClearTeachingClass: _removeTeachingClassFilter,
-    );
+    // v3 brand chips — sticky inside hero. Tapping any chip routes to the
+    // full filter sheet (single-filter pickers can be added later).
+    String? _classNameForId(String? id) {
+      if (id == null) return null;
+      final match = _availableClass.cast<Map<String, dynamic>>().firstWhere(
+            (c) => c['id']?.toString() == id,
+            orElse: () => const {'name': '1 kelas'},
+          );
+      return match['name']?.toString();
+    }
+
+    final brandChips = <BrandFilterChip>[
+      BrandFilterChip(
+        label: lang.getTranslatedText(const {
+          'en': 'Role',
+          'id': 'Status',
+        }),
+        value: _selectedHomeroomFilter == null
+            ? null
+            : lang.getTranslatedText(switch (_selectedHomeroomFilter) {
+                'wali_kelas' => const {
+                    'en': 'Homeroom',
+                    'id': 'Wali Kelas',
+                  },
+                'guru_mapel' => const {
+                    'en': 'Subject Teacher',
+                    'id': 'Guru Mapel',
+                  },
+                _ => {
+                    'en': _selectedHomeroomFilter!,
+                    'id': _selectedHomeroomFilter!,
+                  },
+              }),
+        onTap: _openFilterSheet,
+      ),
+      BrandFilterChip(
+        label: lang.getTranslatedText(const {
+          'en': 'Class',
+          'id': 'Kelas',
+        }),
+        value: _classNameForId(_selectedTeachingClassId),
+        onTap: _openFilterSheet,
+      ),
+      BrandFilterChip(
+        label: lang.getTranslatedText(const {
+          'en': 'Employment',
+          'id': 'Status Kerja',
+        }),
+        value: _selectedEmploymentStatus,
+        onTap: _openFilterSheet,
+      ),
+    ];
 
     return AdminCrudScaffold(
       title: lang.getTranslatedText(const {
-        'en': 'Teacher Management',
-        'id': 'Manajemen Guru',
+        'en': 'Teachers',
+        'id': 'Guru',
       }),
       subtitle: lang.getTranslatedText(const {
         'en': 'Manage and monitor teachers',
@@ -411,7 +583,15 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
       onSearchSubmitted: (_) => _loadData(),
       onFilterTap: _openFilterSheet,
       hasActiveFilter: _hasActiveFilter,
-      activeFilters: activeFilters,
+      brandChips: brandChips,
+      headerKicker: lang.getTranslatedText(const {
+        'en': 'DATA MANAGEMENT',
+        'id': 'MANAJEMEN DATA',
+      }),
+      counterLabel: '${_teachers.length} ${lang.getTranslatedText(const {
+        'en': 'teachers',
+        'id': 'guru',
+      })}',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,
@@ -441,10 +621,15 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
       childBuilder: () => PaginatedListView<Map<String, dynamic>>(
         items: _teachers.cast<Map<String, dynamic>>(),
         itemBuilder: (context, teacher, index) {
+          final id = teacher['id']?.toString() ?? '';
+          final isSelected = _selectedIds.contains(id);
           return TeacherCard(
             teacher: teacher,
             index: index,
-            onTap: () => _openTeacherDetail(teacher),
+            onTap: () =>
+                _bulkMode ? _toggleSelection(id) : _openTeacherDetail(teacher),
+            onLongPress: () => _toggleSelection(id),
+            selected: isSelected,
             onEdit: () => _openAddEditSheet(teacher: teacher),
             onDelete: () => _deleteTeacher(teacher),
           );
@@ -457,6 +642,23 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
       onFabTap: academicYear.isReadOnly ? null : _openAddEditSheet,
       fabKey: _fabKey,
       hideFab: academicYear.isReadOnly,
+      selectedCount: _selectedIds.length,
+      onClearSelection: _clearSelection,
+      bulkItemNoun: lang.getTranslatedText(const {
+        'en': 'teacher',
+        'id': 'guru',
+      }),
+      bulkActions: [
+        BulkAction(
+          icon: Icons.delete_outline_rounded,
+          label: lang.getTranslatedText(const {
+            'en': 'Delete',
+            'id': 'Hapus',
+          }),
+          onTap: _bulkDeleteSelected,
+          isDestructive: true,
+        ),
+      ],
     );
   }
 }

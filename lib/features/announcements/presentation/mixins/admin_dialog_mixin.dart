@@ -4,7 +4,7 @@ import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
-import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_form_sheet.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/admin_announcement_compose_sheet.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_delete_dialog.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_detail_dialog.dart';
 
@@ -30,17 +30,18 @@ mixin AdminDialogMixin on ConsumerState<AdminAnnouncementScreen> {
 
   Future<void> loadData({bool resetPage = true, bool useCache = true});
 
+  /// Mockup #10 v3 admin compose sheet — uses the AudienceMatrix
+  /// + AudienceSummaryStrip + PinScheduleToggleStack instead of the
+  /// legacy single-target dropdown form.
   void showAddEditDialog({Map<String, dynamic>? announcementData}) {
-    final languageProvider = ref.watch(languageRiverpod);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return AnnouncementFormSheet(
+        return AdminAnnouncementComposeSheet(
           announcementData: announcementData,
           primaryColor: getPrimaryColor(),
-          languageProvider: languageProvider,
           onSaved: () => loadData(resetPage: true, useCache: false),
         );
       },

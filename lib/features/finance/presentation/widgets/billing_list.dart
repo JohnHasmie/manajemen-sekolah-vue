@@ -570,21 +570,15 @@ class _BillingRow extends ConsumerWidget {
       await AppNavigator.push<void>(
         context,
         ParentPaymentSuccessScreen(
-          billName: (data['name'] ??
-                  data['title'] ??
-                  data['type'] ??
-                  'Tagihan')
+          billName: (data['name'] ?? data['title'] ?? data['type'] ?? 'Tagihan')
               .toString(),
-          studentName: (data['student_name'] ??
-                  data['student']?['name'] ??
-                  'Anak')
+          studentName:
+              (data['student_name'] ?? data['student']?['name'] ?? 'Anak')
+                  .toString(),
+          methodLabel: (data['payment_method'] ?? data['method'] ?? '-')
               .toString(),
-          methodLabel:
-              (data['payment_method'] ?? data['method'] ?? '-').toString(),
-          amount:
-              double.tryParse((data['amount'] ?? '0').toString()) ?? 0,
-          adminFee:
-              double.tryParse((data['admin_fee'] ?? '0').toString()) ?? 0,
+          amount: double.tryParse((data['amount'] ?? '0').toString()) ?? 0,
+          adminFee: double.tryParse((data['admin_fee'] ?? '0').toString()) ?? 0,
           isManualPending: isPending,
         ),
       );
@@ -594,8 +588,7 @@ class _BillingRow extends ConsumerWidget {
     // Unpaid → open the brand checkout. When it returns true the
     // gateway has confirmed payment, so refresh the bill list to
     // pick up the new status / amount paid.
-    final refreshed =
-        await openParentBillCheckout(context, bill: data);
+    final refreshed = await openParentBillCheckout(context, bill: data);
     if (refreshed == true) {
       // ignore: unused_result — fire-and-forget refresh.
       ref.read(parentFinanceProvider.notifier).refreshBilling();

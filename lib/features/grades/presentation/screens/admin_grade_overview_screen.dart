@@ -14,9 +14,9 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/core/widgets/teacher_page_header.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/features/grades/data/grade_service.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
@@ -142,25 +142,64 @@ class _AdminGradeOverviewScreenState
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          TeacherPageHeader(
+          BrandPageHeader(
+            role: 'admin',
+            subtitle: lp.getTranslatedText({
+              'en': 'ACADEMIC',
+              'id': 'AKADEMIK',
+            }),
             title: lp.getTranslatedText({
               'en': 'Grades Overview',
-              'id': 'Rekap Nilai',
+              'id': 'Buku Nilai',
             }),
-            subtitle: lp.getTranslatedText({
-              'en': 'School-wide grade overview',
-              'id': 'Rekap nilai seluruh sekolah',
-            }),
-            primaryColor: _adminColor,
-            showSearchFilter: true,
-            searchController: _searchController,
-            onSearchChanged: (_) => setState(() {}),
-            searchHintText: lp.getTranslatedText({
-              'en': 'Search teacher...',
-              'id': 'Cari guru...',
-            }),
+            bottomSlot: _buildSearchField(lp),
           ),
           Expanded(child: _buildContent(lp)),
+        ],
+      ),
+    );
+  }
+
+  /// Compact white search bar that lives in the [BrandPageHeader.bottomSlot]
+  /// — matches the v3 pattern where chips/filters or a search live inside
+  /// the gradient hero rather than below it.
+  Widget _buildSearchField(LanguageProvider lp) {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          const Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                hintText: lp.getTranslatedText({
+                  'en': 'Search teacher...',
+                  'id': 'Cari guru...',
+                }),
+                hintStyle: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

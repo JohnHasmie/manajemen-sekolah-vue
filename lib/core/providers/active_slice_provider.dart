@@ -177,7 +177,7 @@ class ActiveSliceNotifier extends Notifier<ActiveSliceState> {
   }
 
   void _onTick() {
-    if (state.paused) return;
+    if (state.paused || state.total <= 1) return;
     final started = _slotStartedAt;
     if (started == null) return;
     final elapsed = DateTime.now().difference(started);

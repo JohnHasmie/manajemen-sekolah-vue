@@ -17,7 +17,11 @@ class FinanceFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isReadOnly || currentTabIndex != 1) {
+    // Only show on the Jenis (Payment Types) tab — index 2 in the
+    // v3 layout (Mockup #13: Tagihan / Pembayaran / Jenis). Was
+    // index 1 in the legacy 4-tab layout; the constant moved when
+    // we folded Dashboard out of the hub.
+    if (isReadOnly || currentTabIndex != 2) {
       return const SizedBox.shrink();
     }
 

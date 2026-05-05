@@ -1,27 +1,34 @@
 // Bottom navigation bar for the admin finance screen.
 //
-// Extracted from `_buildNavigationBar` in admin_finance_screen.dart.
-// Like a Vue `<FinanceNavigationBar>` component — stateless, receives the
-// active tab index, badge count, primary colour, and a callback for tab
-// selection.
+// v3 redesign (Mockup #13 Phase Final): the legacy 4-tab nav
+// (Dashboard / Payment Types / Verification / Class Report) has
+// been folded down to the spec'd 3 tabs:
 //
-// The four tabs are: Dashboard (0), Payment Types (1), Verification (2),
-// Class Report (3).  Tab 2 shows a badge when there are pending payments.
+//   0  Tagihan      — bill list with sub-filters + drill card
+//   1  Pembayaran   — pending payment verification queue
+//   2  Jenis        — payment types CRUD
+//
+// Tab 0 (Tagihan) shows a red overdue badge when [overdueCount] ≥ 1.
+// Tab 1 (Pembayaran) keeps the orange pending-count badge.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Horizontal tab-bar that sits at the top of the finance screen body.
 ///
-/// Stateless — the parent [FinanceScreenState] owns [currentIndex] and calls
-/// [onTabSelected] when the user taps a tab, just like Vue `v-model` on tabs.
+/// Stateless — the parent [FinanceScreenState] owns [currentIndex] and
+/// calls [onTabSelected] when the user taps a tab.
 class FinanceNavigationBar extends StatelessWidget {
-  /// Index of the currently active tab (0–3).
+  /// Index of the currently active tab (0–2).
   final int currentIndex;
 
-  /// Number of pending payments — displayed as a red badge on tab 2.
+  /// Number of pending payments awaiting verification — drives the
+  /// orange badge on the Pembayaran (1) tab.
   final int pendingCount;
+
+  /// Number of overdue bills — drives the red badge on the Tagihan (0)
+  /// tab. Hidden when 0.
+  final int overdueCount;
 
   /// Primary theme colour already resolved by the parent.
   final Color primaryColor;
@@ -33,6 +40,7 @@ class FinanceNavigationBar extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.pendingCount,
+    required this.overdueCount,
     required this.primaryColor,
     required this.onTabSelected,
   });
@@ -41,22 +49,18 @@ class FinanceNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = <_NavItem>[
       _NavItem(
-        icon: Icons.dashboard_rounded,
-        label: AppLocalizations.dashboard.tr,
-      ),
-      _NavItem(
-        icon: Icons.payments_rounded,
-        label: AppLocalizations.paymentTypes.tr,
+        icon: Icons.receipt_long_rounded,
+        label: 'Tagihan',
+        badge: overdueCount,
+        badgeColor: const Color(0xFFDC2626),
       ),
       _NavItem(
         icon: Icons.verified_rounded,
-        label: AppLocalizations.verification.tr,
+        label: 'Pembayaran',
         badge: pendingCount,
+        badgeColor: const Color(0xFFF59E0B),
       ),
-      _NavItem(
-        icon: Icons.school_rounded,
-        label: AppLocalizations.classReport.tr,
-      ),
+      const _NavItem(icon: Icons.payments_rounded, label: 'Jenis'),
     ];
 
     return Container(
@@ -94,8 +98,14 @@ class _NavItem {
   final IconData icon;
   final String label;
   final int badge;
+  final Color badgeColor;
 
-  const _NavItem({required this.icon, required this.label, this.badge = 0});
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    this.badge = 0,
+    this.badgeColor = const Color(0xFFDC2626),
+  });
 }
 
 class _TabPill extends StatelessWidget {
@@ -151,7 +161,7 @@ class _TabPill extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: ColorUtils.error600,
+                        color: item.badgeColor,
                         borderRadius: const BorderRadius.all(
                           Radius.circular(10),
                         ),

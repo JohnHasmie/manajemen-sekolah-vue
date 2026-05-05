@@ -144,8 +144,10 @@ class _ParentBillCheckoutScreenState
     }
 
     try {
-      final response =
-          await ApiService().post('/bill/$billId/checkout', const {});
+      final response = await ApiService().post(
+        '/bill/$billId/checkout',
+        const {},
+      );
       if (!mounted) return;
       final data = response is Map && response['data'] is Map
           ? Map<String, dynamic>.from(response['data'] as Map)
@@ -236,9 +238,7 @@ class _ParentBillCheckoutScreenState
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: const Color(0xFFF1F5F9)),
-        ),
+        border: Border(bottom: BorderSide(color: const Color(0xFFF1F5F9))),
       ),
       child: Row(
         children: [
@@ -295,9 +295,10 @@ class _ParentBillCheckoutScreenState
 
   Widget _buildBillRecap() {
     final billName = widget.bill['type']?.toString() ?? 'Tagihan';
-    final studentName = widget.bill['student_name']?.toString()
-        ?? widget.bill['student']?['name']?.toString()
-        ?? '';
+    final studentName =
+        widget.bill['student_name']?.toString() ??
+        widget.bill['student']?['name']?.toString() ??
+        '';
     final headerLabel = studentName.isEmpty
         ? billName.toUpperCase()
         : '${billName.toUpperCase()} · ${studentName.toUpperCase()}';
@@ -541,10 +542,7 @@ class _ParentBillCheckoutScreenState
                   ),
                 ),
               ),
-              _CopyPill(
-                value: 'Salin',
-                onCopy: () => _toastCopied('Nomor VA'),
-              ),
+              _CopyPill(value: 'Salin', onCopy: () => _toastCopied('Nomor VA')),
             ],
           ),
           const Divider(height: 24, color: Color(0xFFF1F5F9)),
@@ -572,10 +570,7 @@ class _ParentBillCheckoutScreenState
               const SizedBox(width: 8),
               Text(
                 '+ admin ${_formatRupiah(_session.adminFeeFor(_method))}',
-                style: TextStyle(
-                  fontSize: 9.5,
-                  color: ColorUtils.slate500,
-                ),
+                style: TextStyle(fontSize: 9.5, color: ColorUtils.slate500),
               ),
             ],
           ),
@@ -684,10 +679,7 @@ class _ParentBillCheckoutScreenState
                 const SizedBox(height: 2),
                 Text(
                   tip,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    color: ColorUtils.slate500,
-                  ),
+                  style: TextStyle(fontSize: 9.5, color: ColorUtils.slate500),
                 ),
               ],
             ),
@@ -719,9 +711,7 @@ class _ParentBillCheckoutScreenState
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: manual
-                  ? const Color(0xFFF59E0B)
-                  : ColorUtils.success600,
+              color: manual ? const Color(0xFFF59E0B) : ColorUtils.success600,
               shape: BoxShape.circle,
             ),
           ),
@@ -734,9 +724,7 @@ class _ParentBillCheckoutScreenState
               style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
-                color: manual
-                    ? const Color(0xFF92400E)
-                    : ColorUtils.success600,
+                color: manual ? const Color(0xFF92400E) : ColorUtils.success600,
               ),
             ),
           ),
@@ -789,9 +777,10 @@ class _ParentBillCheckoutScreenState
     // implementation polls /bill/{id}/status here and only pushes
     // success when the response is "paid".
     final billName = widget.bill['type']?.toString() ?? 'Tagihan';
-    final studentName = widget.bill['student_name']?.toString()
-        ?? widget.bill['student']?['name']?.toString()
-        ?? 'Anak';
+    final studentName =
+        widget.bill['student_name']?.toString() ??
+        widget.bill['student']?['name']?.toString() ??
+        'Anak';
     final result = await AppNavigator.push<bool>(
       context,
       ParentPaymentSuccessScreen(
@@ -1030,10 +1019,7 @@ class _BankRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'a.n. $owner',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    color: ColorUtils.slate500,
-                  ),
+                  style: TextStyle(fontSize: 9.5, color: ColorUtils.slate500),
                 ),
               ],
             ),
@@ -1042,10 +1028,7 @@ class _BankRow extends StatelessWidget {
             onTap: onCopy,
             borderRadius: BorderRadius.circular(10),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
@@ -1116,7 +1099,8 @@ class _CheckoutSession {
     DateTime expires;
     final rawExpires = json['expires_at']?.toString();
     if (rawExpires != null && rawExpires.isNotEmpty) {
-      expires = DateTime.tryParse(rawExpires) ??
+      expires =
+          DateTime.tryParse(rawExpires) ??
           DateTime.now().add(const Duration(hours: 24));
     } else {
       expires = DateTime.now().add(const Duration(hours: 24));

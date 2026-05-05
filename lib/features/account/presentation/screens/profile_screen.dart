@@ -15,7 +15,10 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/admin_profile_components.dart';
+import 'package:manajemensekolah/features/account/data/profile_service.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:manajemensekolah/features/settings/presentation/widgets/change_password_dialog.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -238,6 +241,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 12),
           // Card 2: Akun & Akses
           _buildAccessCard(),
+          const SizedBox(height: 12),
+          // Card 3: SecurityChecklistCard (Mockup #15 — admin only).
+          // Shown for admin role; other roles can opt-in later by
+          // dropping the gate.
+          if (_role == 'admin') _buildSecurityCard(),
           const SizedBox(height: 24),
           // Logout button
           Padding(
@@ -359,6 +367,58 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Mockup #15 — Security checklist card. Watches the
+  /// [securityStatusProvider] and renders the shared
+  /// [SecurityChecklistCard] from `lib/core/widgets/`. While the
+  /// request is in-flight or errored, falls back to a neutral
+  /// placeholder so the screen never blocks.
+  Widget _buildSecurityCard() {
+    return Consumer(
+      builder: (context, ref, _) {
+        final async = ref.watch(securityStatusProvider);
+        return async.when(
+          data: (result) => SecurityChecklistCard(
+            items: result.toChecks((route) {
+              // Routes are owned by the Flutter side — map them to
+              // existing screens. Today only "change-password" is wired;
+              // 2FA + verify-email TBD.
+              if (route.endsWith('/change-password')) {
+                showDialog(
+                  context: context,
+                  builder: (_) => ChangePasswordDialog(
+                    primaryColor: _accentColor,
+                  ),
+                );
+              } else {
+                SnackBarUtils.showError(
+                  context,
+                  'Aksi belum tersedia: $route',
+                );
+              }
+            }),
+          ),
+          loading: () => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              height: 96,
+              decoration: BoxDecoration(
+                color: ColorUtils.slate100,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              alignment: Alignment.center,
+              child: const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+          error: (_, __) => const SizedBox.shrink(),
+        );
+      },
     );
   }
 

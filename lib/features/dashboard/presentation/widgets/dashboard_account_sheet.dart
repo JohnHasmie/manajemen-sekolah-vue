@@ -11,7 +11,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/admin_profile_components.dart';
+import 'package:manajemensekolah/features/account/data/profile_service.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/'
     'controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/mixins/dashboard_account_sheet_header_mixin.dart';
@@ -97,6 +100,13 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
               '-')
           .toString();
 
+  /// True when the active role is admin — switches the top of the
+  /// sheet from the legacy white avatar row to the new
+  /// [IdentityHero] + [RoleScopeChips] block (Mockup #15). Other
+  /// roles keep the existing layout to avoid disrupting parent and
+  /// teacher flows.
+  bool get _isAdminVariant => widget.effectiveRole == 'admin';
+
   @override
   Widget build(BuildContext context) {
     ref.watch(languageRiverpod);
@@ -107,198 +117,305 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
+      // Clip so the navy IdentityHero gradient (admin variant)
+      // honours the rounded top corners.
+      clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(24, 0, 24, 20 + bottomPad),
+        padding: EdgeInsets.only(bottom: 20 + bottomPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Drag handle
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 10, bottom: 20),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCBD5E1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            // Avatar + name + email + role pill + close X
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Avatar
-                Container(
-                  width: 56,
-                  height: 56,
+            // ── Top hero / drag handle (no horizontal padding) ──
+            if (_isAdminVariant)
+              _buildAdminIdentityHero(context)
+            else
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 10, bottom: 20),
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: widget.primaryColor.withValues(alpha: 0.14),
-                    shape: BoxShape.circle,
+                    color: const Color(0xFFCBD5E1),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    _initial,
-                    style: TextStyle(
-                      fontSize: 22,
+                ),
+              ),
+
+            // ── Body (24px horizontal padding) ──────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!_isAdminVariant) ...[
+                    _buildLegacyAvatarRow(context),
+                    const SizedBox(height: 20),
+                  ] else
+                    const SizedBox(height: 16),
+
+                  // Lihat Profil Lengkap
+                  buildLihatProfilTile(context),
+                  const SizedBox(height: 20),
+
+                  // Divider
+                  const Divider(color: Color(0xFFF1F5F9), height: 1),
+                  const SizedBox(height: 16),
+
+                  // AKSES SAYA section
+                  Text(
+                    AppLocalizations.myAccess.tr.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: widget.primaryColor,
+                      color: Color(0xFF94A3B8),
+                      letterSpacing: 0.5,
                     ),
                   ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _userName,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _userEmail,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: widget.primaryColor.withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(9),
-                        ),
-                        child: Text(
-                          roleDisplayName(widget.effectiveRole),
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            color: widget.primaryColor,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 12),
+
+                  // Peran aktif row
+                  () {
+                    final roles = widget.state.availableRoles;
+                    final hasMultiple = roles.length > 1;
+                    return _AccessRow(
+                      icon: Icons.person_outline,
+                      iconColor: widget.primaryColor,
+                      label: AppLocalizations.activeRole.tr,
+                      value: roleDisplayName(widget.effectiveRole),
+                      action:
+                          hasMultiple ? AppLocalizations.switchAction.tr : '',
+                      isActive: true,
+                      accentColor: widget.primaryColor,
+                      onTap: hasMultiple
+                          ? () {
+                              final sId =
+                                  (widget.state.userData['school_id'] ?? '')
+                                      .toString();
+                              final rList =
+                                  roles.map((e) => e.toString()).toList();
+                              Navigator.pop(context);
+                              widget.onShowRoleSelection(sId, rList);
+                            }
+                          : () {},
+                    );
+                  }(),
+                  const SizedBox(height: 8),
+
+                  // Sekolah aktif row
+                  () {
+                    final schools = widget.state.accessibleSchools;
+                    final hasMultiple = schools.length > 1;
+                    return _AccessRow(
+                      icon: Icons.school_outlined,
+                      iconColor: const Color(0xFF10B981),
+                      label: AppLocalizations.activeSchool.tr,
+                      value: _schoolName,
+                      action:
+                          hasMultiple ? AppLocalizations.switchAction.tr : '',
+                      onTap: hasMultiple
+                          ? () {
+                              Navigator.pop(context);
+                              widget.onShowSchoolSelection();
+                            }
+                          : () {},
+                    );
+                  }(),
+                  const SizedBox(height: 12),
+
+                  // Divider before Bahasa
+                  const Divider(color: Color(0xFFF1F5F9), height: 1),
+                  const SizedBox(height: 16),
+
+                  // Bahasa row
+                  _AccessRow(
+                    icon: Icons.language_outlined,
+                    iconColor: const Color(0xFF6366F1),
+                    label: AppLocalizations.language.tr,
+                    value: ref.watch(languageRiverpod).currentLanguage ==
+                            LanguageProvider.english
+                        ? 'English'
+                        : 'Bahasa Indonesia',
+                    action: AppLocalizations.changeAction.tr,
+                    onTap: widget.onLanguageTap,
                   ),
-                ),
-                // Close X
-                Material(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(10),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: () => Navigator.pop(context),
-                    child: const SizedBox(
-                      width: 30,
-                      height: 30,
-                      child: Icon(Icons.close, size: 16, color: Color(0xFF475569)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-            // Lihat Profil Lengkap
-            buildLihatProfilTile(context),
-            const SizedBox(height: 20),
+                  // Divider
+                  const Divider(color: Color(0xFFF1F5F9), height: 1),
+                  const SizedBox(height: 20),
 
-            // Divider
-            const Divider(color: Color(0xFFF1F5F9), height: 1),
-            const SizedBox(height: 16),
-
-            // AKSES SAYA section
-            Text(
-              AppLocalizations.myAccess.tr.toUpperCase(),
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF94A3B8),
-                letterSpacing: 0.5,
+                  // Logout
+                  buildLogoutButton(context),
+                  const SizedBox(height: 12),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-
-            // Peran aktif row
-            () {
-              final roles = widget.state.availableRoles;
-              final hasMultiple = roles.length > 1;
-              return _AccessRow(
-                icon: Icons.person_outline,
-                iconColor: widget.primaryColor,
-                label: AppLocalizations.activeRole.tr,
-                value: roleDisplayName(widget.effectiveRole),
-                action: hasMultiple ? AppLocalizations.switchAction.tr : '',
-                isActive: true,
-                accentColor: widget.primaryColor,
-                onTap: hasMultiple
-                    ? () {
-                        final sId = (widget.state.userData['school_id'] ?? '').toString();
-                        final rList = roles.map((e) => e.toString()).toList();
-                        Navigator.pop(context);
-                        widget.onShowRoleSelection(sId, rList);
-                      }
-                    : () {},
-              );
-            }(),
-            const SizedBox(height: 8),
-
-            // Sekolah aktif row
-            () {
-              final schools = widget.state.accessibleSchools;
-              final hasMultiple = schools.length > 1;
-              return _AccessRow(
-                icon: Icons.school_outlined,
-                iconColor: const Color(0xFF10B981),
-                label: AppLocalizations.activeSchool.tr,
-                value: _schoolName,
-                action: hasMultiple ? AppLocalizations.switchAction.tr : '',
-                onTap: hasMultiple
-                    ? () {
-                        Navigator.pop(context);
-                        widget.onShowSchoolSelection();
-                      }
-                    : () {},
-              );
-            }(),
-            const SizedBox(height: 12),
-
-            // Divider before Bahasa
-            const Divider(color: Color(0xFFF1F5F9), height: 1),
-            const SizedBox(height: 16),
-
-            // Bahasa row
-            _AccessRow(
-              icon: Icons.language_outlined,
-              iconColor: const Color(0xFF6366F1),
-              label: AppLocalizations.language.tr,
-              value: ref.watch(languageRiverpod).currentLanguage == LanguageProvider.english
-                  ? 'English'
-                  : 'Bahasa Indonesia',
-              action: AppLocalizations.changeAction.tr,
-              onTap: widget.onLanguageTap,
-            ),
-            const SizedBox(height: 20),
-
-            // Divider
-            const Divider(color: Color(0xFFF1F5F9), height: 1),
-            const SizedBox(height: 20),
-
-            // Logout
-            buildLogoutButton(context),
-            const SizedBox(height: 12),
           ],
         ),
       ),
+    );
+  }
+
+  /// Mockup #15 admin variant — full-width navy IdentityHero with
+  /// RoleScopeChips below, plus a floating drag-handle + close button
+  /// over the gradient.
+  Widget _buildAdminIdentityHero(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            IdentityHero(
+              avatarInitials: _initial,
+              name: _userName,
+              email: _userEmail.isEmpty ? '—' : _userEmail,
+              roleLabel: roleDisplayName(widget.effectiveRole),
+              subRoleLabel: _schoolName == '-' ? null : _schoolName,
+              padding: const EdgeInsets.fromLTRB(20, 28, 56, 20),
+            ),
+            // RoleScopeChips lives inside the navy gradient too —
+            // wrap it in a same-gradient Container that explicitly
+            // takes the full sheet width so the navy paints across
+            // the entire row even when the chip content is narrower.
+            // (Earlier the Container sized to its child's intrinsic
+            // width, which left the right half of the row white.)
+            Container(
+              width: double.infinity,
+              decoration:
+                  BoxDecoration(gradient: ColorUtils.brandGradient('admin')),
+              child: _ScopeChipsLoader(
+                onSelectSchool: (id) {
+                  Navigator.pop(context);
+                  widget.onShowSchoolSelection();
+                },
+              ),
+            ),
+          ],
+        ),
+        // Drag handle floating over the navy
+        Positioned(
+          top: 8,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+        ),
+        // Close X in top-right of the hero
+        Positioned(
+          top: 14,
+          right: 14,
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(10),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => Navigator.pop(context),
+              child: const SizedBox(
+                width: 30,
+                height: 30,
+                child:
+                    Icon(Icons.close, size: 16, color: Colors.white),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Legacy white avatar Row used for parent / teacher roles.
+  /// Untouched from the original design so nothing changes for those
+  /// flows.
+  Widget _buildLegacyAvatarRow(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: widget.primaryColor.withValues(alpha: 0.14),
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            _initial,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: widget.primaryColor,
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _userName,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _userEmail,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: widget.primaryColor.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Text(
+                  roleDisplayName(widget.effectiveRole),
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: widget.primaryColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Material(
+          color: const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => Navigator.pop(context),
+            child: const SizedBox(
+              width: 30,
+              height: 30,
+              child:
+                  Icon(Icons.close, size: 16, color: Color(0xFF475569)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -318,6 +435,32 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
 
   @override
   ValueNotifier<String?> get switchingRoleNotifier => _switchingRole;
+}
+
+/// Wraps [RoleScopeChips] in a Riverpod consumer so the chip row only
+/// renders once `managedSchoolsProvider` resolves. While loading we
+/// show nothing (the IdentityHero above is enough); on error we hide
+/// silently so the rest of the sheet stays usable.
+class _ScopeChipsLoader extends ConsumerWidget {
+  final ValueChanged<String> onSelectSchool;
+  const _ScopeChipsLoader({required this.onSelectSchool});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(managedSchoolsProvider);
+    return async.when(
+      data: (result) {
+        if (!result.hasMultiple) return const SizedBox.shrink();
+        return RoleScopeChips(
+          schools: result.schools,
+          activeSchoolId: result.activeSchoolId,
+          onSelect: onSelectSchool,
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
 }
 
 class _AccessRow extends StatelessWidget {

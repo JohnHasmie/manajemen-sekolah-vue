@@ -34,15 +34,22 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Overflow "kebab" menu for admin CRUD screens.
 ///
-/// Renders a 40×40 white-on-accent circle with a vertical ellipsis icon,
-/// and opens a four-entry popup: Refresh · Export · Import · Template.
-/// Each entry is skipped when its callback is null, so screens without a
-/// template or import flow (e.g., Mapel) only show the items they support.
+/// Renders a 36×36 white-on-accent rounded square (matches
+/// [BrandHeaderIconButton] so all header icons line up at the same
+/// vertical baseline), and opens a popup with: Export · Import ·
+/// Template. The legacy "Refresh Data" item was removed — pull-to-refresh
+/// on the body covers that case and matches the parent role pattern.
+/// Each remaining entry is skipped when its callback is null, so screens
+/// without a template or import flow (e.g., Mapel) only show the items
+/// they support.
 class AdminDataMenu extends StatelessWidget {
   /// Provides Bahasa Indonesia / English copy for menu items.
   final LanguageProvider languageProvider;
 
-  /// Refresh-data handler. When null, the refresh item is hidden.
+  /// Refresh-data handler. Deprecated — pull-to-refresh on the body
+  /// covers this case. Kept on the constructor for backward compatibility
+  /// with existing callers; the menu item is no longer rendered.
+  @Deprecated('Use pull-to-refresh on the AdminCrudScaffold body instead.')
   final VoidCallback? onRefresh;
 
   /// Export-to-Excel handler. When null, the export item is hidden.
@@ -75,21 +82,7 @@ class AdminDataMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = <PopupMenuEntry<_AdminMenuAction>>[];
 
-    if (onRefresh != null) {
-      items.add(
-        PopupMenuItem<_AdminMenuAction>(
-          value: _AdminMenuAction.refresh,
-          child: _MenuRow(
-            icon: Icons.refresh,
-            iconColor: ColorUtils.info600,
-            label: languageProvider.getTranslatedText(const {
-              'en': 'Refresh Data',
-              'id': 'Perbarui Data',
-            }),
-          ),
-        ),
-      );
-    }
+    // Refresh removed (use pull-to-refresh on the body, parent role pattern).
 
     if (onExport != null) {
       items.add(
@@ -141,16 +134,19 @@ class AdminDataMenu extends StatelessWidget {
     return PopupMenuButton<_AdminMenuAction>(
       key: triggerKey,
       tooltip: tooltip,
+      // Strip the default 8 px PopupMenuButton padding so the visible
+      // 36×36 hit target matches BrandHeaderIconButton exactly.
+      padding: EdgeInsets.zero,
       onSelected: _handleSelection,
       itemBuilder: (_) => items,
       icon: Container(
-        width: 40,
-        height: 40,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
+          color: Colors.white.withValues(alpha: 0.18),
           borderRadius: const BorderRadius.all(Radius.circular(10)),
         ),
-        child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
+        child: const Icon(Icons.more_vert, color: Colors.white, size: 18),
       ),
     );
   }

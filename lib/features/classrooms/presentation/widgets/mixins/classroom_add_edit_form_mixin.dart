@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/widgets/admin_form_components.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/widgets/classroom_form_fields.dart';
 
 /// Mixin for building the form body section of
@@ -35,43 +36,59 @@ mixin ClassroomAddEditFormMixin {
   /// Provides access to language provider for translations.
   dynamic get languageProvider;
 
-  /// Builds the scrollable form body with all form fields.
-  ///
-  /// Returns an Expanded widget containing a SingleChildScrollView
-  /// with the form field widgets (name, grade level, teacher).
+  /// Builds the scrollable, sectioned form body.
   Widget buildFormBody() {
-    return Expanded(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClassroomDialogTextField(
-              controller: nameController,
-              label: languageProvider.getTranslatedText({
-                'en': 'Class Name',
-                'id': 'Nama Kelas',
-              }),
-              icon: Icons.school,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ClassroomGradeLevelDropdown(
-              value: selectedGradeLevel,
-              onChanged: (value) =>
-                  setState(() => updateSelectedGradeLevel(value)),
-              availableGradeLevels: availableGradeLevels,
-              languageProvider: languageProvider,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ClassroomHomeroomTeacherDropdown(
-              value: selectedHomeroomTeacherId,
-              onChanged: (value) =>
-                  setState(() => updateSelectedHomeroomTeacherId(value)),
-              teachers: teachers,
-              languageProvider: languageProvider,
-            ),
-          ],
-        ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        4,
+        AppSpacing.lg,
+        AppSpacing.lg,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AdminFormSection(
+            label: languageProvider.getTranslatedText({
+              'en': 'BASIC DATA',
+              'id': 'DATA POKOK',
+            }) as String,
+            children: [
+              ClassroomDialogTextField(
+                controller: nameController,
+                label: languageProvider.getTranslatedText({
+                  'en': 'Class Name',
+                  'id': 'Nama Kelas',
+                }),
+                icon: Icons.school,
+              ),
+              ClassroomGradeLevelDropdown(
+                value: selectedGradeLevel,
+                onChanged: (value) =>
+                    setState(() => updateSelectedGradeLevel(value)),
+                availableGradeLevels: availableGradeLevels,
+                languageProvider: languageProvider,
+              ),
+            ],
+          ),
+          AdminFormSection(
+            label: languageProvider.getTranslatedText({
+              'en': 'HOMEROOM',
+              'id': 'WALI KELAS',
+            }) as String,
+            bottomGap: 4,
+            children: [
+              ClassroomHomeroomTeacherDropdown(
+                value: selectedHomeroomTeacherId,
+                onChanged: (value) =>
+                    setState(() => updateSelectedHomeroomTeacherId(value)),
+                teachers: teachers,
+                languageProvider: languageProvider,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

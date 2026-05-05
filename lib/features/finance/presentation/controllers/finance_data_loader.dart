@@ -166,7 +166,9 @@ class FinanceDataLoader {
   }
 
   /// Fetches all bills and groups them by student_id.
-  /// Used by [loadClassData] and ClassReportTab.
+  /// Used by [loadClassData] and the ClassFinanceReport drill screen
+  /// (reachable via the navy-tinted ClassReportDrillCard pinned at
+  /// the bottom of the Tagihan tab — Mockup #13).
   Future<Map<String, List<dynamic>>> loadBillsForStudents() async {
     try {
       final billsResponse = await ApiService().get('/bills?limit=10000');

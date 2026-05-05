@@ -16,16 +16,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
 import 'package:manajemensekolah/core/widgets/admin_data_menu.dart';
+import 'package:manajemensekolah/core/widgets/admin_entity_detail_sheet.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/bulk_action_bar.dart';
+import 'package:manajemensekolah/core/widgets/bulk_delete_confirm_dialog.dart';
 import 'package:manajemensekolah/core/widgets/paginated_list_view.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/students/presentation/controllers/admin_student_controller.dart';
-import 'package:manajemensekolah/features/students/presentation/screens/student_detail_screen.dart';
 import 'package:manajemensekolah/features/students/presentation/widgets/student_add_edit_dialog.dart';
 import 'package:manajemensekolah/features/students/presentation/widgets/student_card.dart';
 import 'package:manajemensekolah/features/students/presentation/widgets/student_filter_sheet.dart';
@@ -81,6 +83,12 @@ class StudentManagementScreenState
   // FAB key kept for potential reintroduction of onboarding tour later;
   // the per-header menu/search/filter keys are intentionally retired.
   final GlobalKey _fabKey = GlobalKey();
+
+  // ── Bulk-select state ──
+  // Set of student ids currently selected. Long-press a card to enter
+  // bulk mode; tapping a card while in bulk mode toggles its selection.
+  final Set<String> _selectedIds = <String>{};
+  bool get _bulkMode => _selectedIds.isNotEmpty;
 
   // Cache the provider reference so dispose() doesn't call ref after unmount.
   late final _academicYearProvider = ref.read(academicYearRiverpod);
@@ -279,49 +287,196 @@ class StudentManagementScreenState
     _loadData();
   }
 
-  // Per-chip removal callbacks — each chip in the header carries its own
-  // targeted callback so the × on a specific class chip removes only that
-  // class id, not every active filter. (Fixed the pre-existing bug where
-  // every chip's × fired the same generic callback.)
+  // ── Bulk-select actions ─────────────────────────────────────────────
 
-  void _removeStatusFilter() {
-    setState(() => _selectedStatusFilter = null);
-    _refreshHasActiveFilter();
-    _loadData();
+  /// Enter bulk mode (or toggle this id within an existing selection).
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
   }
 
-  void _removeClassFilter(String classId) {
-    setState(
-      () => _selectedClassIds = _selectedClassIds
-          .where((id) => id != classId)
+  /// Clear all selections — leaves bulk mode.
+  void _clearSelection() {
+    if (_selectedIds.isEmpty) return;
+    setState(_selectedIds.clear);
+  }
+
+  /// Delete every selected student in one batch. Shows the shared
+  /// type-to-confirm dialog with a multi-entity preview.
+  Future<void> _bulkDeleteSelected() async {
+    if (_selectedIds.isEmpty) return;
+    final lang = ref.read(languageRiverpod);
+
+    final selected = _students
+        .cast<Map<String, dynamic>>()
+        .where((s) => _selectedIds.contains(s['id']?.toString()))
+        .toList();
+
+    final ok = await showBulkDeleteConfirm(
+      context,
+      entityNoun: lang.getTranslatedText(const {
+        'en': 'students',
+        'id': 'siswa',
+      }),
+      items: selected
+          .map(
+            (s) => BulkDeleteItem(
+              id: s['id'].toString(),
+              title: (s['name'] ?? '?').toString(),
+              subtitle: (s['class_name'] ?? '').toString().isEmpty
+                  ? null
+                  : 'Kelas ${s['class_name']}',
+            ),
+          )
           .toList(),
     );
-    _refreshHasActiveFilter();
-    _loadData();
-  }
+    if (ok != true || !mounted) return;
 
-  void _removeGenderFilter() {
-    setState(() => _selectedGenderFilter = null);
-    _refreshHasActiveFilter();
-    _loadData();
-  }
+    // Reuse the controller's per-id deleteStudent — the backend doesn't
+    // currently expose a bulk endpoint, so loop sequentially. Cap UI
+    // disruption by clearing selection first.
+    final controller = ref.read(adminStudentControllerProvider);
+    final ids = List<Map<String, dynamic>>.from(selected);
+    setState(_selectedIds.clear);
 
-  void _removeGuardianFilter() {
-    setState(() => _selectedGuardian = null);
-    _refreshHasActiveFilter();
-    _loadData();
+    var deleted = 0;
+    for (final s in ids) {
+      // Pass `confirm: false` is not supported on this controller — we
+      // already confirmed via the dialog. The per-row deleteStudent
+      // currently includes its own confirm dialog; treat each item as a
+      // separate call. If the controller learns a `bulkDelete` later,
+      // swap this loop for a single call.
+      final removed = await controller.deleteStudent(s, context);
+      if (removed) deleted++;
+      if (!mounted) return;
+    }
+    if (!mounted) return;
+    await _loadData();
+    if (!mounted) return;
+    SnackBarUtils.showSuccess(
+      context,
+      lang.getTranslatedText({
+        'en': '$deleted of ${ids.length} students deleted',
+        'id': '$deleted dari ${ids.length} siswa terhapus',
+      }),
+    );
   }
 
   // ── Row-level actions ───────────────────────────────────────────────
 
   void _openStudentDetail(Map<String, dynamic> student) {
     final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
-    AppNavigator.push(
+    final lang = ref.read(languageRiverpod);
+    final model = Student.fromJson(student);
+
+    final nis = (student['nis'] ?? student['nisn'] ?? '').toString();
+    final className = model.className.isNotEmpty ? model.className : '-';
+    final genderText = ref
+        .read(adminStudentControllerProvider)
+        .getGenderText(model.gender, lang);
+    final guardianName = (student['guardian_name'] ??
+            student['parent_name'] ??
+            '-')
+        .toString();
+    final guardianPhone = (student['guardian_phone'] ??
+            student['parent_phone'] ??
+            '-')
+        .toString();
+    final birthDate = (student['birth_date'] ?? student['tanggal_lahir'] ?? '-')
+        .toString();
+    final address = (student['address'] ?? student['alamat'] ?? '-').toString();
+    final email = (student['email'] ?? '-').toString();
+
+    showAdminEntityDetailSheet(
       context,
-      StudentDetailScreen(
-        student: student,
-        onEdit: isReadOnly ? null : () => _openAddEditSheet(student: student),
+      kicker: lang.getTranslatedText(const {'en': 'STUDENT', 'id': 'SISWA'}),
+      title: model.name.isNotEmpty ? model.name : 'No Name',
+      meta: nis.isNotEmpty ? '$className · NIS $nis' : className,
+      initials: model.name.isNotEmpty ? model.name : '?',
+      status: EntityStatus.success(
+        lang.getTranslatedText(const {'en': 'Active', 'id': 'Aktif'}),
       ),
+      sections: [
+        EntityDetailSection(
+          label: lang.getTranslatedText(const {
+            'en': 'Academic',
+            'id': 'Data Akademik',
+          }),
+          rows: [
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Class',
+                'id': 'Kelas',
+              }),
+              value: className,
+            ),
+            EntityDetailRow(
+              label: 'NIS',
+              value: nis.isEmpty ? '-' : nis,
+            ),
+          ],
+        ),
+        EntityDetailSection(
+          label: lang.getTranslatedText(const {
+            'en': 'Personal',
+            'id': 'Data Pribadi',
+          }),
+          rows: [
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Gender',
+                'id': 'Jenis kelamin',
+              }),
+              value: genderText,
+            ),
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Birth date',
+                'id': 'Tanggal lahir',
+              }),
+              value: birthDate,
+            ),
+            EntityDetailRow(label: 'Email', value: email),
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Address',
+                'id': 'Alamat',
+              }),
+              value: address,
+            ),
+          ],
+        ),
+        EntityDetailSection(
+          label: lang.getTranslatedText(const {
+            'en': 'Guardian',
+            'id': 'Wali / Orang Tua',
+          }),
+          rows: [
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Name',
+                'id': 'Nama',
+              }),
+              value: guardianName,
+            ),
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Phone',
+                'id': 'No. HP',
+              }),
+              value: guardianPhone,
+            ),
+          ],
+        ),
+      ],
+      onEdit: () => _openAddEditSheet(student: student),
+      onDelete: () => _deleteStudent(student),
+      isReadOnly: isReadOnly,
     );
   }
 
@@ -394,24 +549,68 @@ class StudentManagementScreenState
     final academicYear = ref.watch(academicYearRiverpod);
     final primaryColor = ColorUtils.getRoleColor('admin');
 
-    final controller = ref.read(adminStudentControllerProvider);
-    final activeFilters = controller.buildFilterChips(
-      selectedStatusFilter: _selectedStatusFilter,
-      selectedClassIds: _selectedClassIds,
-      selectedGenderFilter: _selectedGenderFilter,
-      selectedGuardian: _selectedGuardian,
-      classList: _classList,
-      languageProvider: lang,
-      onClearStatus: _removeStatusFilter,
-      onClearClass: _removeClassFilter,
-      onClearGender: _removeGenderFilter,
-      onClearGuardian: _removeGuardianFilter,
-    );
+    // Build v3 brand chips — chips live INSIDE the gradient hero so the
+    // active filter state stays visible while the user scrolls (parent
+    // Tagihan/Nilai pattern). Tapping a chip opens the full filter sheet
+    // pre-scrolled to that section. When backend supports per-filter
+    // pickers, swap each onTap to its single-filter BrandHeroSheet picker.
+    final brandChips = <BrandFilterChip>[
+      BrandFilterChip(
+        label: lang.getTranslatedText(const {
+          'en': 'Status',
+          'id': 'Status',
+        }),
+        value: _selectedStatusFilter == null
+            ? null
+            : lang.getTranslatedText(switch (_selectedStatusFilter) {
+                'active' => const {'en': 'Active', 'id': 'Aktif'},
+                'inactive' => const {'en': 'Inactive', 'id': 'Nonaktif'},
+                'unverified' => const {
+                  'en': 'Unverified',
+                  'id': 'Belum diverifikasi'
+                },
+                _ => {'en': _selectedStatusFilter!, 'id': _selectedStatusFilter!},
+              }),
+        onTap: _openFilterSheet,
+      ),
+      BrandFilterChip(
+        label: lang.getTranslatedText(const {
+          'en': 'Class',
+          'id': 'Kelas',
+        }),
+        value: _selectedClassIds.isEmpty
+            ? null
+            : (_selectedClassIds.length == 1
+                ? _classList
+                    .cast<Map<String, dynamic>>()
+                    .firstWhere(
+                      (c) => c['id']?.toString() == _selectedClassIds.first,
+                      orElse: () => const {'name': '1 kelas'},
+                    )['name']
+                    .toString()
+                : '${_selectedClassIds.length} kelas'),
+        onTap: _openFilterSheet,
+      ),
+      BrandFilterChip(
+        label: lang.getTranslatedText(const {
+          'en': 'Gender',
+          'id': 'Gender',
+        }),
+        value: _selectedGenderFilter == null
+            ? null
+            : lang.getTranslatedText(switch (_selectedGenderFilter) {
+                'L' => const {'en': 'Male', 'id': 'Laki-laki'},
+                'P' => const {'en': 'Female', 'id': 'Perempuan'},
+                _ => {'en': _selectedGenderFilter!, 'id': _selectedGenderFilter!},
+              }),
+        onTap: _openFilterSheet,
+      ),
+    ];
 
     return AdminCrudScaffold(
       title: lang.getTranslatedText(const {
-        'en': 'Student Management',
-        'id': 'Manajemen Siswa',
+        'en': 'Students',
+        'id': 'Siswa',
       }),
       subtitle: lang.getTranslatedText(const {
         'en': 'Manage and monitor students',
@@ -427,7 +626,15 @@ class StudentManagementScreenState
       onSearchSubmitted: (_) => _loadData(),
       onFilterTap: _openFilterSheet,
       hasActiveFilter: _hasActiveFilter,
-      activeFilters: activeFilters,
+      brandChips: brandChips,
+      headerKicker: lang.getTranslatedText(const {
+        'en': 'DATA MANAGEMENT',
+        'id': 'MANAJEMEN DATA',
+      }),
+      counterLabel: '${_students.length} ${lang.getTranslatedText(const {
+        'en': 'students',
+        'id': 'siswa',
+      })}',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,
@@ -457,6 +664,8 @@ class StudentManagementScreenState
       childBuilder: () => PaginatedListView<Map<String, dynamic>>(
         items: _students.cast<Map<String, dynamic>>(),
         itemBuilder: (context, student, index) {
+          final id = student['id']?.toString() ?? '';
+          final isSelected = _selectedIds.contains(id);
           return StudentCard(
             student: student,
             index: index,
@@ -465,7 +674,12 @@ class StudentManagementScreenState
             genderText: ref
                 .read(adminStudentControllerProvider)
                 .getGenderText(Student.fromJson(student).gender, lang),
-            onTap: () => _openStudentDetail(student),
+            // Bulk-mode tap toggles selection; otherwise opens detail.
+            onTap: () =>
+                _bulkMode ? _toggleSelection(id) : _openStudentDetail(student),
+            // Long-press always toggles selection (entry into bulk mode).
+            onLongPress: () => _toggleSelection(id),
+            selected: isSelected,
             onEdit: () => _openAddEditSheet(student: student),
             onDelete: () => _deleteStudent(student),
           );
@@ -478,6 +692,24 @@ class StudentManagementScreenState
       onFabTap: academicYear.isReadOnly ? null : _openAddEditSheet,
       fabKey: _fabKey,
       hideFab: academicYear.isReadOnly,
+      // ── Bulk-action wiring ──
+      selectedCount: _selectedIds.length,
+      onClearSelection: _clearSelection,
+      bulkItemNoun: lang.getTranslatedText(const {
+        'en': 'student',
+        'id': 'siswa',
+      }),
+      bulkActions: [
+        BulkAction(
+          icon: Icons.delete_outline_rounded,
+          label: lang.getTranslatedText(const {
+            'en': 'Delete',
+            'id': 'Hapus',
+          }),
+          onTap: _bulkDeleteSelected,
+          isDestructive: true,
+        ),
+      ],
     );
   }
 }

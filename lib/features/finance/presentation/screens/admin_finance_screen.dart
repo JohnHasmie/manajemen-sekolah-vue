@@ -1,16 +1,23 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/admin_finance_controller.dart';
+import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_list_screen.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/finance/data/finance_service.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_navigation_bar.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_header.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_tab_content.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_fab.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/month_filter_sheet.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/tagih_reminder_sheet.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/tagihan_filter_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/mixins/finance_filter_mixin.dart';
 import 'package:manajemensekolah/features/finance/presentation/mixins/finance_data_mixin.dart';
 import 'package:manajemensekolah/features/finance/presentation/mixins/finance_action_mixin.dart';
@@ -21,12 +28,12 @@ import 'package:manajemensekolah/features/finance/presentation/mixins/finance_ac
 
 /// Admin finance management screen.
 class FinanceScreen extends ConsumerStatefulWidget {
-  /// Optional deep-link entry point. Valid values: 0 Dashboard, 1 Payment
-  /// Types, 2 Verification, 3 Class Report. Defaults to 0.
+  /// Optional deep-link entry point. Valid values: 0 Tagihan,
+  /// 1 Pembayaran, 2 Jenis. Defaults to 0.
   ///
-  /// Used by admin dashboard PendingInboxCard to route "Verifikasi pembayaran"
-  /// straight into tab 2 and "Tagihan menunggak" into tab 3 without the user
-  /// tapping through the hub first.
+  /// Used by admin dashboard PendingInboxCard to route
+  /// "Verifikasi pembayaran" straight into tab 1 (Pembayaran) without
+  /// the user tapping through the hub first.
   final int initialTabIndex;
 
   const FinanceScreen({super.key, this.initialTabIndex = 0});
@@ -52,7 +59,18 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   Map<String, dynamic> _dashboardData = {};
   bool _isLoading = true;
   String _errorMessage = '';
-  late int _currentTabIndex = widget.initialTabIndex.clamp(0, 3);
+  late int _currentTabIndex = widget.initialTabIndex.clamp(0, 2);
+
+  /// Active sub-filter chip on the Tagihan tab — `'all'` (default),
+  /// `'unpaid'`, or `'overdue'`. Drives [TagihanTab.activeFilterKey].
+  String _tagihanFilterKey = 'all';
+
+  /// Set of payment-type IDs to keep in the Tagihan list. Empty = no
+  /// jenis filter applied. Driven by [TagihanFilterSheet].
+  Set<String> _tagihanSelectedJenisIds = {};
+
+  /// Single `YYYY-MM` to keep in the Tagihan list, or null = all months.
+  String? _tagihanSelectedMonth;
 
   final ScrollController _billScrollController = ScrollController();
   final ScrollController _pendingScrollController = ScrollController();
@@ -307,6 +325,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
 
     final filteredPaymentTypes = _getFilteredPaymentTypes();
     final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
+    final overdueCount = _computeOverdueCount();
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
@@ -316,10 +335,17 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
             languageProvider: languageProvider,
             primaryColor: getPrimaryColor(),
             onRefresh: forceRefresh,
+            academicYearId: ref
+                .read(academicYearRiverpod)
+                .selectedAcademicYear?['id']
+                ?.toString(),
+            selectedMonth: _tagihanSelectedMonth,
+            onPickMonth: _pickHeaderMonth,
           ),
           FinanceNavigationBar(
             currentIndex: _currentTabIndex,
             pendingCount: _totalPendingPayments,
+            overdueCount: overdueCount,
             primaryColor: getPrimaryColor(),
             onTabSelected: (index) => setState(() => _currentTabIndex = index),
           ),
@@ -329,18 +355,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
               removeTop: true,
               child: FinanceTabContent(
                 currentTabIndex: _currentTabIndex,
-                dashboardData: _dashboardData,
                 pendingPaymentList: _pendingPaymentList,
                 billList: _billList,
                 languageProvider: languageProvider,
                 primaryColor: getPrimaryColor(),
                 isReadOnly: isReadOnly,
-                onVerifyNow: () => setState(() => _currentTabIndex = 2),
-                calculateBatchesFromBills: () =>
-                    _calculateBatchesFromBills(_billList),
-                formatMonth: formatMonth,
                 formatCurrency: formatCurrency,
-                onDeleteBatch: deleteGeneratedBills,
                 onRefresh: loadData,
                 filteredPaymentTypes: filteredPaymentTypes,
                 searchController: _searchController,
@@ -350,11 +370,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
                 buildFilterChips: () => buildFilterChips(languageProvider),
                 getGoalDescription: getGoalDescription,
                 getTranslatedPeriod: getTranslatedPeriod,
-                onGenerateBills: (index) =>
-                    confirmGenerateBills(filteredPaymentTypes[index]),
-                onEdit: (index) => showAddEditPaymentType(
-                  paymentType: filteredPaymentTypes[index],
-                ),
+                onEdit: (index) =>
+                    showPaymentTypeDetail(filteredPaymentTypes[index]),
                 onDelete: (index) =>
                     deletePaymentType(filteredPaymentTypes[index]),
                 pendingScrollController: _pendingScrollController,
@@ -363,10 +380,19 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
                     showVerificationDialog(_pendingPaymentList[index]),
                 onShowProof: (index) =>
                     showPaymentProof(_pendingPaymentList[index]),
-                classList: _classList,
-                studentsByClass: _studentsByClass,
-                billsByStudent: _billsByStudent,
-                isLoading: _isLoading,
+                tagihanFilterKey: _tagihanFilterKey,
+                onTagihanFilterChanged: (key) =>
+                    setState(() => _tagihanFilterKey = key),
+                overdueCount: overdueCount,
+                onTagihBill: _onTagihBill,
+                onClassReportTap: _openClassFinanceReport,
+                tagihanSelectedJenisIds: _tagihanSelectedJenisIds,
+                tagihanSelectedMonth: _tagihanSelectedMonth,
+                onOpenTagihanFilter: _openTagihanFilterSheet,
+                onClearTagihanFilter: () => setState(() {
+                  _tagihanSelectedJenisIds = {};
+                  _tagihanSelectedMonth = null;
+                }),
               ),
             ),
           ),
@@ -379,5 +405,141 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
         onPressed: showAddEditPaymentType,
       ),
     );
+  }
+
+  /// Counts unpaid bills whose due_date has already passed. Drives both
+  /// the FinanceNavigationBar Tagihan badge and the Tagihan tab's
+  /// "Jatuh tempo" sub-filter chip badge.
+  int _computeOverdueCount() {
+    final now = DateTime.now();
+    var count = 0;
+    for (final raw in _billList) {
+      if (raw is! Map) continue;
+      final b = Map<String, dynamic>.from(raw);
+      final status = (b['status'] ?? '').toString().toLowerCase();
+      final isUnpaid = status == 'pending' || status == 'unpaid';
+      if (!isUnpaid) continue;
+      final due = b['due_date'] ?? b['jatuh_tempo'] ?? b['tanggal_jatuh_tempo'];
+      if (due == null) continue;
+      final parsed = DateTime.tryParse(due.toString());
+      if (parsed != null && parsed.isBefore(now)) count++;
+    }
+    return count;
+  }
+
+  void _openClassFinanceReport() {
+    // ClassFinanceReportScreen requires a (classId, className) pair
+    // — push the class-list screen instead so the admin can pick
+    // which kelas to drill into. This is the same pattern the legacy
+    // 4th tab used to render inline.
+    AppNavigator.push(context, const ClassFinanceListScreen());
+  }
+
+  /// Opens the month picker sheet from the header period pill. The
+  /// chosen value is stored in the same `_tagihanSelectedMonth` slot
+  /// the Tagihan filter sheet writes to — so picking "Mei 2026" from
+  /// the pill scopes the Tagihan list to that month, the pill label
+  /// updates, and the dedicated Tagihan filter toolbar reflects the
+  /// same selection. Picking "Semua bulan" resets the override and
+  /// the pill falls back to the API's `periodLabel`.
+  Future<void> _pickHeaderMonth() async {
+    final result = await showMonthFilterSheet(
+      context,
+      primaryColor: getPrimaryColor(),
+      initialMonth: _tagihanSelectedMonth,
+    );
+    if (!mounted || result == null) return;
+    setState(() => _tagihanSelectedMonth = result.month);
+  }
+
+  /// Opens the Tagihan filter sheet with the current jenis + month
+  /// selections pre-applied. Stores the result back into screen state
+  /// so the next rebuild filters the bill list.
+  Future<void> _openTagihanFilterSheet() async {
+    final jenisOptions = _paymentTypeList
+        .whereType<Map>()
+        .map((raw) => Map<String, dynamic>.from(raw))
+        .map(
+          (m) => {
+            'id': (m['id'] ?? '').toString(),
+            'name': (m['name'] ?? '-').toString(),
+          },
+        )
+        .where((opt) => opt['id']!.isNotEmpty)
+        .toList(growable: false);
+
+    final result = await showTagihanFilterSheet(
+      context,
+      primaryColor: getPrimaryColor(),
+      jenisOptions: jenisOptions,
+      initialJenisIds: _tagihanSelectedJenisIds,
+      initialMonth: _tagihanSelectedMonth,
+    );
+    if (!mounted || result == null) return;
+    setState(() {
+      _tagihanSelectedJenisIds = result.selectedJenisIds;
+      _tagihanSelectedMonth = result.selectedMonth;
+    });
+  }
+
+  /// Tagih button handler — opens [showTagihReminderSheet] for the
+  /// chosen bill. On confirm, calls
+  /// `POST /finance/bills/{id}/remind`, then syncs the local row's
+  /// `reminder_count` + `last_reminded_at` from the response. Errors
+  /// surface as a snackbar without bumping the counter so the row
+  /// truthfully reflects backend state.
+  Future<void> _onTagihBill(Map<String, dynamic> bill) async {
+    final sheetResult = await showTagihReminderSheet(context, bill: bill);
+    if (sheetResult == null || !mounted) return;
+
+    final id = bill['id']?.toString();
+    if (id == null || id.isEmpty) return;
+
+    final channelLabel = sheetResult.channel == TagihReminderChannel.whatsapp
+        ? 'WhatsApp'
+        : 'Email';
+    final channelKey = sheetResult.channel == TagihReminderChannel.whatsapp
+        ? 'whatsapp'
+        : 'email';
+
+    try {
+      final response = await FinanceService.remindBill(
+        billId: id,
+        channel: channelKey,
+      );
+      if (!mounted) return;
+
+      final data = response['data'];
+      final newCount = (data is Map && data['reminder_count'] is num)
+          ? (data['reminder_count'] as num).toInt()
+          : ((bill['reminder_count'] as num?)?.toInt() ?? 0) + 1;
+      final lastRemindedAt = (data is Map && data['last_reminded_at'] != null)
+          ? data['last_reminded_at'].toString()
+          : DateTime.now().toIso8601String();
+
+      setState(() {
+        for (var i = 0; i < _billList.length; i++) {
+          final raw = _billList[i];
+          if (raw is! Map) continue;
+          if (raw['id']?.toString() != id) continue;
+          final updated = Map<String, dynamic>.from(raw);
+          updated['reminder_count'] = newCount;
+          updated['last_reminded_at'] = lastRemindedAt;
+          _billList[i] = updated;
+          break;
+        }
+      });
+
+      SnackBarUtils.showSuccess(
+        context,
+        'Pengingat tagihan terkirim via $channelLabel.',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      SnackBarUtils.showError(
+        context,
+        'Gagal mencatat pengingat: ${ErrorUtils.getFriendlyMessage(e)}',
+      );
+    }
   }
 }

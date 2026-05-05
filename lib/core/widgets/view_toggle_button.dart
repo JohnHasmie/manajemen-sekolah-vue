@@ -76,7 +76,9 @@ class ViewToggleButton extends StatelessWidget {
         width: buttonSize,
         height: buttonSize,
         decoration: BoxDecoration(
-          color: backgroundColor ?? Colors.white.withValues(alpha: 0.2),
+          // Match BrandHeaderIconButton's 18 % white tint so all
+          // header action icons render at the same visual weight.
+          color: backgroundColor ?? Colors.white.withValues(alpha: 0.18),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(

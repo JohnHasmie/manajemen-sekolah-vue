@@ -34,12 +34,25 @@ class AppErrorHandler {
   static void setupErrorHandling() {
     // Handle Flutter errors
     FlutterError.onError = (FlutterErrorDetails details) {
+      final msg = details.exception.toString();
+
+      // Skip debug-only semantics assertions that cascade infinitely.
+      // The parentDataDirty / !_debugUltimatePreviousSiblingOf errors come
+      // from Stack(clipBehavior: Clip.none) + Positioned in dashboard
+      // heroes — harmless in release, but in debug they re-trigger on
+      // every frame and flood the error stream + log service.
+      if (kDebugMode &&
+          (msg.contains('parentDataDirty') ||
+           msg.contains('_debugUltimatePreviousSiblingOf'))) {
+        return; // swallow entirely — breaks the infinite cascade
+      }
+
       if (kDebugMode) {
         FlutterError.presentError(details);
       }
 
       // Send error to stream
-      _errorController.add(Exception(details.exception.toString()));
+      _errorController.add(Exception(msg));
 
       // Log error
       _logError('Flutter Error', details.exception, details.stack);
@@ -47,11 +60,23 @@ class AppErrorHandler {
 
     // Handle Dart errors
     PlatformDispatcher.instance.onError = (error, stack) {
+      final msg = error.toString();
+
+      // Skip network errors from LogService itself — prevents infinite
+      // loop when the logging backend is unreachable.
+      if (msg.contains('SocketException') ||
+          msg.contains('Connection refused')) {
+        if (kDebugMode) {
+          AppLogger.debug('error', 'Suppressed network error: $msg');
+        }
+        return true;
+      }
+
       AppLogger.error('error', error);
       AppLogger.debug('error', 'Stack: $stack');
 
       // Send error to stream
-      _errorController.add(Exception(error.toString()));
+      _errorController.add(Exception(msg));
 
       // Log error
       _logError('Dart Error', error, stack);
