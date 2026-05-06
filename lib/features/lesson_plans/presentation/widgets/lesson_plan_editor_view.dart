@@ -99,10 +99,22 @@ class _LessonPlanEditorViewState extends State<LessonPlanEditorView> {
       final key = field['key']!;
       final altKey = field['altKey'] ?? '';
       final value = _getFieldValue(data, key, altKey);
-      _controllers[key] = quill.QuillController(
+      final controller = quill.QuillController(
         document: _htmlToQuill(value),
         selection: const TextSelection.collapsed(offset: 0),
       );
+      // Forward Quill edits up to the parent so `_lessonPlanData`
+      // stays in sync with what the user typed. Without this the
+      // controllers held the edits internally and `saveLessonPlan`
+      // PATCH'd the original (untouched) content — the toast said
+      // success but the saved row matched the old content.
+      controller.document.changes.listen((_) {
+        final cb = widget.onFieldChanged;
+        if (cb == null) return;
+        final text = controller.document.toPlainText().trimRight();
+        cb(key, text);
+      });
+      _controllers[key] = controller;
     }
   }
 

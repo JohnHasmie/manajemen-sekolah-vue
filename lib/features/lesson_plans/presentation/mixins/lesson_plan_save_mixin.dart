@@ -19,12 +19,22 @@ mixin LessonPlanSaveMixin on State<RPPDetailPage> {
 
   /// True when the lesson plan being viewed is AI-generated.
   ///
-  /// AI-generated RPPs live in the kamiledu-ai backend (separate
-  /// database, separate URL); the core /rpp endpoint just mirrors
-  /// the metadata. Editing must hit the AI backend's
-  /// `PATCH /lesson-plans/{id}`, otherwise the core PATCH 200s but
-  /// the AI-side content is never touched and the screen reloads
-  /// the old values.
+  /// AI-generated RPPs live in the shared `lesson_plans` table but
+  /// own their own update endpoint on the kamiledu-ai backend
+  /// (`PATCH /lesson-plans/{id}`). The core API's `/rpp/{id}` also
+  /// 200s mass-assignment writes against that same row, but it
+  /// doesn't run the AI backend's editability gate or the
+  /// regen-limit accounting, so saves there look like they
+  /// succeed yet leave the screen reloading the old values until
+  /// some side-effect on the AI side flushes them. Routing
+  /// AI-flagged rows through the AI backend keeps the two
+  /// pipelines consistent.
+  ///
+  /// Detection is intentionally inclusive: any of the AI bookkeeping
+  /// fields, the chapter/sub-chapter pointers (only AI generation
+  /// fills these), or a non-empty content field (AI's RppFieldRegenLimit
+  /// content) is enough to flip the route. Manually-created RPPs
+  /// have all of these null/blank.
   bool _isAiGeneratedRpp() {
     bool truthy(dynamic v) {
       if (v is bool) return v;
@@ -36,11 +46,41 @@ mixin LessonPlanSaveMixin on State<RPPDetailPage> {
       return v != null;
     }
 
-    if (truthy(lessonPlanData['is_ai_generated'])) return true;
-    if (truthy(lessonPlanData['ai_generated'])) return true;
-    if (truthy(lessonPlanData['ai_model_used'])) return true;
-    if (truthy(lessonPlanData['ai_tokens_used'])) return true;
-    if (truthy(lessonPlanData['lesson_plan_ai_id'])) return true;
+    // Explicit AI bookkeeping flags
+    const flagKeys = [
+      'is_ai_generated',
+      'ai_generated',
+      'ai_model_used',
+      'ai_tokens_used',
+      'lesson_plan_ai_id',
+      'chapter_id',
+      'sub_chapter_id',
+    ];
+    for (final k in flagKeys) {
+      if (truthy(lessonPlanData[k])) return true;
+    }
+
+    // Content-bearing fields. Only AI-generated RPPs have these
+    // pre-filled at the moment; manually-created RPPs leave them
+    // empty. If any of them carry content, route to the AI backend
+    // so its regen-limits and editability gates stay authoritative.
+    const contentKeys = [
+      'core_competence',
+      'basic_competence',
+      'indicator',
+      'learning_objective',
+      'main_material',
+      'learning_method',
+      'media_tools',
+      'learning_source',
+      'learning_activities',
+      'assessment',
+    ];
+    for (final k in contentKeys) {
+      final v = lessonPlanData[k];
+      if (v is String && v.trim().isNotEmpty) return true;
+    }
+
     return false;
   }
 
