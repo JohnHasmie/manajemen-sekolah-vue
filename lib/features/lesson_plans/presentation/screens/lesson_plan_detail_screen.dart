@@ -11,7 +11,9 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_editor_view.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_form_dialog.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_detail_header.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_detail_preview.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_regen_sheet.dart';
@@ -246,11 +248,24 @@ class RPPDetailPageState extends State<RPPDetailPage>
 
   @override
   String? get filePath {
+    final url = _lessonPlanData['file_url'];
     final fp = _lessonPlanData['file_path'];
-    return (fp != null && fp.toString().trim().isNotEmpty)
-        ? fp.toString().trim()
-        : null;
+    AppLogger.debug(
+      'lesson_plan',
+      'filePath check — file_url: $url, '
+      'file_path: $fp',
+    );
+    // Prefer file_url (full URL resolved by backend).
+    if (url != null && url.toString().trim().isNotEmpty) {
+      return url.toString().trim();
+    }
+    // Fall back to raw file_path.
+    if (fp != null && fp.toString().trim().isNotEmpty) {
+      return fp.toString().trim();
+    }
+    return null;
   }
+
 
   @override
   String getFieldValue(String key, String altKey) {
@@ -308,10 +323,74 @@ class RPPDetailPageState extends State<RPPDetailPage>
   void _setSaving(bool value) => setState(() => _isSaving = value);
 
   @override
-  void onSaveSuccess() => setState(() => _isEditing = false);
+  void onSaveSuccess() {
+    setState(() {
+      _isEditing = false;
+      // The just-saved content IS the official content now, so the
+      // dirty flag must reset. Otherwise `canRegen` stays false and
+      // the preview falls back to the plain formatted-content view
+      // (no Regenerasi Semua Field banner, no per-section cards) until
+      // the user manually refreshes the screen.
+      _contentWasEdited = false;
+      // Reformat the editor content from the latest lessonPlanData so
+      // the formatted-content fallback (used when canRegen is false
+      // for non-AI plans) also reflects the new values.
+      _editedContent = formatLessonPlanContent();
+    });
+  }
+
+  /// True when this RPP was created via manual file upload
+  /// (not AI-generated).
+  bool get _isManualUpload {
+    // Explicit AI flag from backend
+    final aiFlag = _lessonPlanData['ai_generated'] ??
+        _lessonPlanData['is_ai_generated'];
+    if (aiFlag == true || aiFlag == 'true' || aiFlag == '1') {
+      return false;
+    }
+    // Has a file attachment → manual upload
+    if (filePath != null) return true;
+    // No AI content fields filled → manual
+    return !hasAiAdditionalData;
+  }
 
   // Private UI methods
-  void _toggleEdit() => setState(() => _isEditing = !_isEditing);
+  void _toggleEdit() {
+    if (_isManualUpload) {
+      // Manual upload RPP → open the upload form dialog
+      _openManualEditForm();
+    } else {
+      // AI-generated RPP → inline structured editor
+      setState(() => _isEditing = !_isEditing);
+    }
+  }
+
+  void _openManualEditForm() {
+    final teacherId =
+        (_lessonPlanData['teacher_id'] ??
+                _lessonPlanData['teacher']?['id'] ??
+                '')
+            .toString();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+        ),
+        child: LessonPlanFormDialog(
+          teacherId: teacherId,
+          lessonPlanData: _lessonPlanData,
+          onSaved: () {
+            // Close the detail sheet — the list screen
+            // will reload and show updated data.
+            AppNavigator.pop(context);
+          },
+        ),
+      ),
+    );
+  }
 
   void _updateContent(String newContent) {
     setState(() {
