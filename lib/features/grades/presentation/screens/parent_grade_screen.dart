@@ -17,7 +17,6 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
-import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_data_loading_mixin.dart';
@@ -352,10 +351,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
           badgeBorderColor: ColorUtils.brandAzure,
         ),
       ],
-      realtimeIndicator: BrandRealtimePill(
-        isFresh: !isLoading,
-        lastSync: _lastSync,
-      ),
+      isRealtimeFresh: !isLoading,
       childSelector: summaries.length < 2
           ? null
           : ChildSelectorChipRow(

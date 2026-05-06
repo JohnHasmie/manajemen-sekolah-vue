@@ -189,7 +189,7 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
           ),
           // Section header
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
             child: Row(
               children: [
                 Expanded(

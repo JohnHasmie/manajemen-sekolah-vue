@@ -90,7 +90,9 @@ class ChildSelectorChipRow extends StatelessWidget {
   final Color accentColor;
 
   /// Optional small caption rendered above the chip row inside the
-  /// gradient (e.g. `'PILIH ANAK'`). Pass null to hide.
+  /// gradient (e.g. `'PILIH ANAK'`). Defaults to null in compact v2 —
+  /// the avatar chips are self-describing, so the label was redundant
+  /// vertical space. Pass a non-null value to opt back in.
   final String? sectionLabel;
 
   const ChildSelectorChipRow({
@@ -99,7 +101,7 @@ class ChildSelectorChipRow extends StatelessWidget {
     required this.selectedChildId,
     required this.onSelected,
     this.accentColor = const Color(0xFF21AFE6),
-    this.sectionLabel = 'PILIH ANAK',
+    this.sectionLabel,
   });
 
   @override
@@ -114,30 +116,37 @@ class ChildSelectorChipRow extends StatelessWidget {
           Text(
             sectionLabel!,
             style: const TextStyle(
-              fontSize: 10.5,
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               color: Colors.white,
               letterSpacing: 0.6,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
         ],
+        // Row of Expanded chips so they stretch to fill the gradient
+        // header width — matches the v3 mockup (chips share the row
+        // 50/50 for two children, 33/33 for three, etc.). With ≥5
+        // children the inner Column ellipsizes the name to keep
+        // chips readable. We don't horizontal-scroll because the
+        // chip's inner Expanded would be unbounded inside a scroll
+        // viewport.
         SizedBox(
-          height: 46,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: children.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (_, index) {
-              final child = children[index];
-              final isActive = child.id == selectedChildId;
-              return _ChildChip(
-                child: child,
-                isActive: isActive,
-                accentColor: accentColor,
-                onTap: () => onSelected(child.id),
-              );
-            },
+          height: 36,
+          child: Row(
+            children: [
+              for (int i = 0; i < children.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                Expanded(
+                  child: _ChildChip(
+                    child: children[i],
+                    isActive: children[i].id == selectedChildId,
+                    accentColor: accentColor,
+                    onTap: () => onSelected(children[i].id),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ],
@@ -177,21 +186,21 @@ class _ChildChip extends StatelessWidget {
         isActive ? const Color(0xFF475569) : Colors.white;
 
     return InkWell(
-      borderRadius: const BorderRadius.all(Radius.circular(14)),
+      borderRadius: const BorderRadius.all(Radius.circular(12)),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(8, 6, 16, 6),
+        padding: const EdgeInsets.fromLTRB(6, 4, 10, 4),
         decoration: BoxDecoration(
           color: pillColor,
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
           border: Border.all(color: borderColor, width: isActive ? 0 : 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 28,
-              height: 28,
+              width: 22,
+              height: 22,
               decoration: BoxDecoration(
                 color: avatarColor,
                 shape: BoxShape.circle,
@@ -200,20 +209,19 @@ class _ChildChip extends StatelessWidget {
               child: Text(
                 child._resolvedInitials,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: avatarTextColor,
                   height: 1.0,
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            ConstrainedBox(
-              // Cap the name+class column so two chips comfortably
-              // fit on a 375 px-wide screen. Ellipsis kicks in beyond
-              // this cap so very long names ("Anak Mas Yahya 1") get
-              // truncated rather than blowing up the chip width.
-              constraints: const BoxConstraints(maxWidth: 100),
+            const SizedBox(width: 8),
+            // The chip's parent (Row of Expanded slots in
+            // ChildSelectorChipRow) governs the available width now,
+            // so the name+class column just needs to flex inside the
+            // pill. Ellipsis still kicks in for very long names.
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -224,22 +232,21 @@ class _ChildChip extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: nameColor,
                       height: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 2),
                   Text(
                     child.klass,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 9,
                       fontWeight: FontWeight.w500,
                       color: klassColor,
-                      height: 1.1,
+                      height: 1.2,
                     ),
                   ),
                 ],

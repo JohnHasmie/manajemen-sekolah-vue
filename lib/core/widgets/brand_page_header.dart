@@ -1,30 +1,55 @@
-// Phase-3 brand-aligned page header for deep-tab screens.
+// Phase-3 brand-aligned page header for deep-tab screens — compact v2.
 //
-// What this is for
-// ----------------
-// Every deep-tab screen in the parent role (and eventually teacher/admin)
-// gets the same gradient hero pattern: brand gradient background, back
-// button on the left, kicker-subtitle + title in the middle, action
-// icons on the right, and optional rows for a realtime indicator,
-// child-selector chips, or filter chips below.
+// What changed in v2 (compact redesign)
+// -------------------------------------
+// The header is now ~100dp shorter on parent role screens and ~70dp
+// shorter on admin role screens. Two structural moves drive the
+// savings:
 //
-// `BrandPageHeader` is the canonical implementation. The dashboard
-// bodies build their own variant inline because they need a more
-// complex hero (greeting, school pill, KPI overlay) — but every other
-// screen should use this widget so a brand refresh changes one place.
+//   1. Title block centers in a fixed 3-column toolbar (back / center
+//      / actions) instead of stacking below the toolbar. The kicker
+//      (subtitle) shrinks from 11px → 10px and sits *inside* the
+//      center column above a 19px (was 24px) title.
+//   2. The realtime indicator collapses from a full-width pill row
+//      ("Terhubung realtime · 21:05") into a 6dp green/grey dot
+//      placed inline beside the title. Pass `isRealtimeFresh`
+//      instead of building a `BrandRealtimePill` for the new compact
+//      surface. The legacy `realtimeIndicator` slot still renders
+//      below the title for callers that haven't migrated yet — it's
+//      now soft-deprecated.
+//
+// "PILIH ANAK" / "PILIH KELAS" labels above the child selector were
+// dropped; the avatar chips are self-describing. Child chips and
+// filter chips render at the new compact sizes (see
+// `ChildSelectorChipRow` and `BrandFilterChipStrip`).
+//
+// M1 tapered hairline + title polish
+// ----------------------------------
+// Between the title block and any bottom section (childSelector,
+// bottomSlot, legacy realtime row) we paint a tapered hairline — a
+// 1px line whose alpha fades to 0 at the screen edges (32% white in
+// the middle, transparent at the sides). Reads as a deliberate
+// section break rather than a hard ruled line. Stripe / Linear use
+// the same treatment.
+//
+// Title polish:
+//   • title 19px / weight 700 / letter-spacing -0.1 / line-height 1.15
+//   • kicker 10px / weight 700 / 72% white / letter-spacing 1.4
+//   • kicker → title gap = 3dp
 //
 // Companion helpers
 // -----------------
-//   • [BrandHeaderIconButton] — the 36×36 white-translucent icon
+//   • [BrandHeaderIconButton] — the 32×32 white-translucent icon
 //     button with optional notification badge, used in the action row.
 //   • [BrandRealtimePill] — green-dot + "Terhubung realtime · HH:MM"
-//     copy, with pulsing animation; matches the dashboard hero exactly.
+//     copy, with pulsing animation. Still exported because legacy
+//     screens use it, but new screens should prefer the
+//     [isRealtimeFresh] inline dot.
 //
 // Visual contract
 // ---------------
-// Mirrors the gradient-hero idiom used in the role dashboards and
-// documented in the parent Phase-3 mockup SVGs. Source-of-truth tokens:
-// `ColorUtils.brandGradient(role)`, `ColorUtils.getRoleColor(role)`.
+// Source-of-truth tokens: `ColorUtils.brandGradient(role)`,
+// `ColorUtils.getRoleColor(role)`. Mockup: `Header_Compact_v2.svg`.
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
@@ -33,12 +58,13 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// A Phase-3 brand-aligned page header for deep-tab screens.
 ///
-/// Example:
+/// Compact v2 example:
 /// ```dart
 /// BrandPageHeader(
 ///   role: 'wali',
 ///   subtitle: 'Akademik · Anak',
 ///   title: 'Kehadiran',
+///   isRealtimeFresh: true, // small green dot beside the title
 ///   actionIcons: [
 ///     BrandHeaderIconButton(
 ///       icon: Icons.tune_rounded,
@@ -46,10 +72,6 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 ///       badgeCount: 2,
 ///     ),
 ///   ],
-///   realtimeIndicator: BrandRealtimePill(
-///     isFresh: _isFresh,
-///     lastSync: _lastSync,
-///   ),
 ///   childSelector: ChildSelectorChipRow(
 ///     children: _children,
 ///     selectedChildId: _selectedChildId,
@@ -67,7 +89,7 @@ class BrandPageHeader extends StatelessWidget {
   final String title;
 
   /// Optional small kicker line above the title (e.g.
-  /// `'Akademik · Anak'`). Renders in 78% white when present.
+  /// `'Akademik · Anak'`). Renders centered, all-caps, 72% white.
   final String? subtitle;
 
   /// Back-button tap handler. When null, the back button auto-pops via
@@ -82,8 +104,16 @@ class BrandPageHeader extends StatelessWidget {
   /// item is typically a [BrandHeaderIconButton]. Spaced 6px apart.
   final List<Widget>? actionIcons;
 
-  /// Optional realtime indicator row (use [BrandRealtimePill]). Sits
-  /// between the title row and any child selector / filter chips.
+  /// When non-null, paints a 6dp dot beside the title — green for
+  /// `true` (live), translucent slate for `false` (stale). Cheaper
+  /// than the full-row [realtimeIndicator] and the recommended
+  /// surface for the compact header.
+  final bool? isRealtimeFresh;
+
+  /// Soft-deprecated realtime indicator row (typically
+  /// [BrandRealtimePill]). Kept for legacy call sites; new screens
+  /// should pass [isRealtimeFresh] instead. When both are provided
+  /// the inline dot wins and this widget is ignored.
   final Widget? realtimeIndicator;
 
   /// Optional row of child-selector chips (parent role typically).
@@ -99,10 +129,8 @@ class BrandPageHeader extends StatelessWidget {
   final bool? showBackButton;
 
   /// Extra bottom padding inside the gradient to reserve space for a
-  /// KPI overlay card. The body's scroll view should start with a
-  /// negative top margin (e.g. `padding: EdgeInsets.only(top: 0)` +
-  /// the KPI as the first child) so the KPI sits ON this extended
-  /// gradient area, creating the overlap effect.
+  /// KPI overlay card. Pair with `BrandPageLayout.kpiOverlapHeight`
+  /// when the screen also passes a `kpiCard` to `BrandPageLayout`.
   ///
   /// When 0 (default), no extra space is added.
   final double kpiOverlayHeight;
@@ -114,6 +142,7 @@ class BrandPageHeader extends StatelessWidget {
     this.subtitle,
     this.onBackPressed,
     this.actionIcons,
+    this.isRealtimeFresh,
     this.realtimeIndicator,
     this.childSelector,
     this.bottomSlot,
@@ -125,11 +154,15 @@ class BrandPageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusBarHeight = MediaQuery.of(context).viewPadding.top;
     final accentColor = ColorUtils.getRoleColor(role);
-    // Use Navigator.canPop (Flutter navigator) instead of context.canPop
-    // (go_router) because screens pushed via AppNavigator.push use
-    // Flutter's Navigator, not go_router's routing.
     final showBack = showBackButton ??
         (onBackPressed != null || Navigator.canPop(context));
+
+    final List<Widget> rightIcons = actionIcons ?? const [];
+
+    final bool hasBottomSection = (isRealtimeFresh == null &&
+            realtimeIndicator != null) ||
+        childSelector != null ||
+        bottomSlot != null;
 
     return Container(
       width: double.infinity,
@@ -149,75 +182,195 @@ class BrandPageHeader extends StatelessWidget {
       ),
       padding: EdgeInsets.fromLTRB(
         AppSpacing.md,
-        statusBarHeight + AppSpacing.md,
+        statusBarHeight + AppSpacing.sm,
         AppSpacing.md,
-        AppSpacing.lg + kpiOverlayHeight,
+        AppSpacing.md + kpiOverlayHeight,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Top toolbar row — back button left, action icons right. Kept
-          // separate from the title block so all icons share a single
-          // vertical baseline regardless of how tall the title block is.
-          if (showBack || (actionIcons != null && actionIcons!.isNotEmpty))
-            Row(
-              children: [
-                if (showBack)
-                  _HeaderBackButton(
-                    onTap: onBackPressed ?? () => AppNavigator.pop(context),
-                  ),
-                const Spacer(),
-                if (actionIcons != null && actionIcons!.isNotEmpty)
-                  for (int i = 0; i < actionIcons!.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 8),
-                    actionIcons![i],
-                  ],
-              ],
-            ),
-          if (showBack || (actionIcons != null && actionIcons!.isNotEmpty))
-            const SizedBox(height: 12),
-          // Title block — kicker (subtitle) + big title. Sits below the
-          // toolbar so it can grow without pushing the icons.
-          if (subtitle != null) ...[
-            Text(
-              subtitle!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: 1.2,
+          // Top toolbar: back / centered title block / actions.
+          //
+          // Layout: back button gets a fixed 32dp slot, action icons
+          // take their natural (intrinsic) width, and the title is
+          // wrapped in `Expanded` so it can never push the action
+          // icons off-screen. The trade-off is that when the right
+          // side is significantly wider than the left, the title is
+          // optically centered within its `Expanded` slot rather
+          // than within the full toolbar — which is fine for normal
+          // 1–3 icon counts and never overflows when callers pass
+          // compound action menus (Row of multiple buttons).
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 32,
+                child: showBack
+                    ? _HeaderBackButton(
+                        onTap:
+                            onBackPressed ?? () => AppNavigator.pop(context),
+                      )
+                    : null,
               ),
-            ),
-            const SizedBox(height: 4),
-          ],
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: 0.1,
-              height: 1.2,
-            ),
+              Expanded(
+                child: _CenteredTitleBlock(
+                  subtitle: subtitle,
+                  title: title,
+                  isRealtimeFresh: isRealtimeFresh,
+                ),
+              ),
+              if (rightIcons.isNotEmpty)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(width: 6),
+                    for (int i = 0; i < rightIcons.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 6),
+                      rightIcons[i],
+                    ],
+                  ],
+                ),
+            ],
           ),
-          if (realtimeIndicator != null) ...[
+          // Tapered hairline divider — fades to transparent at both
+          // edges so it reads as a deliberate section break rather
+          // than a hard ruled line. Painted only when there's a
+          // bottom section (childSelector / bottomSlot / legacy
+          // realtime row) to separate from the title block.
+          if (hasBottomSection) ...[
             const SizedBox(height: AppSpacing.md),
-            realtimeIndicator!,
+            const _TaperedHairline(),
+            const SizedBox(height: AppSpacing.sm + 2),
           ],
-          if (childSelector != null) ...[
-            const SizedBox(height: AppSpacing.md),
-            childSelector!,
-          ],
+          // Legacy realtime row — only when `isRealtimeFresh` is null
+          // and a custom widget was provided. New screens skip this
+          // path entirely.
+          if (isRealtimeFresh == null && realtimeIndicator != null)
+            Center(child: realtimeIndicator!),
+          if (childSelector != null) childSelector!,
           if (bottomSlot != null) ...[
-            const SizedBox(height: AppSpacing.md),
+            if (childSelector != null) const SizedBox(height: AppSpacing.sm),
             bottomSlot!,
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Internal centered title block: kicker (small caps) above a 19px
+/// title with an optional inline live-status dot. Kept private so the
+/// header's centering rules can't be broken by callers passing custom
+/// alignment.
+class _CenteredTitleBlock extends StatelessWidget {
+  final String? subtitle;
+  final String title;
+  final bool? isRealtimeFresh;
+
+  const _CenteredTitleBlock({
+    required this.title,
+    required this.subtitle,
+    required this.isRealtimeFresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (subtitle != null) ...[
+          Text(
+            subtitle!,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              // Polished: 72% white instead of solid — title still
+              // pops harder against it.
+              color: Colors.white.withValues(alpha: 0.72),
+              letterSpacing: 1.4,
+            ),
+          ),
+          const SizedBox(height: 3),
+        ],
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                title,
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: -0.1,
+                  height: 1.15,
+                ),
+              ),
+            ),
+            if (isRealtimeFresh != null) ...[
+              const SizedBox(width: 6),
+              _LiveDot(isFresh: isRealtimeFresh!),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// 1px horizontal divider that fades to transparent at the edges —
+/// reads as a deliberate section break rather than a hard ruled line.
+/// Used between the title block and the bottom sections (child
+/// selector, filter chips, legacy realtime row) inside the gradient
+/// header.
+class _TaperedHairline extends StatelessWidget {
+  const _TaperedHairline();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0),
+            Colors.white.withValues(alpha: 0.32),
+            Colors.white.withValues(alpha: 0.32),
+            Colors.white.withValues(alpha: 0),
+          ],
+          stops: const [0.0, 0.25, 0.75, 1.0],
+        ),
+      ),
+    );
+  }
+}
+
+/// 6dp dot used as the compact realtime indicator. Green when fresh,
+/// translucent slate when stale. No animation — keeps the header
+/// repaint-free during pulse cycles.
+class _LiveDot extends StatelessWidget {
+  final bool isFresh;
+  const _LiveDot({required this.isFresh});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 6,
+      height: 6,
+      decoration: BoxDecoration(
+        color: isFresh
+            ? const Color(0xFF4ADE80)
+            : Colors.white.withValues(alpha: 0.45),
+        shape: BoxShape.circle,
       ),
     );
   }
@@ -241,16 +394,16 @@ class _HeaderBackButton extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(10)),
         onTap: onTap,
         child: const SizedBox(
-          width: 36,
-          height: 36,
-          child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
+          width: 32,
+          height: 32,
+          child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 18),
         ),
       ),
     );
   }
 }
 
-/// A 36×36 white-translucent action icon button used in the
+/// A 32×32 white-translucent action icon button used in the
 /// [BrandPageHeader] top row.
 ///
 /// Optional [badgeCount] paints a small red notification badge at the
@@ -288,9 +441,9 @@ class BrandHeaderIconButton extends StatelessWidget {
             borderRadius: const BorderRadius.all(Radius.circular(10)),
             onTap: onTap,
             child: SizedBox(
-              width: 36,
-              height: 36,
-              child: Icon(icon, size: 18, color: Colors.white),
+              width: 32,
+              height: 32,
+              child: Icon(icon, size: 16, color: Colors.white),
             ),
           ),
         ),

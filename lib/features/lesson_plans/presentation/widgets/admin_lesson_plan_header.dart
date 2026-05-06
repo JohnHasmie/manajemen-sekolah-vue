@@ -1,19 +1,28 @@
+// Gradient header for the admin lesson plan screen — now powered by
+// the shared `BrandPageHeader` so admin pages share one canonical
+// gradient/title/chip pattern across the app.
+//
+// What it surfaces:
+//   • Centered title + kicker (subtitle)
+//   • Back button (auto, plus optional `onBack` override)
+//   • Two action icons — Filter (with badge when active) + Refresh menu
+//   • Compact search bar in `bottomSlot`
+//
+// The active-filter "summary pill" the legacy header carried below
+// the search bar has been retired — the badge dot on the filter icon
+// already telegraphs that state, matching the parent role pattern.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
-/// Gradient header for the admin lesson plan screen.
-///
-/// Extracted from [_AdminLessonPlanScreenState.build] to keep the build method
-/// readable. Like a Blade partial: `@include('lesson_plans._header')`.
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+
 class AdminLessonPlanHeader extends StatelessWidget {
   final Color primaryColor;
-  final LinearGradient gradient;
   final String title;
   final String? subtitle;
   final bool showTeacherList;
   final bool hasActiveFilter;
-  final String filterSummary;
+  final String filterSummary; // unused now — kept for API stability
   final GlobalKey menuKey;
   final GlobalKey searchKey;
   final GlobalKey filterKey;
@@ -21,17 +30,18 @@ class AdminLessonPlanHeader extends StatelessWidget {
   final String searchHint;
   final String exportLabel;
   final String updateDataLabel;
-  final String filterTooltip;
+  final String filterTooltip; // unused now — kept for API stability
   final VoidCallback onBack;
   final VoidCallback onSearch;
   final VoidCallback onExport;
   final VoidCallback onRefresh;
   final VoidCallback onShowFilter;
-  final VoidCallback onClearFilter;
+  final VoidCallback onClearFilter; // unused now — clearing happens in sheet
 
   const AdminLessonPlanHeader({
     required this.primaryColor,
-    required this.gradient,
+    // ignore: unused_element_parameter
+    LinearGradient? gradient,
     required this.title,
     required this.subtitle,
     required this.showTeacherList,
@@ -56,274 +66,106 @@ class AdminLessonPlanHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: gradient,
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return BrandPageHeader(
+      role: 'admin',
+      title: title,
+      subtitle: subtitle,
+      onBackPressed: onBack,
+      showBackButton: true,
+      actionIcons: [
+        // Filter — only meaningful in the teacher-list state (the
+        // legacy header hid this button for nested drill-downs).
+        if (showTeacherList)
+          BrandHeaderIconButton(
+            key: filterKey,
+            icon: Icons.tune_rounded,
+            onTap: onShowFilter,
+            badgeCount: hasActiveFilter ? 1 : null,
+            badgeBorderColor: primaryColor,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top row: back, title/subtitle, popup menu
-          Row(
-            children: [
-              GestureDetector(
-                onTap: onBack,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+        BrandHeaderIconButton(
+          key: menuKey,
+          icon: Icons.more_vert_rounded,
+          onTap: () => _showMoreMenu(context),
+        ),
+      ],
+      bottomSlot: Container(
+        key: searchKey,
+        height: 36,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            Icon(Icons.search_rounded, size: 16, color: ColorUtils.slate400),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: searchController,
+                style: TextStyle(
+                  color: ColorUtils.slate800,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ],
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: searchHint,
+                  hintStyle: TextStyle(
+                    color: ColorUtils.slate400,
+                    fontSize: 12.5,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
                 ),
-              ),
-              PopupMenuButton<String>(
-                key: menuKey,
-                onSelected: (value) {
-                  switch (value) {
-                    case 'export':
-                      onExport();
-                      break;
-                    case 'refresh':
-                      onRefresh();
-                      break;
-                  }
-                },
-                icon: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  ),
-                  child: const Icon(
-                    Icons.more_vert,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                itemBuilder: (BuildContext context) => [
-                  if (!showTeacherList)
-                    PopupMenuItem<String>(
-                      value: 'export',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.download, size: 20),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(exportLabel),
-                        ],
-                      ),
-                    ),
-                  PopupMenuItem<String>(
-                    value: 'refresh',
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.refresh,
-                          size: 20,
-                          color: ColorUtils.info600,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(updateDataLabel),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          // Search bar + optional filter button
-          Row(
-            children: [
-              Expanded(
-                key: searchKey,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: searchController,
-                          onSubmitted: (_) => onSearch(),
-                          style: TextStyle(color: ColorUtils.slate800),
-                          decoration: InputDecoration(
-                            hintText: searchHint,
-                            hintStyle: TextStyle(color: ColorUtils.slate400),
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: ColorUtils.slate400,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(right: 4),
-                        child: IconButton(
-                          icon: Icon(Icons.search, color: primaryColor),
-                          onPressed: onSearch,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (!showTeacherList) ...[
-                const SizedBox(width: AppSpacing.sm),
-                Container(
-                  key: filterKey,
-                  decoration: BoxDecoration(
-                    color: hasActiveFilter
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      IconButton(
-                        onPressed: onShowFilter,
-                        icon: Icon(
-                          Icons.tune,
-                          color: hasActiveFilter ? primaryColor : Colors.white,
-                        ),
-                        tooltip: filterTooltip,
-                      ),
-                      if (hasActiveFilter)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(AppSpacing.xs),
-                            decoration: BoxDecoration(
-                              color: ColorUtils.error600,
-                              shape: BoxShape.circle,
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 8,
-                              minHeight: 8,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-
-          // Filter chips (RPP only)
-          if (!showTeacherList && hasActiveFilter) ...[
-            const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              height: 32,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(16),
-                            ),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.5),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                filterSummary,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              GestureDetector(
-                                onTap: onClearFilter,
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                onSubmitted: (_) => onSearch(),
               ),
             ),
           ],
-        ],
+        ),
       ),
     );
+  }
+
+  void _showMoreMenu(BuildContext context) {
+    final RenderBox? box = context.findRenderObject() as RenderBox?;
+    final Offset position = box?.localToGlobal(Offset.zero) ?? Offset.zero;
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx + (box?.size.width ?? 0) - 200,
+        position.dy + 56,
+        position.dx + (box?.size.width ?? 0) - 12,
+        position.dy + 600,
+      ),
+      items: [
+        PopupMenuItem<String>(
+          value: 'export',
+          child: Row(
+            children: [
+              Icon(Icons.file_download_outlined,
+                  size: 18, color: ColorUtils.slate700),
+              const SizedBox(width: 12),
+              Text(exportLabel),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'refresh',
+          child: Row(
+            children: [
+              Icon(Icons.refresh_rounded,
+                  size: 18, color: ColorUtils.slate700),
+              const SizedBox(width: 12),
+              Text(updateDataLabel),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'export') onExport();
+      if (value == 'refresh') onRefresh();
+    });
   }
 }

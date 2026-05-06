@@ -63,13 +63,14 @@ class FinanceNavigationBar extends StatelessWidget {
       const _NavItem(icon: Icons.payments_rounded, label: 'Jenis'),
     ];
 
+    // Compact tab bar — single horizontal row with icon-left / label-
+    // right pills. The previous icon-on-top layout cost ~70px of body
+    // height for what amounts to three navigation buttons, which the
+    // user flagged as taking too much room. The new layout is ~38px
+    // tall (vs ~70) and reads as cleanly because the label is right
+    // next to the icon.
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.sm,
-      ),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 4, AppSpacing.md, 4),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -130,49 +131,47 @@ class _TabPill extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
         margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.symmetric(
-          vertical: AppSpacing.sm + 2,
-          horizontal: AppSpacing.xs,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? primaryColor.withValues(alpha: 0.08)
+              ? primaryColor.withValues(alpha: 0.10)
               : Colors.transparent,
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          borderRadius: const BorderRadius.all(Radius.circular(10)),
         ),
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Stack(
               clipBehavior: Clip.none,
               children: [
                 Icon(
                   item.icon,
-                  size: 22,
+                  size: 17,
                   color: isSelected ? primaryColor : ColorUtils.slate500,
                 ),
                 if (item.badge > 0)
                   Positioned(
-                    right: -8,
-                    top: -4,
+                    right: -7,
+                    top: -5,
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: item.badge > 9 ? 4 : 5,
-                        vertical: 2,
+                        horizontal: item.badge > 9 ? 4 : 4,
+                        vertical: 1,
                       ),
                       decoration: BoxDecoration(
                         color: item.badgeColor,
                         borderRadius: const BorderRadius.all(
-                          Radius.circular(10),
+                          Radius.circular(9),
                         ),
-                        border: Border.all(color: Colors.white, width: 1.5),
+                        border: Border.all(color: Colors.white, width: 1.2),
                       ),
                       child: Text(
                         item.badge > 99 ? '99+' : '${item.badge}',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w800,
                           height: 1.1,
                         ),
                       ),
@@ -180,18 +179,19 @@ class _TabPill extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 5),
-            Text(
-              item.label,
-              style: TextStyle(
-                fontSize: 10.5,
-                color: isSelected ? primaryColor : ColorUtils.slate600,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                letterSpacing: 0.1,
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                item.label,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: isSelected ? primaryColor : ColorUtils.slate600,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  letterSpacing: 0.1,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
             ),
           ],
         ),

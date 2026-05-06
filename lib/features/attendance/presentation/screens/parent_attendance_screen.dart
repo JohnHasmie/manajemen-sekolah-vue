@@ -43,7 +43,6 @@ import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
-import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
@@ -298,10 +297,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
           badgeBorderColor: ColorUtils.brandAzureDeep,
         ),
       ],
-      realtimeIndicator: BrandRealtimePill(
-        isFresh: !isLoading,
-        lastSync: _lastSync,
-      ),
+      isRealtimeFresh: !isLoading,
       childSelector: children.length < 2
           ? null
           : ChildSelectorChipRow(

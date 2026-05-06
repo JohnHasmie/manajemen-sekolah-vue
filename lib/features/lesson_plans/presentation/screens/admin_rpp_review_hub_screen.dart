@@ -1,79 +1,223 @@
-// Admin RPP review hub — Mockup #09 applied.
+// Admin RPP review hub — Mockup #09 with shared brand components.
 //
-// Hero with 3 QueueCountTiles + period pill, then a ReviewQueueColumn
-// with 3 tiers (Pending → Rejected → Approved teaser). Each pending
-// card has an inline approve action; rejected cards expose Regen +
-// Edit manual buttons (snackbar placeholder until #134 regen flow is
-// generalised for admin).
+// Uses BrandPageHeader + BrandPageLayout (same pattern as parent role
+// screens) so the hero, pull-to-refresh, and KPI overlay are
+// consistent across all admin surfaces.
 //
-// Existing AdminLessonPlanScreen left untouched — the new hub is a
-// dedicated drill-in with a different shape (review queue vs. CRUD
-// list). Future work can swap entry points or merge them.
+// Layout:
+//   1. BrandPageHeader with kicker "Akademik · Pembelajaran", title
+//      "RPP", filter chips in bottomSlot.
+//   2. KPI overlay: 3 QueueCountTiles (Perlu Review / Disetujui /
+//      Ditolak) overlapping the hero gradient.
+//   3. Body: ReviewQueueColumn with tier sections.
+//   4. Pull-to-refresh via BrandPageLayout.onRefresh.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_lesson_plan_components.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/features/lesson_plans/data/admin_lesson_plan_queue_service.dart';
 
-class AdminRppReviewHubScreen extends ConsumerWidget {
+class AdminRppReviewHubScreen extends ConsumerStatefulWidget {
   const AdminRppReviewHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final navy = ColorUtils.getRoleColor('admin');
+  ConsumerState<AdminRppReviewHubScreen> createState() =>
+      _AdminRppReviewHubScreenState();
+}
+
+class _AdminRppReviewHubScreenState
+    extends ConsumerState<AdminRppReviewHubScreen> {
+  /// Active status filter — null = show all.
+  String? _statusFilter;
+
+  Future<void> _refresh() async {
+    ref.invalidate(adminLessonPlanQueueProvider);
+    // Wait for the provider to settle so the refresh
+    // indicator finishes only after data arrives.
+    await ref.read(adminLessonPlanQueueProvider.future);
+  }
+
+  void _setStatusFilter(String? key) {
+    setState(() {
+      _statusFilter =
+          (_statusFilter == key) ? null : key;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(adminLessonPlanQueueProvider);
+    final queue = async.maybeWhen(
+      data: (q) => q,
+      orElse: () => null,
+    );
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          _Hero(navy: navy, queue: async.maybeWhen(
-            data: (q) => q,
-            orElse: () => null,
-          )),
-          const SizedBox(height: AppSpacing.lg),
-          async.when(
-            data: (q) => _buildBody(context, ref, q),
-            loading: () => const Padding(
-              padding: EdgeInsets.symmetric(vertical: 60),
-              child: Center(child: CircularProgressIndicator()),
+      body: BrandPageLayout(
+        role: 'admin',
+        onRefresh: _refresh,
+        header: BrandPageHeader(
+          role: 'admin',
+          subtitle: 'Akademik · Pembelajaran',
+          title: 'RPP',
+          // Matches the rule baked into BrandPageLayout — header
+          // reserves overlap space below the chip strip so the KPI's
+          // overlap zone tucks into navy instead of covering chips.
+          kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
+          actionIcons: [
+            BrandHeaderIconButton(
+              icon: Icons.tune_rounded,
+              onTap: () => _showStatusSheet(context),
+              badgeCount: _statusFilter != null ? 1 : null,
             ),
-            error: (e, _) => Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Text(
-                'Gagal memuat: $e',
-                style: const TextStyle(color: Color(0xFFDC2626)),
+          ],
+          // Filter chip strip — matches parent role pattern
+          // (parent_billing_screen): one BrandFilterChip whose `value`
+          // reflects the active status. Tapping the chip OR the tune
+          // icon opens the same status sheet.
+          bottomSlot: BrandFilterChipStrip(
+            chips: [
+              BrandFilterChip(
+                label: 'Status',
+                value: _statusFilter == null
+                    ? null
+                    : _filterLabel(_statusFilter!),
+                onTap: () => _showStatusSheet(context),
               ),
-            ),
+            ],
           ),
+        ),
+        kpiCard: _buildKpiStrip(queue),
+        bodyChildren: [
+          const SizedBox(height: AppSpacing.md),
+          _buildBody(context, async),
           SizedBox(
-            height: AppSpacing.xl + MediaQuery.of(context).padding.bottom,
+            height: AppSpacing.xl +
+                MediaQuery.of(context).padding.bottom,
           ),
         ],
       ),
     );
   }
 
+  // ── KPI strip (white card, same as parent role) ──
+
+  Widget _buildKpiStrip(AdminLessonPlanQueue? q) {
+    final pending = q?.tierByKey('pending');
+    final approved = q?.tierByKey('approved');
+    final rejected = q?.tierByKey('rejected');
+
+    return BrandKpiStrip(
+      columns: [
+        BrandKpiColumn(
+          label: 'Perlu Review',
+          value: '${pending?.totalCount ?? 0}',
+          valueColor: const Color(0xFFF59E0B),
+          sub: pending?.deltaLabel,
+        ),
+        BrandKpiColumn(
+          label: 'Disetujui',
+          value: '${approved?.totalCount ?? 0}',
+          valueColor: const Color(0xFF10B981),
+          sub: approved?.deltaLabel,
+        ),
+        BrandKpiColumn(
+          label: 'Ditolak',
+          value: '${rejected?.totalCount ?? 0}',
+          valueColor: const Color(0xFFDC2626),
+          sub: rejected?.deltaLabel,
+        ),
+      ],
+    );
+  }
+
+  // ── Body ──
+
   Widget _buildBody(
     BuildContext context,
-    WidgetRef ref,
+    AsyncValue<AdminLessonPlanQueue> async,
+  ) {
+    return async.when(
+      data: (q) => _buildQueue(context, q),
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          children: [
+            Text(
+              'Gagal memuat: $e',
+              style: const TextStyle(
+                color: Color(0xFFDC2626),
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: _refresh,
+              child: const Text('Coba lagi'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQueue(
+    BuildContext context,
     AdminLessonPlanQueue queue,
   ) {
-    final tiers = queue.tiers.map((t) {
-      final cards = t.items.take(t.key == 'approved' ? 3 : 5).map((item) {
+    // Filter tiers by status if a filter is active.
+    var tiers = queue.tiers;
+    if (_statusFilter != null) {
+      tiers = tiers
+          .where((t) => t.key == _statusFilter)
+          .toList();
+    }
+
+    if (tiers.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Center(
+          child: Text(
+            _statusFilter != null
+                ? 'Tidak ada RPP dengan status '
+                    '"${_filterLabel(_statusFilter!)}"'
+                : 'Belum ada RPP.',
+            style: TextStyle(
+              fontSize: 12,
+              color: ColorUtils.slate500,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final rendered = tiers.map((t) {
+      final cards = t.items
+          .take(t.key == 'approved' ? 3 : 5)
+          .map((item) {
         return SwipeableQueueCard(
           subtitle: item.subtitle,
           title: item.title,
           tone: t.tone,
           rejectionReason: item.rejectionReason,
           meta: [
-            _StatusPill(label: item.status, tone: t.tone),
+            _StatusPill(
+              label: item.status,
+              tone: t.tone,
+            ),
             if (item.updatedAtHuman != null)
               Text(
                 item.updatedAtHuman!,
@@ -83,22 +227,24 @@ class AdminRppReviewHubScreen extends ConsumerWidget {
                 ),
               ),
           ],
-          footer: '${item.teacherName}',
+          footer: item.teacherName,
           onTap: () => SnackBarUtils.showInfo(
             context,
-            'Detail RPP akan tersedia di rilis berikutnya.',
+            'Detail RPP akan tersedia '
+            'di rilis berikutnya.',
           ),
           onApprove: t.key == 'pending'
-              ? () => _handleApprove(context, ref, item.id)
+              ? () => _handleApprove(context, item.id)
               : null,
           actionsRow: t.key == 'rejected'
               ? [
                   _ActionButton(
-                    label: '⟳ Regen via AI',
+                    label: '\u27F3 Regen via AI',
                     primary: true,
                     onTap: () => SnackBarUtils.showInfo(
                       context,
-                      'Regen via AI akan tersedia di rilis berikutnya.',
+                      'Regen via AI akan tersedia '
+                      'di rilis berikutnya.',
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -107,7 +253,8 @@ class AdminRppReviewHubScreen extends ConsumerWidget {
                     primary: false,
                     onTap: () => SnackBarUtils.showInfo(
                       context,
-                      'Edit manual akan tersedia di rilis berikutnya.',
+                      'Edit manual akan tersedia '
+                      'di rilis berikutnya.',
                     ),
                   ),
                 ]
@@ -126,26 +273,26 @@ class AdminRppReviewHubScreen extends ConsumerWidget {
         onSeeAll: t.key == 'approved'
             ? () => SnackBarUtils.showInfo(
                   context,
-                  'Daftar lengkap akan tersedia di rilis berikutnya.',
+                  'Daftar lengkap akan tersedia '
+                  'di rilis berikutnya.',
                 )
             : null,
       );
     }).toList();
 
-    return ReviewQueueColumn(tiers: tiers);
+    return ReviewQueueColumn(tiers: rendered);
   }
+
+  // ── Actions ──
 
   Future<void> _handleApprove(
     BuildContext context,
-    WidgetRef ref,
     String id,
   ) async {
     try {
       await ref
           .read(adminLessonPlanQueueServiceProvider)
           .updateStatus(id, 'Approved');
-      // Re-fetch the queue so the approved card moves to the
-      // approved tier teaser.
       ref.invalidate(adminLessonPlanQueueProvider);
       if (context.mounted) {
         SnackBarUtils.showSuccess(context, 'RPP disetujui');
@@ -156,113 +303,91 @@ class AdminRppReviewHubScreen extends ConsumerWidget {
       }
     }
   }
-}
 
-class _Hero extends StatelessWidget {
-  final Color navy;
-  final AdminLessonPlanQueue? queue;
-  const _Hero({required this.navy, this.queue});
+  // ── Status filter sheet ──
 
-  QueueTier? _byKey(String key) => queue?.tierByKey(key);
+  String _filterLabel(String key) => switch (key) {
+        'pending' => 'Perlu Review',
+        'approved' => 'Disetujui',
+        'rejected' => 'Ditolak',
+        _ => key,
+      };
 
-  @override
-  Widget build(BuildContext context) {
-    final pending = _byKey('pending');
-    final approved = _byKey('approved');
-    final rejected = _byKey('rejected');
-
-    return Container(
-      decoration: BoxDecoration(gradient: ColorUtils.brandGradient('admin')),
-      child: SafeArea(
-        bottom: false,
+  void _showStatusSheet(BuildContext context) {
+    final navy = ColorUtils.getRoleColor('admin');
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      builder: (ctx) => SafeArea(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                0,
-              ),
-              child: Row(
-                children: [
-                  Material(
-                    color: Colors.white.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(12),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () => AppNavigator.pop(context),
-                      child: const SizedBox(
-                        width: 36,
-                        height: 36,
-                        child: Icon(Icons.arrow_back_rounded,
-                            color: Colors.white, size: 20),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Akademik · Pembelajaran',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withValues(alpha: 0.85),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'RPP',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: ColorUtils.slate300,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 14),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: QueueCountTile(
-                      label: 'PERLU REVIEW',
-                      count: pending?.totalCount ?? 0,
-                      tone: QueueTone.warn,
-                      deltaLabel: pending?.deltaLabel,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: QueueCountTile(
-                      label: 'DISETUJUI',
-                      count: approved?.totalCount ?? 0,
-                      tone: QueueTone.good,
-                      deltaLabel: approved?.deltaLabel,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: QueueCountTile(
-                      label: 'DITOLAK',
-                      count: rejected?.totalCount ?? 0,
-                      tone: QueueTone.bad,
-                      deltaLabel: rejected?.deltaLabel,
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 16),
+            Text(
+              'Filter Status',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: ColorUtils.slate900,
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: 12),
+            for (final key in ['pending', 'approved', 'rejected'])
+              ListTile(
+                title: Text(
+                  _filterLabel(key),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: _statusFilter == key
+                        ? FontWeight.w800
+                        : FontWeight.w500,
+                    color: _statusFilter == key
+                        ? navy
+                        : ColorUtils.slate700,
+                  ),
+                ),
+                trailing: _statusFilter == key
+                    ? Icon(
+                        Icons.check_rounded,
+                        color: navy,
+                        size: 18,
+                      )
+                    : null,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _setStatusFilter(key);
+                },
+              ),
+            if (_statusFilter != null)
+              ListTile(
+                title: Text(
+                  'Hapus filter',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFDC2626),
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _setStatusFilter(null);
+                },
+              ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -270,20 +395,39 @@ class _Hero extends StatelessWidget {
   }
 }
 
+// ═════════════════════════════════════════════════════════════════════
+// Private widgets
+// ═════════════════════════════════════════════════════════════════════
+
 class _StatusPill extends StatelessWidget {
   final String label;
   final QueueTone tone;
-  const _StatusPill({required this.label, required this.tone});
+  const _StatusPill({
+    required this.label,
+    required this.tone,
+  });
 
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (tone) {
-      QueueTone.warn => (const Color(0xFFFFFBEB), const Color(0xFF92400E)),
-      QueueTone.good => (const Color(0xFFF0FDF4), const Color(0xFF166534)),
-      QueueTone.bad => (const Color(0xFFFEF2F2), const Color(0xFF991B1B)),
+      QueueTone.warn => (
+        const Color(0xFFFFFBEB),
+        const Color(0xFF92400E),
+      ),
+      QueueTone.good => (
+        const Color(0xFFF0FDF4),
+        const Color(0xFF166534),
+      ),
+      QueueTone.bad => (
+        const Color(0xFFFEF2F2),
+        const Color(0xFF991B1B),
+      ),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(6),
@@ -322,14 +466,18 @@ class _ActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 5,
+          ),
           decoration: BoxDecoration(
-            color: bg,
             borderRadius: BorderRadius.circular(8),
             border: primary
                 ? null
-                : Border.all(color: ColorUtils.slate300, width: 1),
+                : Border.all(
+                    color: ColorUtils.slate300,
+                    width: 1,
+                  ),
           ),
           child: Text(
             label,

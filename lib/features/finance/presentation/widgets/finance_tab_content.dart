@@ -42,19 +42,15 @@ class FinanceTabContent extends StatelessWidget {
   final Function(int) onVerify;
   final Function(int) onShowProof;
 
-  // Tagihan tab wiring (Mockup #13)
+  // Tagihan tab wiring (Mockup #13). Status / jenis / bulan filters
+  // are now header-owned (BrandFilterChipStrip) — the screen passes
+  // the resolved filter values through, the tab just renders.
   final String tagihanFilterKey;
-  final ValueChanged<String> onTagihanFilterChanged;
-  final int overdueCount;
   final void Function(Map<String, dynamic> bill)? onTagihBill;
   final void Function(Map<String, dynamic> bill)? onTapBill;
   final VoidCallback onClassReportTap;
-
-  // Tagihan jenis + bulan filter wiring
   final Set<String> tagihanSelectedJenisIds;
   final String? tagihanSelectedMonth;
-  final VoidCallback onOpenTagihanFilter;
-  final VoidCallback onClearTagihanFilter;
 
   const FinanceTabContent({
     required this.currentTabIndex,
@@ -80,13 +76,9 @@ class FinanceTabContent extends StatelessWidget {
     required this.onVerify,
     required this.onShowProof,
     required this.tagihanFilterKey,
-    required this.onTagihanFilterChanged,
-    required this.overdueCount,
     required this.onClassReportTap,
     required this.tagihanSelectedJenisIds,
     required this.tagihanSelectedMonth,
-    required this.onOpenTagihanFilter,
-    required this.onClearTagihanFilter,
     this.onTagihBill,
     this.onTapBill,
     super.key,
@@ -100,17 +92,12 @@ class FinanceTabContent extends StatelessWidget {
         TagihanTab(
           billList: billList,
           activeFilterKey: tagihanFilterKey,
-          onFilterChanged: onTagihanFilterChanged,
-          overdueCount: overdueCount,
           onTagih: onTagihBill,
           onTap: onTapBill,
           onClassReportTap: onClassReportTap,
           onRefresh: onRefresh,
           selectedJenisIds: tagihanSelectedJenisIds,
           selectedMonth: tagihanSelectedMonth,
-          onOpenFilterSheet: onOpenTagihanFilter,
-          onClearFilters: onClearTagihanFilter,
-          primaryColor: primaryColor,
         ),
         FinanceVerificationTab(
           pendingPaymentList: pendingPaymentList,
@@ -126,6 +113,7 @@ class FinanceTabContent extends StatelessWidget {
           filteredPaymentTypes: filteredPaymentTypes,
           searchController: searchController,
           hasActiveFilter: hasActiveFilter,
+          hasActiveHeaderFilter: hasActiveFilter,
           primaryColor: primaryColor,
           onShowFilterSheet: onShowFilterSheet,
           onClearAllFilters: onClearAllFilters,

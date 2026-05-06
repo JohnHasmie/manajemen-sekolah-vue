@@ -27,7 +27,6 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
-import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
@@ -174,10 +173,7 @@ class ParentClassActivityScreenState
           badgeBorderColor: ColorUtils.brandAzureDeep,
         ),
       ],
-      realtimeIndicator: BrandRealtimePill(
-        isFresh: !isLoading,
-        lastSync: _lastSync,
-      ),
+      isRealtimeFresh: !isLoading,
       childSelector: children.length < 2
           ? null
           : ChildSelectorChipRow(

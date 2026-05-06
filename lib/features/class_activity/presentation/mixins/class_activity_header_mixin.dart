@@ -1,102 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/admin_class_activity_screen.dart';
 
 /// Mixin providing header building methods for admin class activity screen.
 mixin ClassActivityHeaderMixin on ConsumerState<AdminClassActivityScreen> {
-  Widget buildHeader(LanguageProvider lp) => Container(
-    width: double.infinity,
-    padding: EdgeInsets.only(
-      top: MediaQuery.of(context).padding.top + 16,
-      left: 16,
-      right: 16,
-      bottom: 16,
-    ),
-    decoration: BoxDecoration(
-      gradient: getCardGradient(),
-      boxShadow: [
-        BoxShadow(
-          color: getPrimaryColor().withValues(alpha: 0.3),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
+  /// Builds the gradient hero — now goes through the shared
+  /// `BrandPageHeader` so the admin role gets the same compact
+  /// centered-title + bottomSlot search idiom as every other tab.
+  /// The drill-down back button still walks the in-screen state
+  /// (teachers → subjects → activities) before falling through to
+  /// `AppNavigator.pop`.
+  Widget buildHeader(LanguageProvider lp) {
+    return BrandPageHeader(
+      key: infoKey,
+      role: 'admin',
+      subtitle: _getKickerText(lp),
+      title: getTitleText(lp),
+      onBackPressed: _handleBack,
+      showBackButton: true,
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: Icons.refresh_rounded,
+          onTap: forceRefresh,
         ),
       ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildHeaderTop(lp),
-        const SizedBox(height: AppSpacing.lg),
-        buildSearchBar(lp),
-      ],
-    ),
-  );
+      bottomSlot: _buildSearchField(lp),
+    );
+  }
 
-  Widget buildHeaderTop(LanguageProvider lp) => Row(
-    children: [
-      _buildBackButton(),
-      const SizedBox(width: AppSpacing.md),
-      _buildHeaderTitles(lp),
-      buildMenuButton(),
-    ],
-  );
+  /// Walks the drill-down state. From teachers list, pops the screen.
+  /// From subjects list, returns to teachers. From activities, returns
+  /// to subjects.
+  void _handleBack() {
+    if (showTeacherList) {
+      AppNavigator.pop(context);
+    } else if (showSubjectList) {
+      backToTeacherList();
+    } else {
+      backToSubjectList();
+    }
+  }
 
-  Widget _buildBackButton() => GestureDetector(
-    onTap: showTeacherList
-        ? () => AppNavigator.pop(context)
-        : (showSubjectList ? backToTeacherList : backToSubjectList),
-    child: Container(
-      width: 40,
-      height: 40,
+  /// Compact white search field that lives in
+  /// `BrandPageHeader.bottomSlot`. Mirrors the v3 search-bar pattern
+  /// `admin_grade_overview_screen` uses.
+  Widget _buildSearchField(LanguageProvider lp) {
+    return Container(
+      key: searchKey,
+      height: 36,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(10)),
       ),
-      child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-    ),
-  );
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          Icon(Icons.search_rounded, size: 16, color: ColorUtils.slate400),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: searchController,
+              style: TextStyle(
+                color: ColorUtils.slate800,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: getSearchHint(lp),
+                hintStyle: TextStyle(
+                  color: ColorUtils.slate400,
+                  fontSize: 12.5,
+                ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              onSubmitted: (_) => setState(() {}),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget _buildHeaderTitles(LanguageProvider lp) => Expanded(
-    child: Column(
-      key: infoKey,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          getTitleText(lp),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          getSubtitleText(lp),
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.white.withValues(alpha: 0.9),
-          ),
-        ),
-      ],
-    ),
-  );
+  /// Kicker shown ABOVE the centered title in the BrandPageHeader.
+  /// Switches between the role kicker and the drill-down breadcrumb
+  /// so the admin always knows which level of the hierarchy they're
+  /// viewing.
+  String _getKickerText(LanguageProvider lp) {
+    if (showTeacherList) {
+      return lp.getTranslatedText({
+        'en': 'ACADEMIC · ACTIVITIES',
+        'id': 'AKADEMIK · KEGIATAN',
+      });
+    }
+    if (showSubjectList) {
+      return (selectedTeacherName ?? '').toUpperCase();
+    }
+    return (selectedSubjectName ?? '').toUpperCase();
+  }
 
   String getTitleText(LanguageProvider lp) => lp.getTranslatedText(
     showTeacherList
         ? {'en': 'Class Activities', 'id': 'Kegiatan Kelas'}
         : showSubjectList
-        ? {
-            'en': 'Subjects - $selectedTeacherName',
-            'id': 'Mata Pelajaran - $selectedTeacherName',
-          }
-        : {
-            'en': 'Activities - $selectedSubjectName',
-            'id': 'Kegiatan - $selectedSubjectName',
-          },
+        ? {'en': 'Subjects', 'id': 'Mata Pelajaran'}
+        : {'en': 'Activities', 'id': 'Kegiatan'},
   );
 
   String getSubtitleText(LanguageProvider lp) => lp.getTranslatedText(
@@ -114,67 +127,6 @@ mixin ClassActivityHeaderMixin on ConsumerState<AdminClassActivityScreen> {
             'en': 'Viewing activities for $selectedSubjectName',
             'id': 'Melihat kegiatan untuk $selectedSubjectName',
           },
-  );
-
-  Widget buildMenuButton() => PopupMenuButton<String>(
-    onSelected: (v) => v == 'refresh' ? forceRefresh() : null,
-    icon: Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
-      ),
-      child: const Icon(Icons.more_vert, color: Colors.white, size: 20),
-    ),
-    itemBuilder: (_) => [
-      PopupMenuItem<String>(
-        value: 'refresh',
-        child: Row(
-          children: [
-            Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
-            const SizedBox(width: AppSpacing.sm),
-            Text(AppLocalizations.updateData.tr),
-          ],
-        ),
-      ),
-    ],
-  );
-
-  Widget buildSearchBar(LanguageProvider lp) => Container(
-    key: searchKey,
-    decoration: BoxDecoration(
-      color: Colors.white.withValues(alpha: 0.92),
-      borderRadius: const BorderRadius.all(Radius.circular(12)),
-    ),
-    child: Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: searchController,
-            style: TextStyle(color: ColorUtils.slate800),
-            decoration: InputDecoration(
-              hintText: getSearchHint(lp),
-              hintStyle: TextStyle(color: ColorUtils.slate400),
-              prefixIcon: Icon(Icons.search, color: ColorUtils.slate400),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
-            onSubmitted: (_) => setState(() {}),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.only(right: 4),
-          child: IconButton(
-            icon: Icon(Icons.search, color: getPrimaryColor()),
-            onPressed: () => setState(() {}),
-          ),
-        ),
-      ],
-    ),
   );
 
   String getSearchHint(LanguageProvider lp) => lp.getTranslatedText(

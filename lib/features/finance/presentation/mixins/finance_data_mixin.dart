@@ -85,6 +85,10 @@ mixin FinanceDataMixin on ConsumerState<FinanceScreen> {
           if (mounted) {
             applyLoadedData(cached);
             AppLogger.info('finance', 'Loaded from cache');
+            // Still fetch fresh data in background to catch
+            // stale cache (e.g. payment types added/removed
+            // in another session).
+            _refreshInBackground(cacheKey);
             return;
           }
         }
@@ -136,6 +140,38 @@ mixin FinanceDataMixin on ConsumerState<FinanceScreen> {
         updateIsLoading(false);
         handleLoadError(error);
       }
+    }
+  }
+
+  /// Background refresh after cache hit — silently updates UI + cache
+  /// if the API returns different data.
+  Future<void> _refreshInBackground(String cacheKey) async {
+    try {
+      final results = await Future.wait([
+        controller.loadPaymentTypes(),
+        controller.loadBills(
+          page: 1,
+          perPage: perPage,
+          statusFilter: selectedStatusFilter,
+        ),
+        controller.loadPendingPayments(page: 1, perPage: pendingPerPage),
+        controller.loadDashboardData(),
+        controller.loadClassData(),
+      ]);
+
+      if (!mounted) return;
+
+      applyResults(
+        results[0] as LoadPaymentTypesResult,
+        results[1] as LoadBillsResult,
+        results[2] as LoadPendingPaymentsResult,
+        results[3] as LoadDashboardResult,
+        results[4] as LoadClassDataResult,
+      );
+
+      LocalCacheService.save(cacheKey, buildCacheData());
+    } catch (_) {
+      // Silent — cache data is already showing
     }
   }
 

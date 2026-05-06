@@ -1,49 +1,24 @@
-// Jenis tab body — v3 redesign (Mockup #13), polish round 2.
+// Jenis tab body — v3 redesign (Mockup #13).
 //
-// Round 2 trims two pieces of UI clutter and aligns interaction with
-// the rest of the v3 admin language:
+// The body is filter-chrome-free. The Status / Periode filters live in
+// the page header as `BrandFilterChip`s and are applied upstream by
+// `_getFilteredPaymentTypes()` on the screen, so this widget just
+// renders whatever rows it's handed.
 //
-//   * The per-row "Generate" mini-button is gone. The Laravel scheduler
-//     in `routes/console.php` already runs `finance:generate-bills`
-//     daily at 01:00 — manually generating from the row was redundant
-//     and surprised users (a few admins thought it created bills for
-//     ALL students, not just current period).
-//   * The 3-dot PopupMenu is gone. The standard admin gesture is now:
+//   * Per-row "Generate" mini-button is gone — the Laravel scheduler
+//     in `routes/console.php` runs `finance:generate-bills` daily at
+//     01:00.
+//   * 3-dot PopupMenu is gone. Standard admin gesture is:
 //       • tap row  → open detail / edit sheet
 //       • long-press → confirm delete
-//     Every other Mockup #13 row (Tagihan, Pembayaran) follows the same
-//     pattern, so this brings Jenis in line.
-//
-// Sub-filter chip strip (Semua / Aktif / Nonaktif / Sekali / Bulanan /
-// Tahunan) and the 4-px status edge stay unchanged.
 
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
-import 'package:manajemensekolah/core/widgets/admin_finance_components.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 
-/// Sub-filter keys for the Jenis tab.
-const _jenisFilterKeys = [
-  'all',
-  'active',
-  'inactive',
-  'once',
-  'monthly',
-  'yearly',
-];
-
-const _jenisFilterLabels = {
-  'all': 'Semua',
-  'active': 'Aktif',
-  'inactive': 'Nonaktif',
-  'once': 'Sekali',
-  'monthly': 'Bulanan',
-  'yearly': 'Tahunan',
-};
-
-class FinancePaymentTypesTab extends StatefulWidget {
+class FinancePaymentTypesTab extends StatelessWidget {
   const FinancePaymentTypesTab({
     required this.filteredPaymentTypes,
     required this.searchController,
@@ -59,6 +34,7 @@ class FinancePaymentTypesTab extends StatefulWidget {
     required this.onDelete,
     this.onRefresh,
     this.languageProvider,
+    this.hasActiveHeaderFilter = false,
     super.key,
   });
 
@@ -81,49 +57,16 @@ class FinancePaymentTypesTab extends StatefulWidget {
   final Future<void> Function()? onRefresh;
   final dynamic languageProvider;
 
-  @override
-  State<FinancePaymentTypesTab> createState() => _FinancePaymentTypesTabState();
-}
-
-class _FinancePaymentTypesTabState extends State<FinancePaymentTypesTab> {
-  String _localFilter = 'all';
-
-  List<dynamic> get _displayed {
-    if (_localFilter == 'all') return widget.filteredPaymentTypes;
-    return widget.filteredPaymentTypes.where((raw) {
-      final m = Map<String, dynamic>.from(raw as Map);
-      final status = (m['status'] ?? '').toString().toLowerCase();
-      final period = (m['periode'] ?? m['type'] ?? '').toString().toLowerCase();
-      switch (_localFilter) {
-        case 'active':
-          return status == 'active';
-        case 'inactive':
-          return status == 'inactive';
-        case 'once':
-          return period == 'once' || period == 'sekali';
-        case 'monthly':
-          return period == 'monthly' || period == 'bulanan';
-        case 'yearly':
-          return period == 'yearly' || period == 'tahunan';
-      }
-      return true;
-    }).toList();
-  }
-
-  int _countFor(String key) {
-    if (key == 'all') return widget.filteredPaymentTypes.length;
-    final saved = _localFilter;
-    _localFilter = key;
-    final n = _displayed.length;
-    _localFilter = saved;
-    return n;
-  }
+  /// Whether any header chip filter is currently applied — drives the
+  /// "Tidak ada hasil" empty-state copy so the user knows it's a
+  /// filter result rather than no data at all.
+  final bool hasActiveHeaderFilter;
 
   @override
   Widget build(BuildContext context) {
-    final list = _displayed;
+    final list = filteredPaymentTypes;
     return AppRefreshIndicator(
-      onRefresh: widget.onRefresh ?? () async {},
+      onRefresh: onRefresh ?? () async {},
       role: 'admin',
       child: ListView.builder(
         padding: const EdgeInsets.only(top: 4, bottom: 80),
@@ -131,54 +74,36 @@ class _FinancePaymentTypesTabState extends State<FinancePaymentTypesTab> {
         itemCount: 1 + (list.isEmpty ? 1 : list.length),
         itemBuilder: (context, index) {
           if (index == 0) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FinanceSubFilterStrip(
-                  chips: [
-                    for (final k in _jenisFilterKeys)
-                      SubFilterChipData(
-                        key: k,
-                        label: _jenisFilterLabels[k]!,
-                        badge: k == 'all' ? null : _countFor(k),
-                        tone: SubFilterTone.neutral,
-                      ),
-                  ],
-                  activeKey: _localFilter,
-                  onSelect: (k) => setState(() => _localFilter = k),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                  child: Row(
-                    children: [
-                      Text(
-                        'JENIS PEMBAYARAN',
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          color: ColorUtils.slate500,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '· ${list.length} TIPE',
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          color: ColorUtils.slate300,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              child: Row(
+                children: [
+                  Text(
+                    'JENIS PEMBAYARAN',
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      color: ColorUtils.slate500,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  Text(
+                    '· ${list.length} TIPE',
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      color: ColorUtils.slate300,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
             );
           }
           if (list.isEmpty) {
             return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -196,9 +121,9 @@ class _FinancePaymentTypesTabState extends State<FinancePaymentTypesTab> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _localFilter == 'all'
-                            ? 'Belum ada jenis pembayaran. Tap + untuk menambah.'
-                            : 'Tidak ada jenis pembayaran pada filter ini.',
+                        hasActiveHeaderFilter
+                            ? 'Tidak ada jenis pembayaran pada filter ini.'
+                            : 'Belum ada jenis pembayaran. Tap + untuk menambah.',
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
@@ -215,14 +140,14 @@ class _FinancePaymentTypesTabState extends State<FinancePaymentTypesTab> {
           final pt = Map<String, dynamic>.from(list[i] as Map);
           // Resolve original index in the unfiltered list so callbacks
           // still receive the right reference.
-          final origIndex = widget.filteredPaymentTypes.indexOf(list[i]);
+          final origIndex = filteredPaymentTypes.indexOf(list[i]);
           return _PaymentTypeRow(
             data: pt,
-            navy: widget.primaryColor,
-            formatCurrency: widget.formatCurrency,
-            getTranslatedPeriod: widget.getTranslatedPeriod,
-            onTap: () => widget.onEdit(origIndex),
-            onLongPress: () => widget.onDelete(origIndex),
+            navy: primaryColor,
+            formatCurrency: formatCurrency,
+            getTranslatedPeriod: getTranslatedPeriod,
+            onTap: () => onEdit(origIndex),
+            onLongPress: () => onDelete(origIndex),
           );
         },
       ),

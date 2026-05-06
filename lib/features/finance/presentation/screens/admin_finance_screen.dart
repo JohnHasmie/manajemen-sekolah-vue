@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -13,11 +14,15 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/finance/data/finance_service.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_navigation_bar.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_header.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/finance_kpi_block.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_tab_content.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_fab.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/jenis_filter_pickers.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/month_filter_sheet.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/status_filter_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/tagih_reminder_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/tagihan_filter_sheet.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/features/finance/presentation/mixins/finance_filter_mixin.dart';
 import 'package:manajemensekolah/features/finance/presentation/mixins/finance_data_mixin.dart';
 import 'package:manajemensekolah/features/finance/presentation/mixins/finance_action_mixin.dart';
@@ -74,6 +79,13 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
 
   final ScrollController _billScrollController = ScrollController();
   final ScrollController _pendingScrollController = ScrollController();
+
+  /// Used to measure the sticky FinanceHeader so the scrollable below
+  /// it can reserve the right amount of top spacing — matters because
+  /// the header height varies with status-bar inset and chip count.
+  final GlobalKey _headerKey = GlobalKey();
+  // Compact v2 estimate — admin Keuangan: status bar (~44) + toolbar
+  // (~52) + filter strip (~32) + padding (~24) ≈ 152. Refined to the
 
   int _currentPage = 1;
   final int _perPage = 10;
@@ -327,27 +339,107 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
     final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
     final overdueCount = _computeOverdueCount();
 
+    // Resolve all chip values + active counts up front so the header
+    // gets a clean, tab-specific chip list.
+    final monthLabel = _tagihanSelectedMonth == null
+        ? null
+        : monthFilterLabelFor(_tagihanSelectedMonth);
+    final jenisLabel = _tagihanSelectedJenisIds.isEmpty
+        ? null
+        : '${_tagihanSelectedJenisIds.length} jenis';
+    final tagihanStatus = tagihanStatusFromKey(_tagihanFilterKey);
+    final tagihanStatusLabel = tagihanStatus.chipValueOrNull;
+
+    final jenisStatusLabel = jenisStatusChipLabel(_selectedStatusFilter);
+    final jenisPeriodLabel = jenisPeriodChipLabel(_selectedPeriodFilter);
+
+    // Active count drives the tune badge on the header. Each tab has
+    // its own filter universe so we count only what's relevant.
+    final int activeFilterCount;
+    final List<BrandFilterChip> headerChips;
+    if (_currentTabIndex == 2) {
+      // Jenis tab — Status + Periode
+      activeFilterCount =
+          (jenisStatusLabel == null ? 0 : 1) +
+          (jenisPeriodLabel == null ? 0 : 1);
+      headerChips = [
+        BrandFilterChip(
+          label: 'Status',
+          value: jenisStatusLabel,
+          onTap: _pickJenisStatus,
+        ),
+        BrandFilterChip(
+          label: 'Periode',
+          value: jenisPeriodLabel,
+          onTap: _pickJenisPeriod,
+        ),
+      ];
+    } else {
+      // Tagihan / Pembayaran tabs — Status (bill) + Bulan + Jenis
+      activeFilterCount =
+          (tagihanStatus == TagihanStatusFilter.all ? 0 : 1) +
+          (_tagihanSelectedMonth == null ? 0 : 1) +
+          (_tagihanSelectedJenisIds.isEmpty ? 0 : 1);
+      headerChips = [
+        BrandFilterChip(
+          label: 'Status',
+          value: tagihanStatusLabel,
+          onTap: _pickHeaderStatus,
+        ),
+        BrandFilterChip(
+          label: 'Bulan',
+          value: monthLabel,
+          onTap: _pickHeaderMonth,
+          width: 168,
+        ),
+        BrandFilterChip(
+          label: 'Jenis',
+          value: jenisLabel,
+          onTap: _openTagihanFilterSheet,
+        ),
+      ];
+    }
+
+    // Tune-icon target: open the most-relevant filter for the active
+    // tab. On Jenis we open the Status picker (Periode is one tap away
+    // via its chip), on other tabs we open the Tagihan filter sheet.
+    final VoidCallback onTuneTap = _currentTabIndex == 2
+        ? _pickJenisStatus
+        : _openTagihanFilterSheet;
+
+    final ayId = ref
+        .read(academicYearRiverpod)
+        .selectedAcademicYear?['id']
+        ?.toString();
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
           FinanceHeader(
+            key: _headerKey,
             languageProvider: languageProvider,
             primaryColor: getPrimaryColor(),
-            onRefresh: forceRefresh,
-            academicYearId: ref
-                .read(academicYearRiverpod)
-                .selectedAcademicYear?['id']
-                ?.toString(),
-            selectedMonth: _tagihanSelectedMonth,
-            onPickMonth: _pickHeaderMonth,
+            onTuneTap: onTuneTap,
+            activeFilterCount: activeFilterCount,
+            chips: headerChips,
           ),
+          // KPI cards (Masuk / Terutang / Jatuh tempo + Aliran bar)
+          FinanceKpiBlock(
+            academicYearId: ayId,
+            onOverdueTap: () => setState(() {
+              _currentTabIndex = 0;
+              _tagihanFilterKey = 'overdue';
+            }),
+          ),
+          const SizedBox(height: 4),
           FinanceNavigationBar(
             currentIndex: _currentTabIndex,
             pendingCount: _totalPendingPayments,
             overdueCount: overdueCount,
             primaryColor: getPrimaryColor(),
-            onTabSelected: (index) => setState(() => _currentTabIndex = index),
+            onTabSelected: (index) =>
+                setState(() => _currentTabIndex = index),
           ),
           Expanded(
             child: MediaQuery.removePadding(
@@ -362,37 +454,38 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
                 isReadOnly: isReadOnly,
                 formatCurrency: formatCurrency,
                 onRefresh: loadData,
-                filteredPaymentTypes: filteredPaymentTypes,
+                filteredPaymentTypes:
+                    filteredPaymentTypes,
                 searchController: _searchController,
                 hasActiveFilter: _hasActiveFilter,
                 onShowFilterSheet: showFilterSheet,
                 onClearAllFilters: clearAllFilters,
-                buildFilterChips: () => buildFilterChips(languageProvider),
+                buildFilterChips: () =>
+                    buildFilterChips(languageProvider),
                 getGoalDescription: getGoalDescription,
                 getTranslatedPeriod: getTranslatedPeriod,
                 onEdit: (index) =>
-                    showPaymentTypeDetail(filteredPaymentTypes[index]),
-                onDelete: (index) =>
-                    deletePaymentType(filteredPaymentTypes[index]),
-                pendingScrollController: _pendingScrollController,
+                    showPaymentTypeDetail(
+                        filteredPaymentTypes[index]),
+                onDelete: (index) => deletePaymentType(
+                    filteredPaymentTypes[index]),
+                pendingScrollController:
+                    _pendingScrollController,
                 hasMorePending: _hasMorePending,
                 onVerify: (index) =>
-                    showVerificationDialog(_pendingPaymentList[index]),
+                    showVerificationDialog(
+                        _pendingPaymentList[index]),
                 onShowProof: (index) =>
-                    showPaymentProof(_pendingPaymentList[index]),
+                    showPaymentProof(
+                        _pendingPaymentList[index]),
                 tagihanFilterKey: _tagihanFilterKey,
-                onTagihanFilterChanged: (key) =>
-                    setState(() => _tagihanFilterKey = key),
-                overdueCount: overdueCount,
                 onTagihBill: _onTagihBill,
-                onClassReportTap: _openClassFinanceReport,
-                tagihanSelectedJenisIds: _tagihanSelectedJenisIds,
-                tagihanSelectedMonth: _tagihanSelectedMonth,
-                onOpenTagihanFilter: _openTagihanFilterSheet,
-                onClearTagihanFilter: () => setState(() {
-                  _tagihanSelectedJenisIds = {};
-                  _tagihanSelectedMonth = null;
-                }),
+                onClassReportTap:
+                    _openClassFinanceReport,
+                tagihanSelectedJenisIds:
+                    _tagihanSelectedJenisIds,
+                tagihanSelectedMonth:
+                    _tagihanSelectedMonth,
               ),
             ),
           ),
@@ -433,6 +526,57 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
     // which kelas to drill into. This is the same pattern the legacy
     // 4th tab used to render inline.
     AppNavigator.push(context, const ClassFinanceListScreen());
+  }
+
+  /// Header Jenis-tab Status chip — opens the Aktif/Nonaktif picker
+  /// and writes through to the FinanceFilterMixin's
+  /// `_selectedStatusFilter`, which `_getFilteredPaymentTypes()`
+  /// already consumes.
+  Future<void> _pickJenisStatus() async {
+    final picked = await showJenisStatusPickerSheet(
+      context,
+      primaryColor: getPrimaryColor(),
+      initial: _selectedStatusFilter,
+    );
+    if (!mounted || picked == null) return;
+    setState(() {
+      _selectedStatusFilter = picked.value;
+      _hasActiveFilter =
+          _selectedStatusFilter != null || _selectedPeriodFilter != null;
+    });
+  }
+
+  /// Header Jenis-tab Periode chip — opens the
+  /// Sekali/Bulanan/Semester/Tahunan picker. Same wire-through as
+  /// status above.
+  Future<void> _pickJenisPeriod() async {
+    final picked = await showJenisPeriodPickerSheet(
+      context,
+      primaryColor: getPrimaryColor(),
+      initial: _selectedPeriodFilter,
+    );
+    if (!mounted || picked == null) return;
+    setState(() {
+      _selectedPeriodFilter = picked.value;
+      _hasActiveFilter =
+          _selectedStatusFilter != null || _selectedPeriodFilter != null;
+    });
+  }
+
+  /// Opens the Status picker sheet from the header chip. Result writes
+  /// to `_tagihanFilterKey` — the same slot the (now-removed) in-body
+  /// sub-filter strip used to drive — so the existing TagihanTab
+  /// filter logic keeps working unchanged.
+  Future<void> _pickHeaderStatus() async {
+    final overdueCount = _computeOverdueCount();
+    final picked = await showTagihanStatusFilterSheet(
+      context,
+      primaryColor: getPrimaryColor(),
+      initial: tagihanStatusFromKey(_tagihanFilterKey),
+      overdueCount: overdueCount,
+    );
+    if (!mounted || picked == null) return;
+    setState(() => _tagihanFilterKey = picked.key);
   }
 
   /// Opens the month picker sheet from the header period pill. The
@@ -543,3 +687,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
     }
   }
 }
+
+// =====================================================================
+// SliverPersistentHeader delegate that pins the navigation bar below

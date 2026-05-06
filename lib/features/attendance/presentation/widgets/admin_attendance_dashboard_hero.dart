@@ -13,9 +13,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_attendance_components.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_dashboard_service.dart';
 
 class AdminAttendanceDashboardHero extends ConsumerStatefulWidget {
@@ -50,42 +50,41 @@ class _AdminAttendanceDashboardHeroState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ── Navy hero ────────────────────────────────────────────
-        Container(
-          decoration: BoxDecoration(
-            gradient: ColorUtils.brandGradient('admin'),
-            boxShadow: [
-              BoxShadow(
-                color: navy.withValues(alpha: 0.28),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
+        // ── Shared compact gradient header ──────────────────────
+        // Uses `BrandPageHeader` so the admin Kehadiran dashboard
+        // shares the same centered-title + bottomSlot idiom as
+        // every other admin tab. The DateRangeChipBar moves into
+        // `bottomSlot`, matching the parent role's filter-chip
+        // pattern (parent_billing_screen).
+        BrandPageHeader(
+          role: 'admin',
+          subtitle: 'Akademik · Kehadiran',
+          title: 'Laporan harian',
+          bottomSlot: DateRangeChipBar(
+            active: _range,
+            onSelect: (r) => setState(() => _range = r),
           ),
-          child: SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                _TitleRow(onBack: () => AppNavigator.pop(context)),
-                const SizedBox(height: AppSpacing.sm),
-                DateRangeChipBar(
-                  active: _range,
-                  onSelect: (r) => setState(() => _range = r),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                async.when(
-                  data: (d) => AttendanceRingHero(
-                    breakdown: d.breakdown,
-                    subtitle: d.rangeLabel.isEmpty
-                        ? 'Hadir'
-                        : 'Hadir ${d.rangeLabel.toLowerCase()}',
-                  ),
-                  loading: () => const _RingPlaceholder(),
-                  error: (_, __) => const _RingPlaceholder(),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
+        ),
+        // ── Attendance ring (was inside the gradient — now a body
+        //     panel with a navy backdrop so the ring still reads
+        //     against admin's brand color). ───────────────────────
+        Container(
+          color: navy,
+          padding: const EdgeInsets.fromLTRB(
+            0,
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+          ),
+          child: async.when(
+            data: (d) => AttendanceRingHero(
+              breakdown: d.breakdown,
+              subtitle: d.rangeLabel.isEmpty
+                  ? 'Hadir'
+                  : 'Hadir ${d.rangeLabel.toLowerCase()}',
             ),
+            loading: () => const _RingPlaceholder(),
+            error: (_, __) => const _RingPlaceholder(),
           ),
         ),
         // ── KPI strip (Rata kehadiran + Siswa tidak hadir) ───────
@@ -150,71 +149,8 @@ class _AdminAttendanceDashboardHeroState
 }
 
 // =====================================================================
-// Title row
+// Title row retired — `BrandPageHeader` handles back/title/kicker now.
 // =====================================================================
-
-class _TitleRow extends StatelessWidget {
-  final VoidCallback onBack;
-  const _TitleRow({required this.onBack});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.lg,
-        0,
-      ),
-      child: Row(
-        children: [
-          Material(
-            color: Colors.white.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: onBack,
-              child: const SizedBox(
-                width: 36,
-                height: 36,
-                child: Icon(Icons.arrow_back_rounded,
-                    color: Colors.white, size: 20),
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    'Akademik · Kehadiran',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.85),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Laporan harian',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // =====================================================================
 // KPI strip

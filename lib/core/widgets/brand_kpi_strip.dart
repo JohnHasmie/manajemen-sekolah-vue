@@ -1,22 +1,24 @@
-// Shared KPI strip card used across parent screens.
+// Shared KPI strip card used across all role screens.
 //
 // A white card with N equal-width columns separated by thin dividers.
-// Each column shows a value + label + optional accent badge.
+// Each column shows a value + label + optional accent badge + sub-text.
 //
-// Usage (like Vue props):
+// Usage:
 // ```dart
 // BrandKpiStrip(
 //   columns: [
-//     BrandKpiColumn(label: 'Penilaian', value: '14', sub: '10 sudah · 4 menunggu'),
-//     BrandKpiColumn(label: 'Rata-rata', value: '88,2', badge: 'Sangat Baik', badgeColor: Colors.green),
+//     BrandKpiColumn(label: 'Penilaian', value: '14',
+//         sub: '10 sudah · 4 menunggu'),
+//     BrandKpiColumn(label: 'Rata-rata', value: '88,2',
+//         badge: 'Sangat Baik', badgeColor: Colors.green),
 //     BrandKpiColumn(label: 'Rentang', value: '76 — 96'),
 //   ],
 // )
 // ```
 //
-// Place as the first child of the body ListView. When the parent
-// screen sets `BrandPageHeader(kpiOverlayHeight: BrandKpiStrip.defaultOverlap)`,
-// the gradient extends behind this card, creating the overlap effect.
+// Place as `kpiCard` of BrandPageLayout. The header's
+// `kpiOverlayHeight: BrandKpiStrip.defaultOverlap` extends the
+// gradient so the card visually overlaps the hero bottom edge.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
@@ -31,7 +33,7 @@ class BrandKpiColumn {
   /// Optional color for the value text. Defaults to slate-900.
   final Color? valueColor;
 
-  /// Optional sub-text below the value (e.g. "10 sudah · 4 menunggu").
+  /// Optional sub-text below the value.
   final String? sub;
 
   /// Optional badge text below the value (e.g. "Sangat Baik").
@@ -40,8 +42,14 @@ class BrandKpiColumn {
   /// Badge background color. Only used when [badge] is set.
   final Color? badgeColor;
 
-  /// Badge text color. Defaults to a darker shade of [badgeColor].
+  /// Badge text color. Defaults to [badgeColor].
   final Color? badgeTextColor;
+
+  /// Optional icon inside the badge pill.
+  final IconData? badgeIcon;
+
+  /// Per-column tap handler.
+  final VoidCallback? onTap;
 
   const BrandKpiColumn({
     required this.label,
@@ -51,24 +59,23 @@ class BrandKpiColumn {
     this.badge,
     this.badgeColor,
     this.badgeTextColor,
+    this.badgeIcon,
+    this.onTap,
   });
 }
 
 /// Shared KPI strip card — white card with equal-width columns.
 ///
 /// Set `BrandPageHeader(kpiOverlayHeight: BrandKpiStrip.defaultOverlap)`
-/// on the header, then place this as the first child of the body
-/// `ListView` to get the overlap effect.
+/// on the header, then pass this as `kpiCard` to `BrandPageLayout`
+/// to get the standard overlap effect.
 class BrandKpiStrip extends StatelessWidget {
-  /// The columns to display.
   final List<BrandKpiColumn> columns;
-
-  /// Horizontal padding around the card. Default: 16.
   final double horizontalPadding;
 
-  /// Default overlap height — pass this to
-  /// `BrandPageHeader.kpiOverlayHeight` to get the standard overlap.
-  static const double defaultOverlap = 40;
+  /// Default overlap — pass to `BrandPageHeader.kpiOverlayHeight`
+  /// and `BrandPageLayout.overlapHeight`.
+  static const double defaultOverlap = 45;
 
   const BrandKpiStrip({
     super.key,
@@ -79,12 +86,19 @@ class BrandKpiStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+      ),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+        padding: const EdgeInsets.symmetric(
+          vertical: 14,
+          horizontal: 4,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          borderRadius: const BorderRadius.all(
+            Radius.circular(16),
+          ),
           border: Border.all(
             color: const Color(0xFFE2E8F0),
             width: 0.75,
@@ -105,7 +119,9 @@ class BrandKpiStrip extends StatelessWidget {
                 if (i < columns.length - 1)
                   Container(
                     width: 1,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 4,
+                    ),
                     color: const Color(0xFFF1F5F9),
                   ),
               ],
@@ -117,7 +133,7 @@ class BrandKpiStrip extends StatelessWidget {
   }
 
   Widget _buildColumn(BrandKpiColumn col) {
-    return Column(
+    final content = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
@@ -147,22 +163,11 @@ class BrandKpiStrip extends StatelessWidget {
         ),
         if (col.badge != null) ...[
           const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: (col.badgeColor ?? Colors.green).withValues(alpha: 0.12),
-              borderRadius: const BorderRadius.all(Radius.circular(9)),
-            ),
-            child: Text(
-              col.badge!,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: col.badgeTextColor ??
-                    col.badgeColor ??
-                    const Color(0xFF15803D),
-              ),
-            ),
+          _BadgePill(
+            text: col.badge!,
+            color: col.badgeColor,
+            textColor: col.badgeTextColor,
+            icon: col.badgeIcon,
           ),
         ],
         if (col.sub != null) ...[
@@ -180,6 +185,70 @@ class BrandKpiStrip extends StatelessWidget {
           ),
         ],
       ],
+    );
+
+    if (col.onTap != null) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: col.onTap,
+        child: content,
+      );
+    }
+    return content;
+  }
+}
+
+class _BadgePill extends StatelessWidget {
+  final String text;
+  final Color? color;
+  final Color? textColor;
+  final IconData? icon;
+
+  const _BadgePill({
+    required this.text,
+    this.color,
+    this.textColor,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg =
+        (color ?? Colors.green).withValues(alpha: 0.12);
+    final fg =
+        textColor ?? color ?? const Color(0xFF15803D);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 3,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(9),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 10, color: fg),
+            const SizedBox(width: 3),
+          ],
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: fg,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
