@@ -14,6 +14,14 @@ class AttendanceSummaryCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
+  /// When true the trailing trash icon is replaced by a check/uncheck
+  /// indicator and `onTap` toggles selection instead of opening the
+  /// detail. The host sheet enters this mode via a long-press; see
+  /// [AttendanceDetailSheet]'s multi-select branch.
+  final bool isSelectionMode;
+  final bool isSelected;
+  final VoidCallback? onLongPress;
+
   const AttendanceSummaryCard({
     super.key,
     required this.summary,
@@ -21,6 +29,9 @@ class AttendanceSummaryCard extends StatelessWidget {
     required this.languageProvider,
     required this.onTap,
     required this.onDelete,
+    this.isSelectionMode = false,
+    this.isSelected = false,
+    this.onLongPress,
   });
 
   @override
@@ -38,14 +49,22 @@ class AttendanceSummaryCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(14),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            // Tint the card while it's selected so the multi-select
+            // state reads at a glance.
+            color: isSelected
+                ? primaryColor.withValues(alpha: 0.06)
+                : Colors.white,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: ColorUtils.slate200),
+            border: Border.all(
+              color: isSelected ? primaryColor : ColorUtils.slate200,
+              width: isSelected ? 1.5 : 1,
+            ),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
           child: Row(
@@ -198,25 +217,47 @@ class AttendanceSummaryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              // Delete button
-              GestureDetector(
-                onTap: onDelete,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
+              // Trailing affordance — selection check in multi-select
+              // mode, single-row trash icon otherwise.
+              if (isSelectionMode)
+                Container(
+                  width: 24,
+                  height: 24,
                   decoration: BoxDecoration(
-                    color: ColorUtils.error600.withValues(alpha: 0.08),
+                    color: isSelected ? primaryColor : Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: ColorUtils.error600.withValues(alpha: 0.2),
+                      color: isSelected ? primaryColor : ColorUtils.slate300,
+                      width: 1.5,
                     ),
                   ),
-                  child: Icon(
-                    Icons.delete_outline,
-                    size: 14,
-                    color: ColorUtils.error600,
+                  child: isSelected
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        )
+                      : null,
+                )
+              else
+                GestureDetector(
+                  onTap: onDelete,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: ColorUtils.error600.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: ColorUtils.error600.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.delete_outline,
+                      size: 14,
+                      color: ColorUtils.error600,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
