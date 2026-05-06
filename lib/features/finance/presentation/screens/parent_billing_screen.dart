@@ -26,16 +26,13 @@ import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
-import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
-import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/parent_finance_controller.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/billing_list.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_filter_sheet.dart';
-import 'package:manajemensekolah/core/shell/shell_controller.dart';
-import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 class ParentBillingScreen extends ConsumerStatefulWidget {
   final bool showBackButton;
@@ -50,6 +47,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
   final GlobalKey _studentSelectorKey = GlobalKey();
   final GlobalKey _billingListKey = GlobalKey();
   DateTime _lastSync = DateTime.now();
+
 
   @override
   void initState() {
@@ -271,15 +269,17 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: BrandPageLayout(
-        header: header,
-        // KPI is embedded inside BillingList — pass it as body content
-        // with kpiCard so the overlap works on the billing KPI strip.
-        kpiCard: const SizedBox.shrink(),
         role: 'wali',
         onRefresh: () async {
-          await ref.read(parentFinanceProvider.notifier).forceRefresh();
+          await ref
+              .read(parentFinanceProvider.notifier)
+              .forceRefresh();
           if (mounted) setState(() => _lastSync = DateTime.now());
         },
+        header: header,
+        kpiCard: BillingKpiOverlay(
+          languageProvider: languageProvider,
+        ),
         bodyChildren: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -288,6 +288,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
               languageProvider: languageProvider,
             ),
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -317,7 +318,12 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
     return BrandPageHeader(
       role: 'wali',
-      kpiOverlayHeight: 40,
+      // Match the BrandPageLayout overlap so the KPI's overlap zone
+      // tucks into empty navy below the chips instead of covering
+      // them. (BrandPageLayout positions the body at
+      // `top: headerH - kpiOverlapHeight`, so the header needs that
+      // many dp of gradient below the chip strip.)
+      kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
       showBackButton: widget.showBackButton ? true : null,
       onBackPressed: widget.showBackButton
           ? () => AppNavigator.pop(context)
@@ -335,7 +341,11 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
           badgeBorderColor: ColorUtils.brandAzureDeep,
         ),
       ],
-      realtimeIndicator: BrandRealtimePill(isFresh: true, lastSync: _lastSync),
+      // Compact v2 — inline 6dp dot beside the title instead of the
+      // full-row `BrandRealtimePill`. `_lastSync` is no longer surfaced
+      // visually here; if the user wants the timestamp back we can
+      // promote the dot to a tiny pill.
+      isRealtimeFresh: true,
       childSelector: summaries.length < 2
           ? null
           : ChildSelectorChipRow(

@@ -255,6 +255,235 @@ class _ConnectorPainter extends CustomPainter {
 }
 
 // =====================================================================
+// RaportPipelineCard
+// =====================================================================
+//
+// Body-card variant of [StatusPipelineStrip] for the admin Raport hub
+// after the gradient-hero refactor. Renders the same N nodes, but on a
+// white card with slate text and brand-navy active states.
+//
+// Layout rules
+// ------------
+//   • Each node: 36×36 circle with the count, then 6dp gap, then
+//     a label. All circles are the SAME size — the active state
+//     changes fill/text color, never size, so the centerline never
+//     drifts (was a long-running bug in the old gradient strip).
+//   • Connectors: dashed (or solid if active) horizontal line whose
+//     `SizedBox(height: 36)` matches the circle's height. With the
+//     row laid out at `CrossAxisAlignment.start`, the connector
+//     paints its 2dp line at `size.height/2 = 18`, which is exactly
+//     the circle's vertical center. Labels hang below the connector
+//     row's top 36dp and never cross the line.
+//
+// Caption slot
+// ------------
+// Optional `caption` (e.g. "Periode 2025/2026 · Genap" or just the
+// total class count) renders above the node row in a small all-caps
+// header. Tap-target on each node still works and `onNodeTap` writes
+// back the same `PipelineNode.key` the gradient version does so the
+// hub controller's filter logic stays unchanged.
+class RaportPipelineCard extends StatelessWidget {
+  final List<PipelineNode> nodes;
+  final ValueChanged<String>? onNodeTap;
+  final String? caption;
+  final EdgeInsetsGeometry margin;
+
+  const RaportPipelineCard({
+    super.key,
+    required this.nodes,
+    this.onNodeTap,
+    this.caption,
+    this.margin = const EdgeInsets.fromLTRB(16, 0, 16, 0),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: margin,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: ColorUtils.slate200, width: 0.75),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          boxShadow: [
+            // Same lift `BrandKpiStrip` uses so the card reads as a
+            // floating overlay when its top tucks into the gradient.
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'PIPELINE STATUS',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.slate500,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+                if (caption != null && caption!.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      '· $caption',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: ColorUtils.slate300,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Cross-axis start so the 36dp connector tucks against
+            // the top of the row — its painted center line at y=18
+            // lands exactly on the circle's vertical center.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = 0; i < nodes.length; i++) ...[
+                  _RaportPipelineNode(
+                    node: nodes[i],
+                    onTap: onNodeTap == null
+                        ? null
+                        : () => onNodeTap!(nodes[i].key),
+                  ),
+                  if (i < nodes.length - 1)
+                    Expanded(
+                      child: SizedBox(
+                        height: 36,
+                        child: CustomPaint(
+                          painter: _RaportConnectorPainter(
+                            active:
+                                nodes[i].active || nodes[i + 1].active,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RaportPipelineNode extends StatelessWidget {
+  final PipelineNode node;
+  final VoidCallback? onTap;
+
+  const _RaportPipelineNode({required this.node, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final navy = ColorUtils.getRoleColor('admin');
+    final isActive = node.active;
+
+    final Color circleBg = isActive ? navy : Colors.white;
+    final Color circleBorder = isActive ? navy : ColorUtils.slate200;
+    final Color circleText = isActive ? Colors.white : navy;
+    final Color labelText = isActive ? navy : ColorUtils.slate500;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: circleBg,
+              shape: BoxShape.circle,
+              border: Border.all(color: circleBorder, width: 1.5),
+            ),
+            child: Text(
+              node.count.toString(),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: circleText,
+                height: 1.0,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            node.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: labelText,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Body-card connector — renders a 2dp horizontal line at the vertical
+/// center of its `size.height = 36` slot, which puts it exactly on the
+/// circle's centerline. Solid when either neighbour node is active,
+/// dashed otherwise.
+class _RaportConnectorPainter extends CustomPainter {
+  final bool active;
+  static const double _dash = 4;
+  static const double _gap = 4;
+
+  const _RaportConnectorPainter({required this.active});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final navy = ColorUtils.getRoleColor('admin');
+    final paint = Paint()
+      ..color = active
+          ? navy.withValues(alpha: 0.55)
+          : ColorUtils.slate300
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    final y = size.height / 2;
+
+    if (active) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      return;
+    }
+
+    var x = 0.0;
+    while (x < size.width) {
+      final end = (x + _dash).clamp(0.0, size.width);
+      canvas.drawLine(Offset(x, y), Offset(end, y), paint);
+      x = end + _gap;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _RaportConnectorPainter old) =>
+      old.active != active;
+}
+
+// =====================================================================
 // TingkatGroupCard
 // =====================================================================
 

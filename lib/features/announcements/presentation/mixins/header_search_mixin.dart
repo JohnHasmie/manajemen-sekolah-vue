@@ -14,7 +14,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
-import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/shell_controller.dart';
@@ -45,10 +44,7 @@ mixin HeaderSearchMixin on ConsumerState<ParentAnnouncementScreen> {
         'en': 'Announcements',
         'id': 'Pengumuman',
       }),
-      realtimeIndicator: BrandRealtimePill(
-        isFresh: true,
-        lastSync: DateTime.now(),
-      ),
+      isRealtimeFresh: true,
       bottomSlot: _SearchField(
         controller: searchController,
         searchKey: searchKey,

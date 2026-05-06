@@ -2,12 +2,16 @@
 // `Parent_Phase3_Tagihan_Mockup.svg`.
 //
 // Layout (top to bottom):
-//   • KPI strip card — 3 columns:
-//       Total bulan ini  |  Sudah lunas  |  Belum lunas
-//     with optional 'X tagihan / X telat' delta chips.
 //   • 'PERLU PERHATIAN' alert card surfacing overdue bills.
 //   • Monthly section headers ('OKTOBER 2025') with each month's
 //     bills underneath as `_BillingRow`s.
+//
+// The KPI strip card (Total bulan ini · Sudah lunas · Belum lunas)
+// is no longer rendered inline here — it lives at the screen level
+// inside a Stack overlay so its top edge tucks into the gradient
+// header (matches the admin Dashboard's hero+KPI pattern). Use the
+// public `BillingKpiOverlay` widget below to render the strip in
+// the screen's hero Stack.
 //
 // Implemented as a single Column rendered inside the parent screen's
 // outer `ListView`, so scroll/refresh stay at the screen level.
@@ -17,10 +21,85 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
+import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/parent_finance_controller.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/parent_bill_checkout_screen.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/parent_payment_success_screen.dart';
+
+/// Floating KPI strip rendered inside the parent billing screen's
+/// hero `Stack` overlay. Watches the same `parentFinanceProvider` as
+/// [BillingList] and computes the same aggregate (Total bulan ini /
+/// Sudah lunas / Belum lunas) so the numbers stay in sync.
+///
+/// Returns a 16dp horizontally-padded card. The screen is responsible
+/// for the Stack + Positioned wiring.
+class BillingKpiOverlay extends ConsumerWidget {
+  final LanguageProvider languageProvider;
+
+  const BillingKpiOverlay({super.key, required this.languageProvider});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final financeState = ref.watch(parentFinanceProvider);
+    final items = financeState.maybeWhen(
+      data: (state) => state.billingItems,
+      orElse: () => const <dynamic>[],
+    );
+    final stats = _aggregateBilling(items);
+    final lp = languageProvider;
+
+    return BrandKpiStrip(
+      columns: [
+        BrandKpiColumn(
+          label: lp.getTranslatedText({
+            'en': 'This month',
+            'id': 'Total bulan ini',
+          }),
+          value: _formatRupiahShort(stats.totalThisMonth),
+          sub: '${stats.countThisMonth} '
+              '${lp.getTranslatedText({
+                'en': 'bills',
+                'id': 'tagihan',
+              })}',
+        ),
+        BrandKpiColumn(
+          label: lp.getTranslatedText({
+            'en': 'Paid',
+            'id': 'Sudah lunas',
+          }),
+          value: _formatRupiahShort(stats.paid),
+          badge: stats.paidCount > 0
+              ? '${stats.paidCount} ${lp.getTranslatedText({
+                    'en': 'bills',
+                    'id': 'tagihan',
+                  })}'
+              : null,
+          badgeColor: const Color(0xFF15803D),
+          badgeIcon: Icons.check_rounded,
+        ),
+        BrandKpiColumn(
+          label: lp.getTranslatedText({
+            'en': 'Unpaid',
+            'id': 'Belum lunas',
+          }),
+          value: _formatRupiahShort(stats.unpaid),
+          valueColor: stats.unpaid > 0
+              ? const Color(0xFFDC2626)
+              : null,
+          badge: stats.overdueCount > 0
+              ? '${stats.overdueCount} ${lp.getTranslatedText({
+                    'en': 'late',
+                    'id': 'telat',
+                  })}'
+              : null,
+          badgeColor: const Color(0xFFDC2626),
+          badgeIcon: Icons.priority_high_rounded,
+        ),
+      ],
+    );
+  }
+}
 
 class BillingList extends ConsumerWidget {
   final LanguageProvider languageProvider;
@@ -160,70 +239,7 @@ class _BillingBody extends StatelessWidget {
     }
   }
 
-  /// Aggregate stats for the top KPI card.
-  ({
-    double totalThisMonth,
-    int countThisMonth,
-    double paid,
-    int paidCount,
-    double unpaid,
-    int overdueCount,
-  })
-  _aggregate(List<Map<String, dynamic>> overdue) {
-    final now = DateTime.now();
-    var totalThisMonth = 0.0;
-    var countThisMonth = 0;
-    var paid = 0.0;
-    var paidCount = 0;
-    var unpaid = 0.0;
-    for (final raw in items) {
-      final m = Map<String, dynamic>.from(raw as Map);
-      final amount = _toDouble(m['amount'] ?? m['nominal'] ?? 0);
-      final status = (m['status'] ?? '').toString().toLowerCase();
-      final due = _parseDate(
-        m['due_date'] ?? m['jatuh_tempo'] ?? m['created_at'],
-      );
-      final isPaid =
-          status == 'verified' || status == 'lunas' || status == 'paid';
-
-      if (due != null && due.year == now.year && due.month == now.month) {
-        totalThisMonth += amount;
-        countThisMonth += 1;
-      }
-      if (isPaid) {
-        paid += amount;
-        paidCount += 1;
-      } else {
-        unpaid += amount;
-      }
-    }
-    return (
-      totalThisMonth: totalThisMonth,
-      countThisMonth: countThisMonth,
-      paid: paid,
-      paidCount: paidCount,
-      unpaid: unpaid,
-      overdueCount: overdue.length,
-    );
-  }
-
-  double _toDouble(dynamic v) {
-    if (v == null) return 0;
-    if (v is num) return v.toDouble();
-    return double.tryParse(v.toString().replaceAll(',', '.')) ?? 0;
-  }
-
-  String _formatRupiah(double v) {
-    if (v >= 1000000) {
-      final m = v / 1000000;
-      return 'Rp ${(m % 1 == 0 ? m.toStringAsFixed(0) : m.toStringAsFixed(1).replaceAll('.', ','))}jt';
-    }
-    if (v >= 1000) {
-      final k = v / 1000;
-      return 'Rp ${(k % 1 == 0 ? k.toStringAsFixed(0) : k.toStringAsFixed(0))}rb';
-    }
-    return 'Rp ${v.toStringAsFixed(0)}';
-  }
+  String _formatRupiah(double v) => _formatRupiahShort(v);
 
   String _monthLabel(String yyyymm) {
     if (yyyymm == 'unknown') {
@@ -255,7 +271,6 @@ class _BillingBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final buckets = _bucketize();
-    final stats = _aggregate(buckets.overdue);
 
     // Mark every visible bill as read on first build — preserves the
     // legacy auto-mark behaviour without a per-item ScrollAware widget.
@@ -274,20 +289,9 @@ class _BillingBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // KPI strip
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          child: _KpiStripCard(
-            totalThisMonth: stats.totalThisMonth,
-            countThisMonth: stats.countThisMonth,
-            paid: stats.paid,
-            paidCount: stats.paidCount,
-            unpaid: stats.unpaid,
-            overdueCount: stats.overdueCount,
-            formatRupiah: _formatRupiah,
-            lang: lang,
-          ),
-        ),
+        // KPI strip moved out — `BillingKpiOverlay` is now rendered at
+        // the screen level inside the hero Stack so its top edge can
+        // tuck into the gradient (overlap effect).
 
         // Perlu perhatian (overdue) section
         if (buckets.overdue.isNotEmpty) ...[
@@ -323,6 +327,97 @@ class _BillingBody extends StatelessWidget {
       ],
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Top-level helpers — shared between the inline body and the public
+// `BillingKpiOverlay` widget so the KPI numbers stay derived from the
+// same source data.
+// ---------------------------------------------------------------------------
+
+double _toBillingDouble(dynamic v) {
+  if (v == null) return 0;
+  if (v is num) return v.toDouble();
+  return double.tryParse(v.toString().replaceAll(',', '.')) ?? 0;
+}
+
+DateTime? _parseBillingDate(dynamic v) {
+  if (v == null) return null;
+  final s = v.toString();
+  if (s.isEmpty || s == 'null') return null;
+  try {
+    return DateTime.parse(s);
+  } catch (_) {
+    return null;
+  }
+}
+
+String _formatRupiahShort(double v) {
+  if (v >= 1000000) {
+    final m = v / 1000000;
+    return 'Rp ${(m % 1 == 0 ? m.toStringAsFixed(0) : m.toStringAsFixed(1).replaceAll('.', ','))}jt';
+  }
+  if (v >= 1000) {
+    final k = v / 1000;
+    return 'Rp ${k.toStringAsFixed(0)}rb';
+  }
+  return 'Rp ${v.toStringAsFixed(0)}';
+}
+
+({
+  double totalThisMonth,
+  int countThisMonth,
+  double paid,
+  int paidCount,
+  double unpaid,
+  int overdueCount,
+})
+_aggregateBilling(List<dynamic> items) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  var totalThisMonth = 0.0;
+  var countThisMonth = 0;
+  var paid = 0.0;
+  var paidCount = 0;
+  var unpaid = 0.0;
+  var overdueCount = 0;
+  for (final raw in items) {
+    final m = Map<String, dynamic>.from(raw as Map);
+    final amount = _toBillingDouble(m['amount'] ?? m['nominal'] ?? 0);
+    final status = (m['status'] ?? '').toString().toLowerCase();
+    final due = _parseBillingDate(
+      m['due_date'] ?? m['jatuh_tempo'] ?? m['created_at'],
+    );
+    final isPaid =
+        status == 'verified' || status == 'lunas' || status == 'paid';
+    final isUnpaid =
+        status == 'unpaid' ||
+        status == 'belum_lunas' ||
+        status == '' ||
+        status == 'pending';
+
+    if (due != null && due.year == now.year && due.month == now.month) {
+      totalThisMonth += amount;
+      countThisMonth += 1;
+    }
+    if (isPaid) {
+      paid += amount;
+      paidCount += 1;
+    } else {
+      unpaid += amount;
+    }
+    if (due != null && isUnpaid && due.isBefore(today)) {
+      overdueCount += 1;
+    }
+  }
+  return (
+    totalThisMonth: totalThisMonth,
+    countThisMonth: countThisMonth,
+    paid: paid,
+    paidCount: paidCount,
+    unpaid: unpaid,
+    overdueCount: overdueCount,
+  );
 }
 
 // ---------------------------------------------------------------------------

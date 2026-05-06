@@ -23,23 +23,21 @@ class AdminAttendanceDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          AdminAttendanceDashboardHero(
-            onTingkatTap: (tingkat) {
-              AppNavigator.push(
-                context,
-                AdminTingkatHeatmapScreen(tingkat: tingkat),
-              );
-            },
-            onExportTap: () => SnackBarUtils.showInfo(
-              context,
-              'Ekspor laporan akan tersedia di rilis berikutnya.',
-            ),
-          ),
-          SizedBox(height: 24 + MediaQuery.of(context).padding.bottom),
-        ],
+      // Hero is now backed by `BrandPageLayout` internally — it
+      // owns the Stack overlay (header + KPI strip overlap + body
+      // ListView with pull-to-refresh), so the screen just hosts
+      // it directly without wrapping it in another ListView.
+      body: AdminAttendanceDashboardHero(
+        onTingkatTap: (tingkat) {
+          AppNavigator.push(
+            context,
+            AdminTingkatHeatmapScreen(tingkat: tingkat),
+          );
+        },
+        onExportTap: () => SnackBarUtils.showInfo(
+          context,
+          'Ekspor laporan akan tersedia di rilis berikutnya.',
+        ),
       ),
     );
   }

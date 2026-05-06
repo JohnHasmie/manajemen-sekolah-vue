@@ -43,7 +43,8 @@ class AppErrorHandler {
       // every frame and flood the error stream + log service.
       if (kDebugMode &&
           (msg.contains('parentDataDirty') ||
-           msg.contains('_debugUltimatePreviousSiblingOf'))) {
+           msg.contains('_debugUltimatePreviousSiblingOf') ||
+           msg.contains('_history.isNotEmpty'))) {
         return; // swallow entirely — breaks the infinite cascade
       }
 

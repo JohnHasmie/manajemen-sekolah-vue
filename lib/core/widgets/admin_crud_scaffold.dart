@@ -32,7 +32,6 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
-import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/bulk_action_bar.dart';
 import 'package:manajemensekolah/core/widgets/school_pill.dart';
 import 'package:manajemensekolah/core/widgets/search_filter_bar.dart';
@@ -450,18 +449,9 @@ class AdminCrudScaffold extends StatelessWidget {
       onBackPressed: onBackPressed,
       showBackButton: showBackButton,
       actionIcons: actions.isEmpty ? null : actions,
-      realtimeIndicator: _buildRealtimeRow(),
+      isRealtimeFresh: showRealtimePill ? true : null,
       bottomSlot: BrandFilterChipStrip(chips: brandChips!),
     );
-  }
-
-  /// Realtime row — just the pulsing-green pill. The total count chip was
-  /// dropped because pagination only ever returns the current page so the
-  /// number was misleading. The [counterLabel] prop is preserved for API
-  /// compatibility but no longer renders.
-  Widget? _buildRealtimeRow() {
-    if (!showRealtimePill) return null;
-    return BrandRealtimePill(isFresh: true, lastSync: DateTime.now());
   }
 
   /// White search bar rendered just below the gradient hero in v3 mode.

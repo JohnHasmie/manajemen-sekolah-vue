@@ -28,7 +28,6 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
-import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
 
 class ParentReportCardDetailScreen extends StatefulWidget {
@@ -223,10 +222,7 @@ class _ParentReportCardDetailScreenState
           onTap: () => _downloadPdf(context),
         ),
       ],
-      realtimeIndicator: BrandRealtimePill(
-        isFresh: published != null,
-        lastSync: published ?? DateTime.now(),
-      ),
+      isRealtimeFresh: published != null,
       bottomSlot: Row(
         children: [
           Expanded(

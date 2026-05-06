@@ -121,15 +121,24 @@ class BrandFilterChipStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (chips.isEmpty) return const SizedBox.shrink();
+    // Row of Expanded / fixed-width chips so the strip fills the
+    // gradient header width — matches the v3 mockup. Chips that
+    // declare an explicit `width` (e.g. the lead "Periode" chip) keep
+    // that width; chips without a `width` flex to share the remainder.
     return Padding(
       padding: padding,
       child: SizedBox(
-        height: 36,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: chips.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (_, index) => _ChipView(chip: chips[index]),
+        height: 32,
+        child: Row(
+          children: [
+            for (int i = 0; i < chips.length; i++) ...[
+              if (i > 0) const SizedBox(width: 6),
+              if (chips[i].width != null)
+                _ChipView(chip: chips[i])
+              else
+                Expanded(child: _ChipView(chip: chips[i])),
+            ],
+          ],
         ),
       ),
     );
@@ -148,15 +157,15 @@ class _ChipView extends StatelessWidget {
 
     final container = Container(
       width: chip.width,
-      height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         // Hard colors only. Applied chip = 25%-fill solid white;
         // placeholder = 18%-fill with a 1px hairline white border.
         color: isApplied
             ? const Color(0x40FFFFFF)
             : const Color(0x2EFFFFFF),
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
         border: isApplied
             ? null
             : Border.all(
@@ -172,9 +181,9 @@ class _ChipView extends StatelessWidget {
     if (chip.onTap == null) return container;
     return Material(
       color: Colors.transparent,
-      borderRadius: const BorderRadius.all(Radius.circular(12)),
+      borderRadius: const BorderRadius.all(Radius.circular(10)),
       child: InkWell(
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
         onTap: chip.onTap,
         child: container,
       ),
@@ -191,7 +200,7 @@ class _ChipView extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 11.5,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Colors.white,
               height: 1.0,
@@ -199,7 +208,7 @@ class _ChipView extends StatelessWidget {
           ),
         ),
         if (chip.showChevron) ...[
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
           const _ChevronDown(),
         ],
       ],
@@ -213,13 +222,13 @@ class _ChipView extends StatelessWidget {
         const Text(
           '+',
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w800,
             color: Colors.white,
             height: 1.0,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 4),
         Text(
           chip.label,
           style: const TextStyle(

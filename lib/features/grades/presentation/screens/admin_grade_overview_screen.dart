@@ -244,16 +244,26 @@ class _AdminGradeOverviewScreenState
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
         children: [
           _buildSchoolStatsCard(),
-          const SizedBox(height: 16),
-          _buildSectionTitle(lp),
-          const SizedBox(height: 8),
+          const SizedBox(height: 18),
+          _buildSectionHeader(lp, filtered.length),
+          const SizedBox(height: 10),
           ...filtered.map((t) => _buildTeacherCard(t)),
         ],
       ),
     );
   }
 
-  // ── School-wide KPI stats card ──
+  // =====================================================================
+  // School-wide KPI hero card
+  //
+  // Replaces the prior lopsided layout (two small badges left + one giant
+  // "550" floating right) with a balanced 3-up tile strip in the same
+  // visual language as `MoneyFlowStrip` on Keuangan: each tile holds an
+  // uppercase kicker, a heavy value, and a faint footer caption. The
+  // distribution bar moves *underneath* the strip with a flat 1px legend
+  // row instead of competing with the strip for real estate. The "X guru
+  // · Y siswa" meta stays as a faint footer line so it doesn't dominate.
+  // =====================================================================
 
   Widget _buildSchoolStatsCard() {
     final total = _schoolStats['total_grades'] ?? 0;
@@ -264,9 +274,9 @@ class _AdminGradeOverviewScreenState
     final dist = _schoolStats['distribution'] is Map
         ? Map<String, dynamic>.from(_schoolStats['distribution'])
         : <String, dynamic>{};
-    final high = dist['high'] ?? 0;
-    final mid = dist['mid'] ?? 0;
-    final low = dist['low'] ?? 0;
+    final high = (dist['high'] as num?)?.toInt() ?? 0;
+    final mid = (dist['mid'] as num?)?.toInt() ?? 0;
+    final low = (dist['low'] as num?)?.toInt() ?? 0;
     final distTotal = high + mid + low;
 
     return Container(
@@ -274,61 +284,83 @@ class _AdminGradeOverviewScreenState
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [_adminColor, _adminColor.withValues(alpha: 0.85)],
+          colors: [_adminColor, _adminColor.withValues(alpha: 0.82)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: _adminColor.withValues(alpha: 0.3),
+            color: _adminColor.withValues(alpha: 0.28),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Row 1: Avg score + pass rate
+          // 3-up KPI tile strip
           Row(
             children: [
-              _buildStatBadge(
-                '${(avg as num).toStringAsFixed(1)}',
-                'Rata-rata',
-                Colors.white,
+              Expanded(
+                child: _StatTile(
+                  kicker: 'TOTAL',
+                  value: '$total',
+                  caption: 'Nilai',
+                ),
               ),
-              const SizedBox(width: 12),
-              _buildStatBadge(
-                '${(passRate as num).toStringAsFixed(1)}%',
-                'Lulus (≥75)',
-                Colors.white,
+              const SizedBox(width: 8),
+              Expanded(
+                child: _StatTile(
+                  kicker: 'RATA-RATA',
+                  value: (avg as num).toStringAsFixed(1),
+                  caption: 'dari 100',
+                ),
               ),
-              const Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '$total',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    'Total Nilai',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.white.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: _StatTile(
+                  kicker: 'LULUS',
+                  value: '${(passRate as num).toStringAsFixed(1)}%',
+                  caption: 'KKM ≥ 75',
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          // Row 2: Distribution bar
+
+          // Distribution band — only if we actually have data
           if (distTotal > 0) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Icon(
+                  Icons.donut_small_rounded,
+                  size: 12,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'DISTRIBUSI',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '· $distTotal NILAI',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                    color: Colors.white.withValues(alpha: 0.55),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: Row(
@@ -339,75 +371,70 @@ class _AdminGradeOverviewScreenState
                 ],
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Row(
               children: [
-                _buildDistLabel('≥80', high, ColorUtils.success600),
-                const SizedBox(width: 12),
-                _buildDistLabel('60-79', mid, ColorUtils.warning600),
-                const SizedBox(width: 12),
-                _buildDistLabel('<60', low, ColorUtils.error600),
+                Expanded(
+                  child: _DistLegend(
+                    range: '≥80',
+                    count: high,
+                    color: ColorUtils.success600,
+                  ),
+                ),
+                Expanded(
+                  child: _DistLegend(
+                    range: '60–79',
+                    count: mid,
+                    color: ColorUtils.warning600,
+                  ),
+                ),
+                Expanded(
+                  child: _DistLegend(
+                    range: '<60',
+                    count: low,
+                    color: ColorUtils.error600,
+                  ),
+                ),
               ],
             ),
           ],
-          const SizedBox(height: 12),
-          // Row 3: Teachers + students count
+
+          // Hairline + footer counts
+          const SizedBox(height: 14),
+          Container(height: 1, color: Colors.white.withValues(alpha: 0.16)),
+          const SizedBox(height: 10),
           Row(
             children: [
               Icon(
-                Icons.person_outline,
-                size: 14,
-                color: Colors.white.withValues(alpha: 0.7),
+                Icons.person_rounded,
+                size: 13,
+                color: Colors.white.withValues(alpha: 0.85),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 5),
               Text(
                 '$totalTeachers guru',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white.withValues(alpha: 0.85),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Icon(
-                Icons.school_outlined,
-                size: 14,
-                color: Colors.white.withValues(alpha: 0.7),
+                Icons.school_rounded,
+                size: 13,
+                color: Colors.white.withValues(alpha: 0.85),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 5),
               Text(
                 '$totalStudents siswa',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white.withValues(alpha: 0.85),
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatBadge(String value, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(fontSize: 9, color: color.withValues(alpha: 0.8)),
           ),
         ],
       ),
@@ -421,40 +448,54 @@ class _AdminGradeOverviewScreenState
     );
   }
 
-  Widget _buildDistLabel(String range, int count, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '$range: $count',
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.white.withValues(alpha: 0.8),
+  // =====================================================================
+  // Section header — kicker style "PER GURU · N ORANG" with hairline
+  // =====================================================================
+
+  Widget _buildSectionHeader(LanguageProvider lp, int count) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          Icon(Icons.person_rounded, size: 13, color: ColorUtils.slate500),
+          const SizedBox(width: 6),
+          Text(
+            lp.getTranslatedText({'en': 'PER TEACHER', 'id': 'PER GURU'}),
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
+              color: ColorUtils.slate500,
+            ),
           ),
-        ),
-      ],
-    );
-  }
-
-  // ── Section title ──
-
-  Widget _buildSectionTitle(LanguageProvider lp) {
-    return Text(
-      lp.getTranslatedText({'en': 'Per Teacher', 'id': 'Per Guru'}),
-      style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: ColorUtils.slate700,
+          const SizedBox(width: 6),
+          Text(
+            '· $count ORANG',
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+              color: ColorUtils.slate300,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Container(height: 1, color: ColorUtils.slate100)),
+        ],
       ),
     );
   }
 
-  // ── Per-teacher card ──
+  // =====================================================================
+  // Per-teacher card — v3 row pattern with 4-px score edge + initial avatar
+  //
+  // Mirrors the InvoiceRow shape used on Tagihan: a 4-px coloured left
+  // edge (green/amber/red based on avg score) acts as a quick visual
+  // skim cue, the navy-tinted initials avatar replaces the absent
+  // photo, and the trailing "Avg" badge becomes a slim score pill
+  // instead of the previous oversized 18pt block. The chevron sits
+  // next to the badge on its own line so it never fights with the
+  // amount.
+  // =====================================================================
 
   Widget _buildTeacherCard(dynamic teacher) {
     final name = teacher['teacher_name']?.toString() ?? '-';
@@ -465,200 +506,174 @@ class _AdminGradeOverviewScreenState
     final subjectCount = teacher['subject_count'] ?? 0;
     final classCount = teacher['class_count'] ?? 0;
     final passed = teacher['passed'] ?? 0;
-    final failed = teacher['failed'] ?? 0;
     final passRate = totalGrades > 0
         ? (passed / totalGrades * 100).roundToDouble()
         : 0.0;
     final subjects = (teacher['subjects'] as List?) ?? [];
-    final dist = teacher['distribution'] is Map
-        ? Map<String, dynamic>.from(teacher['distribution'])
-        : <String, dynamic>{};
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final edgeColor = avgScore == null
+        ? ColorUtils.slate300
+        : _scoreColor(avgScore);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ColorUtils.slate200),
-        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () =>
               _openTeacherGrades(Map<String, dynamic>.from(teacher as Map)),
-          borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Row 1: Teacher name + avg badge + chevron
-                Row(
-                  children: [
-                    Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  offset: const Offset(0, 4),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 4-px score edge
+                  Container(width: 4, color: edgeColor),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            name,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: ColorUtils.slate900,
-                            ),
+                          // Row 1: avatar + name + meta + avg pill + chevron
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: _adminColor.withValues(alpha: 0.10),
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                                child: Text(
+                                  initial,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: _adminColor,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: Color(0xFF0F172A),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '$subjectCount mapel · $classCount kelas · $totalGrades nilai',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: ColorUtils.slate500,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              if (avgScore != null) _AvgPill(value: avgScore),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 18,
+                                color: ColorUtils.slate400,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '$subjectCount mapel · $classCount kelas · $totalGrades nilai',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: ColorUtils.slate500,
+
+                          // Row 2: Pass-rate progress bar
+                          if (totalGrades > 0) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: LinearProgressIndicator(
+                                      value: passRate / 100,
+                                      minHeight: 5,
+                                      backgroundColor: ColorUtils.slate100,
+                                      valueColor: AlwaysStoppedAnimation(
+                                        passRate >= 75
+                                            ? ColorUtils.success600
+                                            : passRate >= 50
+                                            ? ColorUtils.warning600
+                                            : ColorUtils.error600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${passRate.toStringAsFixed(0)}% lulus',
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: ColorUtils.slate600,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
+                          ],
+
+                          // Row 3: Subject mini-chips (max 5 + overflow)
+                          if (subjects.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                for (final s in subjects.take(5))
+                                  _SubjectChip(
+                                    name: s['subject_name']?.toString() ?? '-',
+                                    avg: s['avg_score'] is num
+                                        ? (s['avg_score'] as num).toDouble()
+                                        : null,
+                                    scoreColor: _scoreColor,
+                                  ),
+                                if (subjects.length > 5)
+                                  _OverflowSubjectChip(
+                                    extra: subjects.length - 5,
+                                  ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
-                    if (avgScore != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _scoreColor(avgScore).withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              avgScore.toStringAsFixed(1),
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: _scoreColor(avgScore),
-                              ),
-                            ),
-                            Text(
-                              'Avg',
-                              style: TextStyle(
-                                fontSize: 8,
-                                color: _scoreColor(
-                                  avgScore,
-                                ).withValues(alpha: 0.7),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: ColorUtils.slate300,
-                    ),
-                  ],
-                ),
-
-                // Row 2: Pass rate bar
-                if (totalGrades > 0) ...[
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(3),
-                          child: LinearProgressIndicator(
-                            value: passRate / 100,
-                            minHeight: 4,
-                            backgroundColor: ColorUtils.slate100,
-                            valueColor: AlwaysStoppedAnimation(
-                              passRate >= 75
-                                  ? ColorUtils.success600
-                                  : passRate >= 50
-                                  ? ColorUtils.warning600
-                                  : ColorUtils.error600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${passRate.toStringAsFixed(0)}% lulus',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: ColorUtils.slate500,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
-
-                // Row 3: Subject mini-chips
-                if (subjects.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: subjects.take(5).map<Widget>((s) {
-                      final sName = s['subject_name']?.toString() ?? '-';
-                      final sAvg = s['avg_score'] is num
-                          ? (s['avg_score'] as num).toDouble()
-                          : null;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _adminColor.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: _adminColor.withValues(alpha: 0.12),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              sName,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                                color: ColorUtils.slate700,
-                              ),
-                            ),
-                            if (sAvg != null) ...[
-                              const SizedBox(width: 4),
-                              Text(
-                                sAvg.toStringAsFixed(0),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: _scoreColor(sAvg),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  if (subjects.length > 5)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        '+${subjects.length - 5} mapel lainnya',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: ColorUtils.slate400,
-                        ),
-                      ),
-                    ),
-                ],
-              ],
+              ),
             ),
           ),
         ),
@@ -670,5 +685,231 @@ class _AdminGradeOverviewScreenState
     if (s >= 80) return ColorUtils.success600;
     if (s >= 60) return ColorUtils.warning600;
     return ColorUtils.error600;
+  }
+}
+
+// =======================================================================
+// Reusable pieces — kept private to this file so they can't be reached
+// for from elsewhere. Each one is a thin presentational widget that the
+// state class composes into the larger surface.
+// =======================================================================
+
+class _StatTile extends StatelessWidget {
+  final String kicker;
+  final String value;
+  final String caption;
+  const _StatTile({
+    required this.kicker,
+    required this.value,
+    required this.caption,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            kicker,
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
+              color: Colors.white.withValues(alpha: 0.78),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              height: 1.05,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            caption,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.68),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DistLegend extends StatelessWidget {
+  final String range;
+  final int count;
+  final Color color;
+  const _DistLegend({
+    required this.range,
+    required this.count,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 5),
+        Flexible(
+          child: Text(
+            '$range · $count',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: Colors.white.withValues(alpha: 0.85),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AvgPill extends StatelessWidget {
+  final double value;
+  const _AvgPill({required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = value >= 80
+        ? ColorUtils.success600
+        : value >= 60
+        ? ColorUtils.warning600
+        : ColorUtils.error600;
+    final bg = value >= 80
+        ? const Color(0xFFF0FDF4)
+        : value >= 60
+        ? const Color(0xFFFFFBEB)
+        : const Color(0xFFFEF2F2);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value.toStringAsFixed(1),
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w800,
+              color: color,
+              height: 1.05,
+            ),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            'AVG',
+            style: TextStyle(
+              fontSize: 8.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+              color: color.withValues(alpha: 0.85),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SubjectChip extends StatelessWidget {
+  final String name;
+  final double? avg;
+  final Color Function(double) scoreColor;
+  const _SubjectChip({
+    required this.name,
+    required this.avg,
+    required this.scoreColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate700,
+            ),
+          ),
+          if (avg != null) ...[
+            const SizedBox(width: 6),
+            Container(width: 1, height: 10, color: ColorUtils.slate200),
+            const SizedBox(width: 6),
+            Text(
+              avg!.toStringAsFixed(0),
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                color: scoreColor(avg!),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _OverflowSubjectChip extends StatelessWidget {
+  final int extra;
+  const _OverflowSubjectChip({required this.extra});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate100,
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Text(
+        '+$extra mapel',
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w800,
+          color: ColorUtils.slate600,
+        ),
+      ),
+    );
   }
 }

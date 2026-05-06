@@ -23,7 +23,6 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
-import 'package:manajemensekolah/core/widgets/brand_realtime_pill.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/mixins/report_card_data_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/mixins/report_card_ui_builder_mixin.dart';
@@ -187,10 +186,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
       actionIcons: [
         BrandHeaderIconButton(icon: Icons.tune_rounded, onTap: showFilterSheet),
       ],
-      realtimeIndicator: BrandRealtimePill(
-        isFresh: !isLoading,
-        lastSync: _lastSync,
-      ),
+      isRealtimeFresh: !isLoading,
       childSelector: children.length < 2
           ? null
           : ChildSelectorChipRow(

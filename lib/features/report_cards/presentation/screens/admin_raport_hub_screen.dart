@@ -27,6 +27,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_raport_components.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/features/report_cards/data/admin_raport_service.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
 
@@ -206,6 +208,10 @@ class _AdminRaportHubScreenState
       backgroundColor: Colors.transparent,
       builder: (ctx) => _MoreMenuSheet(
         navy: navy,
+        onCetak: () {
+          Navigator.pop(ctx);
+          _openCetakFlow();
+        },
         onRefresh: () {
           Navigator.pop(ctx);
           _load();
@@ -341,76 +347,115 @@ class _AdminRaportHubScreenState
     final navy = ColorUtils.getRoleColor('admin');
     final hasBulk = _selectedClassIds.isNotEmpty;
 
+    final filterApplied = _statusFilter != 'all';
+    final periodLabel = _data?.periodLabel ?? 'Periode aktif';
+    final statusValue = filterApplied
+        ? _statusLabelForKey(_statusFilter)
+        : null;
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Stack(
         children: [
-          RefreshIndicator(
+          // Shared scaffold — Stack pattern with `body Positioned at
+          // top: headerH - overlap` so the kpiCard (RaportPipelineCard)
+          // visually overlaps the gradient header by 45dp. Same widget
+          // that drives parent Tagihan / Nilai overlap.
+          BrandPageLayout(
+            role: 'admin',
             onRefresh: _load,
-            color: navy,
-            child: ListView(
-              padding: EdgeInsets.zero,
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                _Hero(
-                  navy: navy,
-                  periodLabel:
-                      _data?.periodLabel ?? 'Periode aktif',
-                  pipelineNodes: _pipelineForRender(),
-                  statusFilterKey: _statusFilter,
-                  onNodeTap: _onPipelineNodeTap,
-                  onClearFilter: _statusFilter == 'all'
-                      ? null
-                      : () => setState(() => _statusFilter = 'all'),
-                  onPrintTap: _openCetakFlow,
-                  onFilterTap: _openStatusFilterSheet,
-                  onMoreTap: _openMoreMenu,
+            header: BrandPageHeader(
+              role: 'admin',
+              subtitle: 'Akademik · Penilaian',
+              title: 'Raport',
+              isRealtimeFresh: !_loading && _error == null,
+              // RULE: when paired with a `kpiCard`, the header MUST
+              // reserve `BrandPageLayout.kpiOverlapHeight` of gradient
+              // below its chip strip so the KPI's overlap zone tucks
+              // into empty navy instead of covering the chips.
+              kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
+              actionIcons: [
+                BrandHeaderIconButton(
+                  icon: filterApplied
+                      ? Icons.filter_alt_rounded
+                      : Icons.tune_rounded,
+                  onTap: _openStatusFilterSheet,
+                  badgeCount: filterApplied ? 1 : null,
+                  badgeBorderColor: navy,
                 ),
-                const SizedBox(height: AppSpacing.md),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-                  child: Row(
-                    children: [
+                BrandHeaderIconButton(
+                  icon: Icons.more_vert_rounded,
+                  onTap: _openMoreMenu,
+                ),
+              ],
+              // Filter chips follow the parent role's pattern
+              // (parent_billing_screen): each chip's `value` reflects
+              // its current active state. Periode is read-only on
+              // admin Raport (the period is fixed by backend), so its
+              // chip has `showChevron: false` and no onTap. Status
+              // opens the same filter sheet the tune icon does — both
+              // entry points hit the same compound sheet.
+              bottomSlot: BrandFilterChipStrip(
+                chips: [
+                  BrandFilterChip(
+                    label: 'Periode',
+                    value: periodLabel,
+                    onTap: null,
+                    showChevron: false,
+                    width: 172,
+                  ),
+                  BrandFilterChip(
+                    label: 'Status',
+                    value: statusValue,
+                    onTap: _openStatusFilterSheet,
+                  ),
+                ],
+              ),
+            ),
+            kpiCard: RaportPipelineCard(
+              nodes: _pipelineForRender(),
+              onNodeTap: _onPipelineNodeTap,
+              caption: _data == null
+                  ? null
+                  : '${_data!.totalClasses} kelas · $periodLabel',
+            ),
+            bottomPadding: (hasBulk ? 96 : 0) +
+                AppSpacing.xl +
+                MediaQuery.of(context).padding.bottom,
+            bodyChildren: [
+              // Section header — the active filter state lives on
+              // the Status chip in the header, not as a separate
+              // pill here, so this row is just a kicker label.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Row(
+                  children: [
+                    Text(
+                      'PER TINGKAT',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: ColorUtils.slate500,
+                        letterSpacing: 0.6,
+                      ),
+                    ),
+                    if (_data != null) ...[
+                      const SizedBox(width: 6),
                       Text(
-                        'PER TINGKAT',
+                        '· ${_data!.totalClasses} KELAS',
                         style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
-                          color: ColorUtils.slate500,
+                          color: ColorUtils.slate300,
                           letterSpacing: 0.6,
                         ),
                       ),
-                      if (_data != null) ...[
-                        const SizedBox(width: 6),
-                        Text(
-                          '· ${_data!.totalClasses} KELAS',
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w800,
-                            color: ColorUtils.slate300,
-                            letterSpacing: 0.6,
-                          ),
-                        ),
-                      ],
-                      const Spacer(),
-                      if (_statusFilter != 'all')
-                        _ActiveFilterPill(
-                          label: _statusLabelForKey(_statusFilter),
-                          onClear: () =>
-                              setState(() => _statusFilter = 'all'),
-                          accent: navy,
-                        ),
                     ],
-                  ),
+                  ],
                 ),
-                _buildBody(navy),
-                SizedBox(
-                  height: (hasBulk ? 96 : 0) +
-                      AppSpacing.xl +
-                      MediaQuery.of(context).padding.bottom,
-                ),
-              ],
-            ),
+              ),
+              _buildBody(navy),
+            ],
           ),
           // Bulk action bar — sticks to the bottom of the screen so it
           // stays visible while the admin scrolls through tingkats.
@@ -539,329 +584,11 @@ const _placeholderPipeline = [
 ];
 
 // ═════════════════════════════════════════════════════════════════════
-// Hero (gradient header)
+// Hero retired + body-pill retired — see BrandPageHeader call in
+// `build` above. Active filter state is now reflected ON the
+// `BrandFilterChip` in the header bottom slot (matches parent role
+// pattern), so no separate body-row pill is needed.
 // ═════════════════════════════════════════════════════════════════════
-
-class _Hero extends StatelessWidget {
-  final Color navy;
-  final String periodLabel;
-  final List<PipelineNode> pipelineNodes;
-  final String statusFilterKey;
-  final ValueChanged<String> onNodeTap;
-  final VoidCallback? onClearFilter;
-  final VoidCallback onPrintTap;
-  final VoidCallback onFilterTap;
-  final VoidCallback onMoreTap;
-
-  const _Hero({
-    required this.navy,
-    required this.periodLabel,
-    required this.pipelineNodes,
-    required this.statusFilterKey,
-    required this.onNodeTap,
-    required this.onClearFilter,
-    required this.onPrintTap,
-    required this.onFilterTap,
-    required this.onMoreTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final filterApplied = statusFilterKey != 'all';
-    return Container(
-      decoration: BoxDecoration(
-        gradient: ColorUtils.brandGradient('admin'),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Top action row
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, AppSpacing.md, 16, 0),
-              child: Row(
-                children: [
-                  _HeroChip(
-                    icon: Icons.arrow_back_rounded,
-                    onTap: () => AppNavigator.pop(context),
-                  ),
-                  const Spacer(),
-                  _HeroChip(
-                    icon: filterApplied
-                        ? Icons.filter_alt_rounded
-                        : Icons.filter_list_rounded,
-                    onTap: onFilterTap,
-                    showDot: filterApplied,
-                  ),
-                  const SizedBox(width: 6),
-                  _HeroChip(
-                    icon: Icons.more_vert_rounded,
-                    onTap: onMoreTap,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Akademik · Penilaian',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Raport',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            // Period pill + (optional) active-filter pill, centred so
-            // the row reads as a balanced horizontal band beneath the
-            // left-aligned title. Wrap keeps both pills on one line
-            // when they fit and breaks gracefully otherwise.
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Center(
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _HeroPill(label: periodLabel, dim: true),
-                    if (filterApplied)
-                      _HeroPill(
-                        label:
-                            'Filter · ${_statusLabels[statusFilterKey] ?? statusFilterKey}',
-                        dim: false,
-                        onClear: onClearFilter,
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Pipeline strip with the Cetak pill threaded through
-            // the strip's `trailing` slot so it vertically centres
-            // with the circle row (instead of the column label that
-            // sits above).
-            StatusPipelineStrip(
-              nodes: pipelineNodes,
-              onNodeTap: onNodeTap,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              trailing: Material(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: onPrintTap,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
-                    child: Text(
-                      'Cetak',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: navy,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            // Status filter chip strip — cheap visual reinforcement of
-            // the pipeline. Tapping a chip does the same thing as
-            // tapping a node above; both write to `_statusFilter`.
-            BrandFilterChipStrip(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-              chips: [
-                for (final key in _statusKeys)
-                  if (key == 'all')
-                    BrandFilterChip(
-                      label: 'Semua',
-                      value: statusFilterKey == 'all' ? 'Semua' : null,
-                      onTap: () => onNodeTap('all'),
-                      showChevron: false,
-                    )
-                  else
-                    BrandFilterChip(
-                      label: _statusLabels[key]!,
-                      value: statusFilterKey == key
-                          ? _statusLabels[key]
-                          : null,
-                      onTap: () => onNodeTap(key),
-                      showChevron: false,
-                    ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeroChip extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool showDot;
-  const _HeroChip({
-    required this.icon,
-    required this.onTap,
-    this.showDot = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Material(
-          color: Colors.white.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: onTap,
-            child: SizedBox(
-              width: 36,
-              height: 36,
-              child: Icon(icon, color: Colors.white, size: 20),
-            ),
-          ),
-        ),
-        if (showDot)
-          Positioned(
-            top: -2,
-            right: -2,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFCD34D),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 1.5),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _HeroPill extends StatelessWidget {
-  final String label;
-  final bool dim;
-  final VoidCallback? onClear;
-  const _HeroPill({
-    required this.label,
-    required this.dim,
-    this.onClear,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 5, 8, 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: dim ? 0.18 : 0.30),
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          if (onClear != null) ...[
-            const SizedBox(width: 4),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onClear,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 13,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ] else
-            const SizedBox(width: 4),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActiveFilterPill extends StatelessWidget {
-  final String label;
-  final VoidCallback onClear;
-  final Color accent;
-  const _ActiveFilterPill({
-    required this.label,
-    required this.onClear,
-    required this.accent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onClear,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(10, 4, 6, 4),
-        decoration: BoxDecoration(
-          color: accent.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-                color: accent,
-                letterSpacing: 0.2,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(Icons.close_rounded, size: 13, color: accent),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ═════════════════════════════════════════════════════════════════════
 // Bulk action bar (sticky bottom)
@@ -1151,11 +878,13 @@ class _StatusFilterSheet extends StatelessWidget {
 class _MoreMenuSheet extends StatelessWidget {
   final Color navy;
   final VoidCallback onRefresh;
+  final VoidCallback onCetak;
   final VoidCallback? onClearFilter;
 
   const _MoreMenuSheet({
     required this.navy,
     required this.onRefresh,
+    required this.onCetak,
     this.onClearFilter,
   });
 
@@ -1181,6 +910,31 @@ class _MoreMenuSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
+            ListTile(
+              leading: Container(
+                width: 32,
+                height: 32,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: navy.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.print_rounded, color: navy, size: 16),
+              ),
+              title: const Text(
+                'Cetak raport',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              subtitle: const Text(
+                'Buka alur cetak per kelas',
+                style: TextStyle(fontSize: 10.5),
+              ),
+              onTap: onCetak,
+            ),
             ListTile(
               leading: Container(
                 width: 32,
