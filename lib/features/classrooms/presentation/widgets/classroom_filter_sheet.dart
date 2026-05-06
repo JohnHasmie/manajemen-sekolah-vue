@@ -67,7 +67,7 @@ class ClassroomFilterSheetState extends State<ClassroomFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final lang = widget.languageProvider;
-    final primary = ColorUtils.corporateBlue600;
+    final primary = ColorUtils.getRoleColor('admin');
 
     return AppFilterBottomSheet(
       title: lang.getTranslatedText({

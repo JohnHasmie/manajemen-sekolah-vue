@@ -81,7 +81,7 @@ class SubjectFilterSheetState extends ConsumerState<SubjectFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageRiverpod);
-    final primaryColor = ColorUtils.corporateBlue600;
+    final primaryColor = ColorUtils.getRoleColor('admin');
 
     return AppFilterBottomSheet(
       title: lang.getTranslatedText({
