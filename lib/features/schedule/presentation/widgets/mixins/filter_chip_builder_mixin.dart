@@ -1,6 +1,7 @@
 // Mixin to build FilterChip rows for schedule filters.
 // Provides methods to render day, class, semester, and lesson hour chips.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 
 /// Mixin providing FilterChip building methods for schedule filter sheet.
@@ -58,7 +59,7 @@ mixin FilterChipBuilderMixin {
       }).toList(),
       selectedValue: tempSelectedHariId,
       onSelected: (val) => setState(() => tempSelectedHariId = val),
-      selectedColor: Theme.of(context).primaryColor,
+      selectedColor: ColorUtils.getRoleColor('admin'),
     );
   }
 
@@ -73,7 +74,7 @@ mixin FilterChipBuilderMixin {
       }).toList(),
       selectedValue: tempSelectedClassId,
       onSelected: (val) => setState(() => tempSelectedClassId = val),
-      selectedColor: Theme.of(context).primaryColor,
+      selectedColor: ColorUtils.getRoleColor('admin'),
     );
   }
 
@@ -92,7 +93,7 @@ mixin FilterChipBuilderMixin {
       }).toList(),
       selectedValue: tempSelectedSemester,
       onSelected: (val) => setState(() => tempSelectedSemester = val),
-      selectedColor: Theme.of(context).primaryColor,
+      selectedColor: ColorUtils.getRoleColor('admin'),
     );
   }
 
@@ -112,7 +113,7 @@ mixin FilterChipBuilderMixin {
       }).toList(),
       selectedValue: tempSelectedLessonHour,
       onSelected: (val) => setState(() => tempSelectedLessonHour = val),
-      selectedColor: Theme.of(context).primaryColor,
+      selectedColor: ColorUtils.getRoleColor('admin'),
     );
   }
 

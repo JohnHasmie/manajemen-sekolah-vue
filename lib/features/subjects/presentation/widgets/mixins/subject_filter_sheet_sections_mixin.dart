@@ -63,7 +63,7 @@ mixin SubjectFilterSheetSectionsMixin {
           onSelected: (sel) =>
               setState(() => onChanged(sel ? item['value'] : null)),
           backgroundColor: Colors.white,
-          selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+          selectedColor: ColorUtils.getRoleColor('admin').withValues(alpha: 0.12),
           checkmarkColor: ColorUtils.corporateBlue600,
           side: BorderSide(
             color: isSelected
@@ -95,7 +95,7 @@ mixin SubjectFilterSheetSectionsMixin {
       onSelected: (sel) =>
           setState(() => setTempGradeLevel(sel ? gradeLevel : null)),
       backgroundColor: Colors.white,
-      selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+      selectedColor: ColorUtils.getRoleColor('admin').withValues(alpha: 0.12),
       checkmarkColor: ColorUtils.corporateBlue600,
       side: BorderSide(
         color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300,
@@ -137,7 +137,7 @@ mixin SubjectFilterSheetSectionsMixin {
       onSelected: (sel) =>
           setState(() => setTempClassName(sel ? className : null)),
       backgroundColor: Colors.white,
-      selectedColor: ColorUtils.corporateBlue600.withValues(alpha: 0.12),
+      selectedColor: ColorUtils.getRoleColor('admin').withValues(alpha: 0.12),
       checkmarkColor: ColorUtils.corporateBlue600,
       side: BorderSide(
         color: isSelected ? ColorUtils.corporateBlue600 : ColorUtils.slate300,
