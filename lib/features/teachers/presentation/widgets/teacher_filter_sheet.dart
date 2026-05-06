@@ -6,6 +6,7 @@
 // Like a Vue modal component — receives initial filter values as props and
 // emits the confirmed selection via [onApply].
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_filter_sections.dart';
@@ -154,7 +155,7 @@ class TeacherFilterSheetState extends State<TeacherFilterSheet> {
   @override
   Widget build(BuildContext context) {
     final languageProvider = widget.languageProvider;
-    final color = Theme.of(context).primaryColor;
+    final color = ColorUtils.getRoleColor('admin');
 
     return AppFilterBottomSheet(
       title: languageProvider.getTranslatedText({

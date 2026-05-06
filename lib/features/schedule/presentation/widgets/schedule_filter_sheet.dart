@@ -134,7 +134,7 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet>
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.read(languageRiverpod);
-    final primaryColor = ColorUtils.corporateBlue600;
+    final primaryColor = ColorUtils.getRoleColor('admin');
 
     return AppFilterBottomSheet(
       title: languageProvider.getTranslatedText({

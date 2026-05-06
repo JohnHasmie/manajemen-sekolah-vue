@@ -121,24 +121,68 @@ class BrandFilterChipStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (chips.isEmpty) return const SizedBox.shrink();
-    // Row of Expanded / fixed-width chips so the strip fills the
-    // gradient header width — matches the v3 mockup. Chips that
-    // declare an explicit `width` (e.g. the lead "Periode" chip) keep
-    // that width; chips without a `width` flex to share the remainder.
+    // Two layout modes, picked at build time via LayoutBuilder:
+    //
+    //  • FILL mode (default for parent / 2–3-chip strips): Row of
+    //    Expanded / fixed-width chips so the strip fills the gradient
+    //    header width. Matches the v3 mockup. Chips that declare an
+    //    explicit `width` (e.g. the lead "Periode" chip) keep that
+    //    width; chips without a `width` flex to share the remainder.
+    //
+    //  • SCROLL mode (admin Jadwal-style 4-chip strip on narrow
+    //    devices): a horizontal scroller with intrinsic-width chips so
+    //    placeholder chips like "+ Kelas" never get clipped. Triggered
+    //    when the estimated minimum row width exceeds the available
+    //    width.
     return Padding(
       padding: padding,
       child: SizedBox(
         height: 32,
-        child: Row(
-          children: [
-            for (int i = 0; i < chips.length; i++) ...[
-              if (i > 0) const SizedBox(width: 6),
-              if (chips[i].width != null)
-                _ChipView(chip: chips[i])
-              else
-                Expanded(child: _ChipView(chip: chips[i])),
-            ],
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Minimum width a *flex* chip needs to render its content
+            // without overflow. Calibrated for "+ Kelas" placeholder
+            // (largest of the common admin labels) at the current
+            // 11pt font + 10dp horizontal padding.
+            const minFlexChipWidth = 72.0;
+            const gap = 6.0;
+
+            double minRequired = 0;
+            for (var i = 0; i < chips.length; i++) {
+              if (i > 0) minRequired += gap;
+              minRequired += chips[i].width ?? minFlexChipWidth;
+            }
+
+            final overflows = minRequired > constraints.maxWidth;
+
+            if (overflows) {
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < chips.length; i++) ...[
+                      if (i > 0) const SizedBox(width: gap),
+                      _ChipView(chip: chips[i]),
+                    ],
+                  ],
+                ),
+              );
+            }
+
+            return Row(
+              children: [
+                for (var i = 0; i < chips.length; i++) ...[
+                  if (i > 0) const SizedBox(width: gap),
+                  if (chips[i].width != null)
+                    _ChipView(chip: chips[i])
+                  else
+                    Expanded(child: _ChipView(chip: chips[i])),
+                ],
+              ],
+            );
+          },
         ),
       ),
     );
