@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 
 /// A single item in the "Modul lain" horizontal strip.
 ///
@@ -69,7 +68,6 @@ class ModulLainStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasOverflow = overflowItems.isNotEmpty;
-    final totalItems = visibleItems.length + overflowItems.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,6 +247,12 @@ class ModulLainStrip extends StatelessWidget {
   void _showOverflowSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      // isScrollControlled lets the sheet size to its content rather
+      // than being clamped to 50% of screen height — important when
+      // the overflow list has only 2-3 short rows. Without it the
+      // sheet looked half-empty (large gap between the rows and the
+      // sheet bottom edge).
+      isScrollControlled: true,
       builder: (context) => _OverflowSheet(
         items: overflowItems,
         title: title,
@@ -280,61 +284,65 @@ class _OverflowSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      minChildSize: 0.4,
-      maxChildSize: 0.9,
-      builder: (context, scrollController) {
-        return Column(
-          children: [
-            // Header with drag handle
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+    // Content-sized layout. Capped at 70% of screen height so a long
+    // overflow list still scrolls instead of pushing the sheet off
+    // the top — but with 2-7 short rows the sheet is just tall
+    // enough for the rows + header + 24dp footer breathing room.
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.7;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header with drag handle
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // List of overflow items
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
                 ),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return _buildOverflowItem(context, item);
-                },
-              ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-          ],
-        );
-      },
+          ),
+          // List of overflow items — Flexible so it shrinks when the
+          // list is short (3 rows) but still scrolls when it would
+          // exceed the 70% cap.
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return _buildOverflowItem(context, item);
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 

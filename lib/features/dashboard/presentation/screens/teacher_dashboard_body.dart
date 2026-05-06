@@ -37,11 +37,15 @@ import 'package:manajemensekolah/features/attendance/presentation/screens/teache
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
+import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_recap_overview.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teacher_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_overview.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
+import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
 
 // Teacher = "between admin and parent" in the brand. The hero gradient
 // literally combines both brand colors (Dark Blue → Azzure Blue), which
@@ -232,6 +236,60 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
 
   void _openAnnouncementDrafts() =>
       AppNavigator.push(context, const TeacherAnnouncementScreen());
+
+  /// Builds a slim teacher map matching the shape that the grade /
+  /// recommendation / report-card screens expect when constructed
+  /// outside the Lainnya hub. Centralised here so each navigation
+  /// handler doesn't repeat the same null-coalescing.
+  Map<String, dynamic> _teacherPayload() {
+    final user = widget.state.userData;
+    return {
+      'id': (user['teacher_id'] ?? user['id'])?.toString() ?? '',
+      'nama': (user['nama'] ?? user['name'] ?? 'Guru').toString(),
+      'email': (user['email'] ?? '').toString(),
+      'role': 'guru',
+    };
+  }
+
+  /// Rekap Nilai overview — distinct from `_openGrades` which opens
+  /// the per-class Buku Nilai input screen. The Modul lain "Rekap
+  /// Nilai" tile previously routed here too, sending teachers to the
+  /// wrong screen.
+  void _openGradeRecap() => AppNavigator.push(
+    context,
+    GradeRecapOverviewPage(teacher: _teacherPayload()),
+  );
+
+  /// Rekomendasi Belajar (wali-kelas only). Mirrors the Lainnya hub's
+  /// gate — if the teacher has no homeroom class assignment, surface
+  /// an info snackbar instead of opening an empty screen.
+  void _openRecommendation() {
+    final classes = widget.state.homeroomClasses;
+    if (classes.isEmpty) {
+      SnackBarUtils.showInfo(
+        context,
+        'Rekomendasi Belajar hanya tersedia untuk wali kelas.',
+      );
+      return;
+    }
+    final payload = _teacherPayload();
+    if ((payload['id'] as String).isEmpty) {
+      SnackBarUtils.showInfo(context, 'ID guru tidak ditemukan.');
+      return;
+    }
+    AppNavigator.push(
+      context,
+      LearningRecommendationClassScreen(
+        teacher: payload.cast<String, String>(),
+        classes: classes,
+      ),
+    );
+  }
+
+  /// Akun → settings screen (same destination as the app-bar avatar
+  /// and the Lainnya hub's Akun row).
+  void _openAccount() =>
+      AppNavigator.push(context, const SettingsScreen());
 
   void _openReportCards() => AppNavigator.push(
     context,
@@ -568,7 +626,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         ModulLainStripItem(
           label: 'Rekap Nilai',
           icon: Icons.assessment_outlined,
-          onTap: _openGrades,
+          onTap: _openGradeRecap,
         ),
         ModulLainStripItem(
           label: 'Rapor',
@@ -585,12 +643,12 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         ModulLainStripItem(
           label: 'Rekomendasi',
           icon: Icons.lightbulb_outline,
-          onTap: () {}, // TODO: wire to recommendation screen
+          onTap: _openRecommendation,
         ),
         ModulLainStripItem(
           label: 'Akun',
           icon: Icons.account_circle_outlined,
-          onTap: () {}, // TODO: wire to account settings
+          onTap: _openAccount,
         ),
       ],
     );
