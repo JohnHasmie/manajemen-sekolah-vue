@@ -6,6 +6,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -130,6 +131,21 @@ mixin LessonPlanExportMixin on State<RPPDetailPage> {
     return Uri.parse(filePath).pathSegments.last;
   }
 
+  /// Resolves a relative `lesson_plans/foo.pdf` storage path into a
+  /// fully-qualified `/storage/...` URL. The DB-stored `file_path`
+  /// is *not* a URL on its own, so handing it straight to Dio
+  /// produced a `FormatException` (no scheme/host) which surfaced as
+  /// the generic "system error" toast on the teacher RPP detail
+  /// screen. Mirrors the admin's `FileOperationsMixin.buildDownloadUrl`.
+  String _resolveDownloadUrl(String filePath) {
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      return filePath;
+    }
+    final base = ApiService.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
+    final clean = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+    return '$base/storage/$clean';
+  }
+
   Future<void> downloadAndOpenFile() async {
     final fp = filePath;
     if (fp == null) return;
@@ -137,9 +153,10 @@ mixin LessonPlanExportMixin on State<RPPDetailPage> {
     setState(() => isDownloading = true);
 
     try {
+      final url = _resolveDownloadUrl(fp);
       final dio = Dio();
       final response = await dio.get<List<int>>(
-        fp,
+        url,
         options: Options(responseType: ResponseType.bytes),
       );
 

@@ -290,10 +290,25 @@ class GradeBookController {
     final academicYearId = _ref
         .read(academicYearRiverpod)
         .selectedAcademicYear?['id'];
-    final endpoint =
-        '/grades/export?class_id=${classData['id']}&'
-        'subject_id=${Subject.fromJson(subject).id}&teacher_id=${Teacher.fromJson(teacher).id}&'
-        'academic_year_id=$academicYearId';
+
+    // Build the query map and only append `academic_year_id` when the
+    // value is non-null. The previous string interpolation produced
+    // `academic_year_id=null` (literal "null") whenever the academic
+    // year hadn't been chosen yet, which caused a Postgres "invalid
+    // input syntax for type bigint" → 500 on the export endpoint and
+    // surfaced as the generic "Terjadi kesalahan pada sistem server"
+    // toast in the UI.
+    final params = <String, String>{
+      'class_id': classData['id']?.toString() ?? '',
+      'subject_id': Subject.fromJson(subject).id,
+      'teacher_id': Teacher.fromJson(teacher).id,
+      if (academicYearId != null)
+        'academic_year_id': academicYearId.toString(),
+    };
+    final endpoint = Uri(
+      path: '/grades/export',
+      queryParameters: params,
+    ).toString();
 
     return exp.GradeExportHelper.exportGrades(endpoint);
   }
