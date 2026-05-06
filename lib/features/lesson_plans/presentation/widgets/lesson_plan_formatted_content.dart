@@ -32,22 +32,10 @@ class LessonPlanFormattedContent extends StatelessWidget {
           return const SizedBox(height: AppSpacing.lg);
         }
 
-        // Main title line
+        // Main title line — skip rendering, the parent
+        // already shows the title via LessonPlanHeaderInfoCard.
         if (line.startsWith('RENCANA PELAKSANAAN PEMBELAJARAN')) {
-          return Column(
-            children: [
-              Text(
-                line,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-          );
+          return const SizedBox.shrink();
         }
 
         // Horizontal rule

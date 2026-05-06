@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/teacher_announcement_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
@@ -84,17 +85,16 @@ class TeacherOtherHub extends ConsumerWidget {
       SnackBarUtils.showInfo(context, 'Data dashboard belum termuat.');
       return;
     }
-    final userData = state.userData;
-    final id =
-        (userData['teacher_id'] ?? userData['id'])?.toString() ?? '';
-    if (id.isEmpty) {
+    final tp = ref.read(teacherRiverpod);
+    final id = tp.teacherId;
+    if (id == null || id.isEmpty) {
       SnackBarUtils.showInfo(context, 'ID guru tidak ditemukan.');
       return;
     }
     final teacherData = <String, String>{
       'id': id,
-      'nama': (userData['nama'] ?? userData['name'] ?? 'Teacher').toString(),
-      'email': (userData['email'] ?? '').toString(),
+      'nama': tp.teacherName ?? 'Teacher',
+      'email': state.userData['email']?.toString() ?? '',
       'role': 'guru',
     };
     AppNavigator.push(

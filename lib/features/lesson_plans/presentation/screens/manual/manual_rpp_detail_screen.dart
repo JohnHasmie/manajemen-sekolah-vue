@@ -11,7 +11,6 @@
 // show once at entry — neither screen re-checks the kind.
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:open_file/open_file.dart';
@@ -314,33 +313,24 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
 
   // ── Attachment download ───────────────────────────────────────
 
-  String _resolveDownloadUrl(String filePath) {
-    if (filePath.startsWith('http://') ||
-        filePath.startsWith('https://')) {
-      return filePath;
-    }
-    final base = ApiService.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
-    final clean =
-        filePath.startsWith('/') ? filePath.substring(1) : filePath;
-    if (clean.startsWith('storage/')) return '$base/$clean';
-    return '$base/storage/$clean';
-  }
-
   Future<void> _downloadAndOpenFile() async {
     final fp = _filePath;
-    if (fp == null) return;
+    final id = _lessonPlanId;
+    if (fp == null || id == null) return;
 
     setState(() => _isDownloading = true);
     try {
-      final url = _resolveDownloadUrl(fp);
-      final response = await Dio().get<List<int>>(
-        url,
-        options: Options(responseType: ResponseType.bytes),
+      // Use the backend download proxy — works with
+      // both local storage and S3/Minio. The mobile
+      // client cannot resolve the internal Docker
+      // hostname (e.g. minio:9000) in file_url.
+      final bytes = await ApiService.downloadFile(
+        '/rpp/$id/download',
       );
       final dir = await getTemporaryDirectory();
       final fileName = Uri.parse(fp).pathSegments.last;
       final localFile = File('${dir.path}/$fileName');
-      await localFile.writeAsBytes(response.data ?? const [], flush: true);
+      await localFile.writeAsBytes(bytes, flush: true);
       await OpenFile.open(localFile.path);
       if (mounted) {
         SnackBarUtils.showInfo(
@@ -351,7 +341,10 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
     } catch (e) {
       AppLogger.error('lesson_plan', e);
       if (mounted) {
-        SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+        SnackBarUtils.showError(
+          context,
+          ErrorUtils.getFriendlyMessage(e),
+        );
       }
     } finally {
       if (mounted) setState(() => _isDownloading = false);

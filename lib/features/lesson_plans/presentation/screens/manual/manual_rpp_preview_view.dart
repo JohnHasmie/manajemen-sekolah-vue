@@ -9,9 +9,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_file_card.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_formatted_content.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_header_info_card.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_signature_card.dart';
 
@@ -56,33 +54,6 @@ class ManualRppPreviewView extends StatelessWidget {
           LessonPlanHeaderInfoCard(
             lessonPlanData: lessonPlanData,
             primaryColor: primaryColor,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.all(Radius.circular(14)),
-              border: Border.all(color: ColorUtils.slate200),
-              boxShadow: [
-                BoxShadow(
-                  color: primaryColor.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 3),
-                ),
-                BoxShadow(
-                  color: ColorUtils.slate900.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xxl),
-              child: LessonPlanFormattedContent(
-                content: formattedContent,
-                primaryColor: primaryColor,
-              ),
-            ),
           ),
           const SizedBox(height: AppSpacing.md),
           LessonPlanSignatureCard(

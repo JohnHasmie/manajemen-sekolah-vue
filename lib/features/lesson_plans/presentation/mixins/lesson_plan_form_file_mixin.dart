@@ -1,8 +1,6 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -46,31 +44,14 @@ mixin LessonPlanFormFileMixin on ConsumerState<LessonPlanFormDialog> {
     }
   }
 
-  /// Views the current attached file.
+  /// Views the current attached file via the download proxy.
   Future<void> viewCurrentFile() async {
-    final filePath = widget.lessonPlanData?['file_path'];
-    if (filePath != null) {
-      await downloadAndOpenFile(context, filePath);
-    }
-  }
+    final lpId = widget.lessonPlanData?['id']?.toString();
+    final fp = widget.lessonPlanData?['file_path']
+        ?? widget.lessonPlanData?['file_url'];
+    if (fp == null || lpId == null) return;
 
-  /// Downloads and opens file from server.
-  Future<void> downloadAndOpenFile(
-    BuildContext context,
-    String filePath,
-  ) async {
     try {
-      final rootUrl = ApiService.baseUrl.replaceFirst('/api', '');
-
-      String cleanPath = filePath;
-      if (!cleanPath.startsWith('/')) {
-        cleanPath = '/$cleanPath';
-      }
-
-      final fullUrl = '$rootUrl$cleanPath';
-
-      AppLogger.debug('lesson_plan', 'Downloading file from: $fullUrl');
-
       final languageProvider = ref.read(languageRiverpod);
       SnackBarUtils.showInfo(
         context,
@@ -80,28 +61,33 @@ mixin LessonPlanFormFileMixin on ConsumerState<LessonPlanFormDialog> {
         }),
       );
 
-      final dio = Dio();
-      final response = await dio.get<List<int>>(
-        fullUrl,
-        options: Options(responseType: ResponseType.bytes),
+      // Use the backend download proxy — works with
+      // both local storage and S3/Minio.
+      final bytes = await ApiService.downloadFile(
+        '/rpp/$lpId/download',
       );
 
       final dir = await getTemporaryDirectory();
-      final fileName = cleanPath.split('/').last;
+      final fileName = fp.toString().split('/').last;
       final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes, flush: true);
 
-      await file.writeAsBytes(response.data ?? []);
-
-      AppLogger.info('lesson_plan', 'File saved to: ${file.path}');
+      AppLogger.info(
+        'lesson_plan',
+        'File saved to: ${file.path}',
+      );
 
       await OpenFile.open(file.path);
     } catch (e) {
-      AppLogger.error('lesson_plan', 'Error opening file: $e');
-
-      final String message = e.toString().replaceFirst('Exception: ', '');
-
+      AppLogger.error(
+        'lesson_plan',
+        'Error opening file: $e',
+      );
       if (context.mounted) {
-        SnackBarUtils.showError(context, message);
+        SnackBarUtils.showError(
+          context,
+          'File tidak dapat diunduh. Coba lagi.',
+        );
       }
     }
   }

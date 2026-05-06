@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teacher_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
@@ -110,16 +111,14 @@ class TeacherTeachingHub extends ConsumerWidget {
   /// Build the teacher map shape that downstream screens expect.
   /// Returns null when the teacher id is missing — caller should toast.
   Map<String, String>? _resolveTeacherData(WidgetRef ref) {
-    final state = ref.read(dashboardProvider).asData?.value;
-    if (state == null) return null;
-    final userData = state.userData;
-    final id =
-        (userData['teacher_id'] ?? userData['id'])?.toString() ?? '';
-    if (id.isEmpty) return null;
+    final tp = ref.read(teacherRiverpod);
+    final id = tp.teacherId;
+    if (id == null || id.isEmpty) return null;
     return {
       'id': id,
-      'nama': (userData['nama'] ?? userData['name'] ?? 'Teacher').toString(),
-      'email': (userData['email'] ?? '').toString(),
+      'nama': tp.teacherName ?? 'Teacher',
+      'email': ref.read(dashboardProvider).asData?.value
+              .userData['email']?.toString() ?? '',
       'role': 'guru',
     };
   }

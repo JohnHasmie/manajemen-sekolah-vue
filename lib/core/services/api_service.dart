@@ -116,7 +116,32 @@ class ApiService {
       return Uint8List.fromList(response.data ?? []);
     } on DioException catch (e) {
       AppLogger.error('api', 'Download Error on $endpoint: $e');
-      if (e.error is Exception) throw e.error as Exception;
+      // Extract the actual error body from the server
+      final resp = e.response;
+      if (resp != null) {
+        String serverMsg = 'Server error (${resp.statusCode})';
+        final data = resp.data;
+        if (data is List<int>) {
+          try {
+            serverMsg = String.fromCharCodes(data);
+          } catch (_) {}
+        } else if (data is Map) {
+          serverMsg = (data['error'] ??
+                  data['message'] ??
+                  serverMsg)
+              .toString();
+        } else if (data is String) {
+          serverMsg = data;
+        }
+        AppLogger.error(
+          'api',
+          'Server response: $serverMsg',
+        );
+        throw Exception(serverMsg);
+      }
+      if (e.error is Exception) {
+        throw e.error as Exception;
+      }
       rethrow;
     }
   }
