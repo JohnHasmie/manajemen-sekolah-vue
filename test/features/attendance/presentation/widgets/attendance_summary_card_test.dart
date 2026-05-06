@@ -42,7 +42,7 @@ void main() {
   Widget buildWidget({
     AttendanceSummaryItem? summary,
     VoidCallback? onTap,
-    VoidCallback? onDelete,
+    VoidCallback? onLongPress,
   }) {
     return MaterialApp(
       home: Scaffold(
@@ -52,7 +52,7 @@ void main() {
             primaryColor: Colors.blue,
             languageProvider: langProvider,
             onTap: onTap ?? () {},
-            onDelete: onDelete ?? () {},
+            onLongPress: onLongPress,
           ),
         ),
       ),
@@ -83,20 +83,18 @@ void main() {
       expect(find.text('30 Siswa'), findsOneWidget);
     });
 
-    testWidgets('delete button fires onDelete callback', (
+    testWidgets('long-press fires onLongPress callback', (
       WidgetTester tester,
     ) async {
-      bool deleted = false;
-      await tester.pumpWidget(buildWidget(onDelete: () => deleted = true));
-
-      final deleteIcon = find.byWidgetPredicate(
-        (w) => w is Icon && w.icon == Icons.delete_outline,
+      var triggered = false;
+      await tester.pumpWidget(
+        buildWidget(onLongPress: () => triggered = true),
       );
-      expect(deleteIcon, findsOneWidget);
-      await tester.tap(deleteIcon);
+
+      await tester.longPress(find.byType(AttendanceSummaryCard));
       await tester.pump();
 
-      expect(deleted, isTrue);
+      expect(triggered, isTrue);
     });
 
     testWidgets('tapping the card fires onTap callback', (
@@ -197,7 +195,6 @@ void main() {
                 primaryColor: Colors.green,
                 languageProvider: langProvider,
                 onTap: () {},
-                onDelete: () {},
               ),
             ),
           ),
