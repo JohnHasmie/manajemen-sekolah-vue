@@ -1,15 +1,16 @@
 // Admin Raport hub shared components — Mockup #08.
 //
-// Two new widgets:
-//   • StatusPipelineStrip — N circular nodes connected by lines.
-//                           Active node enlarges + inverts to white.
-//                           Tap a node to filter the list to that
-//                           lifecycle stage.
-//   • TingkatGroupCard    — Collapsible card with header (tingkat,
-//                           class+student count, %-reviewed bar) +
-//                           expanded grid of per-kelas mini-chips.
+// Three widgets:
+//   • PipelineNode model — N-tuple drives the hub's status pipeline.
+//   • RaportPipelineCard — body-card variant rendering circles with
+//                          uniform sizing + a dashed connector aligned
+//                          to the circle centerline. Used after the
+//                          gradient-hero refactor.
+//   • TingkatGroupCard   — Collapsible card with header (tingkat,
+//                          class+student count, %-reviewed bar) +
+//                          expanded grid of per-kelas mini-chips.
 //
-// Both are pure presentation widgets keyed off the
+// All three are pure presentation widgets keyed off the
 // /api/raports/admin-pipeline response shape.
 
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 // =====================================================================
-// StatusPipelineStrip
+// PipelineNode
 // =====================================================================
 
 class PipelineNode {
@@ -32,226 +33,6 @@ class PipelineNode {
     required this.count,
     required this.active,
   });
-}
-
-class StatusPipelineStrip extends StatelessWidget {
-  final List<PipelineNode> nodes;
-  final ValueChanged<String>? onNodeTap;
-  final EdgeInsetsGeometry padding;
-
-  /// Optional widget rendered to the right of the connector row, in
-  /// the same crossAxis-center position as the circle nodes. Used by
-  /// the Raport hub for the trailing "Cetak" pill so it visually
-  /// centers with the pipeline circles instead of the column label.
-  final Widget? trailing;
-
-  const StatusPipelineStrip({
-    super.key,
-    required this.nodes,
-    this.onNodeTap,
-    this.padding = const EdgeInsets.symmetric(horizontal: 16),
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: padding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'PIPELINE STATUS',
-            style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    for (var i = 0; i < nodes.length; i++) ...[
-                      _PipelineDot(
-                        node: nodes[i],
-                        onTap: onNodeTap == null
-                            ? null
-                            : () => onNodeTap!(nodes[i].key),
-                      ),
-                      if (i < nodes.length - 1)
-                        Expanded(
-                          child: _PipelineConnector(
-                            active: nodes[i].active ||
-                                nodes[i + 1].active,
-                          ),
-                        ),
-                    ],
-                  ],
-                ),
-              ),
-              if (trailing != null) ...[
-                const SizedBox(width: 10),
-                trailing!,
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PipelineDot extends StatelessWidget {
-  final PipelineNode node;
-  final VoidCallback? onTap;
-  const _PipelineDot({required this.node, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final navy = ColorUtils.getRoleColor('admin');
-    final size = node.active ? 36.0 : 28.0;
-    final bg = node.active
-        ? Colors.white
-        : Colors.white.withValues(alpha: 0.18);
-    final fg = node.active ? navy : Colors.white;
-    final countSize = node.active ? 13.0 : 11.0;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: size,
-            height: size,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: bg,
-              shape: BoxShape.circle,
-              border: node.active
-                  ? null
-                  : Border.all(
-                      color: Colors.white.withValues(alpha: 0.4),
-                      width: 1.5,
-                    ),
-            ),
-            child: Text(
-              node.count.toString(),
-              style: TextStyle(
-                fontSize: countSize,
-                fontWeight: FontWeight.w800,
-                color: fg,
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            node.label,
-            style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w800,
-              color: node.active
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.85),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Connector between two adjacent pipeline nodes.
-///
-/// **Visual rule:**
-///   • When [active] is `true`  → a single solid line.
-///   • When [active] is `false` → an evenly spaced dashed line.
-///
-/// **When is [active] true?** Owned by [StatusPipelineStrip], which
-/// flips a connector to active when *either* of the two nodes it
-/// joins is the active filter target. With no filter applied (the
-/// default, "Semua"), no node is active and every connector renders
-/// dashed.
-///
-/// **Dash painting** uses a [CustomPainter] with fixed dash width
-/// (4 px) and gap (4 px) so the pattern is identical regardless of
-/// the connector's available width. The previous implementation laid
-/// out N `SizedBox` dashes inside a `Row(spaceBetween)`, which made
-/// the gap depend on `(width - N*dashWidth) / (N-1)`. If that worked
-/// out to ~0 the dashes touched and the connector read as a solid
-/// line — the bug surfaced as one mysterious solid connector among
-/// otherwise-dashed neighbours when the `Expanded` flex doled out
-/// slightly different widths.
-class _PipelineConnector extends StatelessWidget {
-  final bool active;
-  const _PipelineConnector({required this.active});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = active
-        ? Colors.white.withValues(alpha: 0.42)
-        : Colors.white.withValues(alpha: 0.30);
-    // The active circle is 36 px → its vertical centre sits at y=18
-    // from the top of the dot Column. Inactive circles are 28 px but
-    // their Column is cross-axis-centred inside the Row (which sizes
-    // to the tallest child Column), so every circle centre lands at
-    // the same y. Pin the connector at top:17 so its 2 px line
-    // intersects the circle centreline exactly.
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 17, 4, 0),
-      child: SizedBox(
-        height: 2,
-        child: CustomPaint(
-          painter: _ConnectorPainter(color: color, solid: active),
-        ),
-      ),
-    );
-  }
-}
-
-/// Paints a 2 px horizontal stroke across the canvas. When [solid] is
-/// true the stroke is continuous; otherwise it's dashed with a fixed
-/// `4 px on / 4 px off` rhythm — identical regardless of available
-/// width, so neighbouring connectors that get slightly different
-/// widths from `Expanded`'s flex distribution still read as the same
-/// dashed pattern.
-class _ConnectorPainter extends CustomPainter {
-  final Color color;
-  final bool solid;
-  static const double _dash = 4;
-  static const double _gap = 4;
-
-  const _ConnectorPainter({required this.color, required this.solid});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-    final y = size.height / 2;
-
-    if (solid) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-      return;
-    }
-
-    var x = 0.0;
-    while (x < size.width) {
-      final end = (x + _dash).clamp(0.0, size.width);
-      canvas.drawLine(Offset(x, y), Offset(end, y), paint);
-      x = end + _gap;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ConnectorPainter old) =>
-      old.color != color || old.solid != solid;
 }
 
 // =====================================================================

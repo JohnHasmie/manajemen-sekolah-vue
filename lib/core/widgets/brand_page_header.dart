@@ -12,11 +12,7 @@
 //      center column above a 19px (was 24px) title.
 //   2. The realtime indicator collapses from a full-width pill row
 //      ("Terhubung realtime · 21:05") into a 6dp green/grey dot
-//      placed inline beside the title. Pass `isRealtimeFresh`
-//      instead of building a `BrandRealtimePill` for the new compact
-//      surface. The legacy `realtimeIndicator` slot still renders
-//      below the title for callers that haven't migrated yet — it's
-//      now soft-deprecated.
+//      placed inline beside the title — pass `isRealtimeFresh`.
 //
 // "PILIH ANAK" / "PILIH KELAS" labels above the child selector were
 // dropped; the avatar chips are self-describing. Child chips and
@@ -41,10 +37,6 @@
 // -----------------
 //   • [BrandHeaderIconButton] — the 32×32 white-translucent icon
 //     button with optional notification badge, used in the action row.
-//   • [BrandRealtimePill] — green-dot + "Terhubung realtime · HH:MM"
-//     copy, with pulsing animation. Still exported because legacy
-//     screens use it, but new screens should prefer the
-//     [isRealtimeFresh] inline dot.
 //
 // Visual contract
 // ---------------
@@ -105,16 +97,8 @@ class BrandPageHeader extends StatelessWidget {
   final List<Widget>? actionIcons;
 
   /// When non-null, paints a 6dp dot beside the title — green for
-  /// `true` (live), translucent slate for `false` (stale). Cheaper
-  /// than the full-row [realtimeIndicator] and the recommended
-  /// surface for the compact header.
+  /// `true` (live), translucent slate for `false` (stale).
   final bool? isRealtimeFresh;
-
-  /// Soft-deprecated realtime indicator row (typically
-  /// [BrandRealtimePill]). Kept for legacy call sites; new screens
-  /// should pass [isRealtimeFresh] instead. When both are provided
-  /// the inline dot wins and this widget is ignored.
-  final Widget? realtimeIndicator;
 
   /// Optional row of child-selector chips (parent role typically).
   final Widget? childSelector;
@@ -143,7 +127,6 @@ class BrandPageHeader extends StatelessWidget {
     this.onBackPressed,
     this.actionIcons,
     this.isRealtimeFresh,
-    this.realtimeIndicator,
     this.childSelector,
     this.bottomSlot,
     this.showBackButton,
@@ -159,10 +142,8 @@ class BrandPageHeader extends StatelessWidget {
 
     final List<Widget> rightIcons = actionIcons ?? const [];
 
-    final bool hasBottomSection = (isRealtimeFresh == null &&
-            realtimeIndicator != null) ||
-        childSelector != null ||
-        bottomSlot != null;
+    final bool hasBottomSection =
+        childSelector != null || bottomSlot != null;
 
     return Container(
       width: double.infinity,
@@ -236,18 +217,13 @@ class BrandPageHeader extends StatelessWidget {
           // Tapered hairline divider — fades to transparent at both
           // edges so it reads as a deliberate section break rather
           // than a hard ruled line. Painted only when there's a
-          // bottom section (childSelector / bottomSlot / legacy
-          // realtime row) to separate from the title block.
+          // bottom section (childSelector / bottomSlot) to separate
+          // from the title block.
           if (hasBottomSection) ...[
             const SizedBox(height: AppSpacing.md),
             const _TaperedHairline(),
             const SizedBox(height: AppSpacing.sm + 2),
           ],
-          // Legacy realtime row — only when `isRealtimeFresh` is null
-          // and a custom widget was provided. New screens skip this
-          // path entirely.
-          if (isRealtimeFresh == null && realtimeIndicator != null)
-            Center(child: realtimeIndicator!),
           if (childSelector != null) childSelector!,
           if (bottomSlot != null) ...[
             if (childSelector != null) const SizedBox(height: AppSpacing.sm),
