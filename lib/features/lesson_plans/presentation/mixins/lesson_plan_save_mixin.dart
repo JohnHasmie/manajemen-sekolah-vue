@@ -29,7 +29,13 @@ mixin LessonPlanSaveMixin on State<RPPDetailPage> {
         return '';
       }
 
+      // Forward the existing id so the service can PATCH instead of
+      // POST. Without this, every "save edit" silently inserted a
+      // new record while the original RPP stayed unchanged.
+      final existingId = fallback(['id', 'rpp_id', 'lesson_plan_id']);
+
       await getIt<ApiSubjectService>().saveRPP({
+        if (existingId.isNotEmpty) 'id': existingId,
         'teacher_id': fallback(['teacher_id', 'guru_id']),
         'subject_id': fallback(['subject_id', 'mata_pelajaran_id']),
         'class_id': fallback(['class_id']),

@@ -15,8 +15,28 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// import/export. Like Laravel's LessonPlanController and
 /// ImportController combined.
 class SubjectLessonPlanService {
-  /// Saves/creates a lesson plan (RPP).
+  /// Saves a lesson plan (RPP).
+  ///
+  /// Picks the right verb based on whether `data` carries an `id`:
+  /// `POST /rpp` for create, `PATCH /rpp/{id}` for update. Without
+  /// this branch the previous implementation always POSTed, which
+  /// happily inserted a new record on every "save edit" tap so the
+  /// teacher's edits silently never overwrote the original RPP.
   Future<dynamic> saveRPP(Map<String, dynamic> data) async {
+    final rawId = data['id'] ?? data['rpp_id'] ?? data['lesson_plan_id'];
+    final id = rawId?.toString().trim();
+
+    if (id != null && id.isNotEmpty) {
+      // Strip the id from the payload — it lives in the URL — to
+      // avoid overlap with the backend Form Request validators.
+      final payload = Map<String, dynamic>.from(data)
+        ..remove('id')
+        ..remove('rpp_id')
+        ..remove('lesson_plan_id');
+      final response = await dioClient.patch('/rpp/$id', data: payload);
+      return response.data;
+    }
+
     final response = await dioClient.post('/rpp', data: data);
     return response.data;
   }
