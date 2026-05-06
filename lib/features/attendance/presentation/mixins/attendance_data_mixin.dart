@@ -228,11 +228,96 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
       if (widget.initialclassId != null) {
         loadSubjectsByClass(widget.initialclassId!);
       }
+
+      // Edit-mode hydration. When the sheet was opened from a session
+      // detail page (`Update Kehadiran` / `Edit Attendance`) the form
+      // previously defaulted every student to 'hadir', wiping out the
+      // existing record. Fetch what's actually stored for the
+      // date+subject+class[+lesson hour] tuple and override the
+      // defaults before the user starts editing.
+      await _hydrateExistingAttendance();
     } catch (e) {
       AppLogger.error('attendance', 'Error loading embedded data: $e');
       if (mounted) {
         setState(() => isLoadingInput = false);
       }
+    }
+  }
+
+  /// Pulls existing attendance records for the open (date, subject,
+  /// class[, lesson hour]) tuple and overrides the `attendanceStatus`
+  /// map. No-op when the tuple is incomplete or when the API call
+  /// returns nothing — that's the genuine "new session" case where
+  /// the default 'hadir' is the right starting point.
+  Future<void> _hydrateExistingAttendance() async {
+    final subjectId = widget.initialSubjectId;
+    final classId = widget.initialclassId;
+    final date = widget.initialDate;
+    if (subjectId == null || classId == null || date == null) return;
+
+    String? lessonHourId;
+    if (widget.initialLessonHourNumber != null) {
+      // Match by hour_number (the value extracted from the session
+      // card label, e.g. "Jam ke-5" → 5) since the detail page does
+      // not pass the lesson_hour UUID through.
+      final match = lessonHours.cast<Map<dynamic, dynamic>>().firstWhere(
+        (lh) => lh['hour_number'] == widget.initialLessonHourNumber,
+        orElse: () => const <dynamic, dynamic>{},
+      );
+      final id = match['id'];
+      if (id != null) lessonHourId = id.toString();
+    }
+
+    try {
+      final dateStr =
+          '${date.year.toString().padLeft(4, '0')}-'
+          '${date.month.toString().padLeft(2, '0')}-'
+          '${date.day.toString().padLeft(2, '0')}';
+      final existing = await AttendanceService.getAttendance(
+        teacherId: teacherId.isNotEmpty ? teacherId : null,
+        subjectId: subjectId,
+        classId: classId,
+        date: dateStr,
+        lessonHourId: lessonHourId,
+      );
+      if (!mounted || existing.isEmpty) return;
+
+      setState(() {
+        for (final att in existing) {
+          attendanceStatus[att.studentId] = _normalizeStatus(att.status);
+        }
+      });
+    } catch (e) {
+      // Hydration failure is non-fatal — the form still works with
+      // the 'hadir' default and the user can re-enter what they need.
+      AppLogger.error('attendance', 'hydrate existing attendance: $e');
+    }
+  }
+
+  /// Normalises the various status values the backend may persist
+  /// ("Present", "hadir", "late", "Terlambat", …) into the lowercase
+  /// Indonesian token the input form's status segments use.
+  String _normalizeStatus(String raw) {
+    switch (raw.trim().toLowerCase()) {
+      case 'present':
+      case 'hadir':
+        return 'hadir';
+      case 'late':
+      case 'terlambat':
+        return 'terlambat';
+      case 'sick':
+      case 'sakit':
+        return 'sakit';
+      case 'excused':
+      case 'permit':
+      case 'permission':
+      case 'izin':
+        return 'izin';
+      case 'absent':
+      case 'alpha':
+        return 'alpha';
+      default:
+        return raw.trim().toLowerCase();
     }
   }
 
