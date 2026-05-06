@@ -82,7 +82,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   email,
                   role,
                   avatarLetter,
-                  showEditProfileDialog,
+                  // Wrapped instead of passing the bare tear-off so
+                  // the Future<void> result of the dialog future is
+                  // explicitly fire-and-forget — passing the bare
+                  // reference to a VoidCallback slot was producing
+                  // an unhandled-future runtime swallow that left
+                  // the pencil tap looking like a no-op.
+                  // ignore: unnecessary_lambdas
+                  () => showEditProfileDialog(),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(

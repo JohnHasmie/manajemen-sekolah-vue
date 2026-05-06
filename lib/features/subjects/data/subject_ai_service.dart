@@ -68,6 +68,12 @@ class SubjectAiService {
   }
 
   /// Parses Dio AI response and throws on non-2xx status.
+  ///
+  /// Pulls the user-facing reason out of the AI backend's standard
+  /// envelope: `{ success: false, message: "RPP dengan status 'submitted'
+  /// tidak dapat diedit." }`. We previously only checked the legacy
+  /// `error` key, so 422s surfaced as the generic "Request failed
+  /// with status: 422" instead of the explanatory message.
   dynamic _handleAiResponse(Response<dynamic> response) {
     final responseBody = response.data;
 
@@ -75,14 +81,20 @@ class SubjectAiService {
         response.statusCode! >= 200 &&
         response.statusCode! < 300) {
       return responseBody;
-    } else {
-      throw Exception(
-        responseBody is Map
-            ? (responseBody['error'] ??
-                  'Request failed with status: ${response.statusCode}')
-            : 'Request failed with status: ${response.statusCode}',
-      );
     }
+
+    String? extractedMessage;
+    if (responseBody is Map) {
+      final m = responseBody['message'] ?? responseBody['error'];
+      if (m is String && m.trim().isNotEmpty) {
+        extractedMessage = m.trim();
+      }
+    }
+
+    throw Exception(
+      extractedMessage ??
+          'Request failed with status: ${response.statusCode}',
+    );
   }
 
   /// Generate a lesson plan via kamiledu-ai backend.

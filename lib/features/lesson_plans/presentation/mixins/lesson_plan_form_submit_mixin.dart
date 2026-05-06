@@ -70,13 +70,28 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
       AppLogger.debug('lesson_plan', '- Judul: ${titleController.text}');
       AppLogger.debug('lesson_plan', '- File Path: $filePath');
 
+      // Priority: uploaded path > existing path > selected filename
+      final existingFilePath =
+          widget.lessonPlanData?['file_path']?.toString();
+      final resolvedFilePath =
+          filePath ?? existingFilePath ?? selectedFileName;
+
+      AppLogger.debug(
+        'lesson_plan',
+        'Resolved file_path: $resolvedFilePath '
+        '(upload=$filePath, existing=$existingFilePath, '
+        'name=$selectedFileName)',
+      );
+
       final lessonPlanData = {
         'subject_id': selectedSubjectId,
         'class_id': selectedClassId,
         'title': titleController.text,
         'semester': selectedTerm,
         'academic_year': academicYearController.text,
-        'file_path': filePath ?? selectedFileName,
+        if (resolvedFilePath != null &&
+            resolvedFilePath.isNotEmpty)
+          'file_path': resolvedFilePath,
       };
 
       if (widget.lessonPlanData != null) {

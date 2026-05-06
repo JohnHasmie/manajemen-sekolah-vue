@@ -70,6 +70,14 @@ class AttendanceWriteHelper {
   }
 
   /// Deletes attendance summary by teacher/subject/class/date.
+  ///
+  /// Routes through `DELETE /attendance/bulk` (bulkDestroy) — the
+  /// previous `DELETE /attendance?...` URL had no matching backend
+  /// route (only `/attendance/{id}`, `/attendance/bulk` and
+  /// `/attendances/{id}` exist), which 404'd and surfaced as the
+  /// generic "system error" toast on the teacher Presensi screen.
+  /// `bulkDestroy` already accepts the same teacher_id / subject_id /
+  /// date / class_id / lesson_hour_id filters and returns a count.
   Future<dynamic> deleteAttendanceSummary({
     required String teacherId,
     required String subjectId,
@@ -77,17 +85,19 @@ class AttendanceWriteHelper {
     String? classId,
     String? lessonHourId,
   }) async {
-    String query =
-        '${ApiEndpoints.attendance}?teacher_id=$teacherId'
-        '&subject_id=$subjectId&date=$date';
-    if (classId != null && classId.isNotEmpty) {
-      query += '&class_id=$classId';
-    }
-    if (lessonHourId != null && lessonHourId.isNotEmpty) {
-      query += '&lesson_hour_id=$lessonHourId';
-    }
+    final params = <String, String>{
+      'teacher_id': teacherId,
+      'subject_id': subjectId,
+      'date': date,
+      if (classId != null && classId.isNotEmpty) 'class_id': classId,
+      if (lessonHourId != null && lessonHourId.isNotEmpty)
+        'lesson_hour_id': lessonHourId,
+    };
 
-    final response = await dioClient.delete(query);
+    final response = await dioClient.delete(
+      '${ApiEndpoints.attendance}/bulk',
+      queryParameters: params,
+    );
     await CacheInvalidationService.onAttendanceChanged();
     return response;
   }

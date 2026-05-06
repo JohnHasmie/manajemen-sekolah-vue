@@ -1,62 +1,16 @@
-// Helper methods and getters mixin.
-import 'package:flutter/material.dart';
-import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_content_formatter.dart';
-
-/// Provides helper methods and computed getters.
-mixin LessonPlanHelpersMixin {
-  /// Required abstract members from State.
-  void setState(VoidCallback fn);
-
-  /// State properties from main class.
-  Map<String, dynamic> get lessonPlanData;
-
-  /// Get display title from lesson plan data.
-  String getDisplayTitle() {
-    final title = LessonPlan.fromJson(lessonPlanData).title;
-    return title.isNotEmpty ? title : 'RPP';
-  }
-
-  /// Get teacher ID from lesson plan data.
-  String get teacherId =>
-      (lessonPlanData['guru_id'] ?? lessonPlanData['teacher_id'] ?? '')
-          .toString();
-
-  /// Check if lesson plan has AI additional data.
-  bool get hasAiAdditionalData {
-    const aiKeys = [
-      'core_competence',
-      'basic_competence',
-      'indicator',
-      'learning_objective',
-      'main_material',
-      'learning_method',
-      'media_tools',
-      'learning_source',
-      'learning_activities',
-      'assessment',
-      'ai_model_used',
-      'ai_tokens_used',
-      'ai_generated',
-      'is_ai_generated',
-      // Indonesian alt keys (from AI generate form)
-      'kompetensi_inti',
-      'kompetensi_dasar',
-      'tujuan_pembelajaran',
-      'kegiatan_inti',
-      'penilaian',
-    ];
-    return aiKeys.any((key) {
-      final value = lessonPlanData[key];
-      if (value is bool) return value;
-      return value != null && value.toString().trim().isNotEmpty;
-    });
-  }
-
-  /// Strip HTML tags from content.
-  String stripHtml(String html) => LessonPlanContentFormatter.stripHtml(html);
-
-  /// Format lesson plan content.
-  String formatLessonPlanContent() =>
-      LessonPlanContentFormatter.format(lessonPlanData);
-}
+// DEPRECATED — retired during the AI/manual RPP detail-screen split.
+//
+// The thin field-lookup / display-title / strip-html helpers that
+// used to live here are now inlined into the two kind-specific
+// screens:
+//   • screens/ai/ai_rpp_detail_screen.dart     (AI-generated RPPs)
+//   • screens/manual/manual_rpp_detail_screen.dart  (manual uploads)
+//
+// Each screen carries its own copy because the helpers are tiny and
+// the previous mixin coupling forced both kinds to share decisions
+// (e.g. `hasAiAdditionalData`) that should have been made once at
+// the dispatcher layer instead.
+//
+// This file is kept as an empty stub because the in-sandbox filesystem
+// doesn't allow `unlink`. A follow-up `git rm` on a real dev machine
+// will retire it physically.

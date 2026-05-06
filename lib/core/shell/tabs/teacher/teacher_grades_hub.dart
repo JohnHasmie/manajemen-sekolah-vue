@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_recap_overview.dart';
@@ -112,16 +113,14 @@ class TeacherGradesHub extends ConsumerWidget {
   }
 
   Map<String, String>? _resolveTeacherData(WidgetRef ref) {
-    final state = ref.read(dashboardProvider).asData?.value;
-    if (state == null) return null;
-    final userData = state.userData;
-    final id =
-        (userData['teacher_id'] ?? userData['id'])?.toString() ?? '';
-    if (id.isEmpty) return null;
+    final tp = ref.read(teacherRiverpod);
+    final id = tp.teacherId;
+    if (id == null || id.isEmpty) return null;
     return {
       'id': id,
-      'nama': (userData['nama'] ?? userData['name'] ?? 'Teacher').toString(),
-      'email': (userData['email'] ?? '').toString(),
+      'nama': tp.teacherName ?? 'Teacher',
+      'email': ref.read(dashboardProvider).asData?.value
+              .userData['email']?.toString() ?? '',
       'role': 'guru',
     };
   }

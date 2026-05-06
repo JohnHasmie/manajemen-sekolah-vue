@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -35,6 +36,21 @@ class GradeExportHelper {
       }
 
       return null;
+    } on DioException catch (e) {
+      // Extract actual server error message from response
+      final data = e.response?.data;
+      String msg;
+      if (data is Map) {
+        msg = (data['error'] ?? data['message'] ?? e.message)
+            .toString();
+      } else if (data is List<int>) {
+        // Server returned error as bytes (ResponseType.bytes)
+        msg = String.fromCharCodes(data);
+      } else {
+        msg = data?.toString() ?? e.message ?? 'Unknown';
+      }
+      AppLogger.error('grades', 'Export failed: $msg');
+      return msg;
     } catch (e) {
       AppLogger.error('grades', e);
       return ErrorUtils.getFriendlyMessage(e);
