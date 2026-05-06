@@ -722,19 +722,25 @@ class DateRangeChipBar extends StatelessWidget {
       child: Row(
         children: [
           for (var i = 0; i < entries.length; i++) ...[
-            _RangeChip(
-              def: entries[i].$1,
-              active: entries[i].$2 == active,
-              onTap: () {
-                final r = entries[i].$2;
-                if (r == AttendanceRange.custom && onCustomTap != null) {
-                  onCustomTap!();
-                } else {
-                  onSelect(r);
-                }
-              },
+            // Each chip flexes to share the available width — matches
+            // the parent role's `BrandFilterChipStrip` and prevents the
+            // 4-chip row ("Hari ini / Minggu ini / Bulan ini / Custom")
+            // from overflowing on a 380dp screen.
+            Expanded(
+              child: _RangeChip(
+                def: entries[i].$1,
+                active: entries[i].$2 == active,
+                onTap: () {
+                  final r = entries[i].$2;
+                  if (r == AttendanceRange.custom && onCustomTap != null) {
+                    onCustomTap!();
+                  } else {
+                    onSelect(r);
+                  }
+                },
+              ),
             ),
-            if (i < entries.length - 1) const SizedBox(width: 8),
+            if (i < entries.length - 1) const SizedBox(width: 6),
           ],
         ],
       ),
@@ -765,15 +771,16 @@ class _RangeChip extends StatelessWidget {
     final fg = active ? navy : Colors.white;
     return Material(
       color: bg,
-      borderRadius: BorderRadius.circular(11),
+      borderRadius: BorderRadius.circular(10),
       child: InkWell(
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          height: 32,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.circular(10),
             border: !active && def.dashed
                 ? Border.all(
                     color: Colors.white.withValues(alpha: 0.35),
@@ -783,9 +790,11 @@ class _RangeChip extends StatelessWidget {
           ),
           child: Text(
             def.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 11,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
               color: fg,
             ),
           ),

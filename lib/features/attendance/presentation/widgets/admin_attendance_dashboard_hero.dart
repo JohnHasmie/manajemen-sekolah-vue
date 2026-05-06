@@ -1,9 +1,14 @@
-// Admin Kehadiran report dashboard hero — Mockup #11.
+// Admin Kehadiran dashboard hero — Mockup #11, refactored.
 //
-// Stacks the navy gradient hero (back button + title + DateRangeChipBar
-// + AttendanceRingHero), the 2-card KPI strip, and the per-tingkat
-// TrendSparkRow panel. Drops below the existing list/table content of
-// AdminAttendanceReportScreen as a top-of-page summary.
+// Stacks the shared BrandPageHeader + BrandKpiStrip overlap idiom
+// every other admin screen uses, then drops a per-tingkat trend
+// panel and an export bar below as body cards. The previous bespoke
+// gradient + ring + 2-card KPI hybrid has been retired:
+//   • Ring chart removed — its information is now surfaced by the
+//     "Rata kehadiran" KPI column.
+//   • 2-card KPI strip → 3-column `BrandKpiStrip` (Hadir / Tidak Hadir
+//     / Rata kehadiran), overlapping the gradient like the parent
+//     Tagihan / Nilai cards.
 //
 // State: holds the active [AttendanceRange] locally and forwards it
 // to `attendanceDashboardProvider` so switching chips re-fetches
@@ -15,7 +20,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_attendance_components.dart';
+import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_dashboard_service.dart';
 
 class AdminAttendanceDashboardHero extends ConsumerStatefulWidget {
@@ -23,7 +30,7 @@ class AdminAttendanceDashboardHero extends ConsumerStatefulWidget {
   /// per-student detail screen (Mockup #12) filtered to that tingkat.
   final void Function(int tingkat)? onTingkatTap;
 
-  /// Tap callback for the export bar at the bottom of the hero. When
+  /// Tap callback for the export bar at the bottom of the body. When
   /// null the bar hides itself.
   final VoidCallback? onExportTap;
 
@@ -44,323 +51,87 @@ class _AdminAttendanceDashboardHeroState
 
   @override
   Widget build(BuildContext context) {
-    final navy = ColorUtils.getRoleColor('admin');
     final async = ref.watch(attendanceDashboardProvider(_range));
+    final data = async.maybeWhen(
+      data: (d) => d,
+      orElse: () => null,
+    );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // ── Shared compact gradient header ──────────────────────
-        // Uses `BrandPageHeader` so the admin Kehadiran dashboard
-        // shares the same centered-title + bottomSlot idiom as
-        // every other admin tab. The DateRangeChipBar moves into
-        // `bottomSlot`, matching the parent role's filter-chip
-        // pattern (parent_billing_screen).
-        BrandPageHeader(
-          role: 'admin',
-          subtitle: 'Akademik · Kehadiran',
-          title: 'Laporan harian',
-          bottomSlot: DateRangeChipBar(
-            active: _range,
-            onSelect: (r) => setState(() => _range = r),
-          ),
+    return BrandPageLayout(
+      role: 'admin',
+      onRefresh: () async {
+        ref.invalidate(attendanceDashboardProvider(_range));
+      },
+      header: BrandPageHeader(
+        role: 'admin',
+        subtitle: 'Akademik · Kehadiran',
+        title: 'Laporan harian',
+        isRealtimeFresh: !async.isLoading && !async.hasError,
+        // Reserve gradient overlap below the chip strip so the KPI
+        // strip's top tucks into navy instead of covering the chips.
+        kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
+        bottomSlot: DateRangeChipBar(
+          active: _range,
+          onSelect: (r) => setState(() => _range = r),
+          padding: EdgeInsets.zero,
         ),
-        // ── Attendance ring (was inside the gradient — now a body
-        //     panel with a navy backdrop so the ring still reads
-        //     against admin's brand color). ───────────────────────
-        Container(
-          color: navy,
-          padding: const EdgeInsets.fromLTRB(
-            0,
-            AppSpacing.lg,
-            0,
-            AppSpacing.lg,
+      ),
+      kpiCard: BrandKpiStrip(
+        columns: [
+          BrandKpiColumn(
+            label: 'Hadir',
+            value: '${data?.breakdown.present ?? 0}',
+            valueColor: const Color(0xFF15803D),
+            sub: data == null
+                ? null
+                : '${data.breakdown.presentPct.toStringAsFixed(0)}% hadir',
           ),
-          child: async.when(
-            data: (d) => AttendanceRingHero(
-              breakdown: d.breakdown,
-              subtitle: d.rangeLabel.isEmpty
-                  ? 'Hadir'
-                  : 'Hadir ${d.rangeLabel.toLowerCase()}',
-            ),
-            loading: () => const _RingPlaceholder(),
-            error: (_, __) => const _RingPlaceholder(),
+          BrandKpiColumn(
+            label: 'Tidak hadir',
+            value: '${data?.absentCount ?? 0}',
+            valueColor: const Color(0xFFDC2626),
+            sub: data == null
+                ? null
+                : (data.absentDelta == 0
+                    ? 'sama dengan kemarin'
+                    : data.absentDelta > 0
+                        ? '↑ ${data.absentDelta.abs()} dari kemarin'
+                        : '↓ ${data.absentDelta.abs()} dari kemarin'),
           ),
-        ),
-        // ── KPI strip (Rata kehadiran + Siswa tidak hadir) ───────
-        //
-        // Always render the 2-card strip — never collapse it to a
-        // SizedBox.shrink. Earlier we hid it on `error` and on the
-        // initial-load tick before the API resolved, which left a
-        // tall blank gap between the navy hero and the TingkatPanel
-        // (the user reported this as "no kpi cards"). Now the strip
-        // is part of the page skeleton and the inner values fall
-        // back to zeros when data isn't available.
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.md,
-            AppSpacing.lg,
-            0,
+          BrandKpiColumn(
+            label: 'Rata kehadiran',
+            value: data == null ? '0%' : '${data.avgPct.toStringAsFixed(1)}%',
+            valueColor: ColorUtils.slate900,
+            sub: data == null || data.rangeLabel.isEmpty
+                ? null
+                : data.rangeLabel.toLowerCase(),
           ),
-          child: _KpiStrip(
-            avgPct: async.maybeWhen(
-              data: (d) => d.avgPct,
-              orElse: () => 0,
-            ),
-            absentCount: async.maybeWhen(
-              data: (d) => d.absentCount,
-              orElse: () => 0,
-            ),
-            absentDelta: async.maybeWhen(
-              data: (d) => d.absentDelta,
-              orElse: () => 0,
-            ),
-            sparkline: async.maybeWhen(
-              data: (d) => d.kpiSparkline,
-              orElse: () => const <double>[],
-            ),
-            isLoading: async.isLoading && !async.hasValue,
-          ),
-        ),
-        // ── Tingkat trend panel ──────────────────────────────────
+        ],
+      ),
+      bodyChildren: [
+        const SizedBox(height: AppSpacing.md),
+        // Per-tingkat trend panel — only when we have data. Loading +
+        // error fall back to a thin placeholder so the body never
+        // collapses to 0dp height.
         async.when(
           data: (d) => _TingkatPanel(
             trends: d.tingkats,
             onTap: widget.onTingkatTap,
           ),
-          loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          loading: () => const SizedBox(height: 80),
+          error: (_, __) => const SizedBox(height: 8),
         ),
-        // ── Export bar ───────────────────────────────────────────
         if (widget.onExportTap != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.md,
               AppSpacing.lg,
-              AppSpacing.lg,
+              0,
             ),
             child: _ExportBar(onTap: widget.onExportTap!),
           ),
       ],
-    );
-  }
-}
-
-// =====================================================================
-// Title row retired — `BrandPageHeader` handles back/title/kicker now.
-// =====================================================================
-
-// =====================================================================
-// KPI strip
-// =====================================================================
-
-class _KpiStrip extends StatelessWidget {
-  final double avgPct;
-  final int absentCount;
-  final int absentDelta;
-  final List<double> sparkline;
-  final bool isLoading;
-
-  const _KpiStrip({
-    required this.avgPct,
-    required this.absentCount,
-    required this.absentDelta,
-    required this.sparkline,
-    this.isLoading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: _KpiCard(
-            kicker: 'RATA KEHADIRAN',
-            value: isLoading ? '—' : '${avgPct.toStringAsFixed(1)}%',
-            valueColor: ColorUtils.slate900,
-            sparkline: sparkline,
-            sparklineColor: AttendancePalette.present,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _KpiCard(
-            kicker: 'SISWA TIDAK HADIR',
-            value: isLoading ? '—' : absentCount.toString(),
-            valueColor: AttendancePalette.alpha,
-            footer: isLoading
-                ? 'memuat…'
-                : (absentDelta == 0
-                    ? 'sama dengan kemarin'
-                    : (absentDelta > 0
-                        ? '↑ ${absentDelta.abs()} dari kemarin'
-                        : '↓ ${absentDelta.abs()} dari kemarin')),
-            footerColor:
-                absentDelta > 0 ? AttendancePalette.alpha : ColorUtils.slate500,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _KpiCard extends StatelessWidget {
-  final String kicker;
-  final String value;
-  final Color valueColor;
-  final List<double>? sparkline;
-  final Color? sparklineColor;
-  final String? footer;
-  final Color? footerColor;
-
-  const _KpiCard({
-    required this.kicker,
-    required this.value,
-    required this.valueColor,
-    this.sparkline,
-    this.sparklineColor,
-    this.footer,
-    this.footerColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        // Slightly stronger border + shadow than the original so the
-        // cards read clearly on the slate50 background (the user
-        // reported them as "missing" because the previous shadow
-        // (alpha 0.04) and absent border made them blend in).
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            offset: const Offset(0, 4),
-            blurRadius: 12,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            kicker,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: ColorUtils.slate500,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: valueColor,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (sparkline != null && sparkline!.isNotEmpty)
-            SizedBox(
-              height: 16,
-              child: CustomPaint(
-                painter: _MiniSpark(
-                  points: sparkline!,
-                  color: sparklineColor ?? AttendancePalette.present,
-                ),
-              ),
-            )
-          else if (footer != null)
-            Text(
-              footer!,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: footerColor ?? ColorUtils.slate500,
-              ),
-            )
-          // Always reserve a third row of space so the two cards stay
-          // the same height regardless of whether the data has a
-          // sparkline or a footer string. Otherwise the cards visibly
-          // shrink mid-frame when the AsyncValue resolves.
-          else
-            const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniSpark extends CustomPainter {
-  final List<double> points;
-  final Color color;
-  const _MiniSpark({required this.points, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.length < 2) return;
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final maxV = points.reduce((a, b) => a > b ? a : b);
-    final minV = points.reduce((a, b) => a < b ? a : b);
-    final span = (maxV - minV) <= 0 ? 1 : (maxV - minV);
-
-    final dx = size.width / (points.length - 1);
-    final path = Path();
-    for (var i = 0; i < points.length; i++) {
-      final v = points[i];
-      final yFrac = 1 - ((v - minV) / span);
-      final x = i * dx;
-      final y = yFrac * size.height;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _MiniSpark old) =>
-      old.points != points || old.color != color;
-}
-
-class _KpiStripSkeleton extends StatelessWidget {
-  const _KpiStripSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(
-        2,
-        (_) => Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Container(
-              height: 80,
-              decoration: BoxDecoration(
-                color: ColorUtils.slate100,
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -381,7 +152,7 @@ class _TingkatPanel extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        AppSpacing.lg,
+        AppSpacing.md,
         AppSpacing.lg,
         0,
       ),
@@ -440,30 +211,8 @@ class _TingkatPanel extends StatelessWidget {
 }
 
 // =====================================================================
-// Misc
+// Export bar
 // =====================================================================
-
-class _RingPlaceholder extends StatelessWidget {
-  const _RingPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 152,
-      child: Center(
-        child: SizedBox(
-          width: 28,
-          height: 28,
-          child: CircularProgressIndicator(
-            strokeWidth: 3,
-            valueColor: AlwaysStoppedAnimation(
-                Colors.white.withValues(alpha: 0.7)),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _ExportBar extends StatelessWidget {
   final VoidCallback onTap;
