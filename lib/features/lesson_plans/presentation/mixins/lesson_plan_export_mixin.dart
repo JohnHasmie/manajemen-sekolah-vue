@@ -138,11 +138,26 @@ mixin LessonPlanExportMixin on State<RPPDetailPage> {
   /// the generic "system error" toast on the teacher RPP detail
   /// screen. Mirrors the admin's `FileOperationsMixin.buildDownloadUrl`.
   String _resolveDownloadUrl(String filePath) {
-    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+    // Already a full URL — use as-is.
+    if (filePath.startsWith('http://') ||
+        filePath.startsWith('https://')) {
       return filePath;
     }
-    final base = ApiService.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
-    final clean = filePath.startsWith('/') ? filePath.substring(1) : filePath;
+
+    final base = ApiService.baseUrl
+        .replaceAll(RegExp(r'/api/?$'), '');
+    final clean = filePath.startsWith('/')
+        ? filePath.substring(1)
+        : filePath;
+
+    // If the path already includes 'storage/', don't
+    // double it (e.g. "storage/rpp_files/x.pdf").
+    if (clean.startsWith('storage/')) {
+      return '$base/$clean';
+    }
+
+    // Relative path like "rpp_files/x.pdf" — prepend
+    // storage/.
     return '$base/storage/$clean';
   }
 
@@ -154,6 +169,10 @@ mixin LessonPlanExportMixin on State<RPPDetailPage> {
 
     try {
       final url = _resolveDownloadUrl(fp);
+      AppLogger.debug(
+        'lesson_plan',
+        'Download URL: $url (raw filePath: $fp)',
+      );
       final dio = Dio();
       final response = await dio.get<List<int>>(
         url,

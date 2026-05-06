@@ -12,12 +12,13 @@ class AttendanceSummaryCard extends StatelessWidget {
   final Color primaryColor;
   final LanguageProvider languageProvider;
   final VoidCallback onTap;
-  final VoidCallback onDelete;
 
-  /// When true the trailing trash icon is replaced by a check/uncheck
-  /// indicator and `onTap` toggles selection instead of opening the
-  /// detail. The host sheet enters this mode via a long-press; see
-  /// [AttendanceDetailSheet]'s multi-select branch.
+  /// When true the card renders a check/uncheck indicator on the
+  /// trailing edge and `onTap` toggles selection instead of opening
+  /// the detail. The host sheet enters this mode via long-press;
+  /// see [AttendanceDetailSheet]'s multi-select branch. Single-row
+  /// delete via a per-card trash icon was removed in favour of the
+  /// long-press → multi-select → confirm flow.
   final bool isSelectionMode;
   final bool isSelected;
   final VoidCallback? onLongPress;
@@ -28,7 +29,6 @@ class AttendanceSummaryCard extends StatelessWidget {
     required this.primaryColor,
     required this.languageProvider,
     required this.onTap,
-    required this.onDelete,
     this.isSelectionMode = false,
     this.isSelected = false,
     this.onLongPress,
@@ -216,10 +216,13 @@ class AttendanceSummaryCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              // Trailing affordance — selection check in multi-select
-              // mode, single-row trash icon otherwise.
-              if (isSelectionMode)
+              // Trailing affordance — only the selection check in
+              // multi-select mode. In normal mode the row is bare:
+              // delete is reached via long-press → multi-select →
+              // bulk delete bar with confirmation, never a per-row
+              // trash icon.
+              if (isSelectionMode) ...[
+                const SizedBox(width: 8),
                 Container(
                   width: 24,
                   height: 24,
@@ -238,26 +241,8 @@ class AttendanceSummaryCard extends StatelessWidget {
                           color: Colors.white,
                         )
                       : null,
-                )
-              else
-                GestureDetector(
-                  onTap: onDelete,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: ColorUtils.error600.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: ColorUtils.error600.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.delete_outline,
-                      size: 14,
-                      color: ColorUtils.error600,
-                    ),
-                  ),
                 ),
+              ],
             ],
           ),
         ),

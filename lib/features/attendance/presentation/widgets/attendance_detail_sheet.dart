@@ -3,9 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
-import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_summary_item.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
@@ -323,7 +323,6 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
                 ? () => _toggleSelection(key)
                 : () => _openDetail(s),
             onLongPress: widget.canEdit ? () => _toggleSelection(key) : null,
-            onDelete: widget.canEdit ? () => _deleteSession(s) : () {},
           );
         },
       ),
@@ -364,47 +363,24 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
     );
   }
 
-  Future<void> _deleteSession(AttendanceSummaryItem s) async {
-    try {
-      await AttendanceService.deleteAttendanceSummary(
-        teacherId: widget.teacherId,
-        subjectId: s.subjectId,
-        date: DateFormat('yyyy-MM-dd').format(s.date),
-        classId: s.classId,
-        lessonHourId: s.lessonHourId,
-      );
-      _loadSessions();
-    } catch (e) {
-      if (context.mounted) {
-        SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
-      }
-    }
-  }
-
-  /// Deletes every currently-selected session. Each tuple goes
-  /// through the same bulkDestroy endpoint as single-row delete; we
-  /// run them sequentially so the snackbar reflects partial failure
-  /// if any one row errors out.
+  /// Deletes every currently-selected session. Confirmation flows
+  /// through the shared [ConfirmationDialog] (gradient header +
+  /// confirm/cancel buttons) so the visual matches the destructive
+  /// flows on parent / admin pages. Each tuple goes through the
+  /// same bulkDestroy endpoint as a single row; we run them
+  /// sequentially so the snackbar reflects partial failure if any
+  /// one row errors out.
   Future<void> _deleteSelected() async {
     if (_selectedKeys.isEmpty) return;
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Hapus presensi?'),
-        content: Text(
-          '${_selectedKeys.length} sesi presensi akan dihapus permanen.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: TextButton.styleFrom(foregroundColor: ColorUtils.error600),
-            child: const Text('Hapus'),
-          ),
-        ],
+      builder: (_) => ConfirmationDialog(
+        title: 'Hapus presensi',
+        content:
+            'Yakin ingin menghapus ${_selectedKeys.length} sesi presensi? '
+            'Tindakan ini tidak dapat dibatalkan.',
+        confirmText: 'Hapus',
+        confirmColor: ColorUtils.error600,
       ),
     );
     if (confirm != true) return;
