@@ -41,6 +41,7 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_recap_overview.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teacher_lesson_plan_screen.dart';
+import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_overview.dart';
@@ -199,32 +200,37 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   void _openMaterials() =>
       AppNavigator.push(context, TeacherMaterialScreen(teacher: widget.state.userData));
 
-  void _openLessonPlans() => AppNavigator.push(
-    context,
-    LessonPlanScreen(
-      teacherId:
-          (widget.state.userData['teacher_id'] ?? widget.state.userData['id'])
-              .toString(),
-      teacherName:
-          (widget.state.userData['nama'] ?? widget.state.userData['name'] ?? 'Guru')
-              .toString(),
-    ),
-  );
+  void _openLessonPlans() {
+    final tp = ref.read(teacherRiverpod);
+    final tId = tp.teacherId
+        ?? widget.state.userData['teacher_id']?.toString()
+        ?? '';
+    if (tId.isEmpty) return;
+    AppNavigator.push(
+      context,
+      LessonPlanScreen(
+        teacherId: tId,
+        teacherName: tp.teacherName
+            ?? widget.state.userData['name']?.toString()
+            ?? 'Guru',
+      ),
+    );
+  }
 
-  void _openGrades() => AppNavigator.push(
-    context,
-    GradePage(
-      teacher: {
-        'id': (widget.state.userData['teacher_id'] ??
-                widget.state.userData['id'])
-            ?.toString() ??
-            '',
-        'nama': widget.state.userData['nama'] ?? 'Guru',
-        'email': widget.state.userData['email'] ?? '',
-        'role': 'guru',
-      },
-    ),
-  );
+  void _openGrades() {
+    final tp = ref.read(teacherRiverpod);
+    AppNavigator.push(
+      context,
+      GradePage(
+        teacher: {
+          'id': tp.teacherId ?? '',
+          'nama': tp.teacherName ?? 'Guru',
+          'email': widget.state.userData['email'] ?? '',
+          'role': 'guru',
+        },
+      ),
+    );
+  }
 
   void _openAttendance() =>
       AppNavigator.push(context, AttendancePage(teacher: widget.state.userData));
@@ -291,20 +297,22 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   void _openAccount() =>
       AppNavigator.push(context, const SettingsScreen());
 
-  void _openReportCards() => AppNavigator.push(
-    context,
-    ReportCardOverviewPage(
-      teacher: {
-        'id': (widget.state.userData['teacher_id'] ??
-                widget.state.userData['id'])
-            ?.toString() ??
-            '',
-        'nama': widget.state.userData['nama']?.toString() ?? 'Guru',
-        'email': widget.state.userData['email']?.toString() ?? '',
-        'role': 'guru',
-      },
-    ),
-  );
+  void _openReportCards() {
+    final tp = ref.read(teacherRiverpod);
+    AppNavigator.push(
+      context,
+      ReportCardOverviewPage(
+        teacher: {
+          'id': tp.teacherId ?? '',
+          'nama': tp.teacherName ?? 'Guru',
+          'email':
+              widget.state.userData['email']?.toString()
+                  ?? '',
+          'role': 'guru',
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -591,7 +599,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         ),
         QuickAction(
           icon: Icons.local_activity_outlined,
-          label: 'Aktivitas',
+          label: 'Kegiatan',
           color: ColorUtils.info600,
           caption: 'Kelas',
           onTap: _openActivities,

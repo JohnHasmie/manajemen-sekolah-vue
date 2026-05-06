@@ -16,6 +16,12 @@ import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_
 /// footer.
 mixin ParentAttendanceFilterMixin
     on ConsumerState<ParentAttendanceScreen>, ParentAttendanceStateMixin {
+  /// Implemented by [ParentAttendanceDataMixin]; declared abstract
+  /// here so the filter sheet's `onApply` can recompute the KPI
+  /// summary right after a filter change without a circular `on`
+  /// constraint between the two mixins.
+  void calculateMonthlySummary();
+
   void checkActiveFilter() {
     setState(() {
       hasActiveFilter =
@@ -73,6 +79,12 @@ mixin ParentAttendanceFilterMixin
                 selectedSemesterFilter = null;
                 checkActiveFilter();
               });
+              // Recompute the KPI breakdown for the freshly-picked
+              // month/status. Without this the hero card kept the
+              // previously-computed `monthlySummary` map and only
+              // refreshed after a pull-to-refresh (which incidentally
+              // re-runs calculateMonthlySummary inside loadData).
+              calculateMonthlySummary();
             },
             onReset: () => setSS(() {
               tempMonthFilter = DateTime.now().month.toString();

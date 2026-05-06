@@ -23,7 +23,14 @@ mixin ParentGradeDetailMixin on ConsumerState<ParentGradeScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
+      // Use a different parameter name for the dialog's local context
+      // so the close button can pop *this* dialog instead of the
+      // surrounding route. The previous closure shadowed the state
+      // context with `(context) => …` but the Tutup button lived in
+      // a separate state-method `_buildDetailFooter()` which closed
+      // over `this.context` and popped the wrong route — making the
+      // dialog look stuck.
+      builder: (dialogContext) => Dialog(
         clipBehavior: Clip.antiAlias,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -33,7 +40,7 @@ mixin ParentGradeDetailMixin on ConsumerState<ParentGradeScreen> {
           children: [
             _buildDetailHeader(grade, primaryColor, type),
             _buildDetailContent(grade, type, typeColor),
-            _buildDetailFooter(),
+            _buildDetailFooter(dialogContext),
           ],
         ),
       ),
@@ -198,8 +205,11 @@ mixin ParentGradeDetailMixin on ConsumerState<ParentGradeScreen> {
     return rows;
   }
 
-  /// Build detail footer with close button.
-  Widget _buildDetailFooter() {
+  /// Build detail footer with close button. Pops [dialogContext]
+  /// (the showDialog builder's local context), not `this.context`,
+  /// so the Tutup button always closes this dialog rather than the
+  /// surrounding route.
+  Widget _buildDetailFooter(BuildContext dialogContext) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
@@ -208,7 +218,7 @@ mixin ParentGradeDetailMixin on ConsumerState<ParentGradeScreen> {
       child: SizedBox(
         width: double.infinity,
         child: OutlinedButton(
-          onPressed: () => AppNavigator.pop(context),
+          onPressed: () => AppNavigator.pop(dialogContext),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 12),
             side: BorderSide(color: ColorUtils.slate300),
