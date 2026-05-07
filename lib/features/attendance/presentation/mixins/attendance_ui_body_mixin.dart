@@ -66,6 +66,11 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
   Future<void> submitAttendance();
   void showQuickActionsSheet(LanguageProvider lp);
 
+  /// Frame A "Daftar Siswa · N siswa" section head — provided by the
+  /// embedded chrome mixin. Declared abstract here so the body mixin
+  /// can reference it without depending on the embedded mixin file.
+  Widget buildEmbeddedSectionHead(LanguageProvider lp);
+
   // ═══════════════════════════════════════════
   // MAIN BODY
   // ═══════════════════════════════════════════
