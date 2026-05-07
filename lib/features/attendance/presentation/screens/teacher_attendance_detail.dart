@@ -192,51 +192,32 @@ class _TeacherAttendanceDetailPageState
                             ),
                           ),
                         ),
+                      // Mockup-style section head — uppercase title +
+                      // "N siswa" trailing label, no boxed pill.
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                         child: Row(
                           children: [
-                            Container(
-                              width: 3.5,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                color: getPrimaryColor(),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
                             Text(
                               languageProvider.getTranslatedText({
-                                'en': 'Attendance List',
-                                'id': 'Daftar Peserta Didik',
-                              }),
+                                'en': 'Student List',
+                                'id': 'Daftar Siswa',
+                              }).toUpperCase(),
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                color: ColorUtils.slate900,
-                                letterSpacing: -0.5,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: ColorUtils.slate700,
+                                letterSpacing: 0.6,
                               ),
                             ),
                             const Spacer(),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: getPrimaryColor().withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${state.students.length} Total',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: getPrimaryColor(),
-                                  fontWeight: FontWeight.w900,
-                                ),
+                            Text(
+                              '${state.students.length} '
+                              '${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: ColorUtils.slate500,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],
@@ -317,89 +298,6 @@ class _TeacherAttendanceDetailPageState
   }
 }
 
-// === CUSTOM PAINTER FOR DONUT CHART ===
-class AttendanceDonutPainter extends CustomPainter {
-  final int present;
-  final int late;
-  final int sick;
-  final int permit;
-  final int absent;
-  final int total;
-
-  AttendanceDonutPainter({
-    required this.present,
-    required this.late,
-    required this.sick,
-    required this.permit,
-    required this.absent,
-    required this.total,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (total == 0) return;
-
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-    final strokeWidth = size.width * 0.14;
-    final rect = Rect.fromCircle(
-      center: center,
-      radius: radius - (strokeWidth / 2),
-    );
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
-
-    double startAngle = -3.14159 / 2;
-
-    _drawSlice(
-      canvas,
-      rect,
-      paint,
-      startAngle,
-      present / total,
-      ColorUtils.success600,
-    );
-    startAngle += (present / total) * 2 * 3.14159;
-
-    _drawSlice(canvas, rect, paint, startAngle, late / total, Colors.orange);
-    startAngle += (late / total) * 2 * 3.14159;
-
-    _drawSlice(
-      canvas,
-      rect,
-      paint,
-      startAngle,
-      (sick + permit) / total,
-      ColorUtils.warning600,
-    );
-    startAngle += ((sick + permit) / total) * 2 * 3.14159;
-
-    _drawSlice(
-      canvas,
-      rect,
-      paint,
-      startAngle,
-      absent / total,
-      ColorUtils.error600,
-    );
-  }
-
-  void _drawSlice(
-    Canvas canvas,
-    Rect rect,
-    Paint paint,
-    double startAngle,
-    double sweepFactor,
-    Color color,
-  ) {
-    if (sweepFactor <= 0) return;
-    paint.color = color;
-    canvas.drawArc(rect, startAngle, sweepFactor * 2 * 3.14159, false, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
+// AttendanceDonutPainter retired with the Frame B/F redesign — the
+// detail screen now shows a 4-cell KPI strip instead of the donut +
+// legend. Re-add from git history if a future view needs the donut.

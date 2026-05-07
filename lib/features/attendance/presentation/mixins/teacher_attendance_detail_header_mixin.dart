@@ -7,7 +7,14 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_state.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
 
-/// Mixin for header building in teacher attendance detail.
+/// Builds the gradient header for the attendance detail screen.
+///
+/// Matches Frame B/F from `_design/teacher_attendance_detail_mockup.html`:
+///   • back button (‹) + kicker (`PRESENSI · DETAIL` / `PRESENSI · ARSIP`)
+///   • title row (`Edit Presensi` / `Lihat Presensi`) with realtime dot —
+///     dot is green when canEdit, slate when read-only.
+///   • context strip showing the subject icon, `subject · class`, and
+///     a date · lesson-hour subtitle.
 mixin TeacherAttendanceDetailHeaderMixin
     on ConsumerState<TeacherAttendanceDetailPage> {
   /// Get primary color for the role
@@ -20,171 +27,228 @@ mixin TeacherAttendanceDetailHeaderMixin
     TeacherAttendanceState? state,
     bool isLoading = false,
   }) {
+    final primary = getPrimaryColor();
+    final canEdit = widget.canEdit;
+    final dotColor = canEdit ? ColorUtils.success600 : ColorUtils.slate400;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: ColorUtils.heroGradient(primaryColor: getPrimaryColor()),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [ColorUtils.brandDarkBlue, primary],
+        ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
-            color: getPrimaryColor().withValues(alpha: 0.3),
+            color: primary.withValues(alpha: 0.25),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 12,
-              left: 20,
-              right: 20,
-              bottom: 24,
+      child: Padding(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + 10,
+          left: 16,
+          right: 16,
+          bottom: 18,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Top row: back · (kicker + title) · trailing icon ──
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _backButton(),
+                const SizedBox(width: 12),
+                Expanded(child: _titleBlock(languageProvider, dotColor)),
+                _trailingIcon(canEdit),
+              ],
             ),
+            const SizedBox(height: 14),
+            // ── Context strip: subject avatar · subject·class · date ──
+            _contextStrip(languageProvider),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _backButton() {
+    return GestureDetector(
+      onTap: () => AppNavigator.pop(context),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.chevron_left_rounded,
+          color: Colors.white,
+          size: 26,
+        ),
+      ),
+    );
+  }
+
+  Widget _titleBlock(LanguageProvider lp, Color dotColor) {
+    final canEdit = widget.canEdit;
+    final kicker = canEdit
+        ? lp.getTranslatedText({
+            'en': 'Attendance · Detail',
+            'id': 'Presensi · Detail',
+          })
+        : lp.getTranslatedText({
+            'en': 'Attendance · Archive',
+            'id': 'Presensi · Arsip',
+          });
+    final title = canEdit
+        ? lp.getTranslatedText({'en': 'Edit Attendance', 'id': 'Edit Presensi'})
+        : lp.getTranslatedText({
+            'en': 'View Attendance',
+            'id': 'Lihat Presensi',
+          });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          kicker.toUpperCase(),
+          style: TextStyle(
+            fontSize: 9.5,
+            fontWeight: FontWeight.w800,
+            color: Colors.white.withValues(alpha: 0.7),
+            letterSpacing: 1.0,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Row(
+          children: [
+            // Realtime dot.
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: dotColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: dotColor.withValues(alpha: 0.6),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _trailingIcon(bool canEdit) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(
+        canEdit ? Icons.more_horiz_rounded : Icons.download_rounded,
+        color: Colors.white,
+        size: 18,
+      ),
+    );
+  }
+
+  /// Context strip — subject letter avatar + subject·class title + date /
+  /// lesson hour subtitle. Matches the mockup's `.ctx-strip` block.
+  Widget _contextStrip(LanguageProvider lp) {
+    final dateStr = DateFormat('EEEE, d MMM yyyy', 'id_ID').format(widget.date);
+    final lessonHour = (widget.lessonHourName ?? '').trim();
+    final subtitleParts = <String>[
+      dateStr,
+      if (lessonHour.isNotEmpty) lessonHour,
+    ];
+    final subtitle = subtitleParts.join(' · ');
+    final initial = widget.subjectName.isNotEmpty
+        ? widget.subjectName[0].toUpperCase()
+        : '?';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              initial,
+              style: TextStyle(
+                color: getPrimaryColor(),
+                fontWeight: FontWeight.w900,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => AppNavigator.pop(context),
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: ColorUtils.glassMorphism(
-                          opacity: 0.2,
-                          blur: 8,
-                        ),
-                        child: const Icon(
-                          Icons.chevron_left_rounded,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            languageProvider.getTranslatedText({
-                              'en': 'Session Detail',
-                              'id': 'Detail Sesi',
-                            }),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white.withValues(alpha: 0.7),
-                            ),
-                          ),
-                          Text(
-                            widget.subjectName,
-                            style: const TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: -0.4,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                Text(
+                  '${widget.subjectName} · ${widget.className}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    height: 1.2,
+                  ),
                 ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        decoration: ColorUtils.glassMorphism(
-                          opacity: 0.15,
-                          blur: 10,
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today_rounded,
-                              size: 14,
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                DateFormat(
-                                  'EEEE, dd MMM yyyy',
-                                  'id_ID',
-                                ).format(widget.date),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    if (widget.lessonHourName != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          widget.lessonHourName!,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: getPrimaryColor(),
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.school_rounded,
-                        size: 12,
-                        color: Colors.white.withValues(alpha: 0.6),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${widget.className} Class Session',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.6),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.78),
+                    fontWeight: FontWeight.w500,
+                    height: 1.2,
                   ),
                 ),
               ],
