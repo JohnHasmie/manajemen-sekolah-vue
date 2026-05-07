@@ -25,6 +25,11 @@ class AttendanceInputMode extends ConsumerStatefulWidget {
   final ScrollController? scrollController;
   final bool compactMode;
 
+  /// Optional widget rendered between the toolbar and the student list.
+  /// Used by the embedded sheet (Frame A) for the "Daftar Siswa · N
+  /// siswa" section head — pass null for the standalone screen.
+  final Widget? sectionHead;
+
   const AttendanceInputMode({
     super.key,
     required this.isLoadingInput,
@@ -41,6 +46,7 @@ class AttendanceInputMode extends ConsumerStatefulWidget {
     required this.onSubmit,
     this.scrollController,
     this.compactMode = false,
+    this.sectionHead,
   });
 
   @override
@@ -78,6 +84,12 @@ class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode>
           if (widget.selectedSubjectId != null)
             SliverToBoxAdapter(child: buildToolbar()),
 
+          // 2b. Section head (Frame A — "Daftar Siswa · N siswa")
+          if (widget.sectionHead != null &&
+              widget.selectedSubjectId != null &&
+              widget.filteredStudentList.isNotEmpty)
+            SliverToBoxAdapter(child: widget.sectionHead!),
+
           // 3. Student List (or empty state)
           _buildStudentListSliver(languageProvider),
 
@@ -98,6 +110,12 @@ class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode>
 
         // 2. Toolbar
         if (widget.selectedSubjectId != null) buildToolbar(),
+
+        // 2b. Section head (Frame A — "Daftar Siswa · N siswa")
+        if (widget.sectionHead != null &&
+            widget.selectedSubjectId != null &&
+            widget.filteredStudentList.isNotEmpty)
+          widget.sectionHead!,
 
         // 3. Student List
         Expanded(child: _buildStudentListSection(languageProvider)),

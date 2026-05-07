@@ -181,6 +181,9 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
       onSubmit: submitAttendance,
       scrollController: embeddedScrollController,
       compactMode: compactMode,
+      // Frame A — only embedded sheet shows the section head; the
+      // standalone Take Attendance tab uses its own header chrome.
+      sectionHead: widget.embedded ? buildEmbeddedSectionHead(lp) : null,
     );
   }
 

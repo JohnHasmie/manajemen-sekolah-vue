@@ -278,6 +278,43 @@ class AttendancePageState extends ConsumerState<AttendancePage>
   @override
   void setCompactMode(bool v) => setState(() => _compactMode = v);
 
+  // ── Frame A — embedded sheet KPI strip + section-head accessors ──
+  // Live counts derived from the in-memory `_attendanceStatus` map.
+  @override
+  Map<String, int> get embeddedStatusCounts {
+    int hadir = 0, terlambat = 0, sakit = 0, izin = 0, alpha = 0;
+    for (final s in _attendanceStatus.values) {
+      switch (s.toLowerCase()) {
+        case 'hadir':
+        case 'present':
+          hadir++;
+        case 'terlambat':
+        case 'late':
+          terlambat++;
+        case 'sakit':
+        case 'sick':
+          sakit++;
+        case 'izin':
+        case 'permission':
+        case 'excused':
+          izin++;
+        case 'alpha':
+        case 'absent':
+          alpha++;
+      }
+    }
+    return {
+      'hadir': hadir,
+      'terlambat': terlambat,
+      'sakit': sakit,
+      'izin': izin,
+      'alpha': alpha,
+    };
+  }
+
+  @override
+  int get embeddedTotalStudents => filteredStudentList.length;
+
   // Error state for inline error display with retry
   String? _attendanceErrorMessage;
   @override

@@ -81,7 +81,15 @@ mixin AttendanceUIBuilderMixin
         ),
         child: Column(
           children: [
+            // Frame A — gradient header with kicker · title · realtime dot.
             buildEmbeddedHeader(lp),
+            // Frame A — KPI strip (5-cell live status counts) renders
+            // immediately below the header. The card sits in slate-50
+            // background so it reads as a "card overlap" pattern even
+            // without true negative-margin overlap.
+            buildEmbeddedKpiStrip(lp),
+            // Body: context strip + toolbar + section head + student list
+            // + sticky save button.
             Expanded(child: buildInputMode()),
           ],
         ),
@@ -414,6 +422,10 @@ mixin AttendanceUIBuilderMixin
 
   @override
   Widget buildEmbeddedHeader(LanguageProvider lp);
+  @override
+  Widget buildEmbeddedKpiStrip(LanguageProvider lp);
+  @override
+  Widget buildEmbeddedSectionHead(LanguageProvider lp);
   @override
   Widget buildInputMode();
   @override
