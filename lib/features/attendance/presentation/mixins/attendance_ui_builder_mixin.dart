@@ -210,13 +210,25 @@ mixin AttendanceUIBuilderMixin
           setState(() => isHomeroomView = false);
         } else if (id.startsWith('wali:')) {
           final classId = id.substring(5);
-          final picked = homeroomClassesList.firstWhere(
-            (c) => (c['id'] ?? '').toString() == classId,
-            orElse: () => homeroomClassesList.first,
-          );
+          // Plain loop instead of `firstWhere` — when
+          // `homeroomClassesList` is declared `List<dynamic>` but the
+          // runtime list contains `Map<String, dynamic>` values, the
+          // analyzer types `firstWhere`'s orElse closure as
+          // `() => dynamic` while the runtime list expects
+          // `() => Map<String, dynamic>`, throwing TypeError on tap.
+          Map<String, dynamic>? picked;
+          for (final c in homeroomClassesList) {
+            if (c is Map && (c['id'] ?? '').toString() == classId) {
+              picked = Map<String, dynamic>.from(c);
+              break;
+            }
+          }
+          picked ??= homeroomClassesList.isNotEmpty
+              ? Map<String, dynamic>.from(homeroomClassesList.first as Map)
+              : <String, dynamic>{};
           setState(() {
             isHomeroomView = true;
-            selectedHomeroomClass = Map<String, dynamic>.from(picked as Map);
+            selectedHomeroomClass = picked;
           });
         }
         forceRefresh();

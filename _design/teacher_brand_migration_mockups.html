@@ -442,6 +442,89 @@
   </div>
 </div>
 
+<!-- ════════════════ 1b · Presensi · Wali Kelas mode ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">01b</span>PRESENSI · WALI KELAS <span class="kpi">KPI · Hari ini · Selesai · Belum (kelas perwalian)</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · KEHADIRAN</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Presensi</span></div>
+        </div>
+        <div class="h-icons">
+          <div class="h-icon">⚙<span class="badge">1</span></div>
+        </div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip idle"><div class="avatar">M</div><div class="label-stack"><div class="name">Mengajar</div><div class="sub">3 kelas · 4 mapel</div></div></div>
+        <div class="role-chip active"><div class="avatar">8B</div><div class="label-stack"><div class="name">Wali 8B</div><div class="sub">28 siswa</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">PERIODE</div><div class="fc-value">Hari ini</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v">7</div><div class="l">Sesi hari ini</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">5</div><span class="pill green">Selesai</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">2</div><span class="pill amber">Belum</span></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="annotate" style="margin-bottom:10px;font-size:10px;line-height:1.5">
+        <strong>Wali-kelas mode</strong> aggregates attendance for the homeroom (8B) across <em>all teachers</em> who taught it. The KPI card above counts sessions across the homeroom, not just Mas Yahya's mengajar slots. Each card shows the recording teacher's name in the subtitle so the wali can spot which guru hasn't filled their session yet. <strong>FAB hidden</strong> — wali kelas is read-only here; data entry is per-mapel-teacher.
+      </div>
+      <div class="section-head"><div class="t">Sesi belum diabsen</div><div class="a">2 sesi</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--amber-50);color:var(--amber-600)">M</div>
+          <div class="card-body">
+            <div class="card-title">Matematika · 8B</div>
+            <div class="card-sub">Bu Siti · 10.30 – 11.50 · Jam ke-5</div>
+          </div>
+          <div class="meta-pill amber">Belum</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--amber-50);color:var(--amber-600)">F</div>
+          <div class="card-body">
+            <div class="card-title">Fisika · 8B</div>
+            <div class="card-sub">Pak Adi · 12.00 – 13.20 · Jam ke-7</div>
+          </div>
+          <div class="meta-pill amber">Belum</div>
+        </div>
+      </div>
+      <div class="section-head" style="margin-top:8px"><div class="t">Sesi selesai</div><div class="a">5 sesi</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--blue-50);color:var(--blue-600)">B</div>
+          <div class="card-body">
+            <div class="card-title">B. Arab · 8B</div>
+            <div class="card-sub">Mas Yahya · 07.00 – 08.20 · 28 hadir · 0 alpa</div>
+          </div>
+          <div class="meta-pill green">100%</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--blue-50);color:var(--blue-600)">B</div>
+          <div class="card-body">
+            <div class="card-title">B. Indonesia · 8B</div>
+            <div class="card-sub">Bu Rina · 08.30 – 09.50 · 27 hadir · 1 sakit</div>
+          </div>
+          <div class="meta-pill green">96%</div>
+        </div>
+      </div>
+    </div>
+    <!-- No FAB in wali-kelas mode — read-only aggregator. -->
+  </div>
+</div>
+
 <!-- ════════════════ 2 · Kegiatan Kelas ════════════════ -->
 <div class="frame">
   <div class="frame-label"><span class="num">02</span>KEGIATAN KELAS <span class="kpi">KPI · Pekan ini · Total · Tugas</span></div>
