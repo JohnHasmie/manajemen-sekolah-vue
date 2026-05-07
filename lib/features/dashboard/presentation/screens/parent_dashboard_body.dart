@@ -43,6 +43,7 @@ import 'package:manajemensekolah/features/dashboard/presentation/providers/acade
 import 'package:manajemensekolah/features/dashboard/presentation/screens/parent_inbox_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/academic_year_picker_sheet.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/parent_dashboard_hero_widgets.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/parent_report_card_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
@@ -164,7 +165,8 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   int get _childrenCount => _asInt(widget.state.stats['children_count']);
   int get _attendanceRate => _asInt(widget.state.stats['attendance_rate']);
   int get _newGradesCount => _asInt(widget.state.stats['new_grades_7days']);
-  int get _overdueBillsCount => _asInt(widget.state.stats['overdue_bills_count']);
+  int get _overdueBillsCount =>
+      _asInt(widget.state.stats['overdue_bills_count']);
 
   // Inbox counts
   int get _overdueBills => _asInt(widget.state.stats['overdue_bills_count']);
@@ -232,10 +234,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   }
 
   void _openBilling() {
-    AppNavigator.push(
-      context,
-      const ParentBillingScreen(showBackButton: true),
-    );
+    AppNavigator.push(context, const ParentBillingScreen(showBackButton: true));
   }
 
   /// Phase-5 surface B — full Perlu Perhatian inbox screen reached
@@ -286,160 +285,168 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   /// school pill, and KPI cards floating onto the bottom edge.
   Widget _buildHeroWithKpiOverlay(BuildContext context) {
     final statusBarHeight = MediaQuery.of(context).viewPadding.top;
-    final notifBadge = _asInt(widget.state.userData['unread_notifications_count']) +
+    final notifBadge =
+        _asInt(widget.state.userData['unread_notifications_count']) +
         _asInt(widget.state.stats['unread_announcements']);
     return ExcludeSemantics(
-     child: Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 100),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [_parentBrandAzure, _parentBrandAzureDeep],
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(28),
-                bottomRight: Radius.circular(28),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _parentBrandAzure.withValues(alpha: 0.18),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 100),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_parentBrandAzure, _parentBrandAzureDeep],
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                statusBarHeight + AppSpacing.md,
-                AppSpacing.md,
-                // Extra space below the school pill so the floating KPI
-                // cards overlap an empty violet band rather than the pill.
-                48,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              AppLocalizations.greeting(DateTime.now().hour),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white.withValues(alpha: 0.72),
-                                letterSpacing: 0.1,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _userName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: 0.1,
-                                height: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      _HeroIconButton(
-                        icon: Icons.language_outlined,
-                        onTap: widget.onLanguageTap,
-                        gradientBg: _parentBrandAzure,
-                      ),
-                      const SizedBox(width: 6),
-                      _HeroIconButton(
-                        icon: Icons.notifications_outlined,
-                        onTap: widget.onNotificationTap,
-                        gradientBg: _parentBrandAzure,
-                        showDot: notifBadge > 0,
-                      ),
-                      const SizedBox(width: 6),
-                      _HeroIconButton(
-                        icon: Icons.person_outline,
-                        onTap: widget.onAccountTap,
-                        gradientBg: _parentBrandAzure,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
-                  const SizedBox(height: AppSpacing.md),
-                  // School pill + tahun-ajaran chip side-by-side. The
-                  // school pill takes the available space and the chip
-                  // is a fixed-width sidekick. On narrow screens the
-                  // pill ellipsises; the chip stays legible.
-                  //
-                  // No `crossAxisAlignment: stretch` — that would ask
-                  // Flutter to bound the Row's height to the children
-                  // but neither parent (the hero Column) nor the chip
-                  // give a height constraint upward, so layout asserts.
-                  // Both children carry their own intrinsic height; the
-                  // default `start` alignment is correct here.
-                  IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: SchoolPill.expanded(
-                            schoolName: _schoolName,
-                            subtitle: _greetingSubtitle,
-                            onTap: widget.onSchoolSwitchTap,
-                            accentColor: _parentBrandAzure,
-                            actionLabel: AppLocalizations.dbSwitch.tr,
-                            onDarkSurface: true,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          flex: 2,
-                          child: AcademicYearChip(
-                            yearLabel: _academicYearLabel,
-                            semesterLabel: widget.state.currentSemesterLabel
-                                ?.replaceAll(RegExp(r'\s*[-\u2013\u2014·].*'), '')
-                                .trim(),
-                            onTap: () => showAcademicYearPickerSheet(
-                              context: context,
-                              ref: ref,
-                              currentSemesterLabel: widget.state.currentSemesterLabel,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _parentBrandAzure.withValues(alpha: 0.18),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  statusBarHeight + AppSpacing.md,
+                  AppSpacing.md,
+                  // Extra space below the school pill so the floating KPI
+                  // cards overlap an empty violet band rather than the pill.
+                  48,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                AppLocalizations.greeting(DateTime.now().hour),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white.withValues(alpha: 0.72),
+                                  letterSpacing: 0.1,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _userName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  letterSpacing: 0.1,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        ParentDashboardHeroIconButton(
+                          icon: Icons.language_outlined,
+                          onTap: widget.onLanguageTap,
+                          gradientBg: _parentBrandAzure,
+                        ),
+                        const SizedBox(width: 6),
+                        ParentDashboardHeroIconButton(
+                          icon: Icons.notifications_outlined,
+                          onTap: widget.onNotificationTap,
+                          gradientBg: _parentBrandAzure,
+                          showDot: notifBadge > 0,
+                        ),
+                        const SizedBox(width: 6),
+                        ParentDashboardHeroIconButton(
+                          icon: Icons.person_outline,
+                          onTap: widget.onAccountTap,
+                          gradientBg: _parentBrandAzure,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    ParentDashboardRealtimePill(
+                      isFresh: _isFresh,
+                      lastSync: _lastSync,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    // School pill + tahun-ajaran chip side-by-side. The
+                    // school pill takes the available space and the chip
+                    // is a fixed-width sidekick. On narrow screens the
+                    // pill ellipsises; the chip stays legible.
+                    //
+                    // No `crossAxisAlignment: stretch` — that would ask
+                    // Flutter to bound the Row's height to the children
+                    // but neither parent (the hero Column) nor the chip
+                    // give a height constraint upward, so layout asserts.
+                    // Both children carry their own intrinsic height; the
+                    // default `start` alignment is correct here.
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: SchoolPill.expanded(
+                              schoolName: _schoolName,
+                              subtitle: _greetingSubtitle,
+                              onTap: widget.onSchoolSwitchTap,
+                              accentColor: _parentBrandAzure,
+                              actionLabel: AppLocalizations.dbSwitch.tr,
+                              onDarkSurface: true,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            flex: 2,
+                            child: AcademicYearChip(
+                              yearLabel: _academicYearLabel,
+                              semesterLabel: widget.state.currentSemesterLabel
+                                  ?.replaceAll(
+                                    RegExp(r'\s*[-\u2013\u2014·].*'),
+                                    '',
+                                  )
+                                  .trim(),
+                              onTap: () => showAcademicYearPickerSheet(
+                                context: context,
+                                ref: ref,
+                                currentSemesterLabel:
+                                    widget.state.currentSemesterLabel,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-        Positioned(
-          key: widget.statsSectionKey,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: _buildKpiCarousel(),
-        ),
-      ],
-    ),
+          Positioned(
+            key: widget.statsSectionKey,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildKpiCarousel(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -507,12 +514,13 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             caption: s.isPlaceholder
                 ? AppLocalizations.pdWaiting.tr
                 : (s.tugasOverdue > 0
-                    ? '${s.tugasOverdue} ${AppLocalizations.pdNotCollected.tr}'
-                    : '${s.tugasTotal} ${AppLocalizations.pdTotalTasks.tr}'),
+                      ? '${s.tugasOverdue} ${AppLocalizations.pdNotCollected.tr}'
+                      : '${s.tugasTotal} ${AppLocalizations.pdTotalTasks.tr}'),
             trend: (s.tugasOverdue > 0)
                 ? StatTrend(
                     direction: StatTrendDirection.down,
-                    label: '${s.tugasOverdue} ${AppLocalizations.pdNotCollected.tr}',
+                    label:
+                        '${s.tugasOverdue} ${AppLocalizations.pdNotCollected.tr}',
                     inverse: true,
                   )
                 : null,
@@ -526,15 +534,15 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             value: s.isPlaceholder
                 ? '—'
                 : (s.overdueTotal > 0
-                    ? 'Rp ${_formatRupiahShort(s.overdueTotal)}'
-                    : AppLocalizations.pdVerified.tr),
+                      ? 'Rp ${_formatRupiahShort(s.overdueTotal)}'
+                      : AppLocalizations.pdVerified.tr),
             icon: Icons.account_balance_wallet_outlined,
             accentColor: ColorUtils.error600,
             caption: s.isPlaceholder
                 ? AppLocalizations.pdDue.tr
                 : (s.overdueCount > 0
-                    ? '${s.overdueCount} ${AppLocalizations.billing.tr.toLowerCase()}'
-                    : AppLocalizations.pdNoArrears.tr),
+                      ? '${s.overdueCount} ${AppLocalizations.billing.tr.toLowerCase()}'
+                      : AppLocalizations.pdNoArrears.tr),
             onTap: s.isPlaceholder ? null : _openBilling,
           ),
           // 4. Rata-rata nilai
@@ -549,7 +557,9 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             accentColor: const Color(0xFF6366F1),
             caption: s.avgGradeTerm != null
                 ? '${s.avgGradeSubjectCount} ${AppLocalizations.pdSubjectsCount.tr}'
-                : (s.isPlaceholder ? AppLocalizations.pdActiveSemester.tr : AppLocalizations.pdNoDataYet.tr),
+                : (s.isPlaceholder
+                      ? AppLocalizations.pdActiveSemester.tr
+                      : AppLocalizations.pdNoDataYet.tr),
             trend: (s.avgGradeTerm != null && s.avgGradeDelta.abs() >= 0.1)
                 ? StatTrend(
                     direction: s.avgGradeDelta > 0
@@ -763,132 +773,6 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           icon: Icons.account_circle_outlined,
           onTap: _openAccount,
         ),
-      ],
-    );
-  }
-}
-
-class _RealtimePill extends StatelessWidget {
-  final bool isFresh;
-  final DateTime lastSync;
-
-  const _RealtimePill({required this.isFresh, required this.lastSync});
-
-  @override
-  Widget build(BuildContext context) {
-    final dotColor = isFresh ? const Color(0xFF4ADE80) : Colors.grey.shade400;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _PulsingDot(color: dotColor, animate: isFresh),
-        const SizedBox(width: 8),
-        Text(
-          _buildLabel(),
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: Colors.white.withValues(alpha: 0.72),
-            letterSpacing: 0.1,
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _buildLabel() {
-    if (isFresh) {
-      final hh = lastSync.hour.toString().padLeft(2, '0');
-      final mm = lastSync.minute.toString().padLeft(2, '0');
-      return 'Terhubung realtime · $hh:$mm';
-    }
-    final mins = DateTime.now().difference(lastSync).inMinutes;
-    if (mins <= 0) return 'Mencoba menyambungkan ulang…';
-    return 'Terakhir diperbarui $mins menit lalu';
-  }
-}
-
-class _PulsingDot extends StatefulWidget {
-  final Color color;
-  final bool animate;
-
-  const _PulsingDot({required this.color, required this.animate});
-
-  @override
-  State<_PulsingDot> createState() => _PulsingDotState();
-}
-
-class _PulsingDotState extends State<_PulsingDot> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: BoxDecoration(
-        color: widget.color,
-        shape: BoxShape.circle,
-        boxShadow: widget.animate
-            ? [
-                BoxShadow(
-                  color: widget.color.withValues(alpha: 0.4),
-                  blurRadius: 6,
-                  spreadRadius: 1,
-                ),
-              ]
-            : null,
-      ),
-    );
-  }
-}
-
-/// 36x36 white-translucent button rendered inside the violet gradient hero.
-/// [showDot] paints a small red dot at top-right (notification badge).
-class _HeroIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final Color gradientBg;
-  final bool showDot;
-
-  const _HeroIconButton({
-    required this.icon,
-    required this.onTap,
-    required this.gradientBg,
-    this.showDot = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Material(
-          color: Colors.white.withValues(alpha: 0.14),
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
-          child: InkWell(
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
-            onTap: onTap,
-            child: SizedBox(
-              width: 36,
-              height: 36,
-              child: Icon(icon, size: 18, color: Colors.white),
-            ),
-          ),
-        ),
-        if (showDot)
-          Positioned(
-            right: 4,
-            top: 4,
-            child: Container(
-              width: 9,
-              height: 9,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEF4444),
-                shape: BoxShape.circle,
-                border: Border.all(color: gradientBg, width: 1.5),
-              ),
-            ),
-          ),
       ],
     );
   }
