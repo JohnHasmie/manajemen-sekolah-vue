@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_controller.dart';
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_state.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
@@ -34,7 +33,10 @@ mixin TeacherAttendanceDetailCardMixin
     final Color statusColor = getStatusColor(status);
     final String statusText = getStatusText(status, languageProvider);
     final avatarColor = ColorUtils.getColorForIndex(index);
-    final note = _noteFor(student.id, state.attendanceRecords);
+    // Notes aren't currently surfaced on the Attendance read model
+    // (only sent on createAttendance). When that field is added to
+    // the model, _buildBody can render the note pill inline again.
+    const String? note = null;
 
     final card = Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
@@ -215,20 +217,6 @@ mixin TeacherAttendanceDetailCardMixin
     if (parts.isEmpty || parts.first.isEmpty) return '?';
     if (parts.length == 1) return parts.first[0].toUpperCase();
     return (parts.first[0] + parts.last[0]).toUpperCase();
-  }
-
-  /// Looks up the saved note for a student so it can be rendered
-  /// inline beneath the name (when status != hadir / mempunyai catatan).
-  String? _noteFor(String studentId, List<Attendance> records) {
-    for (final r in records) {
-      if (r.studentId.toString() == studentId.toString()) {
-        if (r.notes != null && r.notes!.trim().isNotEmpty) {
-          return r.notes!.trim();
-        }
-        return null;
-      }
-    }
-    return null;
   }
 
   /// Opens Frame E — the per-student status picker bottom sheet.
