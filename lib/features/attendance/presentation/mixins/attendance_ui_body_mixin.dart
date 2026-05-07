@@ -322,59 +322,141 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
         ),
       );
     }
-    // Group rows into 3 buckets so the body matches the mockup:
-    //   • today + no records yet  → "Sesi belum diabsen"
-    //   • today + records present → "Sesi selesai"
-    //   • everything else (older days, future) → "Lainnya"
+    // FLATTEN per-session view. Each backend group has a `latest_records`
+    // array of (date, lesson_hour, present, total) — the mockup wants one
+    // card per session, not per class+subject. Expand each group into N
+    // session items, carry the parent's identity fields, and bucket by
+    // date (today / older).
     final today = DateTime.now();
     final pendingToday = <Map<String, dynamic>>[];
     final doneToday = <Map<String, dynamic>>[];
     final other = <Map<String, dynamic>>[];
+
+    Map<String, dynamic> sessionItemFromGroup(
+      Map<String, dynamic> g,
+      Map session,
+    ) {
+      final present = (session['present'] as num?)?.toInt() ?? 0;
+      final total = (session['total'] as num?)?.toInt() ?? 0;
+      final pct = total > 0 ? (present / total * 100) : 0.0;
+      return {
+        'class_id': g['class_id'],
+        'class_name': g['class_name'],
+        'subject_id': g['subject_id'],
+        'subject_name': g['subject_name'],
+        'teacher_id': g['teacher_id'],
+        'teacher_name': g['teacher_name'],
+        'date': session['date'],
+        'lesson_hour_id': session['lesson_hour_id'],
+        'lesson_hour_name': session['lesson_hour_name'],
+        'start_time': session['start_time'],
+        'end_time': session['end_time'],
+        'present': present,
+        'total': total,
+        'pct': pct,
+        'status': total == 0 ? 'pending' : 'recorded',
+        // Carry parent group so navigation can use latest_records[0]
+        // fallback when needed.
+        '__parent_group': g,
+      };
+    }
+
     for (final raw in groupedAttendance) {
       if (raw is! Map) continue;
-      final m = Map<String, dynamic>.from(raw);
-      final dateStr = (m['latest_date'] ?? m['date'] ?? m['tanggal'] ?? '')
-          .toString();
-      final d = DateTime.tryParse(dateStr);
-      final isToday =
-          d != null &&
-          d.year == today.year &&
-          d.month == today.month &&
-          d.day == today.day;
-      final recorded =
-          (m['total_sessions'] ??
-                  m['recorded_count'] ??
-                  m['attendance_count'] ??
-                  0)
-              as num? ??
-          0;
-      if (isToday && recorded == 0) {
-        pendingToday.add(m);
-      } else if (isToday) {
-        doneToday.add(m);
-      } else {
-        other.add(m);
+      final g = Map<String, dynamic>.from(raw);
+      final latest = (g['latest_records'] as List?) ?? const [];
+      if (latest.isEmpty) {
+        // No recorded sessions yet — surface a single "Belum" card so the
+        // teacher sees the slot exists.
+        final dateStr = (g['latest_date'] ?? g['date'] ?? '').toString();
+        final fallback = sessionItemFromGroup(g, {
+          'date': dateStr,
+          'lesson_hour_id': null,
+          'lesson_hour_name': null,
+          'present': 0,
+          'total': 0,
+        });
+        final d = DateTime.tryParse(dateStr);
+        final isToday =
+            d != null &&
+            d.year == today.year &&
+            d.month == today.month &&
+            d.day == today.day;
+        if (isToday) {
+          pendingToday.add(fallback);
+        } else {
+          other.add(fallback);
+        }
+        continue;
+      }
+      for (final s in latest) {
+        if (s is! Map) continue;
+        final item = sessionItemFromGroup(g, s);
+        final dateStr = (item['date'] ?? '').toString();
+        final d = DateTime.tryParse(dateStr);
+        final isToday =
+            d != null &&
+            d.year == today.year &&
+            d.month == today.month &&
+            d.day == today.day;
+        final recorded = (item['total'] as int) > 0;
+        if (isToday && !recorded) {
+          pendingToday.add(item);
+        } else if (isToday) {
+          doneToday.add(item);
+        } else {
+          other.add(item);
+        }
       }
     }
 
-    // Compact session card matching the brand mockup. Drives the
-    // status pill from `recorded_count` / `attendance_count` /
-    // `total_sessions`: zero → "Belum" amber, otherwise "{pct}%" or
-    // "{n} sesi" green.
-    Widget cardFor(Map<String, dynamic> g, {required bool pending}) => Padding(
+    // Sort each bucket by date desc, then lesson hour asc (Jam ke-1 first).
+    int sessionSorter(Map<String, dynamic> a, Map<String, dynamic> b) {
+      final ad = DateTime.tryParse((a['date'] ?? '').toString());
+      final bd = DateTime.tryParse((b['date'] ?? '').toString());
+      if (ad != null && bd != null && ad != bd) return bd.compareTo(ad);
+      final aLh = (a['lesson_hour_name'] ?? '').toString();
+      final bLh = (b['lesson_hour_name'] ?? '').toString();
+      return aLh.compareTo(bLh);
+    }
+
+    pendingToday.sort(sessionSorter);
+    doneToday.sort(sessionSorter);
+    other.sort(sessionSorter);
+
+    // Per-session card matching the brand mockup card row:
+    //   `[icon] [Mapel · Class / Day · Time · Jam ke-N] [pill]`.
+    Widget cardFor(Map<String, dynamic> s, {required bool pending}) => Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: _AttendanceMockupCard(
-        group: g,
+        group: s,
         pending: pending,
         primaryColor: primaryColor,
-        onTap: () => openAttendanceDetail(
-          classId: g['class_id']?.toString() ?? '',
-          className: g['class_name']?.toString() ?? '',
-          subjectId: g['subject_id']?.toString() ?? '',
-          subjectName: g['subject_name']?.toString() ?? '',
-          teacherId: g['teacher_id']?.toString(),
-          group: g,
-        ),
+        onTap: () {
+          // Navigate using the SESSION's date + lesson hour, not the
+          // parent group's "latest" — that ensures tapping any card in
+          // "Sesi sebelumnya" lands on THAT specific session.
+          final sessionPayload = <String, dynamic>{
+            ...s,
+            'latest_records': [
+              {
+                'date': s['date'],
+                'lesson_hour_id': s['lesson_hour_id'],
+                'lesson_hour_name': s['lesson_hour_name'],
+                'present': s['present'],
+                'total': s['total'],
+              },
+            ],
+          };
+          openAttendanceDetail(
+            classId: s['class_id']?.toString() ?? '',
+            className: s['class_name']?.toString() ?? '',
+            subjectId: s['subject_id']?.toString() ?? '',
+            subjectName: s['subject_name']?.toString() ?? '',
+            teacherId: s['teacher_id']?.toString(),
+            group: sessionPayload,
+          );
+        },
       ),
     );
 
@@ -505,8 +587,13 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
 }
 
 /// Compact session card for the brand-migrated Presensi screen,
-/// matching the v1 mockup card shape:
+/// matching mockup frame 01:
 /// `[icon] [Mapel · Kelas / Day · Time · Jam ke-N] [pill]`.
+///
+/// Each card represents ONE scheduled session (date + lesson hour),
+/// not a class+subject aggregate. The pill is "Belum" amber when
+/// `pending` (no records yet), `{pct}%` green when fully recorded
+/// with everyone present, or amber `{pct}%` when partial.
 class _AttendanceMockupCard extends StatelessWidget {
   final Map<String, dynamic> group;
   final bool pending;
@@ -525,10 +612,12 @@ class _AttendanceMockupCard extends StatelessWidget {
     final subject = (group['subject_name'] ?? '-').toString();
     final klass = (group['class_name'] ?? '-').toString();
     final dateStr =
-        (group['latest_date'] ?? group['date'] ?? group['tanggal'] ?? '')
+        (group['date'] ?? group['latest_date'] ?? group['tanggal'] ?? '')
             .toString();
-    final totalSessions = (group['total_sessions'] ?? 0) as num? ?? 0;
-    final avgPct = (group['avg_present_pct'] ?? 0) as num? ?? 0;
+    final pct = (group['pct'] as num?)?.toDouble() ?? 0.0;
+    final present = (group['present'] as num?)?.toInt() ?? 0;
+    final total = (group['total'] as num?)?.toInt() ?? 0;
+    final teacherName = (group['teacher_name'] ?? '').toString().trim();
 
     final iconBg = pending ? const Color(0xFFFEF3C7) : const Color(0xFFDBEAFE);
     final iconFg = pending ? const Color(0xFFB45309) : ColorUtils.brandCobalt;
@@ -539,18 +628,26 @@ class _AttendanceMockupCard extends StatelessWidget {
     String pillText;
     Color pillBg;
     Color pillFg;
-    if (pending) {
+    if (pending || total == 0) {
       pillText = 'Belum';
       pillBg = const Color(0xFFFEF3C7);
       pillFg = const Color(0xFFB45309);
-    } else if (totalSessions == 0) {
-      pillText = '—';
-      pillBg = ColorUtils.slate100;
-      pillFg = ColorUtils.slate500;
-    } else {
-      pillText = '${avgPct.toStringAsFixed(0)}%';
+    } else if (present == total) {
+      pillText = '100%';
       pillBg = const Color(0xFFDCFCE7);
       pillFg = const Color(0xFF15803D);
+    } else if (pct >= 80) {
+      pillText = '${pct.toStringAsFixed(0)}%';
+      pillBg = const Color(0xFFDCFCE7);
+      pillFg = const Color(0xFF15803D);
+    } else if (pct >= 60) {
+      pillText = '${pct.toStringAsFixed(0)}%';
+      pillBg = const Color(0xFFFEF3C7);
+      pillFg = const Color(0xFFB45309);
+    } else {
+      pillText = '${pct.toStringAsFixed(0)}%';
+      pillBg = const Color(0xFFFEE2E2);
+      pillFg = const Color(0xFFB91C1C);
     }
 
     return Material(
@@ -605,16 +702,20 @@ class _AttendanceMockupCard extends StatelessWidget {
                     Text(
                       _subtitle(
                         dateStr: dateStr,
-                        totalSessions: totalSessions.toInt(),
+                        lessonHourName: (group['lesson_hour_name'] ?? '')
+                            .toString()
+                            .trim(),
+                        startTime: (group['start_time'] ?? '')
+                            .toString()
+                            .trim(),
+                        endTime: (group['end_time'] ?? '').toString().trim(),
                         // In wali-kelas mode the backend tags every
                         // row with the recording teacher (the guru
                         // who taught that class·subject·session) so
                         // the wali can spot which guru hasn't filled
                         // their slot. Surface that name as the lead
                         // of the subtitle when present.
-                        teacherName: (group['teacher_name'] ?? '')
-                            .toString()
-                            .trim(),
+                        teacherName: teacherName,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -651,7 +752,9 @@ class _AttendanceMockupCard extends StatelessWidget {
 
   String _subtitle({
     required String dateStr,
-    required int totalSessions,
+    String lessonHourName = '',
+    String startTime = '',
+    String endTime = '',
     String teacherName = '',
   }) {
     final parts = <String>[];
@@ -660,8 +763,17 @@ class _AttendanceMockupCard extends StatelessWidget {
     }
     final d = DateTime.tryParse(dateStr);
     if (d != null) parts.add(_fmtDate(d));
-    if (totalSessions > 0) parts.add('$totalSessions sesi');
+    if (startTime.isNotEmpty && endTime.isNotEmpty) {
+      parts.add('${_clipTime(startTime)} – ${_clipTime(endTime)}');
+    }
+    if (lessonHourName.isNotEmpty) parts.add(lessonHourName);
     return parts.isEmpty ? '—' : parts.join(' · ');
+  }
+
+  /// Trim "HH:MM:SS" → "HH.MM" (Indonesian time formatting).
+  String _clipTime(String s) {
+    if (s.length >= 5) return s.substring(0, 5).replaceAll(':', '.');
+    return s.replaceAll(':', '.');
   }
 
   String _fmtDate(DateTime d) {
