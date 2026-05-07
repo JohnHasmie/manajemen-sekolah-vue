@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 
 /// Handles building active filter chips and filter state management.
@@ -110,6 +111,54 @@ mixin AttendanceFilterChipsMixin on ConsumerState<AttendancePage> {
       return lp.getTranslatedText({'en': 'This Week', 'id': 'Minggu ini'});
     }
     return lp.getTranslatedText({'en': 'This Month', 'id': 'Bulan ini'});
+  }
+
+  /// Brand-pattern filter chips that always render (3 dimensions:
+  /// Periode, Kelas, Mapel). Each chip's value previews the current
+  /// selection — defaulting to `Semua` / `Bulan ini` when not
+  /// filtered — and `onTap` opens the same filter sheet so the chip
+  /// is a tap target as well as a state read-out.
+  ///
+  /// Mirrors the parent role's `BrandFilterChipStrip` usage on
+  /// `parent_billing_screen.dart` so the brand-migrated teacher
+  /// surfaces feel identical to a parent navigating their bills.
+  List<BrandFilterChip> buildBrandFilterChips({
+    required LanguageProvider lp,
+    required VoidCallback onTap,
+  }) {
+    return [
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Period', 'id': 'Periode'}),
+        value: filterDateOption == null
+            ? lp.getTranslatedText({'en': 'This month', 'id': 'Bulan ini'})
+            : _resolveDateLabel(lp),
+        onTap: onTap,
+      ),
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+        value: filterClassId == null
+            ? lp.getTranslatedText({'en': 'All', 'id': 'Semua'})
+            : _resolveClassName(),
+        onTap: onTap,
+      ),
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Subject', 'id': 'Mapel'}),
+        value: filterSubjectId == null
+            ? lp.getTranslatedText({'en': 'All', 'id': 'Semua'})
+            : _resolveSubjectName(),
+        onTap: onTap,
+      ),
+    ];
+  }
+
+  /// Count of dimensions with a non-null filter applied — drives the
+  /// red badge on the filter icon in the header.
+  int get activeFilterCount {
+    var n = 0;
+    if (filterClassId != null) n++;
+    if (filterSubjectId != null) n++;
+    if (filterDateOption != null) n++;
+    return n;
   }
 
   /// Clear all active filters and refresh data

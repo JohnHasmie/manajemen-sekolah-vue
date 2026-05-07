@@ -16,7 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
@@ -59,7 +58,11 @@ mixin AttendanceUIBuilderMixin
   Future<void> loadMoreGroupedAttendance();
   bool get hasMoreData;
   void showFilterDialog(LanguageProvider lp);
-  List<ActiveFilter> buildActiveFilterChips(LanguageProvider lp);
+  List<BrandFilterChip> buildBrandFilterChips({
+    required LanguageProvider lp,
+    required VoidCallback onTap,
+  });
+  int get activeFilterCount;
   void clearAllFilters();
 
   // ═══════════════════════════════════════════
@@ -88,7 +91,6 @@ mixin AttendanceUIBuilderMixin
   }
 
   Widget buildMainScreen(LanguageProvider lp) {
-    final activeFilters = buildActiveFilterChips(lp);
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
@@ -98,7 +100,7 @@ mixin AttendanceUIBuilderMixin
           child: BrandPageLayout(
             role: 'guru',
             onRefresh: forceRefresh,
-            header: _brandHeader(lp, activeFilters),
+            header: _brandHeader(lp),
             kpiCard: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _buildKpiCard(lp),
@@ -138,8 +140,7 @@ mixin AttendanceUIBuilderMixin
   // HEADER
   // ═══════════════════════════════════════════
 
-  Widget _brandHeader(LanguageProvider lp, List<ActiveFilter> activeFilters) {
-    final filterCount = activeFilters.length;
+  Widget _brandHeader(LanguageProvider lp) {
     return BrandPageHeader(
       role: 'guru',
       kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
@@ -153,7 +154,7 @@ mixin AttendanceUIBuilderMixin
         BrandHeaderIconButton(
           icon: Icons.tune_rounded,
           onTap: () => showFilterDialog(lp),
-          badgeCount: filterCount > 0 ? filterCount : null,
+          badgeCount: activeFilterCount > 0 ? activeFilterCount : null,
           badgeBorderColor: ColorUtils.brandDarkBlue,
         ),
         BrandHeaderIconButton(
@@ -164,7 +165,13 @@ mixin AttendanceUIBuilderMixin
         ),
       ],
       childSelector: _buildRoleSelector(lp),
-      bottomSlot: _buildFilterStrip(lp, activeFilters),
+      // Filter strip is ALWAYS visible — three dimension chips
+      // (Periode / Kelas / Mapel) preview the current selection and
+      // every chip opens the same filter sheet on tap. Matches the
+      // parent role's `parent_billing_screen` pattern.
+      bottomSlot: BrandFilterChipStrip(
+        chips: buildBrandFilterChips(lp: lp, onTap: () => showFilterDialog(lp)),
+      ),
     );
   }
 
@@ -215,26 +222,6 @@ mixin AttendanceUIBuilderMixin
         }
         forceRefresh();
       },
-    );
-  }
-
-  /// Active-filter chip strip rendered in the header bottomSlot.
-  /// Each chip opens the same filter sheet so the body just previews
-  /// the active values. Hidden when no filters are active.
-  Widget? _buildFilterStrip(
-    LanguageProvider lp,
-    List<ActiveFilter> activeFilters,
-  ) {
-    if (activeFilters.isEmpty) return null;
-    return BrandFilterChipStrip(
-      chips: [
-        for (final f in activeFilters)
-          BrandFilterChip(
-            label: f.label,
-            value: f.value,
-            onTap: () => showFilterDialog(lp),
-          ),
-      ],
     );
   }
 
