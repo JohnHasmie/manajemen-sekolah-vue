@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher Brand Migration — High-fi Mockups</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-deep: #1F4A8F;
+    --brand-azure: #21AFE6;
+    --brand-azure-deep: #1A8FBE;
+    --brand-cobalt: #1B6FB8;
+    --green-50: #DCFCE7;
+    --green-600: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-600: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px;
+    color: var(--slate-900);
+  }
+  h1 {
+    font-size: 24px;
+    margin: 0 0 8px;
+    color: var(--brand-dark);
+    letter-spacing: -0.4px;
+  }
+  .subtitle {
+    color: var(--slate-500);
+    font-size: 14px;
+    margin: 0 0 32px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px;
+    align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 28px;
+    padding: 0;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+    position: relative;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--slate-500);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .kpi {
+    float: right; text-transform: none; letter-spacing: 0;
+    color: var(--slate-400); font-weight: 500; font-size: 10.5px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 720;
+    position: relative;
+    overflow: hidden;
+    background: var(--slate-50);
+  }
+
+  /* ── Header gradient ─────────────────────────────── */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-azure) 100%);
+    padding: 14px 16px 24px;
+    color: white;
+    position: relative;
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: rgba(255,255,255,.14);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex: 0 0 auto;
+  }
+  .h-title-block {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+  }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 600;
+    color: rgba(255,255,255,.65);
+    letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .h-title-row {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 2px;
+  }
+  .h-dot {
+    width: 6px; height: 6px; border-radius: 999px;
+    background: #4ADE80; box-shadow: 0 0 8px #4ADE80;
+  }
+  .h-title { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
+  .h-icons { display: flex; gap: 6px; flex: 0 0 auto; }
+  .h-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: rgba(255,255,255,.14);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; position: relative;
+  }
+  .h-icon .badge {
+    position: absolute; top: 4px; right: 4px;
+    background: #EF4444; color: white;
+    font-size: 8px; font-weight: 800;
+    padding: 1px 4px; border-radius: 999px;
+    border: 1.5px solid var(--brand-dark);
+    min-width: 14px; text-align: center;
+  }
+
+  /* ── Role toggle (multi-wali kelas) ──────────────── */
+  .role-strip {
+    display: flex; gap: 6px;
+    margin-top: 12px; height: 36px;
+  }
+  .role-chip {
+    flex: 1; min-width: 0;
+    border-radius: 12px;
+    padding: 4px 8px 4px 6px;
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.22);
+    border: 1px solid transparent;
+  }
+  .role-chip.idle {
+    background: rgba(255,255,255,.14);
+    border-color: rgba(255,255,255,.32);
+  }
+  .role-chip.active {
+    background: white;
+    color: var(--slate-900);
+  }
+  .role-chip .avatar {
+    width: 22px; height: 22px; border-radius: 999px;
+    background: rgba(255,255,255,.4);
+    color: white; font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .role-chip.active .avatar {
+    background: var(--brand-cobalt); color: white;
+  }
+  .role-chip .label-stack { flex: 1; min-width: 0; line-height: 1.1; }
+  .role-chip .name {
+    font-size: 11px; font-weight: 700; color: white;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .role-chip.active .name { color: var(--slate-900); }
+  .role-chip .sub {
+    font-size: 9px; font-weight: 500;
+    color: rgba(255,255,255,.78); margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .role-chip.active .sub { color: var(--slate-600); }
+
+  /* ── Filter chip strip ───────────────────────────── */
+  .chip-strip { display: flex; gap: 6px; margin-top: 10px; }
+  .filter-chip {
+    flex: 1;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.32);
+    border-radius: 12px;
+    padding: 5px 10px;
+    display: flex; flex-direction: column;
+    line-height: 1.1;
+  }
+  .filter-chip .fc-label {
+    font-size: 8.5px; font-weight: 600;
+    color: rgba(255,255,255,.7);
+    letter-spacing: 0.3px; text-transform: uppercase;
+  }
+  .filter-chip .fc-value {
+    font-size: 11px; font-weight: 700; color: white;
+    margin-top: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ── KPI overlay card ────────────────────────────── */
+  .kpi-card {
+    position: absolute;
+    left: 12px; right: 12px;
+    margin-top: -34px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 8px 16px rgba(15,23,42,.06), 0 2px 4px rgba(15,23,42,.04);
+    padding: 14px;
+  }
+  .kpi-row { display: flex; align-items: center; }
+  .kpi-cell { flex: 1; text-align: center; }
+  .kpi-cell .v {
+    font-size: 22px; font-weight: 800; color: var(--slate-900);
+    letter-spacing: -0.4px; line-height: 1;
+  }
+  .kpi-cell .l {
+    font-size: 10px; font-weight: 500; color: var(--slate-500);
+    margin-top: 4px;
+  }
+  .kpi-cell .pill {
+    display: inline-block; margin-top: 4px;
+    padding: 1px 6px; border-radius: 999px;
+    font-size: 9px; font-weight: 700;
+  }
+  .pill.green { background: var(--green-50); color: var(--green-600); }
+  .pill.amber { background: var(--amber-50); color: var(--amber-600); }
+  .pill.red { background: var(--red-50); color: var(--red-600); }
+  .pill.blue { background: var(--blue-50); color: var(--blue-600); }
+  .pill.violet { background: var(--violet-50); color: var(--violet-600); }
+  .kpi-divider { width: 1px; height: 32px; background: var(--slate-100); }
+
+  /* ── Body ───────────────────────────────────────── */
+  .body { padding: 36px 12px 12px; }
+
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 6px;
+  }
+  .section-head .t { font-size: 12px; font-weight: 700; color: var(--slate-900); }
+  .section-head .a { font-size: 10px; font-weight: 500; color: var(--slate-500); }
+
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px;
+    margin-top: 8px;
+    box-shadow: 0 1px 3px rgba(15,23,42,.04);
+  }
+  .card-row { display: flex; align-items: center; gap: 10px; }
+  .card-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800;
+  }
+  .card-body { flex: 1; min-width: 0; }
+  .card-title { font-size: 12px; font-weight: 700; color: var(--slate-900); }
+  .card-sub { font-size: 10px; color: var(--slate-500); margin-top: 2px; }
+  .card-meta {
+    margin-top: 8px;
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .meta-pill {
+    background: var(--slate-50);
+    color: var(--slate-600);
+    font-size: 9.5px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .meta-pill.amber { background: var(--amber-50); color: var(--amber-600); }
+  .meta-pill.green { background: var(--green-50); color: var(--green-600); }
+  .meta-pill.red { background: var(--red-50); color: var(--red-600); }
+  .meta-pill.blue { background: var(--blue-50); color: var(--blue-600); }
+  .meta-pill.violet { background: var(--violet-50); color: var(--violet-600); }
+
+  .fab {
+    position: absolute; bottom: 16px; right: 16px;
+    width: 50px; height: 50px; border-radius: 16px;
+    background: var(--brand-cobalt);
+    color: white; font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 14px rgba(27,111,184,.4);
+  }
+
+  .annotate {
+    background: #fffbeb;
+    border-left: 3px solid var(--amber-600);
+    padding: 10px 12px;
+    font-size: 11px; color: #78350F;
+    line-height: 1.5;
+  }
+  .annotate strong { color: #92400E; }
+
+  /* Schedule matrix preview */
+  .matrix {
+    display: grid; grid-template-columns: 36px repeat(5, 1fr); gap: 4px;
+    margin-top: 8px;
+  }
+  .matrix-h, .matrix-c {
+    font-size: 9px; font-weight: 600;
+    text-align: center; padding: 4px 2px;
+  }
+  .matrix-h { color: var(--slate-500); }
+  .matrix-c {
+    border-radius: 6px; background: var(--slate-50);
+    color: var(--slate-700);
+  }
+  .matrix-c.busy {
+    background: var(--brand-cobalt); color: white; font-weight: 800;
+  }
+
+  /* Rekap table */
+  .rekap-table {
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .rekap-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+    font-size: 10px;
+    border-bottom: 1px solid var(--slate-100);
+  }
+  .rekap-row:last-child { border-bottom: 0; }
+  .rekap-row .h {
+    background: rgba(27,111,184,.08); font-weight: 700;
+    color: var(--slate-700);
+  }
+  .rekap-row > div {
+    padding: 8px 6px; text-align: center;
+    border-right: 1px solid var(--slate-100);
+  }
+  .rekap-row > div:first-child {
+    text-align: left; font-weight: 600; color: var(--slate-700);
+  }
+  .rekap-row > div:last-child { border-right: 0; }
+
+  /* Progress ring (simple representation) */
+  .ring-wrap { position: relative; width: 44px; height: 44px; }
+  .ring {
+    width: 44px; height: 44px; border-radius: 999px;
+    background: conic-gradient(var(--brand-cobalt) 78%, var(--slate-100) 0);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ring-inner {
+    width: 32px; height: 32px; border-radius: 999px; background: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; color: var(--brand-cobalt);
+  }
+</style>
+</head>
+<body>
+
+<h1>Teacher Brand Migration · High-fi Mockups</h1>
+<p class="subtitle">9 teacher screens redesigned to match the parent role's brand pattern: <code>BrandPageHeader</code> + <code>BrandPageLayout</code> with a KPI overlay card, multi-wali-kelas <code>RoleToggleChipRow</code>, and <code>BrandFilterChipStrip</code> in the header bottomSlot. Phone frames are 380×720; gradient is teacher's <code>brandDarkBlue → brandAzure</code>.</p>
+
+<div class="annotate" style="margin-bottom:24px; max-width: 880px;">
+<strong>What's new across all 9 screens:</strong> centered-title BrandPageHeader with a 6-pixel realtime dot inline; up to N+1 chips in the role row (<em>Mengajar</em> + one chip per homeroom class); active filters live in the bottomSlot as compact pillar chips that all open the same filter sheet; a KPI card overlaps the gradient by 45dp via <code>BrandPageLayout.kpiOverlapHeight</code>; bodies use the existing card patterns but stop fighting the header for vertical space.
+</div>
+
+<div class="grid">
+
+<!-- ════════════════ 1 · Presensi ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">01</span>PRESENSI <span class="kpi">KPI · Sesi hari ini · Done · Pending</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · KEHADIRAN</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Presensi</span></div>
+        </div>
+        <div class="h-icons">
+          <div class="h-icon">⚙<span class="badge">2</span></div>
+          <div class="h-icon">⊞</div>
+        </div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip active"><div class="avatar">M</div><div class="label-stack"><div class="name">Mengajar</div><div class="sub">3 kelas · 4 mapel</div></div></div>
+        <div class="role-chip idle"><div class="avatar">7B</div><div class="label-stack"><div class="name">Wali 7B</div><div class="sub">28 siswa</div></div></div>
+        <div class="role-chip idle"><div class="avatar">8A</div><div class="label-stack"><div class="name">Wali 8A</div><div class="sub">31 siswa</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">PERIODE</div><div class="fc-value">Minggu ini</div></div>
+        <div class="filter-chip"><div class="fc-label">KELAS</div><div class="fc-value">Semua</div></div>
+        <div class="filter-chip"><div class="fc-label">MAPEL</div><div class="fc-value">Matematika</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v">8</div><div class="l">Sesi hari ini</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">5</div><span class="pill green">Selesai</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">3</div><span class="pill amber">Belum</span></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Sesi belum diabsen</div><div class="a">3 sesi</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--blue-50);color:var(--blue-600)">M</div>
+          <div class="card-body">
+            <div class="card-title">Matematika · 7B</div>
+            <div class="card-sub">Senin · 08.30 – 09.50 · Jam ke-3</div>
+          </div>
+          <div class="meta-pill amber">Belum</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--violet-50);color:var(--violet-600)">F</div>
+          <div class="card-body">
+            <div class="card-title">Fisika · 8A</div>
+            <div class="card-sub">Senin · 10.00 – 11.20 · Jam ke-4</div>
+          </div>
+          <div class="meta-pill amber">Belum</div>
+        </div>
+      </div>
+      <div class="section-head" style="margin-top:8px"><div class="t">Sesi selesai</div><div class="a">5 sesi</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--green-50);color:var(--green-600)">M</div>
+          <div class="card-body">
+            <div class="card-title">Matematika · 7A</div>
+            <div class="card-sub">Senin · 07.00 – 08.20 · 28 hadir · 0 alpa</div>
+          </div>
+          <div class="meta-pill green">100%</div>
+        </div>
+      </div>
+    </div>
+    <div class="fab">+</div>
+  </div>
+</div>
+
+<!-- ════════════════ 2 · Kegiatan Kelas ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">02</span>KEGIATAN KELAS <span class="kpi">KPI · Pekan ini · Total · Tugas</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · KEGIATAN</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Kegiatan Kelas</span></div>
+        </div>
+        <div class="h-icons">
+          <div class="h-icon">⚙<span class="badge">1</span></div>
+        </div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip active"><div class="avatar">M</div><div class="label-stack"><div class="name">Mengajar</div><div class="sub">3 kelas</div></div></div>
+        <div class="role-chip idle"><div class="avatar">7B</div><div class="label-stack"><div class="name">Wali 7B</div><div class="sub">28 siswa</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">PERIODE</div><div class="fc-value">7 hari terakhir</div></div>
+        <div class="filter-chip"><div class="fc-label">JENIS</div><div class="fc-value">Tugas</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v">14</div><div class="l">Pekan ini</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">42</div><div class="l">Total bulan ini</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">9</div><span class="pill blue">Tugas</span></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Hari ini · Senin</div><div class="a">3 kegiatan</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--blue-50);color:var(--blue-600)">📝</div>
+          <div class="card-body">
+            <div class="card-title">Tugas Trigonometri</div>
+            <div class="card-sub">7B · Matematika · 09.30</div>
+            <div class="card-meta">
+              <span class="meta-pill blue">Tugas</span>
+              <span class="meta-pill">28 siswa</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--violet-50);color:var(--violet-600)">📚</div>
+          <div class="card-body">
+            <div class="card-title">Diskusi kelompok</div>
+            <div class="card-sub">8A · Fisika · 10.30</div>
+            <div class="card-meta"><span class="meta-pill violet">Aktivitas</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fab">+</div>
+  </div>
+</div>
+
+<!-- ════════════════ 3 · Buku Nilai ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">03</span>BUKU NILAI <span class="kpi">KPI · Penilaian semester · Tuntas · Belum</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · NILAI</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Buku Nilai</span></div>
+        </div>
+        <div class="h-icons">
+          <div class="h-icon">⚙</div>
+          <div class="h-icon">↧</div>
+        </div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip active"><div class="avatar">M</div><div class="label-stack"><div class="name">Mengajar</div><div class="sub">4 mapel</div></div></div>
+        <div class="role-chip idle"><div class="avatar">7B</div><div class="label-stack"><div class="name">Wali 7B</div><div class="sub">10 mapel</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">SEMESTER</div><div class="fc-value">Ganjil 2025/26</div></div>
+        <div class="filter-chip"><div class="fc-label">KELAS</div><div class="fc-value">Semua</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v">23</div><div class="l">Penilaian</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">18</div><span class="pill green">Tuntas</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">5</div><span class="pill amber">Draft</span></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Penilaian baru</div><div class="a">5 draft</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--amber-50);color:var(--amber-600)">UH</div>
+          <div class="card-body">
+            <div class="card-title">UH 2 Trigonometri</div>
+            <div class="card-sub">7B · Matematika · 14 Mei</div>
+            <div class="card-meta">
+              <span class="meta-pill amber">Draft</span>
+              <span class="meta-pill">12/28 dinilai</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--green-50);color:var(--green-600)">UTS</div>
+          <div class="card-body">
+            <div class="card-title">UTS Genap</div>
+            <div class="card-sub">8A · Fisika · 28 April</div>
+            <div class="card-meta">
+              <span class="meta-pill green">Tuntas</span>
+              <span class="meta-pill">31/31</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fab">+</div>
+  </div>
+</div>
+
+<!-- ════════════════ 4 · Rekap Nilai overview ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">04</span>REKAP NILAI · OVERVIEW <span class="kpi">KPI · Kelas final · Rata-rata</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · REKAP</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Rekap Nilai</span></div>
+        </div>
+        <div class="h-icons">
+          <div class="h-icon">⚙</div>
+        </div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip active"><div class="avatar">M</div><div class="label-stack"><div class="name">Mengajar</div><div class="sub">3 kelas · 4 mapel</div></div></div>
+        <div class="role-chip idle"><div class="avatar">7B</div><div class="label-stack"><div class="name">Wali 7B</div><div class="sub">10 mapel</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">SEMESTER</div><div class="fc-value">Ganjil 2025/26</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v">7</div><span class="pill green">Final</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">5</div><span class="pill amber">Draft</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">82</div><div class="l">Rata-rata</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Per kelas × mapel</div><div class="a">12 sel</div></div>
+      <div class="card" style="padding:0">
+        <div class="rekap-table">
+          <div class="rekap-row">
+            <div class="h">Kelas</div><div class="h">Mat</div><div class="h">Fis</div><div class="h">Kim</div><div class="h">Bio</div>
+          </div>
+          <div class="rekap-row">
+            <div>7A</div><div>84</div><div>—</div><div>78</div><div>—</div>
+          </div>
+          <div class="rekap-row">
+            <div>7B</div><div>81</div><div>—</div><div>—</div><div>—</div>
+          </div>
+          <div class="rekap-row">
+            <div>8A</div><div>—</div><div>87</div><div>—</div><div>83</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotate" style="margin-top:10px;font-size:10px">
+        <strong>Tap sel:</strong> buka recap dialog (existing). <strong>Long-press:</strong> aksi cepat (export, kunci, dsb).
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ 5 · RPP ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">05</span>RPP <span class="kpi">KPI · Diajukan · Disetujui · Ditolak</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · RPP</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">RPP</span></div>
+        </div>
+        <div class="h-icons">
+          <div class="h-icon">⚙</div>
+        </div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip active"><div class="avatar">M</div><div class="label-stack"><div class="name">Mengajar</div><div class="sub">12 RPP</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">STATUS</div><div class="fc-value">Menunggu</div></div>
+        <div class="filter-chip"><div class="fc-label">MAPEL</div><div class="fc-value">Matematika</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v">3</div><span class="pill amber">Menunggu</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">8</div><span class="pill green">Disetujui</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">1</div><span class="pill red">Ditolak</span></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Menunggu review</div><div class="a">3 RPP</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--amber-50);color:var(--amber-600)">📄</div>
+          <div class="card-body">
+            <div class="card-title">RPP Trigonometri</div>
+            <div class="card-sub">7B · Matematika · 12 Mei</div>
+            <div class="card-meta">
+              <span class="meta-pill amber">Menunggu</span>
+              <span class="meta-pill blue">AI-generated</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--green-50);color:var(--green-600)">📄</div>
+          <div class="card-body">
+            <div class="card-title">RPP Aljabar Linear</div>
+            <div class="card-sub">8A · Matematika · 10 Mei</div>
+            <div class="card-meta">
+              <span class="meta-pill green">Disetujui</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fab">+</div>
+  </div>
+</div>
+
+<!-- ════════════════ 6 · Materi ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">06</span>MATERI <span class="kpi">KPI · Terbit · Draft · Total</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · MATERI</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Materi</span></div>
+        </div>
+        <div class="h-icons"><div class="h-icon">⚙</div></div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip active"><div class="avatar">M</div><div class="label-stack"><div class="name">Mengajar</div><div class="sub">4 mapel</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">MAPEL</div><div class="fc-value">Matematika</div></div>
+        <div class="filter-chip"><div class="fc-label">STATUS</div><div class="fc-value">Semua</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v">14</div><span class="pill green">Terbit</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">3</div><span class="pill amber">Draft</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">17</div><div class="l">Total</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Modul terbit</div><div class="a">14 modul</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--blue-50);color:var(--blue-600)">📘</div>
+          <div class="card-body">
+            <div class="card-title">Bab 1 · Bilangan Bulat</div>
+            <div class="card-sub">7B · Matematika · PDF · 2 lampiran</div>
+            <div class="card-meta">
+              <span class="meta-pill green">Terbit</span>
+              <span class="meta-pill">Bab 1</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--violet-50);color:var(--violet-600)">📗</div>
+          <div class="card-body">
+            <div class="card-title">Bab 2 · Persamaan Linear</div>
+            <div class="card-sub">7B · Matematika · DOCX</div>
+            <div class="card-meta">
+              <span class="meta-pill green">Terbit</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fab">+</div>
+  </div>
+</div>
+
+<!-- ════════════════ 7 · Jadwal ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">07</span>JADWAL <span class="kpi">KPI · Hari ini · Sekarang · Berikutnya</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · JADWAL</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Jadwal</span></div>
+        </div>
+        <div class="h-icons">
+          <div class="h-icon">⚙</div>
+          <div class="h-icon">⊞</div>
+        </div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip active"><div class="avatar">M</div><div class="label-stack"><div class="name">Mengajar</div><div class="sub">28 sesi/pekan</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">HARI</div><div class="fc-value">Senin</div></div>
+        <div class="filter-chip"><div class="fc-label">SEMESTER</div><div class="fc-value">Ganjil</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v">5</div><div class="l">Sesi hari ini</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">10:30</div><span class="pill amber">Sekarang</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">12:00</div><span class="pill blue">Berikut</span></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Senin</div><div class="a">5 sesi</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--amber-50);color:var(--amber-600)">M</div>
+          <div class="card-body">
+            <div class="card-title">Matematika · 7B</div>
+            <div class="card-sub">10.30 – 11.50 · Jam ke-5 · R. 7B</div>
+            <div class="card-meta">
+              <span class="meta-pill amber">Sekarang</span>
+              <span class="meta-pill">28 siswa</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--blue-50);color:var(--blue-600)">F</div>
+          <div class="card-body">
+            <div class="card-title">Fisika · 8A</div>
+            <div class="card-sub">12.00 – 13.20 · Jam ke-7 · R. Lab</div>
+          </div>
+        </div>
+      </div>
+      <div class="annotate" style="margin-top:10px;font-size:10px">
+        <strong>View toggle:</strong> tap ⊞ → matrix view (timetable grid).
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ 8 · Pengumuman ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">08</span>PENGUMUMAN <span class="kpi">KPI · Belum dibaca · Hari ini · Total</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">KOMUNIKASI · PENGUMUMAN</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Pengumuman</span></div>
+        </div>
+        <div class="h-icons">
+          <div class="h-icon">⚙</div>
+        </div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip active"><div class="avatar">M</div><div class="label-stack"><div class="name">Mengajar</div><div class="sub">3 kelas</div></div></div>
+        <div class="role-chip idle"><div class="avatar">7B</div><div class="label-stack"><div class="name">Wali 7B</div><div class="sub">28 wali</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">PERIODE</div><div class="fc-value">Bulan ini</div></div>
+        <div class="filter-chip"><div class="fc-label">TIPE</div><div class="fc-value">Sekolah</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v">4</div><span class="pill red">Belum dibaca</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">2</div><span class="pill blue">Hari ini</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">17</div><div class="l">Bulan ini</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Belum dibaca</div><div class="a">4 baru</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="card-icon" style="background:var(--red-50);color:var(--red-600)">📢</div>
+          <div class="card-body">
+            <div class="card-title">Rapat orang tua kelas 7</div>
+            <div class="card-sub">Sekolah · 14 Mei · 2 jam lalu</div>
+            <div class="card-meta">
+              <span class="meta-pill red">Baru</span>
+              <span class="meta-pill">Sekolah</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fab">+</div>
+  </div>
+</div>
+
+<!-- ════════════════ 9 · Raport overview (wali kelas only) ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">09</span>RAPORT · OVERVIEW <span class="kpi">KPI · Final · Draft · Rata-rata</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · RAPORT</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Raport</span></div>
+        </div>
+        <div class="h-icons">
+          <div class="h-icon">⚙</div>
+        </div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip active"><div class="avatar">7B</div><div class="label-stack"><div class="name">Wali 7B</div><div class="sub">28 siswa</div></div></div>
+        <div class="role-chip idle"><div class="avatar">8A</div><div class="label-stack"><div class="name">Wali 8A</div><div class="sub">31 siswa</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">SEMESTER</div><div class="fc-value">Ganjil 2025/26</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v">22</div><span class="pill green">Final</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">6</div><span class="pill amber">Draft</span></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v">81</div><div class="l">Rata-rata</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Per siswa</div><div class="a">28 siswa</div></div>
+      <div class="card">
+        <div class="card-row">
+          <div class="ring-wrap"><div class="ring"><div class="ring-inner">A</div></div></div>
+          <div class="card-body">
+            <div class="card-title">Aisha Putri</div>
+            <div class="card-sub">7B · 91 rata-rata · 10 mapel</div>
+            <div class="card-meta">
+              <span class="meta-pill green">Final</span>
+              <span class="meta-pill">Hadir 98%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <div class="ring-wrap"><div class="ring" style="background:conic-gradient(var(--amber-600) 64%, var(--slate-100) 0)"><div class="ring-inner" style="color:var(--amber-600)">B</div></div></div>
+          <div class="card-body">
+            <div class="card-title">Budi Santoso</div>
+            <div class="card-sub">7B · 78 rata-rata · 10 mapel</div>
+            <div class="card-meta">
+              <span class="meta-pill amber">Draft</span>
+              <span class="meta-pill red">Alpa 4×</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="annotate" style="margin-top:10px;font-size:10px">
+        <strong>Wali-kelas-only screen.</strong> Mengajar role hides this from the bottom nav (or shows an empty state with a switch-to-wali CTA).
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="margin-top:48px;padding:18px 22px;background:var(--surface);border-radius:14px;max-width:880px;border:1px solid var(--slate-200)">
+  <h3 style="margin:0 0 10px;font-size:15px;color:var(--brand-dark)">Backend changes I'd ship alongside</h3>
+  <ul style="font-size:12px;color:var(--slate-600);line-height:1.7;padding-left:20px;margin:0">
+    <li><strong>/api/teacher/dashboard/kpis</strong> — single endpoint returning the per-screen KPI bundles for the active teacher (sessions today, RPP status counts, assessment counts, etc.) so each screen doesn't need its own GET.</li>
+    <li><strong>Per-screen endpoints get a <code>?include=kpi</code> param</strong> as a fallback (the screen can stand alone if the bundle endpoint fails).</li>
+    <li><strong>Homeroom assignments → list, not single.</strong> Where the API currently returns one homeroom class for a teacher, expand to <code>homeroom_classes: [{id, name, student_count}]</code> so the multi-wali-kelas <code>RoleToggleChipRow</code> has its data.</li>
+    <li><strong>Cache:</strong> KPI bundle is cacheable for 60 s with the existing realtime poll loop, same TTL as the parent dashboard.</li>
+  </ul>
+  <h3 style="margin:18px 0 10px;font-size:15px;color:var(--brand-dark)">Notes for review</h3>
+  <ul style="font-size:12px;color:var(--slate-600);line-height:1.7;padding-left:20px;margin:0">
+    <li><strong>FAB is removed</strong> on Rekap Nilai overview, Jadwal (read-only for teachers), and Raport overview. The other 6 keep their FAB for "tambah".</li>
+    <li><strong>Search bar is gone.</strong> Pre-migration teacher screens had an inline search; the brand pattern keeps search inside the Filter sheet (open via the gear icon). If you want the inline bar back I can put it in the body above the section header.</li>
+    <li><strong>Realtime dot</strong> sits inline next to the title (6×6 px, green). The "last sync 2 minutes ago" text was retired in the compact v2 pass per the parent-role redesign.</li>
+    <li><strong>Role chips ellipsize</strong> when ≥4 chips fit in the strip; on overflow the strip becomes horizontally scrollable. Single-role teachers (no homeroom) get no chip strip at all.</li>
+    <li><strong>Filter chips</strong> always open the same shared filter sheet — tapping any chip is equivalent to tapping the gear icon. The chip body just previews the active value.</li>
+  </ul>
+</div>
+
+</body>
+</html>
