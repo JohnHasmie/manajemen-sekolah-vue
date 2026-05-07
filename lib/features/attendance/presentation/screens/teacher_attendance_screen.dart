@@ -32,6 +32,15 @@ class AttendancePage extends ConsumerStatefulWidget {
   final String? initialclassId;
   final String? initialClassName;
   final int? initialLessonHourNumber;
+
+  /// Exact `lesson_hour_id` UUID of the schedule slot the user came
+  /// from. Each (day, hour_number) tuple has its own UUID, so passing
+  /// just the [initialLessonHourNumber] would let the hydration logic
+  /// pick whatever day's hour_number matched first — typically not the
+  /// one the user tapped — and lock the form to that other day's
+  /// already-saved records, blocking new entry for the actual day.
+  final String? initialLessonHourId;
+
   final String? initialStartTime;
   final int initialTabIndex;
   final ScrollController? scrollController;
@@ -46,6 +55,7 @@ class AttendancePage extends ConsumerStatefulWidget {
     this.initialclassId,
     this.initialClassName,
     this.initialLessonHourNumber,
+    this.initialLessonHourId,
     this.initialStartTime,
     this.initialTabIndex = 0,
     this.embedded = false,

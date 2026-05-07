@@ -35,6 +35,13 @@ class GradeRecapTableView extends StatelessWidget {
   /// Fires when a chapter delete (×) is tapped.
   final ValueChanged<int> onDeleteChapter;
 
+  /// Fires when a chapter header is tapped — opens a rename dialog
+  /// for that bab. Always available, including when the table only
+  /// has a single chapter (in which case [onDeleteChapter] is hidden
+  /// because deleting the last column would leave nothing to grade
+  /// against).
+  final ValueChanged<int> onEditChapter;
+
   /// Fires when a student's description cell is tapped.
   final void Function(String studentClassId, String studentName) onDeskripsiTap;
 
@@ -50,6 +57,7 @@ class GradeRecapTableView extends StatelessWidget {
     required this.cellBuilder,
     required this.onBulkSelect,
     required this.onDeleteChapter,
+    required this.onEditChapter,
     required this.onDeskripsiTap,
   });
 
@@ -251,15 +259,21 @@ class GradeRecapTableView extends StatelessWidget {
     final title = _chapterTitle(i);
     final canDelete = chapters.length > 1;
 
+    // Tapping the header itself renames the chapter — that's the
+    // edit affordance. Delete remains a separate × icon top-right
+    // and is only shown when there's more than one bab (deleting
+    // the last column would leave the table with no grade slots).
     return InkWell(
-      onTap: () => onBulkSelect('bab', i),
+      onTap: () => onEditChapter(i),
       child: Container(
         decoration: _headerBorderDecoration(),
         child: Stack(
           children: [
             Padding(
+              // Reserve room on both sides for the edit pencil
+              // (always shown, left) and the delete × (when >1, right).
               padding: EdgeInsets.only(
-                left: 6,
+                left: 18,
                 right: canDelete ? 18 : 6,
                 top: 6,
                 bottom: 6,
@@ -276,6 +290,30 @@ class GradeRecapTableView extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            // Edit pencil — always visible, including when there's
+            // only one bab (which is the case the user reported as
+            // "no edit button at all"). Tapping it does the same
+            // thing as tapping the header: opens the rename sheet.
+            Positioned(
+              top: 2,
+              left: 2,
+              child: InkResponse(
+                radius: 14,
+                onTap: () => onEditChapter(i),
+                child: Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.edit_rounded,
+                    size: 12,
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
                 ),
               ),
             ),

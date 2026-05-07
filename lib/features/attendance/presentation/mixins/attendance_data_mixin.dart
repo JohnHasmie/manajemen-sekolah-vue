@@ -256,10 +256,19 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
     if (subjectId == null || classId == null || date == null) return;
 
     String? lessonHourId;
-    if (widget.initialLessonHourNumber != null) {
-      // Match by hour_number (the value extracted from the session
-      // card label, e.g. "Jam ke-5" → 5) since the detail page does
-      // not pass the lesson_hour UUID through.
+    // Prefer the exact lesson_hour_id when the caller had it (Jadwal
+    // → presensi flow). The lookup-by-hour_number fallback only fires
+    // for callers that genuinely don't know the UUID (e.g. the
+    // session-detail "Update Kehadiran" path which parses a number
+    // out of "Jam ke-5"). Without this, hydration would
+    // `firstWhere((lh) => lh['hour_number'] == N)` on the global
+    // lesson-hour list and pick whatever day's slot matched first —
+    // typically not the user's day — locking the form to another
+    // day's already-saved records.
+    final providedId = widget.initialLessonHourId;
+    if (providedId != null && providedId.isNotEmpty) {
+      lessonHourId = providedId;
+    } else if (widget.initialLessonHourNumber != null) {
       final match = lessonHours.cast<Map<dynamic, dynamic>>().firstWhere(
         (lh) => lh['hour_number'] == widget.initialLessonHourNumber,
         orElse: () => const <dynamic, dynamic>{},

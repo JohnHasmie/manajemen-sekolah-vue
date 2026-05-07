@@ -155,6 +155,16 @@ mixin TeacherActivityStateMixin on ConsumerState<TeacherClassActivityScreen> {
     setState(() => _timelineLoadingMore = value);
   }
 
+  /// Replaces the current filter values with whatever the caller
+  /// passes — including explicit nulls, which are how the filter
+  /// sheet's Reset → Apply flow signals "clear this filter". The
+  /// previous `if (x != null) _filterX = x` shape ignored the
+  /// reset, so once a filter was applied the only way to remove it
+  /// was via [clearFilters] (which wipes ALL filters).
+  ///
+  /// `subjectList` keeps the null-guard because empty-vs-null
+  /// distinction matters there (`null` = "caller didn't touch it",
+  /// `[]` = "caller explicitly emptied it").
   void updateFilters({
     String? classId,
     String? subjectId,
@@ -162,9 +172,9 @@ mixin TeacherActivityStateMixin on ConsumerState<TeacherClassActivityScreen> {
     List<dynamic>? subjectList,
   }) {
     setState(() {
-      if (classId != null) _filterClassId = classId;
-      if (subjectId != null) _filterSubjectId = subjectId;
-      if (dateOption != null) _filterDateOption = dateOption;
+      _filterClassId = classId;
+      _filterSubjectId = subjectId;
+      _filterDateOption = dateOption;
       if (subjectList != null) _filterSubjectList = subjectList;
     });
   }

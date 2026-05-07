@@ -686,6 +686,61 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
   }
 
   @override
+  void editChapter(int chapterIndex) async {
+    if (chapterIndex < 0 || chapterIndex >= chapters.length) return;
+    final ch = chapters[chapterIndex] as Map;
+    final currentName = (ch['judul_bab'] ??
+            ch['judul'] ??
+            ch['title'] ??
+            'Bab ${chapterIndex + 1}')
+        .toString();
+    final controller = TextEditingController(text: currentName);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Ubah nama bab'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: const InputDecoration(
+            labelText: 'Nama bab',
+            hintText: 'Mis. "Bab 1: Pengantar"',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (v) => Navigator.of(dialogCtx).pop(v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () =>
+                Navigator.of(dialogCtx).pop(controller.text.trim()),
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (newName == null || newName.isEmpty || newName == currentName) return;
+    if (!mounted) return;
+    setState(() {
+      // Mutate in place so any other key the source data carries
+      // (judul / title fallback) stays — we just override the
+      // canonical `judul_bab` and clean up the legacy aliases so
+      // re-reading via the same fallback chain returns the new name.
+      final updated = Map<String, dynamic>.from(ch);
+      updated['judul_bab'] = newName;
+      updated['judul'] = newName;
+      updated['title'] = newName;
+      chapters = List.from(chapters)..[chapterIndex] = updated;
+      hasUnsavedChanges = true;
+    });
+  }
+
+  @override
   void deleteChapter(int chapterIndex) {
     if (chapters.length <= 1) return;
     setState(() {
@@ -1038,6 +1093,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
         onBulkSelect: (type, chapterIndex) =>
             showBulkDialog(type, chapterIndex),
         onDeleteChapter: deleteChapter,
+        onEditChapter: editChapter,
         onDeskripsiTap: showEditDeskripsi,
       ),
     );

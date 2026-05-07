@@ -21,6 +21,13 @@ mixin ScheduleCardActionMixin {
   String? get subjectName => null;
   String? get classId => null;
   String? get className => null;
+
+  /// Exact `lesson_hour_id` UUID for the schedule slot the card
+  /// represents. Each (day, hour_number) tuple owns a distinct UUID,
+  /// so we cannot reconstruct it on the AttendancePage side from
+  /// hour_number alone — the schedule already has it, just forward it.
+  String? get lessonHourId => null;
+
   VoidCallback? get onRefresh => null;
 
   // Color and data access.
@@ -175,6 +182,12 @@ mixin ScheduleCardActionMixin {
               initialLessonHourNumber: sched.Schedule.fromJson(
                 schedule,
               ).lessonHour,
+              // Pass the exact UUID so the form's hydration + new-row
+              // submit both target the right per-day slot. Without
+              // this, hour_number 1 from one day would happily
+              // surface another day's stored attendance and block
+              // new entry.
+              initialLessonHourId: lessonHourId,
               initialTabIndex: tabIndex,
               embedded: true,
               scrollController: scrollController,

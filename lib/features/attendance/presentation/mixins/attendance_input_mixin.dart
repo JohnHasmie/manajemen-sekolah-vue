@@ -171,6 +171,18 @@ mixin AttendanceInputMixin on ConsumerState<AttendancePage> {
   // ═══════════════════════════════════════════
 
   void detectLessonHour() {
+    // Prefer the exact lesson_hour_id when the caller had it (Jadwal
+    // → presensi flow). Same-day-different-day collision avoidance:
+    // each (day, hour_number) tuple has its own UUID; matching by
+    // hour_number alone picks whichever day's slot happens to come
+    // first in the list, which is rarely the schedule the user
+    // actually tapped on.
+    final providedId = widget.initialLessonHourId;
+    if (providedId != null && providedId.isNotEmpty) {
+      setState(() => setInputSelectedLessonHourId(providedId));
+      return;
+    }
+
     if (widget.initialLessonHourNumber != null) {
       for (final lh in lessonHours) {
         final hourNum = lh['hour_number'] ?? lh['jam_ke'];

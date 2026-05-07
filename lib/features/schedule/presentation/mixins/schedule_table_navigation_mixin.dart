@@ -61,6 +61,7 @@ mixin ScheduleTableNavigationMixin on State<TeacherScheduleTableView> {
           initialclassId: scheduleData['classId'],
           initialClassName: scheduleData['className'],
           initialLessonHourNumber: scheduleData['lessonHour'],
+          initialLessonHourId: scheduleData['lessonHourId'],
           initialTabIndex: tabIndex,
           embedded: true,
           scrollController: scrollController,
@@ -77,6 +78,13 @@ mixin ScheduleTableNavigationMixin on State<TeacherScheduleTableView> {
       'classId': model.classId,
       'className': model.className,
       'lessonHour': model.lessonHour,
+      // Each (day, hour_number) tuple owns a distinct UUID. The
+      // attendance form needs the exact UUID — not just the hour
+      // number — so it can scope hydration / submit to the right
+      // per-day slot. Without this the matrix-view → presensi flow
+      // would surface another day's already-saved attendance and
+      // block new entry, same way the card-view flow did.
+      'lessonHourId': model.lessonHourId,
     };
   }
 
