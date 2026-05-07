@@ -113,47 +113,34 @@ mixin AttendanceFilterChipsMixin on ConsumerState<AttendancePage> {
     return lp.getTranslatedText({'en': 'This Month', 'id': 'Bulan ini'});
   }
 
-  /// Brand-pattern filter chips that show ONLY active-filter dimensions.
+  /// Brand-pattern filter chips — always render the three dimensions
+  /// (Periode · Kelas · Mapel). When a dimension has no filter applied
+  /// we pass `value: null` so the shared `BrandFilterChip` renders its
+  /// `+ Label` placeholder ("+ Kelas") rather than "Kelas: Semua".
+  /// When filtered, only the resolved value is shown.
   ///
-  /// We deliberately don't render placeholder chips like
-  /// `Periode: Semua` — the gear icon in the header is the dedicated
-  /// filter entry-point, so the bottomSlot strip is purely a "state
-  /// read-out" of what's currently filtered. Empty list when nothing
-  /// is filtered → the strip vanishes (BrandFilterChipStrip handles
-  /// empty internally).
+  /// Mirrors the parent role's `parent_billing_screen` chip wiring 1:1.
   List<BrandFilterChip> buildBrandFilterChips({
     required LanguageProvider lp,
     required VoidCallback onTap,
   }) {
-    final chips = <BrandFilterChip>[];
-    if (filterDateOption != null) {
-      chips.add(
-        BrandFilterChip(
-          label: lp.getTranslatedText({'en': 'Period', 'id': 'Periode'}),
-          value: _resolveDateLabel(lp),
-          onTap: onTap,
-        ),
-      );
-    }
-    if (filterClassId != null) {
-      chips.add(
-        BrandFilterChip(
-          label: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
-          value: _resolveClassName(),
-          onTap: onTap,
-        ),
-      );
-    }
-    if (filterSubjectId != null) {
-      chips.add(
-        BrandFilterChip(
-          label: lp.getTranslatedText({'en': 'Subject', 'id': 'Mapel'}),
-          value: _resolveSubjectName(),
-          onTap: onTap,
-        ),
-      );
-    }
-    return chips;
+    return [
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Period', 'id': 'Periode'}),
+        value: filterDateOption == null ? null : _resolveDateLabel(lp),
+        onTap: onTap,
+      ),
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+        value: filterClassId == null ? null : _resolveClassName(),
+        onTap: onTap,
+      ),
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Subject', 'id': 'Mapel'}),
+        value: filterSubjectId == null ? null : _resolveSubjectName(),
+        onTap: onTap,
+      ),
+    ];
   }
 
   /// Count of dimensions with a non-null filter applied — drives the

@@ -143,12 +143,25 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
         apiFetcher: () => getIt<ApiScheduleService>().getJamPelajaran(),
       );
 
+      // Use the SAME query shape as `fetchGroupedAttendance` (which
+      // pull-to-refresh and `loadMore` go through) so the data set
+      // is identical between init paint and a manual refresh.
+      // Without this, the initial paint omitted `view`, `dateFilter`
+      // and the wali-kelas branch — the backend then returned a
+      // different row count than the refresh path, which the user
+      // surfaced as "init shows 1, refresh shows 3".
+      final hcId = selectedHomeroomClass?['id']?.toString();
       final summaryResult = await AttendanceService.getTeacherAttendanceSummary(
-        teacherId: teacherId,
+        teacherId: isHomeroomView ? null : teacherId,
+        classId: isHomeroomView ? hcId : filterClassId,
         academicYearId: ayId,
+        subjectId: filterSubjectId,
+        search: searchController.text.isNotEmpty ? searchController.text : null,
+        dateFilter: filterDateOption,
         page: 1,
         perPage: 20,
         includeClasses: true, // piggy-back classes in the same request
+        view: isHomeroomView ? 'wali_kelas' : 'mengajar',
       );
 
       final hours = await hoursFuture;
