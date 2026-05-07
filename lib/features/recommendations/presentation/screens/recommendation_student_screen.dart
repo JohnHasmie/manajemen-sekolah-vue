@@ -24,6 +24,7 @@ import 'package:manajemensekolah/features/recommendations/data/recommendation_se
 import 'package:manajemensekolah/features/recommendations/presentation/screens/mixins/data_loading_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/mixins/tour_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_result_screen.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_student_screen_parts.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Lists students in a class for the learning recommendation flow.
@@ -407,28 +408,28 @@ class _LearningRecommendationStudentScreenState
       ),
       child: Row(
         children: [
-          _SummaryStatItem(
+          RecommendationSummaryStatItem(
             icon: Icons.people_alt_rounded,
             value: '${_students.length}',
             label: 'Siswa',
             color: _primaryColor,
           ),
           _verticalDivider(),
-          _SummaryStatItem(
+          RecommendationSummaryStatItem(
             icon: Icons.auto_awesome_rounded,
             value: '$_totalRecommendations',
             label: 'Rekomendasi',
             color: ColorUtils.corporateBlue500,
           ),
           _verticalDivider(),
-          _SummaryStatItem(
+          RecommendationSummaryStatItem(
             icon: Icons.check_circle_rounded,
             value: '$_totalCompleted',
             label: 'Diterapkan',
             color: ColorUtils.emerald500,
           ),
           _verticalDivider(),
-          _SummaryStatItem(
+          RecommendationSummaryStatItem(
             icon: Icons.schedule_rounded,
             value: '$_totalPending',
             label: 'Belum',
@@ -455,14 +456,14 @@ class _LearningRecommendationStudentScreenState
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            _FilterChip(
+            RecommendationFilterChip(
               label: 'Semua Siswa',
               isActive: _statusFilter == 'all',
               color: _primaryColor,
               onTap: () => setState(() => _statusFilter = 'all'),
             ),
             const SizedBox(width: 6),
-            _FilterChip(
+            RecommendationFilterChip(
               label: 'Ada Rekomendasi ($_studentsWithRecommendations)',
               isActive: _statusFilter == 'has_recommendations',
               color: ColorUtils.corporateBlue500,
@@ -470,14 +471,14 @@ class _LearningRecommendationStudentScreenState
                   setState(() => _statusFilter = 'has_recommendations'),
             ),
             const SizedBox(width: 6),
-            _FilterChip(
+            RecommendationFilterChip(
               label: 'Ada Belum Diterapkan',
               isActive: _statusFilter == 'has_pending',
               color: ColorUtils.amber500,
               onTap: () => setState(() => _statusFilter = 'has_pending'),
             ),
             const SizedBox(width: 6),
-            _FilterChip(
+            RecommendationFilterChip(
               label: 'Semua Diterapkan',
               isActive: _statusFilter == 'all_completed',
               color: ColorUtils.emerald500,
@@ -926,92 +927,6 @@ class _LearningRecommendationStudentScreenState
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Single stat item in the summary bar.
-class _SummaryStatItem extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
-
-  const _SummaryStatItem({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(height: 3),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w500,
-              color: ColorUtils.slate400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Filter chip for status filtering.
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.isActive,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: const BorderRadius.all(Radius.circular(8)),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: isActive ? color : Colors.white,
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
-            border: Border.all(color: isActive ? color : ColorUtils.slate200),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: isActive ? Colors.white : ColorUtils.slate500,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
