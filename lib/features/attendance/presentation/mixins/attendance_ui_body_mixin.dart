@@ -265,10 +265,16 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
         attendanceErrorMessage == null) {
       return const Padding(
         padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+        // shrinkWrap: true → render as a sized Column instead of a
+        // ListView with its own viewport. BrandPageLayout slots this
+        // body into an outer sliver list that gives children
+        // unbounded vertical space, which would otherwise blow up
+        // the inner ListView's layout.
         child: SkeletonListLoading(
           itemCount: 6,
           infoTagCount: 2,
           showActions: false,
+          shrinkWrap: true,
         ),
       );
     }
@@ -303,25 +309,95 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
         ),
       );
     }
+    // Group rows into 3 buckets so the body matches the mockup:
+    //   • today + no records yet  → "Sesi belum diabsen"
+    //   • today + records present → "Sesi selesai"
+    //   • everything else (older days, future) → "Lainnya"
+    final today = DateTime.now();
+    final pendingToday = <Map<String, dynamic>>[];
+    final doneToday = <Map<String, dynamic>>[];
+    final other = <Map<String, dynamic>>[];
+    for (final raw in groupedAttendance) {
+      if (raw is! Map) continue;
+      final m = Map<String, dynamic>.from(raw);
+      final dateStr = (m['latest_date'] ?? m['date'] ?? m['tanggal'] ?? '')
+          .toString();
+      final d = DateTime.tryParse(dateStr);
+      final isToday =
+          d != null &&
+          d.year == today.year &&
+          d.month == today.month &&
+          d.day == today.day;
+      final recorded =
+          (m['total_sessions'] ??
+                  m['recorded_count'] ??
+                  m['attendance_count'] ??
+                  0)
+              as num? ??
+          0;
+      if (isToday && recorded == 0) {
+        pendingToday.add(m);
+      } else if (isToday) {
+        doneToday.add(m);
+      } else {
+        other.add(m);
+      }
+    }
+
+    Widget cardFor(Map<String, dynamic> g) => AttendanceGroupCard(
+      group: g,
+      primaryColor: primaryColor,
+      languageProvider: lp,
+      isHomeroomView: isHomeroomView,
+      onTap: () => openAttendanceDetail(
+        classId: g['class_id']?.toString() ?? '',
+        className: g['class_name']?.toString() ?? '',
+        subjectId: g['subject_id']?.toString() ?? '',
+        subjectName: g['subject_name']?.toString() ?? '',
+        teacherId: g['teacher_id']?.toString(),
+      ),
+    );
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final g in groupedAttendance)
-            AttendanceGroupCard(
-              group: g as Map<String, dynamic>,
-              primaryColor: primaryColor,
-              languageProvider: lp,
-              isHomeroomView: isHomeroomView,
-              onTap: () => openAttendanceDetail(
-                classId: g['class_id']?.toString() ?? '',
-                className: g['class_name']?.toString() ?? '',
-                subjectId: g['subject_id']?.toString() ?? '',
-                subjectName: g['subject_name']?.toString() ?? '',
-                teacherId: g['teacher_id']?.toString(),
-              ),
+          if (pendingToday.isNotEmpty) ...[
+            _AttendanceSectionHeader(
+              title: lp.getTranslatedText({
+                'en': 'Sessions not yet recorded',
+                'id': 'Sesi belum diabsen',
+              }),
+              trailing: '${pendingToday.length} sesi',
             ),
+            const SizedBox(height: 8),
+            for (final g in pendingToday) cardFor(g),
+            const SizedBox(height: 18),
+          ],
+          if (doneToday.isNotEmpty) ...[
+            _AttendanceSectionHeader(
+              title: lp.getTranslatedText({
+                'en': 'Sessions completed',
+                'id': 'Sesi selesai',
+              }),
+              trailing: '${doneToday.length} sesi',
+            ),
+            const SizedBox(height: 8),
+            for (final g in doneToday) cardFor(g),
+            const SizedBox(height: 18),
+          ],
+          if (other.isNotEmpty) ...[
+            _AttendanceSectionHeader(
+              title: lp.getTranslatedText({
+                'en': 'Older sessions',
+                'id': 'Sesi sebelumnya',
+              }),
+              trailing: '${other.length}',
+            ),
+            const SizedBox(height: 8),
+            for (final g in other) cardFor(g),
+          ],
           if (isLoadingMore) _buildLoadingIndicator(),
         ],
       ),
@@ -336,10 +412,12 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
         attendanceErrorMessage == null) {
       return const Padding(
         padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+        // shrinkWrap: true — see note in buildGroupedBodyForBrand.
         child: SkeletonListLoading(
           itemCount: 6,
           infoTagCount: 1,
           showActions: false,
+          shrinkWrap: true,
         ),
       );
     }
@@ -401,4 +479,43 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
   void setSelectedLessonHourId(String? v);
   void setSelectedClassId(String? v);
   void setSelectedSubjectId(String? v);
+}
+
+/// Compact "Title · trailing" section heading used to break the
+/// grouped attendance body into "Sesi belum diabsen" / "Sesi selesai" /
+/// "Sesi sebelumnya" buckets — matches the v1 mockup.
+class _AttendanceSectionHeader extends StatelessWidget {
+  final String title;
+  final String trailing;
+
+  const _AttendanceSectionHeader({required this.title, required this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 4, 2, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: ColorUtils.slate900,
+              ),
+            ),
+          ),
+          Text(
+            trailing,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: ColorUtils.slate500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

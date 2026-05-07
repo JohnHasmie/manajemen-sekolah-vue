@@ -113,42 +113,47 @@ mixin AttendanceFilterChipsMixin on ConsumerState<AttendancePage> {
     return lp.getTranslatedText({'en': 'This Month', 'id': 'Bulan ini'});
   }
 
-  /// Brand-pattern filter chips that always render (3 dimensions:
-  /// Periode, Kelas, Mapel). Each chip's value previews the current
-  /// selection — defaulting to `Semua` / `Bulan ini` when not
-  /// filtered — and `onTap` opens the same filter sheet so the chip
-  /// is a tap target as well as a state read-out.
+  /// Brand-pattern filter chips that show ONLY active-filter dimensions.
   ///
-  /// Mirrors the parent role's `BrandFilterChipStrip` usage on
-  /// `parent_billing_screen.dart` so the brand-migrated teacher
-  /// surfaces feel identical to a parent navigating their bills.
+  /// We deliberately don't render placeholder chips like
+  /// `Periode: Semua` — the gear icon in the header is the dedicated
+  /// filter entry-point, so the bottomSlot strip is purely a "state
+  /// read-out" of what's currently filtered. Empty list when nothing
+  /// is filtered → the strip vanishes (BrandFilterChipStrip handles
+  /// empty internally).
   List<BrandFilterChip> buildBrandFilterChips({
     required LanguageProvider lp,
     required VoidCallback onTap,
   }) {
-    return [
-      BrandFilterChip(
-        label: lp.getTranslatedText({'en': 'Period', 'id': 'Periode'}),
-        value: filterDateOption == null
-            ? lp.getTranslatedText({'en': 'This month', 'id': 'Bulan ini'})
-            : _resolveDateLabel(lp),
-        onTap: onTap,
-      ),
-      BrandFilterChip(
-        label: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
-        value: filterClassId == null
-            ? lp.getTranslatedText({'en': 'All', 'id': 'Semua'})
-            : _resolveClassName(),
-        onTap: onTap,
-      ),
-      BrandFilterChip(
-        label: lp.getTranslatedText({'en': 'Subject', 'id': 'Mapel'}),
-        value: filterSubjectId == null
-            ? lp.getTranslatedText({'en': 'All', 'id': 'Semua'})
-            : _resolveSubjectName(),
-        onTap: onTap,
-      ),
-    ];
+    final chips = <BrandFilterChip>[];
+    if (filterDateOption != null) {
+      chips.add(
+        BrandFilterChip(
+          label: lp.getTranslatedText({'en': 'Period', 'id': 'Periode'}),
+          value: _resolveDateLabel(lp),
+          onTap: onTap,
+        ),
+      );
+    }
+    if (filterClassId != null) {
+      chips.add(
+        BrandFilterChip(
+          label: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+          value: _resolveClassName(),
+          onTap: onTap,
+        ),
+      );
+    }
+    if (filterSubjectId != null) {
+      chips.add(
+        BrandFilterChip(
+          label: lp.getTranslatedText({'en': 'Subject', 'id': 'Mapel'}),
+          value: _resolveSubjectName(),
+          onTap: onTap,
+        ),
+      );
+    }
+    return chips;
   }
 
   /// Count of dimensions with a non-null filter applied — drives the

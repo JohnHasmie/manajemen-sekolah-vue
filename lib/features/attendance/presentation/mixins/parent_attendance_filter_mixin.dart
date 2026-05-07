@@ -144,8 +144,7 @@ mixin ParentAttendanceFilterMixin
                       }).toList(),
                       selectedValue: tempStatusFilter,
                       onSelected: (val) => setSS(() {
-                        tempStatusFilter =
-                            val == tempStatusFilter ? null : val;
+                        tempStatusFilter = val == tempStatusFilter ? null : val;
                       }),
                       selectedColor: primaryColor,
                     ),

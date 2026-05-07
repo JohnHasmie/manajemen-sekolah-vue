@@ -62,7 +62,8 @@ class _AdminTingkatHeatmapScreenState
         children: [
           _Hero(
             navy: navy,
-            title: widget.title ??
+            title:
+                widget.title ??
                 (widget.tingkat != null
                     ? 'Tingkat ${widget.tingkat}'
                     : 'Kehadiran detail'),
@@ -88,7 +89,9 @@ class _AdminTingkatHeatmapScreenState
               ),
             ),
           ),
-          SizedBox(height: AppSpacing.xl + MediaQuery.of(context).padding.bottom),
+          SizedBox(
+            height: AppSpacing.xl + MediaQuery.of(context).padding.bottom,
+          ),
         ],
       ),
     );
@@ -136,8 +139,11 @@ class _Hero extends StatelessWidget {
                       child: const SizedBox(
                         width: 36,
                         height: 36,
-                        child: Icon(Icons.arrow_back_rounded,
-                            color: Colors.white, size: 20),
+                        child: Icon(
+                          Icons.arrow_back_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -234,8 +240,7 @@ class _DaysChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(11),
         onTap: onTap,
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           child: Text(
             label,
             style: TextStyle(
@@ -256,30 +261,30 @@ class _LegendStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget legendItem(Color c, String label) => Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: c,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ],
+      padding: const EdgeInsets.only(right: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: c,
+              borderRadius: BorderRadius.circular(3),
+            ),
           ),
-        );
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),

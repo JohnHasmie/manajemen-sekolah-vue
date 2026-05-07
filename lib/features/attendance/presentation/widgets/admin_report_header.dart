@@ -160,8 +160,7 @@ class AdminReportHeader extends StatelessWidget {
           value: 'refresh',
           child: Row(
             children: [
-              Icon(Icons.refresh_rounded,
-                  size: 18, color: ColorUtils.slate700),
+              Icon(Icons.refresh_rounded, size: 18, color: ColorUtils.slate700),
               const SizedBox(width: 12),
               Text(AppLocalizations.updateData.tr),
             ],
@@ -172,13 +171,18 @@ class AdminReportHeader extends StatelessWidget {
             value: 'export',
             child: Row(
               children: [
-                Icon(Icons.file_download_outlined,
-                    size: 18, color: ColorUtils.slate700),
+                Icon(
+                  Icons.file_download_outlined,
+                  size: 18,
+                  color: ColorUtils.slate700,
+                ),
                 const SizedBox(width: 12),
-                Text(languageProvider.getTranslatedText({
-                  'en': 'Export Excel',
-                  'id': 'Export Excel',
-                })),
+                Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Export Excel',
+                    'id': 'Export Excel',
+                  }),
+                ),
               ],
             ),
           ),

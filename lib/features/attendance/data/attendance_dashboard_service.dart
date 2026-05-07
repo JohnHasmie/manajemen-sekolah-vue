@@ -55,11 +55,10 @@ class AttendanceDashboardService {
         : <String, dynamic>{};
 
     final totals = Map<String, dynamic>.from(
-        (data['totals'] as Map?) ?? const {});
-    final kpi =
-        Map<String, dynamic>.from((data['kpi'] as Map?) ?? const {});
-    final tingkatRaw =
-        (data['tingkats'] as List?) ?? const <dynamic>[];
+      (data['totals'] as Map?) ?? const {},
+    );
+    final kpi = Map<String, dynamic>.from((data['kpi'] as Map?) ?? const {});
+    final tingkatRaw = (data['tingkats'] as List?) ?? const <dynamic>[];
 
     return AttendanceDashboard(
       breakdown: AttendanceBreakdown(
@@ -77,15 +76,17 @@ class AttendanceDashboardService {
           .toList(),
       tingkats: tingkatRaw
           .map((e) => Map<String, dynamic>.from(e as Map))
-          .map((m) => TingkatTrend(
-                tingkat: (m['tingkat'] as num?)?.toInt() ?? 0,
-                currentPct: (m['current_pct'] as num?)?.toDouble() ?? 0,
-                deltaPct: (m['delta_pct'] as num?)?.toDouble() ?? 0,
-                series: (m['series'] as List? ?? const [])
-                    .map((e) => (e as num).toDouble())
-                    .toList(),
-                alertCopy: m['alert_copy']?.toString(),
-              ))
+          .map(
+            (m) => TingkatTrend(
+              tingkat: (m['tingkat'] as num?)?.toInt() ?? 0,
+              currentPct: (m['current_pct'] as num?)?.toDouble() ?? 0,
+              deltaPct: (m['delta_pct'] as num?)?.toDouble() ?? 0,
+              series: (m['series'] as List? ?? const [])
+                  .map((e) => (e as num).toDouble())
+                  .toList(),
+              alertCopy: m['alert_copy']?.toString(),
+            ),
+          )
           .toList(),
       rangeLabel: (data['range_label'] ?? '').toString(),
     );
@@ -164,8 +165,7 @@ extension StudentHeatmapFetch on AttendanceDashboardService {
     final params = <String, String>{'days': days.toString()};
     if (tingkat != null) params['tingkat'] = tingkat.toString();
     if (classId != null) params['class_id'] = classId;
-    final qs =
-        params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    final qs = params.entries.map((e) => '${e.key}=${e.value}').join('&');
     final raw = await _api.get('/attendance/student-heatmap?$qs');
     final data = (raw is Map && raw['data'] is Map)
         ? Map<String, dynamic>.from(raw['data'] as Map)
@@ -173,20 +173,21 @@ extension StudentHeatmapFetch on AttendanceDashboardService {
 
     final students = (data['students'] as List? ?? const [])
         .map((e) => Map<String, dynamic>.from(e as Map))
-        .map((m) => StudentHeatmapEntry(
-              id: (m['id'] ?? '').toString(),
-              name: (m['name'] ?? '').toString(),
-              studentNumber: m['student_number']?.toString(),
-              cells: (m['cells'] as List? ?? const [])
-                  .map((c) => _parseCellState(c?.toString()))
-                  .toList(),
-              monthlyPct:
-                  (m['monthly_pct'] as num?)?.toDouble() ?? 0,
-              presentDays: (m['present_days'] as num?)?.toInt() ?? 0,
-              totalDays: (m['total_days'] as num?)?.toInt() ?? 0,
-              alert: (m['alert'] as bool?) ?? false,
-              alertCopy: m['alert_copy']?.toString(),
-            ))
+        .map(
+          (m) => StudentHeatmapEntry(
+            id: (m['id'] ?? '').toString(),
+            name: (m['name'] ?? '').toString(),
+            studentNumber: m['student_number']?.toString(),
+            cells: (m['cells'] as List? ?? const [])
+                .map((c) => _parseCellState(c?.toString()))
+                .toList(),
+            monthlyPct: (m['monthly_pct'] as num?)?.toDouble() ?? 0,
+            presentDays: (m['present_days'] as num?)?.toInt() ?? 0,
+            totalDays: (m['total_days'] as num?)?.toInt() ?? 0,
+            alert: (m['alert'] as bool?) ?? false,
+            alertCopy: m['alert_copy']?.toString(),
+          ),
+        )
         .toList();
 
     return StudentHeatmapResult(
@@ -215,37 +216,36 @@ class HeatmapScope {
   int get hashCode => Object.hash(tingkat, classId, days);
 }
 
-final studentHeatmapProvider =
-    FutureProvider.autoDispose.family<StudentHeatmapResult, HeatmapScope>(
-  (ref, scope) async {
-    return ref.read(attendanceDashboardServiceProvider).fetchStudentHeatmap(
-          tingkat: scope.tingkat,
-          classId: scope.classId,
-          days: scope.days,
-        );
-  },
-);
+final studentHeatmapProvider = FutureProvider.autoDispose
+    .family<StudentHeatmapResult, HeatmapScope>((ref, scope) async {
+      return ref
+          .read(attendanceDashboardServiceProvider)
+          .fetchStudentHeatmap(
+            tingkat: scope.tingkat,
+            classId: scope.classId,
+            days: scope.days,
+          );
+    });
 
 // =====================================================================
 // Riverpod
 // =====================================================================
 
-final attendanceDashboardServiceProvider =
-    Provider<AttendanceDashboardService>((ref) {
-  return AttendanceDashboardService(ApiService());
-});
+final attendanceDashboardServiceProvider = Provider<AttendanceDashboardService>(
+  (ref) {
+    return AttendanceDashboardService(ApiService());
+  },
+);
 
 /// Family provider keyed by the active [AttendanceRange]. Switching
 /// the chip in the hero invalidates the auto-disposed instance and
 /// re-fetches.
-final attendanceDashboardProvider =
-    FutureProvider.autoDispose.family<AttendanceDashboard, AttendanceRange>(
-  (ref, range) async {
-    final slug = switch (range) {
-      AttendanceRange.thisWeek => 'week',
-      AttendanceRange.thisMonth => 'month',
-      _ => 'today',
-    };
-    return ref.read(attendanceDashboardServiceProvider).fetch(range: slug);
-  },
-);
+final attendanceDashboardProvider = FutureProvider.autoDispose
+    .family<AttendanceDashboard, AttendanceRange>((ref, range) async {
+      final slug = switch (range) {
+        AttendanceRange.thisWeek => 'week',
+        AttendanceRange.thisMonth => 'month',
+        _ => 'today',
+      };
+      return ref.read(attendanceDashboardServiceProvider).fetch(range: slug);
+    });

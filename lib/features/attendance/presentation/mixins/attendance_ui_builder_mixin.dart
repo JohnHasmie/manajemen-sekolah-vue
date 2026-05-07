@@ -165,14 +165,21 @@ mixin AttendanceUIBuilderMixin
         ),
       ],
       childSelector: _buildRoleSelector(lp),
-      // Filter strip is ALWAYS visible — three dimension chips
-      // (Periode / Kelas / Mapel) preview the current selection and
-      // every chip opens the same filter sheet on tap. Matches the
-      // parent role's `parent_billing_screen` pattern.
-      bottomSlot: BrandFilterChipStrip(
-        chips: buildBrandFilterChips(lp: lp, onTap: () => showFilterDialog(lp)),
-      ),
+      // Filter chips render only when at least one filter is active.
+      // The gear icon in the header action slot is the dedicated
+      // entry-point — the chips are a read-out of the current applied
+      // selection, not a placeholder UI. Empty filter set → no strip.
+      bottomSlot: _buildAppliedFilterStrip(lp),
     );
+  }
+
+  Widget? _buildAppliedFilterStrip(LanguageProvider lp) {
+    final chips = buildBrandFilterChips(
+      lp: lp,
+      onTap: () => showFilterDialog(lp),
+    );
+    if (chips.isEmpty) return null;
+    return BrandFilterChipStrip(chips: chips);
   }
 
   /// Multi-wali-kelas role chip row. Hides itself when the teacher has

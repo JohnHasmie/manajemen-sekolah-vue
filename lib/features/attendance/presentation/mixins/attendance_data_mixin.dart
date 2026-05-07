@@ -160,7 +160,13 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
               ?.map((c) => Map<String, dynamic>.from(c as Map))
               .toList() ??
           [];
-      final homeroom = classes.where((c) => c['is_homeroom'] == true).toList();
+      // Defensive: Postgres + JSON sometimes serializes booleans as
+      // string `'true'` / `'1'` / int `1` rather than literal `true`.
+      // Treat all of those as truthy so the role chip strip renders
+      // for teachers who have homeroom assignments regardless of how
+      // the column was encoded upstream.
+      bool _truthy(Object? v) => v == true || v == 1 || v == 'true' || v == '1';
+      final homeroom = classes.where((c) => _truthy(c['is_homeroom'])).toList();
 
       final data = (summaryResult['data'] as List?) ?? [];
       final pagination = summaryResult['pagination'];
