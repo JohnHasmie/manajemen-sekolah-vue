@@ -52,12 +52,32 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
             'lesson_plan',
             'File uploaded successfully: $filePath',
           );
+
+          // Sanity check: backend should return a relative
+          // path like "rpp_files/xxx.pdf". Anything else
+          // (full URL, bare filename) means the upload was
+          // misrouted — refuse to save it.
+          if (filePath == null ||
+              filePath.isEmpty ||
+              !filePath.startsWith('rpp_files/')) {
+            throw Exception(
+              'Upload mengembalikan path tidak valid: $filePath',
+            );
+          }
         } catch (uploadError) {
           AppLogger.error(
             'lesson_plan',
             'Error during file upload: $uploadError',
           );
-          filePath = null;
+          if (mounted) {
+            setIsUploading(false);
+            SnackBarUtils.showError(
+              context,
+              'Gagal mengunggah file. Periksa koneksi '
+              'lalu coba lagi.',
+            );
+          }
+          return; // BLOCK save — don't persist invalid file_path
         }
       } else {
         AppLogger.debug('lesson_plan', 'No file selected for upload');
@@ -70,17 +90,18 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
       AppLogger.debug('lesson_plan', '- Judul: ${titleController.text}');
       AppLogger.debug('lesson_plan', '- File Path: $filePath');
 
-      // Priority: uploaded path > existing path > selected filename
+      // Use uploaded path if a new file was attached;
+      // otherwise keep the existing record's file_path
+      // unchanged. NEVER fall back to the bare local
+      // filename — that's not a real storage path.
       final existingFilePath =
           widget.lessonPlanData?['file_path']?.toString();
-      final resolvedFilePath =
-          filePath ?? existingFilePath ?? selectedFileName;
+      final resolvedFilePath = filePath ?? existingFilePath;
 
       AppLogger.debug(
         'lesson_plan',
         'Resolved file_path: $resolvedFilePath '
-        '(upload=$filePath, existing=$existingFilePath, '
-        'name=$selectedFileName)',
+        '(upload=$filePath, existing=$existingFilePath)',
       );
 
       final lessonPlanData = {
