@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/embedded_activity_list_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/teacher_activity_ui_helpers_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
@@ -19,25 +20,17 @@ mixin TeacherActivityNavigationMixin
     required String subjectId,
     required String subjectName,
   }) {
-    showModalBottomSheet(
+    AppDraggableSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.96,
-        expand: false,
-        builder: (context, sc) => ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          child: EmbeddedActivityListScreen(
-            teacherId: teacherId,
-            teacherName: teacherName,
-            classId: classId,
-            className: className,
-            subjectId: subjectId,
-            subjectName: subjectName,
-          ),
+      builder: (_, _) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: EmbeddedActivityListScreen(
+          teacherId: teacherId,
+          teacherName: teacherName,
+          classId: classId,
+          className: className,
+          subjectId: subjectId,
+          subjectName: subjectName,
         ),
       ),
     );

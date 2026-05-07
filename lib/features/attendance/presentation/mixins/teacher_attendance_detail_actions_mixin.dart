@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_controller.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
@@ -19,36 +20,25 @@ mixin TeacherAttendanceDetailActionsMixin
       }
     }
 
-    showModalBottomSheet(
+    AppDraggableSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.8,
-          minChildSize: 0.5,
-          maxChildSize: 0.96,
-          expand: false,
-          builder: (context, scrollController) {
-            return AttendancePage(
-              teacher: widget.teacher,
-              initialDate: widget.date,
-              initialSubjectId: widget.subjectId,
-              initialSubjectName: widget.subjectName,
-              initialclassId: widget.classId,
-              initialClassName: widget.className,
-              initialLessonHourNumber: lessonHourNum,
-              initialTabIndex: 1, // Start on input tab
-              embedded: true,
-              scrollController: scrollController,
-            );
-          },
-        );
+      onClose: () {
+        // Refresh data after edit sheet is closed
+        ref.invalidate(teacherAttendanceProvider(_controllerParams));
       },
-    ).then((_) {
-      // Refresh data after edit sheet is closed
-      ref.invalidate(teacherAttendanceProvider(_controllerParams));
-    });
+      builder: (_, scrollController) => AttendancePage(
+        teacher: widget.teacher,
+        initialDate: widget.date,
+        initialSubjectId: widget.subjectId,
+        initialSubjectName: widget.subjectName,
+        initialclassId: widget.classId,
+        initialClassName: widget.className,
+        initialLessonHourNumber: lessonHourNum,
+        initialTabIndex: 1, // Start on input tab
+        embedded: true,
+        scrollController: scrollController,
+      ),
+    );
   }
 
   /// Get controller parameters for provider

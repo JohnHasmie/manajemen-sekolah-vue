@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -130,32 +131,24 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
     required String subjectName,
     String? teacherId,
   }) {
-    showModalBottomSheet(
+    AppDraggableSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.96,
-        expand: false,
-        builder: (context, sc) => AttendanceDetailSheet(
-          teacherId: this.teacherId,
-          teacherNama: this.teacherNama,
-          classId: classId,
-          className: className,
-          subjectId: subjectId,
-          subjectName: subjectName,
-          filterTeacherId:
-              teacherId ?? (isHomeroomView ? null : this.teacherId),
-          lessonHours: lessonHours,
-          classList: classList,
-          primaryColor: primaryColor,
-          languageProvider: ref.read(languageRiverpod),
-          canEdit: !isHomeroomView,
-        ),
+      onClose: refreshGroupedAttendance,
+      builder: (_, _) => AttendanceDetailSheet(
+        teacherId: this.teacherId,
+        teacherNama: teacherNama,
+        classId: classId,
+        className: className,
+        subjectId: subjectId,
+        subjectName: subjectName,
+        filterTeacherId: teacherId ?? (isHomeroomView ? null : this.teacherId),
+        lessonHours: lessonHours,
+        classList: classList,
+        primaryColor: primaryColor,
+        languageProvider: ref.read(languageRiverpod),
+        canEdit: !isHomeroomView,
       ),
-    ).then((_) => refreshGroupedAttendance());
+    );
   }
 
   @override
@@ -165,28 +158,21 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
     required String subjectId,
     required String subjectName,
   }) {
-    showModalBottomSheet(
+    AppDraggableSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.8,
-        minChildSize: 0.5,
-        maxChildSize: 0.96,
-        expand: false,
-        builder: (context, sc) => AttendancePage(
-          teacher: {'id': teacherId, 'nama': teacherNama},
-          initialDate: DateTime.now(),
-          initialSubjectId: subjectId,
-          initialSubjectName: subjectName,
-          initialclassId: classId,
-          initialClassName: className,
-          initialTabIndex: 1,
-          embedded: true,
-          scrollController: sc,
-        ),
+      onClose: refreshGroupedAttendance,
+      builder: (_, sc) => AttendancePage(
+        teacher: {'id': teacherId, 'nama': teacherNama},
+        initialDate: DateTime.now(),
+        initialSubjectId: subjectId,
+        initialSubjectName: subjectName,
+        initialclassId: classId,
+        initialClassName: className,
+        initialTabIndex: 1,
+        embedded: true,
+        scrollController: sc,
       ),
-    ).then((_) => refreshGroupedAttendance());
+    );
   }
 
   @override
