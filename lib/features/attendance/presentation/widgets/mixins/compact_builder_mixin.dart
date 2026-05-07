@@ -145,6 +145,18 @@ class _WordButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Match Frame A mockup styling exactly:
+    //   selected   → color-50 fill + color-600 text + color-600 border
+    //   unselected → slate-100 fill + slate-500 text + no border
+    // Neutral unselected state means only the active status pops out
+    // visually — the row reads as a single colored chip surrounded by
+    // four "available" greys, instead of five competing pastel chips.
+    final bgColor = isSelected
+        ? Color.alphaBlend(color.withValues(alpha: 0.10), Colors.white)
+        : ColorUtils.slate100;
+    final fgColor = isSelected ? color : ColorUtils.slate500;
+    final borderColor = isSelected ? color : Colors.transparent;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -154,17 +166,14 @@ class _WordButton extends StatelessWidget {
         height: 40,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? color : color.withValues(alpha: 0.08),
+          color: bgColor,
           borderRadius: BorderRadius.circular(11),
-          border: Border.all(
-            color: isSelected ? color : color.withValues(alpha: 0.25),
-            width: isSelected ? 1.5 : 1,
-          ),
+          border: Border.all(color: borderColor, width: isSelected ? 1.5 : 0),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : color,
+            color: fgColor,
             fontWeight: FontWeight.w800,
             fontSize: 11,
             letterSpacing: 0.2,
