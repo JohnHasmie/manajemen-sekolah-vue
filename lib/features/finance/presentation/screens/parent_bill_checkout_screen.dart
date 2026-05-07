@@ -32,6 +32,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/parent_payment_success_screen.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/parent_bill_checkout_widgets.dart';
 
 /// Push the Bayar checkout for [bill]. Returns `true` when the user
 /// completed payment (so the caller can refresh the bill list);
@@ -385,19 +386,19 @@ class _ParentBillCheckoutScreenState
       ),
       child: Row(
         children: [
-          _MethodTab(
+          ParentCheckoutMethodTab(
             label: 'QRIS',
             caption: '⚡ Tercepat',
             active: _method == _PayMethod.qris,
             onTap: () => setState(() => _method = _PayMethod.qris),
           ),
-          _MethodTab(
+          ParentCheckoutMethodTab(
             label: 'Virtual Acc.',
             caption: 'BCA / Mandiri',
             active: _method == _PayMethod.va,
             onTap: () => setState(() => _method = _PayMethod.va),
           ),
-          _MethodTab(
+          ParentCheckoutMethodTab(
             label: 'Manual',
             caption: 'Upload bukti',
             active: _method == _PayMethod.manual,
@@ -431,7 +432,7 @@ class _ParentBillCheckoutScreenState
         children: [
           Row(
             children: [
-              _CountdownChip(expires: _session.expiresAt),
+              ParentCheckoutCountdownChip(expires: _session.expiresAt),
               const Spacer(),
               Text(
                 'Simpan QR ↓',
@@ -481,7 +482,7 @@ class _ParentBillCheckoutScreenState
           ),
           const SizedBox(height: AppSpacing.md),
           // Salin nominal pill
-          _CopyPill(
+          ParentCheckoutCopyPill(
             label: 'Nominal',
             value: _formatRupiah(_session.totalFor(_method)),
             onCopy: () => _toastCopied('Nominal'),
@@ -542,7 +543,10 @@ class _ParentBillCheckoutScreenState
                   ),
                 ),
               ),
-              _CopyPill(value: 'Salin', onCopy: () => _toastCopied('Nomor VA')),
+              ParentCheckoutCopyPill(
+                value: 'Salin',
+                onCopy: () => _toastCopied('Nomor VA'),
+              ),
             ],
           ),
           const Divider(height: 24, color: Color(0xFFF1F5F9)),
@@ -601,7 +605,7 @@ class _ParentBillCheckoutScreenState
           ),
           const SizedBox(height: AppSpacing.md),
           for (final bank in _session.manualBankList) ...[
-            _BankRow(
+            ParentCheckoutBankRow(
               bank: bank.$1,
               account: bank.$2,
               owner: bank.$3,
@@ -810,243 +814,6 @@ class _ParentBillCheckoutScreenState
 
   void _toastCopied(String label) {
     SnackBarUtils.showSuccess(context, '$label berhasil disalin');
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// Helper widgets
-// ════════════════════════════════════════════════════════════════
-
-class _MethodTab extends StatelessWidget {
-  final String label;
-  final String caption;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _MethodTab({
-    required this.label,
-    required this.caption,
-    required this.active,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            border: active
-                ? Border.all(color: ColorUtils.brandAzureDeep, width: 1.2)
-                : null,
-            boxShadow: active
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: active
-                      ? ColorUtils.brandAzureDeep
-                      : ColorUtils.slate600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                caption,
-                style: TextStyle(
-                  fontSize: 9,
-                  color: active
-                      ? ColorUtils.brandAzureDeep
-                      : ColorUtils.slate400,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CountdownChip extends StatelessWidget {
-  final DateTime expires;
-
-  const _CountdownChip({required this.expires});
-
-  @override
-  Widget build(BuildContext context) {
-    final remaining = expires.difference(DateTime.now());
-    final hours = remaining.inHours.toString().padLeft(2, '0');
-    final minutes = (remaining.inMinutes % 60).toString().padLeft(2, '0');
-    final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEF3C7),
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Text(
-        '⏱ $hours:$minutes:$seconds',
-        style: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          color: Color(0xFFB45309),
-        ),
-      ),
-    );
-  }
-}
-
-class _CopyPill extends StatelessWidget {
-  final String? label;
-  final String value;
-  final VoidCallback onCopy;
-
-  const _CopyPill({this.label, required this.value, required this.onCopy});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onCopy,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF0F9FF),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFBAE6FD), width: 0.75),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (label != null) ...[
-              Text(
-                label!,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: ColorUtils.brandAzureDeep,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: ColorUtils.slate900,
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Text(
-              '📋 ${label == null ? value : 'Salin'}',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: ColorUtils.brandAzureDeep,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BankRow extends StatelessWidget {
-  final String bank;
-  final String account;
-  final String owner;
-  final VoidCallback onCopy;
-
-  const _BankRow({
-    required this.bank,
-    required this.account,
-    required this.owner,
-    required this.onCopy,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  bank,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    color: ColorUtils.slate500,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  account,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: ColorUtils.slate900,
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'a.n. $owner',
-                  style: TextStyle(fontSize: 9.5, color: ColorUtils.slate500),
-                ),
-              ],
-            ),
-          ),
-          InkWell(
-            onTap: onCopy,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Text(
-                '📋 Salin',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: ColorUtils.brandAzureDeep,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
