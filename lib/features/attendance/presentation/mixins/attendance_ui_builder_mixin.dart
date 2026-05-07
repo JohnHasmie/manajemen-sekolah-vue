@@ -38,8 +38,6 @@ mixin AttendanceUIBuilderMixin
   @override
   TextEditingController get searchController;
   @override
-  bool get isTimelineView;
-  @override
   bool get hasActiveFilter;
   List<dynamic> get homeroomClassesList;
   Map<String, dynamic>? get selectedHomeroomClass;
@@ -63,6 +61,7 @@ mixin AttendanceUIBuilderMixin
     required VoidCallback onTap,
   });
   int get activeFilterCount;
+  String currentPeriodLabel(LanguageProvider lp);
   void clearAllFilters();
 
   // ═══════════════════════════════════════════
@@ -105,11 +104,7 @@ mixin AttendanceUIBuilderMixin
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _buildKpiCard(lp),
             ),
-            bodyChildren: [
-              isTimelineView
-                  ? buildTimelineBodyForBrand(lp)
-                  : buildGroupedBodyForBrand(lp),
-            ],
+            bodyChildren: [buildGroupedBodyForBrand(lp)],
           ),
         ),
         floatingActionButton: isHomeroomView
@@ -128,11 +123,7 @@ mixin AttendanceUIBuilderMixin
   bool _onScrollEndForPagination(ScrollEndNotification n) {
     final m = n.metrics;
     if (m.pixels < m.maxScrollExtent - 200) return false;
-    // Timeline view returns the full set in one shot (`timelineHasMore`
-    // is always false after fetch), so only the grouped list paginates.
-    if (!isTimelineView && hasMoreData) {
-      loadMoreGroupedAttendance();
-    }
+    if (hasMoreData) loadMoreGroupedAttendance();
     return false;
   }
 
@@ -156,12 +147,6 @@ mixin AttendanceUIBuilderMixin
           onTap: () => showFilterDialog(lp),
           badgeCount: activeFilterCount > 0 ? activeFilterCount : null,
           badgeBorderColor: ColorUtils.brandDarkBlue,
-        ),
-        BrandHeaderIconButton(
-          icon: isTimelineView
-              ? Icons.grid_view_rounded
-              : Icons.view_list_rounded,
-          onTap: toggleView,
         ),
       ],
       childSelector: _buildRoleSelector(lp),
@@ -256,7 +241,10 @@ mixin AttendanceUIBuilderMixin
         children: [
           Expanded(
             child: _kpiCell(
-              label: lp.getTranslatedText({'en': 'Today', 'id': 'Hari ini'}),
+              // Period label flips with the active filter — `Hari ini`
+              // by default, `Minggu ini` / `Bulan ini` when the
+              // teacher tapped the Periode chip in the filter sheet.
+              label: currentPeriodLabel(lp),
               value: sessionsToday.toString(),
               caption: lp.getTranslatedText({'en': 'sessions', 'id': 'sesi'}),
               accent: ColorUtils.brandCobalt,
@@ -400,7 +388,6 @@ mixin AttendanceUIBuilderMixin
   // ABSTRACT METHOD HOOKS
   // ═══════════════════════════════════════════
 
-  void toggleView();
   @override
   Future<void> forceRefresh();
   @override
@@ -410,8 +397,6 @@ mixin AttendanceUIBuilderMixin
   Widget buildEmbeddedHeader(LanguageProvider lp);
   @override
   Widget buildInputMode();
-  @override
-  Widget buildTimelineBody(LanguageProvider lp);
   @override
   Widget buildBody(LanguageProvider lp);
 }

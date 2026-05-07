@@ -344,17 +344,23 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
       }
     }
 
-    Widget cardFor(Map<String, dynamic> g) => AttendanceGroupCard(
-      group: g,
-      primaryColor: primaryColor,
-      languageProvider: lp,
-      isHomeroomView: isHomeroomView,
-      onTap: () => openAttendanceDetail(
-        classId: g['class_id']?.toString() ?? '',
-        className: g['class_name']?.toString() ?? '',
-        subjectId: g['subject_id']?.toString() ?? '',
-        subjectName: g['subject_name']?.toString() ?? '',
-        teacherId: g['teacher_id']?.toString(),
+    // Compact session card matching the brand mockup. Drives the
+    // status pill from `recorded_count` / `attendance_count` /
+    // `total_sessions`: zero → "Belum" amber, otherwise "{pct}%" or
+    // "{n} sesi" green.
+    Widget cardFor(Map<String, dynamic> g, {required bool pending}) => Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: _AttendanceMockupCard(
+        group: g,
+        pending: pending,
+        primaryColor: primaryColor,
+        onTap: () => openAttendanceDetail(
+          classId: g['class_id']?.toString() ?? '',
+          className: g['class_name']?.toString() ?? '',
+          subjectId: g['subject_id']?.toString() ?? '',
+          subjectName: g['subject_name']?.toString() ?? '',
+          teacherId: g['teacher_id']?.toString(),
+        ),
       ),
     );
 
@@ -372,7 +378,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
               trailing: '${pendingToday.length} sesi',
             ),
             const SizedBox(height: 8),
-            for (final g in pendingToday) cardFor(g),
+            for (final g in pendingToday) cardFor(g, pending: true),
             const SizedBox(height: 18),
           ],
           if (doneToday.isNotEmpty) ...[
@@ -384,7 +390,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
               trailing: '${doneToday.length} sesi',
             ),
             const SizedBox(height: 8),
-            for (final g in doneToday) cardFor(g),
+            for (final g in doneToday) cardFor(g, pending: false),
             const SizedBox(height: 18),
           ],
           if (other.isNotEmpty) ...[
@@ -396,7 +402,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
               trailing: '${other.length}',
             ),
             const SizedBox(height: 8),
-            for (final g in other) cardFor(g),
+            for (final g in other) cardFor(g, pending: false),
           ],
           if (isLoadingMore) _buildLoadingIndicator(),
         ],
@@ -479,6 +485,176 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
   void setSelectedLessonHourId(String? v);
   void setSelectedClassId(String? v);
   void setSelectedSubjectId(String? v);
+}
+
+/// Compact session card for the brand-migrated Presensi screen,
+/// matching the v1 mockup card shape:
+/// `[icon] [Mapel · Kelas / Day · Time · Jam ke-N] [pill]`.
+class _AttendanceMockupCard extends StatelessWidget {
+  final Map<String, dynamic> group;
+  final bool pending;
+  final Color primaryColor;
+  final VoidCallback onTap;
+
+  const _AttendanceMockupCard({
+    required this.group,
+    required this.pending,
+    required this.primaryColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final subject = (group['subject_name'] ?? '-').toString();
+    final klass = (group['class_name'] ?? '-').toString();
+    final dateStr =
+        (group['latest_date'] ?? group['date'] ?? group['tanggal'] ?? '')
+            .toString();
+    final totalSessions = (group['total_sessions'] ?? 0) as num? ?? 0;
+    final avgPct = (group['avg_present_pct'] ?? 0) as num? ?? 0;
+
+    final iconBg = pending ? const Color(0xFFFEF3C7) : const Color(0xFFDBEAFE);
+    final iconFg = pending ? const Color(0xFFB45309) : ColorUtils.brandCobalt;
+    final initial = subject.isEmpty
+        ? '?'
+        : subject.substring(0, 1).toUpperCase();
+
+    String pillText;
+    Color pillBg;
+    Color pillFg;
+    if (pending) {
+      pillText = 'Belum';
+      pillBg = const Color(0xFFFEF3C7);
+      pillFg = const Color(0xFFB45309);
+    } else if (totalSessions == 0) {
+      pillText = '—';
+      pillBg = ColorUtils.slate100;
+      pillFg = ColorUtils.slate500;
+    } else {
+      pillText = '${avgPct.toStringAsFixed(0)}%';
+      pillBg = const Color(0xFFDCFCE7);
+      pillFg = const Color(0xFF15803D);
+    }
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: ColorUtils.slate200, width: 0.75),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: iconFg,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$subject · $klass',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: ColorUtils.slate900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _subtitle(dateStr, totalSessions.toInt()),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: ColorUtils.slate500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: pillBg,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  pillText,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: pillFg,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _subtitle(String dateStr, int totalSessions) {
+    final d = DateTime.tryParse(dateStr);
+    if (d == null && totalSessions == 0) return '—';
+    final dateLabel = d == null ? '' : _fmtDate(d);
+    if (totalSessions <= 0) return dateLabel;
+    final sesiLabel = '$totalSessions sesi';
+    return dateLabel.isEmpty ? sesiLabel : '$dateLabel · $sesiLabel';
+  }
+
+  String _fmtDate(DateTime d) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
+    final today = DateTime.now();
+    if (d.year == today.year && d.month == today.month && d.day == today.day) {
+      return 'Hari ini';
+    }
+    if (d.year == today.year &&
+        d.month == today.month &&
+        d.day == today.day - 1) {
+      return 'Kemarin';
+    }
+    return '${d.day} ${months[d.month - 1]}';
+  }
 }
 
 /// Compact "Title · trailing" section heading used to break the

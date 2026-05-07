@@ -166,6 +166,17 @@ mixin AttendanceFilterChipsMixin on ConsumerState<AttendancePage> {
     return n;
   }
 
+  /// Localized label for the active period filter — used by the KPI
+  /// card to title the "sessions" cell ("Hari ini", "Minggu ini",
+  /// etc.) so it reflects the dimension the user is looking at.
+  /// Defaults to "Hari ini" when no period filter is set.
+  String currentPeriodLabel(LanguageProvider lp) {
+    if (filterDateOption == null || filterDateOption == 'today') {
+      return lp.getTranslatedText({'en': 'Today', 'id': 'Hari ini'});
+    }
+    return _resolveDateLabel(lp);
+  }
+
   /// Clear all active filters and refresh data
   void clearAllFilters() {
     setState(() {
