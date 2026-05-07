@@ -59,6 +59,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
     required String subjectId,
     required String subjectName,
     String? teacherId,
+    Map<String, dynamic>? group,
   });
 
   void filterStudents();
@@ -126,6 +127,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
             subjectId: g['subject_id']?.toString() ?? '',
             subjectName: g['subject_name']?.toString() ?? '',
             teacherId: g['teacher_id']?.toString(),
+            group: g is Map<String, dynamic> ? g : Map<String, dynamic>.from(g),
           ),
         );
       },
@@ -237,6 +239,9 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
             subjectId: (r['subject_id'] ?? '').toString(),
             subjectName: (r['subject_name'] ?? '').toString(),
             teacherId: r['teacher_id']?.toString(),
+            group: r is Map<String, dynamic>
+                ? r
+                : Map<String, dynamic>.from(r as Map),
           ),
         );
       },
@@ -368,6 +373,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
           subjectId: g['subject_id']?.toString() ?? '',
           subjectName: g['subject_name']?.toString() ?? '',
           teacherId: g['teacher_id']?.toString(),
+          group: g,
         ),
       ),
     );
@@ -478,6 +484,9 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
                 subjectId: (r['subject_id'] ?? '').toString(),
                 subjectName: (r['subject_name'] ?? '').toString(),
                 teacherId: r['teacher_id']?.toString(),
+                group: r is Map<String, dynamic>
+                    ? r
+                    : Map<String, dynamic>.from(r as Map),
               ),
             ),
           if (timelineLoadingMore) _buildLoadingIndicator(),

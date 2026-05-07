@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_quick_actions_sheet.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_detail_sheet.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
@@ -51,8 +53,77 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
     }
   }
 
+  /// Tap behaviour for a session card on Presensi.
+  ///
+  /// Per the brand-migration mockup (Frame B from
+  /// `_design/teacher_attendance_detail_mockup.html`), tapping a card
+  /// should jump directly to the detail/edit screen for that specific
+  /// session — not show another sheet listing every date for the
+  /// class+subject combo. We pull the latest session's date and
+  /// lesson-hour-id from `latest_records[0]` (with `latest_date` /
+  /// `latest_lesson_hour_id` as fallbacks) and navigate.
+  ///
+  /// If the group has no resolvable session yet (e.g. a freshly
+  /// scheduled slot with zero records), we fall back to the all-dates
+  /// sheet via [openAttendanceDetailSheet] so the teacher can still
+  /// open Ambil Presensi via the FAB inside.
   @override
   void openAttendanceDetail({
+    required String classId,
+    required String className,
+    required String subjectId,
+    required String subjectName,
+    String? teacherId,
+    Map<String, dynamic>? group,
+  }) {
+    final dyn = group;
+    final latestRecords = (dyn?['latest_records'] as List?) ?? const [];
+    final latestRow = latestRecords.isNotEmpty ? latestRecords.first : null;
+    final dateStr =
+        (latestRow is Map ? latestRow['date']?.toString() : null) ??
+        dyn?['latest_date']?.toString();
+    final lessonHourId =
+        (latestRow is Map ? latestRow['lesson_hour_id']?.toString() : null) ??
+        dyn?['latest_lesson_hour_id']?.toString();
+    final lessonHourName =
+        (latestRow is Map ? latestRow['lesson_hour_name']?.toString() : null) ??
+        dyn?['latest_lesson_hour_name']?.toString();
+
+    final date = dateStr != null ? DateTime.tryParse(dateStr) : null;
+    if (date == null) {
+      // No resolvable session yet — surface the all-dates sheet so the
+      // teacher can pick (or create) one via Ambil Presensi.
+      openAttendanceDetailSheet(
+        classId: classId,
+        className: className,
+        subjectId: subjectId,
+        subjectName: subjectName,
+        teacherId: teacherId,
+      );
+      return;
+    }
+
+    AppNavigator.push(
+      context,
+      TeacherAttendanceDetailPage(
+        subjectId: subjectId,
+        subjectName: subjectName,
+        classId: classId,
+        className: className,
+        date: date,
+        teacher: {'id': this.teacherId, 'nama': teacherNama},
+        lessonHourId: lessonHourId,
+        lessonHourName: lessonHourName,
+        canEdit: !isHomeroomView,
+        filterTeacherId: teacherId ?? (isHomeroomView ? null : this.teacherId),
+      ),
+    ).then((_) => refreshGroupedAttendance());
+  }
+
+  /// All-dates sheet (the previous default tap behaviour). Kept around
+  /// for the fallback case above and as a future "Lihat Semua" entry
+  /// point — long-press / overflow menu / View All chevron.
+  void openAttendanceDetailSheet({
     required String classId,
     required String className,
     required String subjectId,
