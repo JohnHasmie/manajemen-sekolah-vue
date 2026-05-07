@@ -306,6 +306,62 @@
   .st-btn.on.i { background: var(--amber-50); color: var(--amber-600); border-color: var(--amber-600); }
   .st-btn.on.a { background: var(--red-50); color: var(--red-600); border-color: var(--red-600); }
 
+  /* === Big-target status row (Frame A v2) === */
+  /* The student card switches to a vertical layout: top row holds
+     avatar + name, bottom row is a 4-segment full-width picker
+     where every segment is ≥44px tall — well over Apple's 44pt
+     and Google's 48dp minimum touch-target sizes. Active segment
+     fills with its colour; inactive segments are subtle. */
+  .stu.tall {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 10px 8px;
+    gap: 8px;
+  }
+  .stu.tall .stu-top {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .stu.tall .stu-segments {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .seg {
+    height: 46px;
+    border-radius: 10px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    color: var(--slate-500);
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px;
+    font-size: 11px; font-weight: 700;
+  }
+  .seg .glyph {
+    width: 18px; height: 18px; border-radius: 999px;
+    background: var(--slate-100); color: var(--slate-400);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800;
+  }
+  .seg.on.h {
+    background: var(--green-50); border-color: var(--green-600);
+    color: var(--green-600);
+  }
+  .seg.on.h .glyph { background: var(--green-600); color: white; }
+  .seg.on.s {
+    background: var(--blue-50); border-color: var(--blue-600);
+    color: var(--blue-600);
+  }
+  .seg.on.s .glyph { background: var(--blue-600); color: white; }
+  .seg.on.i {
+    background: var(--amber-50); border-color: var(--amber-600);
+    color: var(--amber-600);
+  }
+  .seg.on.i .glyph { background: var(--amber-600); color: white; }
+  .seg.on.a {
+    background: var(--red-50); border-color: var(--red-600);
+    color: var(--red-600);
+  }
+  .seg.on.a .glyph { background: var(--red-600); color: white; }
+
   /* Pill on right when filled */
   .stu-pill {
     height: 26px;
@@ -449,7 +505,7 @@
 
 <!-- ════════════════ A · Take Attendance (empty / first time) ════════════════ -->
 <div class="frame">
-  <div class="frame-label"><span class="num">A</span>TAKE ATTENDANCE · NEW <span class="desc">From FAB · empty state · all default Hadir</span></div>
+  <div class="frame-label"><span class="num">A</span>TAKE ATTENDANCE · NEW <span class="desc">From FAB · 4-segment picker, 46dp tall · thumb-friendly</span></div>
   <div class="phone">
     <div class="header">
       <div class="h-row">
@@ -491,65 +547,73 @@
       </div>
       <div class="section-head"><div class="t">Daftar Siswa</div><div class="a">28 siswa</div></div>
 
-      <div class="stu">
-        <div class="stu-num">1.</div>
-        <div class="stu-avatar">AP</div>
-        <div class="stu-body">
-          <div class="stu-name">Aisha Putri</div>
-          <div class="stu-meta">7B · NIS 21001</div>
+      <div class="stu tall">
+        <div class="stu-top">
+          <div class="stu-num">1.</div>
+          <div class="stu-avatar">AP</div>
+          <div class="stu-body">
+            <div class="stu-name">Aisha Putri</div>
+            <div class="stu-meta">7B · NIS 21001</div>
+          </div>
         </div>
-        <div class="stu-status">
-          <div class="st-btn on h">H</div>
-          <div class="st-btn">S</div>
-          <div class="st-btn">I</div>
-          <div class="st-btn">A</div>
-        </div>
-      </div>
-      <div class="stu">
-        <div class="stu-num">2.</div>
-        <div class="stu-avatar">BS</div>
-        <div class="stu-body">
-          <div class="stu-name">Budi Santoso</div>
-          <div class="stu-meta">7B · NIS 21002</div>
-        </div>
-        <div class="stu-status">
-          <div class="st-btn on h">H</div>
-          <div class="st-btn">S</div>
-          <div class="st-btn">I</div>
-          <div class="st-btn">A</div>
+        <div class="stu-segments">
+          <div class="seg on h"><div class="glyph">✓</div>Hadir</div>
+          <div class="seg"><div class="glyph">●</div>Sakit</div>
+          <div class="seg"><div class="glyph">○</div>Izin</div>
+          <div class="seg"><div class="glyph">×</div>Alpa</div>
         </div>
       </div>
-      <div class="stu">
-        <div class="stu-num">3.</div>
-        <div class="stu-avatar">CD</div>
-        <div class="stu-body">
-          <div class="stu-name">Citra Dewi</div>
-          <div class="stu-meta">7B · NIS 21003</div>
+      <div class="stu tall">
+        <div class="stu-top">
+          <div class="stu-num">2.</div>
+          <div class="stu-avatar">BS</div>
+          <div class="stu-body">
+            <div class="stu-name">Budi Santoso</div>
+            <div class="stu-meta">7B · NIS 21002</div>
+          </div>
         </div>
-        <div class="stu-status">
-          <div class="st-btn on h">H</div>
-          <div class="st-btn">S</div>
-          <div class="st-btn">I</div>
-          <div class="st-btn">A</div>
+        <div class="stu-segments">
+          <div class="seg"><div class="glyph">✓</div>Hadir</div>
+          <div class="seg on s"><div class="glyph">●</div>Sakit</div>
+          <div class="seg"><div class="glyph">○</div>Izin</div>
+          <div class="seg"><div class="glyph">×</div>Alpa</div>
         </div>
       </div>
-      <div class="stu">
-        <div class="stu-num">4.</div>
-        <div class="stu-avatar">DR</div>
-        <div class="stu-body">
-          <div class="stu-name">Dimas Rahmat</div>
-          <div class="stu-meta">7B · NIS 21004</div>
+      <div class="stu tall">
+        <div class="stu-top">
+          <div class="stu-num">3.</div>
+          <div class="stu-avatar">CD</div>
+          <div class="stu-body">
+            <div class="stu-name">Citra Dewi</div>
+            <div class="stu-meta">7B · NIS 21003</div>
+          </div>
         </div>
-        <div class="stu-status">
-          <div class="st-btn on h">H</div>
-          <div class="st-btn">S</div>
-          <div class="st-btn">I</div>
-          <div class="st-btn">A</div>
+        <div class="stu-segments">
+          <div class="seg on h"><div class="glyph">✓</div>Hadir</div>
+          <div class="seg"><div class="glyph">●</div>Sakit</div>
+          <div class="seg"><div class="glyph">○</div>Izin</div>
+          <div class="seg"><div class="glyph">×</div>Alpa</div>
+        </div>
+      </div>
+      <div class="stu tall">
+        <div class="stu-top">
+          <div class="stu-num">4.</div>
+          <div class="stu-avatar">DR</div>
+          <div class="stu-body">
+            <div class="stu-name">Dimas Rahmat</div>
+            <div class="stu-meta">7B · NIS 21004</div>
+          </div>
+        </div>
+        <div class="stu-segments">
+          <div class="seg"><div class="glyph">✓</div>Hadir</div>
+          <div class="seg"><div class="glyph">●</div>Sakit</div>
+          <div class="seg"><div class="glyph">○</div>Izin</div>
+          <div class="seg on a"><div class="glyph">×</div>Alpa</div>
         </div>
       </div>
     </div>
     <div class="footer-save">
-      <div class="summary"><div class="v">28 / 28 dinilai</div><div class="l">Hari ini · Belum disimpan</div></div>
+      <div class="summary"><div class="v">26 / 28 dinilai</div><div class="l">Hari ini · 1 Sakit · 1 Alpa · Belum disimpan</div></div>
       <div class="btn">💾 Simpan</div>
     </div>
   </div>
@@ -841,7 +905,7 @@
   <h3 style="margin:0 0 10px;font-size:15px;color:var(--brand-dark)">Notes for review</h3>
   <ul style="font-size:12px;color:var(--slate-600);line-height:1.7;padding-left:20px;margin:0">
     <li><strong>One screen, two modes.</strong> Frame A is the "new" flow (FAB tap on Presensi); Frame B is "edit" (existing card tap). Same scaffold, different starting state. Title flips between <em>Ambil Presensi</em> and <em>Edit Presensi</em> based on whether `attendance_id` is present.</li>
-    <li><strong>Inline 4-button picker (Frame A).</strong> When the student row has no saved status yet — i.e., we're in the new flow with default Hadir applied — the row shows a compact 4-button picker (H/S/I/A). Tap any to switch. Saves UI roundtrips for the dominant case (mark a few absent, save).</li>
+    <li><strong>Big-target 4-segment picker (Frame A v2).</strong> The student card is two stacked rows: avatar + name on top, then a full-width 4-segment picker (Hadir / Sakit / Izin / Alpa) underneath. Each segment is <code>46dp</code> tall and ~<code>78dp</code> wide — well above iOS 44pt and Material 48dp minimum hit targets, so a teacher can mark students with their thumb without zooming. Active segment fills with its colour and turns its glyph dot solid; inactive segments stay outlined. Saves a UI roundtrip for the dominant case (mark a few absent, save).</li>
     <li><strong>Pill + sheet (Frame B).</strong> Once a session is saved, the right-hand affordance becomes a single colored pill ("Hadir", "Sakit", etc). Tapping the pill opens Frame E — a per-student sheet with the 4 status tiles + a notes field. This keeps the list tighter when reviewing.</li>
     <li><strong>KPI strip is live.</strong> The 4-cell counts at the top update as the teacher taps statuses. Same overlap pattern as the Presensi list KPI (`BrandPageLayout.kpiOverlapHeight`).</li>
     <li><strong>Quick actions (Frame C).</strong> Mark all Hadir, fill remaining as Alpa, copy from last session, reset, change date/slot. Keeps the bulk-mark chips on the body simple and shoves power-features into the sheet.</li>
