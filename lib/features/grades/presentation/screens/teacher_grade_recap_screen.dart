@@ -8,19 +8,20 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/features/grades/data/grade_recap_service.dart';
-import 'package:manajemensekolah/features/grades/data/grade_service.dart';
-import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.dart';
+import 'package:manajemensekolah/features/grades/data/grade_recap_table_builder.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_data_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_grade_ops_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_data_ops_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_ui_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/add_chapter_sheet.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_chapter_rename_dialog.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_modal_header.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_save_bar.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_table_skeleton.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_table_view.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_tour_helper.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_unsaved_changes_dialog.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
-import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 
 /// Grade recap wizard: class -> subject -> table.
@@ -161,13 +162,13 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
           subjectId: subjectId,
           academicYearId: ayId,
         ),
-        _fetchMaterialsForSubject(
+        GradeRecapTableBuilder.fetchMaterialsForSubject(
           teacherId: teacherId,
           subjectId: subjectId,
           classId: classId,
           academicYearId: ayId,
         ),
-        _fetchGradesForSubject(
+        GradeRecapTableBuilder.fetchGradesForSubject(
           teacherId: teacherId,
           subjectId: subjectId,
           academicYearId: ayId,
@@ -180,8 +181,19 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
       availableMaterials = results[1] as List<String>;
       rawGrades = results[2] as List<dynamic>;
 
-      // Parse response into tableData format expected by mixins
-      _buildTableData(data);
+      // Parse response into tableData format expected by mixins. The
+      // builder mutates the controller maps in place; the screen still
+      // owns disposal in [dispose].
+      final built = GradeRecapTableBuilder.build(
+        apiData: data,
+        predikatControllers: predikatControllers,
+        descriptionControllers: descriptionControllers,
+        scoreControllers: scoreControllers,
+        scoreFocusNodes: scoreFocusNodes,
+      );
+      chapters = built.chapters;
+      tableData = built.tableData;
+      hasUnsavedChanges = false;
 
       setState(() => isLoading = false);
 
@@ -193,219 +205,8 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
     }
   }
 
-  /// Converts API response into the tableData format expected by the table
-  /// mixins. Also initialises controllers for predikat, description, and scores.
-  void _buildTableData(List<dynamic> apiData) {
-    // Determine chapters from the first student that has bab data
-    List<dynamic> babNames = [];
-    int maxBabs = 0;
-    for (final row in apiData) {
-      final scores = row['bab_scores'];
-      final names = row['bab_names'];
-      if (scores is List && scores.length > maxBabs) {
-        maxBabs = scores.length;
-        if (names is List && names.length == scores.length) {
-          babNames = names;
-        }
-      }
-    }
-
-    // Build chapter list
-    if (maxBabs == 0) {
-      // Default to 1 empty chapter if none exist
-      maxBabs = 1;
-      babNames = ['Bab 1'];
-    }
-    chapters = List.generate(maxBabs, (i) {
-      final name = i < babNames.length ? babNames[i]?.toString() : null;
-      return {'judul_bab': name ?? 'Bab ${i + 1}'};
-    });
-
-    // Dispose old controllers + focus nodes
-    for (final c in scoreControllers.values) {
-      c.dispose();
-    }
-    for (final f in scoreFocusNodes.values) {
-      f.dispose();
-    }
-    for (final c in predikatControllers.values) {
-      c.dispose();
-    }
-    for (final c in descriptionControllers.values) {
-      c.dispose();
-    }
-    scoreControllers.clear();
-    scoreFocusNodes.clear();
-    predikatControllers.clear();
-    descriptionControllers.clear();
-
-    // Build table rows
-    tableData = apiData.map<Map<String, dynamic>>((row) {
-      final scId = row['student_class_id']?.toString() ?? '';
-      // Use growable list — JSON decode returns fixed-length lists
-      final babScores = row['bab_scores'] is List
-          ? List<double?>.from(
-              (row['bab_scores'] as List).map(
-                (v) => v is num ? v.toDouble() : null,
-              ),
-            )
-          : List<double?>.generate(maxBabs, (_) => null);
-
-      // Pad bab_scores to maxBabs
-      while (babScores.length < maxBabs) {
-        babScores.add(null);
-      }
-
-      final uts = row['uts_score'] is num
-          ? (row['uts_score'] as num).toDouble()
-          : null;
-      final uas = row['uas_score'] is num
-          ? (row['uas_score'] as num).toDouble()
-          : null;
-      final finalScore = row['final_score'] is num
-          ? (row['final_score'] as num).toDouble()
-          : null;
-      final skillScore = row['skill_score'] is num
-          ? (row['skill_score'] as num).toDouble()
-          : null;
-
-      // Create controllers
-      predikatControllers[scId] = TextEditingController(
-        text: row['predikat']?.toString() ?? '',
-      );
-      descriptionControllers[scId] = TextEditingController(
-        text: row['deskripsi']?.toString() ?? '',
-      );
-
-      // Score controllers + focus nodes keyed as "scId|type|chapterIndex".
-      // Keeping both maps in lock-step lets the cell builder look up its
-      // own focus node AND the adjacent row's focus node by the same key
-      // shape, which is what powers Enter/Arrow-Down → next row.
-      void registerCell(String cellKey, String text) {
-        scoreControllers[cellKey] = TextEditingController(text: text);
-        scoreFocusNodes[cellKey] = FocusNode(debugLabel: 'score:$cellKey');
-      }
-
-      for (int i = 0; i < maxBabs; i++) {
-        registerCell(
-          '$scId|bab|$i',
-          babScores[i] != null ? babScores[i]!.toStringAsFixed(0) : '',
-        );
-      }
-      registerCell('$scId|uts|null', uts != null ? uts.toStringAsFixed(0) : '');
-      registerCell('$scId|uas|null', uas != null ? uas.toStringAsFixed(0) : '');
-      registerCell(
-        '$scId|skill_score|null',
-        skillScore != null ? skillScore.toStringAsFixed(0) : '',
-      );
-
-      return {
-        'student_class_id': scId,
-        'student_id': row['student_id']?.toString() ?? '',
-        'nama': row['student_name']?.toString() ?? '-',
-        'nis': row['nis']?.toString() ?? '',
-        'bab_scores': babScores,
-        'uts': uts,
-        'uas': uas,
-        'final_score': finalScore,
-        'skill_score': skillScore,
-      };
-    }).toList();
-
-    hasUnsavedChanges = false;
-  }
-
   Future<void> loadTodaySchedules() async {
     // Not needed for recap — placeholder for mixin compatibility
-  }
-
-  /// Pulls lesson-plan titles for the current (teacher, subject, class,
-  /// academic-year) slice and returns them as a clean, deduped list of
-  /// materi names. Failures return `[]` — the add-bab sheet handles the
-  /// empty case by dropping straight into custom-input mode.
-  Future<List<String>> _fetchMaterialsForSubject({
-    required String teacherId,
-    required String subjectId,
-    required String classId,
-    required String academicYearId,
-  }) async {
-    try {
-      final resp = await LessonPlanService.getLessonPlansPaginated(
-        page: 1,
-        limit: 100,
-        teacherId: teacherId.isEmpty ? null : teacherId,
-        subjectId: subjectId.isEmpty ? null : subjectId,
-        classId: classId.isEmpty ? null : classId,
-        academicYearId: academicYearId.isEmpty ? null : academicYearId,
-      );
-      final list = resp['data'];
-      if (list is! List) return <String>[];
-      final titles = <String>{};
-      for (final item in list) {
-        if (item is! Map) continue;
-        final title = (item['title'] ?? item['judul'] ?? item['nama'])
-            ?.toString()
-            .trim();
-        if (title != null && title.isNotEmpty) titles.add(title);
-      }
-      return titles.toList();
-    } catch (e) {
-      AppLogger.error('grade_recap', 'Error loading lesson-plan titles: $e');
-      return <String>[];
-    }
-  }
-
-  /// Pulls every grade recorded for this (teacher, subject, year) combo.
-  /// Used in two ways: (1) as the pool the add-bab sheet dedupes into a
-  /// list of assessments, and (2) as the per-student lookup we consult
-  /// when the teacher picks an assessment to fill a new column from.
-  Future<List<dynamic>> _fetchGradesForSubject({
-    required String teacherId,
-    required String subjectId,
-    required String academicYearId,
-  }) async {
-    try {
-      return await GradeService.getGrades(
-        teacherId: teacherId.isEmpty ? null : teacherId,
-        subjectId: subjectId.isEmpty ? null : subjectId,
-        academicYearId: academicYearId.isEmpty ? null : academicYearId,
-      );
-    } catch (e) {
-      AppLogger.error('grade_recap', 'Error loading grades pool: $e');
-      return <dynamic>[];
-    }
-  }
-
-  /// Collapses [rawGrades] into a deduped list of assessments,
-  /// keyed by (title, date, type). Each entry is the shape the
-  /// add-bab sheet expects:
-  /// ```
-  /// { 'title': 'Tugas 1', 'type': 'tugas', 'date': '2025-09-14' }
-  /// ```
-  List<Map<String, dynamic>> _deriveAvailableAssessments() {
-    final seen = <String>{};
-    final out = <Map<String, dynamic>>[];
-    for (final g in rawGrades) {
-      if (g is! Map) continue;
-      final title = (g['title'] ?? g['judul'] ?? '').toString().trim();
-      final type = (g['type'] ?? g['grade_type'] ?? '')
-          .toString()
-          .trim()
-          .toLowerCase();
-      final date = (g['date'] ?? g['tanggal'] ?? '').toString().trim();
-      if (title.isEmpty) continue;
-      final key = '$title|$type|$date';
-      if (seen.add(key)) {
-        out.add({'title': title, 'type': type, 'date': date});
-      }
-    }
-    // Sort: group by type first (tugas/uh/…), then by date ascending.
-    out.sort((a, b) {
-      final t = (a['type'] as String).compareTo(b['type'] as String);
-      if (t != 0) return t;
-      return (a['date'] as String).compareTo(b['date'] as String);
-    });
-    return out;
   }
 
   void loadClasses() {
@@ -619,7 +420,9 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
     //   (1) Materi / Bab — pick a lesson-plan title or type a custom name.
     //   (2) Cara mengisi nilai — pick an existing assessment to pull scores
     //       from, or "Input Manual" to leave the new column blank.
-    final assessments = _deriveAvailableAssessments();
+    final assessments = GradeRecapTableBuilder.deriveAvailableAssessments(
+      rawGrades,
+    );
     final result = await showAddChapterSheet(
       context: context,
       primaryColor: getPrimaryColor(),
@@ -690,48 +493,17 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
   void editChapter(int chapterIndex) async {
     if (chapterIndex < 0 || chapterIndex >= chapters.length) return;
     final ch = chapters[chapterIndex] as Map;
-    final currentName = (ch['judul_bab'] ??
-            ch['judul'] ??
-            ch['title'] ??
-            'Bab ${chapterIndex + 1}')
-        .toString();
-    final controller = TextEditingController(text: currentName);
-    final newName = await showDialog<String>(
+    final currentName =
+        (ch['judul_bab'] ??
+                ch['judul'] ??
+                ch['title'] ??
+                'Bab ${chapterIndex + 1}')
+            .toString();
+    final newName = await showGradeRecapChapterRenameDialog(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: const Text('Ubah nama bab'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(
-            labelText: 'Nama bab',
-            hintText: 'Mis. "Bab 1: Pengantar"',
-            border: OutlineInputBorder(),
-          ),
-          onSubmitted: (v) => Navigator.of(dialogCtx).pop(v.trim()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () =>
-                Navigator.of(dialogCtx).pop(controller.text.trim()),
-            child: const Text('Simpan'),
-          ),
-        ],
-      ),
+      currentName: currentName,
     );
-    // Defer disposal — the dialog's close animation may still
-    // rebuild the TextField on the next frame and would crash
-    // with "TextEditingController used after disposed".
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.dispose();
-    });
-    if (newName == null || newName.isEmpty || newName == currentName) return;
-    if (!mounted) return;
+    if (newName == null || !mounted) return;
     setState(() {
       // Mutate in place so any other key the source data carries
       // (judul / title fallback) stays — we just override the
@@ -756,11 +528,12 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
     // "Hapus" / "Batal" pair) so the destructive confirm matches
     // every other destructive flow in the app.
     final ch = chapters[chapterIndex] as Map;
-    final name = (ch['judul_bab'] ??
-            ch['judul'] ??
-            ch['title'] ??
-            'Bab ${chapterIndex + 1}')
-        .toString();
+    final name =
+        (ch['judul_bab'] ??
+                ch['judul'] ??
+                ch['title'] ??
+                'Bab ${chapterIndex + 1}')
+            .toString();
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -828,7 +601,14 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
       // not the "Tidak Ada Siswa" empty state (tableData starts empty and
       // loadRecapData only runs after the first build via post-frame).
       isLoading = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => loadRecapData());
+      // Defer the heavy fetch + controller creation until AFTER the modal
+      // bottom sheet finishes its open animation (~250ms). Doing it
+      // synchronously janks the slide-up transition because building
+      // 100s of TextEditingController + FocusNode instances blocks the
+      // UI thread mid-animation.
+      Future.delayed(const Duration(milliseconds: 320), () {
+        if (mounted) loadRecapData();
+      });
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await loadTodaySchedules();
@@ -957,7 +737,13 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
           ],
         ),
         bottomNavigationBar: (_currentStep == 2 && tableData.isNotEmpty)
-            ? _buildBottomBar(lp)
+            ? GradeRecapSaveBar(
+                saveKey: _saveKey,
+                isSaving: isSaving,
+                hasUnsavedChanges: hasUnsavedChanges,
+                onSave: _onSavePressed,
+                lp: lp,
+              )
             : null,
         floatingActionButton: (_currentStep == 2 && tableData.isNotEmpty)
             ? FloatingActionButton(
@@ -979,102 +765,6 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
     );
   }
 
-  /// Sticky bottom bar: Simpan-only primary action.
-  ///
-  /// Export lives in the header; the `+` FAB handles add-chapter. This
-  /// leaves the bottom bar free to present a single full-width save
-  /// affordance with an inline unsaved-changes hint. The FAB floats above
-  /// the bar via [FloatingActionButtonLocation.endFloat], so the Simpan
-  /// button takes the full available width.
-  Widget _buildBottomBar(LanguageProvider lp) {
-    return Container(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 10,
-        bottom: MediaQuery.of(context).padding.bottom + 10,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: ColorUtils.slate200)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SizedBox(
-        key: _saveKey,
-        height: 52,
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: isSaving ? null : _onSavePressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: ColorUtils.success600,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: ColorUtils.slate300,
-            elevation: 2,
-            shadowColor: ColorUtils.success600.withValues(alpha: 0.4),
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-          icon: isSaving
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.save_rounded, size: 18),
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                isSaving
-                    ? lp.getTranslatedText({
-                        'en': 'Saving...',
-                        'id': 'Menyimpan...',
-                      })
-                    : lp.getTranslatedText({'en': 'Save', 'id': 'Simpan'}),
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
-              ),
-              // Inline unsaved-changes indicator — small white dot next
-              // to the label when there are pending changes.
-              if (hasUnsavedChanges && !isSaving) ...[
-                const SizedBox(width: 8),
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        blurRadius: 4,
-                        spreadRadius: 0.5,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildBody(LanguageProvider lp) {
     if (_currentStep == 0) {
       return const SizedBox.shrink(); // Wizard step 0 — class selection
@@ -1085,9 +775,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
 
     // Step 2 — table view
     if (isLoading) {
-      return const SkeletonListLoading(
-        padding: EdgeInsets.only(top: 8, bottom: 80),
-      );
+      return GradeRecapTableSkeleton(primaryColor: getPrimaryColor());
     }
 
     if (tableData.isEmpty) {
