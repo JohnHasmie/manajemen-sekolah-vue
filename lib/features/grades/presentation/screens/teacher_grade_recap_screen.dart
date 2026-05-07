@@ -824,6 +824,10 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
       _selectedClass = widget.initialClass;
       _selectedSubject = widget.initialSubject;
       _currentStep = 2;
+      // Set isLoading synchronously so the first frame shows the skeleton,
+      // not the "Tidak Ada Siswa" empty state (tableData starts empty and
+      // loadRecapData only runs after the first build via post-frame).
+      isLoading = true;
       WidgetsBinding.instance.addPostFrameCallback((_) => loadRecapData());
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
