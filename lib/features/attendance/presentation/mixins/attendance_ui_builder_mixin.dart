@@ -120,8 +120,20 @@ mixin AttendanceUIBuilderMixin
 
   /// Triggers infinite-scroll pagination when the user reaches within
   /// 200 dp of the bottom of `BrandPageLayout`'s outer ListView.
+  ///
+  /// Two guards before firing `loadMore`:
+  ///   1. The list must actually be longer than the threshold —
+  ///      otherwise on a short list (e.g. only 1 row visible) the
+  ///      `maxScrollExtent - 200` becomes negative and the
+  ///      `pixels < negative` check is always false, slipping
+  ///      through to a spurious `loadMore` call.
+  ///   2. The user must have scrolled — `pixels > 0`. A pull-to-
+  ///      refresh emits a `ScrollEndNotification` with `pixels = 0`
+  ///      that would otherwise satisfy guard 1 alone.
   bool _onScrollEndForPagination(ScrollEndNotification n) {
     final m = n.metrics;
+    if (m.maxScrollExtent <= 200) return false;
+    if (m.pixels <= 0) return false;
     if (m.pixels < m.maxScrollExtent - 200) return false;
     if (hasMoreData) loadMoreGroupedAttendance();
     return false;
