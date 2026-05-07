@@ -1,18 +1,40 @@
-// Bottom sheet for bulk-setting all students to a single attendance status.
+// Quick actions sheet — Frame C from
+// `_design/teacher_attendance_detail_mockup.html`.
+//
+// Bottom sheet from the "⚡ Cepat" toolbar button. Replaces the legacy
+// 5-status tile grid with a list of focused bulk actions:
+//
+//   • Tandai semua Hadir            override every student → hadir
+//   • Sisanya Alpa                  only students without a mark yet
+//   • Reset semua ke kosong         clear every student's mark
+//
+// Each row is rendered as a `_SheetButton` matching the mockup's
+// `.sheet-btn` block: tinted icon tile + lead/desc text + chevron.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
-typedef OnStatusSelected = void Function(String status);
-
 class AttendanceQuickActionsSheet extends StatelessWidget {
   final LanguageProvider languageProvider;
-  final OnStatusSelected onStatusSelected;
+
+  /// Override every student's status (e.g. "Tandai semua Hadir").
+  final void Function(String status) onStatusSelected;
+
+  /// Apply a status only to students that don't have a status yet
+  /// (mockup's "Sisanya Alpa"). Optional — when null, that row is
+  /// hidden so callers without the wiring don't show a dead button.
+  final void Function(String status)? onFillUnmarked;
+
+  /// Reset every student to "no status" (mockup's "Reset semua ke
+  /// kosong"). Optional — same reason as `onFillUnmarked`.
+  final VoidCallback? onResetAll;
 
   const AttendanceQuickActionsSheet({
     super.key,
     required this.languageProvider,
     required this.onStatusSelected,
+    this.onFillUnmarked,
+    this.onResetAll,
   });
 
   String _tr(Map<String, String> map) =>
@@ -28,152 +50,204 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
           topRight: Radius.circular(20),
         ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag handle
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: ColorUtils.slate300,
-              borderRadius: BorderRadius.circular(2),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHandle(),
+            const SizedBox(height: 12),
+            _buildTitle(),
+            _buildSubtitle(),
+            const SizedBox(height: 8),
+            _SheetButton(
+              icon: Icons.check_rounded,
+              iconBg: const Color(0xFFDCFCE7),
+              iconFg: ColorUtils.success600,
+              title: _tr({
+                'en': 'Mark all Present',
+                'id': 'Tandai semua Hadir',
+              }),
+              desc: _tr({
+                'en': 'Override any current status',
+                'id': 'Override status manapun',
+              }),
+              onTap: () {
+                Navigator.pop(context);
+                onStatusSelected('hadir');
+              },
             ),
-          ),
-          const SizedBox(height: 16),
-          // Title
-          Text(
-            _tr({
-              'en': 'Mark All Students As',
-              'id': 'Tandai Semua Siswa Sebagai',
-            }),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: ColorUtils.slate800,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            _tr({
-              'en': 'Tap a status to apply to all students',
-              'id': 'Ketuk status untuk diterapkan ke semua siswa',
-            }),
-            style: TextStyle(fontSize: 12, color: ColorUtils.slate400),
-          ),
-          const SizedBox(height: 16),
-          // Status options
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _StatusOption(
-                  status: 'hadir',
-                  label: _tr({'en': 'Present', 'id': 'Hadir'}),
-                  icon: Icons.check_circle_outline,
-                  color: ColorUtils.success600,
-                  onTap: () => _select(context, 'hadir'),
-                ),
-                const SizedBox(width: 8),
-                _StatusOption(
-                  status: 'terlambat',
-                  label: _tr({'en': 'Late', 'id': 'Terlambat'}),
-                  icon: Icons.watch_later_outlined,
-                  color: ColorUtils.violet700,
-                  onTap: () => _select(context, 'terlambat'),
-                ),
-                const SizedBox(width: 8),
-                _StatusOption(
-                  status: 'sakit',
-                  label: _tr({'en': 'Sick', 'id': 'Sakit'}),
-                  icon: Icons.local_hospital_outlined,
-                  color: ColorUtils.warning600,
-                  onTap: () => _select(context, 'sakit'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _StatusOption(
-                  status: 'izin',
-                  label: _tr({'en': 'Permission', 'id': 'Izin'}),
-                  icon: Icons.assignment_turned_in_outlined,
-                  color: ColorUtils.info600,
-                  onTap: () => _select(context, 'izin'),
-                ),
-                const SizedBox(width: 8),
-                _StatusOption(
-                  status: 'alpha',
-                  label: _tr({'en': 'Absent', 'id': 'Alpha'}),
-                  icon: Icons.cancel_outlined,
-                  color: ColorUtils.error600,
-                  onTap: () => _select(context, 'alpha'),
-                ),
-                const SizedBox(width: 8),
-                // Empty spacer to keep 3-column grid
-                const Expanded(child: SizedBox()),
-              ],
-            ),
-          ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
-        ],
+            if (onFillUnmarked != null)
+              _SheetButton(
+                icon: Icons.close_rounded,
+                iconBg: const Color(0xFFFEE2E2),
+                iconFg: ColorUtils.error600,
+                title: _tr({'en': 'Remaining as Absent', 'id': 'Sisanya Alpa'}),
+                desc: _tr({
+                  'en': 'Only for students not yet marked',
+                  'id': 'Hanya untuk siswa belum dinilai',
+                }),
+                onTap: () {
+                  Navigator.pop(context);
+                  onFillUnmarked!('alpha');
+                },
+              ),
+            if (onResetAll != null)
+              _SheetButton(
+                icon: Icons.refresh_rounded,
+                iconBg: const Color(0xFFF5F3FF),
+                iconFg: ColorUtils.violet700,
+                title: _tr({
+                  'en': 'Reset all to empty',
+                  'id': 'Reset semua ke kosong',
+                }),
+                desc: _tr({
+                  'en': 'Clear every status — nothing saved',
+                  'id': 'Hapus semua status — tidak ada yang disimpan',
+                }),
+                onTap: () {
+                  Navigator.pop(context);
+                  onResetAll!();
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
 
-  void _select(BuildContext context, String status) {
-    onStatusSelected(status);
-    Navigator.of(context).pop();
+  Widget _buildHandle() {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      width: 40,
+      height: 4,
+      decoration: BoxDecoration(
+        color: ColorUtils.slate300,
+        borderRadius: BorderRadius.circular(999),
+      ),
+    );
+  }
+
+  Widget _buildTitle() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          _tr({'en': 'Quick actions', 'id': 'Aksi cepat'}),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: ColorUtils.slate900,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubtitle() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          _tr({
+            'en':
+                'Apply to every student or only the ones without a '
+                'status yet.',
+            'id':
+                'Terapkan ke seluruh siswa atau hanya yang belum '
+                'dinilai.',
+          }),
+          style: TextStyle(
+            fontSize: 11,
+            color: ColorUtils.slate500,
+            height: 1.4,
+          ),
+        ),
+      ),
+    );
   }
 }
 
-/// Card-style status option with icon, label, and tap animation.
-class _StatusOption extends StatelessWidget {
-  final String status;
-  final String label;
+/// Individual list-style action — tinted icon tile + title + desc + chev.
+class _SheetButton extends StatelessWidget {
   final IconData icon;
-  final Color color;
+  final Color iconBg;
+  final Color iconFg;
+  final String title;
+  final String desc;
   final VoidCallback onTap;
 
-  const _StatusOption({
-    required this.status,
-    required this.label,
+  const _SheetButton({
     required this.icon,
-    required this.color,
+    required this.iconBg,
+    required this.iconFg,
+    required this.title,
+    required this.desc,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
       child: Material(
-        color: Colors.transparent,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.06),
+              border: Border.all(color: ColorUtils.slate200),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: color.withValues(alpha: 0.2)),
             ),
-            child: Column(
+            child: Row(
               children: [
-                Icon(icon, color: color, size: 24),
-                const SizedBox(height: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: color,
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(10),
                   ),
+                  alignment: Alignment.center,
+                  child: Icon(icon, size: 18, color: iconFg),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: ColorUtils.slate900,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        desc,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: ColorUtils.slate500,
+                          fontWeight: FontWeight.w500,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: ColorUtils.slate300,
                 ),
               ],
             ),

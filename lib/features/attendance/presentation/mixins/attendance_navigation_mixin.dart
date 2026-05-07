@@ -182,10 +182,34 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
       backgroundColor: Colors.transparent,
       builder: (_) => AttendanceQuickActionsSheet(
         languageProvider: lp,
+        // Override every student's status (Tandai semua Hadir / Sakit / etc).
         onStatusSelected: (status) {
           setState(() {
             for (final s in filteredStudentList) {
               attendanceStatus[s.id] = status;
+            }
+          });
+        },
+        // Apply only to students that haven't been marked yet
+        // (mockup's "Sisanya Alpa"). Default of 'hadir' on the mobile
+        // form means an unmarked student is one whose key isn't in
+        // attendanceStatus yet — guard with isEmpty just in case.
+        onFillUnmarked: (status) {
+          setState(() {
+            for (final s in filteredStudentList) {
+              final v = attendanceStatus[s.id];
+              if (v == null || v.isEmpty) {
+                attendanceStatus[s.id] = status;
+              }
+            }
+          });
+        },
+        // Clear every student's mark — they go back to "no status set"
+        // (the form's default-Hadir hydration kicks in on next render).
+        onResetAll: () {
+          setState(() {
+            for (final s in filteredStudentList) {
+              attendanceStatus.remove(s.id);
             }
           });
         },
