@@ -257,90 +257,123 @@ class GradeRecapTableView extends StatelessWidget {
 
   Widget _babHeader(int i) {
     final title = _chapterTitle(i);
+
+    // Header is now icon-free. The two affordances that used to be
+    // jammed into the chip (edit pencil + delete ×) lived in a
+    // ~90px-wide cell along with two-line wrapped text and read as
+    // visual noise — and the × in particular collided with the
+    // AppBar's close-screen X right above it.
+    //
+    // Short-tap stays wired to onBulkSelect (the bulk-grade dialog
+    // is still TODO upstream but the wire stays for when it lands).
+    // Long-press opens the action menu with rename + (when >1) delete.
+    //
+    // The Builder wraps the InkWell so the long-press handler has a
+    // descendant BuildContext for `showModalBottomSheet` — the cell
+    // sits deep inside FrozenColumnTable's internal scrollers so we
+    // can't reach for the host screen's context here.
+    return Builder(
+      builder: (cellContext) {
+        return InkWell(
+          onTap: () => onBulkSelect('bab', i),
+          onLongPress: () => _showChapterActionSheet(cellContext, i),
+          child: Container(
+            decoration: _headerBorderDecoration(),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            alignment: Alignment.center,
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 0.2,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Opens the action menu for chapter [i]. `Ubah nama bab` is
+  /// always present; `Hapus bab` only when there's more than one
+  /// chapter, since deleting the only column would leave the table
+  /// with no grade slots.
+  void _showChapterActionSheet(BuildContext context, int i) {
     final canDelete = chapters.length > 1;
 
-    // Tapping the header itself renames the chapter — that's the
-    // edit affordance. Delete remains a separate × icon top-right
-    // and is only shown when there's more than one bab (deleting
-    // the last column would leave the table with no grade slots).
-    return InkWell(
-      onTap: () => onEditChapter(i),
-      child: Container(
-        decoration: _headerBorderDecoration(),
-        child: Stack(
-          children: [
-            Padding(
-              // Reserve room on both sides for the edit pencil
-              // (always shown, left) and the delete × (when >1, right).
-              padding: EdgeInsets.only(
-                left: 18,
-                right: canDelete ? 18 : 6,
-                top: 6,
-                bottom: 6,
-              ),
-              child: Center(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: 0.2,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-            // Edit pencil — always visible, including when there's
-            // only one bab (which is the case the user reported as
-            // "no edit button at all"). Tapping it does the same
-            // thing as tapping the header: opens the rename sheet.
-            Positioned(
-              top: 2,
-              left: 2,
-              child: InkResponse(
-                radius: 14,
-                onTap: () => onEditChapter(i),
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.edit_rounded,
-                    size: 12,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                ),
-              ),
-            ),
-            if (canDelete)
-              Positioned(
-                top: 2,
-                right: 2,
-                child: InkResponse(
-                  radius: 14,
-                  onTap: () => onDeleteChapter(i),
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.close_rounded,
-                      size: 12,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (sheetCtx) {
+        return SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate200,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    _chapterTitle(i),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: ColorUtils.slate900,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.edit_outlined,
+                  color: ColorUtils.slate700,
+                ),
+                title: const Text('Ubah nama bab'),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  onEditChapter(i);
+                },
+              ),
+              if (canDelete)
+                ListTile(
+                  leading: Icon(
+                    Icons.delete_outline_rounded,
+                    color: ColorUtils.error600,
+                  ),
+                  title: Text(
+                    'Hapus bab',
+                    style: TextStyle(color: ColorUtils.error600),
+                  ),
+                  onTap: () {
+                    Navigator.of(sheetCtx).pop();
+                    onDeleteChapter(i);
+                  },
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 

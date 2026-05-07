@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/features/grades/data/grade_recap_service.dart';
 import 'package:manajemensekolah/features/grades/data/grade_service.dart';
 import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.dart';
@@ -723,7 +724,12 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
         ],
       ),
     );
-    controller.dispose();
+    // Defer disposal — the dialog's close animation may still
+    // rebuild the TextField on the next frame and would crash
+    // with "TextEditingController used after disposed".
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
     if (newName == null || newName.isEmpty || newName == currentName) return;
     if (!mounted) return;
     setState(() {
@@ -741,8 +747,33 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
   }
 
   @override
-  void deleteChapter(int chapterIndex) {
+  void deleteChapter(int chapterIndex) async {
     if (chapters.length <= 1) return;
+
+    // Long-press already raised the gesture cost, but the actual
+    // mutation wipes scores from every student row in this column.
+    // Route through the shared ConfirmationDialog (gradient header,
+    // "Hapus" / "Batal" pair) so the destructive confirm matches
+    // every other destructive flow in the app.
+    final ch = chapters[chapterIndex] as Map;
+    final name = (ch['judul_bab'] ??
+            ch['judul'] ??
+            ch['title'] ??
+            'Bab ${chapterIndex + 1}')
+        .toString();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => ConfirmationDialog(
+        title: 'Hapus bab',
+        content:
+            'Yakin ingin menghapus "$name"? Semua nilai siswa di kolom ini akan ikut terhapus.',
+        confirmText: 'Hapus',
+        confirmColor: ColorUtils.error600,
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
     setState(() {
       chapters = List.from(chapters)..removeAt(chapterIndex);
       for (final row in tableData) {
