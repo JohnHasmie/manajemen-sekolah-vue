@@ -586,7 +586,19 @@ class _AttendanceMockupCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _subtitle(dateStr, totalSessions.toInt()),
+                      _subtitle(
+                        dateStr: dateStr,
+                        totalSessions: totalSessions.toInt(),
+                        // In wali-kelas mode the backend tags every
+                        // row with the recording teacher (the guru
+                        // who taught that class·subject·session) so
+                        // the wali can spot which guru hasn't filled
+                        // their slot. Surface that name as the lead
+                        // of the subtitle when present.
+                        teacherName: (group['teacher_name'] ?? '')
+                            .toString()
+                            .trim(),
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -620,13 +632,19 @@ class _AttendanceMockupCard extends StatelessWidget {
     );
   }
 
-  String _subtitle(String dateStr, int totalSessions) {
+  String _subtitle({
+    required String dateStr,
+    required int totalSessions,
+    String teacherName = '',
+  }) {
+    final parts = <String>[];
+    if (teacherName.isNotEmpty && teacherName != '-') {
+      parts.add(teacherName);
+    }
     final d = DateTime.tryParse(dateStr);
-    if (d == null && totalSessions == 0) return '—';
-    final dateLabel = d == null ? '' : _fmtDate(d);
-    if (totalSessions <= 0) return dateLabel;
-    final sesiLabel = '$totalSessions sesi';
-    return dateLabel.isEmpty ? sesiLabel : '$dateLabel · $sesiLabel';
+    if (d != null) parts.add(_fmtDate(d));
+    if (totalSessions > 0) parts.add('$totalSessions sesi');
+    return parts.isEmpty ? '—' : parts.join(' · ');
   }
 
   String _fmtDate(DateTime d) {
