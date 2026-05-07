@@ -292,75 +292,42 @@
     flex: 0 0 auto;
     display: flex; gap: 4px;
   }
+  /* === Inline status picker (Frame A) ===
+     Single-row layout per student so the list stays scannable.
+     Buttons carry the full status word (Hadir / Sakit / Izin / Alpa)
+     instead of letter glyphs, so meaning is unambiguous at a glance.
+     Each button is 48dp wide × 40dp tall — width covers the longest
+     label with breathing room, and 40dp height stays well above the
+     ergonomic minimum for a quick thumb-tap. Active state fills with
+     the status colour. */
   .st-btn {
-    width: 30px; height: 30px;
-    border-radius: 8px;
+    min-width: 48px; height: 40px;
+    padding: 0 6px;
+    border-radius: 11px;
     background: var(--slate-100);
     color: var(--slate-500);
     display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-weight: 800;
     border: 1.5px solid transparent;
+    letter-spacing: 0.2px;
   }
   .st-btn.on.h { background: var(--green-50); color: var(--green-600); border-color: var(--green-600); }
   .st-btn.on.s { background: var(--blue-50); color: var(--blue-600); border-color: var(--blue-600); }
   .st-btn.on.i { background: var(--amber-50); color: var(--amber-600); border-color: var(--amber-600); }
   .st-btn.on.a { background: var(--red-50); color: var(--red-600); border-color: var(--red-600); }
-
-  /* === Big-target status row (Frame A v2) === */
-  /* The student card switches to a vertical layout: top row holds
-     avatar + name, bottom row is a 4-segment full-width picker
-     where every segment is ≥44px tall — well over Apple's 44pt
-     and Google's 48dp minimum touch-target sizes. Active segment
-     fills with its colour; inactive segments are subtle. */
-  .stu.tall {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 10px 10px 8px;
-    gap: 8px;
+  /* "pick" mode (Frame A · take new). Avatar is dropped in this mode —
+     the order + name carry enough identity, and the saved horizontal
+     space goes to the word-button picker. */
+  .stu.pick { padding: 10px 10px 10px 12px; gap: 10px; }
+  .stu.pick .stu-avatar { display: none; }
+  .stu.pick .stu-name {
+    font-size: 13.5px; font-weight: 800;
+    color: var(--slate-900);
   }
-  .stu.tall .stu-top {
-    display: flex; align-items: center; gap: 10px;
+  .stu.pick .stu-meta {
+    font-size: 10.5px; color: var(--slate-500);
+    margin-top: 2px;
   }
-  .stu.tall .stu-segments {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-  }
-  .seg {
-    height: 46px;
-    border-radius: 10px;
-    background: white;
-    border: 1px solid var(--slate-200);
-    color: var(--slate-500);
-    display: flex; align-items: center; justify-content: center;
-    gap: 4px;
-    font-size: 11px; font-weight: 700;
-  }
-  .seg .glyph {
-    width: 18px; height: 18px; border-radius: 999px;
-    background: var(--slate-100); color: var(--slate-400);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 800;
-  }
-  .seg.on.h {
-    background: var(--green-50); border-color: var(--green-600);
-    color: var(--green-600);
-  }
-  .seg.on.h .glyph { background: var(--green-600); color: white; }
-  .seg.on.s {
-    background: var(--blue-50); border-color: var(--blue-600);
-    color: var(--blue-600);
-  }
-  .seg.on.s .glyph { background: var(--blue-600); color: white; }
-  .seg.on.i {
-    background: var(--amber-50); border-color: var(--amber-600);
-    color: var(--amber-600);
-  }
-  .seg.on.i .glyph { background: var(--amber-600); color: white; }
-  .seg.on.a {
-    background: var(--red-50); border-color: var(--red-600);
-    color: var(--red-600);
-  }
-  .seg.on.a .glyph { background: var(--red-600); color: white; }
 
   /* Pill on right when filled */
   .stu-pill {
@@ -505,7 +472,7 @@
 
 <!-- ════════════════ A · Take Attendance (empty / first time) ════════════════ -->
 <div class="frame">
-  <div class="frame-label"><span class="num">A</span>TAKE ATTENDANCE · NEW <span class="desc">From FAB · 4-segment picker, 46dp tall · thumb-friendly</span></div>
+  <div class="frame-label"><span class="num">A</span>TAKE ATTENDANCE · NEW <span class="desc">From FAB · single-line rows · word buttons (Hadir/Sakit/Izin/Alpa) at 48×40dp</span></div>
   <div class="phone">
     <div class="header">
       <div class="h-row">
@@ -547,68 +514,56 @@
       </div>
       <div class="section-head"><div class="t">Daftar Siswa</div><div class="a">28 siswa</div></div>
 
-      <div class="stu tall">
-        <div class="stu-top">
-          <div class="stu-num">1.</div>
-          <div class="stu-avatar">AP</div>
-          <div class="stu-body">
-            <div class="stu-name">Aisha Putri</div>
-            <div class="stu-meta">7B · NIS 21001</div>
-          </div>
+      <div class="stu pick">
+        <div class="stu-avatar">AP</div>
+        <div class="stu-body">
+          <div class="stu-name">Aisha Putri</div>
+          <div class="stu-meta">NIS 21001</div>
         </div>
-        <div class="stu-segments">
-          <div class="seg on h"><div class="glyph">✓</div>Hadir</div>
-          <div class="seg"><div class="glyph">●</div>Sakit</div>
-          <div class="seg"><div class="glyph">○</div>Izin</div>
-          <div class="seg"><div class="glyph">×</div>Alpa</div>
+        <div class="stu-status">
+          <div class="st-btn on h">Hadir</div>
+          <div class="st-btn">Sakit</div>
+          <div class="st-btn">Izin</div>
+          <div class="st-btn">Alpa</div>
         </div>
       </div>
-      <div class="stu tall">
-        <div class="stu-top">
-          <div class="stu-num">2.</div>
-          <div class="stu-avatar">BS</div>
-          <div class="stu-body">
-            <div class="stu-name">Budi Santoso</div>
-            <div class="stu-meta">7B · NIS 21002</div>
-          </div>
+      <div class="stu pick">
+        <div class="stu-avatar">BS</div>
+        <div class="stu-body">
+          <div class="stu-name">Budi Santoso</div>
+          <div class="stu-meta">NIS 21002</div>
         </div>
-        <div class="stu-segments">
-          <div class="seg"><div class="glyph">✓</div>Hadir</div>
-          <div class="seg on s"><div class="glyph">●</div>Sakit</div>
-          <div class="seg"><div class="glyph">○</div>Izin</div>
-          <div class="seg"><div class="glyph">×</div>Alpa</div>
+        <div class="stu-status">
+          <div class="st-btn">Hadir</div>
+          <div class="st-btn on s">Sakit</div>
+          <div class="st-btn">Izin</div>
+          <div class="st-btn">Alpa</div>
         </div>
       </div>
-      <div class="stu tall">
-        <div class="stu-top">
-          <div class="stu-num">3.</div>
-          <div class="stu-avatar">CD</div>
-          <div class="stu-body">
-            <div class="stu-name">Citra Dewi</div>
-            <div class="stu-meta">7B · NIS 21003</div>
-          </div>
+      <div class="stu pick">
+        <div class="stu-avatar">CD</div>
+        <div class="stu-body">
+          <div class="stu-name">Citra Dewi</div>
+          <div class="stu-meta">NIS 21003</div>
         </div>
-        <div class="stu-segments">
-          <div class="seg on h"><div class="glyph">✓</div>Hadir</div>
-          <div class="seg"><div class="glyph">●</div>Sakit</div>
-          <div class="seg"><div class="glyph">○</div>Izin</div>
-          <div class="seg"><div class="glyph">×</div>Alpa</div>
+        <div class="stu-status">
+          <div class="st-btn on h">Hadir</div>
+          <div class="st-btn">Sakit</div>
+          <div class="st-btn">Izin</div>
+          <div class="st-btn">Alpa</div>
         </div>
       </div>
-      <div class="stu tall">
-        <div class="stu-top">
-          <div class="stu-num">4.</div>
-          <div class="stu-avatar">DR</div>
-          <div class="stu-body">
-            <div class="stu-name">Dimas Rahmat</div>
-            <div class="stu-meta">7B · NIS 21004</div>
-          </div>
+      <div class="stu pick">
+        <div class="stu-avatar">DR</div>
+        <div class="stu-body">
+          <div class="stu-name">Dimas Rahmat</div>
+          <div class="stu-meta">NIS 21004</div>
         </div>
-        <div class="stu-segments">
-          <div class="seg"><div class="glyph">✓</div>Hadir</div>
-          <div class="seg"><div class="glyph">●</div>Sakit</div>
-          <div class="seg"><div class="glyph">○</div>Izin</div>
-          <div class="seg on a"><div class="glyph">×</div>Alpa</div>
+        <div class="stu-status">
+          <div class="st-btn">Hadir</div>
+          <div class="st-btn">Sakit</div>
+          <div class="st-btn">Izin</div>
+          <div class="st-btn on a">Alpa</div>
         </div>
       </div>
     </div>

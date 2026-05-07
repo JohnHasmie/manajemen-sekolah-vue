@@ -114,7 +114,11 @@ class AttendancePageState extends ConsumerState<AttendancePage>
   String? _selectedLessonHourId;
   final TextEditingController _searchCtrlInput = TextEditingController();
   String? _selectedStatusFilter;
-  bool _compactMode = false;
+  // Default to compact mode — matches the Frame A "take attendance" design:
+  // single-line row per student with full-word status buttons (Hadir / Telat /
+  // Sakit / Izin / Alpa) at ≈40dp tall. The toggle remains so users who
+  // prefer the spacier two-row descriptive layout can flip back.
+  bool _compactMode = true;
   final ScrollController _scrollController = ScrollController();
 
   /// KPI bundle returned alongside the grouped attendance summary —

@@ -1,5 +1,7 @@
 /// Student row for attendance input with two display modes:
-/// - compact:     single row  [# avatar name ── H T S I A]
+/// - compact:     single row  [name + NIS ── Hadir | Telat | Sakit | Izin | Alpa]
+///                Frame A from `_design/teacher_attendance_detail_mockup.html` —
+///                full-word buttons at ≈40dp tall · thumb-friendly.
 /// - descriptive: two rows    [# avatar name ── badge]
 ///                            [Hadir] [Terlambat] [Sakit] [Izin] [Alpha]
 library;
