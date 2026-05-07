@@ -41,6 +41,7 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/drag_handle.dart';
 import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
 import 'package:manajemensekolah/features/grades/data/grade_service.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/modern_grade_editor_parts.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
@@ -202,32 +203,8 @@ class _ModernGradeEditorSheetState
 
   /// Indonesian-school predikat mapping. Mirrors the thresholds used on the
   /// grade recap screen so teachers see the same letter grade in both places.
-  ({String letter, Color color, String label}) _predikat(int? score) {
-    if (score == null) {
-      return (letter: '—', color: ColorUtils.slate300, label: 'Masukkan nilai');
-    }
-    if (score >= 90) {
-      return (
-        letter: 'A',
-        color: const Color(0xFF16A34A),
-        label: 'Sangat Baik',
-      );
-    }
-    if (score >= 80) {
-      return (letter: 'B', color: const Color(0xFF2563EB), label: 'Baik');
-    }
-    if (score >= 70) {
-      return (letter: 'C', color: const Color(0xFFCA8A04), label: 'Cukup');
-    }
-    if (score >= 60) {
-      return (letter: 'D', color: const Color(0xFFEA580C), label: 'Kurang');
-    }
-    return (
-      letter: 'E',
-      color: const Color(0xFFDC2626),
-      label: 'Perlu Bimbingan',
-    );
-  }
+  ({String letter, Color color, String label}) _predikat(int? score) =>
+      modernGradeEditorPredikat(score);
 
   void _bumpScore(int delta) {
     HapticFeedback.selectionClick();
@@ -465,7 +442,10 @@ class _ModernGradeEditorSheetState
                     children: [
                       _buildStudentStrip(lang, primary),
                       const SizedBox(height: AppSpacing.lg),
-                      _buildScoreHero(lang, primary),
+                      ModernGradeEditorScoreHero(
+                        score: _currentScore,
+                        lang: lang,
+                      ),
                       const SizedBox(height: AppSpacing.lg),
                       _buildScoreFieldRow(lang, primary),
                       const SizedBox(height: AppSpacing.sm),
@@ -486,7 +466,16 @@ class _ModernGradeEditorSheetState
                 ),
               ),
             ),
-            _buildFooter(lang, primary),
+            ModernGradeEditorFooter(
+              lang: lang,
+              primary: primary,
+              isEditing: _isEditing,
+              isReadOnly: _isReadOnly,
+              isSaving: _isSaving,
+              isDeleting: _isDeleting,
+              onSave: _save,
+              onDelete: _confirmDelete,
+            ),
           ],
         ),
       ),
@@ -605,123 +594,6 @@ class _ModernGradeEditorSheetState
                   style: TextStyle(fontSize: 11.5, color: ColorUtils.slate500),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScoreHero(LanguageProvider lang, Color primary) {
-    final score = _currentScore;
-    final predikat = _predikat(score);
-    final percent = (score ?? 0).clamp(0, 100) / 100.0;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            predikat.color.withValues(alpha: 0.10),
-            predikat.color.withValues(alpha: 0.02),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: predikat.color.withValues(alpha: 0.25)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lang.getTranslatedText({
-                        'en': 'Current Score',
-                        'id': 'Nilai Saat Ini',
-                      }),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: ColorUtils.slate500,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          score?.toString() ?? '—',
-                          style: TextStyle(
-                            fontSize: 44,
-                            fontWeight: FontWeight.w800,
-                            color: predikat.color,
-                            height: 1.0,
-                          ),
-                        ),
-                        if (score != null)
-                          Text(
-                            ' / 100',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: ColorUtils.slate400,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: predikat.color,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      predikat.letter,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        height: 1.0,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      predikat.label,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: percent,
-              minHeight: 6,
-              backgroundColor: ColorUtils.slate100,
-              valueColor: AlwaysStoppedAnimation(predikat.color),
             ),
           ),
         ],
@@ -1003,98 +875,6 @@ class _ModernGradeEditorSheetState
         const SizedBox(height: 6),
         child,
       ],
-    );
-  }
-
-  Widget _buildFooter(LanguageProvider lang, Color primary) {
-    final isBusy = _isSaving || _isDeleting;
-    // Add the system nav-bar inset on top of the base padding so the buttons
-    // don't sit flush against the Samsung/Android navigation bar. Matches
-    // the shared BottomSheetFooter pattern used elsewhere in the app.
-    final systemBottom = MediaQuery.of(context).padding.bottom;
-    return Container(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + systemBottom),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: ColorUtils.slate100)),
-      ),
-      child: Row(
-        children: [
-          if (_isEditing)
-            OutlinedButton.icon(
-              onPressed: isBusy ? null : _confirmDelete,
-              icon: _isDeleting
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Color(0xFFDC2626),
-                      ),
-                    )
-                  : const Icon(Icons.delete_outline_rounded, size: 18),
-              label: Text(
-                lang.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFDC2626),
-                side: const BorderSide(color: Color(0xFFFCA5A5)),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          if (_isEditing) const SizedBox(width: 10),
-          Expanded(
-            child: FilledButton.icon(
-              onPressed: (isBusy || _isReadOnly) ? null : _save,
-              icon: _isSaving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Icon(
-                      _isEditing
-                          ? Icons.check_circle_outline_rounded
-                          : Icons.save_rounded,
-                      size: 18,
-                    ),
-              label: Text(
-                _isEditing
-                    ? lang.getTranslatedText({
-                        'en': 'Update Grade',
-                        'id': 'Simpan Perubahan',
-                      })
-                    : lang.getTranslatedText({
-                        'en': 'Save Grade',
-                        'id': 'Simpan Nilai',
-                      }),
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: primary,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: primary.withValues(alpha: 0.5),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
