@@ -1,16 +1,17 @@
-// Builds the teacher Presensi screen using the brand visual language
-// (`BrandPageHeader` + KPI card overlay + multi-wali `RoleToggleChipRow` +
-// `BrandFilterChipStrip`).
+// Builds the teacher Presensi screen with the parent-role brand
+// pattern: BrandPageLayout (header + KPI overlay + scrollable body),
+// multi-wali RoleToggleChipRow in childSelector, BrandFilterChipStrip
+// in bottomSlot, and Column-style body widgets that slot into the
+// layout's outer ListView.
 //
-// Why we don't wrap with `BrandPageLayout`
-// ----------------------------------------
-// The existing body (`buildBody` / `buildTimelineBody`) carries its own
-// `ListView.builder` with pagination + scroll listener. `BrandPageLayout`
-// owns its outer `ListView`, which would conflict. To keep the inner
-// pagination flow intact, this screen lays out the header + KPI + body
-// manually as a Column. The KPI card uses a negative top margin to
-// overlap the gradient by `BrandPageLayout.kpiOverlapHeight`, matching
-// what the real layout does.
+// Pagination
+// ----------
+// The screen historically attached its scroll listener to its own
+// ScrollController. Inside BrandPageLayout that controller is
+// detached, so pagination uses a NotificationListener that watches
+// scroll-end notifications bubbling up from the layout's internal
+// ListView. When the user reaches within 200 dp of the bottom and
+// there's more data, we fire `loadMoreGroupedAttendance`.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -45,10 +46,18 @@ mixin AttendanceUIBuilderMixin
   Map<String, dynamic>? get selectedHomeroomClass;
   set selectedHomeroomClass(Map<String, dynamic>? v);
 
+  /// KPI bundle returned by the backend summary endpoint. Carries
+  /// `sessions_today`, `sessions_completed`, `sessions_pending`. Empty
+  /// before the first response — the KPI card falls back to client-side
+  /// computation from `groupedAttendance` until the backend lands.
+  Map<String, dynamic> get kpiSummary;
+
   // Methods to call
   void showAddAttendanceFlow(LanguageProvider lp);
   @override
   Future<void> refreshGroupedAttendance();
+  Future<void> loadMoreGroupedAttendance();
+  bool get hasMoreData;
   void showFilterDialog(LanguageProvider lp);
   List<ActiveFilter> buildActiveFilterChips(LanguageProvider lp);
   void clearAllFilters();
@@ -84,33 +93,22 @@ mixin AttendanceUIBuilderMixin
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
         backgroundColor: ColorUtils.slate50,
-        body: Column(
-          children: [
-            _brandHeader(lp, activeFilters),
-            Expanded(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // Body fills the remaining space starting from the
-                  // KPI card's mid-height, so the card visually overlaps
-                  // the gradient like `BrandPageLayout` does.
-                  Positioned.fill(
-                    top: _kpiOverlapBodyOffset,
-                    child: isTimelineView
-                        ? buildTimelineBody(lp)
-                        : buildBody(lp),
-                  ),
-                  // KPI card — overlaps the gradient.
-                  Positioned(
-                    top: -BrandPageLayout.kpiOverlapHeight,
-                    left: 12,
-                    right: 12,
-                    child: _buildKpiCard(lp),
-                  ),
-                ],
-              ),
+        body: NotificationListener<ScrollEndNotification>(
+          onNotification: _onScrollEndForPagination,
+          child: BrandPageLayout(
+            role: 'guru',
+            onRefresh: forceRefresh,
+            header: _brandHeader(lp, activeFilters),
+            kpiCard: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildKpiCard(lp),
             ),
-          ],
+            bodyChildren: [
+              isTimelineView
+                  ? buildTimelineBodyForBrand(lp)
+                  : buildGroupedBodyForBrand(lp),
+            ],
+          ),
         ),
         floatingActionButton: isHomeroomView
             ? null
@@ -123,14 +121,22 @@ mixin AttendanceUIBuilderMixin
     );
   }
 
+  /// Triggers infinite-scroll pagination when the user reaches within
+  /// 200 dp of the bottom of `BrandPageLayout`'s outer ListView.
+  bool _onScrollEndForPagination(ScrollEndNotification n) {
+    final m = n.metrics;
+    if (m.pixels < m.maxScrollExtent - 200) return false;
+    // Timeline view returns the full set in one shot (`timelineHasMore`
+    // is always false after fetch), so only the grouped list paginates.
+    if (!isTimelineView && hasMoreData) {
+      loadMoreGroupedAttendance();
+    }
+    return false;
+  }
+
   // ═══════════════════════════════════════════
   // HEADER
   // ═══════════════════════════════════════════
-
-  /// Cached body-offset for the KPI overlap. Kept as a constant getter
-  /// so the build method reads cleanly. Equals the KPI card's height
-  /// (~80 dp) minus the overlap so the body starts BELOW the card.
-  double get _kpiOverlapBodyOffset => 80 - BrandPageLayout.kpiOverlapHeight;
 
   Widget _brandHeader(LanguageProvider lp, List<ActiveFilter> activeFilters) {
     final filterCount = activeFilters.length;
@@ -162,9 +168,9 @@ mixin AttendanceUIBuilderMixin
     );
   }
 
-  /// Multi-wali-kelas role chip row. Shows nothing if the teacher only
-  /// has the Mengajar identity (no homeroom classes); shows
-  /// `Mengajar | Wali 7B | Wali 8A | …` otherwise.
+  /// Multi-wali-kelas role chip row. Hides itself when the teacher has
+  /// no homeroom assignments. Otherwise shows
+  /// `Mengajar | Wali 7B | Wali 8A | …`.
   Widget? _buildRoleSelector(LanguageProvider lp) {
     if (homeroomClassesList.isEmpty) return null;
     final roles = <RoleOption>[
@@ -213,9 +219,8 @@ mixin AttendanceUIBuilderMixin
   }
 
   /// Active-filter chip strip rendered in the header bottomSlot.
-  /// Each chip opens the same filter sheet — the body just previews
-  /// the active values so the teacher can see what's filtered without
-  /// opening the sheet.
+  /// Each chip opens the same filter sheet so the body just previews
+  /// the active values. Hidden when no filters are active.
   Widget? _buildFilterStrip(
     LanguageProvider lp,
     List<ActiveFilter> activeFilters,
@@ -237,36 +242,13 @@ mixin AttendanceUIBuilderMixin
   // KPI CARD
   // ═══════════════════════════════════════════
 
-  /// "Sesi hari ini · Selesai · Belum" — three stats computed from the
-  /// loaded grouped-attendance payload. The numbers are best-effort:
-  /// when the screen first paints (cache hit) the counts may be zero
-  /// until the API responds. A backend bundle endpoint is planned to
-  /// return these directly so the card is correct on first paint.
+  /// "Hari ini · Selesai · Belum" — three stats sourced from the
+  /// backend `kpi` field on the attendance summary response when
+  /// available, with a client-side fallback computed from the loaded
+  /// grouped-attendance payload (best-effort; won't reflect data on
+  /// pages the teacher hasn't scrolled into yet).
   Widget _buildKpiCard(LanguageProvider lp) {
-    final today = DateTime.now();
-    int sessionsToday = 0;
-    int completed = 0;
-    int pending = 0;
-    for (final raw in groupedAttendance) {
-      if (raw is! Map) continue;
-      final dateStr = (raw['date'] ?? raw['tanggal'] ?? '').toString();
-      final d = DateTime.tryParse(dateStr);
-      if (d == null) continue;
-      if (d.year != today.year ||
-          d.month != today.month ||
-          d.day != today.day) {
-        continue;
-      }
-      sessionsToday++;
-      final hasRecords =
-          (raw['recorded_count'] ?? raw['attendance_count'] ?? 0) is num &&
-          ((raw['recorded_count'] ?? raw['attendance_count'] ?? 0) as num) > 0;
-      if (hasRecords) {
-        completed++;
-      } else {
-        pending++;
-      }
-    }
+    final (sessionsToday, completed, pending) = _resolveKpi();
 
     return Container(
       decoration: BoxDecoration(
@@ -319,6 +301,50 @@ mixin AttendanceUIBuilderMixin
         ],
       ),
     );
+  }
+
+  /// Read KPI values from the backend summary's `kpi` map first, then
+  /// fall back to the client-side computation from `groupedAttendance`.
+  (int, int, int) _resolveKpi() {
+    int asInt(Object? v) {
+      if (v == null) return 0;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse(v.toString()) ?? 0;
+    }
+
+    if (kpiSummary.isNotEmpty) {
+      return (
+        asInt(kpiSummary['sessions_today']),
+        asInt(kpiSummary['sessions_completed']),
+        asInt(kpiSummary['sessions_pending']),
+      );
+    }
+
+    final today = DateTime.now();
+    int sessionsToday = 0;
+    int completed = 0;
+    int pending = 0;
+    for (final raw in groupedAttendance) {
+      if (raw is! Map) continue;
+      final dateStr = (raw['date'] ?? raw['tanggal'] ?? '').toString();
+      final d = DateTime.tryParse(dateStr);
+      if (d == null) continue;
+      if (d.year != today.year ||
+          d.month != today.month ||
+          d.day != today.day) {
+        continue;
+      }
+      sessionsToday++;
+      final recorded =
+          (raw['recorded_count'] ?? raw['attendance_count'] ?? 0) as num? ?? 0;
+      if (recorded > 0) {
+        completed++;
+      } else {
+        pending++;
+      }
+    }
+    return (sessionsToday, completed, pending);
   }
 
   Widget _kpiCell({

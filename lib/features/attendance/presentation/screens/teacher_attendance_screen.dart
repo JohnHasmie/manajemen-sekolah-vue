@@ -117,6 +117,16 @@ class AttendancePageState extends ConsumerState<AttendancePage>
   bool _compactMode = false;
   final ScrollController _scrollController = ScrollController();
 
+  /// KPI bundle returned alongside the grouped attendance summary —
+  /// `sessions_today`, `sessions_completed`, `sessions_pending`. Empty
+  /// before the first response; the KPI card falls back to a
+  /// client-side computation in that case.
+  Map<String, dynamic> _kpiSummary = const {};
+
+  @override
+  Map<String, dynamic> get kpiSummary => _kpiSummary;
+  set kpiSummary(Map<String, dynamic> v) => _kpiSummary = v;
+
   @override
   Color get primaryColor => ColorUtils.getRoleColor('guru');
 

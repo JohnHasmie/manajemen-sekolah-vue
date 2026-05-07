@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_error_state.dart';
+import 'package:manajemensekolah/core/widgets/empty_state.dart';
+import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
@@ -236,6 +239,158 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Center(child: CircularProgressIndicator(color: primaryColor)),
+    );
+  }
+
+  // ═══════════════════════════════════════════
+  // BRAND-LAYOUT-FRIENDLY BODIES
+  // ═══════════════════════════════════════════
+  //
+  // [BrandPageLayout] owns the outer ListView, so the body must NOT
+  // carry its own scroll or `RefreshIndicator`. These methods return
+  // Column-friendly widgets that slot into [BrandPageLayout.bodyChildren]
+  // directly. Loading / error / empty states render inline as
+  // fixed-height widgets — pull-to-refresh comes from the layout's
+  // `onRefresh`, pagination comes from the screen's scroll listener.
+
+  /// Grouped attendance list rendered as a Column for use inside
+  /// `BrandPageLayout.bodyChildren`. State branching:
+  ///   • loading + empty → skeleton
+  ///   • error           → AppErrorState
+  ///   • empty           → EmptyState (fixed height)
+  ///   • data            → Column of `AttendanceGroupCard`s + footer
+  Widget buildGroupedBodyForBrand(LanguageProvider lp) {
+    if (isLoading &&
+        groupedAttendance.isEmpty &&
+        attendanceErrorMessage == null) {
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: SkeletonListLoading(
+          itemCount: 6,
+          infoTagCount: 2,
+          showActions: false,
+        ),
+      );
+    }
+    if (attendanceErrorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: AppErrorState(
+          message: attendanceErrorMessage,
+          onRetry: forceRefresh,
+          role: 'guru',
+        ),
+      );
+    }
+    if (groupedAttendance.isEmpty) {
+      return SizedBox(
+        height: 320,
+        child: EmptyState(
+          title: lp.getTranslatedText({
+            'en': 'No attendance yet',
+            'id': 'Belum ada presensi',
+          }),
+          subtitle: searchController.text.isNotEmpty || hasActiveFilter
+              ? lp.getTranslatedText({
+                  'en': 'No attendance matches your filter',
+                  'id': 'Tidak ada presensi sesuai filter',
+                })
+              : lp.getTranslatedText({
+                  'en': 'Pull down to refresh',
+                  'id': 'Tarik ke bawah untuk memuat ulang',
+                }),
+          icon: Icons.fact_check_outlined,
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final g in groupedAttendance)
+            AttendanceGroupCard(
+              group: g as Map<String, dynamic>,
+              primaryColor: primaryColor,
+              languageProvider: lp,
+              isHomeroomView: isHomeroomView,
+              onTap: () => openAttendanceDetail(
+                classId: g['class_id']?.toString() ?? '',
+                className: g['class_name']?.toString() ?? '',
+                subjectId: g['subject_id']?.toString() ?? '',
+                subjectName: g['subject_name']?.toString() ?? '',
+                teacherId: g['teacher_id']?.toString(),
+              ),
+            ),
+          if (isLoadingMore) _buildLoadingIndicator(),
+        ],
+      ),
+    );
+  }
+
+  /// Timeline list rendered as a Column for use inside
+  /// `BrandPageLayout.bodyChildren`.
+  Widget buildTimelineBodyForBrand(LanguageProvider lp) {
+    if (isLoading &&
+        timelineAttendance.isEmpty &&
+        attendanceErrorMessage == null) {
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: SkeletonListLoading(
+          itemCount: 6,
+          infoTagCount: 1,
+          showActions: false,
+        ),
+      );
+    }
+    if (attendanceErrorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: AppErrorState(
+          message: attendanceErrorMessage,
+          onRetry: forceRefresh,
+          role: 'guru',
+        ),
+      );
+    }
+    if (timelineAttendance.isEmpty) {
+      return SizedBox(
+        height: 320,
+        child: EmptyState(
+          title: lp.getTranslatedText({
+            'en': 'No attendance records',
+            'id': 'Belum ada data presensi',
+          }),
+          subtitle: lp.getTranslatedText({
+            'en': 'Pull down to refresh',
+            'id': 'Tarik ke bawah untuk memuat ulang',
+          }),
+          icon: Icons.fact_check_outlined,
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final r in timelineAttendance)
+            AttendanceTimelineCard(
+              record: r as Map<String, dynamic>,
+              primaryColor: primaryColor,
+              languageProvider: lp,
+              onTap: () => openAttendanceDetail(
+                classId: (r['class_id'] ?? '').toString(),
+                className: (r['class_name'] ?? r['subject_name'] ?? '')
+                    .toString(),
+                subjectId: (r['subject_id'] ?? '').toString(),
+                subjectName: (r['subject_name'] ?? '').toString(),
+                teacherId: r['teacher_id']?.toString(),
+              ),
+            ),
+          if (timelineLoadingMore) _buildLoadingIndicator(),
+        ],
+      ),
     );
   }
 

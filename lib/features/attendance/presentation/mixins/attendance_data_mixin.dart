@@ -39,6 +39,13 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
   Map<String, dynamic>? get selectedHomeroomClass;
   set selectedHomeroomClass(Map<String, dynamic>? v);
 
+  /// KPI bundle returned by the backend summary endpoint — carries
+  /// `sessions_today`, `sessions_completed`, `sessions_pending` plus
+  /// any additional teacher-presensi KPIs the backend chooses to
+  /// include. Empty if the endpoint hasn't responded yet.
+  Map<String, dynamic> get kpiSummary;
+  set kpiSummary(Map<String, dynamic> v);
+
   bool get isLoading;
   set isLoading(bool v);
 
@@ -157,6 +164,11 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
 
       final data = (summaryResult['data'] as List?) ?? [];
       final pagination = summaryResult['pagination'];
+      // Optional KPI bundle returned alongside the paginated rows.
+      // The backend filled this in on the same teacherSummary endpoint
+      // so the screen doesn't need a separate round-trip for the
+      // overlay card. Treated as best-effort — empty map if absent.
+      final kpi = summaryResult['kpi'];
 
       setAttendanceError(null);
       setState(() {
@@ -169,6 +181,7 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
         groupedAttendance = data;
         hasMoreData = pagination?['has_next_page'] == true;
         currentPage = 1;
+        kpiSummary = (kpi is Map) ? Map<String, dynamic>.from(kpi) : const {};
         isLoading = false;
       });
     } catch (e) {
