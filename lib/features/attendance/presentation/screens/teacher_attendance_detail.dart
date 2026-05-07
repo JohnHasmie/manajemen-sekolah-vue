@@ -140,6 +140,58 @@ class _TeacherAttendanceDetailPageState
                         state.students.length,
                       ),
                       const SizedBox(height: 12),
+                      // Frame F · read-only banner — surfaces when the
+                      // session is from a past academic year (canEdit=false)
+                      // so the teacher knows why pills aren't tappable.
+                      if (!widget.canEdit)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: ColorUtils.info600.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: ColorUtils.info600.withValues(
+                                  alpha: 0.2,
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.lock_outline_rounded,
+                                  size: 16,
+                                  color: ColorUtils.info600,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    languageProvider.getTranslatedText({
+                                      'en':
+                                          'Past academic year — '
+                                          'attendance is locked. '
+                                          'Export to archive.',
+                                      'id':
+                                          'Tahun ajaran lalu — '
+                                          'tidak bisa diubah. '
+                                          'Ekspor Excel untuk arsip.',
+                                    }),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: ColorUtils.info600,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,

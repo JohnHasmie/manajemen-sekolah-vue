@@ -3,21 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/widgets/status_badge.dart';
+import 'package:manajemensekolah/features/attendance/domain/models/attendance.dart';
+import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_controller.dart';
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_state.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/per_student_status_picker.dart';
 
-/// Mixin for student card building.
+/// Builds the per-student row on the attendance detail screen
+/// (Frame B/F from `_design/teacher_attendance_detail_mockup.html`).
+///
+/// Single-line layout: `[# avatar name+NIS ── pill]` with the saved
+/// status rendered as a colored pill on the right. When `canEdit` is
+/// true the pill is tap-to-edit and opens the per-student status
+/// picker (Frame E); otherwise (Frame F · past academic year) the pill
+/// renders at 70% opacity and the row is non-interactive.
 mixin TeacherAttendanceDetailCardMixin
     on ConsumerState<TeacherAttendanceDetailPage> {
-  // Abstract methods that must be implemented by the consuming class
+  // Implemented by other mixins on the screen.
   String getStudentStatus(String studentId, TeacherAttendanceState state);
   Color getStatusColor(String status);
   String getStatusText(String status, LanguageProvider languageProvider);
-  IconData getStatusIcon(String status);
 
-  /// Build student card displaying attendance info
   Widget buildStudentCard(
     Student student,
     LanguageProvider languageProvider,
@@ -28,102 +34,238 @@ mixin TeacherAttendanceDetailCardMixin
     final Color statusColor = getStatusColor(status);
     final String statusText = getStatusText(status, languageProvider);
     final avatarColor = ColorUtils.getColorForIndex(index);
+    final note = _noteFor(student.id, state.attendanceRecords);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    final card = Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        boxShadow: [
-          BoxShadow(
-            color: ColorUtils.slate900.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _buildIndexNumber(index),
+          const SizedBox(width: 6),
+          _buildAvatar(student, avatarColor),
+          const SizedBox(width: 10),
+          Expanded(child: _buildBody(student, note)),
+          const SizedBox(width: 8),
+          _buildPill(statusColor, statusText),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        child: IntrinsicHeight(
-          child: Row(
-            children: [
-              Container(width: 3.5, color: statusColor.withValues(alpha: 0.8)),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: avatarColor.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            student.name.isNotEmpty
-                                ? student.name[0].toUpperCase()
-                                : '?',
-                            style: TextStyle(
-                              color: avatarColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              student.name,
-                              style: TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: FontWeight.w700,
-                                color: ColorUtils.slate900,
-                                letterSpacing: -0.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 1),
-                            Text(
-                              'NIS: ${student.studentNumber}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: ColorUtils.slate500,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      StatusBadge(
-                        label: statusText,
-                        color: statusColor,
-                        icon: getStatusIcon(status),
-                        iconSize: 10,
-                        fontSize: 10.5,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+    );
+
+    if (!widget.canEdit) {
+      // Frame F · read-only — no tap, slightly muted.
+      return Opacity(opacity: 0.92, child: card);
+    }
+
+    // Frame B · edit-on-pill.
+    return InkWell(
+      onTap: () => _openStatusPicker(student, status, note),
+      borderRadius: BorderRadius.circular(14),
+      child: card,
+    );
+  }
+
+  Widget _buildIndexNumber(int index) {
+    return SizedBox(
+      width: 22,
+      child: Text(
+        '${index + 1}.',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: ColorUtils.slate400,
         ),
       ),
+    );
+  }
+
+  Widget _buildAvatar(Student student, Color avatarColor) {
+    final initials = _initials(student.name);
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        color: avatarColor.withValues(alpha: 0.10),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: TextStyle(
+          color: avatarColor,
+          fontWeight: FontWeight.w800,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody(Student student, String? note) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          student.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: ColorUtils.slate900,
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '${widget.className} · NIS ${student.studentNumber}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 10,
+            color: ColorUtils.slate500,
+            fontWeight: FontWeight.w500,
+            height: 1.1,
+          ),
+        ),
+        if (note != null && note.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: ColorUtils.slate50,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.sticky_note_2_outlined,
+                  size: 10,
+                  color: ColorUtils.slate400,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    note,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      color: ColorUtils.slate600,
+                      fontWeight: FontWeight.w500,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPill(Color color, String label) {
+    return Container(
+      height: 26,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w800,
+              fontSize: 10.5,
+              letterSpacing: 0.2,
+            ),
+          ),
+          if (widget.canEdit) ...[
+            const SizedBox(width: 4),
+            Icon(
+              Icons.expand_more_rounded,
+              size: 12,
+              color: color.withValues(alpha: 0.7),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '?';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
+  /// Looks up the saved note for a student so it can be rendered
+  /// inline beneath the name (when status != hadir / mempunyai catatan).
+  String? _noteFor(String studentId, List<Attendance> records) {
+    for (final r in records) {
+      if (r.studentId.toString() == studentId.toString()) {
+        if (r.notes != null && r.notes!.trim().isNotEmpty) {
+          return r.notes!.trim();
+        }
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /// Opens Frame E — the per-student status picker bottom sheet.
+  ///
+  /// On confirm the picker dispatches `updateStatus` + `saveChanges`
+  /// through the existing controller, then the AsyncNotifier reloads.
+  Future<void> _openStatusPicker(
+    Student student,
+    String currentStatus,
+    String? currentNote,
+  ) async {
+    final params = TeacherAttendanceParams(
+      subjectId: widget.subjectId,
+      classId: widget.classId,
+      date: widget.date,
+      teacherId:
+          widget.filterTeacherId ??
+          ((widget.canEdit ? (widget.teacher['id']?.toString()) : null) ?? ''),
+      lessonHourId: widget.lessonHourId,
+    );
+
+    await showPerStudentStatusPicker(
+      context: context,
+      student: student,
+      className: widget.className,
+      initialStatus: currentStatus,
+      initialNote: currentNote,
+      onApply: (status, note) async {
+        // Drop the change into the controller's edited-status map and
+        // persist via the same path the FAB/Edit sheet uses, so it
+        // re-fetches on success and the row repaints.
+        ref.read(teacherAttendanceProvider(params).notifier)
+          ..updateStatus(student.id, status);
+        await ref
+            .read(teacherAttendanceProvider(params).notifier)
+            .saveChanges();
+      },
     );
   }
 }
