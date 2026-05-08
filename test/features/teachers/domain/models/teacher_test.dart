@@ -33,7 +33,7 @@ void main() {
 
   group('Teacher constructor', () {
     test('stores all required fields correctly', () {
-      final teacher = Teacher(
+      const teacher = Teacher(
         id: 'tch-7',
         name: 'Bu Rahayu',
         email: 'rahayu@school.id',
@@ -236,7 +236,7 @@ void main() {
 
   group('Teacher computed properties', () {
     test('isHomeroomTeacher returns true when homeroomClassId is set', () {
-      final teacher = Teacher(
+      const teacher = Teacher(
         id: '1',
         name: 'Test',
         email: 'test@school.id',
@@ -252,7 +252,7 @@ void main() {
     });
 
     test('isHomeroomTeacher returns false when homeroomClassId is empty', () {
-      final teacher = Teacher(
+      const teacher = Teacher(
         id: '1',
         name: 'Test',
         email: 'test@school.id',
@@ -313,7 +313,7 @@ void main() {
 
   group('Teacher edge cases', () {
     test('empty strings are valid field values', () {
-      final teacher = Teacher(id: '', name: '', email: '', role: '');
+      const teacher = Teacher(id: '', name: '', email: '', role: '');
       expect(teacher.id, '');
       expect(teacher.name, '');
       expect(teacher.email, '');

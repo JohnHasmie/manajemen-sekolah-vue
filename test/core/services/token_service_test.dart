@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 /// Tests for TokenService — authentication state management.
 ///
 /// TokenService wraps SecureStorageService (FlutterSecureStorage) and
@@ -29,7 +30,8 @@ const _validJwt =
     '.eyJzdWIiOiIxIiwiZXhwIjo5OTk5OTk5OTk5fQ'
     '.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
 
-// ── Test suite ────────────────────────────────────────────────────────────────
+// ── Test suite
+// ────────────────────────────────────────────────────────────────
 
 void main() {
   // In-memory store that backs the FlutterSecureStorage mock.
@@ -116,6 +118,7 @@ void main() {
     test('returns false when force-logout flag is set', () async {
       // Simulate a previous logout that left the force-logout flag behind.
       // Like Laravel setting a session flash that forces re-auth on next request.
+      //
       await SecureStorageService().setForceLogout(true);
 
       final result = await TokenService().isLoggedIn();

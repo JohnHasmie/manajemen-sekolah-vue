@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 /// Tests for DioClient interceptors — unit tests for AuthInterceptor and
 /// ErrorInterceptor behavior without needing a real HTTP server.
 ///

@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 // Tests for ActivityDetailRow — the icon+label+value metadata row.
 // This widget is purely presentational: no providers, no state.
 
@@ -6,7 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_detail_row.dart';
 
 void main() {
-  // Helper: wraps the widget in the minimal Material scaffold required by tests.
+  // Helper: wraps the widget in the minimal Material scaffold required by
+  // tests.
   Widget buildSubject({
     IconData icon = Icons.calendar_today_outlined,
     String label = 'Date',
@@ -43,6 +45,7 @@ void main() {
 
     testWidgets('uses primaryColor when iconColor is null', (tester) async {
       // The widget should still render without errors when iconColor is omitted.
+      //
       await tester.pumpWidget(
         buildSubject(primaryColor: Colors.green, iconColor: null),
       );

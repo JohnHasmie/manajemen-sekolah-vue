@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 /// Tests for ApiService — core HTTP infrastructure.
 ///
 /// We only test the parts that DON'T require live network calls:
@@ -116,6 +117,7 @@ void main() {
     test('can be called safely in a test environment — absorbs dotenv '
         'NotInitializedError because dotenv is not loaded in unit tests', () async {
       // In production, dotenv.load() is called in main() before ApiService.init().
+      //
       // In unit tests, dotenv is never loaded, so dotenv.env throws
       // NotInitializedError *before* the null-guard inside init() can run.
       //

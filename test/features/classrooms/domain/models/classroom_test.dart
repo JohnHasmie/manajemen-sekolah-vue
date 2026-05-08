@@ -38,7 +38,7 @@ void main() {
 
   group('Classroom constructor', () {
     test('stores all required fields correctly', () {
-      final cls = Classroom(
+      const cls = Classroom(
         id: 'cls-10',
         name: '8B',
         homeroomTeacherName: 'Bu Siti',
@@ -81,8 +81,7 @@ void main() {
     });
 
     test('homeroomTeacherName stores full name string', () {
-      final cls =
-          makeClassroom(homeroomTeacherName: 'Drs. Ahmad Fauzi, M.Pd.');
+      final cls = makeClassroom(homeroomTeacherName: 'Drs. Ahmad Fauzi, M.Pd.');
       expect(cls.homeroomTeacherName, 'Drs. Ahmad Fauzi, M.Pd.');
     });
 
@@ -117,10 +116,7 @@ void main() {
     });
 
     test('normalizes Indonesian key "nama"', () {
-      final cls = Classroom.fromJson({
-        'id': '2',
-        'nama': 'Kelas 8B',
-      });
+      final cls = Classroom.fromJson({'id': '2', 'nama': 'Kelas 8B'});
       expect(cls.name, 'Kelas 8B');
     });
 
@@ -179,19 +175,12 @@ void main() {
     });
 
     test('normalizes tingkat to grade_level', () {
-      final cls = Classroom.fromJson({
-        'id': '8',
-        'name': '9E',
-        'tingkat': '9',
-      });
+      final cls = Classroom.fromJson({'id': '8', 'name': '9E', 'tingkat': '9'});
       expect(cls.gradeLevel, '9');
     });
 
     test('coerces numeric id to string', () {
-      final cls = Classroom.fromJson({
-        'id': 42,
-        'name': '7A',
-      });
+      final cls = Classroom.fromJson({'id': 42, 'name': '7A'});
       expect(cls.id, '42');
     });
 
@@ -205,10 +194,7 @@ void main() {
     });
 
     test('handles missing student_count gracefully (defaults to 0)', () {
-      final cls = Classroom.fromJson({
-        'id': '1',
-        'name': '7A',
-      });
+      final cls = Classroom.fromJson({'id': '1', 'name': '7A'});
       expect(cls.studentCount, 0);
     });
   });

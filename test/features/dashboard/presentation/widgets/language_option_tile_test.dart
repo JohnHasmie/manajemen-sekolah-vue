@@ -1,8 +1,11 @@
-// Tests for LanguageOptionTile — the tappable language-selection tile in the picker dialog.
+// Tests for LanguageOptionTile — the tappable language-selection tile in the
+// picker dialog.
 // LanguageProvider is a plain ChangeNotifier (no WidgetRef / Riverpod tree needed here).
-// We instantiate it directly and pass it as a prop — just like passing a Vue prop.
+// We instantiate it directly and pass it as a prop — just like passing a Vue
+// prop.
 //
-// setUp initialises SharedPreferences mock so that LanguageProvider.setLanguage()
+// setUp initialises SharedPreferences mock so that
+// LanguageProvider.setLanguage()
 // (which calls PreferencesService.setString) doesn't throw.
 
 import 'package:flutter/material.dart';

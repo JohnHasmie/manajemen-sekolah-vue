@@ -31,8 +31,7 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('shows history / bulk-select affordance icon',
-        (tester) async {
+    testWidgets('shows history / bulk-select affordance icon', (tester) async {
       await tester.pumpWidget(_build());
       expect(
         find.byWidgetPredicate(
@@ -48,8 +47,9 @@ void main() {
       expect(find.text('85'), findsOneWidget);
     });
 
-    testWidgets('onChanged fires with parsed double when user types a number',
-        (tester) async {
+    testWidgets('onChanged fires with parsed double when user types a number', (
+      tester,
+    ) async {
       final values = <double>[];
       await tester.pumpWidget(_build(onChanged: values.add));
       await tester.enterText(find.byType(TextField), '90');
@@ -80,8 +80,9 @@ void main() {
       expect(values, contains(87.5));
     });
 
-    testWidgets('onHistoryTap fires when affordance icon is tapped',
-        (tester) async {
+    testWidgets('onHistoryTap fires when affordance icon is tapped', (
+      tester,
+    ) async {
       var tapped = false;
       await tester.pumpWidget(_build(onHistoryTap: () => tapped = true));
       await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));

@@ -1,5 +1,7 @@
-// Tests for PromotionInfoRow — the labelled key-value display row in the promotion wizard.
-// Pure StatelessWidget, no providers. Like testing a Vue <info-field> component.
+// Tests for PromotionInfoRow — the labelled key-value display row in the
+// promotion wizard.
+// Pure StatelessWidget, no providers. Like testing a Vue <info-field>
+// component.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

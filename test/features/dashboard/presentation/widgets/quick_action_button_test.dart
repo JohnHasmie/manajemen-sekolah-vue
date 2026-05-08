@@ -1,5 +1,7 @@
-// Tests for QuickActionButton — the horizontal-scroll shortcut button on the dashboard.
-// Like testing a Vue <QuickAction> in isolation: label text, icon, tap callback, badge.
+// Tests for QuickActionButton — the horizontal-scroll shortcut button on the
+// dashboard.
+// Like testing a Vue <QuickAction> in isolation: label text, icon, tap
+// callback, badge.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

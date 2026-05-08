@@ -17,7 +17,8 @@ void main() {
   // Helpers
   // ---------------------------------------------------------------------------
 
-  /// Factory that returns a fully populated Announcement for reuse across tests.
+  /// Factory that returns a fully populated Announcement for reuse across
+  // tests.
   Announcement makeAnnouncement({
     String id = 'ann-1',
     String title = 'Libur Lebaran',
@@ -42,7 +43,7 @@ void main() {
 
   group('Announcement constructor', () {
     test('stores all required fields correctly', () {
-      final ann = Announcement(
+      const ann = Announcement(
         id: 'ann-42',
         title: 'Pengumuman Ujian',
         content: 'Ujian nasional dilaksanakan bulan Mei.',
@@ -221,12 +222,7 @@ void main() {
 
   group('Announcement edge cases', () {
     test('empty strings are valid field values', () {
-      const ann = Announcement(
-        id: '',
-        title: '',
-        content: '',
-        category: '',
-      );
+      const ann = Announcement(id: '', title: '', content: '', category: '');
 
       expect(ann.id, '');
       expect(ann.title, '');

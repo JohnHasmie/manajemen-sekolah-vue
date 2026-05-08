@@ -1,4 +1,5 @@
-// Tests for the three small schedule card widgets in schedule_card_widgets.dart:
+// Tests for the three small schedule card widgets in
+// schedule_card_widgets.dart:
 //   ScheduleFilterSectionHeader — section header with icon + title
 //   ScheduleInfoTag             — pill badge with icon + text
 //   ScheduleCircleActionButton  — circular icon button
@@ -82,7 +83,9 @@ void main() {
   group('ScheduleInfoTag', () {
     testWidgets('renders icon and text', (tester) async {
       await tester.pumpWidget(
-        _wrap(const ScheduleInfoTag(icon: Icons.school_outlined, text: 'Kelas 7A')),
+        _wrap(
+          const ScheduleInfoTag(icon: Icons.school_outlined, text: 'Kelas 7A'),
+        ),
       );
       expect(find.text('Kelas 7A'), findsOneWidget);
       expect(find.byIcon(Icons.school_outlined), findsOneWidget);
@@ -118,7 +121,12 @@ void main() {
 
     testWidgets('renders with day label text', (tester) async {
       await tester.pumpWidget(
-        _wrap(const ScheduleInfoTag(icon: Icons.today_outlined, text: 'Senin, Rabu')),
+        _wrap(
+          const ScheduleInfoTag(
+            icon: Icons.today_outlined,
+            text: 'Senin, Rabu',
+          ),
+        ),
       );
       expect(find.text('Senin, Rabu'), findsOneWidget);
     });

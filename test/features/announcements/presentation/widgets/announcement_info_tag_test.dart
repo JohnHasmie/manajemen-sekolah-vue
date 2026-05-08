@@ -1,4 +1,5 @@
-// Tests for AnnouncementInfoTag — compact icon+text badge for announcement cards.
+// Tests for AnnouncementInfoTag — compact icon+text badge for announcement
+// cards.
 //
 // Key scenarios:
 // - Renders icon and text

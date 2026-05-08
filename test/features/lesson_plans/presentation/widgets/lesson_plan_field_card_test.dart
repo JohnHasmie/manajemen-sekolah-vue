@@ -10,7 +10,8 @@
 // - isRegeneratingThis=true: spinner shown, star hidden, onRegenTap NOT fired
 // - remaining=0: star icon still shown but in gray state
 //
-// Like testing a Vue <FieldCard> — display + one interaction delegated via callback.
+// Like testing a Vue <FieldCard> — display + one interaction delegated via
+// callback.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_field_card.dart';

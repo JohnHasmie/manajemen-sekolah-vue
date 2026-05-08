@@ -30,7 +30,8 @@ Attendance _makeRecord({
 );
 
 // Override languageRiverpod with a fresh LanguageProvider each time to avoid
-// "used after dispose" errors when the ProviderScope is torn down between tests.
+// "used after dispose" errors when the ProviderScope is torn down between
+// tests.
 Widget _build({
   Attendance? record,
   Color primaryColor = Colors.teal,

@@ -1,6 +1,8 @@
 // Tests for MenuItemCard — the dashboard navigation card.
-// Like testing a Vue <MenuItemCard> component via mount() with various prop combos.
-// Verifies title display, badge rendering, tap callback, emoji icon support, etc.
+// Like testing a Vue <MenuItemCard> component via mount() with various prop
+// combos.
+// Verifies title display, badge rendering, tap callback, emoji icon support,
+// etc.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -131,7 +131,10 @@ void main() {
     testWidgets('renders Indonesian title and buttons', (tester) async {
       final result = ValueNotifier<bool?>(null);
       await tester.pumpWidget(
-        _buildApp(language: LanguageProvider.indonesian, resultNotifier: result),
+        _buildApp(
+          language: LanguageProvider.indonesian,
+          resultNotifier: result,
+        ),
       );
 
       await tester.tap(find.text('Open'));

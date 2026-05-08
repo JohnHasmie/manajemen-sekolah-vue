@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 /// Teacher (Guru) dashboard navigation flow tests.
 ///
 /// Tests every quick action and menu item for the teacher role:
@@ -71,6 +72,7 @@ Widget _buildTeacherDashboard() {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ── Quick Actions ──────────────────────────────────────────────
+                //
                 Row(
                   children: [
                     QuickActionButton(
@@ -136,6 +138,7 @@ Widget _buildTeacherDashboard() {
                 ),
 
                 // ── Menu Items: Teaching ───────────────────────────────────────
+                //
                 MenuItemCard(
                   title: 'Teaching Schedule',
                   icon: Icons.schedule_outlined,
@@ -197,6 +200,7 @@ Widget _buildTeacherDashboard() {
                 ),
 
                 // ── Menu Items: Assessment Planning ────────────────────────────
+                //
                 MenuItemCard(
                   title: 'Input Grades',
                   icon: Icons.edit_note_outlined,

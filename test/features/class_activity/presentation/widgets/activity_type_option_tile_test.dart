@@ -1,4 +1,5 @@
-// Tests for ActivityTypeOptionTile — a tappable card for selecting an activity type.
+// Tests for ActivityTypeOptionTile — a tappable card for selecting an type.
+// activity
 // Purely presentational, no providers.
 
 import 'package:flutter/material.dart';

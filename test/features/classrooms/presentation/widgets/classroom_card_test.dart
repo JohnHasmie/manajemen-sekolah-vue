@@ -1,6 +1,8 @@
+// ignore_for_file: lines_longer_than_80_chars
 // classroom_card_test.dart — widget tests for ClassroomCard.
 //
-// ClassroomCard is a ConsumerWidget (reads languageRiverpod + academicYearRiverpod),
+// ClassroomCard is a ConsumerWidget (reads languageRiverpod +
+// academicYearRiverpod),
 // so every test wraps it in ProviderScope. Both providers are overridden with
 // fresh instances so the global LanguageProvider singleton is never disposed
 // between tests and no real API calls are made.
@@ -27,7 +29,8 @@ class _FakeAcademicYearProvider extends AcademicYearProvider {
 }
 
 // ---------------------------------------------------------------------------
-// Helper — builds the ClassroomCard inside ProviderScope > MaterialApp > Scaffold.
+// Helper — builds the ClassroomCard inside ProviderScope > MaterialApp >
+// Scaffold.
 // ---------------------------------------------------------------------------
 Widget _buildCard({
   required Map<String, dynamic> classData,
@@ -42,6 +45,7 @@ Widget _buildCard({
     overrides: [
       // Fresh LanguageProvider per test so the global singleton is never
       // disposed between tests (languageRiverpod normally shares the singleton).
+      //
       languageRiverpod.overrideWith((_) => LanguageProvider()),
       academicYearRiverpod.overrideWith(
         (_) => _FakeAcademicYearProvider(readOnly: readOnly),
@@ -180,6 +184,7 @@ void main() {
     });
 
     // ── Callbacks ─────────────────────────────────────────────────────────────
+    //
 
     testWidgets('calls onTap when card is tapped', (tester) async {
       bool tapped = false;
@@ -217,6 +222,7 @@ void main() {
     });
 
     // ── Edge cases ────────────────────────────────────────────────────────────
+    //
 
     testWidgets('falls back to "Class" and avatar "C" when name is null', (
       tester,

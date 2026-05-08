@@ -1,4 +1,5 @@
-// Tests for PromotionSectionHeader — the left-bordered section header in the promotion wizard.
+// Tests for PromotionSectionHeader — the left-bordered section header in the
+// promotion wizard.
 // Pure StatelessWidget. Tests icon, title, and color theming.
 
 import 'package:flutter/material.dart';

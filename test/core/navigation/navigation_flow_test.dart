@@ -1,8 +1,10 @@
 /// Core navigation flow tests — verifies AppNavigator push/pop/replace/clear-stack
 /// work correctly using real Navigator state.
 ///
-/// Each test pumps a minimal widget tree, performs a navigation action, and asserts
-/// the correct screen appears or disappears. Like integration-testing Vue Router
+/// Each test pumps a minimal widget tree, performs a navigation action, and
+// asserts
+/// the correct screen appears or disappears. Like integration-testing Vue
+// Router
 /// `push`, `back`, and `replace` calls.
 ///
 /// Pattern:
@@ -563,7 +565,8 @@ void main() {
       await tester.tap(find.byKey(const Key('open_dialog')));
       await tester.pumpAndSettle();
 
-      // Confirm → returns 'confirmed' (check var directly; Builder has no setState)
+      // Confirm → returns 'confirmed' (check var directly; Builder has no
+      // setState)
       await tester.tap(find.byKey(const Key('confirm_btn')));
       await tester.pumpAndSettle();
       expect(result, 'confirmed');

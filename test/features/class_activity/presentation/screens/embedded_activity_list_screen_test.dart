@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 // Unit tests for EmbeddedActivityListScreen.
 // Tests the widget's parameters and construction — verifies that the
 // extracted screen accepts the right props and builds without the
@@ -36,6 +37,7 @@ void main() {
 
     test('optional parameters have sensible defaults', () {
       // These match the constructor defaults in embedded_activity_list_screen.dart
+      //
       const canEdit = true;
       const autoShowActivityDialog = false;
       const showScaffold = true;
@@ -124,7 +126,8 @@ void main() {
     });
 
     test('exposes buildTabSwitcher() for parent header', () {
-      // ClassActivityScreen calls _activityListKey.currentState?.buildTabSwitcher()
+      // ClassActivityScreen calls
+      // _activityListKey.currentState?.buildTabSwitcher()
       // to render the umum/khusus tab switcher in the header at step 2.
       const methodName = 'buildTabSwitcher';
       expect(methodName, isNotEmpty);
@@ -136,13 +139,17 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('Schedule card integration', () {
-    test('schedule card passes teacherId and teacherName from widget props', () {
-      const teacherId = 'teacher-123';
-      const teacherNama = 'Pak Budi';
-      // schedule_card_item.dart line: teacherId: teacherId, teacherName: teacherNama
-      expect(teacherId, isNotEmpty);
-      expect(teacherNama, isNotEmpty);
-    });
+    test(
+      'schedule card passes teacherId and teacherName from widget props',
+      () {
+        const teacherId = 'teacher-123';
+        const teacherNama = 'Pak Budi';
+        // schedule_card_item.dart line: teacherId: teacherId, teacherName:
+        // teacherNama
+        expect(teacherId, isNotEmpty);
+        expect(teacherNama, isNotEmpty);
+      },
+    );
 
     test('schedule card passes class/subject from schedule data', () {
       final schedule = {

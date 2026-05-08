@@ -1,4 +1,5 @@
-// Tests for HeroStatCell — the individual KPI tile inside the dashboard hero banner.
+// Tests for HeroStatCell — the individual KPI tile inside the dashboard hero
+// banner.
 // Like testing a Vue sub-component in isolation via `mount(<HeroStatCell />)`.
 // All props are passed directly; no providers or state needed.
 

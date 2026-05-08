@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 // Unit tests for GradeBookController — covers all pure functions that have
 // no external side-effects (no API calls, no cache, no BuildContext).
 //
@@ -232,6 +233,7 @@ void main() {
       'does not add duplicate date for same type (temp entry with null title)',
       () {
         // addNewAssessment deduplicates only against temp entries (title == null).
+        //
         final existing = {
           'uh': [
             {'id': null, 'date': '2025-03-10', 'title': null, 'is_temp': true},
@@ -547,7 +549,11 @@ void main() {
     });
 
     test('empty grades produce empty assessmentHeaders', () {
-      final result = GradeDataProcessor.processRawData(rawStudents, [], allTypes);
+      final result = GradeDataProcessor.processRawData(
+        rawStudents,
+        [],
+        allTypes,
+      );
       expect(result.assessmentHeaders, isEmpty);
       expect(result.studentList, hasLength(2));
     });

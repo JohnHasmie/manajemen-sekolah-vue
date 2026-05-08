@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 /// Parent (Wali) dashboard navigation flow tests.
 ///
 /// Tests every quick action and menu item for the parent role:
@@ -71,6 +72,7 @@ Widget _buildParentDashboard() {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ── Quick Actions ──────────────────────────────────────────────
+                //
                 Row(
                   children: [
                     QuickActionButton(
@@ -119,6 +121,7 @@ Widget _buildParentDashboard() {
                 ),
 
                 // ── Menu Items ─────────────────────────────────────────────────
+                //
                 MenuItemCard(
                   title: 'Announcements',
                   icon: Icons.announcement_outlined,

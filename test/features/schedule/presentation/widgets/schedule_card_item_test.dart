@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 // Unit tests for ScheduleCardItem helper methods and summary logic.
 // Tests the pure logic for determining button fill states, past-schedule
 // detection, summary key lookups, and schedule date computation.

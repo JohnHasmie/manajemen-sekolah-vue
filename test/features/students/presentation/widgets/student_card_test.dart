@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 // student_card_test.dart — widget tests for StudentCard.
 //
 // StudentCard is a plain StatelessWidget (no Riverpod). It receives isReadOnly
@@ -98,6 +99,7 @@ void main() {
     });
 
     // ── Callbacks ─────────────────────────────────────────────────────────────
+    //
 
     testWidgets('calls onTap when card is tapped', (tester) async {
       bool tapped = false;
@@ -143,6 +145,7 @@ void main() {
     });
 
     // ── Edge cases ────────────────────────────────────────────────────────────
+    //
 
     testWidgets('falls back to "No Name" when student name is null', (
       tester,
@@ -157,6 +160,7 @@ void main() {
         _buildCard(student: _student, primaryColor: Colors.purple),
       );
       // Spot-check: the card still renders the student name regardless of color.
+      //
       expect(find.text('Alice Tan'), findsOneWidget);
     });
   });

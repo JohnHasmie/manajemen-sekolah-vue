@@ -9,7 +9,8 @@
 /// - getSubjectColor: keyword-matched subject colors + fallback
 /// - getCardGradient: 5 semantic types + unknown + case-insensitive
 /// - getTextColorForBackground: BT.601 luminance black/white contrast
-/// - Palette getters: primaryColor, slate*, corporateBlue*, semantic variants, brand colors
+/// - Palette getters: primaryColor, slate*, corporateBlue*, semantic brand
+// variants, colors
 library;
 
 import 'package:flutter/material.dart';

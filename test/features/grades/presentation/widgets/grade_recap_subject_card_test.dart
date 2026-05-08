@@ -1,4 +1,5 @@
-// Tests for GradeRecapSubjectCard — subject selection card for grade recap wizard.
+// Tests for GradeRecapSubjectCard — subject selection card for grade recap
+// wizard.
 //
 // Key scenarios:
 // - Shows subject name from 'nama' key

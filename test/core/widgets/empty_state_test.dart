@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 // Tests for the EmptyState widget.
 //
 // Verifies that title, subtitle, icon, and optional button render and behave
@@ -9,6 +10,7 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 void main() {
   group('EmptyState', () {
     // Helper that wraps EmptyState in the standard MaterialApp + Scaffold shell.
+    //
     Widget buildWidget({
       String title = 'No Data',
       String subtitle = 'Nothing to show here.',

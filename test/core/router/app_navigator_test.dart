@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 /// Tests for AppNavigator — widget tests verifying push, pop, canPop,
 /// pushReplacement, and pushAndClearStack work correctly.
 ///
@@ -109,6 +110,7 @@ void main() {
                   return ElevatedButton(
                     onPressed: () {
                       // Use Navigator.push (like AppNavigator.push does) to add a route
+                      //
                       Navigator.push(
                         ctx,
                         MaterialPageRoute(

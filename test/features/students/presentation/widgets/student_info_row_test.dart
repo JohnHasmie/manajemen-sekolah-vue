@@ -37,7 +37,11 @@ void main() {
     testWidgets('shows "Tidak ada" when value is empty', (tester) async {
       await tester.pumpWidget(
         _wrap(
-          const StudentInfoRow(label: 'Alamat', value: '', primaryColor: Colors.teal),
+          const StudentInfoRow(
+            label: 'Alamat',
+            value: '',
+            primaryColor: Colors.teal,
+          ),
         ),
       );
       expect(find.text('Tidak ada'), findsOneWidget);
