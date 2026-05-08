@@ -26,6 +26,17 @@ mixin TeacherActivityStateMixin on ConsumerState<TeacherClassActivityScreen> {
   late TextEditingController _searchController;
   String? _activityErrorMessage;
 
+  /// KPI bundle returned by the teacher-summary endpoint —
+  /// `weekly_count`, `monthly_count`, `assignment_count` (or the
+  /// Indonesian-keyed equivalents). Empty before the first response;
+  /// the brand KPI card falls back to a client-side count so it
+  /// never renders zeros incorrectly.
+  Map<String, dynamic> _kpiSummary = const {};
+  Map<String, dynamic> get kpiSummary => _kpiSummary;
+  void updateKpiSummary(Map<String, dynamic> v) {
+    setState(() => _kpiSummary = v);
+  }
+
   bool get isLoading => _isLoading;
   bool get isHomeroomView => _isHomeroomView;
   List<dynamic> get homeroomClassesList => _homeroomClassesList;
@@ -102,6 +113,20 @@ mixin TeacherActivityStateMixin on ConsumerState<TeacherClassActivityScreen> {
 
   void updateSelectedHomeroomClass(dynamic homeroomClass) {
     setState(() => _selectedHomeroomClass = homeroomClass);
+  }
+
+  /// Shared name for the brand header — accepts a `Map<String, dynamic>?`.
+  void setSelectedHomeroomClass(Map<String, dynamic>? v) =>
+      updateSelectedHomeroomClass(v);
+
+  /// Number of filter dimensions currently set. Drives the badge on
+  /// the gear icon in the brand header.
+  int get activeFilterCount {
+    int n = 0;
+    if (_filterClassId != null) n++;
+    if (_filterSubjectId != null) n++;
+    if (_filterDateOption != null) n++;
+    return n;
   }
 
   void updateTimeline(bool value) {
