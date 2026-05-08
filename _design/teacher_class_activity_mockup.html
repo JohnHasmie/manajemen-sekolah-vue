@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · Kegiatan Kelas · Mockup</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-deep: #1F4A8F;
+    --brand-azure: #21AFE6;
+    --brand-cobalt: #1B6FB8;
+    --teal-50: #CCFBF1;
+    --teal-600: #0D9488;
+    --green-50: #DCFCE7;
+    --green-600: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-600: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+    --rose-50: #FFE4E6;
+    --rose-600: #BE185D;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 {
+    font-size: 24px; margin: 0 0 8px;
+    color: var(--brand-dark); letter-spacing: -0.4px;
+  }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 32px;
+    max-width: 880px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px;
+    align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 28px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+    position: relative;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px;
+    margin-left: 10px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 760;
+    position: relative;
+    overflow: hidden;
+    background: var(--slate-50);
+  }
+
+  /* Brand header */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    padding: 14px 16px 22px;
+    color: white;
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 18px; flex: 0 0 auto;
+    position: relative;
+  }
+  .h-icon .badge {
+    position: absolute; top: -3px; right: -3px;
+    width: 14px; height: 14px;
+    border-radius: 999px;
+    background: #ef4444;
+    color: white; font-size: 8px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--brand-dark);
+  }
+  .h-title-block { flex: 1; min-width: 0; }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.72);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .h-title-row { display: flex; align-items: center; gap: 8px; }
+  .h-dot {
+    width: 8px; height: 8px;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34,197,94,.6);
+    flex: 0 0 auto;
+  }
+  .h-title {
+    font-size: 19px; font-weight: 900;
+    color: white; letter-spacing: -0.3px;
+  }
+  .ctx-strip {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .ctx-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,.95);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--brand-cobalt); font-weight: 900; font-size: 14px;
+  }
+  .ctx-body { flex: 1; min-width: 0; line-height: 1.2; }
+  .ctx-title { font-size: 14px; font-weight: 800; color: white; }
+  .ctx-sub {
+    font-size: 11px; color: rgba(255,255,255,.78);
+    margin-top: 2px; font-weight: 500;
+  }
+
+  /* Role chips */
+  .role-strip {
+    margin-top: 12px;
+    display: flex; gap: 8px;
+  }
+  .role-chip {
+    flex: 1; height: 36px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 999px;
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 10px;
+  }
+  .role-chip.active {
+    background: white;
+  }
+  .role-chip .avatar {
+    width: 22px; height: 22px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.3);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 9px; font-weight: 800;
+  }
+  .role-chip.active .avatar { background: var(--brand-cobalt); color: white; }
+  .role-chip .label-stack { line-height: 1.1; }
+  .role-chip .name {
+    font-size: 11px; font-weight: 800; color: white;
+  }
+  .role-chip.active .name { color: var(--brand-dark); }
+  .role-chip .sub { font-size: 8.5px; color: rgba(255,255,255,.7); }
+  .role-chip.active .sub { color: var(--slate-500); }
+
+  /* Filter chip strip */
+  .chip-strip {
+    margin-top: 10px;
+    display: flex; gap: 8px;
+  }
+  .filter-chip {
+    height: 32px; flex: 1;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 999px;
+    padding: 0 10px;
+    display: flex; flex-direction: column; justify-content: center;
+    line-height: 1.1;
+  }
+  .fc-label {
+    font-size: 8px; font-weight: 800;
+    color: rgba(255,255,255,.65);
+    letter-spacing: 0.6px; text-transform: uppercase;
+  }
+  .fc-value {
+    font-size: 11px; font-weight: 700; color: white;
+  }
+  .filter-chip.placeholder .fc-value {
+    color: rgba(255,255,255,.55); font-weight: 500;
+  }
+
+  /* KPI overlap card */
+  .kpi-card {
+    margin: -22px 12px 0;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 14px 8px;
+    box-shadow: 0 4px 12px rgba(15,23,42,.06);
+    position: relative; z-index: 2;
+  }
+  .kpi-row { display: flex; align-items: center; }
+  .kpi-cell {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; line-height: 1;
+  }
+  .kpi-cell .v {
+    font-size: 22px; font-weight: 900;
+    color: var(--slate-900); letter-spacing: -0.5px;
+  }
+  .kpi-cell.green .v { color: var(--green-600); }
+  .kpi-cell.blue .v { color: var(--blue-600); }
+  .kpi-cell.violet .v { color: var(--violet-600); }
+  .kpi-cell.amber .v { color: var(--amber-600); }
+  .kpi-cell .l {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-500); margin-top: 4px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .kpi-divider {
+    width: 1px; height: 28px;
+    background: var(--slate-100);
+  }
+
+  /* Body */
+  .body {
+    padding: 12px 12px 88px;
+  }
+  .section-head {
+    display: flex; align-items: center;
+    margin: 14px 4px 8px;
+  }
+  .section-head .t {
+    flex: 1;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-700); letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+  .section-head .a {
+    font-size: 10.5px; color: var(--slate-500); font-weight: 700;
+  }
+
+  /* Activity card */
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .card-row { display: flex; gap: 12px; align-items: flex-start; }
+  .card-icon {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .card-body { flex: 1; min-width: 0; line-height: 1.25; }
+  .card-title {
+    font-size: 13px; font-weight: 800; color: var(--slate-900);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .card-sub {
+    font-size: 10.5px; color: var(--slate-500);
+    margin-top: 2px; font-weight: 500;
+  }
+  .card-meta {
+    display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;
+  }
+  .meta-pill {
+    height: 22px; padding: 0 8px;
+    border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    display: flex; align-items: center; gap: 4px;
+    background: var(--slate-100); color: var(--slate-600);
+  }
+  .meta-pill.blue   { background: var(--blue-50); color: var(--blue-600); }
+  .meta-pill.violet { background: var(--violet-50); color: var(--violet-600); }
+  .meta-pill.green  { background: var(--green-50); color: var(--green-600); }
+  .meta-pill.amber  { background: var(--amber-50); color: var(--amber-600); }
+  .meta-pill.red    { background: var(--red-50); color: var(--red-600); }
+
+  /* FAB */
+  .fab {
+    position: absolute; right: 16px; bottom: 16px;
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    background: var(--brand-cobalt);
+    color: white; font-size: 24px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 18px rgba(27,111,184,.35);
+  }
+
+  /* Sheet primitives */
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--slate-300);
+    border-radius: 999px;
+    margin: 12px auto 0;
+  }
+  .sheet-title {
+    padding: 12px 16px 4px;
+    font-size: 14px; font-weight: 900;
+    color: var(--slate-900);
+  }
+  .sheet-sub {
+    padding: 0 16px 12px;
+    font-size: 11px; color: var(--slate-500); line-height: 1.5;
+  }
+  .field-label {
+    margin: 12px 16px 6px;
+    font-size: 10px; font-weight: 800;
+    color: var(--slate-700); letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .field {
+    margin: 0 12px 6px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 12px; color: var(--slate-700);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .field .icon { color: var(--slate-400); font-size: 13px; }
+  .field.area { min-height: 70px; align-items: flex-start; }
+  .field.placeholder { color: var(--slate-400); }
+
+  /* Two-column field row */
+  .field-row {
+    display: flex; gap: 8px; margin: 0 12px;
+  }
+  .field-row > .field { flex: 1; margin: 0 0 6px; }
+
+  /* Type chooser */
+  .type-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 8px; padding: 0 12px 6px;
+  }
+  .type-tile {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  }
+  .type-tile.on {
+    background: var(--blue-50);
+    border-color: var(--blue-600);
+  }
+  .type-tile .icon-tile {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: var(--slate-100);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: var(--slate-500);
+  }
+  .type-tile.on .icon-tile {
+    background: var(--blue-600); color: white;
+  }
+  .type-tile .name {
+    font-size: 12px; font-weight: 800;
+    color: var(--slate-800);
+  }
+  .type-tile.on .name { color: var(--blue-600); }
+  .type-tile .desc {
+    font-size: 10px; color: var(--slate-500); line-height: 1.3;
+  }
+
+  /* Sticky save footer */
+  .footer-save {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 12px 16px 16px;
+    background: white;
+    border-top: 1px solid var(--slate-100);
+    box-shadow: 0 -4px 14px rgba(15,23,42,.06);
+    display: flex; gap: 8px;
+  }
+  .footer-save .btn {
+    height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900;
+  }
+  .footer-save .btn.secondary {
+    flex: 1; background: white; color: var(--slate-700);
+    border: 1px solid var(--slate-200);
+  }
+  .footer-save .btn.primary {
+    flex: 2; background: var(--brand-cobalt); color: white;
+    box-shadow: 0 6px 14px rgba(27,111,184,.28);
+  }
+
+  /* Detail-frame body */
+  .detail-section {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 14px;
+    margin: 12px 4px 8px;
+  }
+  .detail-section .label {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-500);
+    letter-spacing: 0.6px; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .detail-section .value {
+    font-size: 12.5px; color: var(--slate-800); font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* Locked / archive banner */
+  .ro-banner {
+    margin: 0 4px 10px;
+    background: var(--blue-50); color: var(--blue-600);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 10.5px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Kegiatan Kelas · Detail / Add / Edit · Mockup</h1>
+<p class="subtitle">Five frames covering the activity sub-flows that aren't on the Kegiatan Kelas list page (Frame 02 in <code>teacher_brand_migration_mockups.html</code>): activity detail when a card is tapped, add-activity sheet from the FAB, edit sheet from the detail action menu, type-picker tiles, and a read-only locked variant for past academic-year archives. Same brand language as Presensi — gradient header, KPI overlap, sticky save footer, draggable sheets.</p>
+
+<div class="grid">
+
+<!-- ═══════ A · Activity Detail (read-write) ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A</span>ACTIVITY · DETAIL <span class="desc">Tapped from a card on Kegiatan Kelas list</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">KEGIATAN · DETAIL</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Detail Kegiatan</span></div>
+        </div>
+        <div class="h-icon">⋯</div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon">📝</div>
+        <div class="ctx-body">
+          <div class="ctx-title">Tugas Trigonometri</div>
+          <div class="ctx-sub">7B · Matematika · Senin 14 Apr · 09.30</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell green"><div class="v">28</div><div class="l">Siswa</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">22</div><div class="l">Submit</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">6</div><div class="l">Belum</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="detail-section">
+        <div class="label">Tipe</div>
+        <div class="value">📝 Tugas · Tugas individu rumah</div>
+      </div>
+      <div class="detail-section">
+        <div class="label">Deskripsi</div>
+        <div class="value">Kerjakan latihan halaman 124 nomor 1–10. Hitung sudut elevasi & deklinasi pada soal cerita di nomor 8 & 10. Kumpulkan dalam bentuk PDF maksimal Selasa pukul 23.59.</div>
+      </div>
+      <div class="detail-section">
+        <div class="label">Materi terkait</div>
+        <div class="value">Bab 4 · Trigonometri · 4.2 Sudut elevasi</div>
+      </div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary">Hapus</div>
+      <div class="btn primary">✎ Edit</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ B · Add Activity Sheet ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">B</span>ADD ACTIVITY · NEW <span class="desc">Bottom sheet from the FAB</span></div>
+  <div class="phone" style="background:rgba(20,48,104,.32);">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:white;border-top-left-radius:24px;border-top-right-radius:24px;padding-bottom:84px;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Tambah Kegiatan</div>
+      <div class="sheet-sub">Pilih kelas + mapel + tipe, isi judul dan deskripsi, lalu Simpan.</div>
+
+      <div class="field-label">Kelas &amp; Mapel</div>
+      <div class="field-row">
+        <div class="field"><span class="icon">🎓</span>7B</div>
+        <div class="field"><span class="icon">📚</span>Matematika</div>
+      </div>
+
+      <div class="field-label">Tipe Kegiatan</div>
+      <div class="type-grid">
+        <div class="type-tile on">
+          <div class="icon-tile">📝</div>
+          <div class="name">Tugas</div>
+          <div class="desc">Pemberian tugas / PR</div>
+        </div>
+        <div class="type-tile">
+          <div class="icon-tile">📚</div>
+          <div class="name">Aktivitas</div>
+          <div class="desc">Diskusi / praktik</div>
+        </div>
+        <div class="type-tile">
+          <div class="icon-tile">🧪</div>
+          <div class="name">Ujian</div>
+          <div class="desc">Kuis / penilaian</div>
+        </div>
+        <div class="type-tile">
+          <div class="icon-tile">📋</div>
+          <div class="name">Catatan</div>
+          <div class="desc">Catatan kelas umum</div>
+        </div>
+      </div>
+
+      <div class="field-label">Judul</div>
+      <div class="field">Tugas Trigonometri</div>
+
+      <div class="field-label">Tanggal &amp; Waktu</div>
+      <div class="field-row">
+        <div class="field"><span class="icon">📅</span>Senin, 14 Apr</div>
+        <div class="field"><span class="icon">🕘</span>09.30</div>
+      </div>
+
+      <div class="field-label">Deskripsi</div>
+      <div class="field area placeholder">Jelaskan kegiatan / instruksi tugas …</div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary">Batal</div>
+      <div class="btn primary">💾 Simpan</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ C · Edit Activity Sheet ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">C</span>EDIT ACTIVITY <span class="desc">From Detail → ⋯ → Edit</span></div>
+  <div class="phone" style="background:rgba(20,48,104,.32);">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:white;border-top-left-radius:24px;border-top-right-radius:24px;padding-bottom:84px;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Edit Kegiatan</div>
+      <div class="sheet-sub">Ubah judul / deskripsi / tipe / waktu. Kelas + mapel terkunci untuk konsistensi histori.</div>
+
+      <div class="field-label">Kelas &amp; Mapel <span style="color:var(--slate-400);font-weight:600;text-transform:none;letter-spacing:0">terkunci</span></div>
+      <div class="field-row">
+        <div class="field" style="opacity:.7"><span class="icon">🎓</span>7B</div>
+        <div class="field" style="opacity:.7"><span class="icon">📚</span>Matematika</div>
+      </div>
+
+      <div class="field-label">Tipe</div>
+      <div class="type-grid">
+        <div class="type-tile on">
+          <div class="icon-tile">📝</div>
+          <div class="name">Tugas</div>
+          <div class="desc">Pemberian tugas / PR</div>
+        </div>
+        <div class="type-tile">
+          <div class="icon-tile">📚</div>
+          <div class="name">Aktivitas</div>
+          <div class="desc">Diskusi / praktik</div>
+        </div>
+      </div>
+
+      <div class="field-label">Judul</div>
+      <div class="field">Tugas Trigonometri</div>
+
+      <div class="field-label">Deskripsi</div>
+      <div class="field area">Kerjakan latihan halaman 124 nomor 1–10. Hitung sudut elevasi & deklinasi pada soal cerita di nomor 8 & 10.</div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary">Batal</div>
+      <div class="btn primary">💾 Simpan</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ D · Quick Type Picker ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">D</span>QUICK ACTIONS <span class="desc">Tap ⋯ on detail header</span></div>
+  <div class="phone" style="background:rgba(20,48,104,.32);">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:white;border-top-left-radius:24px;border-top-right-radius:24px;padding-bottom:16px;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Aksi cepat</div>
+      <div class="sheet-sub">Salin tautan, duplikat ke kelas lain, ekspor PDF, atau hapus.</div>
+
+      <div class="field" style="margin-top:8px;">
+        <span class="icon" style="color:var(--blue-600)">📋</span>
+        <div style="flex:1">
+          <div style="font-size:12.5px;font-weight:800;color:var(--slate-900)">Salin tautan</div>
+          <div style="font-size:10px;color:var(--slate-500)">Bagikan ke wali kelas / orang tua</div>
+        </div>
+        <span style="color:var(--slate-300)">›</span>
+      </div>
+      <div class="field">
+        <span class="icon" style="color:var(--violet-600)">📤</span>
+        <div style="flex:1">
+          <div style="font-size:12.5px;font-weight:800;color:var(--slate-900)">Duplikat ke kelas lain</div>
+          <div style="font-size:10px;color:var(--slate-500)">Salin ke 7A · 7C · 8A …</div>
+        </div>
+        <span style="color:var(--slate-300)">›</span>
+      </div>
+      <div class="field">
+        <span class="icon" style="color:var(--green-600)">⤓</span>
+        <div style="flex:1">
+          <div style="font-size:12.5px;font-weight:800;color:var(--slate-900)">Ekspor PDF</div>
+          <div style="font-size:10px;color:var(--slate-500)">Lampirkan ke laporan kegiatan</div>
+        </div>
+        <span style="color:var(--slate-300)">›</span>
+      </div>
+      <div class="field" style="border-color:var(--red-100)">
+        <span class="icon" style="color:var(--red-600)">🗑</span>
+        <div style="flex:1">
+          <div style="font-size:12.5px;font-weight:800;color:var(--red-600)">Hapus kegiatan</div>
+          <div style="font-size:10px;color:var(--slate-500)">Tidak dapat dipulihkan</div>
+        </div>
+        <span style="color:var(--red-600)">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ E · Locked / Archive ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">E</span>READ-ONLY · LOCKED <span class="desc">Past academic year — view-only</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">KEGIATAN · ARSIP</div>
+          <div class="h-title-row"><span class="h-dot" style="background:#94a3b8;box-shadow:none"></span><span class="h-title">Lihat Kegiatan</span></div>
+        </div>
+        <div class="h-icon">⤓</div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon">📝</div>
+        <div class="ctx-body">
+          <div class="ctx-title">Tugas Persamaan Linear</div>
+          <div class="ctx-sub">7B · Matematika · 12 Mei 2024 · TP 2023/2024</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell green"><div class="v">28</div><div class="l">Siswa</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">26</div><div class="l">Submit</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">2</div><div class="l">Belum</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="ro-banner">
+        <span>🔒</span>
+        Tahun ajaran lalu — tidak bisa diubah. Ekspor PDF untuk arsip.
+      </div>
+      <div class="detail-section">
+        <div class="label">Tipe</div>
+        <div class="value">📝 Tugas</div>
+      </div>
+      <div class="detail-section">
+        <div class="label">Deskripsi</div>
+        <div class="value">Kerjakan latihan halaman 88 nomor 1–8. Tunjukkan langkah substitusi.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="margin-top:48px;padding:18px 22px;background:var(--surface);border-radius:14px;max-width:880px;border:1px solid var(--slate-200)">
+  <h3 style="margin:0 0 10px;font-size:15px;color:var(--brand-dark)">Notes for review</h3>
+  <ul style="font-size:12px;color:var(--slate-600);line-height:1.7;padding-left:20px;margin:0">
+    <li><strong>One detail surface, three buckets.</strong> Frame A is the read-write detail (today / current academic year). Frame E is the same scaffold in lock mode (past TP). Frame B is the FAB-driven add sheet, Frame C is the edit sheet (pre-filled, with class+mapel locked).</li>
+    <li><strong>3-cell KPI overlap.</strong> Top-of-detail card breaks per-activity progress into Siswa · Submit · Belum. Numbers come from the Activity ↔ Submission join, fetched alongside the activity itself.</li>
+    <li><strong>Type tiles, not dropdown.</strong> The add/edit sheets show four big tiles (Tugas, Aktivitas, Ujian, Catatan) with icon + label + 1-line desc. Selected tile fills with brand-cobalt; tap toggles. Faster than a dropdown for a 4-item set.</li>
+    <li><strong>Sticky save footer.</strong> Bottom of every sheet — Batal (white outline) + Simpan (cobalt). Edit/Add use the same shape; Detail flips to Hapus + Edit so the destructive action is left-of-primary, never primary itself.</li>
+    <li><strong>Quick actions sheet (Frame D).</strong> Salin tautan / Duplikat / Ekspor PDF / Hapus. The duplicate row uses violet because it spawns N new activities — distinct from the green export and red delete.</li>
+    <li><strong>Locked variant.</strong> Past academic year flips kicker to ARSIP, dot to slate, replaces the ⋯ icon with ⤓ download. Edit/Hapus footer is hidden; only the back arrow + export remain.</li>
+  </ul>
+</div>
+
+</body>
+</html>
