@@ -20,6 +20,7 @@ import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/role_toggle_chip_row.dart';
+import 'package:manajemensekolah/core/widgets/teacher_role_options.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/attendance_ui_embedded_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/attendance_ui_body_mixin.dart';
@@ -69,24 +70,22 @@ mixin AttendanceUIBuilderMixin
   // ═══════════════════════════════════════════
 
   Widget buildEmbedded(LanguageProvider lp) {
-    return GestureDetector(
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      child: Container(
-        decoration: BoxDecoration(
-          color: ColorUtils.slate50,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-        ),
+    // Take-attendance is now a full-screen route (was a draggable
+    // sheet) so it shares the same brand chrome as the main Presensi
+    // page: BrandPageHeader at top, live KPI strip, then the input
+    // form body. Scaffold gives us the proper safe-area + system bar
+    // handling that the sheet variant didn't need.
+    return Scaffold(
+      backgroundColor: ColorUtils.slate50,
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Column(
           children: [
-            // Frame A — gradient header with kicker · title · realtime dot.
+            // Brand-aligned gradient header — centered title, back
+            // button auto-wired by the navigator, density toggle in
+            // the action icons row.
             buildEmbeddedHeader(lp),
-            // Frame A — KPI strip (5-cell live status counts) renders
-            // immediately below the header. The card sits in slate-50
-            // background so it reads as a "card overlap" pattern even
-            // without true negative-margin overlap.
+            // Live KPI strip (4-cell status counts).
             buildEmbeddedKpiStrip(lp),
             // Body: context strip + toolbar + section head + student list
             // + sticky save button.
@@ -187,23 +186,10 @@ mixin AttendanceUIBuilderMixin
   /// `Mengajar | Wali 7B | Wali 8A | …`.
   Widget? _buildRoleSelector(LanguageProvider lp) {
     if (homeroomClassesList.isEmpty) return null;
-    final roles = <RoleOption>[
-      RoleOption.mengajar(
-        subLabel: lp.getTranslatedText({
-          'en': 'Teaching schedule',
-          'id': 'Jadwal mengajar',
-        }),
-      ),
-      for (final hc in homeroomClassesList)
-        RoleOption.waliKelas(
-          classId: (hc['id'] ?? '').toString(),
-          className: (hc['name'] ?? hc['nama'] ?? '').toString(),
-          subLabel: lp.getTranslatedText({
-            'en': 'Homeroom',
-            'id': 'Kelas perwalian',
-          }),
-        ),
-    ];
+    final roles = buildMultiWaliRoleOptions(
+      homeroomClasses: homeroomClassesList,
+      lp: lp,
+    );
 
     final selectedId = isHomeroomView
         ? 'wali:${selectedHomeroomClass?['id'] ?? ''}'

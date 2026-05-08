@@ -174,7 +174,9 @@ class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode>
           final student = widget.filteredStudentList[index];
           return AttendanceStudentItem(
             student: student,
-            currentStatus: widget.attendanceStatus[student.id] ?? 'hadir',
+            // Empty string → no pill highlighted. The form starts
+            // every student unmarked so the teacher must tap a status.
+            currentStatus: widget.attendanceStatus[student.id] ?? '',
             languageProvider: lang,
             onStatusChanged: widget.onStatusChanged,
             index: index,

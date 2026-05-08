@@ -362,7 +362,12 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
     ) {
       final present = (session['present'] as num?)?.toInt() ?? 0;
       final total = (session['total'] as num?)?.toInt() ?? 0;
-      final pct = total > 0 ? (present / total * 100) : 0.0;
+      final classSize = (session['class_size'] as num?)?.toInt() ?? 0;
+      // Use class_size as the denominator when known so a session
+      // with 1 saved Hadir out of 12 students no longer renders as
+      // "100%". Falls back to the saved-row count for legacy responses.
+      final denom = classSize > 0 ? classSize : total;
+      final pct = denom > 0 ? (present / denom * 100) : 0.0;
       return {
         'class_id': g['class_id'],
         'class_name': g['class_name'],
@@ -377,6 +382,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
         'end_time': session['end_time'],
         'present': present,
         'total': total,
+        'class_size': classSize,
         'pct': pct,
         'status': total == 0 ? 'pending' : 'recorded',
         // Carry parent group so navigation can use latest_records[0]
@@ -641,6 +647,7 @@ class _AttendanceMockupCard extends StatelessWidget {
     final pct = (group['pct'] as num?)?.toDouble() ?? 0.0;
     final present = (group['present'] as num?)?.toInt() ?? 0;
     final total = (group['total'] as num?)?.toInt() ?? 0;
+    final classSize = (group['class_size'] as num?)?.toInt() ?? 0;
     final teacherName = (group['teacher_name'] ?? '').toString().trim();
 
     final iconBg = pending ? const Color(0xFFFEF3C7) : const Color(0xFFDBEAFE);
@@ -649,11 +656,23 @@ class _AttendanceMockupCard extends StatelessWidget {
         ? '?'
         : subject.substring(0, 1).toUpperCase();
 
+    // Partial save = saved fewer rows than the class roster. Show
+    // "X/Y" so the teacher can tell at a glance the session isn't
+    // fully recorded — "100%" of 1 marked student is misleading
+    // when the class has 12.
+    final isPartial = classSize > 0 && total < classSize;
+
     String pillText;
     Color pillBg;
     Color pillFg;
     if (pending || total == 0) {
       pillText = 'Belum';
+      pillBg = const Color(0xFFFEF3C7);
+      pillFg = const Color(0xFFB45309);
+    } else if (isPartial) {
+      // Amber to flag the session as incomplete; the number is the
+      // count of marked students out of the roster.
+      pillText = '$total/$classSize';
       pillBg = const Color(0xFFFEF3C7);
       pillFg = const Color(0xFFB45309);
     } else if (present == total) {

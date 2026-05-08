@@ -247,9 +247,11 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
         studentList = stuList.map((s) => Student.fromJson(s)).toList();
         filteredStudentList = studentList;
         lessonHours = _deduplicateHours(hours);
-        for (final s in studentList) {
-          attendanceStatus[s.id] = 'hadir';
-        }
+        // Intentionally NOT pre-populating attendanceStatus here.
+        // The form starts with every student unmarked so a teacher
+        // who saves without scrolling can't silently mark absent
+        // students "Hadir". Bulk-fill is one tap away via the Aksi
+        // cepat sheet ("Tandai semua Hadir" / "Sisanya Alpa").
         isLoadingInput = false;
       });
 

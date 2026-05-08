@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 
 /// Builds the embedded bottom-sheet chrome for the attendance UI.
@@ -28,99 +29,33 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
   // EMBEDDED HEADER · Frame A
   // ─────────────────────────────────────────
 
-  /// Gradient sheet header: drag handle → kicker (`AKADEMIK · KEHADIRAN`)
-  /// → title (`Ambil Presensi`) with realtime dot → close + density
-  /// toggle. Matches the mockup's `.header` block.
+  /// Brand-aligned header for the take-attendance flow. Same gradient
+  /// + centered title pattern as the main Presensi page; the density
+  /// toggle (compact/spacious rows) sits in the action icon row.
+  ///
+  /// The drag handle and explicit close button are gone — the screen
+  /// is no longer a draggable sheet, and the back button is provided
+  /// automatically by [BrandPageHeader] from the navigator.
   Widget buildEmbeddedHeader(LanguageProvider lp) {
-    final primary = ColorUtils.getRoleColor('guru');
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [ColorUtils.brandDarkBlue, primary],
+    return BrandPageHeader(
+      role: 'guru',
+      title: lp.getTranslatedText({
+        'en': 'Take Attendance',
+        'id': 'Ambil Presensi',
+      }),
+      subtitle: lp.getTranslatedText({
+        'en': 'Attendance · Input',
+        'id': 'Presensi · Input',
+      }),
+      isRealtimeFresh: true,
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: compactMode
+              ? Icons.view_agenda_outlined
+              : Icons.density_small_rounded,
+          onTap: () => setState(() => setCompactMode(!compactMode)),
         ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 10, 12, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag handle.
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          // Kicker.
-          Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: Text(
-              lp.getTranslatedText({
-                'en': 'Attendance · Input',
-                'id': 'Presensi · Input',
-              }).toUpperCase(),
-              style: TextStyle(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w800,
-                color: Colors.white.withValues(alpha: 0.7),
-                letterSpacing: 1.0,
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          // Title row: title + realtime dot + close.
-          Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Text(
-                      lp.getTranslatedText({
-                        'en': 'Take Attendance',
-                        'id': 'Ambil Presensi',
-                      }),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Realtime green dot — matches the mockup's `.h-dot`.
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: ColorUtils.success600,
-                        boxShadow: [
-                          BoxShadow(
-                            color: ColorUtils.success600.withValues(alpha: 0.6),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _buildCompactToggle(),
-              const SizedBox(width: 6),
-              _buildCloseBtn(),
-            ],
-          ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -264,41 +199,5 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
 
   Widget _kpiDivider() {
     return Container(width: 1, height: 24, color: ColorUtils.slate100);
-  }
-
-  Widget _buildCompactToggle() {
-    return GestureDetector(
-      onTap: () => setState(() => setCompactMode(!compactMode)),
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          compactMode
-              ? Icons.view_agenda_outlined
-              : Icons.density_small_rounded,
-          color: Colors.white,
-          size: 16,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCloseBtn() {
-    return IconButton(
-      onPressed: () => Navigator.of(context).pop(),
-      icon: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Icon(Icons.close, color: Colors.white, size: 18),
-      ),
-    );
   }
 }

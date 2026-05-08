@@ -160,10 +160,13 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
     required String subjectId,
     required String subjectName,
   }) {
-    AppDraggableSheet.show<void>(
-      context: context,
-      onClose: refreshGroupedAttendance,
-      builder: (_, sc) => AttendancePage(
+    // Push as a full-screen route instead of a draggable sheet so the
+    // input form gets the same brand layout (centered title, KPI
+    // overlay, scroll behavior) as the main Presensi page. Refresh the
+    // listing on pop so newly-saved sessions appear right away.
+    AppNavigator.push(
+      context,
+      AttendancePage(
         teacher: {'id': teacherId, 'nama': teacherNama},
         initialDate: DateTime.now(),
         initialSubjectId: subjectId,
@@ -172,9 +175,8 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
         initialClassName: className,
         initialTabIndex: 1,
         embedded: true,
-        scrollController: sc,
       ),
-    );
+    ).then((_) => refreshGroupedAttendance());
   }
 
   @override
@@ -182,6 +184,13 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      // Five tiles + handle + title + subtitle + safe-area inset
+      // exceed the system's default ~9/16 cap on tall phones, causing
+      // an 11-px bottom overflow. Letting the sheet size to its
+      // content avoids the clamp; the sheet itself wraps its body in
+      // a SingleChildScrollView so it still scrolls on shorter
+      // devices instead of overflowing.
+      isScrollControlled: true,
       builder: (_) => AttendanceQuickActionsSheet(
         languageProvider: lp,
         // Override every student's status (Tandai semua Hadir / Sakit / etc).

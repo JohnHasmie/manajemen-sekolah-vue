@@ -84,13 +84,76 @@ mixin AttendanceInputMixin on ConsumerState<AttendancePage> {
       return;
     }
 
+    // Build the payload from explicitly-marked students only. The
+    // form starts with every student unmarked so a teacher who saves
+    // without scrolling can't silently flag absent students as Hadir.
+    final marked = filteredStudentList.where(
+      (s) => (attendanceStatus[s.id] ?? '').isNotEmpty,
+    ).toList();
+    final skipped = filteredStudentList.length - marked.length;
+
+    if (marked.isEmpty) {
+      SnackBarUtils.showError(
+        context,
+        lp.getTranslatedText({
+          'en': 'No students marked yet — tap a status for each '
+              'student or use Quick actions.',
+          'id': 'Belum ada siswa ditandai — pilih status setiap '
+              'siswa atau pakai Aksi cepat.',
+        }),
+      );
+      return;
+    }
+
+    // Warn before partial save. The teacher might not realise some
+    // rows are still empty — confirm explicitly before persisting an
+    // incomplete session. Cancel returns them to the form so they can
+    // finish marking; "Lanjutkan" persists only the marked rows.
+    if (skipped > 0) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(lp.getTranslatedText({
+            'en': 'Some students not yet marked',
+            'id': 'Ada siswa belum ditandai',
+          })),
+          content: Text(lp.getTranslatedText({
+            'en': '$skipped of ${filteredStudentList.length} students '
+                "don't have a status yet. Save only the marked "
+                '${marked.length} and leave the rest empty?',
+            'id': '$skipped dari ${filteredStudentList.length} siswa '
+                'belum punya status. Simpan hanya ${marked.length} '
+                'yang sudah ditandai dan biarkan sisanya kosong?',
+          })),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(lp.getTranslatedText({
+                'en': 'Cancel',
+                'id': 'Batal',
+              })),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(lp.getTranslatedText({
+                'en': 'Save partial',
+                'id': 'Lanjutkan',
+              })),
+            ),
+          ],
+        ),
+      );
+      if (proceed != true) return;
+      if (!mounted) return;
+    }
+
     setState(() => setInputIsSubmitting(true));
     try {
       final selectedDate = getInputSelectedDate();
       final date = DateFormat('yyyy-MM-dd').format(selectedDate);
 
-      final attendances = filteredStudentList.map((s) {
-        final status = attendanceStatus[s.id] ?? 'hadir';
+      final attendances = marked.map((s) {
+        final status = attendanceStatus[s.id]!;
         return {
           'student_id': s.id,
           'status': _mapStatusToBackend(status),
@@ -101,7 +164,7 @@ mixin AttendanceInputMixin on ConsumerState<AttendancePage> {
       final result = await AttendanceService.createBulkAttendance(
         teacherId: tid.toString(),
         subjectId: selectedSubjectId,
-        classId: filteredStudentList.first.classId ?? selectedClassId ?? '',
+        classId: marked.first.classId ?? selectedClassId ?? '',
         date: date,
         lessonHourId: getInputSelectedLessonHourId(),
         attendances: attendances,
@@ -113,13 +176,20 @@ mixin AttendanceInputMixin on ConsumerState<AttendancePage> {
       final fail = result['failed'] ?? 0;
 
       if (fail == 0) {
-        SnackBarUtils.showSuccess(
-          context,
-          lp.getTranslatedText({
-            'en': 'Attendance saved for $ok students',
-            'id': 'Absensi disimpan untuk $ok siswa',
-          }),
-        );
+        final msg = skipped == 0
+            ? lp.getTranslatedText({
+                'en': 'Attendance saved for $ok students',
+                'id': 'Absensi disimpan untuk $ok siswa',
+              })
+            : lp.getTranslatedText({
+                'en': 'Saved $ok · $skipped students still unmarked',
+                'id': 'Disimpan $ok · $skipped siswa belum ditandai',
+              });
+        if (skipped == 0) {
+          SnackBarUtils.showSuccess(context, msg);
+        } else {
+          SnackBarUtils.showWarning(context, msg);
+        }
         if (widget.embedded && mounted) {
           Navigator.of(context).pop();
           return;
@@ -155,10 +225,14 @@ mixin AttendanceInputMixin on ConsumerState<AttendancePage> {
             term.isEmpty ||
             s.name.toLowerCase().contains(term) ||
             s.studentNumber.toLowerCase().contains(term);
+        // Unmarked students (empty status) shouldn't match any status
+        // filter — they're not "Hadir by default" anymore. The filter
+        // chip is satisfied only when the student has been explicitly
+        // marked with that exact status.
+        final currentStatus = attendanceStatus[s.id] ?? '';
         final matchStatus =
             getInputSelectedStatusFilter() == null ||
-            (attendanceStatus[s.id] ?? 'hadir') ==
-                getInputSelectedStatusFilter();
+            currentStatus == getInputSelectedStatusFilter();
         final matchClass =
             selectedClassId == null || s.classId == selectedClassId;
         return matchSearch && matchStatus && matchClass;

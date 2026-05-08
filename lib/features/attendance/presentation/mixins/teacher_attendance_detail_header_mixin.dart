@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
+import 'package:manajemensekolah/features/attendance/exports/attendance_export_service.dart';
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_state.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_date_slot_picker.dart';
@@ -22,165 +26,81 @@ mixin TeacherAttendanceDetailHeaderMixin
   /// Get primary color for the role
   Color getPrimaryColor() => ColorUtils.getRoleColor('guru');
 
-  /// Build header with subject and class info
+  /// Builds the shared `BrandPageHeader` for the attendance detail
+  /// screen. Same gradient + centered title pattern as the main
+  /// Presensi page; the subject·class·date context strip slots into
+  /// `bottomSlot`. Pairs with `BrandPageLayout` so the KPI overview
+  /// card overlaps the gradient and scrolls with the body.
+  ///
+  /// Read-only mode ("Lihat Presensi") surfaces a download icon in
+  /// [actionIcons] that exports the loaded attendance via Excel.
+  /// Edit mode renders no trailing icon (the previous more-horiz dot
+  /// had no handler and read as a dead affordance).
   Widget buildHeader(
     BuildContext context,
     LanguageProvider languageProvider, {
     TeacherAttendanceState? state,
     bool isLoading = false,
   }) {
-    final primary = getPrimaryColor();
-    final canEdit = widget.canEdit;
-    final dotColor = canEdit ? ColorUtils.success600 : ColorUtils.slate400;
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [ColorUtils.brandDarkBlue, primary],
-        ),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.25),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 10,
-          left: 16,
-          right: 16,
-          bottom: 18,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Top row: back · (kicker + title) · trailing icon ──
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _backButton(),
-                const SizedBox(width: 12),
-                Expanded(child: _titleBlock(languageProvider, dotColor)),
-                _trailingIcon(canEdit),
-              ],
-            ),
-            const SizedBox(height: 14),
-            // ── Context strip: subject avatar · subject·class · date ──
-            _contextStrip(languageProvider),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _backButton() {
-    return GestureDetector(
-      onTap: () => AppNavigator.pop(context),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(
-          Icons.chevron_left_rounded,
-          color: Colors.white,
-          size: 26,
-        ),
-      ),
-    );
-  }
-
-  Widget _titleBlock(LanguageProvider lp, Color dotColor) {
     final canEdit = widget.canEdit;
     final kicker = canEdit
-        ? lp.getTranslatedText({
+        ? languageProvider.getTranslatedText({
             'en': 'Attendance · Detail',
             'id': 'Presensi · Detail',
           })
-        : lp.getTranslatedText({
+        : languageProvider.getTranslatedText({
             'en': 'Attendance · Archive',
             'id': 'Presensi · Arsip',
           });
     final title = canEdit
-        ? lp.getTranslatedText({'en': 'Edit Attendance', 'id': 'Edit Presensi'})
-        : lp.getTranslatedText({
+        ? languageProvider
+            .getTranslatedText({'en': 'Edit Attendance', 'id': 'Edit Presensi'})
+        : languageProvider.getTranslatedText({
             'en': 'View Attendance',
             'id': 'Lihat Presensi',
           });
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          kicker.toUpperCase(),
-          style: TextStyle(
-            fontSize: 9.5,
-            fontWeight: FontWeight.w800,
-            color: Colors.white.withValues(alpha: 0.7),
-            letterSpacing: 1.0,
-          ),
-        ),
-        const SizedBox(height: 3),
-        Row(
-          children: [
-            // Realtime dot.
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: dotColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: dotColor.withValues(alpha: 0.6),
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                  ),
-                ],
+    return BrandPageHeader(
+      role: 'guru',
+      title: title,
+      subtitle: kicker,
+      // green dot when editable (live), translucent slate when read-only.
+      isRealtimeFresh: canEdit,
+      kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
+      actionIcons: canEdit
+          ? null
+          : [
+              BrandHeaderIconButton(
+                icon: Icons.download_rounded,
+                onTap: state == null
+                    ? () {}
+                    : () => _exportAttendance(state),
               ),
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+            ],
+      bottomSlot: _contextStrip(languageProvider),
     );
   }
 
-  Widget _trailingIcon(bool canEdit) {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Icon(
-        canEdit ? Icons.more_horiz_rounded : Icons.download_rounded,
-        color: Colors.white,
-        size: 18,
-      ),
+  Future<void> _exportAttendance(TeacherAttendanceState state) async {
+    if (state.attendanceRecords.isEmpty) {
+      SnackBarUtils.showWarning(
+        context,
+        ref.read(languageRiverpod).getTranslatedText({
+          'en': 'No attendance data to export',
+          'id': 'Tidak ada data absensi untuk diekspor',
+        }),
+      );
+      return;
+    }
+    await ExcelPresenceService.exportPresenceToExcel(
+      presenceData: state.attendanceRecords,
+      context: context,
+      filters: {
+        'class_id': widget.classId,
+        'subject_id': widget.subjectId,
+        'date': DateFormat('yyyy-MM-dd').format(widget.date),
+        if (widget.lessonHourId != null) 'lesson_hour_id': widget.lessonHourId,
+      },
     );
   }
 

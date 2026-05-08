@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_controller.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
@@ -20,13 +19,14 @@ mixin TeacherAttendanceDetailActionsMixin
       }
     }
 
-    AppDraggableSheet.show<void>(
-      context: context,
-      onClose: () {
-        // Refresh data after edit sheet is closed
-        ref.invalidate(teacherAttendanceProvider(_controllerParams));
-      },
-      builder: (_, scrollController) => AttendancePage(
+    // Push the input flow as a full-screen route (was a draggable
+    // sheet) so it picks up the shared BrandPageLayout chrome —
+    // centered title, KPI overlay, branded gradient. Refresh the
+    // detail screen's data when the user pops back so freshly-saved
+    // edits show up immediately.
+    AppNavigator.push(
+      context,
+      AttendancePage(
         teacher: widget.teacher,
         initialDate: widget.date,
         initialSubjectId: widget.subjectId,
@@ -36,9 +36,10 @@ mixin TeacherAttendanceDetailActionsMixin
         initialLessonHourNumber: lessonHourNum,
         initialTabIndex: 1, // Start on input tab
         embedded: true,
-        scrollController: scrollController,
       ),
-    );
+    ).then((_) {
+      ref.invalidate(teacherAttendanceProvider(_controllerParams));
+    });
   }
 
   /// Get controller parameters for provider

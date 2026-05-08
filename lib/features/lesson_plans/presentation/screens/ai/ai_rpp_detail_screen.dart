@@ -35,6 +35,7 @@ import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/ai/ai_rpp_editor_view.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/ai/ai_rpp_preview_view.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_content_formatter.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_pdf_builder.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_detail_header.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_regen_sheet.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
@@ -668,45 +669,12 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
 
   Future<void> _exportToPdf() async {
     try {
-      final document = PdfDocument();
-      final page = document.pages.add();
-      final graphics = page.graphics;
-      final font = PdfStandardFont(PdfFontFamily.helvetica, 12);
-      final titleFont = PdfStandardFont(
-        PdfFontFamily.helvetica,
-        16,
-        style: PdfFontStyle.bold,
+      final body =
+          LessonPlanContentFormatter.format(_lessonPlanData);
+      final bytes = await LessonPlanPdfBuilder.build(
+        data: _lessonPlanData,
+        formattedBody: body,
       );
-
-      graphics.drawString(
-        'RENCANA PELAKSANAAN PEMBELAJARAN (RPP)',
-        titleFont,
-        bounds: Rect.fromLTWH(0, 0, page.size.width, 30),
-        format: PdfStringFormat(alignment: PdfTextAlignment.center),
-      );
-
-      final lines = LessonPlanContentFormatter.format(_lessonPlanData)
-          .split('\n');
-      var y = 40.0;
-      for (final line in lines) {
-        if (line.trim().isEmpty) {
-          y += 10;
-          continue;
-        }
-        graphics.drawString(
-          line,
-          font,
-          bounds: Rect.fromLTWH(50, y, page.size.width - 100, 15),
-        );
-        y += 18;
-        if (y > page.size.height - 50) {
-          document.pages.add();
-          y = 40;
-        }
-      }
-
-      final bytes = await document.save();
-      document.dispose();
 
       final dir = await getTemporaryDirectory();
       final file = File(

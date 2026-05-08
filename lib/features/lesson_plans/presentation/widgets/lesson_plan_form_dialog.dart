@@ -96,7 +96,20 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog>
                   widget.lessonPlanData!['kelas_id'])
               ?.toString();
       _selectedTerm = model.semester ?? 'Ganjil';
-      _selectedFileName = widget.lessonPlanData!['file_path'];
+      // Prefer the persisted original filename. Fall back to the
+      // storage path's basename for legacy rows that don't have a
+      // file_name yet — the user still sees something readable
+      // instead of the full storage path.
+      final initialFileName =
+          widget.lessonPlanData!['file_name']?.toString();
+      final initialFilePath =
+          widget.lessonPlanData!['file_path']?.toString();
+      _selectedFileName = (initialFileName != null &&
+              initialFileName.isNotEmpty)
+          ? initialFileName
+          : (initialFilePath != null && initialFilePath.isNotEmpty
+              ? initialFilePath.split('/').last
+              : null);
 
       if (_selectedSubjectId != null) {
         loadClassesBySubject(_selectedSubjectId!);

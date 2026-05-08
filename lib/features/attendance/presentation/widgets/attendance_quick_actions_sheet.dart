@@ -67,12 +67,18 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHandle(),
-            const SizedBox(height: 12),
-            _buildTitle(),
+        // Scroll the body so the sheet still works on short phones
+        // when all five tiles are visible. The host opens the sheet
+        // with `isScrollControlled: true`, which sizes the modal to
+        // its content; this scroll view kicks in only when content
+        // still exceeds the device height (e.g. with a keyboard up).
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildHandle(),
+              const SizedBox(height: 12),
+              _buildTitle(),
             _buildSubtitle(),
             const SizedBox(height: 8),
             _SheetButton(
@@ -164,7 +170,8 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
                 },
               ),
             const SizedBox(height: 8),
-          ],
+            ],
+          ),
         ),
       ),
     );
