@@ -87,9 +87,7 @@ void main() {
       WidgetTester tester,
     ) async {
       var triggered = false;
-      await tester.pumpWidget(
-        buildWidget(onLongPress: () => triggered = true),
-      );
+      await tester.pumpWidget(buildWidget(onLongPress: () => triggered = true));
 
       await tester.longPress(find.byType(AttendanceSummaryCard));
       await tester.pump();

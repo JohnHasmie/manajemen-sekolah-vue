@@ -8,10 +8,7 @@ import 'package:manajemensekolah/features/schedule/domain/models/school_day.dart
 void main() {
   group('SchoolDay.fromJson', () {
     test('parses standard API response', () {
-      final day = SchoolDay.fromJson({
-        'id': 1,
-        'name': 'Monday',
-      });
+      final day = SchoolDay.fromJson({'id': 1, 'name': 'Monday'});
       expect(day.id, '1');
       expect(day.name, 'Monday');
     });
@@ -33,20 +30,14 @@ void main() {
     });
 
     test('casts integer id to string', () {
-      final day = SchoolDay.fromJson({
-        'id': 42,
-        'name': 'Friday',
-      });
+      final day = SchoolDay.fromJson({'id': 42, 'name': 'Friday'});
       expect(day.id, '42');
     });
   });
 
   group('SchoolDay.toJson', () {
     test('round-trips through fromJson', () {
-      final original = SchoolDay.fromJson({
-        'id': '5',
-        'name': 'Friday',
-      });
+      final original = SchoolDay.fromJson({'id': '5', 'name': 'Friday'});
       final json = original.toJson();
       final restored = SchoolDay.fromJson(json);
       expect(restored.id, original.id);

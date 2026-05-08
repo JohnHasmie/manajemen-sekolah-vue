@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 /// Unit tests for AppDateUtils.
 ///
 /// Covers:
@@ -237,8 +238,10 @@ void main() {
     });
 
     test('invalid string does not crash', () {
-      // 'not-a-real-date' splits on '-' to ["not","a","real-date"] which fails int.parse
-      // → parseLocalDate catches → returns DateTime.now() → formatted as today's date
+      // 'not-a-real-date' splits on '-' to ["not","a","real-date"] which fails
+      // int.parse
+      // → parseLocalDate catches → returns DateTime.now() → formatted as today's
+      // date
       final result = AppDateUtils.formatDateString('not-a-real-date');
       expect(result, isA<String>());
       expect(result, isNotEmpty);

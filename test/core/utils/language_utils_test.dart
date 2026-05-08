@@ -11,7 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
-/// Initializes PreferencesService (singleton) with a clean mock SharedPreferences.
+/// Initializes PreferencesService (singleton) with a clean mock
+// SharedPreferences.
 Future<void> _initPrefs() async {
   SharedPreferences.setMockInitialValues({});
   await PreferencesService().init();

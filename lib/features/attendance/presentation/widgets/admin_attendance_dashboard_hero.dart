@@ -52,10 +52,7 @@ class _AdminAttendanceDashboardHeroState
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(attendanceDashboardProvider(_range));
-    final data = async.maybeWhen(
-      data: (d) => d,
-      orElse: () => null,
-    );
+    final data = async.maybeWhen(data: (d) => d, orElse: () => null);
 
     return BrandPageLayout(
       role: 'admin',
@@ -93,10 +90,10 @@ class _AdminAttendanceDashboardHeroState
             sub: data == null
                 ? null
                 : (data.absentDelta == 0
-                    ? 'sama dengan kemarin'
-                    : data.absentDelta > 0
-                        ? '↑ ${data.absentDelta.abs()} dari kemarin'
-                        : '↓ ${data.absentDelta.abs()} dari kemarin'),
+                      ? 'sama dengan kemarin'
+                      : data.absentDelta > 0
+                      ? '↑ ${data.absentDelta.abs()} dari kemarin'
+                      : '↓ ${data.absentDelta.abs()} dari kemarin'),
           ),
           BrandKpiColumn(
             label: 'Rata kehadiran',
@@ -114,10 +111,8 @@ class _AdminAttendanceDashboardHeroState
         // error fall back to a thin placeholder so the body never
         // collapses to 0dp height.
         async.when(
-          data: (d) => _TingkatPanel(
-            trends: d.tingkats,
-            onTap: widget.onTingkatTap,
-          ),
+          data: (d) =>
+              _TingkatPanel(trends: d.tingkats, onTap: widget.onTingkatTap),
           loading: () => const SizedBox(height: 80),
           error: (_, __) => const SizedBox(height: 8),
         ),
@@ -255,15 +250,14 @@ class _ExportBar extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 'PDF · Excel · CSV',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: ColorUtils.slate500,
-                ),
+                style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
               ),
               const Spacer(),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: navy,
                   borderRadius: BorderRadius.circular(10),

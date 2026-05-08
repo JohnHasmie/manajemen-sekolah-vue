@@ -166,6 +166,14 @@ mixin TeacherActivityDataLoadingMixin
     final schedules = (summaryResult['schedules'] as List?) ?? [];
     final homeroomClasses = (summaryResult['homeroom_classes'] as List?) ?? [];
 
+    // Land the KPI bundle from the backend (when present) so the
+    // brand 3-cell overlap card renders the live counts instead of
+    // the client-side fallback.
+    final rawKpi = summaryResult['kpi'];
+    if (rawKpi is Map) {
+      updateKpiSummary(Map<String, dynamic>.from(rawKpi));
+    }
+
     setActivityError(null);
     onInitialDataLoaded(classes, schedules, summaryResult, homeroomClasses);
   }
@@ -218,4 +226,8 @@ mixin TeacherActivityDataLoadingMixin
   void setLoading(bool value);
 
   void setActivityError(String? message);
+
+  /// Lands the backend `kpi` bundle into state so the brand 3-cell
+  /// overlap card renders live counts.
+  void updateKpiSummary(Map<String, dynamic> v);
 }

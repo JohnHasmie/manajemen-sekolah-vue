@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 // Widget tests for FinanceInfoItem.
 // Pure StatelessWidget — no providers needed.
 import 'package:flutter/material.dart';
@@ -37,6 +38,7 @@ void main() {
         _wrap(const FinanceInfoItem(label: 'Tanggal', value: '2025-01-01')),
       );
       // Expanded wraps the value Text — confirm the Expanded exists in the tree.
+      //
       expect(find.byType(Expanded), findsOneWidget);
     });
 

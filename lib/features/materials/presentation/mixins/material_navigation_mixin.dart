@@ -5,6 +5,7 @@
 // and chapter bottom sheets.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/embedded_activity_list_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/sub_chapter_detail_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
@@ -49,38 +50,31 @@ mixin MaterialNavigationMixin on ConsumerState<TeacherMaterialScreen> {
     Map<String, dynamic> subChapter,
     Map<String, dynamic> bab,
   ) {
-    showModalBottomSheet(
+    AppDraggableSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.92,
-        minChildSize: 0.5,
-        maxChildSize: 0.96,
-        expand: false,
-        builder: (_, sc) => ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          child: SubBabDetailPage(
-            teacherId: teacherProfileId ?? Teacher.fromJson(widget.teacher).id,
-            subjectId: selectedSubject ?? '',
-            classId: selectedClassId,
-            className: selectedClassName,
-            subChapter: subChapter,
-            chapter: bab,
-            checked: checkedSubChapter[subChapter['id'].toString()] ?? false,
-            onCheckChanged: (v) => handleSubChapterCheck(
-              subChapter['id'].toString(),
-              bab['id'].toString(),
-              v,
-            ),
-            onGenerated: () {
-              if (mounted) {
-                setState(
-                  () => generatedSubChapter[subChapter['id'].toString()] = true,
-                );
-              }
-            },
+      initialSize: 0.92,
+      builder: (_, _) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: SubBabDetailPage(
+          teacherId: teacherProfileId ?? Teacher.fromJson(widget.teacher).id,
+          subjectId: selectedSubject ?? '',
+          classId: selectedClassId,
+          className: selectedClassName,
+          subChapter: subChapter,
+          chapter: bab,
+          checked: checkedSubChapter[subChapter['id'].toString()] ?? false,
+          onCheckChanged: (v) => handleSubChapterCheck(
+            subChapter['id'].toString(),
+            bab['id'].toString(),
+            v,
           ),
+          onGenerated: () {
+            if (mounted) {
+              setState(
+                () => generatedSubChapter[subChapter['id'].toString()] = true,
+              );
+            }
+          },
         ),
       ),
     );
@@ -93,22 +87,18 @@ mixin MaterialNavigationMixin on ConsumerState<TeacherMaterialScreen> {
     String subjectId,
     String sn,
   ) {
-    showModalBottomSheet(
+    AppDraggableSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.9,
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: TeacherMaterialScreen(
-            teacher: widget.teacher,
-            initialClassId: classId,
-            initialClassName: cn,
-            initialSubjectId: subjectId,
-            initialSubjectName: sn,
-            embedded: true,
-          ),
+      initialSize: 0.9,
+      builder: (_, _) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: TeacherMaterialScreen(
+          teacher: widget.teacher,
+          initialClassId: classId,
+          initialClassName: cn,
+          initialSubjectId: subjectId,
+          initialSubjectName: sn,
+          embedded: true,
         ),
       ),
     );
@@ -163,37 +153,30 @@ mixin MaterialNavigationMixin on ConsumerState<TeacherMaterialScreen> {
     })
     sel,
   ) {
-    showModalBottomSheet(
+    AppDraggableSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.96,
-        expand: false,
-        builder: (_, sc) => ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          child: EmbeddedActivityListScreen(
-            teacherId: Teacher.fromJson(widget.teacher).id,
-            teacherName: Teacher.fromJson(widget.teacher).name,
-            classId: selectedClassId ?? widget.initialClassId ?? '',
-            className: selectedClassName ?? widget.initialClassName ?? '',
-            subjectId: selectedSubject ?? '',
-            subjectName: getSelectedSubjectName(),
-            initialChapterId: sel.chId,
-            initialSubChapterId: sel.subId,
-            initialAdditionalMaterials: sel.additional,
-            materialsToMarkAsGenerated: sel.toMark,
-            autoShowActivityDialog: true,
-            showScaffold: true,
-          ),
+      onClose: () {
+        if (mounted && selectedSubject != null) {
+          loadChapterContent(selectedSubject!);
+        }
+      },
+      builder: (_, _) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: EmbeddedActivityListScreen(
+          teacherId: Teacher.fromJson(widget.teacher).id,
+          teacherName: Teacher.fromJson(widget.teacher).name,
+          classId: selectedClassId ?? widget.initialClassId ?? '',
+          className: selectedClassName ?? widget.initialClassName ?? '',
+          subjectId: selectedSubject ?? '',
+          subjectName: getSelectedSubjectName(),
+          initialChapterId: sel.chId,
+          initialSubChapterId: sel.subId,
+          initialAdditionalMaterials: sel.additional,
+          materialsToMarkAsGenerated: sel.toMark,
+          autoShowActivityDialog: true,
+          showScaffold: true,
         ),
       ),
-    ).then((_) {
-      if (mounted && selectedSubject != null) {
-        loadChapterContent(selectedSubject!);
-      }
-    });
+    );
   }
 }

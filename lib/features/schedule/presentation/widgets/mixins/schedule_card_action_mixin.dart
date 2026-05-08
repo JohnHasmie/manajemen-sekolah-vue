@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/'
     'teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart'
@@ -21,6 +22,13 @@ mixin ScheduleCardActionMixin {
   String? get subjectName => null;
   String? get classId => null;
   String? get className => null;
+
+  /// Exact `lesson_hour_id` UUID for the schedule slot the card
+  /// represents. Each (day, hour_number) tuple owns a distinct UUID,
+  /// so we cannot reconstruct it on the AttendancePage side from
+  /// hour_number alone — the schedule already has it, just forward it.
+  String? get lessonHourId => null;
+
   VoidCallback? get onRefresh => null;
 
   // Color and data access.
@@ -154,35 +162,27 @@ mixin ScheduleCardActionMixin {
 
   /// Shows attendance dialog with initial tab index.
   void showAttendanceDialog(BuildContext ctx, int tabIndex) {
-    showModalBottomSheet(
+    AppDraggableSheet.show<void>(
       context: ctx,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (dialogContext) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.8,
-          minChildSize: 0.5,
-          maxChildSize: 0.96,
-          expand: false,
-          builder: (context, scrollController) {
-            return AttendancePage(
-              teacher: {'id': teacherId, 'nama': teacherNama},
-              initialDate: computeScheduleDate(),
-              initialSubjectId: subjectId,
-              initialSubjectName: subjectName,
-              initialclassId: classId,
-              initialClassName: className,
-              initialLessonHourNumber: sched.Schedule.fromJson(
-                schedule,
-              ).lessonHour,
-              initialTabIndex: tabIndex,
-              embedded: true,
-              scrollController: scrollController,
-            );
-          },
-        );
-      },
-    ).then((_) => onRefresh?.call());
+      onClose: () => onRefresh?.call(),
+      builder: (_, scrollController) => AttendancePage(
+        teacher: {'id': teacherId, 'nama': teacherNama},
+        initialDate: computeScheduleDate(),
+        initialSubjectId: subjectId,
+        initialSubjectName: subjectName,
+        initialclassId: classId,
+        initialClassName: className,
+        initialLessonHourNumber: sched.Schedule.fromJson(schedule).lessonHour,
+        // Pass the exact UUID so the form's hydration + new-row submit
+        // both target the right per-day slot. Without this, hour_number
+        // 1 from one day would happily surface another day's stored
+        // attendance and block new entry.
+        initialLessonHourId: lessonHourId,
+        initialTabIndex: tabIndex,
+        embedded: true,
+        scrollController: scrollController,
+      ),
+    );
   }
 
   /// Opens material screen (stub for implementation).

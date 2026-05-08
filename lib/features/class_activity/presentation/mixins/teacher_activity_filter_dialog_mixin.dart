@@ -255,7 +255,14 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
                   ),
                 ],
                 selectedValue: _dateOption,
-                onSelected: (val) => setState(() => _dateOption = val),
+                // Tapping the already-selected chip deselects it so
+                // the user can drop a "this week" filter without
+                // having to hit Reset (which would also wipe their
+                // class + subject picks). Mirrors the class chip's
+                // own toggle-off above.
+                onSelected: (val) => setState(
+                  () => _dateOption = val == _dateOption ? null : val,
+                ),
                 selectedColor: widget.primaryColor,
               ),
             ],

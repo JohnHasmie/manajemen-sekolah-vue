@@ -62,6 +62,8 @@ class ApiEndpoints {
   static const attendance = '/attendance';
   static const attendanceBulk = '/attendance/bulk';
   static const attendanceTeacherSummary = '/attendance/teacher-summary';
+  static const attendanceTeacherCalendar = '/attendance/teacher-calendar';
+  static const attendanceLastSession = '/attendance/last-session';
   static const attendanceSummary = '/attendance/summary';
   static const attendanceStats = '/attendance/stats';
   static const attendanceMarkRead = '/attendance/mark-read';

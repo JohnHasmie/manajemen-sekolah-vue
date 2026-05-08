@@ -196,6 +196,13 @@ mixin GradeRecapGradeOpsMixin on ConsumerState<GradeRecapPage> {
 
   void deleteChapter(int chapterIndex);
 
+  /// Renames the chapter at [chapterIndex] in place — opens an
+  /// in-screen rename dialog and writes the new name back into
+  /// `chapters[i]['judul_bab']`. Single-bab tables still need this
+  /// (delete is hidden in that case but the user must still be
+  /// able to rename the single bab they have).
+  void editChapter(int chapterIndex);
+
   // ── Row recalculation (delegated to mixin) ─────
 
   void recalculateRowInternal(Map<String, dynamic> row);

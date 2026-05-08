@@ -1,0 +1,1353 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · Rekap Nilai · Mockup</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-deep: #1F4A8F;
+    --brand-azure: #21AFE6;
+    --brand-cobalt: #1B6FB8;
+    --teal-50: #CCFBF1;
+    --teal-600: #0D9488;
+    --green-50: #DCFCE7;
+    --green-600: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-600: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+    --rose-50: #FFE4E6;
+    --rose-600: #BE185D;
+    --indigo-50: #E0E7FF;
+    --indigo-600: #4338CA;
+    --emerald-50: #D1FAE5;
+    --emerald-600: #047857;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 {
+    font-size: 24px; margin: 0 0 8px;
+    color: var(--brand-dark); letter-spacing: -0.4px;
+  }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 32px;
+    max-width: 880px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px;
+    align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 28px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+    position: relative;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px;
+    margin-left: 10px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 760;
+    position: relative;
+    overflow: hidden;
+    background: var(--slate-50);
+  }
+
+  /* Brand header */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    padding: 14px 16px 22px;
+    color: white;
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 18px; flex: 0 0 auto;
+  }
+  .h-title-block { flex: 1; min-width: 0; }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.72);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .h-title-row { display: flex; align-items: center; gap: 8px; }
+  .h-dot {
+    width: 8px; height: 8px;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34,197,94,.6);
+    flex: 0 0 auto;
+  }
+  .h-dot.slate { background: var(--slate-400); box-shadow: none; }
+  .h-title {
+    font-size: 19px; font-weight: 900;
+    color: white; letter-spacing: -0.3px;
+  }
+  .ctx-strip {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .ctx-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,.95);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--brand-cobalt); font-weight: 900; font-size: 14px;
+  }
+  .ctx-body { flex: 1; min-width: 0; line-height: 1.2; }
+  .ctx-title { font-size: 14px; font-weight: 800; color: white; }
+  .ctx-sub {
+    font-size: 11px; color: rgba(255,255,255,.78);
+    margin-top: 2px; font-weight: 500;
+  }
+
+  /* Search + view toggle */
+  .search-row {
+    margin-top: 12px;
+    display: flex; gap: 8px;
+  }
+  .search-pill {
+    flex: 1; height: 36px;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 999px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 12px;
+    font-size: 12px; color: rgba(255,255,255,.78); font-weight: 600;
+  }
+  .search-pill svg {
+    width: 14px; height: 14px;
+    stroke-width: 2.2;
+    color: rgba(255,255,255,.72);
+  }
+  .view-toggle {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+  }
+  .view-toggle svg { width: 16px; height: 16px; stroke-width: 2; }
+
+  /* Filter chip strip */
+  .chip-strip {
+    margin-top: 10px;
+    display: flex; gap: 8px;
+  }
+  .filter-chip {
+    height: 32px; flex: 1;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 999px;
+    padding: 0 10px;
+    display: flex; flex-direction: column; justify-content: center;
+    line-height: 1.1;
+  }
+  .fc-label {
+    font-size: 8px; font-weight: 800;
+    color: rgba(255,255,255,.65);
+    letter-spacing: 0.6px; text-transform: uppercase;
+  }
+  .fc-value {
+    font-size: 11px; font-weight: 700; color: white;
+  }
+  .filter-chip.placeholder .fc-value {
+    color: rgba(255,255,255,.55); font-weight: 500;
+  }
+
+  /* KPI overlap card */
+  .kpi-card {
+    margin: -22px 12px 0;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 14px 8px;
+    box-shadow: 0 4px 12px rgba(15,23,42,.06);
+    position: relative; z-index: 2;
+  }
+  .kpi-row { display: flex; align-items: center; }
+  .kpi-cell {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; line-height: 1;
+  }
+  .kpi-cell .v {
+    font-size: 22px; font-weight: 900;
+    color: var(--slate-900); letter-spacing: -0.5px;
+  }
+  .kpi-cell.green .v { color: var(--green-600); }
+  .kpi-cell.blue .v { color: var(--blue-600); }
+  .kpi-cell.violet .v { color: var(--violet-600); }
+  .kpi-cell.amber .v { color: var(--amber-600); }
+  .kpi-cell.red .v { color: var(--red-600); }
+  .kpi-cell .l {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-500); margin-top: 4px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .kpi-divider {
+    width: 1px; height: 28px;
+    background: var(--slate-100);
+  }
+
+  /* Body */
+  .body { padding: 12px 12px 88px; }
+  .section-head {
+    display: flex; align-items: center;
+    margin: 14px 4px 8px;
+  }
+  .section-head .t {
+    flex: 1;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-700); letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+  .section-head .a {
+    font-size: 10.5px; color: var(--slate-500); font-weight: 700;
+  }
+
+  /* Subject·Class card — matrix view (2-up grid) */
+  .subj-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .subj-card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .subj-head {
+    display: flex; gap: 10px; align-items: center;
+  }
+  .subj-avatar {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .subj-avatar.blue   { background: var(--blue-50);   color: var(--blue-600); }
+  .subj-avatar.violet { background: var(--violet-50); color: var(--violet-600); }
+  .subj-avatar.green  { background: var(--green-50);  color: var(--green-600); }
+  .subj-avatar.amber  { background: var(--amber-50);  color: var(--amber-600); }
+  .subj-avatar.rose   { background: var(--rose-50);   color: var(--rose-600); }
+  .subj-avatar.indigo { background: var(--indigo-50); color: var(--indigo-600); }
+  .subj-name {
+    font-size: 12.5px; font-weight: 800;
+    color: var(--slate-900);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .subj-class {
+    font-size: 10.5px; color: var(--slate-500); font-weight: 600;
+  }
+  .subj-bar {
+    height: 5px; background: var(--slate-100); border-radius: 999px;
+    overflow: hidden;
+  }
+  .subj-bar > .fill { height: 100%; border-radius: 999px; }
+  .subj-bar.blue .fill   { background: var(--blue-600); }
+  .subj-bar.green .fill  { background: var(--green-600); }
+  .subj-bar.amber .fill  { background: var(--amber-600); }
+  .subj-bar.violet .fill { background: var(--violet-600); }
+  .subj-meta {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .meta-pill {
+    height: 20px; padding: 0 7px;
+    border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    display: flex; align-items: center; gap: 4px;
+    background: var(--slate-100); color: var(--slate-600);
+  }
+  .meta-pill.green { background: var(--green-50); color: var(--green-600); }
+  .meta-pill.blue  { background: var(--blue-50);  color: var(--blue-600); }
+  .meta-pill.amber { background: var(--amber-50); color: var(--amber-600); }
+  .meta-pill.red   { background: var(--red-50);   color: var(--red-600); }
+
+  /* Subject·Class card — list (1-up dense) */
+  .subj-list {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .subj-row {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex; gap: 12px; align-items: center;
+  }
+  .subj-row .subj-avatar { width: 42px; height: 42px; }
+  .subj-row .body-block { flex: 1; min-width: 0; }
+  .subj-row .head-line {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 4px;
+  }
+  .subj-row .name {
+    font-size: 13px; font-weight: 800; color: var(--slate-900);
+  }
+  .subj-row .class-pill {
+    height: 18px; padding: 0 7px;
+    border-radius: 999px;
+    background: var(--blue-50); color: var(--blue-600);
+    font-size: 10px; font-weight: 800;
+    display: inline-flex; align-items: center;
+  }
+  .subj-row .progress-line {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 4px;
+  }
+  .subj-row .progress-line .subj-bar { flex: 1; }
+  .subj-row .progress-line .pct {
+    font-size: 11px; font-weight: 800; color: var(--slate-700);
+  }
+  .subj-row .meta-line {
+    display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;
+  }
+  .subj-row .chevron {
+    width: 18px; height: 18px;
+    color: var(--slate-300);
+    flex: 0 0 auto;
+  }
+
+  /* Matrix table — recap detail */
+  .matrix-card {
+    margin: 12px 0;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .matrix-toolbar {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--slate-100);
+    display: flex; align-items: center; gap: 8px;
+    background: var(--slate-50);
+  }
+  .matrix-toolbar .label {
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-700);
+    flex: 1;
+  }
+  .matrix-toolbar .btn-tiny {
+    height: 26px; padding: 0 10px;
+    border-radius: 8px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    color: var(--slate-700);
+    font-size: 10.5px; font-weight: 800;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .matrix-toolbar .btn-tiny.primary {
+    background: var(--brand-cobalt); border-color: var(--brand-cobalt);
+    color: white;
+  }
+
+  .matrix-scroll {
+    overflow-x: auto;
+  }
+  .matrix-table {
+    border-collapse: separate; border-spacing: 0;
+    font-size: 11px;
+    min-width: 100%;
+  }
+  .matrix-table th, .matrix-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--slate-100);
+    text-align: center;
+    white-space: nowrap;
+    background: white;
+  }
+  .matrix-table .chapter-head {
+    background: var(--blue-50);
+    color: var(--blue-600);
+    font-size: 9.5px; font-weight: 900;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 6px 10px;
+    border-bottom: 1px solid rgba(29,78,216,.18);
+  }
+  .matrix-table .col-head {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-600);
+    background: var(--slate-50);
+    padding: 6px 10px;
+  }
+  .matrix-table tbody td {
+    color: var(--slate-800);
+    font-weight: 700;
+  }
+  .matrix-table .name-col {
+    text-align: left;
+    background: white;
+    position: sticky; left: 0; z-index: 1;
+    box-shadow: inset -1px 0 0 var(--slate-100);
+    min-width: 120px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--slate-900);
+  }
+  .matrix-table .name-col .student-row-info {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .matrix-table .name-col .nis {
+    font-size: 9.5px; color: var(--slate-400); font-weight: 600;
+  }
+  .matrix-table .score {
+    font-variant-numeric: tabular-nums;
+  }
+  .matrix-table .score.editable {
+    background: var(--blue-50);
+    color: var(--blue-600);
+    border-radius: 6px;
+    padding: 5px 8px;
+  }
+  .matrix-table .score.empty { color: var(--slate-300); font-weight: 600; }
+  .matrix-table .score.kkm-fail { color: var(--red-600); }
+  .matrix-table .score.kkm-edge { color: var(--amber-600); }
+  .matrix-table .score.kkm-pass { color: var(--green-600); }
+
+  .matrix-table .avg-col {
+    background: var(--slate-50);
+    color: var(--slate-900);
+    font-weight: 900;
+    border-left: 1px solid var(--slate-200);
+  }
+
+  /* Save bar (sticky bottom) */
+  .save-bar {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 10px 16px 14px;
+    background: white;
+    border-top: 1px solid var(--slate-100);
+    box-shadow: 0 -4px 14px rgba(15,23,42,.06);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .save-bar .dirty-msg {
+    flex: 1; font-size: 11px; color: var(--amber-600); font-weight: 700;
+    line-height: 1.3;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .save-bar .dirty-msg svg {
+    width: 14px; height: 14px; stroke-width: 2.2;
+  }
+  .save-bar .btn {
+    height: 38px; padding: 0 14px;
+    border-radius: 10px;
+    font-size: 12px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .save-bar .btn.secondary {
+    background: white; color: var(--slate-700);
+    border: 1px solid var(--slate-200);
+  }
+  .save-bar .btn.primary {
+    background: var(--brand-cobalt); color: white;
+    box-shadow: 0 6px 14px rgba(27,111,184,.28);
+  }
+
+  /* Sheet primitives */
+  .sheet-body {
+    background: white;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    margin-top: 30px;
+    padding-bottom: 0;
+    height: 100%;
+  }
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--slate-300);
+    border-radius: 999px;
+    margin: 12px auto 0;
+  }
+  .sheet-title {
+    padding: 12px 16px 4px;
+    font-size: 14px; font-weight: 900;
+    color: var(--slate-900);
+  }
+  .sheet-sub {
+    padding: 0 16px 12px;
+    font-size: 11px; color: var(--slate-500); line-height: 1.5;
+  }
+  .field-label {
+    margin: 12px 16px 6px;
+    font-size: 10px; font-weight: 800;
+    color: var(--slate-700); letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .field {
+    margin: 0 12px 6px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 12px; color: var(--slate-700);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .field.placeholder { color: var(--slate-400); }
+  .toggle-row {
+    display: flex; align-items: center; gap: 10px;
+    margin: 8px 12px;
+    padding: 10px 12px;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+  }
+  .toggle-row .label-block { flex: 1; line-height: 1.3; }
+  .toggle-row .t {
+    font-size: 12px; font-weight: 800; color: var(--slate-800);
+  }
+  .toggle-row .d {
+    font-size: 10.5px; color: var(--slate-500); font-weight: 500;
+  }
+  .toggle {
+    width: 36px; height: 20px;
+    background: var(--brand-cobalt);
+    border-radius: 999px;
+    position: relative;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute; top: 2px; right: 2px;
+    width: 16px; height: 16px;
+    background: white; border-radius: 999px;
+  }
+  .toggle.off { background: var(--slate-300); }
+  .toggle.off::after { right: 18px; }
+
+  /* Sheet primary footer */
+  .sheet-footer {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 12px 12px 16px;
+    background: white;
+    border-top: 1px solid var(--slate-100);
+    display: flex; gap: 8px;
+  }
+  .sheet-footer .btn {
+    flex: 1; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900;
+  }
+  .sheet-footer .btn.secondary {
+    background: white; color: var(--slate-700);
+    border: 1px solid var(--slate-200);
+  }
+  .sheet-footer .btn.primary {
+    flex: 2; background: var(--brand-cobalt); color: white;
+  }
+  .sheet-footer .btn.danger {
+    background: white; color: var(--red-600);
+    border: 1px solid var(--slate-200);
+    flex: 0 0 44px;
+  }
+
+  /* Empty state */
+  .empty {
+    margin: 40px 24px;
+    padding: 28px 20px;
+    background: white;
+    border: 1px dashed var(--slate-300);
+    border-radius: 18px;
+    text-align: center;
+  }
+  .empty .icon-bubble {
+    width: 56px; height: 56px;
+    border-radius: 18px;
+    background: var(--blue-50); color: var(--blue-600);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px;
+  }
+  .empty .icon-bubble svg { width: 24px; height: 24px; stroke-width: 1.8; }
+  .empty .t {
+    font-size: 14px; font-weight: 900; color: var(--slate-900);
+    margin-bottom: 6px;
+  }
+  .empty .d {
+    font-size: 11.5px; color: var(--slate-500); line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .empty .cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 36px; padding: 0 14px;
+    background: var(--brand-cobalt); color: white;
+    border-radius: 999px;
+    font-size: 12px; font-weight: 900;
+  }
+
+  /* Locked banner */
+  .ro-banner {
+    margin: 0 4px 10px;
+    background: var(--blue-50); color: var(--blue-600);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 10.5px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ro-banner svg { width: 14px; height: 14px; stroke-width: 2; }
+
+  /* SVG icon helpers */
+  svg.ic { width: 18px; height: 18px; stroke-width: 1.8; }
+  svg.ic-sm { width: 14px; height: 14px; stroke-width: 2; }
+  svg.ic-lg { width: 22px; height: 22px; stroke-width: 1.8; }
+
+  .legend {
+    margin: 32px 0 8px;
+    padding: 16px;
+    background: white; border-radius: 12px;
+    font-size: 12px; color: var(--slate-600); line-height: 1.6;
+    border: 1px solid var(--slate-200);
+  }
+  .legend strong { color: var(--slate-900); }
+  .legend code {
+    background: var(--slate-100); color: var(--brand-cobalt);
+    padding: 1px 6px; border-radius: 4px;
+    font-size: 11px; font-family: 'SF Mono', Menlo, monospace;
+  }
+</style>
+</head>
+<body>
+
+<h1>Rekap Nilai · Mockup v1</h1>
+<p class="subtitle">
+  Seven frames covering the teacher Rekap Nilai flow. Replaces the legacy
+  <code>TeacherPageHeader</code> overview + dialog-style recap matrix with a
+  brand-migrated stack: <strong>BrandPageLayout</strong> overview (matrix &
+  list views), full-screen recap detail with frozen-name column + chapter-grouped
+  columns, sticky save bar that surfaces only when the matrix is dirty,
+  add/rename chapter sheets, an empty state for fresh classes, and an archive
+  variant for past academic years. Score input flows from
+  <strong>Catat Submit</strong> into this same matrix automatically (Phase 3).
+</p>
+
+<div class="grid">
+
+<!-- ═══════ A · OVERVIEW · MATRIX VIEW (default) ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A</span>OVERVIEW · MATRIX <span class="desc">Subject · class cards in a 2-up grid</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · NILAI</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Rekap Nilai</span></div>
+        </div>
+        <div class="h-icon">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+      </div>
+      <div class="search-row">
+        <div class="search-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          Cari mapel atau kelas…
+        </div>
+        <div class="view-toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">SEMESTER</div><div class="fc-value">Ganjil 2025</div></div>
+        <div class="filter-chip placeholder"><div class="fc-label">JENIS</div><div class="fc-value">+ Nilai</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell blue"><div class="v">6</div><div class="l">Mata Pelajaran</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell violet"><div class="v">8</div><div class="l">Kelas</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v">82</div><div class="l">Rata-rata</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Mengajar · 8 kelas</div><div class="a">Tap untuk buka rekap</div></div>
+      <div class="subj-grid">
+        <div class="subj-card">
+          <div class="subj-head">
+            <div class="subj-avatar blue">M</div>
+            <div style="min-width:0;flex:1">
+              <div class="subj-name">Matematika</div>
+              <div class="subj-class">7B · 28 siswa</div>
+            </div>
+          </div>
+          <div class="subj-bar blue"><div class="fill" style="width:84%"></div></div>
+          <div class="subj-meta">
+            <span class="meta-pill green">84% lengkap</span>
+            <span class="meta-pill">Bab 4</span>
+          </div>
+        </div>
+        <div class="subj-card">
+          <div class="subj-head">
+            <div class="subj-avatar violet">F</div>
+            <div style="min-width:0;flex:1">
+              <div class="subj-name">Fisika</div>
+              <div class="subj-class">8A · 26 siswa</div>
+            </div>
+          </div>
+          <div class="subj-bar violet"><div class="fill" style="width:62%"></div></div>
+          <div class="subj-meta">
+            <span class="meta-pill amber">62%</span>
+            <span class="meta-pill">Bab 3</span>
+          </div>
+        </div>
+        <div class="subj-card">
+          <div class="subj-head">
+            <div class="subj-avatar green">B</div>
+            <div style="min-width:0;flex:1">
+              <div class="subj-name">B. Indonesia</div>
+              <div class="subj-class">7A · 30 siswa</div>
+            </div>
+          </div>
+          <div class="subj-bar green"><div class="fill" style="width:97%"></div></div>
+          <div class="subj-meta">
+            <span class="meta-pill green">97%</span>
+            <span class="meta-pill">Bab 5</span>
+          </div>
+        </div>
+        <div class="subj-card">
+          <div class="subj-head">
+            <div class="subj-avatar amber">A</div>
+            <div style="min-width:0;flex:1">
+              <div class="subj-name">B. Arab</div>
+              <div class="subj-class">8B · 24 siswa</div>
+            </div>
+          </div>
+          <div class="subj-bar amber"><div class="fill" style="width:38%"></div></div>
+          <div class="subj-meta">
+            <span class="meta-pill red">38%</span>
+            <span class="meta-pill">Bab 2</span>
+          </div>
+        </div>
+        <div class="subj-card">
+          <div class="subj-head">
+            <div class="subj-avatar rose">S</div>
+            <div style="min-width:0;flex:1">
+              <div class="subj-name">Seni Rupa</div>
+              <div class="subj-class">7C · 27 siswa</div>
+            </div>
+          </div>
+          <div class="subj-bar blue"><div class="fill" style="width:55%"></div></div>
+          <div class="subj-meta">
+            <span class="meta-pill amber">55%</span>
+          </div>
+        </div>
+        <div class="subj-card">
+          <div class="subj-head">
+            <div class="subj-avatar indigo">P</div>
+            <div style="min-width:0;flex:1">
+              <div class="subj-name">PKn</div>
+              <div class="subj-class">8A · 26 siswa</div>
+            </div>
+          </div>
+          <div class="subj-bar green"><div class="fill" style="width:71%"></div></div>
+          <div class="subj-meta">
+            <span class="meta-pill green">71%</span>
+            <span class="meta-pill">Bab 3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ B · OVERVIEW · LIST VIEW ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">B</span>OVERVIEW · LIST <span class="desc">Dense single-column rows for many subjects</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · NILAI</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Rekap Nilai</span></div>
+        </div>
+        <div class="h-icon">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+      </div>
+      <div class="search-row">
+        <div class="search-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          Cari mapel atau kelas…
+        </div>
+        <div class="view-toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">SEMESTER</div><div class="fc-value">Ganjil 2025</div></div>
+        <div class="filter-chip placeholder"><div class="fc-label">JENIS</div><div class="fc-value">+ Nilai</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell blue"><div class="v">6</div><div class="l">Mata Pelajaran</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell violet"><div class="v">8</div><div class="l">Kelas</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v">82</div><div class="l">Rata-rata</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Semester Ganjil</div><div class="a">8 kelas aktif</div></div>
+      <div class="subj-list">
+        <div class="subj-row">
+          <div class="subj-avatar blue">M</div>
+          <div class="body-block">
+            <div class="head-line">
+              <span class="name">Matematika</span>
+              <span class="class-pill">7B</span>
+            </div>
+            <div class="progress-line">
+              <div class="subj-bar blue"><div class="fill" style="width:84%"></div></div>
+              <div class="pct">84%</div>
+            </div>
+            <div class="meta-line">
+              <span class="meta-pill">Bab 4</span>
+              <span class="meta-pill green">12 nilai</span>
+              <span class="meta-pill">28 siswa</span>
+            </div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="subj-row">
+          <div class="subj-avatar violet">F</div>
+          <div class="body-block">
+            <div class="head-line">
+              <span class="name">Fisika</span>
+              <span class="class-pill">8A</span>
+            </div>
+            <div class="progress-line">
+              <div class="subj-bar amber"><div class="fill" style="width:62%"></div></div>
+              <div class="pct">62%</div>
+            </div>
+            <div class="meta-line">
+              <span class="meta-pill">Bab 3</span>
+              <span class="meta-pill amber">8 nilai</span>
+              <span class="meta-pill">26 siswa</span>
+            </div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="subj-row">
+          <div class="subj-avatar amber">A</div>
+          <div class="body-block">
+            <div class="head-line">
+              <span class="name">B. Arab</span>
+              <span class="class-pill" style="background:var(--red-50);color:var(--red-600)">8B</span>
+            </div>
+            <div class="progress-line">
+              <div class="subj-bar amber"><div class="fill" style="width:38%"></div></div>
+              <div class="pct" style="color:var(--red-600)">38%</div>
+            </div>
+            <div class="meta-line">
+              <span class="meta-pill">Bab 2</span>
+              <span class="meta-pill red">5 nilai</span>
+              <span class="meta-pill">24 siswa</span>
+              <span class="meta-pill red">Perlu input</span>
+            </div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="subj-row">
+          <div class="subj-avatar green">B</div>
+          <div class="body-block">
+            <div class="head-line">
+              <span class="name">B. Indonesia</span>
+              <span class="class-pill">7A</span>
+            </div>
+            <div class="progress-line">
+              <div class="subj-bar green"><div class="fill" style="width:97%"></div></div>
+              <div class="pct">97%</div>
+            </div>
+            <div class="meta-line">
+              <span class="meta-pill">Bab 5</span>
+              <span class="meta-pill green">18 nilai</span>
+              <span class="meta-pill">30 siswa</span>
+            </div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ C · RECAP DETAIL · MATRIX (full screen, replaces dialog) ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">C</span>RECAP DETAIL <span class="desc">Frozen name col + chapter-grouped columns + save bar</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">REKAP · 7B MATEMATIKA</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Matematika 7B</span></div>
+        </div>
+        <div class="h-icon">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon">M</div>
+        <div class="ctx-body">
+          <div class="ctx-title">Matematika · 7B</div>
+          <div class="ctx-sub">Sem Ganjil 2025/2026 · 28 siswa · KKM 75</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell green"><div class="v">22</div><div class="l">Tuntas</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">6</div><div class="l">Belum</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">81</div><div class="l">Rata-rata</div></div>
+      </div>
+    </div>
+    <div class="body" style="padding-bottom:80px">
+      <div class="matrix-card">
+        <div class="matrix-toolbar">
+          <div class="label">Bab 1 – Bab 4 · 12 kolom</div>
+          <div class="btn-tiny">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;stroke-width:2.4"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Bab
+          </div>
+          <div class="btn-tiny">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;stroke-width:2.4"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </div>
+        </div>
+        <div class="matrix-scroll">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th class="name-col col-head" rowspan="2" style="text-align:left">Siswa</th>
+                <th class="chapter-head" colspan="3">Bab 1</th>
+                <th class="chapter-head" colspan="3" style="background:var(--violet-50);color:var(--violet-600);border-bottom-color:rgba(124,58,237,.18)">Bab 2</th>
+                <th class="avg-col col-head" rowspan="2">Avg</th>
+              </tr>
+              <tr>
+                <th class="col-head">UH 1</th>
+                <th class="col-head">Tgs</th>
+                <th class="col-head">UH 2</th>
+                <th class="col-head" style="background:#F5F3FF">UH 1</th>
+                <th class="col-head" style="background:#F5F3FF">Tgs</th>
+                <th class="col-head" style="background:#F5F3FF">UH 2</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="name-col">
+                  <div class="student-row-info">
+                    <span>Anak Habib</span>
+                    <span class="nis">NIS · 0124001</span>
+                  </div>
+                </td>
+                <td><span class="score kkm-pass">88</span></td>
+                <td><span class="score kkm-pass">90</span></td>
+                <td><span class="score kkm-edge">76</span></td>
+                <td><span class="score kkm-pass">82</span></td>
+                <td><span class="score editable">85</span></td>
+                <td><span class="score empty">–</span></td>
+                <td class="avg-col">84</td>
+              </tr>
+              <tr>
+                <td class="name-col">
+                  <div class="student-row-info">
+                    <span>Lestari Utama</span>
+                    <span class="nis">NIS · 0124002</span>
+                  </div>
+                </td>
+                <td><span class="score kkm-pass">95</span></td>
+                <td><span class="score kkm-pass">92</span></td>
+                <td><span class="score kkm-pass">88</span></td>
+                <td><span class="score kkm-pass">90</span></td>
+                <td><span class="score kkm-pass">94</span></td>
+                <td><span class="score empty">–</span></td>
+                <td class="avg-col">92</td>
+              </tr>
+              <tr>
+                <td class="name-col">
+                  <div class="student-row-info">
+                    <span>Made Nugraha</span>
+                    <span class="nis">NIS · 0124003</span>
+                  </div>
+                </td>
+                <td><span class="score kkm-fail">62</span></td>
+                <td><span class="score kkm-edge">75</span></td>
+                <td><span class="score kkm-fail">58</span></td>
+                <td><span class="score kkm-edge">76</span></td>
+                <td><span class="score empty">–</span></td>
+                <td><span class="score empty">–</span></td>
+                <td class="avg-col" style="color:var(--red-600)">68</td>
+              </tr>
+              <tr>
+                <td class="name-col">
+                  <div class="student-row-info">
+                    <span>Nur Purnama</span>
+                    <span class="nis">NIS · 0124004</span>
+                  </div>
+                </td>
+                <td><span class="score kkm-pass">85</span></td>
+                <td><span class="score kkm-pass">88</span></td>
+                <td><span class="score kkm-pass">82</span></td>
+                <td><span class="score editable">90</span></td>
+                <td><span class="score editable">78</span></td>
+                <td><span class="score empty">–</span></td>
+                <td class="avg-col">85</td>
+              </tr>
+              <tr>
+                <td class="name-col">
+                  <div class="student-row-info">
+                    <span>Putra Cahaya</span>
+                    <span class="nis">NIS · 0124005</span>
+                  </div>
+                </td>
+                <td><span class="score kkm-pass">80</span></td>
+                <td><span class="score kkm-pass">82</span></td>
+                <td><span class="score kkm-edge">76</span></td>
+                <td><span class="score kkm-pass">81</span></td>
+                <td><span class="score empty">–</span></td>
+                <td><span class="score empty">–</span></td>
+                <td class="avg-col">80</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- Save bar (dirty state) -->
+    <div class="save-bar">
+      <div class="dirty-msg">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        3 perubahan belum disimpan
+      </div>
+      <div class="btn secondary">Batal</div>
+      <div class="btn primary">Simpan</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ D · ADD CHAPTER · SHEET ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">D</span>ADD CHAPTER <span class="desc">AppBottomSheet · field-stack with copy-format toggle</span></div>
+  <div class="phone">
+    <!-- Background dimmed parent -->
+    <div class="header" style="filter:brightness(.8) saturate(.7)">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">REKAP · 7B MATEMATIKA</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Matematika 7B</span></div>
+        </div>
+      </div>
+    </div>
+    <!-- Sheet on top -->
+    <div class="sheet-body" style="position:absolute;left:0;right:0;bottom:0;top:18%;background:white;box-shadow:0 -4px 20px rgba(15,23,42,.18)">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Tambah Bab</div>
+      <div class="sheet-sub">Bab baru akan menambahkan 3 kolom (UH, Tugas, UH) ke matriks rekap nilai.</div>
+
+      <div class="field-label">Nama Bab</div>
+      <div class="field">
+        <svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="color:var(--slate-400)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span style="color:var(--slate-900);font-weight:700">Bab 5 · Aljabar Lanjutan</span>
+      </div>
+
+      <div class="field-label">KKM (opsional)</div>
+      <div class="field">
+        <svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="color:var(--slate-400)"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+        <span style="color:var(--slate-900);font-weight:800">75</span>
+        <span style="color:var(--slate-400);font-size:11px;margin-left:auto">default</span>
+      </div>
+
+      <div class="toggle-row">
+        <div class="label-block">
+          <div class="t">Salin format dari Bab sebelumnya</div>
+          <div class="d">UH 1 · Tugas · UH 2 · Praktikum</div>
+        </div>
+        <div class="toggle"></div>
+      </div>
+
+      <div class="sheet-footer">
+        <div class="btn secondary">Batal</div>
+        <div class="btn primary">Tambah Bab</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ E · RENAME / DELETE CHAPTER · SHEET ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">E</span>EDIT CHAPTER <span class="desc">Rename + destructive Hapus row</span></div>
+  <div class="phone">
+    <div class="header" style="filter:brightness(.8) saturate(.7)">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">REKAP · 7B MATEMATIKA</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Matematika 7B</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-body" style="position:absolute;left:0;right:0;bottom:0;top:22%;background:white;box-shadow:0 -4px 20px rgba(15,23,42,.18)">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Edit Bab 2</div>
+      <div class="sheet-sub">Ubah nama bab atau hapus seluruh kolom Bab 2 beserta nilainya.</div>
+
+      <div class="field-label">Nama Bab</div>
+      <div class="field">
+        <svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="color:var(--slate-400)"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span style="color:var(--slate-900);font-weight:700">Bab 2 · Persamaan Linear</span>
+      </div>
+
+      <div class="field-label">KKM</div>
+      <div class="field">
+        <span style="color:var(--slate-900);font-weight:800">75</span>
+      </div>
+
+      <div style="margin:14px 12px 8px;padding:10px 12px;background:var(--red-50);border:1px solid rgba(185,28,28,.18);border-radius:12px;display:flex;align-items:center;gap:10px">
+        <div style="width:30px;height:30px;border-radius:9px;background:white;color:var(--red-600);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </div>
+        <div style="flex:1;line-height:1.3">
+          <div style="font-size:11.5px;font-weight:800;color:var(--red-600)">Hapus Bab 2</div>
+          <div style="font-size:10.5px;color:var(--red-600);opacity:.85">3 kolom · 84 nilai akan hilang</div>
+        </div>
+        <svg style="width:14px;height:14px;color:var(--red-600);stroke-width:2.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+
+      <div class="sheet-footer">
+        <div class="btn secondary">Batal</div>
+        <div class="btn primary">Simpan</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ F · EMPTY STATE ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">F</span>EMPTY STATE <span class="desc">Fresh class with no chapters yet</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">REKAP · 7C SENI RUPA</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Seni Rupa 7C</span></div>
+        </div>
+        <div class="h-icon">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon" style="color:var(--rose-600)">S</div>
+        <div class="ctx-body">
+          <div class="ctx-title">Seni Rupa · 7C</div>
+          <div class="ctx-sub">Sem Ganjil 2025/2026 · 27 siswa</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell"><div class="v" style="color:var(--slate-300)">–</div><div class="l">Tuntas</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v" style="color:var(--slate-300)">27</div><div class="l">Belum</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="v" style="color:var(--slate-300)">–</div><div class="l">Rata-rata</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="empty">
+        <div class="icon-bubble">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+        </div>
+        <div class="t">Belum ada Bab</div>
+        <div class="d">Tambahkan Bab pertama untuk mulai mencatat nilai siswa kelas Seni Rupa 7C.</div>
+        <div class="cta">
+          <svg style="width:14px;height:14px;stroke-width:2.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Bab
+        </div>
+      </div>
+      <div style="margin:0 4px;padding:10px 12px;background:white;border:1px solid var(--slate-200);border-radius:12px;display:flex;gap:10px;align-items:flex-start">
+        <svg style="width:16px;height:16px;color:var(--blue-600);stroke-width:2;flex-shrink:0;margin-top:1px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div style="font-size:11px;color:var(--slate-600);line-height:1.5">
+          Nilai dari <strong style="color:var(--slate-900)">Catat Submit</strong> di Kegiatan Kelas otomatis tersinkron ke matriks ini berdasarkan tanggal &amp; tipe (UH / Tugas).
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ G · LOCKED · ARCHIVED ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">G</span>LOCKED · ARSIP <span class="desc">Past academic year · read-only · download icon</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">ARSIP · 8B B. ARAB</div>
+          <div class="h-title-row"><span class="h-dot slate"></span><span class="h-title">B. Arab 8B</span></div>
+        </div>
+        <div class="h-icon">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon" style="color:var(--amber-600)">A</div>
+        <div class="ctx-body">
+          <div class="ctx-title">B. Arab · 8B</div>
+          <div class="ctx-sub">Sem Genap 2024/2025 · 24 siswa · Tahun ajaran lalu</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell green"><div class="v">21</div><div class="l">Tuntas</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">3</div><div class="l">Belum</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">79</div><div class="l">Rata-rata</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="ro-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Tahun ajaran lalu — nilai tidak bisa diubah. Ekspor PDF untuk arsip.
+      </div>
+      <div class="matrix-card">
+        <div class="matrix-toolbar" style="background:var(--slate-100);border-bottom-color:var(--slate-200)">
+          <div class="label" style="color:var(--slate-500)">Bab 1 – Bab 6 · 18 kolom · arsip</div>
+          <div class="btn-tiny">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;stroke-width:2.4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            PDF
+          </div>
+        </div>
+        <div class="matrix-scroll">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th class="name-col col-head" rowspan="2" style="text-align:left">Siswa</th>
+                <th class="chapter-head" colspan="3">Bab 5</th>
+                <th class="chapter-head" colspan="2" style="background:var(--violet-50);color:var(--violet-600);border-bottom-color:rgba(124,58,237,.18)">Bab 6</th>
+                <th class="avg-col col-head" rowspan="2">Avg</th>
+              </tr>
+              <tr>
+                <th class="col-head">UH 1</th>
+                <th class="col-head">Tgs</th>
+                <th class="col-head">UAS</th>
+                <th class="col-head" style="background:#F5F3FF">UH 1</th>
+                <th class="col-head" style="background:#F5F3FF">UAS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="name-col"><div class="student-row-info"><span>Ahmad Faiz</span><span class="nis">NIS · 0123101</span></div></td>
+                <td><span class="score kkm-pass">82</span></td>
+                <td><span class="score kkm-pass">85</span></td>
+                <td><span class="score kkm-pass">79</span></td>
+                <td><span class="score kkm-pass">81</span></td>
+                <td><span class="score kkm-pass">88</span></td>
+                <td class="avg-col">83</td>
+              </tr>
+              <tr>
+                <td class="name-col"><div class="student-row-info"><span>Fatimah Aini</span><span class="nis">NIS · 0123102</span></div></td>
+                <td><span class="score kkm-pass">90</span></td>
+                <td><span class="score kkm-pass">88</span></td>
+                <td><span class="score kkm-pass">85</span></td>
+                <td><span class="score kkm-pass">92</span></td>
+                <td><span class="score kkm-pass">94</span></td>
+                <td class="avg-col">90</td>
+              </tr>
+              <tr>
+                <td class="name-col"><div class="student-row-info"><span>Hasan Habib</span><span class="nis">NIS · 0123103</span></div></td>
+                <td><span class="score kkm-edge">76</span></td>
+                <td><span class="score kkm-pass">80</span></td>
+                <td><span class="score kkm-fail">68</span></td>
+                <td><span class="score kkm-edge">75</span></td>
+                <td><span class="score kkm-edge">76</span></td>
+                <td class="avg-col" style="color:var(--amber-600)">75</td>
+              </tr>
+              <tr>
+                <td class="name-col"><div class="student-row-info"><span>Khairul Anam</span><span class="nis">NIS · 0123104</span></div></td>
+                <td><span class="score kkm-pass">78</span></td>
+                <td><span class="score kkm-pass">82</span></td>
+                <td><span class="score kkm-pass">80</span></td>
+                <td><span class="score kkm-pass">79</span></td>
+                <td><span class="score kkm-pass">85</span></td>
+                <td class="avg-col">81</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="legend">
+  <strong>Implementation notes</strong>
+  <ul style="margin:8px 0 0;padding-left:20px;line-height:1.7">
+    <li><strong>Frames A &amp; B</strong> share the same overview screen — view toggle in header switches between matrix grid and dense list. View preference persists in <code>LocalCacheService</code> per the existing <code>rekap_nilai_view_mode</code> key.</li>
+    <li><strong>Frame C</strong> replaces the legacy modal/dialog with a full-screen route. Matrix uses <code>FrozenColumnTable</code> (already in core/widgets) for the sticky <em>Siswa</em> column; chapter heads tint blue/violet alternating. Score cells: <span style="color:var(--green-600)">≥KKM</span> green, <span style="color:var(--amber-600)">edge (=KKM)</span> amber, <span style="color:var(--red-600)">&lt;KKM</span> red, blank dash for missing.</li>
+    <li><strong>Save bar</strong> is a sticky <code>bottomNavigationBar</code> that only mounts when the matrix is dirty. Mirror Presensi's "5 perubahan belum disimpan" pattern. <strong>Batal</strong> reverts via <code>GradeRecapUnsavedChangesDialog</code>.</li>
+    <li><strong>Frames D &amp; E</strong> reuse <code>AppBottomSheet</code> + <code>BottomSheetFooter</code>. Add Chapter wires to <code>add_chapter_sheet.dart</code> (already exists, needs brand polish). Edit Chapter wires to <code>grade_recap_chapter_rename_dialog.dart</code> — promote it from dialog to sheet for consistency.</li>
+    <li><strong>Frame F</strong> uses <code>EmptyState</code> with a custom CTA; the info card below references the Phase 3 sync from Catat Submit so teachers know scores can flow in automatically.</li>
+    <li><strong>Frame G</strong> is the read-only variant — no save bar, slate dot, kicker reads ARSIP, top-right icon flips to download for PDF export. Matches the Kegiatan Kelas Frame E archive pattern.</li>
+    <li>Subject letter avatars use a <strong>palette rotation</strong> by subject family (Math→blue, Sci→violet, Lang→green/amber, Art→rose, Civic→indigo). Same rotation as the Buku Nilai admin overview.</li>
+    <li>Score input → Buku Nilai sync from class_activity Phase 3 already lands in the same <code>grades</code> table this matrix reads from. Edits done here propagate <em>back</em> to Catat Submit views via the same assessment row.</li>
+  </ul>
+</div>
+
+</body>
+</html>

@@ -25,9 +25,11 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/manual/manual_rpp_preview_view.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_content_formatter.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_pdf_builder.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_detail_header.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_form_dialog.dart';
 
@@ -177,14 +179,36 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
         child: LessonPlanFormDialog(
           teacherId: teacherId,
           lessonPlanData: _lessonPlanData,
-          onSaved: () {
-            // Pop the manual detail sheet so the list-screen
-            // refresh drives the new content into view.
-            AppNavigator.pop(context);
-          },
+          // Re-fetch the RPP from the API so the detail re-renders
+          // with the saved title / file_path / file_name without the
+          // user having to pop and re-open. Failure falls back to the
+          // legacy "pop the sheet, let the list refresh push the new
+          // map down on next open" behaviour.
+          onSaved: _refreshFromApi,
         ),
       ),
     );
+  }
+
+  Future<void> _refreshFromApi() async {
+    final id = _lessonPlanId;
+    if (id == null) return;
+    try {
+      final fresh = await LessonPlanService.getLessonPlanById(id);
+      if (!mounted) return;
+      if (fresh.isEmpty) {
+        // No payload returned — fall back to closing the detail so
+        // the list re-fetch surfaces whatever the server now has.
+        AppNavigator.pop(context);
+        return;
+      }
+      setState(() {
+        _lessonPlanData = Map<String, dynamic>.from(fresh);
+      });
+    } catch (e) {
+      AppLogger.error('lesson_plan', 'refresh after edit failed: $e');
+      if (mounted) AppNavigator.pop(context);
+    }
   }
 
   // ── Export menu (PDF / text) ──────────────────────────────────
@@ -231,44 +255,10 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
 
   Future<void> _exportToPdf() async {
     try {
-      final document = PdfDocument();
-      final page = document.pages.add();
-      final graphics = page.graphics;
-      final font = PdfStandardFont(PdfFontFamily.helvetica, 12);
-      final titleFont = PdfStandardFont(
-        PdfFontFamily.helvetica,
-        16,
-        style: PdfFontStyle.bold,
+      final bytes = await LessonPlanPdfBuilder.build(
+        data: _lessonPlanData,
+        formattedBody: _formattedContent(),
       );
-
-      graphics.drawString(
-        'RENCANA PELAKSANAAN PEMBELAJARAN (RPP)',
-        titleFont,
-        bounds: Rect.fromLTWH(0, 0, page.size.width, 30),
-        format: PdfStringFormat(alignment: PdfTextAlignment.center),
-      );
-
-      final lines = _formattedContent().split('\n');
-      var y = 40.0;
-      for (final line in lines) {
-        if (line.trim().isEmpty) {
-          y += 10;
-          continue;
-        }
-        graphics.drawString(
-          line,
-          font,
-          bounds: Rect.fromLTWH(50, y, page.size.width - 100, 15),
-        );
-        y += 18;
-        if (y > page.size.height - 50) {
-          document.pages.add();
-          y = 40;
-        }
-      }
-
-      final bytes = await document.save();
-      document.dispose();
 
       final dir = await getTemporaryDirectory();
       final file = File(
@@ -328,7 +318,14 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
         '/rpp/$id/download',
       );
       final dir = await getTemporaryDirectory();
-      final fileName = Uri.parse(fp).pathSegments.last;
+      // Prefer the persisted original filename so the local copy
+      // matches what the teacher uploaded. Fall back to the storage
+      // path's basename for legacy rows that don't have file_name.
+      final originalName =
+          _lessonPlanData['file_name']?.toString().trim();
+      final fileName = (originalName != null && originalName.isNotEmpty)
+          ? originalName
+          : Uri.parse(fp).pathSegments.last;
       final localFile = File('${dir.path}/$fileName');
       await localFile.writeAsBytes(bytes, flush: true);
       await OpenFile.open(localFile.path);

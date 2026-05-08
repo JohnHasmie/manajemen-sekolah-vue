@@ -1,6 +1,8 @@
+// ignore_for_file: lines_longer_than_80_chars
 // teacher_card_test.dart — widget tests for TeacherCard.
 //
-// TeacherCard is a ConsumerWidget (reads languageRiverpod + academicYearRiverpod),
+// TeacherCard is a ConsumerWidget (reads languageRiverpod +
+// academicYearRiverpod),
 // so every test wraps it in ProviderScope. Both providers are overridden with
 // fresh instances so the global LanguageProvider singleton is never disposed
 // between tests and no real API calls are made.
@@ -45,6 +47,7 @@ Widget _buildCard({
     overrides: [
       // Fresh LanguageProvider per test so the global singleton is never
       // disposed between tests (languageRiverpod normally shares the singleton).
+      //
       languageRiverpod.overrideWith((_) => LanguageProvider()),
       // Replace the real provider with our fake so tests are hermetic.
       academicYearRiverpod.overrideWith(
@@ -153,6 +156,7 @@ void main() {
     });
 
     // ── Callbacks ─────────────────────────────────────────────────────────────
+    //
 
     testWidgets('calls onTap when card is tapped', (tester) async {
       bool tapped = false;
@@ -190,6 +194,7 @@ void main() {
     });
 
     // ── Edge cases ────────────────────────────────────────────────────────────
+    //
 
     testWidgets('falls back to "No Name" when teacher name is null', (
       tester,

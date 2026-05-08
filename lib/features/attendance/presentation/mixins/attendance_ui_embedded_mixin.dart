@@ -2,60 +2,156 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 
-/// Builds the embedded bottom sheet header and
-/// small icon widget helpers for the attendance UI.
+/// Builds the embedded bottom-sheet chrome for the attendance UI.
+///
+/// Mirrors Frame A from `_design/teacher_attendance_detail_mockup.html`:
+/// gradient header with kicker + title + realtime dot, followed by an
+/// inline KPI strip showing live status counts. The status counts are
+/// computed by the consumer so this mixin stays presentation-only.
 mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
   // ── Abstract state accessors ──
   bool get compactMode;
 
   void setCompactMode(bool v);
 
+  /// Live status counts from the consumer (`{hadir, terlambat, sakit,
+  /// izin, alpha}`). Empty before the first student loads.
+  Map<String, int> get embeddedStatusCounts;
+
+  /// Total number of students currently in the filtered list. Used by
+  /// the section head ("Daftar Siswa · N siswa").
+  int get embeddedTotalStudents;
+
   // ─────────────────────────────────────────
-  // EMBEDDED HEADER
+  // EMBEDDED HEADER · Frame A
   // ─────────────────────────────────────────
 
+  /// Brand-aligned header for the take-attendance flow. Same gradient
+  /// + centered title pattern as the main Presensi page; the density
+  /// toggle (compact/spacious rows) sits in the action icon row.
+  ///
+  /// The drag handle and explicit close button are gone — the screen
+  /// is no longer a draggable sheet, and the back button is provided
+  /// automatically by [BrandPageHeader] from the navigator.
   Widget buildEmbeddedHeader(LanguageProvider lp) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: _getCardGradient(),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+    return BrandPageHeader(
+      role: 'guru',
+      title: lp.getTranslatedText({
+        'en': 'Take Attendance',
+        'id': 'Ambil Presensi',
+      }),
+      subtitle: lp.getTranslatedText({
+        'en': 'Attendance · Input',
+        'id': 'Presensi · Input',
+      }),
+      isRealtimeFresh: true,
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: compactMode
+              ? Icons.view_agenda_outlined
+              : Icons.density_small_rounded,
+          onTap: () => setState(() => setCompactMode(!compactMode)),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────
+  // KPI STRIP · Frame A overlap card
+  // ─────────────────────────────────────────
+
+  /// Five-cell KPI card rendered between the gradient header and the
+  /// body. Each cell shows a status count with its brand colour. Live
+  /// — re-counts on every status change.
+  Widget buildEmbeddedKpiStrip(LanguageProvider lp) {
+    final c = embeddedStatusCounts;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ColorUtils.slate200),
+          boxShadow: [
+            BoxShadow(
+              color: ColorUtils.slate900.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        // Frame A · 4-cell strip per the mockup. Telat is folded into
+        // Hadir for the count (late arrivals are still "present") so
+        // teachers see a single Hadir number that matches the student
+        // list head count.
+        child: Row(
+          children: [
+            _kpiCell(
+              label: 'Hadir',
+              value: (c['hadir'] ?? 0) + (c['terlambat'] ?? 0),
+              color: ColorUtils.success600,
+            ),
+            _kpiDivider(),
+            _kpiCell(
+              label: 'Sakit',
+              value: c['sakit'] ?? 0,
+              color: ColorUtils.warning600,
+            ),
+            _kpiDivider(),
+            _kpiCell(
+              label: 'Izin',
+              value: c['izin'] ?? 0,
+              color: ColorUtils.info600,
+            ),
+            _kpiDivider(),
+            _kpiCell(
+              label: 'Alpa',
+              value: c['alpha'] ?? 0,
+              color: ColorUtils.error600,
+            ),
+          ],
+        ),
       ),
-      child: Column(
+    );
+  }
+
+  /// "Daftar Siswa · N siswa" section head between the toolbar and the
+  /// student list — matches the mockup's `.section-head` block.
+  Widget buildEmbeddedSectionHead(LanguageProvider lp) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            margin: const EdgeInsets.only(top: 10),
-            width: 40,
-            height: 4,
+            width: 3,
+            height: 14,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.3),
+              color: ColorUtils.getRoleColor('guru'),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 8, 14),
-            child: Row(
-              children: [
-                _buildIconBox(),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    lp.getTranslatedText({
-                      'en': 'Take Attendance',
-                      'id': 'Ambil Presensi',
-                    }),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                _buildCompactToggle(),
-                const SizedBox(width: 6),
-                _buildCloseBtn(),
-              ],
+          const SizedBox(width: 8),
+          Text(
+            lp.getTranslatedText({'en': 'Student List', 'id': 'Daftar Siswa'}),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: ColorUtils.slate900,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            '$embeddedTotalStudents ${lp.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate500,
             ),
           ),
         ],
@@ -67,70 +163,41 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
   // SMALL WIDGET HELPERS
   // ─────────────────────────────────────────
 
-  Widget _buildIconBox() {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: const Icon(
-        Icons.fact_check_outlined,
-        color: Colors.white,
-        size: 18,
-      ),
-    );
-  }
-
-  Widget _buildCompactToggle() {
-    return GestureDetector(
-      onTap: () => setState(() => setCompactMode(!compactMode)),
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          compactMode
-              ? Icons.view_agenda_outlined
-              : Icons.density_small_rounded,
-          color: Colors.white,
-          size: 16,
-        ),
+  Widget _kpiCell({
+    required String label,
+    required int value,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$value',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: color,
+              height: 1.0,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildCloseBtn() {
-    return IconButton(
-      onPressed: () => Navigator.of(context).pop(),
-      icon: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Icon(Icons.close, color: Colors.white, size: 18),
-      ),
-    );
+  Widget _kpiDivider() {
+    return Container(width: 1, height: 24, color: ColorUtils.slate100);
   }
-
-  // ─────────────────────────────────────────
-  // STATIC HELPERS
-  // ─────────────────────────────────────────
-
-  static LinearGradient _getCardGradient() {
-    final p = _getPrimaryColor();
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [p, p.withValues(alpha: 0.7)],
-    );
-  }
-
-  static Color _getPrimaryColor() => ColorUtils.getRoleColor('guru');
 }

@@ -5,7 +5,8 @@
 // before Freezed's generated code parses it.
 //
 // These tests verify that every documented normalisation path works correctly,
-// like testing a Laravel Accessor or a Vue computed prop for data transformation.
+// like testing a Laravel Accessor or a Vue computed prop for data
+// transformation.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 

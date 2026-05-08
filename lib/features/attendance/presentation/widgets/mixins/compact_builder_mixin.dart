@@ -4,7 +4,13 @@ import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Compact mode builder for attendance student item.
 ///
-/// Single row layout: [# avatar name ── H T S I A]
+/// Single-row layout (Frame A from `_design/teacher_attendance_detail_mockup.html`):
+///
+///   `[ name + NIS ── Hadir | Telat | Sakit | Izin | Alpa ]`
+///
+/// The avatar and order number are intentionally dropped so the row can
+/// fit five full-word status buttons on a single line at ≈40dp tall —
+/// thumb-friendly while still scannable.
 ///
 /// Requires:
 /// - student: Student model
@@ -25,118 +31,110 @@ mixin CompactBuilderMixin {
   Widget buildCompactLayout(BuildContext context) {
     final lowerStatus = currentStatus.toLowerCase();
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: ColorUtils.slate100),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200),
       ),
       child: Row(
         children: [
-          _buildIndexNumber(),
-          const SizedBox(width: 6),
-          _buildStudentName(),
-          const SizedBox(width: 4),
-          _buildCompactButtons(lowerStatus),
+          _buildStudentBlock(),
+          const SizedBox(width: 8),
+          _buildWordButtons(lowerStatus),
         ],
       ),
     );
   }
 
-  Widget _buildIndexNumber() {
-    return SizedBox(
-      width: 18,
-      child: Text(
-        '${index + 1}',
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: ColorUtils.slate400,
-        ),
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
-  Widget _buildStudentName() {
+  Widget _buildStudentBlock() {
     return Expanded(
-      child: Text(
-        student.name,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: ColorUtils.slate800,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            student.name,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate900,
+              height: 1.15,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'NIS ${student.studentNumber}',
+            style: TextStyle(
+              fontSize: 10,
+              color: ColorUtils.slate500,
+              fontWeight: FontWeight.w500,
+              height: 1.1,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildCompactButtons(String lowerStatus) {
+  Widget _buildWordButtons(String lowerStatus) {
+    // Frame A · 4 word buttons per mockup. Terlambat is dropped from
+    // the inline picker — late arrivals are still recorded as 'hadir'
+    // here. Use the per-student picker (Frame E) to mark Telat
+    // explicitly when needed.
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: _compactButtonList(lowerStatus),
+      children: [
+        _WordButton(
+          label: 'Hadir',
+          color: ColorUtils.success600,
+          isSelected: lowerStatus == 'hadir' || lowerStatus == 'terlambat',
+          onTap: () => onStatusChanged(student.id, 'hadir'),
+        ),
+        const SizedBox(width: 4),
+        _WordButton(
+          label: 'Sakit',
+          color: ColorUtils.warning600,
+          isSelected: lowerStatus == 'sakit',
+          onTap: () => onStatusChanged(student.id, 'sakit'),
+        ),
+        const SizedBox(width: 4),
+        _WordButton(
+          label: 'Izin',
+          color: ColorUtils.info600,
+          isSelected: lowerStatus == 'izin',
+          onTap: () => onStatusChanged(student.id, 'izin'),
+        ),
+        const SizedBox(width: 4),
+        _WordButton(
+          label: 'Alpa',
+          color: ColorUtils.error600,
+          isSelected: lowerStatus == 'alpha',
+          onTap: () => onStatusChanged(student.id, 'alpha'),
+        ),
+      ],
     );
-  }
-
-  List<Widget> _compactButtonList(String lowerStatus) {
-    return [
-      _CompactButton(
-        label: 'H',
-        color: ColorUtils.success600,
-        isSelected: lowerStatus == 'hadir',
-        tooltip: getStatusText('hadir'),
-        onTap: () => onStatusChanged(student.id, 'hadir'),
-      ),
-      const SizedBox(width: 3),
-      _CompactButton(
-        label: 'T',
-        color: ColorUtils.violet700,
-        isSelected: lowerStatus == 'terlambat',
-        tooltip: getStatusText('terlambat'),
-        onTap: () => onStatusChanged(student.id, 'terlambat'),
-      ),
-      const SizedBox(width: 3),
-      _CompactButton(
-        label: 'S',
-        color: ColorUtils.warning600,
-        isSelected: lowerStatus == 'sakit',
-        tooltip: getStatusText('sakit'),
-        onTap: () => onStatusChanged(student.id, 'sakit'),
-      ),
-      const SizedBox(width: 3),
-      _CompactButton(
-        label: 'I',
-        color: ColorUtils.info600,
-        isSelected: lowerStatus == 'izin',
-        tooltip: getStatusText('izin'),
-        onTap: () => onStatusChanged(student.id, 'izin'),
-      ),
-      const SizedBox(width: 3),
-      _CompactButton(
-        label: 'A',
-        color: ColorUtils.error600,
-        isSelected: lowerStatus == 'alpha',
-        tooltip: getStatusText('alpha'),
-        onTap: () => onStatusChanged(student.id, 'alpha'),
-      ),
-    ];
   }
 }
 
-/// Compact button widget: 36px square with letter.
-class _CompactButton extends StatelessWidget {
+/// Word button: ~42dp wide × 40dp tall, full-word label.
+///
+/// Active state fills with the status colour and bumps the border weight.
+/// Inactive sits on a light tint of the colour so the row still reads as
+/// a coloured palette at a glance.
+class _WordButton extends StatelessWidget {
   final String label;
-  final String tooltip;
   final Color color;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _CompactButton({
+  const _WordButton({
     required this.label,
-    required this.tooltip,
     required this.color,
     required this.isSelected,
     required this.onTap,
@@ -144,37 +142,41 @@ class _CompactButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      preferBelow: false,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: isSelected ? color : color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isSelected ? color : color.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : color,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-            ),
+    // Match Frame A mockup styling exactly:
+    //   selected   → color-50 fill + color-600 text + color-600 border
+    //   unselected → slate-100 fill + slate-500 text + no border
+    // Neutral unselected state means only the active status pops out
+    // visually — the row reads as a single colored chip surrounded by
+    // four "available" greys, instead of five competing pastel chips.
+    final bgColor = isSelected
+        ? Color.alphaBlend(color.withValues(alpha: 0.10), Colors.white)
+        : ColorUtils.slate100;
+    final fgColor = isSelected ? color : ColorUtils.slate500;
+    final borderColor = isSelected ? color : Colors.transparent;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 42,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(11),
+          border: Border.all(color: borderColor, width: isSelected ? 1.5 : 0),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: fgColor,
+            fontWeight: FontWeight.w800,
+            fontSize: 11,
+            letterSpacing: 0.2,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );

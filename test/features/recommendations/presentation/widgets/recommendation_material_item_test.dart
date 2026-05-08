@@ -1,4 +1,5 @@
-// Tests for RecommendationMaterialItem — single material row inside RecommendationCard.
+// Tests for RecommendationMaterialItem — single material row inside
+// RecommendationCard.
 //
 // Key scenarios:
 // - type='video': shows play_circle_filled_rounded icon

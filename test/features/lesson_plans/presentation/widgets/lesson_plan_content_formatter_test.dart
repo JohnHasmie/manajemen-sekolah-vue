@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 // Unit tests for LessonPlanContentFormatter.
 // All methods are static — no widget setup required, like testing a Laravel
 // helper class purely via unit test assertions.

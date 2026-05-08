@@ -1,3 +1,4 @@
+// ignore_for_file: lines_longer_than_80_chars
 /// Admin dashboard navigation flow tests.
 ///
 /// Tests the full round-trip for EVERY admin menu item and quick action:
@@ -74,6 +75,7 @@ Widget _buildAdminDashboard() {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // ── Quick Actions ──────────────────────────────────────────────
+                //
                 Row(
                   children: [
                     QuickActionButton(
@@ -150,6 +152,7 @@ Widget _buildAdminDashboard() {
                 ),
 
                 // ── Menu Items: Data Management ────────────────────────────────
+                //
                 MenuItemCard(
                   title: 'Manage Data',
                   icon: Icons.folder_shared_outlined,
@@ -321,7 +324,8 @@ Future<void> _tapQuick(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
-/// Verify we're on [screen], then tap BackButton and verify we return to Dashboard.
+/// Verify we're on [screen], then tap BackButton and verify we return to
+// Dashboard.
 Future<void> _assertScreenAndBack(
   WidgetTester tester,
   String screen,

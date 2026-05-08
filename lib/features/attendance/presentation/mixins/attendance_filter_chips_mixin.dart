@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 
 /// Handles building active filter chips and filter state management.
@@ -110,6 +111,57 @@ mixin AttendanceFilterChipsMixin on ConsumerState<AttendancePage> {
       return lp.getTranslatedText({'en': 'This Week', 'id': 'Minggu ini'});
     }
     return lp.getTranslatedText({'en': 'This Month', 'id': 'Bulan ini'});
+  }
+
+  /// Brand-pattern filter chips — always render the three dimensions
+  /// (Periode · Kelas · Mapel). When a dimension has no filter applied
+  /// we pass `value: null` so the shared `BrandFilterChip` renders its
+  /// `+ Label` placeholder ("+ Kelas") rather than "Kelas: Semua".
+  /// When filtered, only the resolved value is shown.
+  ///
+  /// Mirrors the parent role's `parent_billing_screen` chip wiring 1:1.
+  List<BrandFilterChip> buildBrandFilterChips({
+    required LanguageProvider lp,
+    required VoidCallback onTap,
+  }) {
+    return [
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Period', 'id': 'Periode'}),
+        value: filterDateOption == null ? null : _resolveDateLabel(lp),
+        onTap: onTap,
+      ),
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+        value: filterClassId == null ? null : _resolveClassName(),
+        onTap: onTap,
+      ),
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Subject', 'id': 'Mapel'}),
+        value: filterSubjectId == null ? null : _resolveSubjectName(),
+        onTap: onTap,
+      ),
+    ];
+  }
+
+  /// Count of dimensions with a non-null filter applied — drives the
+  /// red badge on the filter icon in the header.
+  int get activeFilterCount {
+    var n = 0;
+    if (filterClassId != null) n++;
+    if (filterSubjectId != null) n++;
+    if (filterDateOption != null) n++;
+    return n;
+  }
+
+  /// Localized label for the active period filter — used by the KPI
+  /// card to title the "sessions" cell ("Hari ini", "Minggu ini",
+  /// etc.) so it reflects the dimension the user is looking at.
+  /// Defaults to "Hari ini" when no period filter is set.
+  String currentPeriodLabel(LanguageProvider lp) {
+    if (filterDateOption == null || filterDateOption == 'today') {
+      return lp.getTranslatedText({'en': 'Today', 'id': 'Hari ini'});
+    }
+    return _resolveDateLabel(lp);
   }
 
   /// Clear all active filters and refresh data

@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · Absensi Detail / Edit · Mockup</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-deep: #1F4A8F;
+    --brand-azure: #21AFE6;
+    --brand-cobalt: #1B6FB8;
+    --green-50: #DCFCE7;
+    --green-100: #BBF7D0;
+    --green-600: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-100: #FDE68A;
+    --amber-600: #B45309;
+    --red-50: #FEE2E2;
+    --red-100: #FECACA;
+    --red-600: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 {
+    font-size: 24px; margin: 0 0 8px;
+    color: var(--brand-dark); letter-spacing: -0.4px;
+  }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 32px;
+    max-width: 880px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px;
+    align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 28px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+    position: relative;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    float: right; text-transform: none; letter-spacing: 0;
+    color: var(--slate-400); font-weight: 500; font-size: 10.5px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 760;
+    position: relative;
+    overflow: hidden;
+    background: var(--slate-50);
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-azure) 100%);
+    padding: 14px 16px 22px;
+    color: white;
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: rgba(255,255,255,.14);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex: 0 0 auto;
+  }
+  .h-title-block { flex: 1; min-width: 0; text-align: center; }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 600;
+    color: rgba(255,255,255,.65);
+    letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .h-title-row {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 2px; justify-content: center;
+  }
+  .h-dot {
+    width: 6px; height: 6px; border-radius: 999px;
+    background: #4ADE80; box-shadow: 0 0 8px #4ADE80;
+  }
+  .h-title { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
+
+  /* Context strip — shows class+subject+date inside the gradient */
+  .ctx-strip {
+    margin-top: 14px;
+    background: rgba(255,255,255,.18);
+    border-radius: 14px;
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ctx-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(255,255,255,.32);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 14px; font-weight: 800;
+    flex: 0 0 auto;
+  }
+  .ctx-body { flex: 1; min-width: 0; line-height: 1.2; }
+  .ctx-title {
+    font-size: 13px; font-weight: 800; color: white;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ctx-sub {
+    font-size: 10.5px; color: rgba(255,255,255,.78);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    margin-top: 2px;
+  }
+  .ctx-edit {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 12px;
+    flex: 0 0 auto;
+  }
+
+  /* Slot picker chips on edit-mode header */
+  .slot-row {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .slot-chip {
+    flex: 1;
+    border-radius: 12px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.32);
+    line-height: 1.1;
+  }
+  .slot-chip.applied {
+    background: rgba(255,255,255,.40);
+    border-color: transparent;
+  }
+  .slot-chip .lbl {
+    font-size: 8.5px; font-weight: 600;
+    color: rgba(255,255,255,.7);
+    letter-spacing: 0.3px; text-transform: uppercase;
+  }
+  .slot-chip .val {
+    font-size: 11px; font-weight: 700; color: white;
+    margin-top: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* KPI overlay (summary) */
+  .kpi-card {
+    position: absolute;
+    left: 12px; right: 12px;
+    margin-top: -28px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 8px 16px rgba(15,23,42,.06);
+    padding: 12px;
+  }
+  .kpi-row { display: flex; align-items: center; }
+  .kpi-cell { flex: 1; text-align: center; }
+  .kpi-cell .v { font-size: 18px; font-weight: 800; color: var(--slate-900); line-height: 1; }
+  .kpi-cell .l {
+    font-size: 9.5px; font-weight: 600;
+    color: var(--slate-500); margin-top: 4px;
+    letter-spacing: 0.3px; text-transform: uppercase;
+  }
+  .kpi-divider { width: 1px; height: 24px; background: var(--slate-100); }
+  .kpi-cell.green .v { color: var(--green-600); }
+  .kpi-cell.amber .v { color: var(--amber-600); }
+  .kpi-cell.red .v { color: var(--red-600); }
+  .kpi-cell.blue .v { color: var(--blue-600); }
+
+  /* Body */
+  .body {
+    padding: 30px 12px 88px;
+    overflow-y: auto;
+    height: calc(100% - 0px);
+  }
+
+  .toolbar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 4px; margin-bottom: 8px;
+  }
+  .toolbar .search {
+    flex: 1; height: 36px;
+    background: white; border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 0 10px;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--slate-500);
+  }
+  .toolbar .search .icon {
+    font-size: 12px; color: var(--slate-400);
+  }
+  .toolbar .quick {
+    height: 36px; padding: 0 12px;
+    background: var(--brand-cobalt); color: white;
+    border-radius: 10px;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Bulk-mark chip row */
+  .bulk-row {
+    display: flex; gap: 6px;
+    padding: 0 4px; margin-bottom: 12px;
+  }
+  .bulk-chip {
+    flex: 1;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px dashed var(--slate-300);
+    color: var(--slate-600);
+    font-size: 10.5px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    background: white;
+  }
+  .bulk-chip .dot {
+    width: 8px; height: 8px; border-radius: 999px;
+  }
+  .bulk-chip .dot.green { background: var(--green-600); }
+  .bulk-chip .dot.amber { background: var(--amber-600); }
+  .bulk-chip .dot.blue { background: var(--blue-600); }
+  .bulk-chip .dot.red { background: var(--red-600); }
+
+  /* Section header */
+  .section-head {
+    display: flex; justify-content: space-between;
+    padding: 6px 6px 6px;
+  }
+  .section-head .t { font-size: 11px; font-weight: 800; color: var(--slate-700); letter-spacing: 0.3px; text-transform: uppercase;}
+  .section-head .a { font-size: 10px; color: var(--slate-500); }
+
+  /* Student row card */
+  .stu {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 10px;
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .stu-num {
+    width: 22px; text-align: right; flex: 0 0 auto;
+    font-size: 11px; font-weight: 700; color: var(--slate-400);
+  }
+  .stu-avatar {
+    width: 34px; height: 34px; border-radius: 999px;
+    background: var(--blue-50); color: var(--blue-600);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+    flex: 0 0 auto;
+  }
+  .stu-body { flex: 1; min-width: 0; line-height: 1.2; }
+  .stu-name {
+    font-size: 12.5px; font-weight: 700; color: var(--slate-900);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .stu-meta {
+    font-size: 9.5px; color: var(--slate-500); margin-top: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .stu-status {
+    flex: 0 0 auto;
+    display: flex; gap: 4px;
+  }
+  /* === Inline status picker (Frame A) ===
+     Single-row layout per student so the list stays scannable.
+     Buttons carry the full status word (Hadir / Sakit / Izin / Alpa)
+     instead of letter glyphs, so meaning is unambiguous at a glance.
+     Each button is 48dp wide × 40dp tall — width covers the longest
+     label with breathing room, and 40dp height stays well above the
+     ergonomic minimum for a quick thumb-tap. Active state fills with
+     the status colour. */
+  .st-btn {
+    min-width: 48px; height: 40px;
+    padding: 0 6px;
+    border-radius: 11px;
+    background: var(--slate-100);
+    color: var(--slate-500);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+    border: 1.5px solid transparent;
+    letter-spacing: 0.2px;
+  }
+  .st-btn.on.h { background: var(--green-50); color: var(--green-600); border-color: var(--green-600); }
+  .st-btn.on.s { background: var(--blue-50); color: var(--blue-600); border-color: var(--blue-600); }
+  .st-btn.on.i { background: var(--amber-50); color: var(--amber-600); border-color: var(--amber-600); }
+  .st-btn.on.a { background: var(--red-50); color: var(--red-600); border-color: var(--red-600); }
+  /* "pick" mode (Frame A · take new). Avatar is dropped in this mode —
+     the order + name carry enough identity, and the saved horizontal
+     space goes to the word-button picker. */
+  .stu.pick { padding: 10px 10px 10px 12px; gap: 10px; }
+  .stu.pick .stu-avatar { display: none; }
+  .stu.pick .stu-name {
+    font-size: 13.5px; font-weight: 800;
+    color: var(--slate-900);
+  }
+  .stu.pick .stu-meta {
+    font-size: 10.5px; color: var(--slate-500);
+    margin-top: 2px;
+  }
+
+  /* Pill on right when filled */
+  .stu-pill {
+    height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; gap: 4px;
+    flex: 0 0 auto;
+  }
+  .stu-pill.h { background: var(--green-50); color: var(--green-600); }
+  .stu-pill.s { background: var(--blue-50); color: var(--blue-600); }
+  .stu-pill.i { background: var(--amber-50); color: var(--amber-600); }
+  .stu-pill.a { background: var(--red-50); color: var(--red-600); }
+  .stu-pill .chev { font-size: 9px; color: rgba(0,0,0,.32); }
+
+  /* Note — small inline note shown only when not "Hadir" */
+  .stu-note {
+    font-size: 9.5px;
+    color: var(--slate-500);
+    margin-top: 4px;
+    background: var(--slate-50);
+    border-radius: 6px;
+    padding: 4px 8px;
+    display: flex; gap: 4px;
+  }
+  .stu-note .icon { font-size: 9px; color: var(--slate-400); }
+
+  /* Sticky footer save */
+  .footer-save {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 12px 16px 16px;
+    background: white;
+    border-top: 1px solid var(--slate-100);
+    box-shadow: 0 -4px 14px rgba(15,23,42,.06);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .footer-save .summary { flex: 1; min-width: 0; line-height: 1.2; }
+  .footer-save .summary .v { font-size: 12px; font-weight: 800; color: var(--slate-900); }
+  .footer-save .summary .l { font-size: 10px; color: var(--slate-500); margin-top: 1px; }
+  .footer-save .btn {
+    height: 44px; padding: 0 18px; border-radius: 12px;
+    background: var(--green-600); color: white;
+    font-size: 13px; font-weight: 800;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .footer-save .btn.disabled {
+    background: var(--slate-300); color: white;
+  }
+
+  /* Annotate */
+  .annotate {
+    background: #fffbeb;
+    border-left: 3px solid var(--amber-600);
+    padding: 10px 12px;
+    font-size: 11px; color: #78350F;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .annotate strong { color: #92400E; }
+
+  /* Quick action sheet */
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--slate-300);
+    border-radius: 999px;
+    margin: 12px auto;
+  }
+  .sheet-title {
+    padding: 6px 16px 4px;
+    font-size: 13px; font-weight: 800;
+    color: var(--slate-900);
+  }
+  .sheet-sub {
+    padding: 0 16px 12px;
+    font-size: 10.5px; color: var(--slate-500); line-height: 1.5;
+  }
+  .sheet-btn {
+    margin: 0 12px 6px;
+    padding: 12px 14px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; font-weight: 700; color: var(--slate-900);
+  }
+  .sheet-btn .icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex: 0 0 auto;
+  }
+  .sheet-btn .lead {
+    flex: 1; line-height: 1.3;
+  }
+  .sheet-btn .lead .desc {
+    font-size: 10px; color: var(--slate-500); font-weight: 500;
+    margin-top: 2px;
+  }
+  .sheet-btn .chev {
+    color: var(--slate-300); font-size: 14px;
+  }
+
+  /* Date sheet */
+  .date-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px; padding: 6px 12px 0;
+    font-size: 10.5px;
+  }
+  .date-grid .head {
+    text-align: center; color: var(--slate-400);
+    font-weight: 700; padding: 4px 0;
+  }
+  .date-grid .cell {
+    height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--slate-700);
+  }
+  .date-grid .cell.today {
+    background: var(--brand-cobalt); color: white; font-weight: 800;
+  }
+  .date-grid .cell.faded { color: var(--slate-300); }
+  .date-grid .cell.has { background: var(--green-50); color: var(--green-600); font-weight: 700; }
+
+  /* Read-only banner */
+  .ro-banner {
+    margin: 0 4px 10px;
+    background: var(--blue-50); color: var(--blue-600);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 10.5px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ro-banner .ic { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h1>Absensi · Detail / Edit · Mockup</h1>
+<p class="subtitle">Three frames for the take-attendance flow that opens when a teacher taps a session card or the FAB on Presensi. Same brand language as the parent surfaces — gradient header with realtime dot, KPI overlay, sticky save footer. The student row is the core primitive: a single inline picker on the right-hand side flips between status states without ever opening a popup.</p>
+
+<div class="grid">
+
+<!-- ════════════════ A · Take Attendance (empty / first time) ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A</span>TAKE ATTENDANCE · NEW <span class="desc">From FAB · single-line rows · word buttons (Hadir/Sakit/Izin/Alpa) at 48×40dp</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">PRESENSI · INPUT</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Ambil Presensi</span></div>
+        </div>
+        <div class="h-icon">⋯</div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon">M</div>
+        <div class="ctx-body">
+          <div class="ctx-title">Matematika · 7B</div>
+          <div class="ctx-sub">Senin · 14 Apr · 10.30 – 11.50 · Jam ke-5</div>
+        </div>
+        <div class="ctx-edit">✎</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell green"><div class="v">28</div><div class="l">Hadir</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">0</div><div class="l">Sakit</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">0</div><div class="l">Izin</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell red"><div class="v">0</div><div class="l">Alpa</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="toolbar">
+        <div class="search"><span class="icon">🔍</span> Cari nama atau NIS…</div>
+        <div class="quick">⚡ Cepat</div>
+      </div>
+      <div class="bulk-row">
+        <div class="bulk-chip"><span class="dot green"></span>Semua Hadir</div>
+        <div class="bulk-chip"><span class="dot red"></span>Sisanya Alpa</div>
+      </div>
+      <div class="section-head"><div class="t">Daftar Siswa</div><div class="a">28 siswa</div></div>
+
+      <div class="stu pick">
+        <div class="stu-avatar">AP</div>
+        <div class="stu-body">
+          <div class="stu-name">Aisha Putri</div>
+          <div class="stu-meta">NIS 21001</div>
+        </div>
+        <div class="stu-status">
+          <div class="st-btn on h">Hadir</div>
+          <div class="st-btn">Sakit</div>
+          <div class="st-btn">Izin</div>
+          <div class="st-btn">Alpa</div>
+        </div>
+      </div>
+      <div class="stu pick">
+        <div class="stu-avatar">BS</div>
+        <div class="stu-body">
+          <div class="stu-name">Budi Santoso</div>
+          <div class="stu-meta">NIS 21002</div>
+        </div>
+        <div class="stu-status">
+          <div class="st-btn">Hadir</div>
+          <div class="st-btn on s">Sakit</div>
+          <div class="st-btn">Izin</div>
+          <div class="st-btn">Alpa</div>
+        </div>
+      </div>
+      <div class="stu pick">
+        <div class="stu-avatar">CD</div>
+        <div class="stu-body">
+          <div class="stu-name">Citra Dewi</div>
+          <div class="stu-meta">NIS 21003</div>
+        </div>
+        <div class="stu-status">
+          <div class="st-btn on h">Hadir</div>
+          <div class="st-btn">Sakit</div>
+          <div class="st-btn">Izin</div>
+          <div class="st-btn">Alpa</div>
+        </div>
+      </div>
+      <div class="stu pick">
+        <div class="stu-avatar">DR</div>
+        <div class="stu-body">
+          <div class="stu-name">Dimas Rahmat</div>
+          <div class="stu-meta">NIS 21004</div>
+        </div>
+        <div class="stu-status">
+          <div class="st-btn">Hadir</div>
+          <div class="st-btn">Sakit</div>
+          <div class="st-btn">Izin</div>
+          <div class="st-btn on a">Alpa</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-save">
+      <div class="summary"><div class="v">26 / 28 dinilai</div><div class="l">Hari ini · 1 Sakit · 1 Alpa · Belum disimpan</div></div>
+      <div class="btn">💾 Simpan</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ B · Edit Attendance (already saved, mixed states) ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">B</span>EDIT ATTENDANCE · MIXED <span class="desc">Tapped from a "Selesai" card · 27 hadir · 1 sakit</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">PRESENSI · DETAIL</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Edit Presensi</span></div>
+        </div>
+        <div class="h-icon">⋯</div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon">B</div>
+        <div class="ctx-body">
+          <div class="ctx-title">B. Arab · 8B</div>
+          <div class="ctx-sub">Senin · 14 Apr · 07.00 – 08.20 · Jam ke-1 · Disimpan 08.21</div>
+        </div>
+        <div class="ctx-edit">✎</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell green"><div class="v">27</div><div class="l">Hadir</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">1</div><div class="l">Sakit</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">0</div><div class="l">Izin</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell red"><div class="v">0</div><div class="l">Alpa</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="toolbar">
+        <div class="search"><span class="icon">🔍</span> Cari nama atau NIS…</div>
+        <div class="quick">⚡ Cepat</div>
+      </div>
+      <div class="section-head"><div class="t">Daftar Siswa</div><div class="a">28 siswa</div></div>
+
+      <div class="stu">
+        <div class="stu-num">1.</div>
+        <div class="stu-avatar">AP</div>
+        <div class="stu-body">
+          <div class="stu-name">Aisha Putri</div>
+          <div class="stu-meta">8B · NIS 21001</div>
+        </div>
+        <div class="stu-pill h">Hadir</div>
+      </div>
+      <div class="stu">
+        <div class="stu-num">2.</div>
+        <div class="stu-avatar">BS</div>
+        <div class="stu-body">
+          <div class="stu-name">Budi Santoso</div>
+          <div class="stu-meta">8B · NIS 21002</div>
+          <div class="stu-note"><span class="icon">📝</span>Surat dari orang tua, demam tinggi.</div>
+        </div>
+        <div class="stu-pill s">Sakit</div>
+      </div>
+      <div class="stu">
+        <div class="stu-num">3.</div>
+        <div class="stu-avatar">CD</div>
+        <div class="stu-body">
+          <div class="stu-name">Citra Dewi</div>
+          <div class="stu-meta">8B · NIS 21003</div>
+        </div>
+        <div class="stu-pill h">Hadir</div>
+      </div>
+      <div class="stu">
+        <div class="stu-num">4.</div>
+        <div class="stu-avatar">DR</div>
+        <div class="stu-body">
+          <div class="stu-name">Dimas Rahmat</div>
+          <div class="stu-meta">8B · NIS 21004</div>
+        </div>
+        <div class="stu-pill h">Hadir</div>
+      </div>
+      <div class="stu">
+        <div class="stu-num">5.</div>
+        <div class="stu-avatar">EH</div>
+        <div class="stu-body">
+          <div class="stu-name">Eka Hartono</div>
+          <div class="stu-meta">8B · NIS 21005</div>
+        </div>
+        <div class="stu-pill h">Hadir</div>
+      </div>
+    </div>
+    <div class="footer-save">
+      <div class="summary"><div class="v">28 / 28 dinilai</div><div class="l">Tap pill untuk ubah · Belum ada perubahan</div></div>
+      <div class="btn disabled">💾 Simpan</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ C · Quick actions sheet ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">C</span>QUICK ACTIONS SHEET <span class="desc">Bottom sheet from "⚡ Cepat" or ⋯ menu</span></div>
+  <div class="phone" style="background:rgba(20,48,104,.32);">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:white;border-top-left-radius:24px;border-top-right-radius:24px;padding-bottom:16px;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Aksi cepat</div>
+      <div class="sheet-sub">Pilih satu untuk menerapkan ke seluruh siswa, atau ke siswa yang belum dinilai.</div>
+      <div class="sheet-btn">
+        <div class="icon" style="background:var(--green-50);color:var(--green-600)">✓</div>
+        <div class="lead"><div>Tandai semua Hadir</div><div class="desc">Override status manapun</div></div>
+        <div class="chev">›</div>
+      </div>
+      <div class="sheet-btn">
+        <div class="icon" style="background:var(--red-50);color:var(--red-600)">✗</div>
+        <div class="lead"><div>Sisanya Alpa</div><div class="desc">Hanya untuk siswa belum dinilai</div></div>
+        <div class="chev">›</div>
+      </div>
+      <div class="sheet-btn">
+        <div class="icon" style="background:var(--blue-50);color:var(--blue-600)">📋</div>
+        <div class="lead"><div>Salin dari sesi terakhir</div><div class="desc">Matematika · 7B · 11 Apr</div></div>
+        <div class="chev">›</div>
+      </div>
+      <div class="sheet-btn">
+        <div class="icon" style="background:var(--violet-50);color:var(--violet-600)">↺</div>
+        <div class="lead"><div>Reset semua ke kosong</div><div class="desc">Hapus semua status — tidak ada yang disimpan</div></div>
+        <div class="chev">›</div>
+      </div>
+      <div class="sheet-btn">
+        <div class="icon" style="background:var(--amber-50);color:var(--amber-600)">📅</div>
+        <div class="lead"><div>Pindah tanggal / sesi</div><div class="desc">Ubah jam, mapel, atau kelas</div></div>
+        <div class="chev">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ D · Date / slot picker ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">D</span>DATE & SLOT PICKER <span class="desc">Tapped ✎ on the context strip</span></div>
+  <div class="phone" style="background:rgba(20,48,104,.32);">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:white;border-top-left-radius:24px;border-top-right-radius:24px;padding-bottom:16px;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Pilih waktu &amp; sesi</div>
+      <div class="sheet-sub">Tanggal hijau = sudah ada presensi tersimpan. Pilih satu untuk dilihat / diedit, atau pilih hari ini untuk membuat sesi baru.</div>
+
+      <div class="date-grid">
+        <div class="head">S</div><div class="head">S</div><div class="head">R</div>
+        <div class="head">K</div><div class="head">J</div><div class="head">S</div><div class="head">M</div>
+      </div>
+      <div class="date-grid">
+        <div class="cell faded">31</div><div class="cell">1</div><div class="cell">2</div>
+        <div class="cell">3</div><div class="cell">4</div><div class="cell faded">5</div><div class="cell faded">6</div>
+        <div class="cell has">7</div><div class="cell has">8</div><div class="cell has">9</div>
+        <div class="cell has">10</div><div class="cell has">11</div><div class="cell faded">12</div><div class="cell faded">13</div>
+        <div class="cell today">14</div><div class="cell">15</div><div class="cell">16</div>
+        <div class="cell">17</div><div class="cell">18</div><div class="cell faded">19</div><div class="cell faded">20</div>
+      </div>
+
+      <div style="height:14px"></div>
+      <div class="section-head" style="padding:0 16px"><div class="t">Sesi hari ini · Senin 14 Apr</div><div class="a">5 sesi</div></div>
+      <div class="sheet-btn">
+        <div class="icon" style="background:var(--green-50);color:var(--green-600)">B</div>
+        <div class="lead"><div>B. Arab · 8B · 07.00–08.20</div><div class="desc">Tersimpan · 27 H · 1 S</div></div>
+        <div class="chev">›</div>
+      </div>
+      <div class="sheet-btn">
+        <div class="icon" style="background:var(--amber-50);color:var(--amber-600)">M</div>
+        <div class="lead"><div>Matematika · 7B · 10.30–11.50</div><div class="desc">Belum diabsen</div></div>
+        <div class="chev">›</div>
+      </div>
+      <div class="sheet-btn">
+        <div class="icon" style="background:var(--amber-50);color:var(--amber-600)">F</div>
+        <div class="lead"><div>Fisika · 8A · 12.00–13.20</div><div class="desc">Belum diabsen</div></div>
+        <div class="chev">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ E · Status picker bottom sheet (per-student) ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">E</span>PER-STUDENT STATUS PICKER <span class="desc">Tap a pill in EDIT mode → opens with note field</span></div>
+  <div class="phone" style="background:rgba(20,48,104,.32);">
+    <div style="position:absolute;left:0;right:0;bottom:0;background:white;border-top-left-radius:24px;border-top-right-radius:24px;padding-bottom:16px;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Budi Santoso</div>
+      <div class="sheet-sub">8B · NIS 21002 · Tap status di bawah untuk ubah, isi catatan opsional.</div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 12px 12px">
+        <div style="background:var(--green-50);border:1.5px solid var(--green-600);color:var(--green-600);border-radius:12px;padding:14px 0;text-align:center;font-size:11px;font-weight:800;">
+          <div style="font-size:15px;margin-bottom:2px">✓</div>Hadir
+        </div>
+        <div style="background:var(--blue-50);border:1.5px solid var(--blue-600);color:var(--blue-600);border-radius:12px;padding:14px 0;text-align:center;font-size:11px;font-weight:800;opacity:1;outline:2px solid var(--blue-600);outline-offset:2px;">
+          <div style="font-size:15px;margin-bottom:2px">●</div>Sakit
+        </div>
+        <div style="background:white;border:1px solid var(--slate-200);color:var(--slate-500);border-radius:12px;padding:14px 0;text-align:center;font-size:11px;font-weight:700;">
+          <div style="font-size:15px;margin-bottom:2px">○</div>Izin
+        </div>
+        <div style="background:white;border:1px solid var(--slate-200);color:var(--slate-500);border-radius:12px;padding:14px 0;text-align:center;font-size:11px;font-weight:700;">
+          <div style="font-size:15px;margin-bottom:2px">×</div>Alpa
+        </div>
+      </div>
+
+      <div style="padding:0 12px 12px">
+        <div style="font-size:11px;font-weight:800;color:var(--slate-700);margin-bottom:6px;letter-spacing:.3px;text-transform:uppercase">Catatan (opsional)</div>
+        <div style="background:white;border:1px solid var(--slate-200);border-radius:12px;padding:12px;min-height:72px;font-size:11.5px;color:var(--slate-700);">Surat dari orang tua, demam tinggi.</div>
+      </div>
+
+      <div style="display:flex;gap:8px;padding:0 12px;">
+        <div style="flex:1;height:44px;border-radius:12px;background:white;border:1px solid var(--slate-200);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--slate-700)">Batal</div>
+        <div style="flex:2;height:44px;border-radius:12px;background:var(--brand-cobalt);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800">Terapkan</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ F · Read-only past period ════════════════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">F</span>READ-ONLY · LOCKED <span class="desc">Past academic year — no edits allowed</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">‹</div>
+        <div class="h-title-block">
+          <div class="h-kicker">PRESENSI · ARSIP</div>
+          <div class="h-title-row"><span class="h-dot" style="background:#94a3b8;box-shadow:none"></span><span class="h-title">Lihat Presensi</span></div>
+        </div>
+        <div class="h-icon">⤓</div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon">M</div>
+        <div class="ctx-body">
+          <div class="ctx-title">Matematika · 7B</div>
+          <div class="ctx-sub">15 Mei 2024 · TP 2023/2024 · Tahun ajaran lalu</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell green"><div class="v">26</div><div class="l">Hadir</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">1</div><div class="l">Sakit</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">0</div><div class="l">Izin</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell red"><div class="v">1</div><div class="l">Alpa</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="ro-banner">
+        <span class="ic">🔒</span>
+        Tahun ajaran lalu — tidak bisa diubah. Ekspor Excel untuk arsip.
+      </div>
+      <div class="section-head"><div class="t">Daftar Siswa</div><div class="a">28 siswa</div></div>
+      <div class="stu">
+        <div class="stu-num">1.</div>
+        <div class="stu-avatar">AP</div>
+        <div class="stu-body">
+          <div class="stu-name">Aisha Putri</div>
+          <div class="stu-meta">7B · NIS 21001</div>
+        </div>
+        <div class="stu-pill h" style="opacity:.7">Hadir</div>
+      </div>
+      <div class="stu">
+        <div class="stu-num">2.</div>
+        <div class="stu-avatar">BS</div>
+        <div class="stu-body">
+          <div class="stu-name">Budi Santoso</div>
+          <div class="stu-meta">7B · NIS 21002</div>
+        </div>
+        <div class="stu-pill s" style="opacity:.7">Sakit</div>
+      </div>
+      <div class="stu">
+        <div class="stu-num">3.</div>
+        <div class="stu-avatar">CD</div>
+        <div class="stu-body">
+          <div class="stu-name">Citra Dewi</div>
+          <div class="stu-meta">7B · NIS 21003</div>
+        </div>
+        <div class="stu-pill a" style="opacity:.7">Alpa</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="margin-top:48px;padding:18px 22px;background:var(--surface);border-radius:14px;max-width:880px;border:1px solid var(--slate-200)">
+  <h3 style="margin:0 0 10px;font-size:15px;color:var(--brand-dark)">Notes for review</h3>
+  <ul style="font-size:12px;color:var(--slate-600);line-height:1.7;padding-left:20px;margin:0">
+    <li><strong>One screen, two modes.</strong> Frame A is the "new" flow (FAB tap on Presensi); Frame B is "edit" (existing card tap). Same scaffold, different starting state. Title flips between <em>Ambil Presensi</em> and <em>Edit Presensi</em> based on whether `attendance_id` is present.</li>
+    <li><strong>Big-target 4-segment picker (Frame A v2).</strong> The student card is two stacked rows: avatar + name on top, then a full-width 4-segment picker (Hadir / Sakit / Izin / Alpa) underneath. Each segment is <code>46dp</code> tall and ~<code>78dp</code> wide — well above iOS 44pt and Material 48dp minimum hit targets, so a teacher can mark students with their thumb without zooming. Active segment fills with its colour and turns its glyph dot solid; inactive segments stay outlined. Saves a UI roundtrip for the dominant case (mark a few absent, save).</li>
+    <li><strong>Pill + sheet (Frame B).</strong> Once a session is saved, the right-hand affordance becomes a single colored pill ("Hadir", "Sakit", etc). Tapping the pill opens Frame E — a per-student sheet with the 4 status tiles + a notes field. This keeps the list tighter when reviewing.</li>
+    <li><strong>KPI strip is live.</strong> The 4-cell counts at the top update as the teacher taps statuses. Same overlap pattern as the Presensi list KPI (`BrandPageLayout.kpiOverlapHeight`).</li>
+    <li><strong>Quick actions (Frame C).</strong> Mark all Hadir, fill remaining as Alpa, copy from last session, reset, change date/slot. Keeps the bulk-mark chips on the body simple and shoves power-features into the sheet.</li>
+    <li><strong>Date & slot picker (Frame D).</strong> Tap ✎ on the context strip to open. Calendar shows green dots on dates that already have records; below is a list of today's scheduled sessions. Picking a green date opens edit mode for that session; picking a future-or-empty date pre-fills today's mengajar slot.</li>
+    <li><strong>Sticky save footer.</strong> Always shows "X / N dinilai" so the teacher knows when the form is complete. Save button is green when there are unsaved changes, slate when there aren't (Frame B). On save, the sheet pops back to Presensi and the card flips from "Belum" amber to a percentage green.</li>
+    <li><strong>Read-only fallback (Frame F).</strong> Past academic years lock editing. Header dot is grey, banner explains why, no save footer, only an export icon (⤓) in the action slot.</li>
+  </ul>
+  <h3 style="margin:18px 0 10px;font-size:15px;color:var(--brand-dark)">Backend changes I'd ship alongside</h3>
+  <ul style="font-size:12px;color:var(--slate-600);line-height:1.7;padding-left:20px;margin:0">
+    <li><code>GET /api/attendance/session-detail?class_id&subject_id&lesson_hour_id&date</code> — returns a session metadata block + the student list with their current status + notes for that session, in one call. Replaces the current "load class students, then load attendance, then merge" three-call flow.</li>
+    <li><code>POST /api/attendance/session-detail/save</code> — atomic upsert of all student statuses for the session. The body is a list of <code>{student_id, status, note}</code>. Backend deletes-then-inserts inside a transaction; mobile sends only the rows that changed since load.</li>
+    <li><code>GET /api/attendance/calendar?month=2025-04&teacher_id=…</code> — returns an array of <code>{date, has_records}</code> for the month so the date picker (Frame D) can paint green dots without N round-trips.</li>
+    <li><code>has_records</code> rolls into the existing teacherSummary so the Presensi card's "Belum / 100%" pill reflects this session's saved status without a refetch.</li>
+  </ul>
+</div>
+
+</body>
+</html>

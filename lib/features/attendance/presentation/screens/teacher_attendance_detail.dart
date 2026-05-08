@@ -3,6 +3,7 @@
 // with edit mode to change individual statuses and save back to the API.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -103,135 +104,168 @@ class _TeacherAttendanceDetailPageState
   ) {
     final stats = state.statistics;
 
+    if (state.isSaving) {
+      // Block the screen with a centered loader during a save —
+      // simpler than overlaying on top of BrandPageLayout, and
+      // saves are short.
+      return Scaffold(
+        backgroundColor: ColorUtils.slate50,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: getPrimaryColor()),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                languageProvider.getTranslatedText({
+                  'en': 'Saving changes...',
+                  'id': 'Menyimpan perubahan...',
+                }),
+                style: TextStyle(
+                  color: ColorUtils.slate500,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          buildHeader(context, languageProvider, state: state),
-          state.isSaving
-              ? Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(color: getPrimaryColor()),
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          languageProvider.getTranslatedText({
-                            'en': 'Saving changes...',
-                            'id': 'Menyimpan perubahan...',
-                          }),
-                          style: TextStyle(
-                            color: ColorUtils.slate500,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : Expanded(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8),
-                      buildOverviewCard(
-                        languageProvider,
-                        stats,
-                        state.students.length,
-                      ),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 3.5,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                color: getPrimaryColor(),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              languageProvider.getTranslatedText({
-                                'en': 'Attendance List',
-                                'id': 'Daftar Peserta Didik',
-                              }),
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                color: ColorUtils.slate900,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const Spacer(),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: getPrimaryColor().withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${state.students.length} Total',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: getPrimaryColor(),
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: state.students.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.people_outline,
-                                      size: 64,
-                                      color: ColorUtils.slate200,
-                                    ),
-                                    const SizedBox(height: AppSpacing.md),
-                                    Text(
-                                      languageProvider.getTranslatedText({
-                                        'en': 'No student data found',
-                                        'id': 'Tidak ada data siswa',
-                                      }),
-                                      style: TextStyle(
-                                        color: ColorUtils.slate400,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : ListView.builder(
-                                padding: const EdgeInsets.only(bottom: 80),
-                                itemCount: state.students.length,
-                                itemBuilder: (context, index) =>
-                                    buildStudentCard(
-                                      state.students[index],
-                                      languageProvider,
-                                      state,
-                                      index,
-                                    ),
-                              ),
-                      ),
-                    ],
+      body: BrandPageLayout(
+        role: 'guru',
+        header: buildHeader(context, languageProvider, state: state),
+        kpiCard: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: buildOverviewCard(
+            languageProvider,
+            stats,
+            state.students.length,
+          ),
+        ),
+        bodyChildren: [
+          // Read-only banner — surfaces when the session is from a
+          // past academic year (canEdit=false) so the teacher knows
+          // why pills aren't tappable.
+          if (!widget.canEdit)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: ColorUtils.info600.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: ColorUtils.info600.withValues(alpha: 0.2),
                   ),
                 ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: 16,
+                      color: ColorUtils.info600,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        languageProvider.getTranslatedText({
+                          'en':
+                              'Past academic year — '
+                              'attendance is locked. '
+                              'Export to archive.',
+                          'id':
+                              'Tahun ajaran lalu — '
+                              'tidak bisa diubah. '
+                              'Ekspor Excel untuk arsip.',
+                        }),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: ColorUtils.info600,
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          // Section head — uppercase title + "N siswa" trailing label.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            child: Row(
+              children: [
+                Text(
+                  languageProvider.getTranslatedText({
+                    'en': 'Student List',
+                    'id': 'Daftar Siswa',
+                  }).toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.slate700,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${state.students.length} '
+                  '${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: ColorUtils.slate500,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (state.students.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.people_outline,
+                    size: 64,
+                    color: ColorUtils.slate200,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    languageProvider.getTranslatedText({
+                      'en': 'No student data found',
+                      'id': 'Tidak ada data siswa',
+                    }),
+                    style: TextStyle(
+                      color: ColorUtils.slate400,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            // Spread student cards directly — BrandPageLayout's
+            // internal ListView handles scrolling. Don't nest another
+            // ListView here (would crash with unbounded vertical
+            // viewport).
+            for (var i = 0; i < state.students.length; i++)
+              buildStudentCard(
+                state.students[i],
+                languageProvider,
+                state,
+                i,
+              ),
         ],
+        bottomPadding: 96,
       ),
       floatingActionButton: widget.canEdit
           ? FloatingActionButton.extended(
@@ -265,89 +299,6 @@ class _TeacherAttendanceDetailPageState
   }
 }
 
-// === CUSTOM PAINTER FOR DONUT CHART ===
-class AttendanceDonutPainter extends CustomPainter {
-  final int present;
-  final int late;
-  final int sick;
-  final int permit;
-  final int absent;
-  final int total;
-
-  AttendanceDonutPainter({
-    required this.present,
-    required this.late,
-    required this.sick,
-    required this.permit,
-    required this.absent,
-    required this.total,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (total == 0) return;
-
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-    final strokeWidth = size.width * 0.14;
-    final rect = Rect.fromCircle(
-      center: center,
-      radius: radius - (strokeWidth / 2),
-    );
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.butt;
-
-    double startAngle = -3.14159 / 2;
-
-    _drawSlice(
-      canvas,
-      rect,
-      paint,
-      startAngle,
-      present / total,
-      ColorUtils.success600,
-    );
-    startAngle += (present / total) * 2 * 3.14159;
-
-    _drawSlice(canvas, rect, paint, startAngle, late / total, Colors.orange);
-    startAngle += (late / total) * 2 * 3.14159;
-
-    _drawSlice(
-      canvas,
-      rect,
-      paint,
-      startAngle,
-      (sick + permit) / total,
-      ColorUtils.warning600,
-    );
-    startAngle += ((sick + permit) / total) * 2 * 3.14159;
-
-    _drawSlice(
-      canvas,
-      rect,
-      paint,
-      startAngle,
-      absent / total,
-      ColorUtils.error600,
-    );
-  }
-
-  void _drawSlice(
-    Canvas canvas,
-    Rect rect,
-    Paint paint,
-    double startAngle,
-    double sweepFactor,
-    Color color,
-  ) {
-    if (sweepFactor <= 0) return;
-    paint.color = color;
-    canvas.drawArc(rect, startAngle, sweepFactor * 2 * 3.14159, false, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
+// AttendanceDonutPainter retired with the Frame B/F redesign — the
+// detail screen now shows a 4-cell KPI strip instead of the donut +
+// legend. Re-add from git history if a future view needs the donut.

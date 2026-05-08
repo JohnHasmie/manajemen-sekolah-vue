@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_header.dart';
 
 class ActivityDetailDialog extends StatelessWidget {
@@ -39,27 +40,21 @@ class ActivityDetailDialog extends StatelessWidget {
     String? selectedSubjectName,
     VoidCallback? onEditPressed,
   }) {
-    return showModalBottomSheet(
+    return AppDraggableSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.65,
-        minChildSize: 0.4,
-        maxChildSize: 0.96,
-        expand: false,
-        builder: (context, scrollController) => ActivityDetailDialog(
-          activity: activity,
-          primaryColor: primaryColor,
-          languageProvider: languageProvider,
-          canEdit: canEdit,
-          selectedClassName: selectedClassName,
-          selectedSubjectName: selectedSubjectName,
-          onEditPressed: () {
-            Navigator.pop(context);
-            onEditPressed?.call();
-          },
-        ),
+      initialSize: 0.65,
+      minSize: 0.4,
+      builder: (sheetContext, _) => ActivityDetailDialog(
+        activity: activity,
+        primaryColor: primaryColor,
+        languageProvider: languageProvider,
+        canEdit: canEdit,
+        selectedClassName: selectedClassName,
+        selectedSubjectName: selectedSubjectName,
+        onEditPressed: () {
+          Navigator.pop(sheetContext);
+          onEditPressed?.call();
+        },
       ),
     );
   }

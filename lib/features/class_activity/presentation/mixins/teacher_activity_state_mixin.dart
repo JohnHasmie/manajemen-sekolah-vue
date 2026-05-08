@@ -26,6 +26,17 @@ mixin TeacherActivityStateMixin on ConsumerState<TeacherClassActivityScreen> {
   late TextEditingController _searchController;
   String? _activityErrorMessage;
 
+  /// KPI bundle returned by the teacher-summary endpoint —
+  /// `weekly_count`, `monthly_count`, `assignment_count` (or the
+  /// Indonesian-keyed equivalents). Empty before the first response;
+  /// the brand KPI card falls back to a client-side count so it
+  /// never renders zeros incorrectly.
+  Map<String, dynamic> _kpiSummary = const {};
+  Map<String, dynamic> get kpiSummary => _kpiSummary;
+  void updateKpiSummary(Map<String, dynamic> v) {
+    setState(() => _kpiSummary = v);
+  }
+
   bool get isLoading => _isLoading;
   bool get isHomeroomView => _isHomeroomView;
   List<dynamic> get homeroomClassesList => _homeroomClassesList;
@@ -104,6 +115,20 @@ mixin TeacherActivityStateMixin on ConsumerState<TeacherClassActivityScreen> {
     setState(() => _selectedHomeroomClass = homeroomClass);
   }
 
+  /// Shared name for the brand header — accepts a `Map<String, dynamic>?`.
+  void setSelectedHomeroomClass(Map<String, dynamic>? v) =>
+      updateSelectedHomeroomClass(v);
+
+  /// Number of filter dimensions currently set. Drives the badge on
+  /// the gear icon in the brand header.
+  int get activeFilterCount {
+    int n = 0;
+    if (_filterClassId != null) n++;
+    if (_filterSubjectId != null) n++;
+    if (_filterDateOption != null) n++;
+    return n;
+  }
+
   void updateTimeline(bool value) {
     setState(() => _isTimelineView = value);
     LocalCacheService.save('kegiatan_view_preference', {
@@ -155,6 +180,16 @@ mixin TeacherActivityStateMixin on ConsumerState<TeacherClassActivityScreen> {
     setState(() => _timelineLoadingMore = value);
   }
 
+  /// Replaces the current filter values with whatever the caller
+  /// passes — including explicit nulls, which are how the filter
+  /// sheet's Reset → Apply flow signals "clear this filter". The
+  /// previous `if (x != null) _filterX = x` shape ignored the
+  /// reset, so once a filter was applied the only way to remove it
+  /// was via [clearFilters] (which wipes ALL filters).
+  ///
+  /// `subjectList` keeps the null-guard because empty-vs-null
+  /// distinction matters there (`null` = "caller didn't touch it",
+  /// `[]` = "caller explicitly emptied it").
   void updateFilters({
     String? classId,
     String? subjectId,
@@ -162,9 +197,9 @@ mixin TeacherActivityStateMixin on ConsumerState<TeacherClassActivityScreen> {
     List<dynamic>? subjectList,
   }) {
     setState(() {
-      if (classId != null) _filterClassId = classId;
-      if (subjectId != null) _filterSubjectId = subjectId;
-      if (dateOption != null) _filterDateOption = dateOption;
+      _filterClassId = classId;
+      _filterSubjectId = subjectId;
+      _filterDateOption = dateOption;
       if (subjectList != null) _filterSubjectList = subjectList;
     });
   }

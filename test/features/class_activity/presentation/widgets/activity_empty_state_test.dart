@@ -1,4 +1,5 @@
-// Tests for ActivityEmptyState — centred placeholder shown when the list is empty.
+// Tests for ActivityEmptyState — centred placeholder shown when the list is
+// empty.
 // Purely presentational: one required [message] param, no providers.
 
 import 'package:flutter/material.dart';

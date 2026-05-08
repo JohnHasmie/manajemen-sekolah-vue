@@ -41,6 +41,7 @@ import 'package:manajemensekolah/features/schedule/presentation/controllers/admi
 import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_card.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_matrix_view.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_filter_sheet.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_detail_sheet.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_dialog.dart';
 
 /// Admin teaching-schedule management screen with full CRUD, search, filters,
@@ -483,102 +484,15 @@ class TeachingScheduleManagementScreenState
   // ── Row-level actions ───────────────────────────────────────────────
 
   void _showScheduleDetail(Map<String, dynamic> schedule) {
-    final ctrl = ref.read(adminScheduleControllerProvider);
-    final lang = ref.read(languageRiverpod);
-    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
-
-    final subject = (schedule['subject_name'] ?? 'No Subject').toString();
-    final teacher = (schedule['teacher_name'] ?? '-').toString();
-    final className = (schedule['class_name'] ?? '-').toString();
-    final dayLabel = ctrl.formatScheduleDays(
-      schedule,
-      _dayList,
-      lang.currentLanguage,
-    );
-    final timeLabel = ctrl.formatTime(schedule);
-    final lessonHour = (schedule['jam_pelajaran'] ?? schedule['lesson_hour'] ?? '-')
-        .toString();
-    final semester = (schedule['semester'] ?? '-').toString();
-    final academicYear =
-        (schedule['academic_year'] ?? schedule['academic_year_name'] ?? '-')
-            .toString();
-
-    showAdminEntityDetailSheet(
-      context,
-      kicker: lang.getTranslatedText(const {
-        'en': 'TEACHING SESSION',
-        'id': 'SESI MENGAJAR',
-      }),
-      title: subject,
-      meta: '$dayLabel · $timeLabel',
-      initials: subject,
-      status: EntityStatus(
-        label: '$academicYear · Sem $semester',
-        color: ColorUtils.getRoleColor('admin'),
-      ),
-      sections: [
-        EntityDetailSection(
-          label: lang.getTranslatedText(const {
-            'en': 'When',
-            'id': 'Waktu',
-          }),
-          rows: [
-            EntityDetailRow(
-              label: lang.getTranslatedText(const {
-                'en': 'Day',
-                'id': 'Hari',
-              }),
-              value: dayLabel,
-            ),
-            EntityDetailRow(
-              label: lang.getTranslatedText(const {
-                'en': 'Time',
-                'id': 'Jam',
-              }),
-              value: timeLabel,
-            ),
-            EntityDetailRow(
-              label: lang.getTranslatedText(const {
-                'en': 'Lesson hour',
-                'id': 'Jam pelajaran',
-              }),
-              value: lessonHour,
-            ),
-          ],
-        ),
-        EntityDetailSection(
-          label: lang.getTranslatedText(const {
-            'en': 'Assignment',
-            'id': 'Penugasan',
-          }),
-          rows: [
-            EntityDetailRow(
-              label: lang.getTranslatedText(const {
-                'en': 'Subject',
-                'id': 'Mapel',
-              }),
-              value: subject,
-            ),
-            EntityDetailRow(
-              label: lang.getTranslatedText(const {
-                'en': 'Teacher',
-                'id': 'Guru',
-              }),
-              value: teacher,
-            ),
-            EntityDetailRow(
-              label: lang.getTranslatedText(const {
-                'en': 'Class',
-                'id': 'Kelas',
-              }),
-              value: className,
-            ),
-          ],
-        ),
-      ],
+    showAdminScheduleDetailSheet(
+      context: context,
+      schedule: schedule,
+      controller: ref.read(adminScheduleControllerProvider),
+      lang: ref.read(languageRiverpod),
+      dayList: _dayList,
+      isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
       onEdit: () => _openAddEditSheet(schedule: schedule),
       onDelete: () => _deleteSchedule(schedule),
-      isReadOnly: isReadOnly,
     );
   }
 
@@ -726,9 +640,10 @@ class TeachingScheduleManagementScreenState
             (s) => BulkDeleteItem(
               id: s['id'].toString(),
               title: (s['subject_name'] ?? '?').toString(),
-              subtitle: [s['class_name'], s['teacher_name']]
-                  .where((v) => v != null && v.toString().isNotEmpty)
-                  .join(' · '),
+              subtitle: [
+                s['class_name'],
+                s['teacher_name'],
+              ].where((v) => v != null && v.toString().isNotEmpty).join(' · '),
             ),
           )
           .toList(),
@@ -856,27 +771,24 @@ class TeachingScheduleManagementScreenState
     String? _dayName(String? id) {
       if (id == null) return null;
       final m = _availableDays.cast<Map<String, dynamic>>().firstWhere(
-            (d) => d['id']?.toString() == id,
-            orElse: () => const {'name': null},
-          );
+        (d) => d['id']?.toString() == id,
+        orElse: () => const {'name': null},
+      );
       return m['name']?.toString();
     }
 
     String? _className(String? id) {
       if (id == null) return null;
       final m = _availableClasses.cast<Map<String, dynamic>>().firstWhere(
-            (c) => c['id']?.toString() == id,
-            orElse: () => const {'name': null},
-          );
+        (c) => c['id']?.toString() == id,
+        orElse: () => const {'name': null},
+      );
       return m['name']?.toString();
     }
 
     final brandChips = <BrandFilterChip>[
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Period',
-          'id': 'Periode',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Period', 'id': 'Periode'}),
         value: '$_selectedAcademicYear · Sem. $_selectedTerm',
         onTap: _openFilterSheet,
         width: 168,
@@ -892,20 +804,14 @@ class TeachingScheduleManagementScreenState
         onTap: _openFilterSheet,
       ),
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Hour',
-          'id': 'Jam',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Hour', 'id': 'Jam'}),
         value: _selectedLessonHour,
         onTap: _openFilterSheet,
       ),
     ];
 
     return AdminCrudScaffold(
-      title: lang.getTranslatedText(const {
-        'en': 'Schedule',
-        'id': 'Jadwal',
-      }),
+      title: lang.getTranslatedText(const {'en': 'Schedule', 'id': 'Jadwal'}),
       subtitle: lang.getTranslatedText(const {
         'en': 'Manage teaching schedules',
         'id': 'Kelola jadwal mengajar',
@@ -925,10 +831,8 @@ class TeachingScheduleManagementScreenState
         'en': 'DATA MANAGEMENT',
         'id': 'MANAJEMEN DATA',
       }),
-      counterLabel: '${_scheduleList.length} ${lang.getTranslatedText(const {
-        'en': 'sessions',
-        'id': 'sesi',
-      })}',
+      counterLabel:
+          '${_scheduleList.length} ${lang.getTranslatedText(const {'en': 'sessions', 'id': 'sesi'})}',
       onClearAllFilters: _clearAllFilters,
       actionMenu: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1024,10 +928,7 @@ class TeachingScheduleManagementScreenState
       bulkActions: [
         BulkAction(
           icon: Icons.delete_outline_rounded,
-          label: lang.getTranslatedText(const {
-            'en': 'Delete',
-            'id': 'Hapus',
-          }),
+          label: lang.getTranslatedText(const {'en': 'Delete', 'id': 'Hapus'}),
           onTap: _bulkDeleteSelected,
           isDestructive: true,
         ),

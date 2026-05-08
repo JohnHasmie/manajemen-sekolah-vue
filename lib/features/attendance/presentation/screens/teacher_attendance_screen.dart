@@ -32,6 +32,15 @@ class AttendancePage extends ConsumerStatefulWidget {
   final String? initialclassId;
   final String? initialClassName;
   final int? initialLessonHourNumber;
+
+  /// Exact `lesson_hour_id` UUID of the schedule slot the user came
+  /// from. Each (day, hour_number) tuple has its own UUID, so passing
+  /// just the [initialLessonHourNumber] would let the hydration logic
+  /// pick whatever day's hour_number matched first — typically not the
+  /// one the user tapped — and lock the form to that other day's
+  /// already-saved records, blocking new entry for the actual day.
+  final String? initialLessonHourId;
+
   final String? initialStartTime;
   final int initialTabIndex;
   final ScrollController? scrollController;
@@ -46,6 +55,7 @@ class AttendancePage extends ConsumerStatefulWidget {
     this.initialclassId,
     this.initialClassName,
     this.initialLessonHourNumber,
+    this.initialLessonHourId,
     this.initialStartTime,
     this.initialTabIndex = 0,
     this.embedded = false,
@@ -104,8 +114,22 @@ class AttendancePageState extends ConsumerState<AttendancePage>
   String? _selectedLessonHourId;
   final TextEditingController _searchCtrlInput = TextEditingController();
   String? _selectedStatusFilter;
-  bool _compactMode = false;
+  // Default to compact mode — matches the Frame A "take attendance" design:
+  // single-line row per student with full-word status buttons (Hadir / Telat /
+  // Sakit / Izin / Alpa) at ≈40dp tall. The toggle remains so users who
+  // prefer the spacier two-row descriptive layout can flip back.
+  bool _compactMode = true;
   final ScrollController _scrollController = ScrollController();
+
+  /// KPI bundle returned alongside the grouped attendance summary —
+  /// `sessions_today`, `sessions_completed`, `sessions_pending`. Empty
+  /// before the first response; the KPI card falls back to a
+  /// client-side computation in that case.
+  Map<String, dynamic> _kpiSummary = const {};
+
+  @override
+  Map<String, dynamic> get kpiSummary => _kpiSummary;
+  set kpiSummary(Map<String, dynamic> v) => _kpiSummary = v;
 
   @override
   Color get primaryColor => ColorUtils.getRoleColor('guru');
@@ -253,6 +277,43 @@ class AttendancePageState extends ConsumerState<AttendancePage>
       setState(() => _selectedLessonHourId = v);
   @override
   void setCompactMode(bool v) => setState(() => _compactMode = v);
+
+  // ── Frame A — embedded sheet KPI strip + section-head accessors ──
+  // Live counts derived from the in-memory `_attendanceStatus` map.
+  @override
+  Map<String, int> get embeddedStatusCounts {
+    int hadir = 0, terlambat = 0, sakit = 0, izin = 0, alpha = 0;
+    for (final s in _attendanceStatus.values) {
+      switch (s.toLowerCase()) {
+        case 'hadir':
+        case 'present':
+          hadir++;
+        case 'terlambat':
+        case 'late':
+          terlambat++;
+        case 'sakit':
+        case 'sick':
+          sakit++;
+        case 'izin':
+        case 'permission':
+        case 'excused':
+          izin++;
+        case 'alpha':
+        case 'absent':
+          alpha++;
+      }
+    }
+    return {
+      'hadir': hadir,
+      'terlambat': terlambat,
+      'sakit': sakit,
+      'izin': izin,
+      'alpha': alpha,
+    };
+  }
+
+  @override
+  int get embeddedTotalStudents => filteredStudentList.length;
 
   // Error state for inline error display with retry
   String? _attendanceErrorMessage;

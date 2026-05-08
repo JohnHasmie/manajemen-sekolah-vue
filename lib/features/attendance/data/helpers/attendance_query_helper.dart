@@ -128,6 +128,62 @@ class AttendanceQueryHelper {
     return {'data': result is List ? result : [], 'pagination': {}};
   }
 
+  /// Frame D — calendar feed for the date & slot picker.
+  ///
+  /// Returns the raw response: `{ dates_with_records: [...],
+  /// sessions_today: [...], month, today, success }`. Errors fall back
+  /// to an empty payload so the picker can still render an empty
+  /// month grid.
+  Future<Map<String, dynamic>> getTeacherCalendar({
+    String? teacherId,
+    String? classId,
+    String? academicYearId,
+    String? month,
+  }) async {
+    final params = <String, dynamic>{
+      if (teacherId != null && teacherId.isNotEmpty) 'teacher_id': teacherId,
+      if (classId != null && classId.isNotEmpty) 'class_id': classId,
+      if (academicYearId != null && academicYearId.isNotEmpty)
+        'academic_year_id': academicYearId,
+      if (month != null && month.isNotEmpty) 'month': month,
+    };
+    try {
+      final response = await dioClient.get(
+        ApiEndpoints.attendanceTeacherCalendar,
+        queryParameters: params,
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic>) return result;
+    } catch (e) {
+      AppLogger.error('attendance', 'getTeacherCalendar failed: $e');
+    }
+    return {
+      'dates_with_records': const [],
+      'sessions_today': const [],
+      'month': month ?? '',
+      'today': '',
+    };
+  }
+
+  /// Frame C · "Salin dari sesi terakhir" feed. Returns the most
+  /// recent session's per-student status mix so the take-attendance
+  /// form can copy it.
+  Future<Map<String, dynamic>> getLastTeacherSession({
+    required String teacherId,
+  }) async {
+    try {
+      final response = await dioClient.get(
+        ApiEndpoints.attendanceLastSession,
+        queryParameters: {'teacher_id': teacherId},
+      );
+      final r = response.data;
+      if (r is Map<String, dynamic>) return r;
+    } catch (e) {
+      AppLogger.error('attendance', 'getLastTeacherSession failed: $e');
+    }
+    return {'students': const [], 'label': null};
+  }
+
   /// Fetches basic attendance summary.
   Future<List<dynamic>> getAttendanceSummary({
     String? teacherId,

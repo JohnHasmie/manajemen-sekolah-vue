@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/features/attendance/presentation/controllers/teacher_attendance_controller.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
@@ -19,34 +19,25 @@ mixin TeacherAttendanceDetailActionsMixin
       }
     }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.8,
-          minChildSize: 0.5,
-          maxChildSize: 0.96,
-          expand: false,
-          builder: (context, scrollController) {
-            return AttendancePage(
-              teacher: widget.teacher,
-              initialDate: widget.date,
-              initialSubjectId: widget.subjectId,
-              initialSubjectName: widget.subjectName,
-              initialclassId: widget.classId,
-              initialClassName: widget.className,
-              initialLessonHourNumber: lessonHourNum,
-              initialTabIndex: 1, // Start on input tab
-              embedded: true,
-              scrollController: scrollController,
-            );
-          },
-        );
-      },
+    // Push the input flow as a full-screen route (was a draggable
+    // sheet) so it picks up the shared BrandPageLayout chrome —
+    // centered title, KPI overlay, branded gradient. Refresh the
+    // detail screen's data when the user pops back so freshly-saved
+    // edits show up immediately.
+    AppNavigator.push(
+      context,
+      AttendancePage(
+        teacher: widget.teacher,
+        initialDate: widget.date,
+        initialSubjectId: widget.subjectId,
+        initialSubjectName: widget.subjectName,
+        initialclassId: widget.classId,
+        initialClassName: widget.className,
+        initialLessonHourNumber: lessonHourNum,
+        initialTabIndex: 1, // Start on input tab
+        embedded: true,
+      ),
     ).then((_) {
-      // Refresh data after edit sheet is closed
       ref.invalidate(teacherAttendanceProvider(_controllerParams));
     });
   }

@@ -39,6 +39,13 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
   Map<String, dynamic>? get selectedHomeroomClass;
   set selectedHomeroomClass(Map<String, dynamic>? v);
 
+  /// KPI bundle returned by the backend summary endpoint — carries
+  /// `sessions_today`, `sessions_completed`, `sessions_pending` plus
+  /// any additional teacher-presensi KPIs the backend chooses to
+  /// include. Empty if the endpoint hasn't responded yet.
+  Map<String, dynamic> get kpiSummary;
+  set kpiSummary(Map<String, dynamic> v);
+
   bool get isLoading;
   set isLoading(bool v);
 
@@ -136,12 +143,25 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
         apiFetcher: () => getIt<ApiScheduleService>().getJamPelajaran(),
       );
 
+      // Use the SAME query shape as `fetchGroupedAttendance` (which
+      // pull-to-refresh and `loadMore` go through) so the data set
+      // is identical between init paint and a manual refresh.
+      // Without this, the initial paint omitted `view`, `dateFilter`
+      // and the wali-kelas branch — the backend then returned a
+      // different row count than the refresh path, which the user
+      // surfaced as "init shows 1, refresh shows 3".
+      final hcId = selectedHomeroomClass?['id']?.toString();
       final summaryResult = await AttendanceService.getTeacherAttendanceSummary(
-        teacherId: teacherId,
+        teacherId: isHomeroomView ? null : teacherId,
+        classId: isHomeroomView ? hcId : filterClassId,
         academicYearId: ayId,
+        subjectId: filterSubjectId,
+        search: searchController.text.isNotEmpty ? searchController.text : null,
+        dateFilter: filterDateOption,
         page: 1,
         perPage: 20,
         includeClasses: true, // piggy-back classes in the same request
+        view: isHomeroomView ? 'wali_kelas' : 'mengajar',
       );
 
       final hours = await hoursFuture;
@@ -153,10 +173,21 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
               ?.map((c) => Map<String, dynamic>.from(c as Map))
               .toList() ??
           [];
-      final homeroom = classes.where((c) => c['is_homeroom'] == true).toList();
+      // Defensive: Postgres + JSON sometimes serializes booleans as
+      // string `'true'` / `'1'` / int `1` rather than literal `true`.
+      // Treat all of those as truthy so the role chip strip renders
+      // for teachers who have homeroom assignments regardless of how
+      // the column was encoded upstream.
+      bool _truthy(Object? v) => v == true || v == 1 || v == 'true' || v == '1';
+      final homeroom = classes.where((c) => _truthy(c['is_homeroom'])).toList();
 
       final data = (summaryResult['data'] as List?) ?? [];
       final pagination = summaryResult['pagination'];
+      // Optional KPI bundle returned alongside the paginated rows.
+      // The backend filled this in on the same teacherSummary endpoint
+      // so the screen doesn't need a separate round-trip for the
+      // overlay card. Treated as best-effort — empty map if absent.
+      final kpi = summaryResult['kpi'];
 
       setAttendanceError(null);
       setState(() {
@@ -169,6 +200,7 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
         groupedAttendance = data;
         hasMoreData = pagination?['has_next_page'] == true;
         currentPage = 1;
+        kpiSummary = (kpi is Map) ? Map<String, dynamic>.from(kpi) : const {};
         isLoading = false;
       });
     } catch (e) {
@@ -215,9 +247,11 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
         studentList = stuList.map((s) => Student.fromJson(s)).toList();
         filteredStudentList = studentList;
         lessonHours = _deduplicateHours(hours);
-        for (final s in studentList) {
-          attendanceStatus[s.id] = 'hadir';
-        }
+        // Intentionally NOT pre-populating attendanceStatus here.
+        // The form starts with every student unmarked so a teacher
+        // who saves without scrolling can't silently mark absent
+        // students "Hadir". Bulk-fill is one tap away via the Aksi
+        // cepat sheet ("Tandai semua Hadir" / "Sisanya Alpa").
         isLoadingInput = false;
       });
 
@@ -256,10 +290,19 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
     if (subjectId == null || classId == null || date == null) return;
 
     String? lessonHourId;
-    if (widget.initialLessonHourNumber != null) {
-      // Match by hour_number (the value extracted from the session
-      // card label, e.g. "Jam ke-5" → 5) since the detail page does
-      // not pass the lesson_hour UUID through.
+    // Prefer the exact lesson_hour_id when the caller had it (Jadwal
+    // → presensi flow). The lookup-by-hour_number fallback only fires
+    // for callers that genuinely don't know the UUID (e.g. the
+    // session-detail "Update Kehadiran" path which parses a number
+    // out of "Jam ke-5"). Without this, hydration would
+    // `firstWhere((lh) => lh['hour_number'] == N)` on the global
+    // lesson-hour list and pick whatever day's slot matched first —
+    // typically not the user's day — locking the form to another
+    // day's already-saved records.
+    final providedId = widget.initialLessonHourId;
+    if (providedId != null && providedId.isNotEmpty) {
+      lessonHourId = providedId;
+    } else if (widget.initialLessonHourNumber != null) {
       final match = lessonHours.cast<Map<dynamic, dynamic>>().firstWhere(
         (lh) => lh['hour_number'] == widget.initialLessonHourNumber,
         orElse: () => const <dynamic, dynamic>{},

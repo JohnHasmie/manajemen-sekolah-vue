@@ -35,6 +35,7 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
 
     try {
       String? filePath;
+      String? uploadedFileName;
 
       AppLogger.debug('lesson_plan', 'File selected: $selectedFile');
       AppLogger.debug('lesson_plan', 'File name: $selectedFileName');
@@ -48,9 +49,15 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
           AppLogger.debug('lesson_plan', 'Upload result: $uploadResult');
 
           filePath = uploadResult['file_path'];
+          // The upload endpoint returns the original filename ("Tugas
+          // Trigonometri.pdf") alongside the opaque storage path. Keep
+          // it so we can persist + display it later without falling
+          // back to the random storage name.
+          uploadedFileName = uploadResult['file_name']?.toString();
           AppLogger.info(
             'lesson_plan',
-            'File uploaded successfully: $filePath',
+            'File uploaded successfully: $filePath '
+            '(name=$uploadedFileName)',
           );
 
           // Sanity check: backend should return a relative
@@ -96,12 +103,19 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
       // filename — that's not a real storage path.
       final existingFilePath =
           widget.lessonPlanData?['file_path']?.toString();
+      final existingFileName =
+          widget.lessonPlanData?['file_name']?.toString();
       final resolvedFilePath = filePath ?? existingFilePath;
+      // When a new file was uploaded, keep its original filename;
+      // otherwise carry the existing name forward so the update
+      // payload doesn't blank it out via array_filter on the server.
+      final resolvedFileName = uploadedFileName ?? existingFileName;
 
       AppLogger.debug(
         'lesson_plan',
         'Resolved file_path: $resolvedFilePath '
-        '(upload=$filePath, existing=$existingFilePath)',
+        '(upload=$filePath, existing=$existingFilePath) '
+        'file_name=$resolvedFileName',
       );
 
       final lessonPlanData = {
@@ -113,6 +127,9 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
         if (resolvedFilePath != null &&
             resolvedFilePath.isNotEmpty)
           'file_path': resolvedFilePath,
+        if (resolvedFileName != null &&
+            resolvedFileName.isNotEmpty)
+          'file_name': resolvedFileName,
       };
 
       if (widget.lessonPlanData != null) {

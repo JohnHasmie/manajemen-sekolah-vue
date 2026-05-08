@@ -1,5 +1,7 @@
-// Tests for PromotionStatRow — the coloured stat display row in the promotion wizard.
-// Pure StatelessWidget with icon, label, value, and color. Like testing a Vue <stat-badge>.
+// Tests for PromotionStatRow — the coloured stat display row in the wizard.
+// promotion
+// Pure StatelessWidget with icon, label, value, and color. Like testing a
+// Vue <stat-badge>.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

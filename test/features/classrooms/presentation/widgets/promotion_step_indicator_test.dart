@@ -1,5 +1,8 @@
-// Tests for PromotionStepIndicator — the horizontal multi-step progress bar in the promotion wizard.
-// Pure StatelessWidget. Verifies step labels, current step highlighting, completed step icons,
+// ignore_for_file: lines_longer_than_80_chars
+// Tests for PromotionStepIndicator — the horizontal multi-step progress bar
+// in the promotion wizard.
+// Pure StatelessWidget. Verifies step labels, current step highlighting,
+// completed step icons,
 // and that it renders correctly for different step counts.
 
 import 'package:flutter/material.dart';
@@ -51,7 +54,8 @@ void main() {
         ),
       );
 
-      // There must be at least one Container whose decoration has color == primaryColor
+      // There must be at least one Container whose decoration has color ==
+      // primaryColor
       final containers = tester.widgetList<Container>(find.byType(Container));
       final hasActiveCircle = containers.any((c) {
         final dec = c.decoration;
@@ -91,7 +95,8 @@ void main() {
         ),
       );
 
-      // Step numbers '2', '3', '4' appear (step 1 is active, displayed as number inside circle)
+      // Step numbers '2', '3', '4' appear (step 1 is active, displayed as number
+      // inside circle)
       expect(find.text('1'), findsOneWidget);
     });
 

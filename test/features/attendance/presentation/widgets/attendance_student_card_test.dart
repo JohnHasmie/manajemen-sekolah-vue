@@ -1,4 +1,5 @@
-// Tests for AttendanceStudentCard — a student row with optional editing buttons.
+// Tests for AttendanceStudentCard — a student row with optional editing
+// buttons.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_student_card.dart';
