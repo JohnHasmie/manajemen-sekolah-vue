@@ -110,7 +110,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
     final i = widget.initial;
     _classId = (i['class_id'] ?? i['kelas_id'])?.toString();
     _subjectId = (i['subject_id'] ?? i['mata_pelajaran_id'])?.toString();
-    _type = ((i['type'] ?? i['tipe'] ?? 'tugas') as String).toLowerCase();
+    _type = _normalizeType(i['type'] ?? i['tipe'] ?? i['jenis']);
     _titleCtrl = TextEditingController(
       text: (i['title'] ?? i['judul'] ?? '').toString(),
     );
@@ -121,6 +121,42 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
     _date = d;
     final t = (i['time'] ?? i['jam'] ?? '').toString();
     _time = _parseTime(t);
+  }
+
+  /// Maps the various legacy/EN type labels the backend may store
+  /// (`assignment`, `material`, `exam`, `quiz`, …) onto the four
+  /// canonical form tiles (`tugas`, `aktivitas`, `ujian`, `catatan`)
+  /// so the current type pre-selects in edit mode.
+  String _normalizeType(dynamic raw) {
+    final s = (raw ?? '').toString().toLowerCase().trim();
+    switch (s) {
+      case 'tugas':
+      case 'assignment':
+      case 'pr':
+      case 'homework':
+        return 'tugas';
+      case 'aktivitas':
+      case 'activity':
+      case 'material':
+      case 'materi':
+      case 'diskusi':
+      case 'discussion':
+        return 'aktivitas';
+      case 'ujian':
+      case 'exam':
+      case 'quiz':
+      case 'test':
+      case 'kuis':
+      case 'penilaian':
+        return 'ujian';
+      case 'catatan':
+      case 'note':
+      case 'notes':
+      case 'umum':
+        return 'catatan';
+      default:
+        return 'tugas';
+    }
   }
 
   TimeOfDay? _parseTime(String raw) {

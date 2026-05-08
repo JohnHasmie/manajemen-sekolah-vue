@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/role_toggle_chip_row.dart';
+import 'package:manajemensekolah/core/widgets/teacher_role_options.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
 
 mixin TeacherActivityHeaderBuilderMixin
@@ -48,23 +49,10 @@ mixin TeacherActivityHeaderBuilderMixin
   /// Hidden when teacher has no homeroom assignments.
   Widget? _buildRoleSelector(LanguageProvider lp) {
     if (homeroomClassesList.isEmpty) return null;
-    final roles = <RoleOption>[
-      RoleOption.mengajar(
-        subLabel: lp.getTranslatedText({
-          'en': 'Teaching schedule',
-          'id': 'Jadwal mengajar',
-        }),
-      ),
-      for (final hc in homeroomClassesList)
-        RoleOption.waliKelas(
-          classId: (hc is Map ? hc['id'] : '').toString(),
-          className: (hc is Map ? (hc['name'] ?? hc['nama']) : '').toString(),
-          subLabel: lp.getTranslatedText({
-            'en': 'Homeroom',
-            'id': 'Kelas perwalian',
-          }),
-        ),
-    ];
+    final roles = buildMultiWaliRoleOptions(
+      homeroomClasses: homeroomClassesList,
+      lp: lp,
+    );
 
     final selectedId = isHomeroomView
         ? 'wali:${(selectedHomeroomClass?['id'] ?? '').toString()}'

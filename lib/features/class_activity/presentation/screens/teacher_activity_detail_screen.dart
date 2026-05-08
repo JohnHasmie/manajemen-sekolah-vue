@@ -12,11 +12,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
+import 'package:manajemensekolah/features/class_activity/data/class_activity_service.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_submission_picker_sheet.dart';
 
 class TeacherActivityDetailScreen extends ConsumerStatefulWidget {
   /// The activity payload — same shape as the list card consumes.
@@ -27,9 +31,13 @@ class TeacherActivityDetailScreen extends ConsumerStatefulWidget {
   /// slate dot, download trailing icon).
   final bool canEdit;
 
-  /// Fired when the teacher taps "Edit". Caller decides whether to
-  /// open the edit sheet or navigate elsewhere.
-  final VoidCallback? onEdit;
+  /// Fired when the teacher taps "Edit". Receives the **current**
+  /// merged activity map (list-row payload + full detail) so the edit
+  /// sheet can pre-fill from fresh data — not the stale list snapshot
+  /// the screen was opened with. The parent persists changes and the
+  /// returned future lets the detail screen await + re-fetch so the
+  /// user sees updated values without having to pop the page.
+  final Future<void> Function(Map<String, dynamic> activity)? onEdit;
 
   /// Fired when the teacher taps the destructive Hapus action.
   final VoidCallback? onDelete;
@@ -58,7 +66,116 @@ class TeacherActivityDetailScreen extends ConsumerStatefulWidget {
 
 class _TeacherActivityDetailScreenState
     extends ConsumerState<TeacherActivityDetailScreen> {
-  Map<String, dynamic> get a => widget.activity;
+  // Local merged map: starts with the list-row payload (so the header /
+  // context strip render instantly) and is overlaid with the full
+  // detail fetched from `GET /class-activity/{id}` once that completes.
+  // The full record carries `description`, `material_title`,
+  // `student_count`, and `submission_count` that the list summary
+  // endpoint deliberately omits.
+  late Map<String, dynamic> _merged;
+  bool _detailLoading = false;
+
+  /// Per-student submission rows for the preview section. Loaded on
+  /// init for tugas/ujian/kuis activities; empty for aktivitas/catatan.
+  List<Map<String, dynamic>> _submissions = const [];
+
+  Map<String, dynamic> get a => _merged;
+
+  /// True when the activity type tracks per-student submissions
+  /// (tugas / ujian / kuis). Drives the Daftar Siswa section + the
+  /// "Catat Submit" footer CTA.
+  bool get _tracksSubmissions {
+    final type = (a['type'] ?? a['tipe'] ?? '').toString().toLowerCase();
+    return type == 'tugas' ||
+        type == 'assignment' ||
+        type == 'ujian' ||
+        type == 'exam' ||
+        type == 'kuis' ||
+        type == 'quiz';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _merged = Map<String, dynamic>.from(widget.activity);
+    _loadFullDetail();
+  }
+
+  Future<void> _loadFullDetail() async {
+    final id = (widget.activity['id'] ?? '').toString();
+    if (id.isEmpty) return;
+    setState(() => _detailLoading = true);
+    try {
+      final full = await getIt<ApiClassActivityService>().getActivity(id);
+      if (!mounted) return;
+      setState(() {
+        // List-row fields stay as the base; the full detail's keys win
+        // when both are present (description, material_title, KPI counts).
+        _merged = {..._merged, ...full};
+        _detailLoading = false;
+      });
+      // Once we know the type, conditionally fetch submissions for the
+      // Daftar Siswa preview section.
+      if (_tracksSubmissions) {
+        _loadSubmissions();
+      }
+    } catch (e) {
+      AppLogger.error('class_activity_detail', 'getActivity failed: $e');
+      if (mounted) setState(() => _detailLoading = false);
+    }
+  }
+
+  Future<void> _loadSubmissions() async {
+    final id = (a['id'] ?? '').toString();
+    if (id.isEmpty) return;
+    try {
+      final rows = await getIt<ApiClassActivityService>().getSubmissions(id);
+      if (!mounted) return;
+      // Sort: pending first, then late, submitted, excused.
+      const order = ['pending', 'late', 'submitted', 'excused'];
+      final sorted = [...rows]..sort((x, y) {
+        final xi = order.indexOf((x['status'] ?? 'pending').toString());
+        final yi = order.indexOf((y['status'] ?? 'pending').toString());
+        if (xi != yi) return xi.compareTo(yi);
+        return ((x['student_name'] ?? '').toString()).compareTo(
+          (y['student_name'] ?? '').toString(),
+        );
+      });
+      setState(() => _submissions = sorted);
+    } catch (e) {
+      AppLogger.error('class_activity_detail', 'getSubmissions failed: $e');
+    }
+  }
+
+  /// Edit handler — awaits the parent's edit flow (which opens the
+  /// form sheet and persists changes), then re-fetches the activity
+  /// so the displayed title / description / type / time pick up the
+  /// new values without the user having to pop and re-open the page.
+  /// Passes the current merged map so the edit form pre-fills from
+  /// the freshly-loaded detail, not the stale list snapshot.
+  Future<void> _onEditPressed() async {
+    final cb = widget.onEdit;
+    if (cb == null) return;
+    await cb(Map<String, dynamic>.from(_merged));
+    if (!mounted) return;
+    await _loadFullDetail();
+  }
+
+  Future<void> _openCatatSubmit() async {
+    final id = (a['id'] ?? '').toString();
+    if (id.isEmpty) return;
+    final saved = await showActivitySubmissionPickerSheet(
+      context: context,
+      activityId: id,
+      activityTitle: (a['title'] ?? a['judul'] ?? '').toString(),
+      // Drives the score input + Buku Nilai sync flag in the sheet.
+      activityType: (a['type'] ?? a['tipe'] ?? '').toString(),
+    );
+    if (saved == true && mounted) {
+      // Re-fetch detail (KPI counts) and the submissions preview.
+      await _loadFullDetail();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -196,16 +313,80 @@ class _TeacherActivityDetailScreenState
   }
 
   Widget _buildKpiCard(LanguageProvider lp) {
-    // 3-cell KPI: Siswa · Submit · Belum.
-    // Backend wiring pending — for now we read these out of the
-    // activity payload (when the future detail endpoint adds them)
-    // and fall back to en-dash placeholders so the card looks
-    // intentionally pre-populated rather than buggy-empty.
+    // Type-aware 3-cell KPI:
+    //   tugas / ujian  → Siswa · Submit · Belum  (submission tracking)
+    //   aktivitas / catatan → Siswa · Target · Hari  (no submissions to track,
+    //                          so we surface useful context instead of 0/0)
+    final type = (a['type'] ?? a['tipe'] ?? '').toString().toLowerCase();
+    final tracksSubmissions =
+        type == 'tugas' || type == 'assignment' ||
+        type == 'ujian' || type == 'exam' ||
+        type == 'kuis' || type == 'quiz';
+
     final siswa = a['student_count'] ?? a['jumlah_siswa'];
-    final submit = a['submission_count'] ?? a['jumlah_submit'];
-    final belum = siswa is num && submit is num
-        ? (siswa.toInt() - submit.toInt())
-        : null;
+
+    Widget content;
+    if (tracksSubmissions) {
+      final submit = a['submission_count'] ?? a['jumlah_submit'];
+      final belum = siswa is num && submit is num
+          ? (siswa.toInt() - submit.toInt())
+          : null;
+      content = Row(
+        children: [
+          _kpiCell(
+            label: lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
+            value: _fmt(siswa),
+            color: ColorUtils.success600,
+          ),
+          _kpiDivider(),
+          _kpiCell(
+            label: lp.getTranslatedText({'en': 'Submit', 'id': 'Submit'}),
+            value: _fmt(submit),
+            color: ColorUtils.info600,
+          ),
+          _kpiDivider(),
+          _kpiCell(
+            label: lp.getTranslatedText({'en': 'Pending', 'id': 'Belum'}),
+            value: _fmt(belum),
+            color: ColorUtils.warning600,
+          ),
+        ],
+      );
+    } else {
+      // aktivitas / catatan — surface Siswa · Target · Hari instead.
+      final targetRole = (a['target_role'] ?? '').toString().toLowerCase();
+      final targetLabel = targetRole == 'khusus'
+          ? lp.getTranslatedText({'en': 'Selected', 'id': 'Khusus'})
+          : lp.getTranslatedText({'en': 'All', 'id': 'Umum'});
+      final dateStr = (a['date'] ?? a['tanggal'] ?? '').toString();
+      final d = DateTime.tryParse(dateStr);
+      final dayLabel = d != null
+          ? DateFormat('EEEE', 'id_ID').format(d)
+          : ((a['day'] ?? a['hari'] ?? '—').toString());
+      content = Row(
+        children: [
+          _kpiCell(
+            label: lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
+            value: _fmt(siswa),
+            color: ColorUtils.success600,
+          ),
+          _kpiDivider(),
+          _kpiCell(
+            label: lp.getTranslatedText({'en': 'Target', 'id': 'Target'}),
+            value: targetLabel,
+            color: ColorUtils.violet700,
+            isText: true,
+          ),
+          _kpiDivider(),
+          _kpiCell(
+            label: lp.getTranslatedText({'en': 'Day', 'id': 'Hari'}),
+            value: dayLabel,
+            color: ColorUtils.info600,
+            isText: true,
+          ),
+        ],
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -223,27 +404,7 @@ class _TeacherActivityDetailScreenState
           ],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-        child: Row(
-          children: [
-            _kpiCell(
-              label: lp.getTranslatedText({'en': 'Students', 'id': 'Siswa'}),
-              value: _fmt(siswa),
-              color: ColorUtils.success600,
-            ),
-            _kpiDivider(),
-            _kpiCell(
-              label: lp.getTranslatedText({'en': 'Submit', 'id': 'Submit'}),
-              value: _fmt(submit),
-              color: ColorUtils.info600,
-            ),
-            _kpiDivider(),
-            _kpiCell(
-              label: lp.getTranslatedText({'en': 'Pending', 'id': 'Belum'}),
-              value: _fmt(belum),
-              color: ColorUtils.warning600,
-            ),
-          ],
-        ),
+        child: content,
       ),
     );
   }
@@ -254,6 +415,7 @@ class _TeacherActivityDetailScreenState
     required String label,
     required String value,
     required Color color,
+    bool isText = false,
   }) {
     return Expanded(
       child: Column(
@@ -261,12 +423,17 @@ class _TeacherActivityDetailScreenState
         children: [
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 22,
+              // Numeric KPIs use display sizing; text values (Umum/Senin)
+              // use a smaller weight so longer words don't overflow the
+              // narrow cell.
+              fontSize: isText ? 15 : 22,
               fontWeight: FontWeight.w900,
               color: color,
               height: 1.0,
-              letterSpacing: -0.5,
+              letterSpacing: isText ? -0.2 : -0.5,
             ),
           ),
           const SizedBox(height: 4),
@@ -297,6 +464,10 @@ class _TeacherActivityDetailScreenState
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       child: Column(
+        // Stretch so the section cards fill the row instead of hugging
+        // their content (Tipe / Deskripsi were rendering centered &
+        // pinched against the long-text Materi card below them).
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (!canEdit) _archiveBanner(lp),
           _section(
@@ -332,6 +503,29 @@ class _TeacherActivityDetailScreenState
                   color: ColorUtils.slate800,
                   fontWeight: FontWeight.w600,
                   height: 1.4,
+                ),
+              ),
+            ),
+          // Daftar Siswa preview — only for tugas/ujian/kuis. Shows the
+          // first 5 rows (pending first, then late, submitted, excused)
+          // with a "Lihat semua" CTA that opens the picker sheet.
+          if (_tracksSubmissions && _submissions.isNotEmpty)
+            _studentListSection(lp, canEdit: canEdit),
+          // Subtle loading footer while the full detail is in flight —
+          // the header and KPI strip already render from the list-row
+          // payload, this just signals that description / materi are
+          // still arriving.
+          if (_detailLoading && desc.isEmpty && material.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: ColorUtils.slate400,
+                  ),
                 ),
               ),
             ),
@@ -433,6 +627,14 @@ class _TeacherActivityDetailScreenState
   }
 
   Widget _buildFooter(LanguageProvider lp) {
+    // Footer layout depends on whether the activity tracks submissions:
+    //   tugas / ujian / kuis →  [🗑] [✎] [   Catat Submit   ]
+    //                           Hapus + Edit shrink to icon-only square
+    //                           buttons so the primary CTA gets a full
+    //                           pill that never wraps.
+    //   aktivitas / catatan  →  [   Hapus   ] [   Edit (primary)   ]
+    //                           original 2-button layout.
+    final tracks = _tracksSubmissions;
     return SafeArea(
       top: false,
       child: Container(
@@ -448,61 +650,453 @@ class _TeacherActivityDetailScreenState
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 44,
-                child: OutlinedButton.icon(
-                  onPressed: widget.onDelete,
-                  icon: const Icon(Icons.delete_outline_rounded, size: 16),
-                  label: Text(
-                    lp.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ColorUtils.error600,
-                    side: BorderSide(color: ColorUtils.slate200),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+        child: tracks ? _footerWithSubmit(lp) : _footerEditPrimary(lp),
+      ),
+    );
+  }
+
+  /// Submission-tracked footer: small icon buttons + full-width
+  /// "Catat Submit" primary CTA. Avoids text wrapping at any width.
+  Widget _footerWithSubmit(LanguageProvider lp) {
+    return Row(
+      children: [
+        _iconActionButton(
+          icon: Icons.delete_outline_rounded,
+          color: ColorUtils.error600,
+          tooltip: lp.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}),
+          onPressed: widget.onDelete,
+        ),
+        const SizedBox(width: 8),
+        _iconActionButton(
+          icon: Icons.edit_rounded,
+          color: ColorUtils.slate700,
+          tooltip: lp.getTranslatedText({'en': 'Edit', 'id': 'Edit'}),
+          onPressed: widget.onEdit == null ? null : _onEditPressed,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SizedBox(
+            height: 44,
+            child: ElevatedButton.icon(
+              onPressed: _openCatatSubmit,
+              icon: const Icon(
+                Icons.assignment_turned_in_rounded,
+                size: 16,
+              ),
+              label: Text(
+                lp.getTranslatedText({
+                  'en': 'Record submit',
+                  'id': 'Catat Submit',
+                }),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorUtils.brandCobalt,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 2,
-              child: SizedBox(
-                height: 44,
-                child: ElevatedButton.icon(
-                  onPressed: widget.onEdit,
-                  icon: const Icon(Icons.edit_rounded, size: 16),
-                  label: Text(
-                    lp.getTranslatedText({'en': 'Edit', 'id': 'Edit'}),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ColorUtils.brandCobalt,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Aktivitas / catatan footer: original Hapus | Edit (primary).
+  Widget _footerEditPrimary(LanguageProvider lp) {
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 44,
+            child: OutlinedButton.icon(
+              onPressed: widget.onDelete,
+              icon: const Icon(Icons.delete_outline_rounded, size: 16),
+              label: Text(
+                lp.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: ColorUtils.error600,
+                side: BorderSide(color: ColorUtils.slate200),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
-          ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 2,
+          child: SizedBox(
+            height: 44,
+            child: ElevatedButton.icon(
+              onPressed: widget.onEdit == null ? null : _onEditPressed,
+              icon: const Icon(Icons.edit_rounded, size: 16),
+              label: Text(
+                lp.getTranslatedText({'en': 'Edit', 'id': 'Edit'}),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorUtils.brandCobalt,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Square-ish icon-only action button used in the submission footer
+  /// so Hapus + Edit don't compete with Catat Submit for label space.
+  Widget _iconActionButton({
+    required IconData icon,
+    required Color color,
+    required String tooltip,
+    VoidCallback? onPressed,
+  }) {
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: Tooltip(
+        message: tooltip,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: color,
+            side: BorderSide(color: ColorUtils.slate200),
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Icon(icon, size: 18),
         ),
       ),
     );
+  }
+
+  /// Daftar Siswa preview card — focused on the actionable Belum bucket.
+  ///
+  /// Drops the old "Lihat semua siswa" tail (which opened the same sheet
+  /// as the footer Catat Submit — pure redundancy) in favor of:
+  ///   • a status breakdown strip at the top (Belum N · Sudah N · …)
+  ///     so the teacher gets a one-glance summary
+  ///   • only the Belum rows inline (max 5), since those are the ones
+  ///     a teacher actually scans the list for
+  ///   • a "+N belum lainnya" tail line ONLY when the bucket overflows;
+  ///     no separate CTA — the footer's Catat Submit is the only entry
+  ///     to the editable sheet
+  ///   • a tiny "Semua sudah submit ✓" empty-state when the Belum
+  ///     bucket is cleared, instead of an empty section
+  Widget _studentListSection(LanguageProvider lp, {required bool canEdit}) {
+    int belum = 0, sudah = 0, telat = 0, izin = 0;
+    final pendingRows = <Map<String, dynamic>>[];
+    for (final r in _submissions) {
+      switch ((r['status'] ?? 'pending').toString()) {
+        case 'submitted':
+          sudah++;
+          break;
+        case 'late':
+          telat++;
+          break;
+        case 'excused':
+          izin++;
+          break;
+        default:
+          belum++;
+          pendingRows.add(r);
+      }
+    }
+    final preview = pendingRows.take(5).toList();
+    final extraBelum = pendingRows.length - preview.length;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    lp.getTranslatedText({
+                      'en': 'Student list',
+                      'id': 'Daftar Siswa',
+                    }).toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      color: ColorUtils.slate500,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${_submissions.length} siswa',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: ColorUtils.slate500,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Status breakdown strip — replaces the redundant "Lihat semua"
+          // tail with at-a-glance counts. Only renders the buckets that
+          // have rows so it stays compact for fresh activities.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                if (belum > 0)
+                  _statusBreakdownPill(
+                    count: belum,
+                    label: 'Belum',
+                    spec: _statusPillSpec('pending'),
+                  ),
+                if (sudah > 0)
+                  _statusBreakdownPill(
+                    count: sudah,
+                    label: 'Sudah',
+                    spec: _statusPillSpec('submitted'),
+                  ),
+                if (telat > 0)
+                  _statusBreakdownPill(
+                    count: telat,
+                    label: 'Telat',
+                    spec: _statusPillSpec('late'),
+                  ),
+                if (izin > 0)
+                  _statusBreakdownPill(
+                    count: izin,
+                    label: 'Izin',
+                    spec: _statusPillSpec('excused'),
+                  ),
+              ],
+            ),
+          ),
+          // Belum bucket — the actionable section. Empty state when the
+          // bucket is cleared signals "all caught up".
+          if (preview.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 4, 14, 16),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_rounded,
+                    size: 16,
+                    color: ColorUtils.success600,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      lp.getTranslatedText({
+                        'en': 'All students recorded',
+                        'id': 'Semua siswa sudah dicatat',
+                      }),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: ColorUtils.success600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 14),
+              height: 1,
+              color: ColorUtils.slate100,
+            ),
+            for (int i = 0; i < preview.length; i++) ...[
+              if (i > 0)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 14),
+                  height: 1,
+                  color: ColorUtils.slate100,
+                ),
+              _studentRow(preview[i]),
+            ],
+            if (extraBelum > 0)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 6, 14, 12),
+                child: Text(
+                  '+ $extraBelum siswa lainnya belum submit',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: ColorUtils.slate500,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              )
+            else
+              const SizedBox(height: 8),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// One pill in the breakdown strip. Tinted background, colored count
+  /// + tiny status word inside. Used as a glanceable summary at the
+  /// top of the Daftar Siswa card.
+  Widget _statusBreakdownPill({
+    required int count,
+    required String label,
+    required _StatusSpec spec,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: spec.tint,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$count',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              color: spec.fg,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              color: spec.fg,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _studentRow(Map<String, dynamic> r) {
+    final name = (r['student_name'] ?? '-').toString();
+    final status = (r['status'] ?? 'pending').toString();
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final spec = _statusPillSpec(status);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: ColorUtils.slate100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              initial,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: ColorUtils.slate700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: ColorUtils.slate900,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: spec.tint,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              spec.label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: spec.fg,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  _StatusSpec _statusPillSpec(String s) {
+    switch (s) {
+      case 'submitted':
+        return _StatusSpec(
+          label: 'Sudah',
+          tint: ColorUtils.success600.withValues(alpha: 0.12),
+          fg: ColorUtils.success600,
+        );
+      case 'late':
+        return _StatusSpec(
+          label: 'Telat',
+          tint: ColorUtils.warning600.withValues(alpha: 0.14),
+          fg: ColorUtils.warning600,
+        );
+      case 'excused':
+        return _StatusSpec(
+          label: 'Izin',
+          tint: ColorUtils.info600.withValues(alpha: 0.12),
+          fg: ColorUtils.info600,
+        );
+      case 'pending':
+      default:
+        return _StatusSpec(
+          label: 'Belum',
+          tint: ColorUtils.slate100,
+          fg: ColorUtils.slate700,
+        );
+    }
   }
 
   String _clipTime(String s) {
@@ -564,12 +1158,25 @@ class _ActivityTypeSpec {
   });
 }
 
+/// Visual spec for a submission status pill (Sudah / Belum / Telat / Izin)
+/// in the Daftar Siswa preview rows.
+class _StatusSpec {
+  final String label;
+  final Color tint;
+  final Color fg;
+  const _StatusSpec({
+    required this.label,
+    required this.tint,
+    required this.fg,
+  });
+}
+
 /// Helper for callers — opens the detail screen as a normal route.
 Future<void> openTeacherActivityDetail({
   required BuildContext context,
   required Map<String, dynamic> activity,
   bool canEdit = true,
-  VoidCallback? onEdit,
+  Future<void> Function(Map<String, dynamic> activity)? onEdit,
   VoidCallback? onDelete,
   VoidCallback? onMoreActions,
   VoidCallback? onExport,

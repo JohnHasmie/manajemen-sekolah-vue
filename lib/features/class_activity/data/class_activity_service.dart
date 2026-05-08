@@ -26,6 +26,13 @@ class ApiClassActivityService {
   static final _metadataHelper = MetadataHelper();
   static final _exportHelper = ExportHelper();
 
+  /// Fetches a single class activity by ID with full detail fields.
+  /// Like `GET /class-activity/{id}` in Laravel — returns the full record
+  /// including description, material_title, student_count, and
+  /// submission_count that the list summary endpoint omits.
+  Future<Map<String, dynamic>> getActivity(String id) =>
+      _crudHelper.getActivity(id);
+
   /// Creates a new class activity record.
   /// Like `ClassActivity::create($data)` in Laravel or a Vuex `store`
   /// action.
@@ -42,6 +49,18 @@ class ApiClassActivityService {
   /// Deletes a class activity by ID.
   /// Like `ClassActivity::find($id)->delete()` in Laravel.
   Future<dynamic> deleteActivity(String id) => _crudHelper.deleteActivity(id);
+
+  /// Returns audience + per-student submission rows for an activity.
+  /// Used by the Catat Submit picker sheet on the detail screen.
+  Future<List<Map<String, dynamic>>> getSubmissions(String activityId) =>
+      _crudHelper.getSubmissions(activityId);
+
+  /// Bulk-upserts per-student submission status for an activity.
+  /// Payload: list of { student_id, status, note?, score? }.
+  Future<void> saveSubmissions(
+    String activityId,
+    List<Map<String, dynamic>> rows,
+  ) => _crudHelper.saveSubmissions(activityId, rows);
 
   /// Fetches class activities with server-side pagination and multiple
   /// filters. Like `ClassActivity::filter($request)->paginate()` in Laravel.

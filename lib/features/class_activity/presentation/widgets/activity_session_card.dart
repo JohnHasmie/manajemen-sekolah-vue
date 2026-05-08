@@ -47,6 +47,8 @@ class ActivitySessionCard extends StatelessWidget {
     // Try multiple field shapes for the time — backend may surface it
     // as `time`, `jam`, or fold it into `created_at`.
     final timeStr = _resolveTime(activity);
+    final studentCount = _readInt(activity['student_count']);
+    final submissionCount = _readInt(activity['submission_count']);
 
     final spec = _typeSpec(type);
 
@@ -100,10 +102,19 @@ class ActivitySessionCard extends StatelessWidget {
                       const SizedBox(height: 5),
                       // Row 2 — class + subject scope pills (always inline).
                       _scopeRow(className, subjectName),
-                      // Row 3 — date · time meta (inline, both optional).
-                      if (dateStr.isNotEmpty || timeStr.isNotEmpty) ...[
+                      // Row 3 — meta. Today: clock+time. Older: calendar+
+                      // date. Tugas/Ujian also get a "X/Y submit" badge.
+                      if (dateStr.isNotEmpty ||
+                          timeStr.isNotEmpty ||
+                          (studentCount ?? 0) > 0) ...[
                         const SizedBox(height: 5),
-                        _metaRow(dateStr: dateStr, timeStr: timeStr),
+                        _metaRow(
+                          dateStr: dateStr,
+                          timeStr: timeStr,
+                          type: type,
+                          studentCount: studentCount,
+                          submissionCount: submissionCount,
+                        ),
                       ],
                     ],
                   ),
@@ -158,20 +169,65 @@ class ActivitySessionCard extends StatelessWidget {
     );
   }
 
-  /// Inline date + time row.
-  Widget _metaRow({required String dateStr, required String timeStr}) {
+  /// Inline meta row matching the mockup:
+  ///   • Today's cards   → clock + `HH.mm`
+  ///   • Older / future  → calendar + `EEE, d MMM`
+  ///   • Tugas / Ujian   → trailing "X/Y submit" badge
+  /// Time-only on today's cards keeps the date implicit (the section
+  /// head already says "Hari ini") and saves a row.
+  Widget _metaRow({
+    required String dateStr,
+    required String timeStr,
+    required String type,
+    required int? studentCount,
+    required int? submissionCount,
+  }) {
     final parts = <Widget>[];
-    final formatted = _formatDate(dateStr);
-    if (formatted.isNotEmpty) {
-      parts.add(_metaLabel(Icons.calendar_today_rounded, formatted));
-    }
-    if (timeStr.isNotEmpty) {
-      if (parts.isNotEmpty) {
-        parts.add(_metaSeparator());
+    final isToday = _isToday(dateStr);
+
+    // Primary token — time on today's cards, date everywhere else.
+    if (isToday && timeStr.isNotEmpty) {
+      parts.add(_metaLabel(Icons.schedule_rounded, timeStr));
+    } else if (dateStr.isNotEmpty) {
+      final formatted = _formatDateLong(dateStr);
+      if (formatted.isNotEmpty) {
+        parts.add(_metaLabel(Icons.calendar_today_rounded, formatted));
       }
+    } else if (timeStr.isNotEmpty) {
       parts.add(_metaLabel(Icons.schedule_rounded, timeStr));
     }
+
+    // Submission badge for tugas / ujian (X/Y submit). Hidden for
+    // aktivitas / catatan since those types don't track submissions.
+    if (_tracksSubmissions(type) && (studentCount ?? 0) > 0) {
+      if (parts.isNotEmpty) parts.add(_metaSeparator());
+      parts.add(
+        _metaPill(
+          label: '${submissionCount ?? 0}/$studentCount submit',
+          bg: ColorUtils.success600.withValues(alpha: 0.10),
+          fg: ColorUtils.success600,
+        ),
+      );
+    }
+
     return Row(mainAxisSize: MainAxisSize.min, children: parts);
+  }
+
+  bool _tracksSubmissions(String type) {
+    return type == 'tugas' ||
+        type == 'assignment' ||
+        type == 'ujian' ||
+        type == 'exam' ||
+        type == 'kuis' ||
+        type == 'quiz';
+  }
+
+  bool _isToday(String raw) {
+    if (raw.isEmpty) return false;
+    final dt = DateTime.tryParse(raw);
+    if (dt == null) return false;
+    final now = DateTime.now();
+    return dt.year == now.year && dt.month == now.month && dt.day == now.day;
   }
 
   Widget _metaSeparator() => Padding(
@@ -224,6 +280,16 @@ class ActivitySessionCard extends StatelessWidget {
   String _trimTime(String s) {
     if (s.length >= 5) return s.substring(0, 5).replaceAll(':', '.');
     return s.replaceAll(':', '.');
+  }
+
+  /// Tolerant int parser — counts may arrive as int, num, or string
+  /// depending on the backend serializer. Returns null when missing
+  /// so the caller can decide whether to render the badge.
+  int? _readInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse(v.toString());
   }
 
   Widget _metaLabel(IconData icon, String label) {
@@ -293,18 +359,14 @@ class ActivitySessionCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(String raw) {
+  /// `EEE, d MMM` (e.g. "Senin, 5 Mei") for older / future cards. The
+  /// section head already says "Hari ini" / "Sebelumnya", so we don't
+  /// need to relabel today/yesterday inline.
+  String _formatDateLong(String raw) {
     if (raw.isEmpty) return '';
     final dt = DateTime.tryParse(raw);
     if (dt == null) return '';
-    final now = DateTime.now();
-    if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
-      return 'Hari ini';
-    }
-    if (dt.year == now.year && dt.month == now.month && dt.day == now.day - 1) {
-      return 'Kemarin';
-    }
-    return DateFormat('d MMM', 'id_ID').format(dt);
+    return DateFormat('EEE, d MMM', 'id_ID').format(dt);
   }
 
   /// Type → icon + tint + label spec. Matches the four type tiles in
