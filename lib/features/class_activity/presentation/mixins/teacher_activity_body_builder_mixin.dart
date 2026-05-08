@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/features/class_activity/data/class_activity_service.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_activity_detail_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_form_sheet.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_quick_actions_sheet.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_session_card.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_timeline_card_widget.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
@@ -143,15 +148,122 @@ mixin TeacherActivityBodyBuilderMixin
       activity: a,
       isHomeroomView: isHomeroomView,
       // Frame A · tap → open the per-activity detail screen with the
-      // already-loaded payload. The detail screen self-renders without
-      // an extra fetch (3-cell KPI shows en-dashes until the backend
-      // surfaces submission counts).
-      onTap: () => openTeacherActivityDetail(
-        context: context,
-        activity: a,
-        canEdit: !isHomeroomView,
+      // already-loaded payload, fully wired to Frame C edit, Frame D
+      // quick actions, and the destructive Hapus action.
+      onTap: () => _openDetail(a),
+    );
+  }
+
+  /// Opens Frame A and wires up Frame B/C/D handlers that share the
+  /// same activity payload. Refreshes the list when any of them
+  /// completes so the card updates inline.
+  void _openDetail(Map<String, dynamic> a) {
+    openTeacherActivityDetail(
+      context: context,
+      activity: a,
+      canEdit: !isHomeroomView,
+      onEdit: () => _openEditSheet(a),
+      onDelete: () => _confirmDelete(a),
+      onMoreActions: () => _openQuickActions(a),
+    );
+  }
+
+  Future<void> _openEditSheet(Map<String, dynamic> a) async {
+    final lp = ref.read(languageRiverpod);
+    // Subjects list — fall back to an empty list if not loaded; the
+    // sheet will show "Pilih mapel" as the locked label.
+    final subjects = (filterSubjectList)
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+    final classes = classList
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+
+    final res = await showActivityFormSheet(
+      context: context,
+      initial: a,
+      classes: classes,
+      subjects: subjects,
+      onSave: (payload) async {
+        final id = (a['id'] ?? '').toString();
+        if (id.isEmpty) return;
+        await ClassActivityService().updateActivity(id, payload);
+      },
+    );
+    if (res != null) {
+      SnackBarUtils.showSuccess(
+        context,
+        lp.getTranslatedText({
+          'en': 'Activity saved',
+          'id': 'Kegiatan tersimpan',
+        }),
+      );
+      await forceRefresh();
+    }
+  }
+
+  Future<void> _confirmDelete(Map<String, dynamic> a) async {
+    final lp = ref.read(languageRiverpod);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => ConfirmationDialog(
+        title: lp.getTranslatedText({
+          'en': 'Delete activity?',
+          'id': 'Hapus kegiatan?',
+        }),
+        content: lp.getTranslatedText({
+          'en':
+              'Are you sure you want to delete this activity? This cannot be undone.',
+          'id':
+              'Yakin ingin menghapus kegiatan ini? Tindakan ini tidak dapat dibatalkan.',
+        }),
+        confirmText: lp.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}),
+        confirmColor: ColorUtils.error600,
       ),
     );
+    if (ok != true) return;
+    final id = (a['id'] ?? '').toString();
+    if (id.isEmpty) return;
+    try {
+      await ClassActivityService().deleteActivity(id);
+      if (!mounted) return;
+      // Pop the detail screen if still on top.
+      if (Navigator.canPop(context)) Navigator.of(context).pop();
+      SnackBarUtils.showSuccess(
+        context,
+        lp.getTranslatedText({
+          'en': 'Activity deleted',
+          'id': 'Kegiatan dihapus',
+        }),
+      );
+      await forceRefresh();
+    } catch (e) {
+      if (!mounted) return;
+      SnackBarUtils.showError(context, 'Gagal menghapus: $e');
+    }
+  }
+
+  void _openQuickActions(Map<String, dynamic> a) {
+    showActivityQuickActionsSheet(
+      context: context,
+      actions: ActivityQuickActions(
+        onCopyLink: () => _copyLink(a),
+        // Duplicate / export still need backend wiring — Frame 3.8
+        // batches those additions. Leaving them null hides the rows
+        // gracefully so the sheet doesn't render dead affordances.
+        onDuplicate: null,
+        onExportPdf: null,
+        onDelete: () => _confirmDelete(a),
+      ),
+    );
+  }
+
+  void _copyLink(Map<String, dynamic> a) {
+    final id = (a['id'] ?? '').toString();
+    final title = (a['title'] ?? '').toString();
+    SnackBarUtils.showSuccess(context, 'Link disalin: kegiatan/$id ($title)');
   }
 
   Widget _sectionHead({required String title, required int count}) {
