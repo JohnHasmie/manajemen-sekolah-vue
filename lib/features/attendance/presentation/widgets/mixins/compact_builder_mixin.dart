@@ -83,21 +83,18 @@ mixin CompactBuilderMixin {
   }
 
   Widget _buildWordButtons(String lowerStatus) {
+    // Frame A · 4 word buttons per mockup. Terlambat is dropped from
+    // the inline picker — late arrivals are still recorded as 'hadir'
+    // here. Use the per-student picker (Frame E) to mark Telat
+    // explicitly when needed.
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _WordButton(
           label: 'Hadir',
           color: ColorUtils.success600,
-          isSelected: lowerStatus == 'hadir',
+          isSelected: lowerStatus == 'hadir' || lowerStatus == 'terlambat',
           onTap: () => onStatusChanged(student.id, 'hadir'),
-        ),
-        const SizedBox(width: 4),
-        _WordButton(
-          label: 'Telat',
-          color: ColorUtils.violet700,
-          isSelected: lowerStatus == 'terlambat',
-          onTap: () => onStatusChanged(student.id, 'terlambat'),
         ),
         const SizedBox(width: 4),
         _WordButton(

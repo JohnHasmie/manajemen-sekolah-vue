@@ -22,12 +22,10 @@ mixin TeacherAttendanceDetailOverviewMixin
     Map<String, int> stats,
     int totalStudents,
   ) {
-    final hadir = stats['hadir'] ?? 0;
-    final terlambat = stats['terlambat'] ?? 0;
-    // Mockup folds Telat into Sakit visually (only 4 cells), but the
-    // app distinguishes Telat. We surface both: Hadir + Telat counted
-    // together would mask late arrivals, so keep Sakit as Sakit and
-    // surface Telat next to it via colour.
+    // Frame B/F mockup uses a 4-cell strip. Telat folds into Hadir
+    // (late arrivals are still "present") so the count matches the
+    // student list head count.
+    final hadir = (stats['hadir'] ?? 0) + (stats['terlambat'] ?? 0);
     final sakit = stats['sakit'] ?? 0;
     final izin = stats['izin'] ?? 0;
     final alpha = stats['alpha'] ?? 0;
@@ -51,8 +49,6 @@ mixin TeacherAttendanceDetailOverviewMixin
         child: Row(
           children: [
             _kpiCell('Hadir', hadir, ColorUtils.success600),
-            _divider(),
-            _kpiCell('Telat', terlambat, ColorUtils.violet700),
             _divider(),
             _kpiCell('Sakit', sakit, ColorUtils.warning600),
             _divider(),

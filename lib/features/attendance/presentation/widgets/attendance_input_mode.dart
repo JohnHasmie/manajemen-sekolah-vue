@@ -30,6 +30,14 @@ class AttendanceInputMode extends ConsumerStatefulWidget {
   /// siswa" section head — pass null for the standalone screen.
   final Widget? sectionHead;
 
+  /// Frame A bulk-row "Semua Hadir" chip handler. When null the chip
+  /// is hidden inside the toolbar.
+  final VoidCallback? onMarkAllHadir;
+
+  /// Frame A bulk-row "Sisanya Alpa" chip handler. Same nullability
+  /// semantics as [onMarkAllHadir].
+  final VoidCallback? onFillRemainingAlpa;
+
   const AttendanceInputMode({
     super.key,
     required this.isLoadingInput,
@@ -47,6 +55,8 @@ class AttendanceInputMode extends ConsumerStatefulWidget {
     this.scrollController,
     this.compactMode = false,
     this.sectionHead,
+    this.onMarkAllHadir,
+    this.onFillRemainingAlpa,
   });
 
   @override
@@ -362,4 +372,10 @@ class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode>
 
   @override
   TextEditingController get toolbarSearchController => widget.searchController;
+
+  @override
+  VoidCallback? get onToolbarMarkAllHadir => widget.onMarkAllHadir;
+
+  @override
+  VoidCallback? get onToolbarFillRemainingAlpa => widget.onFillRemainingAlpa;
 }

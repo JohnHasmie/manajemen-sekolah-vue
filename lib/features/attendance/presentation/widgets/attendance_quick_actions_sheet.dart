@@ -29,12 +29,27 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
   /// kosong"). Optional — same reason as `onFillUnmarked`.
   final VoidCallback? onResetAll;
 
+  /// "Salin dari sesi terakhir" — copy attendance from the teacher's
+  /// most recent session. Optional. When null the row is hidden.
+  /// `subtitle` shows the source session label e.g. "Matematika · 7B
+  /// · 11 Apr"; pass null when there's no last session yet so the
+  /// row stays disabled.
+  final VoidCallback? onCopyFromLastSession;
+  final String? lastSessionLabel;
+
+  /// "Pindah tanggal / sesi" — opens Frame D so the teacher can
+  /// switch slots without leaving the take-attendance flow.
+  final VoidCallback? onMoveDateOrSession;
+
   const AttendanceQuickActionsSheet({
     super.key,
     required this.languageProvider,
     required this.onStatusSelected,
     this.onFillUnmarked,
     this.onResetAll,
+    this.onCopyFromLastSession,
+    this.lastSessionLabel,
+    this.onMoveDateOrSession,
   });
 
   String _tr(Map<String, String> map) =>
@@ -92,6 +107,26 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
                   onFillUnmarked!('alpha');
                 },
               ),
+            if (onCopyFromLastSession != null)
+              _SheetButton(
+                icon: Icons.content_copy_rounded,
+                iconBg: const Color(0xFFEFF6FF),
+                iconFg: ColorUtils.info600,
+                title: _tr({
+                  'en': 'Copy from last session',
+                  'id': 'Salin dari sesi terakhir',
+                }),
+                desc:
+                    lastSessionLabel ??
+                    _tr({
+                      'en': 'No previous session found',
+                      'id': 'Belum ada sesi sebelumnya',
+                    }),
+                onTap: () {
+                  Navigator.pop(context);
+                  onCopyFromLastSession!();
+                },
+              ),
             if (onResetAll != null)
               _SheetButton(
                 icon: Icons.refresh_rounded,
@@ -108,6 +143,24 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
                 onTap: () {
                   Navigator.pop(context);
                   onResetAll!();
+                },
+              ),
+            if (onMoveDateOrSession != null)
+              _SheetButton(
+                icon: Icons.calendar_month_rounded,
+                iconBg: const Color(0xFFFEF3C7),
+                iconFg: const Color(0xFFB45309),
+                title: _tr({
+                  'en': 'Switch date / session',
+                  'id': 'Pindah tanggal / sesi',
+                }),
+                desc: _tr({
+                  'en': 'Change hour, subject, or class',
+                  'id': 'Ubah jam, mapel, atau kelas',
+                }),
+                onTap: () {
+                  Navigator.pop(context);
+                  onMoveDateOrSession!();
                 },
               ),
             const SizedBox(height: 8),

@@ -165,6 +165,25 @@ class AttendanceQueryHelper {
     };
   }
 
+  /// Frame C · "Salin dari sesi terakhir" feed. Returns the most
+  /// recent session's per-student status mix so the take-attendance
+  /// form can copy it.
+  Future<Map<String, dynamic>> getLastTeacherSession({
+    required String teacherId,
+  }) async {
+    try {
+      final response = await dioClient.get(
+        ApiEndpoints.attendanceLastSession,
+        queryParameters: {'teacher_id': teacherId},
+      );
+      final r = response.data;
+      if (r is Map<String, dynamic>) return r;
+    } catch (e) {
+      AppLogger.error('attendance', 'getLastTeacherSession failed: $e');
+    }
+    return {'students': const [], 'label': null};
+  }
+
   /// Fetches basic attendance summary.
   Future<List<dynamic>> getAttendanceSummary({
     String? teacherId,

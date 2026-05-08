@@ -64,8 +64,8 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
             padding: const EdgeInsets.only(left: 4),
             child: Text(
               lp.getTranslatedText({
-                'en': 'Academic · Attendance',
-                'id': 'Akademik · Kehadiran',
+                'en': 'Attendance · Input',
+                'id': 'Presensi · Input',
               }).toUpperCase(),
               style: TextStyle(
                 fontSize: 9.5,
@@ -149,18 +149,16 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
           ],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        // Frame A · 4-cell strip per the mockup. Telat is folded into
+        // Hadir for the count (late arrivals are still "present") so
+        // teachers see a single Hadir number that matches the student
+        // list head count.
         child: Row(
           children: [
             _kpiCell(
               label: 'Hadir',
-              value: c['hadir'] ?? 0,
+              value: (c['hadir'] ?? 0) + (c['terlambat'] ?? 0),
               color: ColorUtils.success600,
-            ),
-            _kpiDivider(),
-            _kpiCell(
-              label: 'Telat',
-              value: c['terlambat'] ?? 0,
-              color: ColorUtils.violet700,
             ),
             _kpiDivider(),
             _kpiCell(

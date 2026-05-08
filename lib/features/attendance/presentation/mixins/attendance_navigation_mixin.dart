@@ -6,7 +6,9 @@ import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_date_slot_picker.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_quick_actions_sheet.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_detail_sheet.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
@@ -213,8 +215,56 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
             }
           });
         },
+        // Frame C — copy attendance from the teacher's most recent
+        // session. Calls the new last-session endpoint and fills the
+        // current form's status map student-by-student.
+        onCopyFromLastSession: () {
+          _copyFromLastSession();
+        },
+        // Frame C — Pindah tanggal/sesi opens Frame D so the teacher
+        // can switch slots without leaving Ambil Presensi.
+        onMoveDateOrSession: () async {
+          final res = await showAttendanceDateSlotPicker(
+            context: context,
+            teacherId: teacherId,
+          );
+          if (!mounted) return;
+          if (res?.session != null) {
+            // Re-open Ambil Presensi with the picked session.
+            openInputSheet(
+              classId: (res!.session!['class_id'] ?? '').toString(),
+              className: (res.session!['class_name'] ?? '').toString(),
+              subjectId: (res.session!['subject_id'] ?? '').toString(),
+              subjectName: (res.session!['subject_name'] ?? '').toString(),
+            );
+          }
+        },
       ),
     );
+  }
+
+  /// Frame C · "Salin dari sesi terakhir" implementation.
+  Future<void> _copyFromLastSession() async {
+    try {
+      final last = await AttendanceService.getLastTeacherSession(
+        teacherId: teacherId,
+      );
+      if (!mounted) return;
+      final entries = (last['students'] as List?) ?? const [];
+      if (entries.isEmpty) return;
+      setState(() {
+        for (final e in entries) {
+          if (e is! Map) continue;
+          final id = (e['student_id'] ?? '').toString();
+          final status = (e['status'] ?? '').toString();
+          if (id.isNotEmpty && status.isNotEmpty) {
+            attendanceStatus[id] = status;
+          }
+        }
+      });
+    } catch (_) {
+      /* swallow — UI shows no-op */
+    }
   }
 
   @override

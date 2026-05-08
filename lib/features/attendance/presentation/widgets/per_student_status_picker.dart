@@ -66,18 +66,16 @@ class _PerStudentStatusPickerBodyState
   late final TextEditingController _noteCtrl;
   bool _saving = false;
 
+  // Frame E mockup uses 4 tiles; drop Telat from the picker. A row
+  // already saved with status='terlambat' will normalise to 'hadir'
+  // on open, so the teacher can explicitly switch to Sakit/Izin/Alpa
+  // if desired. Re-add Telat here if a future mockup brings it back.
   static const _statuses = <_StatusOption>[
     _StatusOption(
       key: 'hadir',
       label: 'Hadir',
       icon: Icons.check_rounded,
       colorRef: _StatusColor.success,
-    ),
-    _StatusOption(
-      key: 'terlambat',
-      label: 'Telat',
-      icon: Icons.schedule_rounded,
-      colorRef: _StatusColor.violet,
     ),
     _StatusOption(
       key: 'sakit',

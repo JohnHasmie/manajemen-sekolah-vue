@@ -26,6 +26,14 @@ abstract class _InputToolbarStateGetter {
 
   /// Search controller for the toolbar.
   TextEditingController get toolbarSearchController;
+
+  /// Bulk-row chip — override every student → hadir.
+  /// Optional. When null the chip is hidden.
+  VoidCallback? get onToolbarMarkAllHadir;
+
+  /// Bulk-row chip — fill students without a status with alpa.
+  /// Optional. When null the chip is hidden.
+  VoidCallback? get onToolbarFillRemainingAlpa;
 }
 
 /// UI builder methods for the attendance input toolbar.
@@ -61,8 +69,46 @@ mixin AttendanceInputToolbarMixin implements _InputToolbarStateGetter {
               tr,
             ),
           ],
+          // Frame A bulk-row — "● Semua Hadir" + "● Sisanya Alpa".
+          // Visible when at least one student is in the list and the
+          // page wired the optional callbacks.
+          if (toolbarFilteredStudents.isNotEmpty &&
+              (onToolbarMarkAllHadir != null ||
+                  onToolbarFillRemainingAlpa != null)) ...[
+            const SizedBox(height: 8),
+            _buildBulkRow(tr),
+          ],
         ],
       ),
+    );
+  }
+
+  /// Two-chip bulk row that mirrors the mockup's `.bulk-row` block.
+  /// Each chip has a colored dot + label and fires the corresponding
+  /// callback. Either chip can be null-and-hidden so the row degrades
+  /// gracefully on read-only screens.
+  Widget _buildBulkRow(String Function(Map<String, String>) tr) {
+    return Row(
+      children: [
+        if (onToolbarMarkAllHadir != null)
+          Expanded(
+            child: _BulkChip(
+              label: tr({'en': 'All Present', 'id': 'Semua Hadir'}),
+              dotColor: ColorUtils.success600,
+              onTap: onToolbarMarkAllHadir!,
+            ),
+          ),
+        if (onToolbarMarkAllHadir != null && onToolbarFillRemainingAlpa != null)
+          const SizedBox(width: 8),
+        if (onToolbarFillRemainingAlpa != null)
+          Expanded(
+            child: _BulkChip(
+              label: tr({'en': 'Remaining Absent', 'id': 'Sisanya Alpa'}),
+              dotColor: ColorUtils.error600,
+              onTap: onToolbarFillRemainingAlpa!,
+            ),
+          ),
+      ],
     );
   }
 
@@ -262,6 +308,66 @@ mixin AttendanceInputToolbarMixin implements _InputToolbarStateGetter {
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: ColorUtils.slate600,
+        ),
+      ),
+    );
+  }
+}
+
+/// Frame A bulk-row chip — colored dot + label inside a dashed pill.
+class _BulkChip extends StatelessWidget {
+  final String label;
+  final Color dotColor;
+  final VoidCallback onTap;
+
+  const _BulkChip({
+    required this.label,
+    required this.dotColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: ColorUtils.slate200,
+              width: 1,
+              style: BorderStyle.solid,
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: dotColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: ColorUtils.slate800,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

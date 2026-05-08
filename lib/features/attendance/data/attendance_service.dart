@@ -145,6 +145,15 @@ class AttendanceService {
     month: month,
   );
 
+  /// Frame C · "Salin dari sesi terakhir" feed.
+  ///
+  /// Returns `{ date, class, subject, lesson_hour, label,
+  /// students: [{student_id, status}…] }` or `{students: []}` when the
+  /// teacher has no records yet.
+  static Future<Map<String, dynamic>> getLastTeacherSession({
+    required String teacherId,
+  }) => _queryHelper.getLastTeacherSession(teacherId: teacherId);
+
   /// Bulk creates/updates attendance for multiple students.
   static Future<Map<String, dynamic>> createBulkAttendance({
     required String teacherId,
