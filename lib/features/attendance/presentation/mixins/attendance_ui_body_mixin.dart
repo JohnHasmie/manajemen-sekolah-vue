@@ -596,9 +596,7 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
                 subjectId: (r['subject_id'] ?? '').toString(),
                 subjectName: (r['subject_name'] ?? '').toString(),
                 teacherId: r['teacher_id']?.toString(),
-                group: r is Map<String, dynamic>
-                    ? r
-                    : Map<String, dynamic>.from(r as Map),
+                group: r,
               ),
             ),
           if (timelineLoadingMore) _buildLoadingIndicator(),
