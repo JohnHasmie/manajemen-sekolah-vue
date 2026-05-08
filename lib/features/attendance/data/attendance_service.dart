@@ -128,6 +128,23 @@ class AttendanceService {
   static Future<dynamic> createAttendance(Map<String, dynamic> data) =>
       _writeHelper.createAttendance(data);
 
+  /// Frame D — calendar feed for the date & slot picker.
+  ///
+  /// Returns `{ dates_with_records: [YYYY-MM-DD…],
+  ///            sessions_today: [{class, subject, lesson_hour, status, …}…],
+  ///            month, today }`.
+  static Future<Map<String, dynamic>> getTeacherCalendar({
+    String? teacherId,
+    String? classId,
+    String? academicYearId,
+    String? month, // YYYY-MM, defaults server-side to current month
+  }) => _queryHelper.getTeacherCalendar(
+    teacherId: teacherId,
+    classId: classId,
+    academicYearId: academicYearId,
+    month: month,
+  );
+
   /// Bulk creates/updates attendance for multiple students.
   static Future<Map<String, dynamic>> createBulkAttendance({
     required String teacherId,
