@@ -15,8 +15,10 @@ import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_ui_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/add_chapter_sheet.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_chapter_rename_dialog.dart';
-import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_modal_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_save_bar.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_kpi_skeleton.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_table_skeleton.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_table_view.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_tour_helper.dart';
@@ -706,61 +708,411 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
           AppNavigator.pop(context, result);
         }
       },
-      child: Scaffold(
-        backgroundColor: ColorUtils.slate50,
-        body: Column(
-          children: [
-            if (widget.initialClass != null &&
-                widget.initialSubject != null) ...[
-              // Modal-style entry: custom header with Export + Close on the
-              // right, matching the app's "Buku Nilai" UX.
-              GradeRecapModalHeader(
-                title:
-                    widget.initialSubject?['nama'] ??
-                    widget.initialSubject?['name'] ??
-                    'Subject',
-                subtitle:
-                    widget.initialClass?['nama'] ??
-                    widget.initialClass?['name'] ??
-                    'Class',
-                primaryColor: getPrimaryColor(),
-                onExport: exportToExcel,
-                onClose: handleBackButton,
-                isExporting: isExporting,
-                exportKey: _exportKey,
+      child: (widget.initialClass != null && widget.initialSubject != null)
+          ? _buildBrandScaffold(lp)
+          : _buildWizardScaffold(lp),
+    );
+  }
+
+  /// Brand-migrated full-screen scaffold for the modal-style entry —
+  /// wraps the matrix table inside `BrandPageLayout` (gradient header +
+  /// 3-cell KPI overlap + scrollable body). Mirrors Frame C from
+  /// `_design/teacher_grade_recap_mockup.html`.
+  Widget _buildBrandScaffold(LanguageProvider lp) {
+    return Scaffold(
+      backgroundColor: ColorUtils.slate50,
+      body: BrandPageLayout(
+        role: 'guru',
+        header: _buildBrandHeader(lp),
+        kpiCard: _buildBrandKpiCard(lp),
+        bodyChildren: [_buildBrandBody(lp)],
+      ),
+      bottomNavigationBar: (_currentStep == 2 && tableData.isNotEmpty)
+          ? GradeRecapSaveBar(
+              saveKey: _saveKey,
+              isSaving: isSaving,
+              hasUnsavedChanges: hasUnsavedChanges,
+              onSave: _onSavePressed,
+              lp: lp,
+            )
+          : null,
+      floatingActionButton: (_currentStep == 2 && tableData.isNotEmpty)
+          ? FloatingActionButton(
+              key: _addChapterKey,
+              heroTag: 'grade_recap_add_chapter_fab',
+              onPressed: addChapter,
+              backgroundColor: getPrimaryColor(),
+              foregroundColor: Colors.white,
+              elevation: 4,
+              tooltip: 'Tambah kolom / bab',
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-            ] else ...[
-              buildMainHeader(lp),
-              if (_currentStep < 2) buildRecapSearchBar(lp),
-            ],
-            Expanded(child: _buildBody(lp)),
+              child: const Icon(Icons.add_rounded, size: 28),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  /// Wizard scaffold — kept for callers that don't pre-pick class +
+  /// subject. Uses the legacy `buildMainHeader` + step-aware body.
+  Widget _buildWizardScaffold(LanguageProvider lp) {
+    return Scaffold(
+      backgroundColor: ColorUtils.slate50,
+      body: Column(
+        children: [
+          buildMainHeader(lp),
+          if (_currentStep < 2) buildRecapSearchBar(lp),
+          Expanded(child: _buildBody(lp)),
+        ],
+      ),
+      bottomNavigationBar: (_currentStep == 2 && tableData.isNotEmpty)
+          ? GradeRecapSaveBar(
+              saveKey: _saveKey,
+              isSaving: isSaving,
+              hasUnsavedChanges: hasUnsavedChanges,
+              onSave: _onSavePressed,
+              lp: lp,
+            )
+          : null,
+      floatingActionButton: (_currentStep == 2 && tableData.isNotEmpty)
+          ? FloatingActionButton(
+              key: _addChapterKey,
+              heroTag: 'grade_recap_add_chapter_fab',
+              onPressed: addChapter,
+              backgroundColor: getPrimaryColor(),
+              foregroundColor: Colors.white,
+              elevation: 4,
+              tooltip: 'Tambah kolom / bab',
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.add_rounded, size: 28),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  /// Brand header — kicker shows class + subject, ctx-strip below
+  /// shows the subject letter avatar + "Subject · Class · Sem 2025/2026 · N siswa".
+  /// Tune icon top-right runs the export-to-Excel flow.
+  Widget _buildBrandHeader(LanguageProvider lp) {
+    final subjectName =
+        (widget.initialSubject?['nama'] ?? widget.initialSubject?['name'] ?? '-')
+            .toString();
+    final className =
+        (widget.initialClass?['nama'] ?? widget.initialClass?['name'] ?? '-')
+            .toString();
+    final initial = subjectName.isNotEmpty
+        ? subjectName[0].toUpperCase()
+        : '?';
+    final ay = ref.watch(academicYearRiverpod).selectedAcademicYear;
+    final ayLabel = ay == null
+        ? ''
+        : ' · ${(ay['name'] ?? ay['nama'] ?? '').toString()}';
+    final studentCount = tableData.length;
+    final studentLine = studentCount > 0 ? ' · $studentCount siswa' : '';
+
+    return BrandPageHeader(
+      role: 'guru',
+      title: '$subjectName · $className',
+      subtitle: lp.getTranslatedText({
+        'en': 'Recap · Grades',
+        'id': 'Rekap · Nilai',
+      }),
+      isRealtimeFresh: true,
+      kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
+      onBackPressed: handleBackButton,
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: isExporting
+              ? Icons.hourglass_top_rounded
+              : Icons.download_rounded,
+          onTap: isExporting ? () {} : exportToExcel,
+        ),
+      ],
+      bottomSlot: _ctxStrip(
+        initial: initial,
+        title: '$subjectName · $className',
+        subtitle: '$className · $subjectName$ayLabel$studentLine',
+      ),
+    );
+  }
+
+  /// Frosted context strip below the title — subject letter avatar +
+  /// "Subject · Class · semester · N siswa". Mirrors the same chrome
+  /// the Kegiatan Kelas detail screen uses.
+  Widget _ctxStrip({
+    required String initial,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              initial,
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                color: ColorUtils.brandCobalt,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.78),
+                    fontWeight: FontWeight.w500,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 3-cell KPI overlap card — Tuntas · Belum · Rata-rata. Computed
+  /// from `tableData` so the card stays in sync with the matrix the
+  /// teacher is editing.
+  ///
+  /// While `isLoading` is true, returns a shimmer skeleton with the
+  /// same shape/dimensions so the slot stays anchored and there's no
+  /// flash of "0 / 0 / —" before the data resolves.
+  Widget _buildBrandKpiCard(LanguageProvider lp) {
+    if (isLoading) {
+      return const GradeRecapKpiSkeleton();
+    }
+
+    // Definitions:
+    //   • Tuntas — student's avg across non-null bab_scores >= KKM (75).
+    //   • Belum  — student has no entries OR their avg is < KKM.
+    //   • Rata-rata — class average computed as MEAN OF MEANS: each
+    //                 student's per-row avg, then averaged across the
+    //                 class. This matches the backend's overview card
+    //                 (`AVG(per_row_avg)` in `Api\GradeRecapController`)
+    //                 so the figure here lines up with the figure on
+    //                 the Rekap Nilai overview. Also the conventional
+    //                 definition for "rata-rata kelas" — every student
+    //                 weighs equally regardless of how many bab they
+    //                 have completed.
+    //
+    // Reads scores from the `bab_scores` list on each row (already
+    // populated when the table loads) AND the live score controllers
+    // (which carry edits the teacher hasn't saved yet) so the KPI
+    // reflects what's actually on screen — not just what's persisted.
+    // Per-student key shape is "$scId|bab|$idx".
+    const kkm = 75.0;
+    int tuntas = 0;
+    int belum = 0;
+    double sumOfRowAvgs = 0;
+    int rowsWithScores = 0;
+    for (final row in tableData) {
+      final scId =
+          (row['student_class_id'] ?? row['id'] ?? '').toString();
+      final scores = <double>[];
+
+      // 1. Live edits in score controllers.
+      for (final entry in scoreControllers.entries) {
+        if (!entry.key.startsWith('$scId|bab|')) continue;
+        final v = entry.value.text.trim();
+        if (v.isEmpty) continue;
+        final parsed = double.tryParse(v.replaceAll(',', '.'));
+        if (parsed != null) scores.add(parsed);
+      }
+
+      // 2. Fallback to row['bab_scores'] when controllers haven't
+      //    been built yet (first frame after a reload).
+      if (scores.isEmpty && row['bab_scores'] is List) {
+        for (final v in (row['bab_scores'] as List)) {
+          if (v is num) scores.add(v.toDouble());
+        }
+      }
+
+      if (scores.isEmpty) {
+        belum++;
+        continue;
+      }
+      final avgRow = scores.reduce((a, b) => a + b) / scores.length;
+      if (avgRow >= kkm) {
+        tuntas++;
+      } else {
+        belum++;
+      }
+      sumOfRowAvgs += avgRow;
+      rowsWithScores++;
+    }
+    final avg = rowsWithScores > 0 ? (sumOfRowAvgs / rowsWithScores) : null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ColorUtils.slate200),
+          boxShadow: [
+            BoxShadow(
+              color: ColorUtils.slate900.withValues(alpha: 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
           ],
         ),
-        bottomNavigationBar: (_currentStep == 2 && tableData.isNotEmpty)
-            ? GradeRecapSaveBar(
-                saveKey: _saveKey,
-                isSaving: isSaving,
-                hasUnsavedChanges: hasUnsavedChanges,
-                onSave: _onSavePressed,
-                lp: lp,
-              )
-            : null,
-        floatingActionButton: (_currentStep == 2 && tableData.isNotEmpty)
-            ? FloatingActionButton(
-                key: _addChapterKey,
-                heroTag: 'grade_recap_add_chapter_fab',
-                onPressed: addChapter,
-                backgroundColor: getPrimaryColor(),
-                foregroundColor: Colors.white,
-                elevation: 4,
-                tooltip: 'Tambah kolom / bab',
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(Icons.add_rounded, size: 28),
-              )
-            : null,
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+        child: Row(
+          children: [
+            _kpiCell(
+              label: lp.getTranslatedText({'en': 'Done', 'id': 'Tuntas'}),
+              value: '$tuntas',
+              color: ColorUtils.success600,
+            ),
+            _kpiDivider(),
+            _kpiCell(
+              label: lp.getTranslatedText({'en': 'Pending', 'id': 'Belum'}),
+              value: '$belum',
+              color: ColorUtils.warning600,
+            ),
+            _kpiDivider(),
+            _kpiCell(
+              label: lp.getTranslatedText({'en': 'Avg', 'id': 'Rata-rata'}),
+              value: avg == null ? '—' : avg.toStringAsFixed(0),
+              color: ColorUtils.info600,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kpiCell({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: color,
+              height: 1.0,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiDivider() =>
+      Container(width: 1, height: 28, color: ColorUtils.slate100);
+
+  /// Body for the brand-migrated scaffold. Mirrors the legacy step-2
+  /// branch but drops the outer `SingleChildScrollView` since
+  /// BrandPageLayout already provides the outer scrollable.
+  Widget _buildBrandBody(LanguageProvider lp) {
+    if (isLoading) {
+      return GradeRecapTableSkeleton(primaryColor: getPrimaryColor());
+    }
+    if (tableData.isEmpty) {
+      return SizedBox(
+        height: 360,
+        child: EmptyState(
+          icon: Icons.assessment_outlined,
+          title: lp.getTranslatedText({
+            'en': 'No Students',
+            'id': 'Tidak Ada Siswa',
+          }),
+          subtitle: lp.getTranslatedText({
+            'en': 'No students found in this class',
+            'id': 'Tidak ada siswa di kelas ini',
+          }),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 80),
+      child: GradeRecapTableView(
+        tableData: tableData,
+        chapters: chapters,
+        scoreControllers: scoreControllers,
+        predikatControllers: predikatControllers,
+        descriptionControllers: descriptionControllers,
+        primaryColor: getPrimaryColor(),
+        labels: {
+          'finalLabel': lp.getTranslatedText({'en': 'Final', 'id': 'NA'}),
+          'skillLabel': lp.getTranslatedText({
+            'en': 'Skill',
+            'id': 'Keterampilan',
+          }),
+          'gradeLabel': lp.getTranslatedText({'en': 'Grade', 'id': 'Nilai'}),
+          'descLabel': lp.getTranslatedText({'en': 'Desc.', 'id': 'Desk.'}),
+        },
+        cellBuilder: (studentClassId, type, chapterIndex) {
+          return buildEditableGradeCell(studentClassId, type, chapterIndex);
+        },
+        onBulkSelect: (type, chapterIndex) =>
+            showBulkDialog(type, chapterIndex),
+        onDeleteChapter: deleteChapter,
+        onEditChapter: editChapter,
+        onDeskripsiTap: showEditDeskripsi,
       ),
     );
   }

@@ -78,30 +78,24 @@ class GradeRecapTableSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Compute how many rows to render based on the available viewport so
-    // the skeleton fills the dialog (no awkward empty space below).
-    final screenHeight =
-        WidgetsBinding
-            .instance
-            .platformDispatcher
-            .views
-            .first
-            .physicalSize
-            .height /
-        WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
-    final rowCount = (screenHeight / 56).ceil() + 2; // generous fill
+    // Render a fixed number of rows directly via a non-Expanded Column.
+    // This widget is mounted inside `BrandPageLayout`'s outer ListView,
+    // which gives unbounded vertical space — `Expanded` would silently
+    // fail in that environment and render nothing.
+    const rowCount = 12; // enough to fill a typical phone viewport
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: ColorUtils.slate200),
         ),
         clipBehavior: Clip.hardEdge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Header row — taller, mimics the actual sticky header
             Container(
@@ -113,7 +107,7 @@ class GradeRecapTableSkeleton extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // Left: "Siswa" label area (no explicit width — fills via flex)
+                  // Left: "Siswa" label area (fills via flex; no width)
                   Expanded(
                     flex: 3,
                     child: Padding(
@@ -134,17 +128,10 @@ class GradeRecapTableSkeleton extends StatelessWidget {
               ),
             ),
 
-            // Filled rows — taller, alternating zebra, no bottom radius
-            // because we want the skeleton to extend off-screen.
-            Expanded(
-              child: ListView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                itemCount: rowCount,
-                itemBuilder: (_, i) =>
-                    _row(isLast: i == rowCount - 1, zebra: i.isOdd),
-              ),
-            ),
+            // Filled rows — alternating zebra, plain Column children
+            // (NOT a nested scrollable so it works inside ListView).
+            for (int i = 0; i < rowCount; i++)
+              _row(isLast: i == rowCount - 1, zebra: i.isOdd),
           ],
         ),
       ),

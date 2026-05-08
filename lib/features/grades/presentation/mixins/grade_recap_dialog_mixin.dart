@@ -18,34 +18,34 @@ mixin GradeRecapDialogMixin {
   void setState(VoidCallback fn);
   void openRecapTable(dynamic classData, dynamic subject) {
     final subj = Subject.fromJson(subject as Map<String, dynamic>);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.95,
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          child: GradeRecapPage(
-            teacher: teacherData,
-            initialClass: {
-              'id': classData['class_id'],
-              'nama': classData['class_name'],
-              'name': classData['class_name'],
-            },
-            initialSubject: {
-              'id': subj.id,
-              'nama': subj.name,
-              'name': subj.name,
-              'kode': subj.code,
-            },
-          ),
+    // [Brand 4.3] — promoted from a 0.95-height modal sheet to a
+    // full-screen route. The recap matrix is the meaty surface of the
+    // grade flow (frozen-name col + chapter columns + sticky save
+    // bar); a full-screen page gives it the room it deserves and keeps
+    // the BrandPageLayout assertions about KPI-overlap heights happy.
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GradeRecapPage(
+          teacher: teacherData,
+          initialClass: {
+            'id': classData['class_id'],
+            'nama': classData['class_name'],
+            'name': classData['class_name'],
+          },
+          initialSubject: {
+            'id': subj.id,
+            'nama': subj.name,
+            'name': subj.name,
+            'kode': subj.code,
+          },
         ),
       ),
-      // When the recap dialog closes, bypass both the server cache and the
+    ).then((_) {
+      // When the recap screen pops, bypass both the server cache and the
       // on-device cache so any scores the teacher just saved show up in the
-      // "$recapCount/$totalStudents siswa" counter immediately.
-    ).then((_) => loadData(useCache: false));
+      // overview's "$recapCount/$totalStudents siswa" counter immediately.
+      if (mounted) loadData(useCache: false);
+    });
   }
 
   void showFilterDialog(LanguageProvider lp) {

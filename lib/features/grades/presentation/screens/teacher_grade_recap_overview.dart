@@ -1,16 +1,25 @@
+// Teacher · Rekap Nilai overview — brand-migrated.
+//
+// Replaces the legacy TeacherPageHeader + matrix/list view-toggle
+// scaffold with `BrandPageLayout` (gradient header + KPI overlap card +
+// scrollable body). Per UX request, the matrix view + view-toggle have
+// been retired; the overview always renders as the dense list (Frame B
+// from `_design/teacher_grade_recap_mockup.html`).
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
+import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_brand_body_mixin.dart';
+import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_brand_header_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_data_mixin.dart';
-import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_header_mixin.dart';
-import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_filter_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_dialog_mixin.dart';
-import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_content_mixin.dart';
+import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_filter_mixin.dart';
 
-/// Flat overview for Rekap Nilai — matching Nilai/Mengajar
-/// pattern. Tap a subject → opens GradeRecapPage as a dialog.
+/// Flat overview for Rekap Nilai. Tap a row → opens the recap matrix
+/// (currently still hosted in a draggable sheet via
+/// `GradeRecapDialogMixin.openRecapTable`; promotion to a full-screen
+/// route is tracked under [Brand 4.3]).
 class GradeRecapOverviewPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
   const GradeRecapOverviewPage({super.key, required this.teacher});
@@ -23,18 +32,16 @@ class GradeRecapOverviewPage extends ConsumerStatefulWidget {
 class _GradeRecapOverviewPageState extends ConsumerState<GradeRecapOverviewPage>
     with
         GradeRecapDataMixin,
-        GradeRecapHeaderMixin,
         GradeRecapFilterMixin,
         GradeRecapDialogMixin,
-        GradeRecapContentMixin {
+        GradeRecapBrandHeaderMixin,
+        GradeRecapBrandBodyMixin {
   @override
   late List<dynamic> groupedData;
   @override
   late bool isLoading;
   @override
   late bool isHomeroomView;
-  @override
-  late bool isListView;
   @override
   late TextEditingController searchController;
   @override
@@ -55,34 +62,15 @@ class _GradeRecapOverviewPageState extends ConsumerState<GradeRecapOverviewPage>
     groupedData = [];
     isLoading = true;
     isHomeroomView = false;
-    isListView = false;
     searchController = TextEditingController();
     filterClassId = null;
     filterClassName = null;
     filterSubjectId = null;
     filterSubjectName = null;
-    _loadViewModePref();
-    loadViewPref();
-    loadData();
-  }
-
-  Future<void> _loadViewModePref() async {
-    try {
-      final cached = await LocalCacheService.load('rekap_nilai_view_mode');
-      if (cached is Map && mounted) {
-        setState(() {
-          isListView = cached['is_list_view'] == true;
-        });
-      }
-    } catch (_) {}
-  }
-
-  @override
-  void toggleViewMode() {
-    setState(() => isListView = !isListView);
-    LocalCacheService.save('rekap_nilai_view_mode', {
-      'is_list_view': isListView,
+    searchController.addListener(() {
+      if (mounted) setState(() {});
     });
+    loadData();
   }
 
   @override
@@ -103,11 +91,12 @@ class _GradeRecapOverviewPageState extends ConsumerState<GradeRecapOverviewPage>
     final lp = ref.watch(languageRiverpod);
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          buildHeader(lp),
-          Expanded(child: buildContent(lp)),
-        ],
+      body: BrandPageLayout(
+        role: 'guru',
+        onRefresh: refresh,
+        header: buildBrandHeader(lp),
+        kpiCard: buildBrandKpiCard(lp),
+        bodyChildren: [buildBrandBody(lp)],
       ),
     );
   }
