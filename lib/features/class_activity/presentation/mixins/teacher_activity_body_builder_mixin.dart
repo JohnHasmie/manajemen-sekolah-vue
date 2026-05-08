@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -172,7 +173,7 @@ mixin TeacherActivityBodyBuilderMixin
     final lp = ref.read(languageRiverpod);
     // Subjects list — fall back to an empty list if not loaded; the
     // sheet will show "Pilih mapel" as the locked label.
-    final subjects = (filterSubjectList)
+    final subjects = filterSubjectList
         .whereType<Map>()
         .map((e) => Map<String, dynamic>.from(e))
         .toList();
@@ -181,6 +182,7 @@ mixin TeacherActivityBodyBuilderMixin
         .map((e) => Map<String, dynamic>.from(e))
         .toList();
 
+    final svc = getIt<ApiClassActivityService>();
     final res = await showActivityFormSheet(
       context: context,
       initial: a,
@@ -189,7 +191,7 @@ mixin TeacherActivityBodyBuilderMixin
       onSave: (payload) async {
         final id = (a['id'] ?? '').toString();
         if (id.isEmpty) return;
-        await ClassActivityService().updateActivity(id, payload);
+        await svc.updateActivity(id, payload);
       },
     );
     if (res != null) {
@@ -227,7 +229,7 @@ mixin TeacherActivityBodyBuilderMixin
     final id = (a['id'] ?? '').toString();
     if (id.isEmpty) return;
     try {
-      await ClassActivityService().deleteActivity(id);
+      await getIt<ApiClassActivityService>().deleteActivity(id);
       if (!mounted) return;
       // Pop the detail screen if still on top.
       if (Navigator.canPop(context)) Navigator.of(context).pop();
@@ -367,6 +369,8 @@ mixin TeacherActivityBodyBuilderMixin
   int get currentPage;
   List<dynamic> get groupedActivities;
   List<dynamic> get timelineActivities;
+  List<dynamic> get classList;
+  List<dynamic> get filterSubjectList;
   TextEditingController get searchController;
   ScrollController get scrollController;
   ScrollController get timelineScrollController;

@@ -226,4 +226,8 @@ mixin TeacherActivityDataLoadingMixin
   void setLoading(bool value);
 
   void setActivityError(String? message);
+
+  /// Lands the backend `kpi` bundle into state so the brand 3-cell
+  /// overlap card renders live counts.
+  void updateKpiSummary(Map<String, dynamic> v);
 }
