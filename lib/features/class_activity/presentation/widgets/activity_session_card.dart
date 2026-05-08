@@ -44,10 +44,9 @@ class ActivitySessionCard extends StatelessWidget {
             .toString()
             .trim();
     final dateStr = (activity['date'] ?? activity['tanggal'] ?? '').toString();
-    final timeStr = (activity['time'] ?? activity['jam'] ?? '')
-        .toString()
-        .trim();
-    final studentCount = activity['student_count'] ?? activity['jumlah_siswa'];
+    // Try multiple field shapes for the time — backend may surface it
+    // as `time`, `jam`, or fold it into `created_at`.
+    final timeStr = _resolveTime(activity);
 
     final spec = _typeSpec(type);
 
@@ -60,16 +59,16 @@ class ActivitySessionCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             decoration: BoxDecoration(
               border: Border.all(color: ColorUtils.slate200),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _typeIcon(spec),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,27 +76,35 @@ class ActivitySessionCard extends StatelessWidget {
                     children: [
                       if (isHomeroomView && teacherName.isNotEmpty)
                         _teacherRow(teacherName),
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: ColorUtils.slate900,
-                          height: 1.2,
-                        ),
+                      // Row 1 — title, with type pill on the right.
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: ColorUtils.slate900,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          _typePill(spec),
+                        ],
                       ),
-                      const SizedBox(height: 6),
-                      _scopeRow(className, subjectName, spec),
-                      const SizedBox(height: 6),
-                      _metaRow(
-                        type: type,
-                        spec: spec,
-                        dateStr: dateStr,
-                        timeStr: timeStr,
-                        studentCount: studentCount,
-                      ),
+                      const SizedBox(height: 5),
+                      // Row 2 — class + subject scope pills (always inline).
+                      _scopeRow(className, subjectName),
+                      // Row 3 — date · time meta (inline, both optional).
+                      if (dateStr.isNotEmpty || timeStr.isNotEmpty) ...[
+                        const SizedBox(height: 5),
+                        _metaRow(dateStr: dateStr, timeStr: timeStr),
+                      ],
                     ],
                   ),
                 ),
@@ -122,60 +129,101 @@ class ActivitySessionCard extends StatelessWidget {
     );
   }
 
-  Widget _scopeRow(String className, String subjectName, _TypeSpec spec) {
-    return Wrap(
-      spacing: 6,
-      runSpacing: 4,
+  /// Class + subject as inline pills sized to their text content. Uses
+  /// Row + Flexible so a long subject name truncates with ellipsis
+  /// instead of wrapping the second pill onto a new line.
+  Widget _scopeRow(String className, String subjectName) {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
       children: [
-        _ScopePill(
-          label: className,
-          icon: Icons.school_rounded,
-          bg: ColorUtils.info600.withValues(alpha: 0.10),
-          fg: ColorUtils.info600,
+        Flexible(
+          child: _ScopePill(
+            label: className,
+            icon: Icons.school_rounded,
+            bg: ColorUtils.info600.withValues(alpha: 0.10),
+            fg: ColorUtils.info600,
+          ),
         ),
-        _ScopePill(
-          label: subjectName,
-          icon: Icons.menu_book_rounded,
-          bg: ColorUtils.violet700.withValues(alpha: 0.10),
-          fg: ColorUtils.violet700,
+        const SizedBox(width: 6),
+        Flexible(
+          flex: 2,
+          child: _ScopePill(
+            label: subjectName,
+            icon: Icons.menu_book_rounded,
+            bg: ColorUtils.violet700.withValues(alpha: 0.10),
+            fg: ColorUtils.violet700,
+          ),
         ),
       ],
     );
   }
 
-  Widget _metaRow({
-    required String type,
-    required _TypeSpec spec,
-    required String dateStr,
-    required String timeStr,
-    required dynamic studentCount,
-  }) {
+  /// Inline date + time row.
+  Widget _metaRow({required String dateStr, required String timeStr}) {
     final parts = <Widget>[];
-
     final formatted = _formatDate(dateStr);
     if (formatted.isNotEmpty) {
       parts.add(_metaLabel(Icons.calendar_today_rounded, formatted));
     }
     if (timeStr.isNotEmpty) {
+      if (parts.isNotEmpty) {
+        parts.add(_metaSeparator());
+      }
       parts.add(_metaLabel(Icons.schedule_rounded, timeStr));
     }
-    parts.add(_metaPill(label: spec.label, bg: spec.tint, fg: spec.fg));
-    if (studentCount is num && studentCount > 0) {
-      parts.add(
-        _metaPill(
-          label: '$studentCount siswa',
-          bg: ColorUtils.slate100,
-          fg: ColorUtils.slate600,
-        ),
-      );
-    }
+    return Row(mainAxisSize: MainAxisSize.min, children: parts);
+  }
 
-    return Wrap(
-      spacing: 6,
-      runSpacing: 4,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: parts,
+  Widget _metaSeparator() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 6),
+    child: Text(
+      '·',
+      style: TextStyle(color: ColorUtils.slate300, fontSize: 11),
+    ),
+  );
+
+  /// Type-tag pill rendered to the right of the title row. Replaces
+  /// the previous full-width type pill that dominated the card.
+  Widget _typePill(_TypeSpec spec) {
+    return Container(
+      height: 20,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: spec.tint,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        spec.label,
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
+          color: spec.fg,
+          letterSpacing: 0.2,
+        ),
+      ),
     );
+  }
+
+  /// Resolve a time label from the most common backend field shapes.
+  String _resolveTime(Map<String, dynamic> a) {
+    final raw = (a['time'] ?? a['jam'] ?? a['start_time'] ?? '')
+        .toString()
+        .trim();
+    if (raw.isNotEmpty) return _trimTime(raw);
+    final created = (a['created_at'] ?? a['createdAt'] ?? '').toString();
+    if (created.isNotEmpty) {
+      final dt = DateTime.tryParse(created);
+      if (dt != null) {
+        return DateFormat('HH.mm').format(dt.toLocal());
+      }
+    }
+    return '';
+  }
+
+  String _trimTime(String s) {
+    if (s.length >= 5) return s.substring(0, 5).replaceAll(':', '.');
+    return s.replaceAll(':', '.');
   }
 
   Widget _metaLabel(IconData icon, String label) {
