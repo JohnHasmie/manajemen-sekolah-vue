@@ -4,6 +4,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_activity_detail_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_session_card.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_timeline_card_widget.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
@@ -141,11 +142,14 @@ mixin TeacherActivityBodyBuilderMixin
     return ActivitySessionCard(
       activity: a,
       isHomeroomView: isHomeroomView,
-      onTap: () => openActivityList(
-        classId: a['class_id']?.toString() ?? '',
-        className: a['class_name']?.toString() ?? '',
-        subjectId: a['subject_id']?.toString() ?? '',
-        subjectName: a['subject_name']?.toString() ?? '',
+      // Frame A · tap → open the per-activity detail screen with the
+      // already-loaded payload. The detail screen self-renders without
+      // an extra fetch (3-cell KPI shows en-dashes until the backend
+      // surfaces submission counts).
+      onTap: () => openTeacherActivityDetail(
+        context: context,
+        activity: a,
+        canEdit: !isHomeroomView,
       ),
     );
   }
