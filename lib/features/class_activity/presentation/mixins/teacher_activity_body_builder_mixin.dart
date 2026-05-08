@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_group_card_widget.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_session_card.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_timeline_card_widget.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
 
@@ -32,33 +33,149 @@ mixin TeacherActivityBodyBuilderMixin
   }
 
   Widget _buildActivityList(LanguageProvider lp) {
+    // Flatten groups → per-activity items so each card maps to a
+    // single (class, subject, title) entry per the redesigned list
+    // mockup (Frame 0). Bucket by date: today vs older.
+    final today = DateTime.now();
+    final todayItems = <Map<String, dynamic>>[];
+    final otherItems = <Map<String, dynamic>>[];
+
+    Map<String, dynamic> hydrate(
+      Map<String, dynamic> g,
+      Map<String, dynamic> a,
+    ) => {
+      ...a,
+      'class_id': a['class_id'] ?? g['class_id'],
+      'class_name': a['class_name'] ?? g['class_name'],
+      'subject_id': a['subject_id'] ?? g['subject_id'],
+      'subject_name': a['subject_name'] ?? g['subject_name'],
+      'teacher_id': a['teacher_id'] ?? g['teacher_id'],
+      'teacher_name': a['teacher_name'] ?? g['teacher_name'],
+    };
+
+    for (final raw in groupedActivities) {
+      if (raw is! Map) continue;
+      final g = Map<String, dynamic>.from(raw);
+      final latest = (g['latest_activities'] as List?) ?? const [];
+      if (latest.isEmpty) continue;
+      for (final a in latest) {
+        if (a is! Map) continue;
+        final item = hydrate(g, Map<String, dynamic>.from(a));
+        final dateStr = (item['date'] ?? '').toString();
+        final d = DateTime.tryParse(dateStr);
+        final isToday =
+            d != null &&
+            d.year == today.year &&
+            d.month == today.month &&
+            d.day == today.day;
+        if (isToday) {
+          todayItems.add(item);
+        } else {
+          otherItems.add(item);
+        }
+      }
+    }
+
+    // Sort each bucket by date desc (today's bucket may have time
+    // ordering instead but we use date desc as the safe default).
+    int sorter(Map<String, dynamic> a, Map<String, dynamic> b) {
+      final ad = DateTime.tryParse((a['date'] ?? '').toString());
+      final bd = DateTime.tryParse((b['date'] ?? '').toString());
+      if (ad == null || bd == null) return 0;
+      return bd.compareTo(ad);
+    }
+
+    todayItems.sort(sorter);
+    otherItems.sort(sorter);
+
+    final hasMore = isLoadingMore ? 1 : 0;
+    final total =
+        (todayItems.isNotEmpty ? todayItems.length + 1 : 0) +
+        (otherItems.isNotEmpty ? otherItems.length + 1 : 0) +
+        hasMore;
+
     return ListView.builder(
       controller: scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-      itemCount: groupedActivities.length + (isLoadingMore ? 1 : 0),
+      itemCount: total,
       itemBuilder: (context, index) {
-        if (index == groupedActivities.length) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: CircularProgressIndicator(color: primaryColor),
-            ),
-          );
+        int cursor = index;
+        if (todayItems.isNotEmpty) {
+          if (cursor == 0) {
+            return _sectionHead(
+              title: lp.getTranslatedText({'en': 'Today', 'id': 'Hari ini'}),
+              count: todayItems.length,
+            );
+          }
+          if (cursor < todayItems.length + 1) {
+            return _activityCard(todayItems[cursor - 1]);
+          }
+          cursor -= todayItems.length + 1;
         }
-        final g = groupedActivities[index];
-        return ActivityGroupCardWidget(
-          group: g,
-          primaryColor: primaryColor,
-          isHomeroomView: isHomeroomView,
-          onTap: () => openActivityList(
-            classId: g['class_id']?.toString() ?? '',
-            className: g['class_name']?.toString() ?? '',
-            subjectId: g['subject_id']?.toString() ?? '',
-            subjectName: g['subject_name']?.toString() ?? '',
-          ),
+        if (otherItems.isNotEmpty) {
+          if (cursor == 0) {
+            return _sectionHead(
+              title: lp.getTranslatedText({
+                'en': 'Earlier',
+                'id': 'Sebelumnya',
+              }),
+              count: otherItems.length,
+            );
+          }
+          if (cursor < otherItems.length + 1) {
+            return _activityCard(otherItems[cursor - 1]);
+          }
+          cursor -= otherItems.length + 1;
+        }
+        // Loading more spinner.
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(child: CircularProgressIndicator(color: primaryColor)),
         );
       },
+    );
+  }
+
+  Widget _activityCard(Map<String, dynamic> a) {
+    return ActivitySessionCard(
+      activity: a,
+      isHomeroomView: isHomeroomView,
+      onTap: () => openActivityList(
+        classId: a['class_id']?.toString() ?? '',
+        className: a['class_name']?.toString() ?? '',
+        subjectId: a['subject_id']?.toString() ?? '',
+        subjectName: a['subject_name']?.toString() ?? '',
+      ),
+    );
+  }
+
+  Widget _sectionHead({required String title, required int count}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 12, 2, 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: ColorUtils.slate700,
+                letterSpacing: 0.6,
+              ),
+            ),
+          ),
+          Text(
+            '$count kegiatan',
+            style: TextStyle(
+              fontSize: 10.5,
+              color: ColorUtils.slate500,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
