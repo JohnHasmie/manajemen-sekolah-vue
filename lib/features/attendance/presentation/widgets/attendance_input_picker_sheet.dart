@@ -17,6 +17,7 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 
 class AmbilPresensiPick {
@@ -54,6 +55,10 @@ class AmbilPresensiPick {
 /// the manual-mode tab as the chip source. [teacherId] drives the
 /// `/attendance/teacher-calendar` lookup that builds the schedule
 /// cards in default mode.
+///
+/// Uses the shared `AppDraggableSheet` primitive so the chrome
+/// (modal bottom sheet wrapping + drag handle behavior + height
+/// presets) stays consistent with the rest of the app.
 Future<AmbilPresensiPick?> showAmbilPresensiSheet({
   required BuildContext context,
   required LanguageProvider lp,
@@ -61,22 +66,14 @@ Future<AmbilPresensiPick?> showAmbilPresensiSheet({
   required List<dynamic> classList,
   String? academicYearId,
 }) {
-  return showModalBottomSheet<AmbilPresensiPick>(
+  return AppDraggableSheet.show<AmbilPresensiPick>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (_) => DraggableScrollableSheet(
-      initialChildSize: 0.85,
-      minChildSize: 0.55,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (ctx, scrollController) => _AmbilPresensiSheet(
-        lp: lp,
-        teacherId: teacherId,
-        classList: classList,
-        academicYearId: academicYearId,
-        scrollController: scrollController,
-      ),
+    builder: (ctx, scrollController) => _AmbilPresensiSheet(
+      lp: lp,
+      teacherId: teacherId,
+      classList: classList,
+      academicYearId: academicYearId,
+      scrollController: scrollController,
     ),
   );
 }
@@ -233,31 +230,33 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          _handle(),
-          _header(),
-          Expanded(child: _scheduleTab ? _scheduleBody() : _manualBody()),
-          if (!_scheduleTab) _manualFooter(),
-        ],
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      child: ColoredBox(
+        color: const Color(0xFFF8FAFC),
+        child: Column(
+          children: [
+            _header(),
+            Expanded(child: _scheduleTab ? _scheduleBody() : _manualBody()),
+            if (!_scheduleTab) _manualFooter(),
+          ],
+        ),
       ),
     );
   }
 
   // ── Header ──
 
-  Widget _handle() => Container(
-    margin: const EdgeInsets.only(top: 8),
+  /// Drag handle, drawn on the cobalt header in white-with-alpha so
+  /// there's no slate-50 strip between the parent screen and the
+  /// header (the previous layout had the handle on a slate-50 band
+  /// above the gradient, which read as a white seam).
+  Widget _handleOnCobalt() => Container(
+    margin: const EdgeInsets.only(top: 8, bottom: 4),
     width: 40,
     height: 4,
     decoration: BoxDecoration(
-      color: ColorUtils.slate300,
+      color: Colors.white.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(999),
     ),
   );
@@ -265,7 +264,7 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
   Widget _header() {
     final today = DateFormat('EEE, d MMM', 'id_ID').format(DateTime.now());
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -276,6 +275,8 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Center(child: _handleOnCobalt()),
+          const SizedBox(height: 10),
           Row(
             children: [
               Container(
@@ -1125,35 +1126,41 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
     );
   }
 
+  /// Compact chip — sized to its label, not greedy. Earlier the chips
+  /// rendered as full-width pills because the AnimatedContainer used
+  /// `alignment: Alignment.center` which makes Container expand to the
+  /// parent's intrinsic width. Replaced with a Material+InkWell wrap
+  /// around `Padding > Text` so the chip hugs its content and Wrap
+  /// can lay multiple chips per row.
   Widget _chip({
     required String label,
     required bool selected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 120),
-        height: 32,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected
-              ? ColorUtils.brandCobalt.withValues(alpha: 0.10)
-              : ColorUtils.slate50,
-          border: Border.all(
-            color: selected ? ColorUtils.brandCobalt : ColorUtils.slate200,
-          ),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
             color: selected
-                ? ColorUtils.brandCobalt
-                : ColorUtils.slate700,
+                ? ColorUtils.brandCobalt.withValues(alpha: 0.10)
+                : ColorUtils.slate50,
+            border: Border.all(
+              color: selected ? ColorUtils.brandCobalt : ColorUtils.slate200,
+            ),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: selected ? ColorUtils.brandCobalt : ColorUtils.slate700,
+            ),
           ),
         ),
       ),
