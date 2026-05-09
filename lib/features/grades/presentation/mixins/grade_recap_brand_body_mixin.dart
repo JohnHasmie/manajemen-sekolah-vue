@@ -179,53 +179,81 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
               ? (item.subject['avg_score'] as num).toDouble()
               : null);
     final babCount = ((item.subject['bab_count'] ?? 0) as num).toInt();
+    // Total numeric grade entries — added to s4 of the backend
+    // response. Distinct from `recap_count` (students with any
+    // entry): a class with 22 students × 1 bab = 22 entries, but
+    // 22 students × 8 bab = 176 entries. Drives the "Nilai" stat
+    // and the bab-tuntas saturation check.
+    final entriesCount =
+        ((item.subject['entries_count'] ?? 0) as num).toInt();
     final teacherName = isHomeroomView
         ? _subjectTeacherName(item.subject)
         : null;
 
-    final hasData = recapCount > 0;
-    final progressTone = _progressTone(completionPct, hasData);
+    final hasData = entriesCount > 0;
+    // Saturation: how full is the (students × bab) matrix?
+    // 1.0 = every student × every bab has a number.
+    final saturation = (totalStudents > 0 && babCount > 0)
+        ? entriesCount / (totalStudents * babCount)
+        : 0.0;
+    final progressTone = _progressTone(saturation * 100, hasData);
+    final status = _statusFor(
+      hasData: hasData,
+      completionPct: completionPct,
+      entriesCount: entriesCount,
+      totalStudents: totalStudents,
+      babCount: babCount,
+      lp: lp,
+    );
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: () => openRecapTable(item.classData, item.subject),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(11),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: ColorUtils.slate200),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _avatar(initial, spec),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _identityBand(
-                        sn,
-                        item.className,
-                        statusFor(completionPct, hasData, lp),
-                      ),
-                      const SizedBox(height: 4),
-                      _subRow(totalStudents, teacherName, lp),
-                      const SizedBox(height: 10),
+                      _identityBand(sn, item.className, status),
+                      // Sub-row only appears in wali-kelas view to
+                      // surface the subject teacher; the siswa count
+                      // moves into the stats grid so we save a row in
+                      // the default mengajar view.
+                      if (teacherName != null) ...[
+                        const SizedBox(height: 3),
+                        _subRow(teacherName),
+                      ],
+                      const SizedBox(height: 8),
                       _statsGrid(
                         babCount: babCount,
-                        recapCount: recapCount,
+                        entriesCount: entriesCount,
+                        totalStudents: totalStudents,
                         avg: avg,
                         progressTone: progressTone,
                         lp: lp,
                       ),
-                      const SizedBox(height: 10),
-                      _progressBand(completionPct, hasData, progressTone, lp),
+                      const SizedBox(height: 8),
+                      _progressBand(
+                        saturation * 100,
+                        hasData,
+                        progressTone,
+                        lp,
+                      ),
                     ],
                   ),
                 ),
@@ -326,85 +354,88 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
     );
   }
 
-  /// Sub-row — siswa count + optional subject teacher (wali kelas view).
-  /// Inline icons + thin · separator instead of a second info row.
-  Widget _subRow(int totalStudents, String? teacherName, LanguageProvider lp) {
+  /// Sub-row — wali-kelas-only subject teacher line (inline person
+  /// icon + name). The siswa count was dropped here because it now
+  /// lives inside the stats grid as the Bab denominator, so the
+  /// default mengajar card stays one row tighter.
+  Widget _subRow(String teacherName) {
     return Row(
       children: [
         Icon(
-          Icons.people_alt_rounded,
+          Icons.person_rounded,
           size: 12,
           color: ColorUtils.slate400,
         ),
         const SizedBox(width: 4),
-        Text(
-          '$totalStudents ${lp.getTranslatedText({"en": "students", "id": "siswa"})}',
-          style: TextStyle(
-            fontSize: 11,
-            color: ColorUtils.slate500,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        if (teacherName != null) ...[
-          const SizedBox(width: 6),
-          Text(
-            '·',
+        Flexible(
+          child: Text(
+            teacherName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 11,
-              color: ColorUtils.slate300,
-              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(width: 6),
-          Icon(
-            Icons.person_rounded,
-            size: 12,
-            color: ColorUtils.slate400,
-          ),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              teacherName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                color: ColorUtils.slate500,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
+        ),
       ],
     );
   }
 
   /// Stats grid — 3 cells (Bab · Nilai · Rata-rata) with hairline
-  /// dividers, on a soft slate-50 chip. Replaces the noisy pill row.
+  /// dividers, on a soft slate-50 chip.
+  ///
+  /// "Nilai" now shows `entries_count` — the literal number of grade
+  /// entries (not students-with-any-entry). Resolves the ambiguity the
+  /// teacher flagged where 22 siswa × 1 bab and 22 siswa × 8 bab both
+  /// reported "22 nilai". Bab cell shows "1/8" when only some bab are
+  /// fully filled (entries_count divisible by total_students), giving
+  /// teachers the at-a-glance "X bab tuntas" they asked for.
   Widget _statsGrid({
     required int babCount,
-    required int recapCount,
+    required int entriesCount,
+    required int totalStudents,
     required double? avg,
     required _ProgressTone progressTone,
     required LanguageProvider lp,
   }) {
     final isEmpty = progressTone.kind == _ProgressKind.empty;
+
+    // "X / Y bab" when entries cleanly divide by class size — that
+    // means X chapters are scored for everyone. Otherwise show the
+    // total bab count alone.
+    final babFilled = (totalStudents > 0 && entriesCount > 0)
+        ? entriesCount ~/ totalStudents
+        : 0;
+    final babCleanFill = totalStudents > 0 &&
+        entriesCount > 0 &&
+        entriesCount % totalStudents == 0 &&
+        babFilled <= babCount &&
+        babCount > 0;
+    final babValue = babCleanFill ? '$babFilled/$babCount' : '$babCount';
+    final babColor = babCleanFill
+        ? (babFilled == babCount
+            ? ColorUtils.success600
+            : ColorUtils.warning600)
+        : ColorUtils.slate900;
+
     return Container(
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(9),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
           _statCell(
-            value: '$babCount',
+            value: babValue,
             label: lp.getTranslatedText({'en': 'Chapters', 'id': 'Bab'}),
-            color: ColorUtils.slate900,
+            color: babColor,
           ),
           _statDivider(),
           _statCell(
-            value: '$recapCount',
+            value: '$entriesCount',
             label: lp.getTranslatedText({'en': 'Grades', 'id': 'Nilai'}),
             color: isEmpty ? ColorUtils.slate400 : progressTone.color,
           ),
@@ -552,10 +583,26 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
     return _ProgressTone(_ProgressKind.alert, ColorUtils.error600);
   }
 
-  /// Status tag spec — Belum mulai (slate) / Sebagian (amber) / Hampir
-  /// tuntas (green) / Tuntas (green). One pill per row, no overlap with
-  /// the stats colors.
-  _StatusSpec statusFor(double pct, bool hasData, LanguageProvider lp) {
+  /// Status tag spec — picked based on the (students × bab) saturation
+  /// matrix, not just completion_pct. Resolves the misleading "Tuntas"
+  /// the teacher flagged: when every student has at least 1 bab entry
+  /// the old logic showed Tuntas, even though only 1 of 8 bab was
+  /// actually filled.
+  ///
+  ///   • 0 entries                                → "Belum mulai"
+  ///   • Bab cleanly tuntas (e.g. 1/8 of 8 bab)    → "X bab tuntas"
+  ///     (gives the teacher a precise "I've done 1 bab" signal —
+  ///      green when complete, amber while in-progress)
+  ///   • Some students still untouched             → "Sebagian"
+  ///   • All bab × all students                    → "Tuntas"
+  _StatusSpec _statusFor({
+    required bool hasData,
+    required double completionPct,
+    required int entriesCount,
+    required int totalStudents,
+    required int babCount,
+    required LanguageProvider lp,
+  }) {
     if (!hasData) {
       return _StatusSpec(
         label: lp.getTranslatedText({'en': 'Not started', 'id': 'Belum mulai'}),
@@ -563,23 +610,41 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
         fg: ColorUtils.slate600,
       );
     }
-    if (pct >= 100) {
+
+    final fullSaturation = totalStudents > 0 && babCount > 0
+        ? entriesCount == totalStudents * babCount
+        : false;
+    if (fullSaturation) {
       return _StatusSpec(
         label: lp.getTranslatedText({'en': 'Done', 'id': 'Tuntas'}),
         tint: ColorUtils.success600.withValues(alpha: 0.12),
         fg: ColorUtils.success600,
       );
     }
-    if (pct >= 80) {
+
+    // Bab cleanly filled: entries divides evenly by class size and the
+    // ratio fits inside bab_count. e.g. 22 students × 1 bab = 22
+    // entries → "1 bab tuntas" (1 chapter is fully scored for all
+    // students).
+    final babFilled = totalStudents > 0 ? entriesCount ~/ totalStudents : 0;
+    final babCleanFill = totalStudents > 0 &&
+        entriesCount > 0 &&
+        entriesCount % totalStudents == 0 &&
+        babFilled > 0 &&
+        babFilled <= babCount;
+    if (babCleanFill) {
       return _StatusSpec(
         label: lp.getTranslatedText({
-          'en': 'Almost done',
-          'id': 'Hampir tuntas',
+          'en': '$babFilled bab done',
+          'id': '$babFilled bab tuntas',
         }),
         tint: ColorUtils.success600.withValues(alpha: 0.12),
         fg: ColorUtils.success600,
       );
     }
+
+    // Otherwise — partial: at least one bab has a missing student
+    // entry. Amber signals "still in progress, not all-students yet".
     return _StatusSpec(
       label: lp.getTranslatedText({'en': 'Partial', 'id': 'Sebagian'}),
       tint: ColorUtils.warning600.withValues(alpha: 0.12),
