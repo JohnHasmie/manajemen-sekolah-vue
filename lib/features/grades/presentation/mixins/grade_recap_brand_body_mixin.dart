@@ -157,6 +157,10 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
     );
   }
 
+  /// Three-band card: identity (avatar + name + class + status tag) →
+  /// sub-row (siswa count + optional teacher name) → stats grid (Bab ·
+  /// Nilai · Rata-rata) → progress band (bar + % or "Mulai input" CTA
+  /// when empty). Mirrors `_design/teacher_grade_recap_card_redesign.html`.
   Widget _buildRow(_FlatItem item, LanguageProvider lp) {
     final sn = Subject.fromJson(
       Map<String, dynamic>.from(item.subject),
@@ -179,13 +183,11 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
         ? _subjectTeacherName(item.subject)
         : null;
 
-    final pctColor = _progressColor(completionPct);
-    final classPillTint = completionPct < 40
-        ? ColorUtils.error600
-        : ColorUtils.info600;
+    final hasData = recapCount > 0;
+    final progressTone = _progressTone(completionPct, hasData);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -193,13 +195,13 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
           onTap: () => openRecapTable(item.classData, item.subject),
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: ColorUtils.slate200),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _avatar(initial, spec),
                 const SizedBox(width: 12),
@@ -207,33 +209,25 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _headLine(sn, item.className, classPillTint),
-                      if (teacherName != null) ...[
-                        const SizedBox(height: 4),
-                        _teacherLine(teacherName),
-                      ],
-                      const SizedBox(height: 6),
-                      _progressLine(completionPct, pctColor),
-                      const SizedBox(height: 6),
-                      _metaLine(
+                      _identityBand(
+                        sn,
+                        item.className,
+                        statusFor(completionPct, hasData, lp),
+                      ),
+                      const SizedBox(height: 4),
+                      _subRow(totalStudents, teacherName, lp),
+                      const SizedBox(height: 10),
+                      _statsGrid(
                         babCount: babCount,
                         recapCount: recapCount,
-                        totalStudents: totalStudents,
-                        completionPct: completionPct,
+                        avg: avg,
+                        progressTone: progressTone,
                         lp: lp,
                       ),
+                      const SizedBox(height: 10),
+                      _progressBand(completionPct, hasData, progressTone, lp),
                     ],
                   ),
-                ),
-                if (avg != null) ...[
-                  const SizedBox(width: 8),
-                  _scoreBadge(avg),
-                ],
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: ColorUtils.slate300,
                 ),
               ],
             ),
@@ -245,24 +239,356 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
 
   Widget _avatar(String initial, _SubjectColor spec) {
     return Container(
-      width: 42,
-      height: 42,
+      width: 44,
+      height: 44,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: spec.tint,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         initial,
         style: TextStyle(
           fontWeight: FontWeight.w900,
-          fontSize: 16,
+          fontSize: 17,
           color: spec.fg,
         ),
       ),
     );
   }
 
+  /// Identity band — subject name + slate class pill + single status tag.
+  /// Status tag drops the noisy multi-pill "Perlu input" alarm in favor
+  /// of a calm, single signal: Belum mulai / Sebagian / Hampir tuntas /
+  /// Tuntas.
+  Widget _identityBand(String name, String className, _StatusSpec status) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.slate900,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate100,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  className,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.slate600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        _statusTag(status),
+      ],
+    );
+  }
+
+  Widget _statusTag(_StatusSpec spec) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: spec.tint,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        spec.label.toUpperCase(),
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
+          color: spec.fg,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
+
+  /// Sub-row — siswa count + optional subject teacher (wali kelas view).
+  /// Inline icons + thin · separator instead of a second info row.
+  Widget _subRow(int totalStudents, String? teacherName, LanguageProvider lp) {
+    return Row(
+      children: [
+        Icon(
+          Icons.people_alt_rounded,
+          size: 12,
+          color: ColorUtils.slate400,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '$totalStudents ${lp.getTranslatedText({"en": "students", "id": "siswa"})}',
+          style: TextStyle(
+            fontSize: 11,
+            color: ColorUtils.slate500,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (teacherName != null) ...[
+          const SizedBox(width: 6),
+          Text(
+            '·',
+            style: TextStyle(
+              fontSize: 11,
+              color: ColorUtils.slate300,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Icon(
+            Icons.person_rounded,
+            size: 12,
+            color: ColorUtils.slate400,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              teacherName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                color: ColorUtils.slate500,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Stats grid — 3 cells (Bab · Nilai · Rata-rata) with hairline
+  /// dividers, on a soft slate-50 chip. Replaces the noisy pill row.
+  Widget _statsGrid({
+    required int babCount,
+    required int recapCount,
+    required double? avg,
+    required _ProgressTone progressTone,
+    required LanguageProvider lp,
+  }) {
+    final isEmpty = progressTone.kind == _ProgressKind.empty;
+    return Container(
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          _statCell(
+            value: '$babCount',
+            label: lp.getTranslatedText({'en': 'Chapters', 'id': 'Bab'}),
+            color: ColorUtils.slate900,
+          ),
+          _statDivider(),
+          _statCell(
+            value: '$recapCount',
+            label: lp.getTranslatedText({'en': 'Grades', 'id': 'Nilai'}),
+            color: isEmpty ? ColorUtils.slate400 : progressTone.color,
+          ),
+          _statDivider(),
+          _statCell(
+            value: avg == null ? '—' : avg.toStringAsFixed(0),
+            label: lp.getTranslatedText({
+              'en': 'Avg score',
+              'id': 'Rata-rata',
+            }),
+            color: avg == null ? ColorUtils.slate400 : progressTone.color,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statCell({
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: color,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 8.5,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statDivider() => Container(
+    width: 1,
+    height: 26,
+    margin: const EdgeInsets.symmetric(vertical: 4),
+    color: ColorUtils.slate200,
+  );
+
+  /// Progress band — paired bar + % when there's data, striped muted bar
+  /// + "Mulai input ›" CTA when empty so the card reads as actionable
+  /// rather than broken.
+  Widget _progressBand(
+    double pct,
+    bool hasData,
+    _ProgressTone tone,
+    LanguageProvider lp,
+  ) {
+    if (!hasData) {
+      return Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  color: ColorUtils.slate100,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                lp.getTranslatedText({
+                  'en': 'Start input',
+                  'id': 'Mulai input',
+                }),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  color: ColorUtils.brandCobalt,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 14,
+                color: ColorUtils.brandCobalt,
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              height: 6,
+              color: ColorUtils.slate100,
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: (pct / 100.0).clamp(0.0, 1.0),
+                child: Container(color: tone.color),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '${pct.round()}%',
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w800,
+            color: tone.color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Tone for a row — drives stats colors + progress fill. `empty` is
+  /// slate (not red) so a fresh card doesn't look like an alarm.
+  _ProgressTone _progressTone(double pct, bool hasData) {
+    if (!hasData) return _ProgressTone(_ProgressKind.empty, ColorUtils.slate400);
+    if (pct >= 80) return _ProgressTone(_ProgressKind.good, ColorUtils.success600);
+    if (pct >= 40) return _ProgressTone(_ProgressKind.warn, ColorUtils.warning600);
+    return _ProgressTone(_ProgressKind.alert, ColorUtils.error600);
+  }
+
+  /// Status tag spec — Belum mulai (slate) / Sebagian (amber) / Hampir
+  /// tuntas (green) / Tuntas (green). One pill per row, no overlap with
+  /// the stats colors.
+  _StatusSpec statusFor(double pct, bool hasData, LanguageProvider lp) {
+    if (!hasData) {
+      return _StatusSpec(
+        label: lp.getTranslatedText({'en': 'Not started', 'id': 'Belum mulai'}),
+        tint: ColorUtils.slate100,
+        fg: ColorUtils.slate600,
+      );
+    }
+    if (pct >= 100) {
+      return _StatusSpec(
+        label: lp.getTranslatedText({'en': 'Done', 'id': 'Tuntas'}),
+        tint: ColorUtils.success600.withValues(alpha: 0.12),
+        fg: ColorUtils.success600,
+      );
+    }
+    if (pct >= 80) {
+      return _StatusSpec(
+        label: lp.getTranslatedText({
+          'en': 'Almost done',
+          'id': 'Hampir tuntas',
+        }),
+        tint: ColorUtils.success600.withValues(alpha: 0.12),
+        fg: ColorUtils.success600,
+      );
+    }
+    return _StatusSpec(
+      label: lp.getTranslatedText({'en': 'Partial', 'id': 'Sebagian'}),
+      tint: ColorUtils.warning600.withValues(alpha: 0.12),
+      fg: ColorUtils.warning600,
+    );
+  }
+
+  // Removed in the redesign — kept the signature stub-free, the
+  // identity band now owns the head line directly.
   Widget _headLine(String name, String className, Color classPillTint) {
     return Row(
       children: [
@@ -575,4 +901,28 @@ class _SubjectColor {
   final Color tint;
   final Color fg;
   const _SubjectColor({required this.tint, required this.fg});
+}
+
+/// Drives the row's stats colors + progress fill. `empty` is the slate
+/// "not started" state — kept distinct from `alert` so a fresh card
+/// reads as ready-for-input, not as an error condition.
+enum _ProgressKind { empty, alert, warn, good }
+
+class _ProgressTone {
+  final _ProgressKind kind;
+  final Color color;
+  const _ProgressTone(this.kind, this.color);
+}
+
+/// Single-pill status surfaced in the identity band — replaces the noisy
+/// "Perlu input" multi-pill alarm with a calm one-shot signal.
+class _StatusSpec {
+  final String label;
+  final Color tint;
+  final Color fg;
+  const _StatusSpec({
+    required this.label,
+    required this.tint,
+    required this.fg,
+  });
 }
