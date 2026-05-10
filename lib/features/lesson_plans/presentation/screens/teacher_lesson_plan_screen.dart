@@ -336,7 +336,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
       break;
     }
 
-    if (newRow == null || !mounted) return;
+    if (!mounted) return;
 
     // Refresh the list so the new row appears, then immediately open
     // it so the teacher can review the AI draft / start filling

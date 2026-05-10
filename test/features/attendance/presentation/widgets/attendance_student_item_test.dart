@@ -1,4 +1,6 @@
-// Tests for AttendanceStudentItem with compact and descriptive modes.
+// Tests for AttendanceStudentItem — single canonical layout (Frame A).
+// The descriptive/compact toggle was retired with the in-header density
+// switch; this widget now ships only the full-word compact row.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,7 +32,6 @@ void main() {
     Student student = testStudent,
     String currentStatus = 'hadir',
     int index = 0,
-    bool compactMode = false,
     void Function(String, String)? onStatusChanged,
   }) {
     return MaterialApp(
@@ -42,7 +43,6 @@ void main() {
             onStatusChanged: onStatusChanged ?? (_, __) {},
             languageProvider: langProvider,
             index: index,
-            compactMode: compactMode,
           ),
         ),
       ),
@@ -65,34 +65,24 @@ void main() {
       expect(find.text('3'), findsOneWidget);
     });
 
-    testWidgets('descriptive mode shows full status labels', (
+    testWidgets('shows full-word status labels (Frame A)', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(buildWidget(compactMode: false));
-      // Default language is 'id', so labels are Indonesian
-      for (final label in ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alpha']) {
+      await tester.pumpWidget(buildWidget());
+      // Frame A row drops Telat/Terlambat — picker handles those.
+      for (final label in ['Hadir', 'Sakit', 'Izin', 'Alpa']) {
         expect(find.text(label), findsWidgets);
       }
     });
 
-    testWidgets('compact mode shows letter labels', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpWidget(buildWidget(compactMode: true));
-      for (final label in ['H', 'T', 'S', 'I', 'A']) {
-        expect(find.text(label), findsOneWidget);
-      }
-    });
-
     testWidgets(
-      'onStatusChanged fires with correct studentId and status (descriptive)',
+      'onStatusChanged fires with correct studentId and status',
       (WidgetTester tester) async {
         String? capturedId;
         String? capturedStatus;
 
         await tester.pumpWidget(
           buildWidget(
-            compactMode: false,
             onStatusChanged: (id, status) {
               capturedId = id;
               capturedStatus = status;
@@ -100,33 +90,7 @@ void main() {
           ),
         );
 
-        // Tap the "Sakit" button in descriptive mode.
         await tester.tap(find.text('Sakit'));
-        await tester.pump();
-
-        expect(capturedId, equals('stu-1'));
-        expect(capturedStatus, equals('sakit'));
-      },
-    );
-
-    testWidgets(
-      'onStatusChanged fires with correct studentId and status (compact)',
-      (WidgetTester tester) async {
-        String? capturedId;
-        String? capturedStatus;
-
-        await tester.pumpWidget(
-          buildWidget(
-            compactMode: true,
-            onStatusChanged: (id, status) {
-              capturedId = id;
-              capturedStatus = status;
-            },
-          ),
-        );
-
-        // Tap the "S" button in compact mode.
-        await tester.tap(find.text('S'));
         await tester.pump();
 
         expect(capturedId, equals('stu-1'));
