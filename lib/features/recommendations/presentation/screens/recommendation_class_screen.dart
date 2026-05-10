@@ -20,6 +20,8 @@ import 'package:manajemensekolah/features/recommendations/presentation/mixins/to
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/build_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_generate_sheet.dart';
 import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
+import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 
 /// Displays a list of classes with AI learning recommendation summaries.
@@ -160,6 +162,70 @@ class _LearningRecommendationClassScreenState
     return ColorUtils.getRoleColor(Teacher.fromJson(widget.teacher).role);
   }
 
+  /// Look up the class roster entry by id. Tries the active scope's
+  /// list (homeroom vs mengajar) first, then the other scope, and
+  /// finally falls back to the immutable [widget.classes] payload so
+  /// deep-links work even before the riverpod cache is hydrated.
+  Map<String, dynamic>? _findClassData(String classId) {
+    final provider = ref.read(teacherRiverpod);
+    final pools = <List<dynamic>>[
+      isHomeroomView ? provider.homeroomClasses : provider.allClasses,
+      isHomeroomView ? provider.allClasses : provider.homeroomClasses,
+      widget.classes,
+    ];
+    for (final pool in pools) {
+      for (final cls in pool) {
+        if (cls is Map && cls['id']?.toString() == classId) {
+          return Map<String, dynamic>.from(cls);
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Reads the enrolment count off a class roster entry, accepting
+  /// every variant key the backend emits across endpoints.
+  int _readStudentCount(Map<String, dynamic>? classData) {
+    if (classData == null) return 0;
+    final raw = classData['students_count'] ??
+        classData['student_count'] ??
+        classData['jumlah_siswa'] ??
+        classData['siswa_count'];
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '') ?? 0;
+  }
+
+  /// Pre-fetches the class roster so the inline `Pilih per siswa`
+  /// picker can render without a follow-up sheet. Returns an empty
+  /// list on failure — the picker handles that gracefully with a
+  /// "tarik refresh" hint.
+  Future<List<Map<String, String>>> _loadStudentsForClass(
+    String classId,
+    String? academicYearId,
+  ) async {
+    try {
+      final raw = await getIt<ApiClassService>().getStudentsByClassId(
+        classId,
+        academicYearId: academicYearId,
+      );
+      return raw
+          .whereType<Map>()
+          .map<Map<String, String>>((s) {
+            final m = Map<String, dynamic>.from(s);
+            final model = Student.fromJson(m);
+            return {
+              'id': model.id,
+              'name': model.name.isNotEmpty ? model.name : 'Siswa',
+            };
+          })
+          .where((m) => (m['id'] ?? '').isNotEmpty)
+          .toList();
+    } catch (e) {
+      AppLogger.error('recommendation', 'Failed to preload students: $e');
+      return const [];
+    }
+  }
+
   /// Override generateForClass to use the unified Frame D Generate AI
   /// sheet (violet header + scope tiles + subject FilterChipGrid +
   /// periode chip + token estimate + violet Generate CTA). The sheet
@@ -179,15 +245,32 @@ class _LearningRecommendationClassScreenState
       return;
     }
 
+    // Pull the actual student count from the class roster (the rec
+    // summary endpoint only returns by_status/by_priority/by_category
+    // counts, not enrollment numbers). The roster lives on
+    // teacherRiverpod and has students_count populated by the
+    // /teacher/{id}/classes call that the class screen kicks off on
+    // first paint. Fall back across the variant key names that
+    // different endpoints emit (`students_count`, `student_count`,
+    // `jumlah_siswa`).
+    final classData = _findClassData(classId);
+    final studentCount = _readStudentCount(classData);
+
+    // At-risk heuristic: prefer explicit backend signal when present,
+    // otherwise fall back to the count of high-priority recs already
+    // generated for this class (those flag the actually-struggling
+    // students), otherwise 30% of enrolment.
     final summary = classSummaries[classId];
-    final studentCount = summary?['student_count'] is num
-        ? (summary!['student_count'] as num).toInt()
-        : (summary?['total_students'] is num
-              ? (summary!['total_students'] as num).toInt()
-              : 0);
+    final highPriority = summary?['by_priority'] is Map
+        ? (Map<String, dynamic>.from(summary!['by_priority'] as Map)['high']
+                  as num?)
+              ?.toInt()
+        : null;
     final atRiskCount = summary?['at_risk_count'] is num
         ? (summary!['at_risk_count'] as num).toInt()
-        : (studentCount > 0 ? (studentCount * 0.3).round() : 0);
+        : (highPriority != null && highPriority > 0
+              ? highPriority
+              : (studentCount > 0 ? (studentCount * 0.3).round() : 0));
 
     final ayLabel =
         ref
@@ -196,6 +279,18 @@ class _LearningRecommendationClassScreenState
             ?.toString() ??
         'Periode aktif';
 
+    // Pre-fetch the class roster so the inline "Pilih per siswa"
+    // picker can render without a follow-up sheet. We don't block
+    // the open of the sheet on this — if the call fails, the picker
+    // shows a "tarik refresh" hint and the other two scopes remain
+    // usable.
+    final ayId = ref
+        .read(academicYearRiverpod)
+        .selectedAcademicYear?['id']
+        ?.toString();
+    final students = await _loadStudentsForClass(classId, ayId);
+    if (!mounted) return;
+
     final config = await showRecommendationGenerateSheet(
       context: context,
       className: className,
@@ -203,6 +298,7 @@ class _LearningRecommendationClassScreenState
       atRiskCount: atRiskCount,
       subjects: subjects,
       periodeLabel: 'Tahun $ayLabel',
+      students: students,
     );
     if (config == null || !mounted) return;
 
@@ -217,51 +313,82 @@ class _LearningRecommendationClassScreenState
     AppLogger.debug('recommendation', '   scope: ${config.scope}');
 
     final includeOnTrack = config.scope == 'all';
+    final perStudent = config.scope == 'per_student';
 
     try {
-      final ayId = ref
-          .read(academicYearRiverpod)
-          .selectedAcademicYear?['id']
-          ?.toString();
-
-      // Fan-out one call per selected subject. The generate API
-      // accepts a single subject_id; running them in series keeps
-      // the rate-limit math simple.
+      // Fan-out plan:
+      //   • all / at_risk → one generateForClass per selected subject.
+      //   • per_student   → one generateForStudent per (studentId × subjectId).
+      // Running serially keeps the rate-limit accounting simple and
+      // lets us surface a partial-failure snackbar.
       var failures = 0;
-      for (final subjectId in config.subjectIds) {
-        try {
-          final result = await getIt<ApiRecommendationService>()
-              .generateForClass(
-                teacherId: effectiveTeacherId,
-                classId: classId,
-                subjectId: subjectId,
-                includeOnTrack: includeOnTrack,
-                academicYearId: ayId,
-              );
-          if (result['async'] == true) {
-            final jobId = result['job_id']?.toString();
-            if (jobId != null) {
-              await getIt<ApiRecommendationService>().pollJobUntilComplete(
-                jobId,
+      var attempts = 0;
+      if (perStudent) {
+        for (final studentId in config.studentIds) {
+          for (final subjectId in config.subjectIds) {
+            attempts++;
+            try {
+              final result = await getIt<ApiRecommendationService>()
+                  .generateForStudent(
+                    teacherId: effectiveTeacherId,
+                    classId: classId,
+                    subjectId: subjectId,
+                    studentId: studentId,
+                  );
+              if (result['async'] == true) {
+                final jobId = result['job_id']?.toString();
+                if (jobId != null) {
+                  await getIt<ApiRecommendationService>()
+                      .pollJobUntilComplete(jobId);
+                }
+              }
+            } catch (e) {
+              failures++;
+              AppLogger.error(
+                'recommendation',
+                'Generate failed for student $studentId / subject $subjectId: $e',
               );
             }
           }
-        } catch (e) {
-          failures++;
-          AppLogger.error(
-            'recommendation',
-            'Generate failed for subject $subjectId: $e',
-          );
+        }
+      } else {
+        for (final subjectId in config.subjectIds) {
+          attempts++;
+          try {
+            final result = await getIt<ApiRecommendationService>()
+                .generateForClass(
+                  teacherId: effectiveTeacherId,
+                  classId: classId,
+                  subjectId: subjectId,
+                  includeOnTrack: includeOnTrack,
+                  academicYearId: ayId,
+                );
+            if (result['async'] == true) {
+              final jobId = result['job_id']?.toString();
+              if (jobId != null) {
+                await getIt<ApiRecommendationService>().pollJobUntilComplete(
+                  jobId,
+                );
+              }
+            }
+          } catch (e) {
+            failures++;
+            AppLogger.error(
+              'recommendation',
+              'Generate failed for subject $subjectId: $e',
+            );
+          }
         }
       }
 
       if (mounted) {
-        final ok = config.subjectIds.length - failures;
+        final ok = attempts - failures;
+        final unit = perStudent ? 'siswa-mapel' : 'mapel';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               failures == 0
-                  ? 'Rekomendasi berhasil dibuat untuk $ok mapel.'
+                  ? 'Rekomendasi berhasil dibuat untuk $ok $unit.'
                   : '$ok berhasil, $failures gagal.',
             ),
           ),

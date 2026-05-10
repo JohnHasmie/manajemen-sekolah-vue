@@ -33,6 +33,11 @@ class RecommendationCard extends StatelessWidget {
   /// `showRecommendationShareHistorySheet`.
   final VoidCallback? onViewShareHistory;
 
+  /// Open the per-recommendation edit screen. Renders a pencil
+  /// affordance next to the title — bulk edit moved off the screen
+  /// header so each rec is edited in its own context.
+  final VoidCallback? onEdit;
+
   const RecommendationCard({
     super.key,
     required this.rec,
@@ -41,6 +46,7 @@ class RecommendationCard extends StatelessWidget {
     this.onToggleStatus,
     this.onShareToParent,
     this.onViewShareHistory,
+    this.onEdit,
   });
 
   String? get _authorName {
@@ -166,21 +172,46 @@ class RecommendationCard extends StatelessWidget {
             ),
           ),
 
-          // Title
+          // Title row — title text on the left, optional pencil button
+          // on the right so the wali can jump straight into the per-rec
+          // editor without leaving the result screen.
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
-            child: Text(
-              key: listKey,
-              rec['title'] ?? 'Rekomendasi',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: isCompleted ? ColorUtils.slate500 : ColorUtils.slate900,
-                letterSpacing: -0.3,
-                height: 1.3,
-                decoration: isCompleted ? TextDecoration.lineThrough : null,
-                decorationColor: ColorUtils.slate400,
-              ),
+            padding: const EdgeInsets.fromLTRB(14, 8, 6, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    key: listKey,
+                    rec['title'] ?? 'Rekomendasi',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: isCompleted
+                          ? ColorUtils.slate500
+                          : ColorUtils.slate900,
+                      letterSpacing: -0.3,
+                      height: 1.3,
+                      decoration:
+                          isCompleted ? TextDecoration.lineThrough : null,
+                      decorationColor: ColorUtils.slate400,
+                    ),
+                  ),
+                ),
+                if (onEdit != null)
+                  IconButton(
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_rounded, size: 16),
+                    color: ColorUtils.slate500,
+                    visualDensity: VisualDensity.compact,
+                    tooltip: 'Edit',
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                    padding: EdgeInsets.zero,
+                  ),
+              ],
             ),
           ),
 

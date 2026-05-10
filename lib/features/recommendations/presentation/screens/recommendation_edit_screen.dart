@@ -24,13 +24,17 @@ import 'package:manajemensekolah/features/recommendations/presentation/mixins/ed
 class LearningRecommendationEditScreen extends StatefulWidget {
   final Map<String, String> teacher;
   final Map<String, dynamic> student;
-  final List<dynamic> recommendations;
+
+  /// The single recommendation being edited. The teacher edits one
+  /// recommendation per session — bulk edit was removed because it
+  /// led to long Quill stacks the wali couldn't see in one screen.
+  final Map<String, dynamic> recommendation;
 
   const LearningRecommendationEditScreen({
     super.key,
     required this.teacher,
     required this.student,
-    required this.recommendations,
+    required this.recommendation,
   });
 
   /// Pushes the editor as a full Material page route. Returns `true`
@@ -39,14 +43,14 @@ class LearningRecommendationEditScreen extends StatefulWidget {
     required BuildContext context,
     required Map<String, String> teacher,
     required Map<String, dynamic> student,
-    required List<dynamic> recommendations,
+    required Map<String, dynamic> recommendation,
   }) {
     return Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => LearningRecommendationEditScreen(
           teacher: teacher,
           student: student,
-          recommendations: recommendations,
+          recommendation: recommendation,
         ),
       ),
     );
@@ -68,15 +72,34 @@ class _LearningRecommendationEditScreenState
       {};
   final Map<String, String> _priorities = {};
 
+  /// Teacher-facing notes ("Catatan Wali Kelas"). Optional. Single
+  /// controller now that the screen edits one rec at a time.
+  late final TextEditingController _notesController;
+
+  /// Live list of selected materials — drives the chip strip in
+  /// "Materi Terkait". Mutable so the wali can remove a chip.
+  late final List<Map<String, dynamic>> _materialChips;
+
   @override
   void initState() {
     super.initState();
     initControllers();
+    _notesController = TextEditingController(
+      text: widget.recommendation['teacher_notes']?.toString() ?? '',
+    );
+    final raw = widget.recommendation['materials'];
+    _materialChips = raw is List
+        ? raw
+              .whereType<Map>()
+              .map((m) => Map<String, dynamic>.from(m))
+              .toList()
+        : <Map<String, dynamic>>[];
   }
 
   @override
   void dispose() {
     disposeAllControllers();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -94,8 +117,11 @@ class _LearningRecommendationEditScreenState
   @override
   Map<String, String> get priorities => _priorities;
 
+  /// Bridge for the existing list-based mixin contract — wraps the
+  /// single recommendation in a one-element list so `initControllers`
+  /// + `saveChanges` keep working without a deeper refactor.
   @override
-  List<dynamic> get widgetRecommendations => widget.recommendations;
+  List<dynamic> get widgetRecommendations => [widget.recommendation];
 
   @override
   bool get isSaving => _isSaving;
@@ -106,6 +132,25 @@ class _LearningRecommendationEditScreenState
   @override
   Map<String, String> get teacher => widget.teacher;
 
+  // ── Per-rec extras (notes + materi chips) ──
+  // EditFormCardMixin reads these to render the Catatan textarea
+  // and the Materi Terkait chip strip. Mutation flows through
+  // onRemoveMaterialChip / onAddMaterialChip with setState so the
+  // strip rebuilds in place.
+  @override
+  TextEditingController get notesController => _notesController;
+  @override
+  List<Map<String, dynamic>> get materialChips => _materialChips;
+  @override
+  void onRemoveMaterialChip(int index) {
+    setState(() => _materialChips.removeAt(index));
+  }
+
+  @override
+  void onAddMaterialChip(Map<String, dynamic> mat) {
+    setState(() => _materialChips.add(mat));
+  }
+
   String get _studentName {
     final raw =
         widget.student['name'] ?? widget.student['student_name'] ?? 'Siswa';
@@ -115,7 +160,6 @@ class _LearningRecommendationEditScreenState
   @override
   Widget build(BuildContext context) {
     final cobalt = ColorUtils.brandCobalt;
-    final count = widget.recommendations.length;
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
@@ -124,7 +168,7 @@ class _LearningRecommendationEditScreenState
           BrandPageHeader(
             role: 'guru',
             subtitle: '$_studentName · Edit Rec',
-            title: count == 1 ? 'Edit Rekomendasi' : 'Edit $count Rekomendasi',
+            title: 'Edit Rekomendasi',
             onBackPressed: _isSaving ? null : () => AppNavigator.pop(context),
             actionIcons: [
               BrandHeaderIconButton(
@@ -134,14 +178,10 @@ class _LearningRecommendationEditScreenState
             ],
           ),
           Expanded(
-            child: ListView.builder(
+            child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              itemCount: widget.recommendations.length,
-              itemBuilder: (context, index) {
-                final rec = widget.recommendations[index];
-                return buildEditCard(rec, index);
-              },
+              children: [buildEditCard(widget.recommendation, 0)],
             ),
           ),
           BottomSheetFooter(

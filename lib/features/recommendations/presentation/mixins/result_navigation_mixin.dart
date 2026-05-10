@@ -18,21 +18,32 @@ mixin ResultNavigationMixin
   /// Fetches recommendations with optional cache.
   Future<void> fetchRecommendations({bool useCache = true});
 
-  /// Opens the edit form as a bottom sheet stacked on top of the result
-  /// sheet. On successful save, invalidates cached recommendations and
-  /// re-fetches so the updated rows show immediately.
-  Future<void> navigateToEdit() async {
+  /// Opens the edit form for a single recommendation. The screen
+  /// edits one rec at a time (bulk edit was retired because the
+  /// stacked Quill editors didn't fit in one viewport). Pass the
+  /// rec map directly — typically wired from a per-card pencil.
+  Future<void> navigateToEditRec(Map<String, dynamic> rec) async {
     final result = await LearningRecommendationEditScreen.show(
       context: context,
       teacher: widget.teacher,
       student: widget.student,
-      recommendations: recommendations,
+      recommendation: rec,
     );
 
     if (result == true) {
       await LocalCacheService.invalidate(buildRecommendationsCacheKey());
       fetchRecommendations(useCache: false);
     }
+  }
+
+  /// Header-level pencil shortcut: edit the first rec. Useful for
+  /// the result-screen header "Edit" action when only one rec is
+  /// visible. No-op when the list is empty.
+  Future<void> navigateToEdit() async {
+    if (recommendations.isEmpty) return;
+    final first = recommendations.first;
+    if (first is! Map) return;
+    await navigateToEditRec(Map<String, dynamic>.from(first));
   }
 
   /// Gets primary color based on teacher role.

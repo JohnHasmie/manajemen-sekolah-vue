@@ -400,18 +400,11 @@ class _LearningRecommendationResultScreenState
                   kpiOverlayHeight: 36,
                   onBackPressed: () =>
                       AppNavigator.pop(context, _statusChanged),
-                  actionIcons: [
-                    if (!_isLoading &&
-                        _recommendations.isNotEmpty &&
-                        !widget.isHomeroomView)
-                      KeyedSubtree(
-                        key: _editButtonKey,
-                        child: BrandHeaderIconButton(
-                          icon: Icons.edit_rounded,
-                          onTap: navigateToEdit,
-                        ),
-                      ),
-                  ],
+                  // Header-level "Edit" pencil retired — each rec
+                  // card now owns its own edit affordance, so the
+                  // wali edits one rec at a time instead of opening a
+                  // bulk-edit page from the header.
+                  actionIcons: const [],
                 ),
                 Positioned(
                   left: 16,
@@ -629,6 +622,13 @@ class _LearningRecommendationResultScreenState
                   onToggleStatus: () => _toggleStatus(rec),
                   onShareToParent: () => _openShareSheet(rec),
                   onViewShareHistory: () => _openShareHistorySheet(rec),
+                  // Per-rec edit pencil — replaces the bulk edit
+                  // action that used to live on the page header.
+                  onEdit: widget.isHomeroomView
+                      ? null
+                      : () => navigateToEditRec(
+                          Map<String, dynamic>.from(rec as Map),
+                        ),
                 );
               },
             ),

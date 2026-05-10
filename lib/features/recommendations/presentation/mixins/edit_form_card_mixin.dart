@@ -26,6 +26,25 @@ mixin EditFormCardMixin {
   BuildContext get context;
   void setState(VoidCallback fn);
 
+  /// "Catatan Wali Kelas" textarea — single per-rec controller fed
+  /// in by the screen state. Empty when the rec has no
+  /// `teacher_notes` value.
+  TextEditingController get notesController;
+
+  /// Live list of material chips shown under "Materi Terkait".
+  /// The screen owns this list and rebuilds when an item is removed
+  /// via [onRemoveMaterialChip].
+  List<Map<String, dynamic>> get materialChips;
+
+  /// Removes the chip at [index] from [materialChips]. The screen
+  /// state mutates the list and calls setState.
+  void onRemoveMaterialChip(int index);
+
+  /// Appends [mat] to [materialChips]. The screen state mutates the
+  /// list and calls setState. Called after the teacher confirms the
+  /// add-material picker.
+  void onAddMaterialChip(Map<String, dynamic> mat);
+
   Widget buildEditCard(Map<String, dynamic> rec, int index) {
     final recId = rec['id']?.toString() ?? UniqueKey().toString();
     final cobalt = ColorUtils.brandCobalt;
@@ -35,8 +54,6 @@ mixin EditFormCardMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildIndexBanner(index, rec),
-          const SizedBox(height: 8),
           _SectCard(
             icon: Icons.edit_rounded,
             iconBg: ColorUtils.violet700.withValues(alpha: 0.10),
@@ -72,83 +89,158 @@ mixin EditFormCardMixin {
             chip: 'Wajib',
             children: [_buildPriorityRow(recId)],
           ),
-          if (rec['materials'] != null &&
-              (rec['materials'] as List).isNotEmpty) ...[
-            const SizedBox(height: 10),
-            _SectCard(
-              icon: Icons.menu_book_rounded,
-              iconBg: cobalt.withValues(alpha: 0.10),
-              iconFg: cobalt,
-              title: 'Materi Terkait',
-              chip: '${(rec['materials'] as List).length} materi',
-              children: [
-                for (final mat in (rec['materials'] as List))
-                  _buildMaterialBlock(recId, mat as Map<String, dynamic>),
-              ],
-            ),
-          ],
+          const SizedBox(height: 10),
+          _SectCard(
+            icon: Icons.menu_book_rounded,
+            iconBg: cobalt.withValues(alpha: 0.10),
+            iconFg: cobalt,
+            title: 'Materi Terkait',
+            chip: materialChips.isEmpty
+                ? null
+                : '${materialChips.length} dipilih',
+            children: [_buildMaterialChipStrip()],
+          ),
+          const SizedBox(height: 10),
+          _SectCard(
+            icon: Icons.chat_bubble_outline_rounded,
+            iconBg: ColorUtils.slate500.withValues(alpha: 0.10),
+            iconFg: ColorUtils.slate600,
+            title: 'Catatan Wali Kelas',
+            chip: 'Opsional',
+            children: [_buildNotesField()],
+          ),
         ],
       ),
     );
   }
 
-  /// Slim banner above each rec — index + truncated title — so the
-  /// teacher can tell the rec sub-stack apart when there are several
-  /// in a single bulk-edit session.
-  Widget _buildIndexBanner(int index, Map<String, dynamic> rec) {
-    final priority =
-        (priorities[rec['id']?.toString() ?? ''] ??
-                rec['priority']?.toString().toLowerCase() ??
-                'low')
-            .toLowerCase();
-    final accent = priority == 'high'
-        ? ColorUtils.error600
-        : priority == 'medium'
-        ? ColorUtils.warning600
-        : ColorUtils.slate500;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [accent.withValues(alpha: 0.06), Colors.white],
-        ),
-        borderRadius: BorderRadius.circular(10),
-        border: Border(left: BorderSide(color: accent, width: 3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 24,
-            height: 24,
+  /// Render the chips for selected materi (Mapel · Bab · Sub-bab),
+  /// plus an outlined "+ Tambah Materi" affordance. Each chip carries
+  /// an `×` button that calls back into [onRemoveMaterialChip].
+  Widget _buildMaterialChipStrip() {
+    final cobalt = ColorUtils.brandCobalt;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (var i = 0; i < materialChips.length; i++)
+          _MaterialChip(
+            label: _materialLabel(materialChips[i]),
+            color: _chipColorFor(materialChips[i]),
+            onRemove: () => onRemoveMaterialChip(i),
+          ),
+        // "+ Tambah Materi" — opens the cobalt-themed picker sheet
+        // below. On confirmation the picker pops with a Map carrying
+        // type/title/description, which we hand off to
+        // [onAddMaterialChip] to mutate the screen's materialChips
+        // list.
+        InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: _openAddMaterialSheet,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(7),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '${index + 1}',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: accent,
+              color: cobalt.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: cobalt.withValues(alpha: 0.4),
+                style: BorderStyle.solid,
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Rekomendasi ${index + 1}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w800,
-                color: ColorUtils.slate700,
-                letterSpacing: 0.2,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add, size: 12, color: cobalt),
+                const SizedBox(width: 4),
+                Text(
+                  'Tambah Materi',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: cobalt,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  /// Open the add-material picker. Returns a Map<String, dynamic>
+  /// shaped to match the materialChips contract:
+  ///   { type: 'subject'|'chapter'|'sub_chapter', title, description? }
+  /// Pre-fills nothing — the teacher types from scratch.
+  Future<void> _openAddMaterialSheet() async {
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => _AddMaterialSheet(),
+    );
+    if (result != null && result['title']?.toString().trim().isNotEmpty == true) {
+      onAddMaterialChip(result);
+    }
+  }
+
+  /// Pick a chip label that matches the mockup format —
+  /// "Matematika" / "Bab 2" / "Sub: Op. Campuran" depending on what
+  /// fields the materi map carries.
+  String _materialLabel(Map<String, dynamic> mat) {
+    final type = mat['type']?.toString() ?? '';
+    final title = mat['title']?.toString() ?? mat['name']?.toString() ?? '-';
+    if (type == 'subject') return title;
+    if (type == 'chapter') return 'Bab ${mat['urutan'] ?? title}';
+    if (type == 'sub_chapter') return 'Sub: $title';
+    return title;
+  }
+
+  /// Subject chips → blue, bab → green, sub-bab → amber. Mirrors the
+  /// mockup palette so each chip type stays visually distinct in a
+  /// strip.
+  Color _chipColorFor(Map<String, dynamic> mat) {
+    final type = mat['type']?.toString() ?? '';
+    if (type == 'chapter') return ColorUtils.success600;
+    if (type == 'sub_chapter') return ColorUtils.warning600;
+    return ColorUtils.brandCobalt;
+  }
+
+  /// Plain "Catatan Wali Kelas" textarea — wraps to 4 lines, no
+  /// rich formatting, sits inside the slate-50 fill that matches the
+  /// title field.
+  Widget _buildNotesField() {
+    final cobalt = ColorUtils.brandCobalt;
+    return TextField(
+      controller: notesController,
+      minLines: 3,
+      maxLines: 5,
+      style: TextStyle(
+        fontSize: 13,
+        color: ColorUtils.slate800,
+      ),
+      decoration: InputDecoration(
+        hintText: 'Tambahkan konteks pribadi atau langkah lanjutan...',
+        hintStyle: TextStyle(
+          fontSize: 13,
+          color: ColorUtils.slate400,
+        ),
+        filled: true,
+        fillColor: ColorUtils.slate50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: ColorUtils.slate200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: ColorUtils.slate200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: cobalt, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.all(12),
+        isDense: true,
       ),
     );
   }
@@ -230,56 +322,53 @@ mixin EditFormCardMixin {
     );
   }
 
-  Widget _buildMaterialBlock(String recId, Map<String, dynamic> mat) {
-    final matId = mat['id']?.toString() ?? UniqueKey().toString();
-    final cobalt = ColorUtils.brandCobalt;
+}
+
+// ─── Material chip ─────────────────────────────────────────────────
+// Tinted pill with subject/bab/sub-bab label and `×` remove button.
+// Mirrors the SS2 mockup palette (subject blue / bab green /
+// sub-bab amber). The owning widget hands in the chip color.
+
+class _MaterialChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final VoidCallback onRemove;
+
+  const _MaterialChip({
+    required this.label,
+    required this.color,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(10, 5, 6, 5),
       decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate200),
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: cobalt.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                alignment: Alignment.center,
-                child: Icon(Icons.menu_book_rounded, size: 12, color: cobalt),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  mat['title']?.toString() ?? 'Materi',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: ColorUtils.slate900,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          if (materialControllers[recId]?[matId] != null)
-            AppQuillEditor(
-              controller: materialControllers[recId]![matId]!,
-              accentColor: cobalt,
-              placeholder: 'Detail materi...',
-              minHeight: 100,
-              maxHeight: 180,
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: color,
             ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: onRemove,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Icon(Icons.close, size: 12, color: color),
+            ),
+          ),
         ],
       ),
     );
@@ -407,6 +496,353 @@ class _PriorityChip extends StatelessWidget {
               width: 6,
               height: 6,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w800,
+                color: selected ? color : ColorUtils.slate700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Add-material picker sheet ──────────────────────────────────────
+
+/// Cobalt-themed bottom sheet that lets the wali kelas attach a new
+/// material chip to the rec they're editing. Three fields:
+///   • Tipe — Mapel / Bab / Sub-bab (drives the chip color + label).
+///   • Judul — free-form title text input.
+///   • Keterangan — optional one-liner description.
+/// Pops with a {type, title, description} map on Save; null on Batal.
+class _AddMaterialSheet extends StatefulWidget {
+  @override
+  State<_AddMaterialSheet> createState() => _AddMaterialSheetState();
+}
+
+class _AddMaterialSheetState extends State<_AddMaterialSheet> {
+  String _type = 'subject';
+  final _titleCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _descCtrl.dispose();
+    super.dispose();
+  }
+
+  bool get _canSave => _titleCtrl.text.trim().isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    final cobalt = ColorUtils.brandCobalt;
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(top: 4, bottom: 14),
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate200,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: cobalt.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Icon(
+                    Icons.menu_book_rounded,
+                    size: 14,
+                    color: cobalt,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Tambah Materi',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
+                          color: ColorUtils.slate900,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        'Lampirkan referensi belajar untuk rekomendasi ini',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: ColorUtils.slate500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _label('Tipe Materi'),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: _typeChip(
+                    'subject',
+                    'Mapel',
+                    ColorUtils.brandCobalt,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _typeChip(
+                    'chapter',
+                    'Bab',
+                    ColorUtils.success600,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _typeChip(
+                    'sub_chapter',
+                    'Sub-bab',
+                    ColorUtils.warning600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _label('Judul'),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _titleCtrl,
+              onChanged: (_) => setState(() {}),
+              autofocus: true,
+              style: TextStyle(
+                fontSize: 13,
+                color: ColorUtils.slate900,
+                fontWeight: FontWeight.w700,
+              ),
+              decoration: InputDecoration(
+                hintText: 'mis. Bab 2 Pecahan Campuran',
+                hintStyle: TextStyle(
+                  fontSize: 13,
+                  color: ColorUtils.slate400,
+                  fontWeight: FontWeight.w400,
+                ),
+                filled: true,
+                fillColor: ColorUtils.slate50,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: ColorUtils.slate200),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: ColorUtils.slate200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: cobalt, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _label('Keterangan', trailing: '· opsional'),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _descCtrl,
+              maxLines: 3,
+              minLines: 2,
+              style: TextStyle(fontSize: 12.5, color: ColorUtils.slate800),
+              decoration: InputDecoration(
+                hintText: 'Catatan untuk siswa atau orang tua…',
+                hintStyle: TextStyle(
+                  fontSize: 12.5,
+                  color: ColorUtils.slate400,
+                ),
+                filled: true,
+                fillColor: ColorUtils.slate50,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: ColorUtils.slate200),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: ColorUtils.slate200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: cobalt, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(null),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.slate100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Batal',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: ColorUtils.slate700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _canSave
+                        ? () => Navigator.of(context).pop({
+                              'type': _type,
+                              'title': _titleCtrl.text.trim(),
+                              'description': _descCtrl.text.trim(),
+                              // Mark as locally added so the save mixin
+                              // knows this is a fresh row, not a
+                              // backend material id reference.
+                              '_local': true,
+                            })
+                        : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _canSave
+                            ? cobalt
+                            : cobalt.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: _canSave
+                            ? [
+                                BoxShadow(
+                                  color: cobalt.withValues(alpha: 0.30),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        'Tambah',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _label(String text, {String? trailing}) {
+    return RichText(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: text.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate700,
+              letterSpacing: 0.4,
+            ),
+          ),
+          if (trailing != null)
+            TextSpan(
+              text: ' $trailing',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: ColorUtils.slate400,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _typeChip(String value, String label, Color color) {
+    final selected = _type == value;
+    return GestureDetector(
+      onTap: () => setState(() => _type = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.06) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected ? color : ColorUtils.slate200,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
             ),
             const SizedBox(width: 6),
             Text(

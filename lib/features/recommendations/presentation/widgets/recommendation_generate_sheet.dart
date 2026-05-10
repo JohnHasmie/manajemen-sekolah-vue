@@ -30,7 +30,16 @@ class GenerateConfig {
   /// Subject IDs the teacher chose. Always at least 1.
   final List<String> subjectIds;
 
-  GenerateConfig({required this.scope, required this.subjectIds});
+  /// Hand-picked student IDs — only populated when [scope] is
+  /// `'per_student'`. The host fans out one `generateForStudent`
+  /// call per (studentId × subjectId) pair.
+  final List<String> studentIds;
+
+  GenerateConfig({
+    required this.scope,
+    required this.subjectIds,
+    this.studentIds = const [],
+  });
 }
 
 Future<GenerateConfig?> showRecommendationGenerateSheet({
@@ -40,6 +49,11 @@ Future<GenerateConfig?> showRecommendationGenerateSheet({
   required int atRiskCount,
   required List<Map<String, String>> subjects,
   required String periodeLabel,
+  /// Class roster — passed in so the inline `Pilih per siswa` picker
+  /// can render without a second sheet. Each map needs at minimum
+  /// `id` and `name`. When empty the per-student tile shows a hint
+  /// asking the teacher to refresh.
+  List<Map<String, String>> students = const [],
   int dailyUsage = 0,
   int dailyLimit = 10,
 }) {
@@ -54,6 +68,7 @@ Future<GenerateConfig?> showRecommendationGenerateSheet({
       atRiskCount: atRiskCount,
       subjects: subjects,
       periodeLabel: periodeLabel,
+      students: students,
       dailyUsage: dailyUsage,
       dailyLimit: dailyLimit,
       scrollController: scrollController,
@@ -67,6 +82,7 @@ class _RecommendationGenerateSheet extends StatefulWidget {
   final int atRiskCount;
   final List<Map<String, String>> subjects;
   final String periodeLabel;
+  final List<Map<String, String>> students;
   final int dailyUsage;
   final int dailyLimit;
   final ScrollController scrollController;
@@ -77,6 +93,7 @@ class _RecommendationGenerateSheet extends StatefulWidget {
     required this.atRiskCount,
     required this.subjects,
     required this.periodeLabel,
+    required this.students,
     required this.dailyUsage,
     required this.dailyLimit,
     required this.scrollController,
@@ -91,6 +108,7 @@ class _RecommendationGenerateSheetState
     extends State<_RecommendationGenerateSheet> {
   String _scope = 'at_risk';
   late Set<String> _selectedSubjectIds;
+  Set<String> _selectedStudentIds = <String>{};
 
   @override
   void initState() {
@@ -110,7 +128,7 @@ class _RecommendationGenerateSheetState
       case 'at_risk':
         return widget.atRiskCount;
       case 'per_student':
-        return 1;
+        return _selectedStudentIds.length;
       default:
         return widget.totalStudents;
     }
@@ -124,8 +142,11 @@ class _RecommendationGenerateSheetState
   @override
   Widget build(BuildContext context) {
     final violet = ColorUtils.violet700;
-    final canGenerate =
-        _selectedSubjectIds.isNotEmpty && widget.dailyUsage < widget.dailyLimit;
+    final hasEnoughStudents =
+        _scope != 'per_student' || _selectedStudentIds.isNotEmpty;
+    final canGenerate = _selectedSubjectIds.isNotEmpty &&
+        hasEnoughStudents &&
+        widget.dailyUsage < widget.dailyLimit;
 
     return Container(
       decoration: const BoxDecoration(
@@ -169,11 +190,18 @@ class _RecommendationGenerateSheetState
                   selected: _scope == 'per_student',
                   title: 'Pilih per siswa',
                   subtitle: 'Pilih sendiri siswa mana yang dianalisa AI.',
-                  trailing: null,
-                  trailingColor: null,
+                  trailing: _scope == 'per_student'
+                      ? '${_selectedStudentIds.length} dipilih'
+                      : null,
+                  trailingColor:
+                      _scope == 'per_student' ? violet : null,
                   violet: violet,
                   onTap: () => setState(() => _scope = 'per_student'),
                 ),
+                if (_scope == 'per_student') ...[
+                  const SizedBox(height: 8),
+                  _buildStudentPicker(violet),
+                ],
                 const SizedBox(height: 14),
                 _FieldLabel('Mata Pelajaran', trailing: '· multi-select'),
                 const SizedBox(height: 6),
@@ -196,6 +224,9 @@ class _RecommendationGenerateSheetState
                 GenerateConfig(
                   scope: _scope,
                   subjectIds: _selectedSubjectIds.toList(),
+                  studentIds: _scope == 'per_student'
+                      ? _selectedStudentIds.toList()
+                      : const [],
                 ),
               );
             },
@@ -271,6 +302,112 @@ class _RecommendationGenerateSheetState
               color: ColorUtils.slate500,
             ),
             onPressed: () => Navigator.of(context).pop(null),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Inline student multi-picker that appears beneath the
+  /// "Pilih per siswa" tile when active. Uses the same
+  /// FilterChipGrid pattern as the subject picker so the brand
+  /// vocabulary stays consistent.
+  Widget _buildStudentPicker(Color violet) {
+    if (widget.students.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: ColorUtils.slate50,
+          border: Border.all(color: ColorUtils.slate200),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.info_outline_rounded,
+              size: 14,
+              color: ColorUtils.slate500,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Daftar siswa belum dimuat. Tarik ke bawah untuk refresh.',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: ColorUtils.slate500,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: violet.withValues(alpha: 0.04),
+        border: Border.all(color: violet.withValues(alpha: 0.18)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.people_alt_rounded, size: 13, color: violet),
+              const SizedBox(width: 6),
+              Text(
+                'PILIH SISWA',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  color: violet,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (_selectedStudentIds.length == widget.students.length) {
+                      _selectedStudentIds.clear();
+                    } else {
+                      _selectedStudentIds = widget.students
+                          .map((s) => s['id'] ?? '')
+                          .where((id) => id.isNotEmpty)
+                          .toSet();
+                    }
+                  });
+                },
+                child: Text(
+                  _selectedStudentIds.length == widget.students.length
+                      ? 'Bersihkan'
+                      : 'Pilih semua',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: violet,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FilterChipGrid<String>(
+            options: widget.students
+                .map(
+                  (s) => FilterOption<String>(
+                    value: s['id'] ?? '',
+                    label: s['name'] ?? 'Siswa',
+                  ),
+                )
+                .toList(),
+            selectedValues: _selectedStudentIds,
+            multiSelect: true,
+            selectedColor: violet,
+            onMultiSelected: (set) =>
+                setState(() => _selectedStudentIds = Set<String>.from(set)),
           ),
         ],
       ),
