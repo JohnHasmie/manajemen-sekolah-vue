@@ -58,19 +58,24 @@ class ClassFinanceReportScreen extends StatefulWidget {
 
 /// State for [ClassFinanceReportScreen] with data loading, payment
 /// handling, and UI management.
+///
+/// Loading / data / error state lives on [ClassFinanceDataMixin]'s
+/// `late` fields (`isLoadingData`, `errorMessage`, `students`,
+/// `billsByStudent`, `monthGroups`). They are seeded in [initState]
+/// before [loadData] runs — without that, the mixin's `setState`
+/// would trip a `LateInitializationError` on the very first read.
+///
+/// Earlier versions kept private final shadows here (`_isLoading =
+/// true`, `_students = []`, …) which never got mutated, so `build()`
+/// rendered a perpetual loading screen even after the mixin's fetch
+/// returned successfully — the loaded data lived on different
+/// fields. Don't reintroduce those shadows.
 class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
     with
         ClassFinanceDataMixin,
         ClassFinancePaymentMixin,
         ClassFinanceUtilsMixin,
         ClassFinanceUIMixin {
-  final ApiService _apiService = ApiService();
-  final bool _isLoading = true;
-  String? _errorMessage;
-
-  final List<dynamic> _students = [];
-  final Map<String, List<dynamic>> _billsByStudent = {};
-  final List<MonthGroup> _monthGroups = [];
   @override
   File? selectedFile;
 
@@ -82,17 +87,26 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
   @override
   void initState() {
     super.initState();
+    // Seed the mixin's late fields so the first `setState` inside
+    // loadData() doesn't trip LateInitializationError. The screen
+    // owns no shadow state — mixin fields are the single source.
+    apiService = ApiService();
+    students = const [];
+    billsByStudent = const {};
+    monthGroups = const [];
+    isLoadingData = true;
+    errorMessage = null;
     loadData();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (isLoadingData) {
       return _buildLoadingScreen();
     }
-    if (_errorMessage?.isNotEmpty == true) {
+    if (errorMessage != null && errorMessage!.isNotEmpty) {
       final errorChild = ErrorScreen(
-        errorMessage: _errorMessage!,
+        errorMessage: errorMessage!,
         onRetry: loadData,
       );
       return widget.embedded ? errorChild : errorChild;
@@ -127,7 +141,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
           child: MediaQuery.removePadding(
             context: context,
             removeTop: true,
-            child: _students.isEmpty
+            child: students.isEmpty
                 ? const EmptyState(
                     title: 'Tidak ada siswa',
                     subtitle: 'Kelas ini belum memiliki siswa',
@@ -147,9 +161,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: ClassFinanceTable(
-        students: _students,
-        billsByStudent: _billsByStudent,
-        monthGroups: _monthGroups,
+        students: students,
+        billsByStudent: billsByStudent,
+        monthGroups: monthGroups,
         searchQuery: _searchQuery,
         selectedPaymentTypeId: _selectedPaymentTypeId,
         selectedMonthKey: _selectedMonthKey,
@@ -289,7 +303,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
         const SizedBox(width: AppSpacing.sm),
         GestureDetector(
           onTap: () => showFilterSheet(
-            _monthGroups,
+            monthGroups,
             _selectedStatus,
             _selectedMonthKey,
             _selectedPaymentTypeId,
@@ -402,7 +416,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
   Widget _buildFilterButton() {
     return GestureDetector(
       onTap: () => showFilterSheet(
-        _monthGroups,
+        monthGroups,
         _selectedStatus,
         _selectedMonthKey,
         _selectedPaymentTypeId,
@@ -467,7 +481,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
   }
 
   String _getSelectedMonthName() {
-    return _monthGroups
+    return monthGroups
         .firstWhere(
           (m) => m.monthKey == _selectedMonthKey,
           orElse: () => MonthGroup(

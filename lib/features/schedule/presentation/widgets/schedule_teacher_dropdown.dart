@@ -21,6 +21,25 @@ class ScheduleTeacherDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Normalise FIRST, filter SECOND. The previous order
+    // (`teachers.where((t) => t['id']...)`) silently dropped every
+    // entry whose API shape used `teacher_id` instead of `id` — the
+    // `Teacher.fromJson` aliasing only kicks in after the model is
+    // constructed. That left the dropdown empty even when teachers
+    // were loaded, so admins couldn't pick anyone in the add-jadwal
+    // form.
+    final items = teachers
+        .whereType<Map<String, dynamic>>()
+        .map(Teacher.fromJson)
+        .where((t) => t.id.isNotEmpty)
+        .map<DropdownMenuItem<String>>(
+          (model) => DropdownMenuItem<String>(
+            value: model.id,
+            child: Text(model.name.isNotEmpty ? model.name : 'Unknown'),
+          ),
+        )
+        .toList();
+
     return FormDropdownField<String>(
       label: languageProvider.getTranslatedText({
         'en': 'Teacher',
@@ -28,16 +47,7 @@ class ScheduleTeacherDropdown extends StatelessWidget {
       }),
       isRequired: true,
       value: selectedValue.isEmpty ? null : selectedValue,
-      items: teachers
-          .where((t) => (t['id']?.toString() ?? '').isNotEmpty)
-          .map<DropdownMenuItem<String>>((teacher) {
-            final model = Teacher.fromJson(teacher as Map<String, dynamic>);
-            return DropdownMenuItem<String>(
-              value: model.id,
-              child: Text(model.name.isNotEmpty ? model.name : 'Unknown'),
-            );
-          })
-          .toList(),
+      items: items,
       onChanged: (value) => onChanged(value ?? ''),
       hintText: languageProvider.getTranslatedText({
         'en': 'Select Teacher',

@@ -41,7 +41,14 @@ Future<PaymentTypeDetailAction?> showPaymentTypeDetailSheet(
 }
 
 /// What the user picked from the detail sheet.
-enum PaymentTypeDetailAction { edit, delete }
+///
+///   - [edit]    — open the full edit form
+///   - [delete]  — destructive confirm + hard delete (or soft
+///                 deactivate when bills exist)
+///   - [activate] / [deactivate] — quick status flip without
+///     reopening the form, returned when the admin taps the
+///     activate/deactivate quick action
+enum PaymentTypeDetailAction { edit, delete, activate, deactivate }
 
 class PaymentTypeDetailSheet extends StatelessWidget {
   final Map<String, dynamic> paymentType;
@@ -208,7 +215,8 @@ class PaymentTypeDetailSheet extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Jenis ini sedang nonaktif — tidak ada tagihan baru yang dibuat.',
+                      'Jenis ini sedang nonaktif — tidak ada tagihan '
+                      'baru yang dibuat.',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -220,6 +228,21 @@ class PaymentTypeDetailSheet extends StatelessWidget {
                 ],
               ),
             ),
+
+          // Quick activate/deactivate row — saves the admin a trip
+          // through the full Edit form just to flip status. Only shown
+          // when there's a meaningful direction to flip.
+          const SizedBox(height: 12),
+          _StatusToggleButton(
+            isActive: isActive,
+            navy: navy,
+            onTap: () => AppNavigator.pop(
+              context,
+              isActive
+                  ? PaymentTypeDetailAction.deactivate
+                  : PaymentTypeDetailAction.activate,
+            ),
+          ),
           const SizedBox(height: 18),
         ],
       ),
@@ -317,6 +340,96 @@ class _DetailRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Quick activate/deactivate row inside the detail sheet body. When
+/// the type is currently active, it offers "Nonaktifkan jenis"; when
+/// inactive, it offers "Aktifkan jenis" in cobalt. Tapping pops the
+/// sheet with [PaymentTypeDetailAction.activate] or `.deactivate`.
+class _StatusToggleButton extends StatelessWidget {
+  final bool isActive;
+  final Color navy;
+  final VoidCallback onTap;
+
+  const _StatusToggleButton({
+    required this.isActive,
+    required this.navy,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = isActive ? ColorUtils.slate600 : navy;
+    final fillBg = isActive
+        ? Colors.white
+        : navy.withValues(alpha: 0.08);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            color: fillBg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isActive
+                  ? ColorUtils.slate200
+                  : navy.withValues(alpha: 0.30),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isActive
+                    ? Icons.pause_circle_rounded
+                    : Icons.play_circle_rounded,
+                size: 16,
+                color: accent,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isActive ? 'Nonaktifkan jenis' : 'Aktifkan jenis',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
+                        color: accent,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isActive
+                          ? 'Hentikan pembuatan tagihan baru tanpa '
+                                'menghapus jenis.'
+                          : 'Mulai lagi pembuatan tagihan otomatis '
+                                'untuk jenis ini.',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w500,
+                        color: ColorUtils.slate500,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: ColorUtils.slate400,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -183,11 +183,42 @@ class AdminFinanceController {
 
   // ─── Write operations ───────────────────────────────────────────────────
 
-  /// Deletes a payment type by its ID.
-  /// Returns `null` on success, or an error message string on failure.
-  Future<String?> deletePaymentType(Map<String, dynamic> paymentType) async {
+  /// Deletes a payment type by its ID. Backend soft-deactivates if
+  /// bills exist for the type, returns `soft_deleted: true` in that
+  /// case so the caller can phrase the snackbar accordingly.
+  ///
+  /// Returns `null` on success (caller should treat both hard delete
+  /// and soft deactivate as success), or an error message string on
+  /// failure.
+  Future<DeletePaymentTypeResult> deletePaymentType(
+    Map<String, dynamic> paymentType,
+  ) async {
     try {
-      await ApiService().delete('/payment-type/${paymentType['id']}');
+      final res = await ApiService()
+          .delete('/payment-types/${paymentType['id']}');
+      final softDeleted = res is Map && res['soft_deleted'] == true;
+      return DeletePaymentTypeResult.success(softDeleted: softDeleted);
+    } catch (e) {
+      AppLogger.error('finance', e);
+      return DeletePaymentTypeResult.failure(
+        ErrorUtils.getFriendlyMessage(e),
+      );
+    }
+  }
+
+  /// Flips the `status` of a payment type between `active` and
+  /// `inactive`. Lets the admin reactivate a soft-deactivated jenis
+  /// from the detail sheet's quick toggle, without rewalking the
+  /// full Edit form. Returns `null` on success, or an error message.
+  Future<String?> setPaymentTypeStatus(
+    String paymentTypeId, {
+    required bool active,
+  }) async {
+    try {
+      await ApiService().patch(
+        '/payment-types/$paymentTypeId/status',
+        {'status': active ? 'active' : 'inactive'},
+      );
       return null;
     } catch (e) {
       AppLogger.error('finance', e);
@@ -209,4 +240,28 @@ class AdminFinanceController {
       return ErrorUtils.getFriendlyMessage(e);
     }
   }
+}
+
+/// Result of a payment-type delete attempt. The backend may either
+/// hard-delete the row or soft-deactivate it (when bills exist) —
+/// both are success outcomes from the admin's perspective, but with
+/// different snackbar copy.
+class DeletePaymentTypeResult {
+  /// True when the call returned 2xx. False means [error] is set.
+  final bool ok;
+
+  /// True when the backend kept the row alive and just flipped
+  /// `status = 'inactive'` (because bills exist for this type).
+  final bool softDeleted;
+
+  /// Friendly error message on failure.
+  final String? error;
+
+  const DeletePaymentTypeResult._(this.ok, this.softDeleted, this.error);
+
+  factory DeletePaymentTypeResult.success({required bool softDeleted}) =>
+      DeletePaymentTypeResult._(true, softDeleted, null);
+
+  factory DeletePaymentTypeResult.failure(String message) =>
+      DeletePaymentTypeResult._(false, false, message);
 }

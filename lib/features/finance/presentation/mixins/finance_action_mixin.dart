@@ -68,27 +68,62 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
   Future<void> deletePaymentType(Map<String, dynamic> paymentType) async {
     final confirmed = await ActionConfirmSheet.show(
       context: context,
-      title: 'Delete Payment Type',
+      title: 'Hapus jenis pembayaran',
       message:
           'Yakin ingin menghapus jenis pembayaran '
-          '"${paymentType['name']}"?',
+          '"${paymentType['name']}"?\n\n'
+          'Jika sudah ada tagihan untuk jenis ini, '
+          'jenis akan dinonaktifkan saja agar riwayat '
+          'pembayaran tetap aman.',
       confirmText: 'Hapus',
       isDestructive: true,
     );
 
     if (confirmed == true) {
-      final error = await controller.deletePaymentType(paymentType);
-      if (mounted) {
-        if (error == null) {
-          SnackBarUtils.showSuccess(
-            context,
-            'Jenis pembayaran berhasil dihapus',
-          );
-          await loadDataAfterAction();
-        } else {
-          SnackBarUtils.showError(context, 'Failed to delete: $error');
-        }
+      final result = await controller.deletePaymentType(paymentType);
+      if (!mounted) return;
+      if (result.ok) {
+        SnackBarUtils.showSuccess(
+          context,
+          result.softDeleted
+              ? 'Jenis pembayaran dinonaktifkan '
+                    '— tagihan lama tetap tersimpan.'
+              : 'Jenis pembayaran berhasil dihapus.',
+        );
+        await loadDataAfterAction();
+      } else {
+        SnackBarUtils.showError(context, 'Gagal menghapus: ${result.error}');
       }
+    }
+  }
+
+  /// Toggles a payment type between `active` and `inactive` via the
+  /// backend's PATCH /payment-types/{id}/status endpoint. Used by the
+  /// detail sheet's quick "Aktifkan / Nonaktifkan" action so the
+  /// admin doesn't have to reopen the full Edit form.
+  Future<void> togglePaymentTypeStatus(
+    Map<String, dynamic> paymentType, {
+    required bool active,
+  }) async {
+    final id = paymentType['id']?.toString();
+    if (id == null || id.isEmpty) return;
+    final error = await controller.setPaymentTypeStatus(id, active: active);
+    if (!mounted) return;
+    if (error == null) {
+      SnackBarUtils.showSuccess(
+        context,
+        active
+            ? 'Jenis pembayaran diaktifkan.'
+            : 'Jenis pembayaran dinonaktifkan.',
+      );
+      await loadDataAfterAction();
+    } else {
+      SnackBarUtils.showError(
+        context,
+        active
+            ? 'Gagal mengaktifkan: $error'
+            : 'Gagal menonaktifkan: $error',
+      );
     }
   }
 
@@ -119,6 +154,12 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
         break;
       case PaymentTypeDetailAction.delete:
         await deletePaymentType(paymentType);
+        break;
+      case PaymentTypeDetailAction.activate:
+        await togglePaymentTypeStatus(paymentType, active: true);
+        break;
+      case PaymentTypeDetailAction.deactivate:
+        await togglePaymentTypeStatus(paymentType, active: false);
         break;
     }
   }
