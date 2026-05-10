@@ -21,20 +21,27 @@ class ScheduleClassDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Normalise via Classroom.fromJson FIRST, then filter on
+    // `model.id`. The previous map-based pre-filter dropped any
+    // class shape that used `class_id` / `kelas_id` instead of
+    // `id`, which left the add-jadwal dropdown empty.
+    final items = classes
+        .whereType<Map<String, dynamic>>()
+        .map(Classroom.fromJson)
+        .where((c) => c.id.isNotEmpty)
+        .map<DropdownMenuItem<String>>(
+          (model) => DropdownMenuItem<String>(
+            value: model.id,
+            child: Text(model.name),
+          ),
+        )
+        .toList();
+
     return FormDropdownField<String>(
       label: languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
       isRequired: true,
       value: selectedValue.isEmpty ? null : selectedValue,
-      items: classes
-          .where((c) => (c['id']?.toString() ?? '').isNotEmpty)
-          .map<DropdownMenuItem<String>>((classItem) {
-            final model = Classroom.fromJson(classItem as Map<String, dynamic>);
-            return DropdownMenuItem<String>(
-              value: model.id,
-              child: Text(model.name),
-            );
-          })
-          .toList(),
+      items: items,
       onChanged: (value) => onChanged(value ?? ''),
       hintText: languageProvider.getTranslatedText({
         'en': 'Select Class',
