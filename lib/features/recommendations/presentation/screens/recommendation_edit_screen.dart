@@ -89,10 +89,7 @@ class _LearningRecommendationEditScreenState
     );
     final raw = widget.recommendation['materials'];
     _materialChips = raw is List
-        ? raw
-              .whereType<Map>()
-              .map((m) => Map<String, dynamic>.from(m))
-              .toList()
+        ? raw.whereType<Map>().map((m) => Map<String, dynamic>.from(m)).toList()
         : <Map<String, dynamic>>[];
   }
 
@@ -149,6 +146,21 @@ class _LearningRecommendationEditScreenState
   @override
   void onAddMaterialChip(Map<String, dynamic> mat) {
     setState(() => _materialChips.add(mat));
+  }
+
+  /// Subject the rec is scoped to — drives the curriculum picker in
+  /// `_AddMaterialSheet`. We accept a few snake/camel variants because
+  /// the rec map comes from both the result-screen ListView and the
+  /// edit-rec mixin which serializes slightly differently.
+  @override
+  String? get materialPickerSubjectId {
+    final raw =
+        widget.recommendation['subject_id'] ??
+        widget.recommendation['subjectId'] ??
+        widget.recommendation['subject']?.toString();
+    final s = raw?.toString().trim();
+    if (s == null || s.isEmpty) return null;
+    return s;
   }
 
   String get _studentName {
