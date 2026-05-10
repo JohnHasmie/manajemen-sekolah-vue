@@ -2,10 +2,15 @@
 //
 // Shows content for a single sub-chapter with AI-generated materials,
 // quizzes, and references in a tabbed layout.
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/features/materials/presentation/mixins/sub_chapter_ai_generation_mixin.dart';
@@ -16,6 +21,7 @@ import 'package:manajemensekolah/features/materials/presentation/mixins/sub_chap
 import 'package:manajemensekolah/features/materials/presentation/mixins/sub_chapter_tab_content_mixin.dart';
 import 'package:manajemensekolah/features/materials/presentation/mixins/sub_chapter_ui_loading_mixin.dart';
 import 'package:manajemensekolah/features/materials/presentation/mixins/sub_chapter_ui_mixin.dart';
+import 'package:manajemensekolah/features/materials/presentation/widgets/material_section_editor_sheet.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/sub_chapter_empty_content.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/sub_chapter_fab.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/sub_chapter_header.dart';
@@ -154,6 +160,12 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
             primaryColor: getPrimaryColor(),
             cardGradient: getCardGradient(),
             languageProvider: languageProvider,
+            isChecked: widget.checked,
+            hasAi: _aiGeneratedData != null,
+            className: widget.className,
+            subjectName:
+                widget.subChapter['subject_name']?.toString() ??
+                widget.chapter['subject_name']?.toString(),
           ),
           Expanded(child: _buildContent()),
         ],
@@ -277,6 +289,113 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   @override
   Future<void> generateMaterialFallback({bool force = false}) async {
     await generateMaterial(force: force);
+  }
+
+  // ==================== SECTION EDITOR ====================
+  /// Open the per-section editor sheet for `fieldKey` with `currentValue`
+  /// preloaded. On Save, merge the new value back into the parsed
+  /// `material_content` map, re-encode, and rewrite the sub-chapter
+  /// cache so the edit survives re-opens.
+  ///
+  /// The kamiledu-ai service does not yet expose a PATCH endpoint for
+  /// `generated_materials.material_content`, so persistence today is
+  /// local cache only. When that endpoint lands, this method should
+  /// also POST the merged JSON.
+  @override
+  void onEditSection(
+    String fieldKey,
+    String fieldLabel,
+    String currentValue,
+  ) {
+    _openSectionEditor(fieldKey, fieldLabel, currentValue);
+  }
+
+  Future<void> _openSectionEditor(
+    String fieldKey,
+    String fieldLabel,
+    String currentValue,
+  ) async {
+    final result = await showMaterialSectionEditorSheet(
+      context: context,
+      fieldKey: fieldKey,
+      fieldLabel: fieldLabel,
+      currentValue: currentValue,
+    );
+    if (result == null || !mounted) return;
+    await _applySectionEdit(result.fieldKey, fieldLabel, result.newValue);
+  }
+
+  Future<void> _applySectionEdit(
+    String fieldKey,
+    String fieldLabel,
+    String newValue,
+  ) async {
+    final ai = _aiGeneratedData;
+    if (ai == null) return;
+
+    // Decode the existing material_content (string-encoded JSON in the
+    // common case, plain Map when the backend already inflated it).
+    final raw = ai['material_content'];
+    Map<String, dynamic> parsed;
+    if (raw is Map<String, dynamic>) {
+      parsed = Map<String, dynamic>.from(raw);
+    } else if (raw is String && raw.trim().isNotEmpty) {
+      try {
+        final decoded = json.decode(raw);
+        parsed = decoded is Map<String, dynamic>
+            ? Map<String, dynamic>.from(decoded)
+            : <String, dynamic>{};
+      } catch (_) {
+        parsed = <String, dynamic>{};
+      }
+    } else {
+      parsed = <String, dynamic>{};
+    }
+
+    // List-shaped sections round-trip via newline split. Anything else
+    // is stored as a plain string.
+    final wasList = parsed[fieldKey] is List;
+    if (wasList) {
+      final items = newValue
+          .split('\n')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      parsed[fieldKey] = items;
+    } else {
+      parsed[fieldKey] = newValue;
+    }
+
+    final updated = Map<String, dynamic>.from(ai);
+    // Re-encode as string when the upstream shape was a string — the
+    // backend stores `material_content` as TEXT and most callers
+    // expect to decode it. Keep Map shape intact when it was Map.
+    updated['material_content'] = raw is Map<String, dynamic>
+        ? parsed
+        : json.encode(parsed);
+
+    setState(() {
+      _aiGeneratedData = updated;
+    });
+
+    // Rewrite the composite cache so the next open reads the edit.
+    final aiCacheKey = CacheKeyBuilder.custom(
+      'materi_ai',
+      '${widget.teacherId}_${widget.chapter['id']}',
+      widget.subChapter['id'].toString(),
+    );
+    try {
+      await LocalCacheService.save(aiCacheKey, updated);
+    } catch (_) {
+      // Cache failure is non-fatal — the edit still lives in memory
+      // until the page is disposed.
+    }
+
+    if (!mounted) return;
+    SnackBarUtils.showInfo(
+      context,
+      '$fieldLabel diperbarui (lokal — sinkron AI menyusul)',
+    );
   }
 
   // ==================== SUBCHAPTERUILOADINGMIXIN IMPLEMENTATIONS ====================

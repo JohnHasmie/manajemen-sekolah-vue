@@ -9,9 +9,9 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/teacher_report_card_cache_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/teacher_report_card_data_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/teacher_report_card_export_mixin.dart';
@@ -220,148 +220,164 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen>
     });
   }
 
+  /// Compute the per-class KPI tuple from the loaded student list.
+  /// Used to populate the 4-cell KPI overlap strip below the brand
+  /// header. Falls back to all-zero when students haven't loaded yet.
+  ({int siswa, int terbit, int draft, double rerata}) _kpiStats() {
+    var siswa = _students.length;
+    var terbit = 0;
+    var draft = 0;
+    double sumScore = 0;
+    int scoreCount = 0;
+    for (final s in _students) {
+      if (s is! Map) continue;
+      final status =
+          (s['raport_status'] ?? s['status'])?.toString().toLowerCase() ?? '';
+      if (status == 'published' || status == 'terbit') terbit++;
+      if (status == 'draft') draft++;
+      final rerata = s['rerata'] ?? s['average'] ?? s['avg_score'];
+      if (rerata is num && rerata > 0) {
+        sumScore += rerata.toDouble();
+        scoreCount++;
+      }
+    }
+    return (
+      siswa: siswa,
+      terbit: terbit,
+      draft: draft,
+      rerata: scoreCount > 0 ? sumScore / scoreCount : 0,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final p = getPrimaryColor();
+    final lp = ref.watch(languageRiverpod);
     final className = _selectedClass?['nama'] ?? _selectedClass?['name'] ?? '';
+    final ayLabel = ref
+        .read(academicYearRiverpod)
+        .selectedAcademicYear?['year']
+        ?.toString();
+    final kicker = [
+      if (ayLabel != null) 'Tahun $ayLabel',
+      if (className.toString().isNotEmpty) 'Kelas $className',
+    ].join(' · ');
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [p, p.withValues(alpha: 0.85)],
-              ),
-              borderRadius: isDialogMode
-                  ? const BorderRadius.vertical(top: Radius.circular(20))
-                  : null,
-            ),
-            child: Column(
-              children: [
-                if (isDialogMode)
-                  Container(
-                    margin: const EdgeInsets.only(top: 10),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(2),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              BrandPageHeader(
+                role: 'guru',
+                subtitle: kicker.isEmpty
+                    ? lp.getTranslatedText({
+                        'en': 'Report Cards',
+                        'id': 'Raport Siswa',
+                      })
+                    : kicker,
+                title: lp.getTranslatedText({
+                  'en': 'Class Report',
+                  'id': 'Raport Kelas',
+                }),
+                kpiOverlayHeight: 45,
+                actionIcons: [
+                  if (_selectedClass != null && !_isLoading)
+                    BrandHeaderIconButton(
+                      key: _exportKey,
+                      icon: Icons.download_rounded,
+                      onTap: _isExporting ? () {} : exportToExcel,
                     ),
-                  )
-                else
-                  SizedBox(height: MediaQuery.of(context).padding.top),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 8, 14),
-                  child: Row(
-                    children: [
-                      if (!isDialogMode) ...[
-                        GestureDetector(
-                          onTap: () => AppNavigator.pop(context),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.arrow_back,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                      ] else ...[
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.assignment_outlined,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                      ],
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _languageProvider.getTranslatedText({
-                                'en': 'Report Cards',
-                                'id': 'Raport Siswa',
-                              }),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            if (className.isNotEmpty)
-                              Text(
-                                'Kelas $className',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      if (_selectedClass != null && !_isLoading)
-                        GestureDetector(
-                          key: _exportKey,
-                          onTap: _isExporting ? null : exportToExcel,
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.download_rounded,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                      const SizedBox(width: 6),
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            isDialogMode ? Icons.close : Icons.more_vert,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                ],
+              ),
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 0,
+                child: Transform.translate(
+                  offset: const Offset(0, 22),
+                  child: _buildKpiStrip(),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          const SizedBox(height: 32),
           Expanded(child: buildBody()),
         ],
       ),
     );
   }
+
+  Widget _buildKpiStrip() {
+    final stats = _kpiStats();
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            _kpiCell('${stats.siswa}', 'SISWA', ColorUtils.brandCobalt),
+            _kpiDivider(),
+            _kpiCell('${stats.terbit}', 'TERBIT', ColorUtils.success600),
+            _kpiDivider(),
+            _kpiCell('${stats.draft}', 'DRAFT', ColorUtils.warning600),
+            _kpiDivider(),
+            _kpiCell(
+              stats.rerata > 0 ? stats.rerata.toStringAsFixed(1) : '—',
+              'RERATA',
+              ColorUtils.info600,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kpiCell(String value, String label, Color color) {
+    return Expanded(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: color,
+              letterSpacing: -0.3,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiDivider() => Container(
+    width: 1,
+    margin: const EdgeInsets.symmetric(vertical: 4),
+    color: ColorUtils.slate100,
+  );
 }

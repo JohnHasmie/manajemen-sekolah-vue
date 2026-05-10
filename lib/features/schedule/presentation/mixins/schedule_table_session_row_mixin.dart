@@ -86,11 +86,11 @@ mixin SessionRowBuildingMixin on State<TeacherScheduleTableView> {
       color: isCurrent
           ? primary.withValues(alpha: 0.08)
           : (isNext ? primary.withValues(alpha: 0.04) : Colors.white),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       border: Border.all(
         color: isCurrent
-            ? primary.withValues(alpha: 0.5)
-            : (isNext ? primary.withValues(alpha: 0.2) : ColorUtils.slate200),
+            ? primary.withValues(alpha: 0.45)
+            : (isNext ? primary.withValues(alpha: 0.22) : ColorUtils.slate200),
         width: isCurrent ? 1.5 : (isNext ? 1.2 : 1.0),
       ),
       boxShadow: _buildRowShadow(isCurrent, isNext, primary),

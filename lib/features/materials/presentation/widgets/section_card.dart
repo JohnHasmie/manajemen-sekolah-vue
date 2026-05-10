@@ -8,11 +8,20 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 ///
 /// Like a Vue slot-based card component: pass [icon], [iconColor], and
 /// [title] as "props", and provide any widget as [child] content.
+///
+/// When [onEdit] is supplied, a pencil affordance lights up at the
+/// top-right of the header — same pattern as the RPP per-section editor.
+/// The pencil opens a focused editor sheet for the caller to handle.
 class SectionCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String title;
   final Widget child;
+
+  /// Optional pencil tap handler — surfaces an "edit this section"
+  /// affordance in the header row. Mirrors the RPP detail screen's
+  /// per-card editor pattern.
+  final VoidCallback? onEdit;
 
   const SectionCard({
     super.key,
@@ -20,6 +29,7 @@ class SectionCard extends StatelessWidget {
     required this.iconColor,
     required this.title,
     required this.child,
+    this.onEdit,
   });
 
   @override
@@ -35,7 +45,7 @@ class SectionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
             decoration: BoxDecoration(
               color: iconColor.withValues(alpha: 0.04),
               borderRadius: const BorderRadius.vertical(
@@ -55,14 +65,34 @@ class SectionCard extends StatelessWidget {
                   child: Icon(icon, size: 15, color: iconColor),
                 ),
                 const SizedBox(width: 10),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: ColorUtils.slate800,
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: ColorUtils.slate800,
+                    ),
                   ),
                 ),
+                if (onEdit != null)
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onEdit,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.edit_rounded,
+                          size: 15,
+                          color: ColorUtils.slate400,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

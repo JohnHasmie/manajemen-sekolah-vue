@@ -27,15 +27,28 @@ mixin MaterialUIHelpersMixin on ConsumerState<TeacherMaterialScreen> {
   // ── Helpers ──
 
   /// Get the name of the selected subject.
+  ///
+  /// Looks up `selectedSubject` in `subjectList` first. When the
+  /// screen took the deep-link fast path (pushed with
+  /// `initialSubjectId/initialSubjectName` from the Materi overview
+  /// or a Jadwal session card), `subjectList` is still empty
+  /// because we skipped the subjects-API fetch. In that case we
+  /// fall back to `widget.initialSubjectName` so the brand header's
+  /// title isn't a bare `-` while the rest of the screen renders.
   String getSelectedSubjectName() {
     if (selectedSubject == null) return '-';
     final mp = subjectList.firstWhere(
       (mp) =>
           (mp['id'] ?? mp['mata_pelajaran_id'])?.toString() ==
           selectedSubject?.toString(),
-      orElse: () => {'nama': '-', 'name': '-'},
+      orElse: () => const <String, dynamic>{},
     );
-    return Subject.fromJson(mp as Map<String, dynamic>).name;
+    if (mp.isNotEmpty) {
+      return Subject.fromJson(mp as Map<String, dynamic>).name;
+    }
+    final initial = widget.initialSubjectName;
+    if (initial != null && initial.isNotEmpty) return initial;
+    return '-';
   }
 
   /// Filter chapters by search term.
@@ -68,15 +81,15 @@ mixin MaterialUIHelpersMixin on ConsumerState<TeacherMaterialScreen> {
   }
 
   /// Get checkbox color based on chapter/sub-chapter state.
+  ///
+  /// Materi Q.2 redesign — every "tercatat" checkbox uses cobalt
+  /// (the teacher brand primary), regardless of whether the chapter
+  /// has AI content yet. Violet was previously used to flag
+  /// `generated_*` rows but that conflicted with the Frame B mockup
+  /// where AI status is communicated via a separate "AI" / "Belum AI"
+  /// pill on the right of each row, not via the checkbox color.
   Color getCheckboxColor(String id, {bool isSubChapter = false}) {
-    if (isSubChapter) {
-      if (usedSubChapter[id] == true) return ColorUtils.info600;
-      if (generatedSubChapter[id] == true) return ColorUtils.violet500;
-      return ColorUtils.success600;
-    }
-    if (usedChapter[id] == true) return ColorUtils.info600;
-    if (generatedChapter[id] == true) return ColorUtils.violet500;
-    return ColorUtils.success600;
+    return ColorUtils.brandCobalt;
   }
 
   /// Auto-expand first unchecked chapter in embedded mode.

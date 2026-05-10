@@ -1,0 +1,1697 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · RPP / Lesson Plan · Mockup v2</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --green-50: #DCFCE7;
+    --green-100: #BBF7D0;
+    --green-600: #15803D;
+    --green-700: #166534;
+    --emerald-50: #D1FAE5;
+    --emerald-600: #047857;
+    --amber-50: #FEF3C7;
+    --amber-600: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --violet-50: #EDE9FE;
+    --violet-100: #DDD6FE;
+    --violet-600: #7C3AED;
+    --violet-700: #6D28D9;
+    --rose-50: #FFE4E6;
+    --rose-600: #BE185D;
+    --indigo-50: #E0E7FF;
+    --indigo-100: #C7D2FE;
+    --indigo-600: #4338CA;
+    --indigo-700: #3730A3;
+    --teal-50: #CCFBF1;
+    --teal-600: #0F766E;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 24px;
+    max-width: 920px; line-height: 1.55;
+  }
+  .format-legend {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin: 0 0 28px;
+  }
+  .fl-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 11.5px; font-weight: 700;
+    background: white; border: 1px solid var(--slate-200);
+  }
+  .fl-pill .dot { width: 8px; height: 8px; border-radius: 999px; }
+  .fl-pill.k13 .dot { background: var(--indigo-600); }
+  .fl-pill.rpp1h .dot { background: var(--emerald-600); }
+  .fl-pill.ma .dot { background: var(--violet-600); }
+  .fl-pill.file .dot { background: var(--slate-500); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc { color: var(--slate-400); font-weight: 600; text-transform: none; letter-spacing: 0.2px; margin-left: 10px; }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 760;
+    position: relative;
+    overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+
+  /* Brand header */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    padding: 14px 16px 22px;
+    color: white;
+    flex: 0 0 auto;
+  }
+  .header.k13 { background: linear-gradient(135deg, var(--indigo-700) 0%, var(--indigo-600) 100%); }
+  .header.rpp1h { background: linear-gradient(135deg, #065F46 0%, var(--emerald-600) 100%); }
+  .header.ma { background: linear-gradient(135deg, var(--violet-700) 0%, var(--violet-600) 100%); }
+  .header.file { background: linear-gradient(135deg, var(--slate-700) 0%, var(--slate-600) 100%); }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto;
+  }
+  .h-icon svg { width: 16px; height: 16px; stroke-width: 2.2; }
+  .h-back svg { width: 18px; height: 18px; stroke-width: 2.2; }
+  .h-title-block { flex: 1; min-width: 0; }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.72);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .h-title-row { display: flex; align-items: center; gap: 8px; }
+  .h-dot {
+    width: 8px; height: 8px;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34,197,94,.6);
+    flex: 0 0 auto;
+  }
+  .h-dot.slate { background: var(--slate-400); box-shadow: none; }
+  .h-title {
+    font-size: 19px; font-weight: 900;
+    color: white; letter-spacing: -0.3px;
+  }
+  .ctx-strip {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .ctx-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,.95);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 14px;
+  }
+  .ctx-body { flex: 1; min-width: 0; line-height: 1.2; }
+  .ctx-title { font-size: 14px; font-weight: 800; color: white; }
+  .ctx-sub { font-size: 11px; color: rgba(255,255,255,.78); margin-top: 2px; font-weight: 500; }
+
+  /* Role chips */
+  .role-strip { margin-top: 12px; display: flex; gap: 8px; }
+  .role-chip {
+    flex: 1; height: 36px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 999px;
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 10px;
+  }
+  .role-chip.active { background: white; }
+  .role-chip .avatar {
+    width: 22px; height: 22px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.3);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 9px; font-weight: 800;
+  }
+  .role-chip.active .avatar { background: var(--brand-cobalt); color: white; }
+  .role-chip .label-stack { line-height: 1.1; }
+  .role-chip .name { font-size: 11px; font-weight: 800; color: white; }
+  .role-chip.active .name { color: var(--brand-dark); }
+  .role-chip .sub { font-size: 8.5px; color: rgba(255,255,255,.7); }
+  .role-chip.active .sub { color: var(--slate-500); }
+
+  /* Filter chip strip */
+  .chip-strip { margin-top: 10px; display: flex; gap: 8px; }
+  .filter-chip {
+    height: 32px; flex: 1;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 999px;
+    padding: 0 10px;
+    display: flex; flex-direction: column; justify-content: center;
+    line-height: 1.1;
+  }
+  .fc-label { font-size: 8px; font-weight: 800; color: rgba(255,255,255,.65); letter-spacing: 0.6px; text-transform: uppercase; }
+  .fc-value { font-size: 11px; font-weight: 700; color: white; }
+  .filter-chip.placeholder .fc-value { color: rgba(255,255,255,.55); font-weight: 500; }
+
+  /* KPI card overlap */
+  .kpi-card {
+    margin: -22px 12px 0;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 14px 8px;
+    box-shadow: 0 4px 12px rgba(15,23,42,.06);
+    position: relative; z-index: 2;
+    flex: 0 0 auto;
+  }
+  .kpi-row { display: flex; align-items: center; }
+  .kpi-cell { flex: 1; display: flex; flex-direction: column; align-items: center; line-height: 1; }
+  .kpi-cell .v { font-size: 22px; font-weight: 900; color: var(--slate-900); letter-spacing: -0.5px; }
+  .kpi-cell.green .v { color: var(--green-600); }
+  .kpi-cell.amber .v { color: var(--amber-600); }
+  .kpi-cell.blue .v { color: var(--blue-600); }
+  .kpi-cell.violet .v { color: var(--violet-600); }
+  .kpi-cell.indigo .v { color: var(--indigo-600); }
+  .kpi-cell.emerald .v { color: var(--emerald-600); }
+  .kpi-cell.red .v { color: var(--red-600); }
+  .kpi-cell .l { font-size: 9.5px; font-weight: 800; color: var(--slate-500); margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .kpi-divider { width: 1px; height: 28px; background: var(--slate-100); }
+
+  /* Body */
+  .body { padding: 12px 12px 88px; flex: 1; overflow-y: auto; }
+  .section-head { display: flex; align-items: center; margin: 14px 4px 8px; }
+  .section-head .t { flex: 1; font-size: 11px; font-weight: 800; color: var(--slate-700); letter-spacing: 0.6px; text-transform: uppercase; }
+  .section-head .a { font-size: 10.5px; color: var(--slate-500); font-weight: 700; }
+
+  /* RPP card (list) */
+  .rpp-card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex; gap: 12px;
+  }
+  .rpp-card .avatar {
+    width: 40px; height: 40px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .rpp-card .avatar.indigo  { background: var(--indigo-50);  color: var(--indigo-600); }
+  .rpp-card .avatar.emerald { background: var(--emerald-50); color: var(--emerald-600); }
+  .rpp-card .avatar.violet  { background: var(--violet-50);  color: var(--violet-600); }
+  .rpp-card .avatar.slate   { background: var(--slate-100);  color: var(--slate-600); }
+  .rpp-card .avatar.amber   { background: var(--amber-50);   color: var(--amber-600); }
+  .rpp-card .body-block { flex: 1; min-width: 0; line-height: 1.2; }
+  .rpp-card .head { display: flex; align-items: center; gap: 8px; }
+  .rpp-card .head .title {
+    flex: 1; font-size: 13.5px; font-weight: 800;
+    color: var(--slate-900); letter-spacing: -0.1px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .rpp-card .ai-badge {
+    font-size: 9px; font-weight: 800;
+    background: var(--violet-50); color: var(--violet-600);
+    padding: 2px 6px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .rpp-card .ai-badge svg { width: 9px; height: 9px; stroke-width: 2.4; }
+
+  /* Format badge — primary identifier */
+  .fmt-badge {
+    font-size: 9px; font-weight: 800;
+    padding: 2px 6px; border-radius: 6px;
+    letter-spacing: 0.4px;
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .fmt-badge.k13   { background: var(--indigo-50);  color: var(--indigo-600); }
+  .fmt-badge.rpp1h { background: var(--emerald-50); color: var(--emerald-600); }
+  .fmt-badge.ma    { background: var(--violet-50);  color: var(--violet-600); }
+  .fmt-badge.file  { background: var(--slate-100);  color: var(--slate-600); }
+  .fmt-badge svg { width: 9px; height: 9px; stroke-width: 2.6; }
+
+  .rpp-card .scope-row { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .scope-pill {
+    height: 20px; padding: 0 7px; border-radius: 999px;
+    font-size: 10px; font-weight: 800;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .scope-pill.blue   { background: var(--blue-50);   color: var(--blue-600); }
+  .scope-pill.violet { background: var(--violet-50); color: var(--violet-600); }
+  .scope-pill.green  { background: var(--green-50);  color: var(--green-600); }
+  .scope-pill.amber  { background: var(--amber-50);  color: var(--amber-600); }
+  .scope-pill.slate  { background: var(--slate-100); color: var(--slate-600); }
+  .scope-pill svg { width: 10px; height: 10px; stroke-width: 2.2; }
+  .rpp-card .meta-row {
+    display: flex; align-items: center; gap: 5px;
+    margin-top: 6px;
+    font-size: 10.5px; color: var(--slate-500); font-weight: 600;
+  }
+  .rpp-card .meta-row svg { width: 11px; height: 11px; color: var(--slate-400); stroke-width: 2; }
+  .rpp-card .status-tag {
+    margin-top: 8px;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px;
+    font-size: 9.5px; font-weight: 800;
+    border-radius: 999px;
+    letter-spacing: 0.4px;
+  }
+  .rpp-card .status-tag.pending  { background: var(--amber-50); color: var(--amber-600); }
+  .rpp-card .status-tag.approved { background: var(--green-50); color: var(--green-600); }
+  .rpp-card .status-tag.rejected { background: var(--red-50);   color: var(--red-600); }
+  .rpp-card .status-tag.draft    { background: var(--slate-100); color: var(--slate-600); }
+  .rpp-card .status-tag svg { width: 10px; height: 10px; stroke-width: 2.4; }
+
+  /* FAB */
+  .fab {
+    position: absolute; right: 16px; bottom: 16px;
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    background: var(--brand-cobalt);
+    color: white; font-size: 24px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 18px rgba(27,111,184,.35);
+  }
+
+  /* Sheet primitives */
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--slate-300);
+    border-radius: 999px;
+    margin: 8px auto 0;
+  }
+  .sheet-title { padding: 12px 16px 4px; font-size: 14px; font-weight: 900; color: var(--slate-900); }
+  .sheet-sub { padding: 0 16px 12px; font-size: 11px; color: var(--slate-500); line-height: 1.5; }
+
+  .field-label { margin: 12px 16px 6px; font-size: 10px; font-weight: 800; color: var(--slate-700); letter-spacing: 0.5px; text-transform: uppercase; }
+  .field {
+    margin: 0 12px 6px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 12px; color: var(--slate-700);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .field.area { min-height: 64px; align-items: flex-start; }
+  .field.placeholder { color: var(--slate-400); }
+  .field svg.field-ic { width: 14px; height: 14px; color: var(--slate-400); stroke-width: 2; flex: 0 0 auto; }
+  .field svg.chev { width: 14px; height: 14px; color: var(--slate-400); stroke-width: 2.4; }
+
+  .field-row { display: flex; gap: 8px; margin: 0 12px; }
+  .field-row > .field { flex: 1; margin: 0 0 6px; }
+
+  /* Format chooser tiles (4-up, 2x2) */
+  .format-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 12px 8px;
+  }
+  .fmt-tile {
+    background: white;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    min-height: 132px;
+    position: relative;
+  }
+  .fmt-tile .ic-tile {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fmt-tile .ic-tile svg { width: 15px; height: 15px; stroke-width: 2.2; }
+  .fmt-tile .tile-title { font-size: 13px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.1px; }
+  .fmt-tile .tile-desc { font-size: 10px; color: var(--slate-500); line-height: 1.4; font-weight: 500; }
+  .fmt-tile .tile-tag {
+    margin-top: auto;
+    align-self: flex-start;
+    font-size: 8.5px; font-weight: 800;
+    padding: 2px 6px; border-radius: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .fmt-tile.k13 .ic-tile { background: var(--indigo-50); color: var(--indigo-600); }
+  .fmt-tile.k13.on { background: var(--indigo-50); border-color: var(--indigo-600); box-shadow: 0 0 0 3px rgba(67,56,202,.1); }
+  .fmt-tile.k13.on .ic-tile { background: var(--indigo-600); color: white; }
+  .fmt-tile.k13 .tile-tag { background: var(--indigo-50); color: var(--indigo-600); }
+
+  .fmt-tile.rpp1h .ic-tile { background: var(--emerald-50); color: var(--emerald-600); }
+  .fmt-tile.rpp1h.on { background: var(--emerald-50); border-color: var(--emerald-600); box-shadow: 0 0 0 3px rgba(4,120,87,.1); }
+  .fmt-tile.rpp1h.on .ic-tile { background: var(--emerald-600); color: white; }
+  .fmt-tile.rpp1h .tile-tag { background: var(--emerald-50); color: var(--emerald-600); }
+
+  .fmt-tile.ma .ic-tile { background: var(--violet-50); color: var(--violet-600); }
+  .fmt-tile.ma.on { background: var(--violet-50); border-color: var(--violet-600); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+  .fmt-tile.ma.on .ic-tile { background: var(--violet-600); color: white; }
+  .fmt-tile.ma .tile-tag { background: var(--violet-50); color: var(--violet-600); }
+
+  .fmt-tile.file .ic-tile { background: var(--slate-100); color: var(--slate-600); }
+  .fmt-tile.file.on { background: var(--slate-100); border-color: var(--slate-500); box-shadow: 0 0 0 3px rgba(100,116,139,.1); }
+  .fmt-tile.file.on .ic-tile { background: var(--slate-600); color: white; }
+  .fmt-tile.file .tile-tag { background: var(--slate-100); color: var(--slate-600); }
+
+  /* Method (AI / Manual) toggle inside the format setup */
+  .method-row {
+    display: flex; gap: 8px;
+    margin: 0 12px 6px;
+    background: var(--slate-100);
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .method-chip {
+    flex: 1;
+    height: 38px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 12px; font-weight: 800;
+    color: var(--slate-600);
+  }
+  .method-chip.on {
+    background: white;
+    color: var(--slate-900);
+    box-shadow: 0 1px 2px rgba(15,23,42,.05), 0 1px 3px rgba(15,23,42,.05);
+  }
+  .method-chip.on.ai { color: var(--violet-600); }
+  .method-chip svg { width: 13px; height: 13px; stroke-width: 2.2; }
+
+  /* Sticky save footer */
+  .footer-save {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 12px 16px 16px;
+    background: white;
+    border-top: 1px solid var(--slate-100);
+    box-shadow: 0 -4px 14px rgba(15,23,42,.06);
+    display: flex; gap: 8px;
+  }
+  .footer-save .btn {
+    height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; gap: 6px;
+  }
+  .footer-save .btn.secondary {
+    flex: 1; background: white; color: var(--slate-700);
+    border: 1px solid var(--slate-200);
+  }
+  .footer-save .btn.primary {
+    flex: 2; background: var(--brand-cobalt); color: white;
+    box-shadow: 0 6px 14px rgba(27,111,184,.28);
+  }
+  .footer-save .btn.primary.violet  { background: var(--violet-600);  box-shadow: 0 6px 14px rgba(124,58,237,.30); }
+  .footer-save .btn.primary.indigo  { background: var(--indigo-600);  box-shadow: 0 6px 14px rgba(67,56,202,.28); }
+  .footer-save .btn.primary.emerald { background: var(--emerald-600); box-shadow: 0 6px 14px rgba(4,120,87,.28); }
+  .footer-save .btn.primary.slate   { background: var(--slate-700);   box-shadow: 0 6px 14px rgba(51,65,85,.28); }
+  .footer-save .btn.danger {
+    background: white; color: var(--red-600);
+    border: 1px solid var(--slate-200);
+    flex: 0 0 44px;
+  }
+  .footer-save .btn svg { width: 14px; height: 14px; stroke-width: 2.4; }
+
+  /* Detail section card */
+  .detail-section {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 14px;
+    margin: 8px 4px;
+  }
+  .detail-section .label {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px; text-transform: uppercase;
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .detail-section .label .num {
+    width: 16px; height: 16px;
+    border-radius: 5px;
+    background: var(--slate-100); color: var(--slate-600);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 900;
+    letter-spacing: 0;
+  }
+  .detail-section .value { font-size: 12.5px; color: var(--slate-800); font-weight: 500; line-height: 1.55; }
+  .detail-section .value strong { color: var(--slate-900); font-weight: 800; }
+  .detail-section.editable {
+    border-color: var(--violet-600);
+    background: rgba(237,233,254,0.4);
+  }
+  .detail-section.editable .label { color: var(--violet-600); }
+  .detail-section.editable .label .num { background: var(--violet-100); color: var(--violet-600); }
+
+  .detail-section.k13 .label .num    { background: var(--indigo-50);  color: var(--indigo-600); }
+  .detail-section.rpp1h .label .num  { background: var(--emerald-50); color: var(--emerald-600); }
+  .detail-section.ma .label .num     { background: var(--violet-50);  color: var(--violet-600); }
+
+  /* Identitas grid (K13 / Modul Ajar header section) */
+  .id-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    margin-top: 4px;
+  }
+  .id-cell {
+    background: var(--slate-50);
+    border-radius: 8px;
+    padding: 8px 10px;
+    line-height: 1.25;
+  }
+  .id-cell .l { font-size: 9px; font-weight: 800; color: var(--slate-500); letter-spacing: 0.4px; text-transform: uppercase; }
+  .id-cell .v { font-size: 11.5px; font-weight: 700; color: var(--slate-800); margin-top: 2px; }
+
+  /* Locked banner */
+  .ro-banner {
+    margin: 0 4px 8px;
+    background: var(--blue-50); color: var(--blue-600);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 10.5px; font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ro-banner svg { width: 14px; height: 14px; stroke-width: 2; }
+
+  /* Save bar (dirty) */
+  .dirty-bar {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 10px 16px 14px;
+    background: white;
+    border-top: 1px solid var(--slate-100);
+    box-shadow: 0 -4px 14px rgba(15,23,42,.06);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .dirty-bar .msg {
+    flex: 1; font-size: 11px; color: var(--amber-600); font-weight: 700;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dirty-bar .msg svg { width: 14px; height: 14px; stroke-width: 2.2; }
+  .dirty-bar .btn {
+    height: 38px; padding: 0 14px;
+    border-radius: 10px;
+    font-size: 12px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dirty-bar .btn.secondary { background: white; color: var(--slate-700); border: 1px solid var(--slate-200); }
+  .dirty-bar .btn.primary { background: var(--brand-cobalt); color: white; }
+
+  /* Filter section header */
+  .fil-sec-head { padding: 14px 16px 6px; font-size: 11px; font-weight: 800; color: var(--slate-700); letter-spacing: 0.5px; text-transform: uppercase; }
+  .fil-chip-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px; }
+  .fil-chip {
+    height: 32px; padding: 0 12px;
+    border-radius: 999px;
+    background: var(--slate-50); border: 1px solid var(--slate-200);
+    font-size: 12px; font-weight: 700; color: var(--slate-700);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .fil-chip.on {
+    background: rgba(27,111,184,.10);
+    border-color: var(--brand-cobalt);
+    color: var(--brand-cobalt);
+  }
+  .fil-chip.on.indigo  { background: var(--indigo-50);  border-color: var(--indigo-600);  color: var(--indigo-600); }
+  .fil-chip.on.emerald { background: var(--emerald-50); border-color: var(--emerald-600); color: var(--emerald-600); }
+  .fil-chip.on.violet  { background: var(--violet-50);  border-color: var(--violet-600);  color: var(--violet-600); }
+  .fil-chip.on.slate   { background: var(--slate-100);  border-color: var(--slate-500);   color: var(--slate-700); }
+  .fil-chip .dot { width: 7px; height: 7px; border-radius: 999px; }
+
+  /* Scrim for sheet frames */
+  .scrim {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,.45) 30%);
+  }
+
+  /* File card / preview */
+  .file-card {
+    margin: 8px 4px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .file-card .ic {
+    width: 44px; height: 44px;
+    border-radius: 11px;
+    background: var(--red-50); color: var(--red-600);
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .file-card .ic svg { width: 20px; height: 20px; stroke-width: 1.8; }
+  .file-card .body-col { flex: 1; min-width: 0; line-height: 1.3; }
+  .file-card .name { font-size: 13px; font-weight: 800; color: var(--slate-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-card .meta { font-size: 10.5px; color: var(--slate-500); font-weight: 600; margin-top: 2px; }
+  .file-card .dl {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--slate-100); color: var(--slate-700);
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .file-card .dl svg { width: 16px; height: 16px; stroke-width: 2.2; }
+
+  .upload-drop {
+    margin: 8px 12px 6px;
+    background: var(--slate-50);
+    border: 1.5px dashed var(--slate-300);
+    border-radius: 14px;
+    padding: 24px 16px;
+    text-align: center;
+  }
+  .upload-drop .ic-up {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: white; color: var(--brand-cobalt);
+    border: 1px solid var(--slate-200);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+  }
+  .upload-drop .ic-up svg { width: 20px; height: 20px; stroke-width: 2; }
+  .upload-drop .t { font-size: 13px; font-weight: 800; color: var(--slate-900); }
+  .upload-drop .d { font-size: 11px; color: var(--slate-500); margin-top: 4px; line-height: 1.4; }
+  .upload-drop .pick {
+    margin-top: 12px; display: inline-flex;
+    height: 36px; padding: 0 18px;
+    border-radius: 10px;
+    background: var(--brand-cobalt); color: white;
+    font-size: 12px; font-weight: 800;
+    align-items: center; gap: 6px;
+  }
+  .upload-drop .pick svg { width: 13px; height: 13px; stroke-width: 2.4; }
+
+  /* AI hint card (inline) */
+  .ai-card {
+    margin: 8px 4px;
+    background: linear-gradient(135deg, rgba(124,58,237,.06) 0%, rgba(67,56,202,.04) 100%);
+    border: 1px solid rgba(124,58,237,.2);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ai-card .ic {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: var(--violet-600); color: white;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .ai-card .ic svg { width: 14px; height: 14px; stroke-width: 2.2; }
+  .ai-card .body-col { flex: 1; line-height: 1.3; }
+  .ai-card .t { font-size: 11.5px; font-weight: 800; color: var(--violet-600); }
+  .ai-card .d { font-size: 10.5px; color: var(--slate-600); font-weight: 500; margin-top: 2px; }
+  .ai-card .cta {
+    height: 30px; padding: 0 12px;
+    background: white; color: var(--violet-600);
+    border: 1px solid rgba(124,58,237,.22);
+    border-radius: 999px;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; gap: 4px;
+    flex: 0 0 auto;
+  }
+  .ai-card .cta svg { width: 11px; height: 11px; stroke-width: 2.4; }
+
+  /* Compact 1-page card (RPP 1 halaman) */
+  .one-page {
+    margin: 8px 4px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 14px;
+    position: relative;
+  }
+  .one-page::before {
+    content: "1 HALAMAN";
+    position: absolute; top: 10px; right: 10px;
+    font-size: 8.5px; font-weight: 900; letter-spacing: 0.6px;
+    background: var(--emerald-50); color: var(--emerald-600);
+    padding: 3px 6px; border-radius: 6px;
+  }
+  .one-page .op-section {
+    border-bottom: 1px dashed var(--slate-200);
+    padding: 10px 0;
+  }
+  .one-page .op-section:last-child { border-bottom: none; padding-bottom: 0; }
+  .one-page .op-section:first-child { padding-top: 0; }
+  .one-page .op-label {
+    font-size: 10px; font-weight: 800;
+    color: var(--emerald-600); letter-spacing: 0.5px; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .one-page .op-value {
+    font-size: 11.5px; color: var(--slate-800);
+    line-height: 1.5;
+  }
+
+  /* Activity steps (Pendahuluan/Inti/Penutup) */
+  .step-row {
+    display: flex; gap: 8px;
+    padding: 8px 0;
+    border-top: 1px dashed var(--slate-200);
+  }
+  .step-row:first-child { border-top: none; padding-top: 0; }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 7px;
+    background: var(--slate-100); color: var(--slate-600);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .step-num.k13      { background: var(--indigo-50); color: var(--indigo-600); }
+  .step-num.rpp1h    { background: var(--emerald-50); color: var(--emerald-600); }
+  .step-num.ma       { background: var(--violet-50); color: var(--violet-600); }
+  .step-text { flex: 1; line-height: 1.4; }
+  .step-text .h { font-size: 11px; font-weight: 800; color: var(--slate-900); }
+  .step-text .b { font-size: 11px; color: var(--slate-600); margin-top: 2px; }
+  .step-text .b .min { font-size: 9.5px; font-weight: 800; color: var(--slate-500); margin-left: 4px; letter-spacing: 0.3px; }
+
+  .legend {
+    margin: 32px 0 8px;
+    padding: 16px;
+    background: white; border-radius: 12px;
+    font-size: 12px; color: var(--slate-600); line-height: 1.6;
+    border: 1px solid var(--slate-200);
+  }
+  .legend strong { color: var(--slate-900); }
+  .legend code {
+    background: var(--slate-100); color: var(--brand-cobalt);
+    padding: 1px 6px; border-radius: 4px;
+    font-size: 11px; font-family: 'SF Mono', Menlo, monospace;
+  }
+  .legend ul li { margin: 6px 0; }
+  .legend table {
+    margin-top: 10px;
+    width: 100%; border-collapse: collapse;
+    font-size: 11.5px;
+  }
+  .legend table th, .legend table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--slate-100);
+    text-align: left;
+    vertical-align: top;
+  }
+  .legend table th { color: var(--slate-700); font-weight: 800; background: var(--slate-50); }
+  .legend table code { white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<h1>RPP / Lesson Plan · Mockup v2</h1>
+<p class="subtitle">
+  Multi-format teacher RPP flow. <strong>Format adalah sumbu utama</strong> —
+  guru memilih K13, RPP 1 Halaman, Modul Ajar (Kurikulum Merdeka), atau
+  Upload File terlebih dahulu. AI vs Manual menjadi sumbu sekunder
+  (toggle) di dalam setiap format. Semua frame memakai shared component
+  pertama: <code>BrandPageLayout</code> + <code>BrandPageHeader</code>,
+  <code>RoleToggleChipRow</code>, <code>BrandFilterChipStrip</code>,
+  <code>AppBottomSheet</code> + <code>BottomSheetFooter</code>,
+  <code>AppDraggableSheet</code>, <code>EmptyState</code>,
+  <code>ConfirmationDialog</code>.
+</p>
+
+<div class="format-legend">
+  <div class="fl-pill k13"><span class="dot"></span>K13 · Kurikulum 2013 (full struktur)</div>
+  <div class="fl-pill rpp1h"><span class="dot"></span>RPP 1 Halaman (ringkas Mendikbud)</div>
+  <div class="fl-pill ma"><span class="dot"></span>Modul Ajar (Kurikulum Merdeka)</div>
+  <div class="fl-pill file"><span class="dot"></span>Upload File (PDF/DOCX manual)</div>
+</div>
+
+<div class="grid">
+
+<!-- ═══════ A · LIST ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A</span>LIST · OVERVIEW <span class="desc">Format badge per card · 4-cell KPI</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">AKADEMIK · RPP</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Rencana Pembelajaran</span></div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><line x1="14" y1="2" x2="14" y2="6"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="16" y1="18" x2="16" y2="22"/></svg></div>
+      </div>
+      <div class="role-strip">
+        <div class="role-chip active"><div class="avatar">M</div><div class="label-stack"><div class="name">Mengajar</div><div class="sub">3 kelas</div></div></div>
+        <div class="role-chip"><div class="avatar">7B</div><div class="label-stack"><div class="name">Wali 7B</div><div class="sub">28 siswa</div></div></div>
+      </div>
+      <div class="chip-strip">
+        <div class="filter-chip"><div class="fc-label">FORMAT</div><div class="fc-value">K13 + 2</div></div>
+        <div class="filter-chip"><div class="fc-label">STATUS</div><div class="fc-value">Pending</div></div>
+        <div class="filter-chip placeholder"><div class="fc-label">KELAS</div><div class="fc-value">+ Kelas</div></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell green"><div class="v">3</div><div class="l">Pekan ini</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">12</div><div class="l">Bulan ini</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">2</div><div class="l">Pending</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell violet"><div class="v">5</div><div class="l">AI</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="section-head"><div class="t">Hari ini · Senin</div><div class="a">2 RPP</div></div>
+
+      <div class="rpp-card">
+        <div class="avatar indigo">M</div>
+        <div class="body-block">
+          <div class="head">
+            <div class="title">Bab 4 · Trigonometri</div>
+            <div class="ai-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg>
+              AI
+            </div>
+          </div>
+          <div class="scope-row">
+            <span class="fmt-badge k13">K13</span>
+            <span class="scope-pill blue">7B</span>
+            <span class="scope-pill violet">Matematika</span>
+          </div>
+          <div class="meta-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            JAM 2 · 08.00 — 08.45
+          </div>
+          <div class="status-tag pending">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Menunggu review
+          </div>
+        </div>
+      </div>
+
+      <div class="rpp-card">
+        <div class="avatar emerald">B</div>
+        <div class="body-block">
+          <div class="head">
+            <div class="title">Bab 1 · Al-Mihnah</div>
+          </div>
+          <div class="scope-row">
+            <span class="fmt-badge rpp1h">1 HAL</span>
+            <span class="scope-pill blue">7A</span>
+            <span class="scope-pill amber">B. Arab</span>
+          </div>
+          <div class="meta-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            JAM 4 · 11.00 — 11.45
+          </div>
+          <div class="status-tag approved">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Disetujui
+          </div>
+        </div>
+      </div>
+
+      <div class="section-head"><div class="t">Sebelumnya</div><div class="a">8 RPP</div></div>
+
+      <div class="rpp-card">
+        <div class="avatar violet">F</div>
+        <div class="body-block">
+          <div class="head">
+            <div class="title">Fase D · Bab 3 Gerak</div>
+            <div class="ai-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg>
+              AI
+            </div>
+          </div>
+          <div class="scope-row">
+            <span class="fmt-badge ma">MODUL AJAR</span>
+            <span class="scope-pill blue">8A</span>
+            <span class="scope-pill violet">IPA · Fisika</span>
+          </div>
+          <div class="meta-row">8 Mei · Jum'at</div>
+          <div class="status-tag rejected">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Perlu revisi
+          </div>
+        </div>
+      </div>
+
+      <div class="rpp-card">
+        <div class="avatar slate">B</div>
+        <div class="body-block">
+          <div class="head">
+            <div class="title">Bab 5 · Teks Eksplanasi</div>
+          </div>
+          <div class="scope-row">
+            <span class="fmt-badge file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>FILE</span>
+            <span class="scope-pill blue">7A</span>
+            <span class="scope-pill green">B. Indonesia</span>
+          </div>
+          <div class="meta-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            RPP-Bab5.pdf · 7 Mei
+          </div>
+          <div class="status-tag draft">Draf</div>
+        </div>
+      </div>
+    </div>
+    <div class="fab">+</div>
+  </div>
+</div>
+
+<!-- ═══════ B · FORMAT CHOOSER ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">B</span>FORMAT CHOOSER <span class="desc">4 tiles · K13 / 1 Hal / Modul Ajar / Upload</span></div>
+  <div class="phone">
+    <div class="header" style="filter:brightness(.78) saturate(.8)"><div class="h-row"><div class="h-back">‹</div><div class="h-title-block"><div class="h-kicker">AKADEMIK · RPP</div><div class="h-title-row"><span class="h-dot"></span><span class="h-title">Rencana Pembelajaran</span></div></div></div></div>
+    <div class="scrim"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -8px 24px rgba(15,23,42,.16);padding-bottom:12px">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Buat RPP baru</div>
+      <div class="sheet-sub">Pilih format yang dipakai sekolah. AI bantu draf di tahap berikutnya.</div>
+
+      <div class="format-grid">
+        <div class="fmt-tile k13 on">
+          <div class="ic-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+          </div>
+          <div class="tile-title">K13</div>
+          <div class="tile-desc">Format Kurikulum 2013 — KI/KD, indikator, langkah pendahuluan-inti-penutup.</div>
+          <div class="tile-tag">DIPILIH</div>
+        </div>
+
+        <div class="fmt-tile rpp1h">
+          <div class="ic-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+          </div>
+          <div class="tile-title">RPP 1 Halaman</div>
+          <div class="tile-desc">Versi ringkas Mendikbud — tujuan, kegiatan inti, asesmen.</div>
+          <div class="tile-tag">RINGKAS</div>
+        </div>
+
+        <div class="fmt-tile ma">
+          <div class="ic-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M12 18v4"/></svg>
+          </div>
+          <div class="tile-title">Modul Ajar</div>
+          <div class="tile-desc">Kurikulum Merdeka — capaian, alur tujuan, asesmen formatif.</div>
+          <div class="tile-tag">KURMER</div>
+        </div>
+
+        <div class="fmt-tile file">
+          <div class="ic-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div class="tile-title">Upload File</div>
+          <div class="tile-desc">Lampirkan PDF/DOCX yang sudah disiapkan di luar app.</div>
+          <div class="tile-tag">PDF · DOCX</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;padding:8px 12px 4px">
+        <div style="flex:1;height:42px;border-radius:12px;background:white;border:1px solid var(--slate-200);color:var(--slate-700);font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center">Batal</div>
+        <div style="flex:2;height:42px;border-radius:12px;background:var(--indigo-600);color:white;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 6px 14px rgba(67,56,202,.30)">
+          Lanjutkan
+          <svg style="width:14px;height:14px;stroke-width:2.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ C · SETUP FORM (K13 example, with AI/Manual toggle) ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">C</span>SETUP FORM <span class="desc">Class · subject · bab + AI/Manual toggle</span></div>
+  <div class="phone">
+    <div class="header k13">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">RPP · K13 · BUAT BARU</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Identitas RPP</span></div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      </div>
+    </div>
+    <div class="body" style="padding-top:14px">
+      <div class="field-label">Cara pengisian</div>
+      <div class="method-row">
+        <div class="method-chip on ai">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg>
+          AI Generate
+        </div>
+        <div class="method-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Tulis Manual
+        </div>
+      </div>
+
+      <div class="field-label">Kelas &amp; Mapel</div>
+      <div class="field-row">
+        <div class="field"><svg class="field-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span style="flex:1;color:var(--slate-900);font-weight:700">7B</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="field"><svg class="field-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v14a3 3 0 0 0-3-3H2zM22 4h-7a3 3 0 0 0-3 3v14a3 3 0 0 1 3-3h7z"/></svg><span style="flex:1;color:var(--slate-900);font-weight:700">Matematika</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+
+      <div class="field-label">Bab &amp; Sub-bab</div>
+      <div class="field"><svg class="field-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><span style="flex:1;color:var(--slate-900);font-weight:700">Bab 4 · Trigonometri</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="field"><svg class="field-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg><span style="flex:1;color:var(--slate-900);font-weight:700">4.2 Aturan sinus</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+
+      <div class="field-label">Alokasi waktu</div>
+      <div class="field-row">
+        <div class="field"><span style="flex:1;color:var(--slate-900);font-weight:700">2 JP × 45 menit</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="field"><span style="flex:1;color:var(--slate-900);font-weight:700">1 pertemuan</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+
+      <div class="field-label">Konteks tambahan untuk AI (opsional)</div>
+      <div class="field area placeholder">Misal: fokus contoh kontekstual, gunakan diskusi kelompok…</div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary">Batal</div>
+      <div class="btn primary violet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg>
+        Generate dengan AI
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ D · K13 DETAIL ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">D</span>K13 DETAIL <span class="desc">Identitas + KI/KD + langkah pendahuluan/inti/penutup</span></div>
+  <div class="phone">
+    <div class="header k13">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">RPP · K13 · 7B MATEMATIKA</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 4 · Trigonometri</span></div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon" style="color:var(--indigo-600)">M</div>
+        <div class="ctx-body">
+          <div class="ctx-title">Matematika · 7B · 2 JP</div>
+          <div class="ctx-sub">K13 · AI · Sem Ganjil 2025/2026</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell indigo"><div class="v">5</div><div class="l">Section</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">2 JP</div><div class="l">Alokasi</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v" style="font-size:13px;letter-spacing:0">Pending</div><div class="l">Status</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="detail-section k13">
+        <div class="label"><span class="num">1</span> Identitas</div>
+        <div class="id-grid">
+          <div class="id-cell"><div class="l">Mata pelajaran</div><div class="v">Matematika</div></div>
+          <div class="id-cell"><div class="l">Kelas / Smt</div><div class="v">VII B / Ganjil</div></div>
+          <div class="id-cell"><div class="l">Materi pokok</div><div class="v">Trigonometri</div></div>
+          <div class="id-cell"><div class="l">Alokasi</div><div class="v">2 × 45 menit</div></div>
+        </div>
+      </div>
+
+      <div class="detail-section k13">
+        <div class="label"><span class="num">2</span> Kompetensi Dasar &amp; Indikator</div>
+        <div class="value">
+          <strong>KD 3.7</strong> Menjelaskan rasio trigonometri dan menerapkannya pada masalah sederhana.<br>
+          <strong>Indikator:</strong> menentukan sin/cos/tan suatu sudut, menerapkan aturan sinus pada segitiga sebarang.
+        </div>
+      </div>
+
+      <div class="detail-section k13">
+        <div class="label"><span class="num">3</span> Tujuan Pembelajaran</div>
+        <div class="value">Siswa memahami aturan sinus, menerapkan dalam segitiga sebarang, dan menyelesaikan soal kontekstual dengan tepat.</div>
+      </div>
+
+      <div class="detail-section k13">
+        <div class="label"><span class="num">4</span> Langkah Kegiatan</div>
+        <div class="step-row">
+          <div class="step-num k13">A</div>
+          <div class="step-text">
+            <div class="h">Pendahuluan <span class="b min">10 MENIT</span></div>
+            <div class="b">Apersepsi sudut segitiga · motivasi · sampaikan tujuan.</div>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num k13">B</div>
+          <div class="step-text">
+            <div class="h">Inti <span class="b min">65 MENIT</span></div>
+            <div class="b">Diskusi terbimbing aturan sinus · contoh soal kontekstual · latihan kelompok 4 siswa.</div>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num k13">C</div>
+          <div class="step-text">
+            <div class="h">Penutup <span class="b min">15 MENIT</span></div>
+            <div class="b">Refleksi · simpulan · pemberian tugas.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section k13">
+        <div class="label"><span class="num">5</span> Penilaian</div>
+        <div class="value"><strong>Sikap:</strong> observasi diskusi · <strong>Pengetahuan:</strong> UH 1 (8 PG + 2 essay) · <strong>Keterampilan:</strong> tugas pemodelan kontekstual.</div>
+      </div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary" style="flex:0 0 44px;color:var(--red-600)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+      <div class="btn secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</div>
+      <div class="btn primary indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Setujui</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ E · RPP 1 HALAMAN DETAIL ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">E</span>RPP 1 HALAMAN DETAIL <span class="desc">Compact 3-section page · single-screen scan</span></div>
+  <div class="phone">
+    <div class="header rpp1h">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">RPP · 1 HAL · 7A B. ARAB</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 1 · Al-Mihnah</span></div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon" style="color:var(--emerald-600)">B</div>
+        <div class="ctx-body">
+          <div class="ctx-title">B. Arab · 7A · Profesi</div>
+          <div class="ctx-sub">RPP 1 Halaman · Manual · 2 JP</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell emerald"><div class="v">3</div><div class="l">Komponen</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">2 JP</div><div class="l">Alokasi</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v" style="font-size:13px;letter-spacing:0">Disetujui</div><div class="l">Status</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="ro-banner" style="background:var(--emerald-50);color:var(--emerald-600)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+        Format ringkas Mendikbud — cukup 3 komponen utama dalam satu halaman.
+      </div>
+
+      <div class="one-page">
+        <div class="op-section">
+          <div class="op-label">A · Tujuan Pembelajaran</div>
+          <div class="op-value">Siswa mampu menyebutkan 5 profesi dalam bahasa Arab, menggunakan kalimat tanya <em>maa mihnatuka?</em>, dan bercerita singkat tentang cita-cita.</div>
+        </div>
+        <div class="op-section">
+          <div class="op-label">B · Kegiatan Pembelajaran</div>
+          <div class="op-value">
+            <strong>Pendahuluan</strong> — apersepsi profesi orang tua, sampaikan tujuan.<br>
+            <strong>Inti</strong> — drill kosakata, hiwar berpasangan, role-play "wartawan-narasumber".<br>
+            <strong>Penutup</strong> — refleksi, tugas tulis 3 kalimat tentang cita-cita.
+          </div>
+        </div>
+        <div class="op-section">
+          <div class="op-label">C · Asesmen</div>
+          <div class="op-value">Pengamatan hiwar berpasangan (rubrik 4 level) · tulis singkat 3 kalimat (penilaian individu).</div>
+        </div>
+      </div>
+
+      <div class="ai-card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg></div>
+        <div class="body-col">
+          <div class="t">Mau coba versi AI?</div>
+          <div class="d">AI bantu draf Tujuan + Inti + Asesmen sesuai bab yang sama.</div>
+        </div>
+        <div class="cta">Coba<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary" style="flex:0 0 44px;color:var(--red-600)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></div>
+      <div class="btn primary emerald"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ F · MODUL AJAR DETAIL ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">F</span>MODUL AJAR DETAIL <span class="desc">Kurikulum Merdeka · capaian + alur tujuan + asesmen</span></div>
+  <div class="phone">
+    <div class="header ma">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">MODUL AJAR · FASE D · IPA</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 3 · Gerak Lurus</span></div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg></div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon" style="color:var(--violet-600)">F</div>
+        <div class="ctx-body">
+          <div class="ctx-title">IPA · 8A · Fase D</div>
+          <div class="ctx-sub">Kurikulum Merdeka · AI · 4 JP · 2 pertemuan</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell violet"><div class="v">6</div><div class="l">Section</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">4 JP</div><div class="l">Alokasi</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell red"><div class="v" style="font-size:13px;letter-spacing:0">Revisi</div><div class="l">Status</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="detail-section ma">
+        <div class="label"><span class="num">1</span> Informasi Umum</div>
+        <div class="id-grid">
+          <div class="id-cell"><div class="l">Fase / Kelas</div><div class="v">D / VIII A</div></div>
+          <div class="id-cell"><div class="l">Alokasi</div><div class="v">4 × 40 menit</div></div>
+          <div class="id-cell"><div class="l">Profil Pelajar</div><div class="v">Bernalar kritis</div></div>
+          <div class="id-cell"><div class="l">Sarana</div><div class="v">Penggaris, stopwatch</div></div>
+        </div>
+      </div>
+
+      <div class="detail-section ma">
+        <div class="label"><span class="num">2</span> Capaian Pembelajaran</div>
+        <div class="value">Pada akhir Fase D peserta didik mampu menerapkan konsep gerak, gaya, dan tekanan dalam menyelesaikan masalah sehari-hari.</div>
+      </div>
+
+      <div class="detail-section ma">
+        <div class="label"><span class="num">3</span> Tujuan Pembelajaran</div>
+        <div class="value">
+          <strong>TP 3.1</strong> Membedakan jarak dan perpindahan.<br>
+          <strong>TP 3.2</strong> Menghitung kecepatan dan kelajuan.<br>
+          <strong>TP 3.3</strong> Menyelesaikan soal kontekstual gerak lurus beraturan.
+        </div>
+      </div>
+
+      <div class="detail-section ma">
+        <div class="label"><span class="num">4</span> Pemahaman Bermakna &amp; Pertanyaan Pemantik</div>
+        <div class="value"><strong>Bermakna:</strong> gerak adalah perubahan posisi yang dapat diukur. <strong>Pemantik:</strong> "Kenapa kereta kelihatan diam saat kereta lain di sebelahnya bergerak?"</div>
+      </div>
+
+      <div class="detail-section ma">
+        <div class="label"><span class="num">5</span> Kegiatan Pembelajaran</div>
+        <div class="step-row">
+          <div class="step-num ma">P1</div>
+          <div class="step-text">
+            <div class="h">Pertemuan 1 · Jarak vs Perpindahan <span class="b min">2 JP</span></div>
+            <div class="b">Demonstrasi langkah · diskusi konsep · LKPD pengukuran lapangan.</div>
+          </div>
+        </div>
+        <div class="step-row">
+          <div class="step-num ma">P2</div>
+          <div class="step-text">
+            <div class="h">Pertemuan 2 · GLB <span class="b min">2 JP</span></div>
+            <div class="b">Eksperimen sederhana stopwatch · analisis grafik s-t · presentasi kelompok.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section ma">
+        <div class="label"><span class="num">6</span> Asesmen &amp; Refleksi</div>
+        <div class="value"><strong>Diagnostik</strong> kuis 5 soal pra-kelas · <strong>Formatif</strong> LKPD + observasi · <strong>Sumatif</strong> proyek mini "kecepatan rata-rata di sekolah". <em>Refleksi guru:</em> 80% siswa paham GLB di pertemuan 2.</div>
+      </div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary" style="flex:0 0 44px;color:var(--red-600)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></div>
+      <div class="btn secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</div>
+      <div class="btn primary violet">Submit ulang</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ G · UPLOAD MANUAL FLOW ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">G</span>UPLOAD FILE FLOW <span class="desc">Drop zone + metadata · no inline form</span></div>
+  <div class="phone">
+    <div class="header file">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">RPP · UPLOAD FILE</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Lampirkan PDF / DOCX</span></div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+      </div>
+    </div>
+    <div class="body" style="padding-top:14px">
+      <div class="upload-drop">
+        <div class="ic-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <div class="t">Pilih file dari perangkat</div>
+        <div class="d">PDF, DOC, DOCX · Maks 10 MB</div>
+        <div class="pick">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Pilih file
+        </div>
+      </div>
+
+      <div class="file-card" style="margin-top:8px">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="body-col">
+          <div class="name">RPP-Bab5-Teks-Eksplanasi.pdf</div>
+          <div class="meta">2.4 MB · diunggah baru saja</div>
+        </div>
+        <div class="dl" style="background:var(--red-50);color:var(--red-600)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+        </div>
+      </div>
+
+      <div class="field-label">Metadata wajib</div>
+      <div class="field"><span style="flex:1;color:var(--slate-900);font-weight:700">Bab 5 · Teks Eksplanasi</span></div>
+      <div class="field-row">
+        <div class="field"><span style="flex:1;color:var(--slate-900);font-weight:700">7A</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="field"><span style="flex:1;color:var(--slate-900);font-weight:700">B. Indonesia</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+
+      <div class="field-label">Catatan singkat (opsional)</div>
+      <div class="field area placeholder">Misal: revisi versi 2025, sumber Buku Siswa hal. 88…</div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary">Batal</div>
+      <div class="btn primary slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Simpan</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ H · UPLOAD FILE DETAIL ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">H</span>UPLOAD FILE DETAIL <span class="desc">File preview · download · no editable sections</span></div>
+  <div class="phone">
+    <div class="header file">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">RPP · FILE · 7A B. INDO</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 5 · Teks Eksplanasi</span></div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon" style="color:var(--slate-700)">B</div>
+        <div class="ctx-body">
+          <div class="ctx-title">B. Indonesia · 7A · Bab 5</div>
+          <div class="ctx-sub">File · Manual · 2.4 MB · diunggah 7 Mei</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell blue"><div class="v">PDF</div><div class="l">Tipe</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell violet"><div class="v">2.4</div><div class="l">MB</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v" style="font-size:13px;letter-spacing:0">Draf</div><div class="l">Status</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="ro-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Versi file — isi tidak bisa diedit dalam app. Ganti file untuk update.
+      </div>
+
+      <div class="file-card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="body-col">
+          <div class="name">RPP-Bab5-Teks-Eksplanasi.pdf</div>
+          <div class="meta">2.4 MB · 4 halaman</div>
+        </div>
+        <div class="dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="label">Metadata</div>
+        <div class="id-grid">
+          <div class="id-cell"><div class="l">Bab</div><div class="v">5 · Teks Eksplanasi</div></div>
+          <div class="id-cell"><div class="l">Kelas</div><div class="v">VII A · 22 siswa</div></div>
+          <div class="id-cell"><div class="l">Mapel</div><div class="v">B. Indonesia</div></div>
+          <div class="id-cell"><div class="l">Diunggah</div><div class="v">7 Mei 2026</div></div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="label">Catatan</div>
+        <div class="value">Revisi versi 2025 — referensi Buku Siswa Kemendikbud halaman 88. Sub-bab struktur teks dipindah ke akhir.</div>
+      </div>
+
+      <div class="ai-card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg></div>
+        <div class="body-col">
+          <div class="t">Konversi ke RPP digital?</div>
+          <div class="d">AI baca PDF dan susun ulang ke format K13 / 1 Hal / Modul Ajar.</div>
+        </div>
+        <div class="cta">Konversi<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary" style="flex:0 0 44px;color:var(--red-600)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></div>
+      <div class="btn secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Ganti file</div>
+      <div class="btn primary slate">Submit untuk review</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ I · EDITOR (format-aware, K13 example) ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">I</span>EDITOR (FORMAT-AWARE) <span class="desc">Per-section editors · per-section regen · dirty bar</span></div>
+  <div class="phone">
+    <div class="header k13">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">RPP · K13 · EDIT</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 4 · Trigonometri</span></div>
+        </div>
+        <div class="h-icon" style="background:var(--violet-600)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg></div>
+      </div>
+    </div>
+    <div class="body" style="padding-top:14px">
+      <div class="detail-section editable">
+        <div class="label"><span class="num">3</span> Tujuan Pembelajaran</div>
+        <div class="value">Siswa memahami aturan sinus, menerapkan dalam segitiga sebarang, dan menyelesaikan soal kontekstual <span style="color:var(--violet-600);font-weight:700">— sedang diedit</span>.</div>
+      </div>
+      <div class="detail-section editable">
+        <div class="label"><span class="num">4</span> Langkah Kegiatan</div>
+        <div class="step-row">
+          <div class="step-num k13">A</div>
+          <div class="step-text"><div class="h">Pendahuluan <span class="b min">10 MENIT</span></div><div class="b">Apersepsi sudut · motivasi · sampaikan tujuan.</div></div>
+        </div>
+        <div class="step-row">
+          <div class="step-num k13">B</div>
+          <div class="step-text"><div class="h">Inti <span class="b min">65 MENIT</span></div><div class="b">Diskusi terbimbing · kelompok 4 siswa · latihan kontekstual.</div></div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="label"><span class="num">5</span> Penilaian</div>
+        <div class="value">UH 1 (8 PG + 2 essay), tugas pemodelan kontekstual.</div>
+      </div>
+
+      <div class="ai-card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg></div>
+        <div class="body-col">
+          <div class="t">Generate ulang per-section</div>
+          <div class="d">Pilih bagian yang ingin AI tulis ulang — sisanya tetap.</div>
+        </div>
+        <div class="cta">Pilih<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+    </div>
+    <div class="dirty-bar">
+      <div class="msg">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        2 bagian belum disimpan
+      </div>
+      <div class="btn secondary">Batal</div>
+      <div class="btn primary">Simpan</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ J · REGEN SHEET (format-aware) ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">J</span>REGEN SHEET <span class="desc">AppDraggableSheet · sections from picked format</span></div>
+  <div class="phone">
+    <div class="header k13" style="filter:brightness(.78) saturate(.8)"><div class="h-row"><div class="h-back">‹</div><div class="h-title-block"><div class="h-kicker">RPP · K13</div><div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 4 · Trigonometri</span></div></div></div></div>
+    <div class="scrim"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;top:18%;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -8px 24px rgba(15,23,42,.16);overflow:auto">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" style="display:flex;align-items:center;gap:8px"><svg style="width:16px;height:16px;color:var(--violet-600);stroke-width:2.2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg> Generate ulang</div>
+      <div class="sheet-sub">Section list mengikuti format <strong style="color:var(--indigo-600)">K13</strong>. Yang tidak dicentang akan tetap apa adanya.</div>
+
+      <div style="padding:0 16px">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--slate-100)">
+          <div style="width:18px;height:18px;border-radius:5px;border:1.5px solid var(--slate-300)"></div>
+          <div style="flex:1"><div style="font-size:12.5px;font-weight:800;color:var(--slate-900)">1 · Identitas</div><div style="font-size:10.5px;color:var(--slate-500);font-weight:600">Identitas mata pelajaran (jarang diubah)</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--slate-100)">
+          <div style="width:18px;height:18px;border-radius:5px;background:var(--violet-600);color:white;display:flex;align-items:center;justify-content:center"><svg style="width:11px;height:11px;stroke-width:2.6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div style="flex:1"><div style="font-size:12.5px;font-weight:800;color:var(--slate-900)">3 · Tujuan Pembelajaran</div><div style="font-size:10.5px;color:var(--slate-500);font-weight:600">Update terakhir: 2 hari lalu</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--slate-100)">
+          <div style="width:18px;height:18px;border-radius:5px;background:var(--violet-600);color:white;display:flex;align-items:center;justify-content:center"><svg style="width:11px;height:11px;stroke-width:2.6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div style="flex:1"><div style="font-size:12.5px;font-weight:800;color:var(--slate-900)">4 · Langkah Kegiatan</div><div style="font-size:10.5px;color:var(--slate-500);font-weight:600">Pendahuluan / Inti / Penutup</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--slate-100)">
+          <div style="width:18px;height:18px;border-radius:5px;border:1.5px solid var(--slate-300)"></div>
+          <div style="flex:1"><div style="font-size:12.5px;font-weight:800;color:var(--slate-900)">5 · Penilaian</div><div style="font-size:10.5px;color:var(--slate-500);font-weight:600">Sikap / Pengetahuan / Keterampilan</div></div>
+        </div>
+      </div>
+
+      <div class="field-label">Catatan untuk AI (opsional)</div>
+      <div class="field area placeholder">Misal: "lebih kontekstual untuk daerah pesisir", "tambahkan latihan kelompok"…</div>
+
+      <div style="height:80px"></div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary">Batal</div>
+      <div class="btn primary violet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg>
+        Generate ulang (2)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ K · UPDATE STATUS ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">K</span>UPDATE STATUS <span class="desc">Pending → Approved / Rejected · BottomSheetFooter</span></div>
+  <div class="phone">
+    <div class="header" style="filter:brightness(.78) saturate(.8)"><div class="h-row"><div class="h-back">‹</div><div class="h-title-block"><div class="h-kicker">RPP · REVIEW</div><div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 4 · Trigonometri</span></div></div></div></div>
+    <div class="scrim"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -8px 24px rgba(15,23,42,.16)">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Update Status RPP</div>
+      <div class="sheet-sub">Setujui untuk lanjut, atau minta revisi dengan catatan.</div>
+
+      <div style="padding:0 12px;display:flex;flex-direction:column;gap:8px">
+        <div style="background:rgba(21,128,61,.08);border:1.5px solid var(--green-600);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--green-600);color:white;display:flex;align-items:center;justify-content:center"><svg style="width:18px;height:18px;stroke-width:2.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div style="flex:1;line-height:1.3"><div style="font-size:13px;font-weight:800;color:var(--green-600)">Disetujui</div><div style="font-size:10.5px;color:var(--slate-500);font-weight:600">RPP siap dipakai untuk pengajaran.</div></div>
+        </div>
+        <div style="background:white;border:1px solid var(--slate-200);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--red-50);color:var(--red-600);display:flex;align-items:center;justify-content:center"><svg style="width:18px;height:18px;stroke-width:2.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+          <div style="flex:1;line-height:1.3"><div style="font-size:13px;font-weight:800;color:var(--slate-900)">Perlu revisi</div><div style="font-size:10.5px;color:var(--slate-500);font-weight:600">Minta penulis untuk merevisi dengan catatan.</div></div>
+        </div>
+      </div>
+
+      <div class="field-label">Catatan (opsional, wajib jika ditolak)</div>
+      <div class="field area placeholder">Tulis hal yang perlu direvisi…</div>
+
+      <div style="height:24px"></div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary">Batal</div>
+      <div class="btn primary" style="background:var(--green-600);box-shadow:0 6px 14px rgba(21,128,61,.30)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Setujui
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ L · FILTER SHEET (with FORMAT) ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">L</span>FILTER SHEET <span class="desc">Format · status · class · subject · period</span></div>
+  <div class="phone">
+    <div class="header" style="filter:brightness(.78) saturate(.8)"><div class="h-row"><div class="h-back">‹</div><div class="h-title-block"><div class="h-kicker">AKADEMIK · RPP</div><div class="h-title-row"><span class="h-dot"></span><span class="h-title">Rencana Pembelajaran</span></div></div></div></div>
+    <div class="scrim"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;top:14%;background:white;border-top-left-radius:20px;border-top-right-radius:20px;box-shadow:0 -8px 24px rgba(15,23,42,.16);overflow:auto">
+      <div class="sheet-handle"></div>
+      <div style="display:flex;align-items:center;padding:12px 16px 4px">
+        <div class="sheet-title" style="padding:0;flex:1">Filter RPP</div>
+        <div style="font-size:11px;font-weight:800;color:var(--brand-cobalt)">Reset</div>
+      </div>
+      <div class="sheet-sub">Pilih filter untuk mempersempit daftar RPP.</div>
+
+      <div class="fil-sec-head">Format</div>
+      <div class="fil-chip-row">
+        <div class="fil-chip on indigo"><span class="dot" style="background:var(--indigo-600)"></span>K13</div>
+        <div class="fil-chip on emerald"><span class="dot" style="background:var(--emerald-600)"></span>1 Halaman</div>
+        <div class="fil-chip"><span class="dot" style="background:var(--violet-600)"></span>Modul Ajar</div>
+        <div class="fil-chip"><span class="dot" style="background:var(--slate-500)"></span>File</div>
+      </div>
+
+      <div class="fil-sec-head">Metode</div>
+      <div class="fil-chip-row">
+        <div class="fil-chip">Semua</div>
+        <div class="fil-chip on">AI</div>
+        <div class="fil-chip">Manual</div>
+      </div>
+
+      <div class="fil-sec-head">Status</div>
+      <div class="fil-chip-row">
+        <div class="fil-chip on">Pending</div>
+        <div class="fil-chip">Disetujui</div>
+        <div class="fil-chip">Perlu revisi</div>
+        <div class="fil-chip">Draf</div>
+      </div>
+
+      <div class="fil-sec-head">Kelas</div>
+      <div class="fil-chip-row">
+        <div class="fil-chip">7A</div>
+        <div class="fil-chip on">7B</div>
+        <div class="fil-chip">8A</div>
+        <div class="fil-chip">8B</div>
+      </div>
+
+      <div class="fil-sec-head">Periode</div>
+      <div class="fil-chip-row">
+        <div class="fil-chip">Hari ini</div>
+        <div class="fil-chip on">Pekan ini</div>
+        <div class="fil-chip">Bulan ini</div>
+        <div class="fil-chip">Semester</div>
+      </div>
+
+      <div style="height:80px"></div>
+    </div>
+    <div class="footer-save">
+      <div class="btn secondary">Batal</div>
+      <div class="btn primary">Terapkan (5)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ M · LOCKED · ARSIP ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">M</span>LOCKED · ARSIP <span class="desc">Past academic year · read-only · download</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">ARSIP · 8B B. ARAB</div>
+          <div class="h-title-row"><span class="h-dot slate"></span><span class="h-title">Bab 6 · Al-Madrasah</span></div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+      </div>
+      <div class="ctx-strip">
+        <div class="ctx-icon" style="color:var(--emerald-600)">B</div>
+        <div class="ctx-body">
+          <div class="ctx-title">B. Arab · 8B</div>
+          <div class="ctx-sub">RPP 1 Halaman · Sem Genap 2024/2025</div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell emerald"><div class="v">3</div><div class="l">Komponen</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">2 JP</div><div class="l">Alokasi</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v" style="font-size:13px;letter-spacing:0">Disetujui</div><div class="l">Status</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="ro-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Tahun ajaran lalu — RPP tidak bisa diubah. Ekspor PDF untuk arsip.
+      </div>
+      <div class="one-page">
+        <div class="op-section">
+          <div class="op-label">A · Tujuan Pembelajaran</div>
+          <div class="op-value">Siswa mampu mendeskripsikan lingkungan sekolah dengan kosakata khusus, membaca paragraf pendek.</div>
+        </div>
+        <div class="op-section">
+          <div class="op-label">B · Kegiatan Pembelajaran</div>
+          <div class="op-value">Drill kosakata · diskusi gambar · presentasi singkat berpasangan.</div>
+        </div>
+        <div class="op-section">
+          <div class="op-label">C · Asesmen</div>
+          <div class="op-value">Pengamatan presentasi · imla' singkat 5 kalimat.</div>
+        </div>
+      </div>
+
+      <div class="file-card" style="margin-top:8px">
+        <div class="ic" style="background:var(--blue-50);color:var(--blue-600)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+        <div class="body-col">
+          <div class="name">RPP-Arsip-Bab6.pdf</div>
+          <div class="meta">Siap diunduh untuk arsip sekolah</div>
+        </div>
+        <div class="dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="legend">
+  <strong>Catatan implementasi</strong>
+  <ul>
+    <li><strong>Format adalah sumbu utama.</strong> Frame B (Format Chooser) muncul saat tap FAB <code>+</code> — guru memilih K13 / RPP 1 Halaman / Modul Ajar / Upload File terlebih dahulu. AI vs Manual menjadi sub-axis (toggle) di Frame C, bukan dialog terpisah.</li>
+    <li><strong>Satu chrome, empat skin.</strong> Header & KPI overlap pakai <code>BrandPageLayout</code> + <code>BrandPageHeader</code> yang sama; perbedaan hanya warna gradient (indigo / emerald / violet / slate), kicker, dan format-badge pada list card.</li>
+    <li><strong>Section schema per format.</strong> Editor (Frame I) dan regen sheet (Frame J) membaca section keys dari format yang dipilih. K13 punya 5 section, RPP 1 Halaman punya 3 (compressed), Modul Ajar punya 6 (Kurikulum Merdeka), Upload File hanya metadata + file.</li>
+    <li><strong>Upload File flow.</strong> Frame G memakai <code>upload-drop</code> + metadata wajib (kelas, mapel, bab); detail (Frame H) menampilkan <code>file-card</code> non-editable + tombol <em>Ganti file</em>. Bukan format isi — tapi tetap entri di list yang sama.</li>
+    <li><strong>Konversi file → RPP digital.</strong> Detail upload (Frame H) menampilkan <code>ai-card</code> opsional: AI bisa baca PDF dan susun ulang ke K13 / 1 Halaman / Modul Ajar (defer ke Phase 2 backend).</li>
+    <li><strong>Filter sheet (Frame L) dapat 2 section baru:</strong> <em>Format</em> (multi-select 4 chip) dan <em>Metode</em> (AI / Manual / Semua). Format chip menggunakan dot warna sesuai brand format-nya.</li>
+    <li><strong>List card (Frame A)</strong> menampilkan <code>fmt-badge</code> kecil di scope-row paling kiri — itulah yang membuat 4 format dapat dibedakan dalam 1 detik.</li>
+    <li><strong>Backend yang bisa ditunda</strong> (per arahan): kolom <code>format</code> di tabel <code>lesson_plans</code> (enum: <code>k13</code>, <code>rpp_1_halaman</code>, <code>modul_ajar</code>, <code>file</code>), kolom <code>file_path</code> + <code>file_size</code> + <code>file_mime</code> untuk upload, dan format-aware system prompt di <code>LessonPlanService</code>.</li>
+  </ul>
+
+  <table>
+    <thead>
+      <tr><th>Format</th><th>Section keys</th><th>Header gradient</th><th>Footer CTA color</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>k13</code></td><td>identitas, kd_indikator, tujuan, langkah_kegiatan, penilaian</td><td>indigo-700 → indigo-600</td><td>indigo-600</td></tr>
+      <tr><td><code>rpp_1_halaman</code></td><td>tujuan, kegiatan, asesmen</td><td>emerald-800 → emerald-600</td><td>emerald-600</td></tr>
+      <tr><td><code>modul_ajar</code></td><td>info_umum, capaian, tujuan, pemahaman_pemantik, kegiatan, asesmen_refleksi</td><td>violet-700 → violet-600</td><td>violet-600</td></tr>
+      <tr><td><code>file</code></td><td>file_path + metadata (no editable sections)</td><td>slate-700 → slate-600</td><td>slate-700</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

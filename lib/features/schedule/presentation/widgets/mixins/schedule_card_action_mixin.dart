@@ -42,22 +42,33 @@ mixin ScheduleCardActionMixin {
   /// When [ctx] is provided it is used instead of the [context] getter,
   /// which allows StatelessWidget hosts (e.g. ScheduleCardItem) to forward
   /// the BuildContext from their build method.
+  ///
+  /// `isCurrent` (the lesson is happening RIGHT NOW) promotes the
+  /// Presensi chip to the cobalt CTA state so the teacher sees a
+  /// pulled-out call-to-action when they enter the screen mid-lesson.
   Widget buildActionButtons(
     Color primary,
     bool attendanceFilled,
     bool activityFilled,
     bool materialFilled, {
     BuildContext? ctx,
+    bool isCurrent = false,
   }) {
     return Row(
       children: [
         Expanded(
-          child: buildAttendanceButton(primary, attendanceFilled, ctx: ctx),
+          child: buildAttendanceButton(
+            primary,
+            attendanceFilled,
+            ctx: ctx,
+            isCobaltCta: isCurrent && !attendanceFilled,
+            attendanceCount: _attendanceCountLabel(),
+          ),
         ),
         const SizedBox(width: 6),
-        Expanded(child: buildMaterialButton(primary, materialFilled, ctx: ctx)),
-        const SizedBox(width: 6),
         Expanded(child: buildActivityButton(primary, activityFilled, ctx: ctx)),
+        const SizedBox(width: 6),
+        Expanded(child: buildMaterialButton(primary, materialFilled, ctx: ctx)),
       ],
     );
   }
@@ -67,18 +78,25 @@ mixin ScheduleCardActionMixin {
     Color primary,
     bool isFilled, {
     BuildContext? ctx,
+    bool isCobaltCta = false,
+    String? attendanceCount,
   }) {
     return Builder(
       builder: (fallbackCtx) {
         final effectiveCtx = ctx ?? fallbackCtx;
+        final label = isFilled && attendanceCount != null
+            ? attendanceCount
+            : languageProvider.getTranslatedText({
+                'en': 'Attendance',
+                'id': 'Presensi',
+              });
         return ScheduleCardActionButton(
           icon: Icons.fact_check_rounded,
-          label: languageProvider.getTranslatedText({
-            'en': 'Attendance',
-            'id': 'Presensi',
-          }),
-          isFilled: isFilled,
-          primary: primary,
+          label: label,
+          state: ScheduleCardActionButton.resolveState(
+            isFilled: isFilled,
+            isCobaltCta: isCobaltCta,
+          ),
           onPressed: () {
             openAttendance(effectiveCtx, isFilled);
           },
@@ -102,8 +120,7 @@ mixin ScheduleCardActionMixin {
             'en': 'Material',
             'id': 'Materi',
           }),
-          isFilled: isFilled,
-          primary: primary,
+          state: ScheduleCardActionButton.resolveState(isFilled: isFilled),
           onPressed: () => openMaterial(effectiveCtx),
         );
       },
@@ -122,15 +139,28 @@ mixin ScheduleCardActionMixin {
         return ScheduleCardActionButton(
           icon: Icons.assignment_rounded,
           label: languageProvider.getTranslatedText({
-            'en': 'Class Activity',
-            'id': 'Kegiatan Kelas',
+            'en': 'Activity',
+            'id': 'Kegiatan',
           }),
-          isFilled: isFilled,
-          primary: primary,
+          state: ScheduleCardActionButton.resolveState(isFilled: isFilled),
           onPressed: () => openClassActivity(effectiveCtx),
         );
       },
     );
+  }
+
+  /// Builds the live attendance count label like `28/28 Hadir` from
+  /// the cached daily summary. Returns null when no aggregate data is
+  /// available so callers fall back to "Presensi".
+  String? _attendanceCountLabel() {
+    final summary = getSummary();
+    final att = summary?['attendance'];
+    if (att is! Map) return null;
+    if (att['filled'] != true) return null;
+    final hadir = (att['hadir'] is num) ? (att['hadir'] as num).toInt() : 0;
+    final total = (att['total'] is num) ? (att['total'] as num).toInt() : 0;
+    if (total <= 0) return null;
+    return '$hadir/$total Hadir';
   }
 
   /// Opens attendance view (detail sheet if filled, dialog if not).

@@ -37,6 +37,8 @@ mixin MaterialDataLoadMixin on ConsumerState<TeacherMaterialScreen> {
   set isLoading(bool v);
   bool get isLoadingBab;
   set isLoadingBab(bool v);
+  bool get isLoadingOverview;
+  set isLoadingOverview(bool v);
   String? get teacherProfileId;
   set teacherProfileId(String? v);
 
@@ -88,7 +90,13 @@ mixin MaterialDataLoadMixin on ConsumerState<TeacherMaterialScreen> {
 
       if (teacherId.isEmpty) {
         if (!mounted) return;
-        setState(() => isLoading = false);
+        // Reset BOTH gates — the overview gate defaults to true on the
+        // screen state, so without resetting it here the body stays on
+        // the skeleton forever when the teacher payload is malformed.
+        setState(() {
+          isLoading = false;
+          isLoadingOverview = false;
+        });
         SnackBarUtils.showInfo(context, 'Error: ID guru tidak valid');
         return;
       }
@@ -130,10 +138,23 @@ mixin MaterialDataLoadMixin on ConsumerState<TeacherMaterialScreen> {
 
   // ── loadData sub-methods ──
 
-  /// Handles the embedded-mode fast path.
+  /// Deep-link fast path: when the screen was pushed with both
+  /// `initialClassId` and `initialSubjectId` (from a Jadwal session
+  /// detail card OR from the Materi overview hub tapping a card),
+  /// jump straight to the chapter content view instead of going
+  /// through the full overview → subjects → resolve chain.
+  ///
+  /// Without this, `selectedSubject` stays null until the async
+  /// `_resolveClassList → _trySubjectsCache → fetchRemoteData →
+  /// applySubjectList` chain completes, and during that window the
+  /// header renders the overview title ("Bab & Sub-Bab") and the
+  /// body shows the skeleton loader. This race used to be guarded
+  /// behind `widget.embedded == true`, but the embedded flag was
+  /// dropped when we converted both call-sites to push as full
+  /// `MaterialPageRoute`s.
+  ///
   /// Returns true if handled (caller should return).
   bool _handleEmbeddedMode(String? teacherId) {
-    if (!widget.embedded) return false;
     if (widget.initialSubjectId == null) return false;
     if (widget.initialClassId == null) return false;
 

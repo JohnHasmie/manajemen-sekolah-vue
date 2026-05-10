@@ -1,12 +1,23 @@
-// Mixin for building edit form cards and quill editor sections.
-// Redesigned with professional UI: focused edit mode per recommendation,
-// polished Quill toolbar, section separators, and refined typography.
+// Edit form sect-cards — Frame E of
+// `_design/teacher_rekomendasi_redesign.html`.
+//
+// Each recommendation renders as a stack of brand-aligned `_SectCard`
+// blocks (one per field group):
+//   • Judul — violet pencil icon, "Wajib" chip, plain text input.
+//   • Deskripsi — indigo bullet-list icon, "Quill" chip, AppQuillEditor.
+//   • Prioritas — amber bolt icon, "Wajib" chip, 3 colored-dot chips
+//     (Tinggi red / Sedang amber / Rendah slate).
+//   • Materi Terkait — cobalt book icon, "n dipilih" chip, AppQuillEditor
+//     per material so the wali can tweak the AI's writeup.
+//
+// All chrome lives inside _SectCard; the mixin only owns layout and
+// state hookups. Callers wrap the whole stack in a brand page header
+// + cobalt Simpan footer (see recommendation_edit_screen.dart).
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_quill_editor.dart';
 
-/// Mixin for building form cards and quill editor sections.
 mixin EditFormCardMixin {
   Map<String, TextEditingController> get titleControllers;
   Map<String, String> get priorities;
@@ -15,234 +26,166 @@ mixin EditFormCardMixin {
   BuildContext get context;
   void setState(VoidCallback fn);
 
-  Color get _editAccent => ColorUtils.getRoleColor('guru');
-
-  /// Builds edit card for a single recommendation.
   Widget buildEditCard(Map<String, dynamic> rec, int index) {
     final recId = rec['id']?.toString() ?? UniqueKey().toString();
-    final priority = priorities[recId] ?? 'low';
+    final cobalt = ColorUtils.brandCobalt;
 
-    // Accent color per priority
-    final Color accentColor;
-    if (priority == 'high') {
-      accentColor = ColorUtils.red500;
-    } else if (priority == 'medium') {
-      accentColor = ColorUtils.amber500;
-    } else {
-      accentColor = ColorUtils.corporateBlue500;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: ColorUtils.slate100),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Card header with accent strip
-          _buildCardHeader(index, accentColor),
-
-          // Title section
-          _buildFormSection(
-            icon: Icons.title_rounded,
-            label: 'Judul Rekomendasi',
-            child: _buildTitleField(recId),
-          ),
-
-          _sectionDivider(),
-
-          // Priority section
-          _buildFormSection(
-            icon: Icons.flag_rounded,
-            label: 'Prioritas',
-            child: _buildPrioritySelector(recId),
-          ),
-
-          _sectionDivider(),
-
-          // Description editor section
-          _buildFormSection(
-            icon: Icons.description_rounded,
-            label: 'Deskripsi Rekomendasi',
-            child: descriptionControllers[recId] != null
-                ? _buildQuillSection(descriptionControllers[recId]!)
-                : const SizedBox.shrink(),
-          ),
-
-          // Materials section
-          if (rec['materials'] != null &&
-              (rec['materials'] as List).isNotEmpty) ...[
-            _sectionDivider(),
-            _buildMaterialsSection(rec, recId),
-          ],
-
-          const SizedBox(height: 4),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCardHeader(int index, Color accentColor) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [accentColor.withValues(alpha: 0.06), Colors.white],
-        ),
-        border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            // Left accent strip
-            Container(
-              width: 4,
-              decoration: BoxDecoration(
-                color: accentColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.12),
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(8),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${index + 1}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: accentColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Rekomendasi ${index + 1}',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: ColorUtils.slate700,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                    ),
-                    Icon(
-                      Icons.edit_note_rounded,
-                      size: 18,
-                      color: ColorUtils.slate400,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFormSection({
-    required IconData icon,
-    required String label,
-    required Widget child,
-  }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section header
-          Row(
+          _buildIndexBanner(index, rec),
+          const SizedBox(height: 8),
+          _SectCard(
+            icon: Icons.edit_rounded,
+            iconBg: ColorUtils.violet700.withValues(alpha: 0.10),
+            iconFg: ColorUtils.violet700,
+            title: 'Judul',
+            chip: 'Wajib',
+            children: [_buildTitleField(recId)],
+          ),
+          const SizedBox(height: 10),
+          _SectCard(
+            icon: Icons.description_rounded,
+            iconBg: ColorUtils.indigo600.withValues(alpha: 0.10),
+            iconFg: ColorUtils.indigo600,
+            title: 'Deskripsi',
+            chip: 'Quill',
             children: [
-              Icon(icon, size: 14, color: _editAccent.withValues(alpha: 0.6)),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: ColorUtils.slate500,
-                  letterSpacing: 0.2,
+              if (descriptionControllers[recId] != null)
+                AppQuillEditor(
+                  controller: descriptionControllers[recId]!,
+                  accentColor: cobalt,
+                  placeholder: 'Tulis deskripsi rekomendasi...',
+                  minHeight: 140,
+                  maxHeight: 240,
                 ),
-              ),
             ],
           ),
-          const SizedBox(height: 8),
-          child,
+          const SizedBox(height: 10),
+          _SectCard(
+            icon: Icons.flag_rounded,
+            iconBg: ColorUtils.warning600.withValues(alpha: 0.10),
+            iconFg: ColorUtils.warning600,
+            title: 'Prioritas',
+            chip: 'Wajib',
+            children: [_buildPriorityRow(recId)],
+          ),
+          if (rec['materials'] != null &&
+              (rec['materials'] as List).isNotEmpty) ...[
+            const SizedBox(height: 10),
+            _SectCard(
+              icon: Icons.menu_book_rounded,
+              iconBg: cobalt.withValues(alpha: 0.10),
+              iconFg: cobalt,
+              title: 'Materi Terkait',
+              chip: '${(rec['materials'] as List).length} materi',
+              children: [
+                for (final mat in (rec['materials'] as List))
+                  _buildMaterialBlock(recId, mat as Map<String, dynamic>),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _sectionDivider() {
-    return Divider(height: 1, thickness: 1, color: ColorUtils.slate100);
+  /// Slim banner above each rec — index + truncated title — so the
+  /// teacher can tell the rec sub-stack apart when there are several
+  /// in a single bulk-edit session.
+  Widget _buildIndexBanner(int index, Map<String, dynamic> rec) {
+    final priority =
+        (priorities[rec['id']?.toString() ?? ''] ??
+                rec['priority']?.toString().toLowerCase() ??
+                'low')
+            .toLowerCase();
+    final accent = priority == 'high'
+        ? ColorUtils.error600
+        : priority == 'medium'
+        ? ColorUtils.warning600
+        : ColorUtils.slate500;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [accent.withValues(alpha: 0.06), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border(left: BorderSide(color: accent, width: 3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(7),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '${index + 1}',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: accent,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Rekomendasi ${index + 1}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w800,
+                color: ColorUtils.slate700,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTitleField(String recId) {
+    final cobalt = ColorUtils.brandCobalt;
     return TextFormField(
       controller: titleControllers[recId],
       style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: ColorUtils.slate800,
+        fontSize: 13,
+        fontWeight: FontWeight.w800,
+        color: ColorUtils.slate900,
         letterSpacing: -0.2,
       ),
       decoration: InputDecoration(
         hintText: 'Masukkan judul rekomendasi...',
         hintStyle: TextStyle(
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: FontWeight.w400,
           color: ColorUtils.slate400,
         ),
         filled: true,
         fillColor: ColorUtils.slate50,
         border: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: ColorUtils.slate200),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: ColorUtils.slate200),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
-          borderSide: BorderSide(
-            color: _editAccent.withValues(alpha: 0.5),
-            width: 1.5,
-          ),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: cobalt, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
+          horizontal: 12,
           vertical: 12,
         ),
         isDense: true,
@@ -250,187 +193,233 @@ mixin EditFormCardMixin {
     );
   }
 
-  Widget _buildPrioritySelector(String recId) {
-    final currentPriority = priorities[recId] ?? 'low';
-
+  Widget _buildPriorityRow(String recId) {
+    final current = (priorities[recId] ?? 'low').toLowerCase();
     return Row(
       children: [
-        _buildPriorityChip(
-          recId,
-          'low',
-          'Rendah',
-          Icons.arrow_downward_rounded,
-          ColorUtils.corporateBlue500,
-          currentPriority,
+        Expanded(
+          child: _PriorityChip(
+            label: 'Tinggi',
+            value: 'high',
+            current: current,
+            color: ColorUtils.error600,
+            onTap: () => setState(() => priorities[recId] = 'high'),
+          ),
         ),
-        const SizedBox(width: 8),
-        _buildPriorityChip(
-          recId,
-          'medium',
-          'Sedang',
-          Icons.remove_rounded,
-          ColorUtils.amber500,
-          currentPriority,
+        const SizedBox(width: 6),
+        Expanded(
+          child: _PriorityChip(
+            label: 'Sedang',
+            value: 'medium',
+            current: current,
+            color: ColorUtils.warning600,
+            onTap: () => setState(() => priorities[recId] = 'medium'),
+          ),
         ),
-        const SizedBox(width: 8),
-        _buildPriorityChip(
-          recId,
-          'high',
-          'Tinggi',
-          Icons.priority_high_rounded,
-          ColorUtils.red500,
-          currentPriority,
+        const SizedBox(width: 6),
+        Expanded(
+          child: _PriorityChip(
+            label: 'Rendah',
+            value: 'low',
+            current: current,
+            color: ColorUtils.slate500,
+            onTap: () => setState(() => priorities[recId] = 'low'),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildPriorityChip(
-    String recId,
-    String value,
-    String label,
-    IconData icon,
-    Color color,
-    String current,
-  ) {
-    final isSelected = current == value;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => priorities[recId] = value),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 9),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? color.withValues(alpha: 0.1)
-                : ColorUtils.slate50,
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
-            border: Border.all(
-              color: isSelected ? color : ColorUtils.slate200,
-              width: isSelected ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 14,
-                color: isSelected ? color : ColorUtils.slate400,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? color : ColorUtils.slate500,
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMaterialsSection(Map<String, dynamic> rec, String recId) {
-    final materials = rec['materials'] as List;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section header
-          Row(
-            children: [
-              Icon(
-                Icons.menu_book_rounded,
-                size: 14,
-                color: _editAccent.withValues(alpha: 0.6),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Materi & Aktivitas (${materials.length})',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: ColorUtils.slate500,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ...materials.map((mat) => _buildMaterialItem(recId, mat)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMaterialItem(String recId, Map<String, dynamic> mat) {
+  Widget _buildMaterialBlock(String recId, Map<String, dynamic> mat) {
     final matId = mat['id']?.toString() ?? UniqueKey().toString();
-
+    final cobalt = ColorUtils.brandCobalt;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: ColorUtils.slate50,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        border: Border.all(color: ColorUtils.slate100),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Material title
           Row(
             children: [
               Container(
-                width: 22,
-                height: 22,
+                width: 24,
+                height: 24,
                 decoration: BoxDecoration(
-                  color: _editAccent.withValues(alpha: 0.08),
-                  borderRadius: const BorderRadius.all(Radius.circular(6)),
+                  color: cobalt.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(7),
                 ),
-                child: Icon(
-                  Icons.description_outlined,
-                  color: _editAccent.withValues(alpha: 0.5),
-                  size: 13,
-                ),
+                alignment: Alignment.center,
+                child: Icon(Icons.menu_book_rounded, size: 12, color: cobalt),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  mat['title'] ?? 'Materi',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: ColorUtils.slate700,
-                  ),
-                  maxLines: 2,
+                  mat['title']?.toString() ?? 'Materi',
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.slate900,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
           if (materialControllers[recId]?[matId] != null)
-            _buildQuillSection(materialControllers[recId]![matId]!),
+            AppQuillEditor(
+              controller: materialControllers[recId]![matId]!,
+              accentColor: cobalt,
+              placeholder: 'Detail materi...',
+              minHeight: 100,
+              maxHeight: 180,
+            ),
         ],
       ),
     );
   }
+}
 
-  /// Builds Quill editor section using the shared AppQuillEditor component.
-  Widget _buildQuillSection(quill.QuillController controller) {
-    return AppQuillEditor(
-      controller: controller,
-      accentColor: _editAccent,
-      placeholder: 'Tulis konten...',
-      minHeight: 120,
-      maxHeight: 200,
+// ─── Sub-widgets ────────────────────────────────────────────────────
+
+class _SectCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconBg;
+  final Color iconFg;
+  final String title;
+  final String? chip;
+  final List<Widget> children;
+
+  const _SectCard({
+    required this.icon,
+    required this.iconBg,
+    required this.iconFg,
+    required this.title,
+    required this.children,
+    this.chip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(icon, size: 14, color: iconFg),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.slate900,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+              ),
+              if (chip != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: ColorUtils.slate100,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    chip!,
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w800,
+                      color: ColorUtils.slate600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _PriorityChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final String current;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _PriorityChip({
+    required this.label,
+    required this.value,
+    required this.current,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = current == value;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.06) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: selected ? color : ColorUtils.slate200,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w800,
+                color: selected ? color : ColorUtils.slate700,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

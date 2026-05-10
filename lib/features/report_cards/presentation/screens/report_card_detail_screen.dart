@@ -169,6 +169,11 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
               existingRaport: existingRaport,
               onBack: handleBackButton,
             ),
+            // Spacer absorbs the hero card's 24dp overlap into the
+            // gradient header (see ReportCardHeader.Stack +
+            // Transform.translate). Without this the tab bar would
+            // overlap the hero.
+            const SizedBox(height: 36),
             _buildTabBar(),
             _buildBody(),
           ],
@@ -185,29 +190,44 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
   }
 
   Widget _buildTabBar() {
-    final p = ColorUtils.getRoleColor('guru');
+    final cobalt = ColorUtils.brandCobalt;
 
     return Container(
       key: tabKey,
-      color: Colors.white,
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate100,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: TabBar(
         controller: tabController,
-        labelColor: p,
+        labelColor: cobalt,
         unselectedLabelColor: ColorUtils.slate500,
-        indicatorColor: p,
-        indicatorWeight: 2,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-        unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 12,
+        indicator: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: ColorUtils.slate900.withValues(alpha: 0.06),
+              blurRadius: 3,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
-        isScrollable: true,
-        tabAlignment: TabAlignment.start,
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
+        labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 11,
+        ),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
         tabs: const [
           Tab(text: 'Sikap'),
-          Tab(text: 'Nilai Akademik'),
+          Tab(text: 'Nilai'),
           Tab(text: 'Tambahan'),
-          Tab(text: 'Info & Keputusan'),
+          Tab(text: 'Info'),
         ],
       ),
     );

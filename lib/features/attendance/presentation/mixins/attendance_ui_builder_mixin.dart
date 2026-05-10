@@ -19,11 +19,13 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
+import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/role_toggle_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/teacher_role_options.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/attendance_ui_embedded_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/attendance_ui_body_mixin.dart';
+import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_student_item.dart';
 
 mixin AttendanceUIBuilderMixin
     on
@@ -70,28 +72,300 @@ mixin AttendanceUIBuilderMixin
   // ═══════════════════════════════════════════
 
   Widget buildEmbedded(LanguageProvider lp) {
-    // Take-attendance is now a full-screen route (was a draggable
-    // sheet) so it shares the same brand chrome as the main Presensi
-    // page: BrandPageHeader at top, live KPI strip, then the input
-    // form body. Scaffold gives us the proper safe-area + system bar
-    // handling that the sheet variant didn't need.
+    // Take-attendance shares the brand layout pattern with the
+    // detail screen: gradient header (with subject/class context
+    // strip in the bottom slot) + KPI overlay card that overlaps
+    // the gradient and scrolls with the body. Submit lives in the
+    // Scaffold's bottomNavigationBar so it stays pinned regardless
+    // of scroll position.
+    final hasSubject = (selectedSubjectId ?? '').isNotEmpty;
+    final hasStudents = filteredStudentList.isNotEmpty;
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
+      resizeToAvoidBottomInset: true,
       body: GestureDetector(
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: Column(
-          children: [
-            // Brand-aligned gradient header — centered title, back
-            // button auto-wired by the navigator, density toggle in
-            // the action icons row.
-            buildEmbeddedHeader(lp),
-            // Live KPI strip (4-cell status counts).
-            buildEmbeddedKpiStrip(lp),
-            // Body: context strip + toolbar + section head + student list
-            // + sticky save button.
-            Expanded(child: buildInputMode()),
+        child: BrandPageLayout(
+          role: 'guru',
+          header: buildEmbeddedHeader(lp),
+          kpiCard: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: buildEmbeddedKpiStrip(lp),
+          ),
+          // Pin the KPI strip — Hadir / Sakit / Izin / Alpa counts
+          // are the teacher's primary feedback while marking, so
+          // they stay visible regardless of how far the student
+          // list has scrolled. Other screens keep the default
+          // scroll-with-body behaviour.
+          kpiSticky: true,
+          bodyChildren: _buildEmbeddedBodyChildren(
+            lp: lp,
+            hasSubject: hasSubject,
+            hasStudents: hasStudents,
+          ),
+          bottomPadding: 12,
+        ),
+      ),
+      bottomNavigationBar: hasSubject && hasStudents
+          ? _buildEmbeddedSubmitBar(lp)
+          : null,
+    );
+  }
+
+  /// Body content for the embedded BrandPageLayout. Each child
+  /// becomes one item in the layout's outer ListView, which lets
+  /// the KPI card overlap the gradient header and scroll with the
+  /// list (matches the main Presensi + detail screen pattern).
+  ///
+  /// Layout:
+  ///   • compact toolbar (search + Aksi cepat trigger)
+  ///   • section head ("Daftar Siswa · N siswa")
+  ///   • student tiles spread directly so no nested viewport conflicts
+  ///   • placeholder / empty state when subject or roster is missing
+  List<Widget> _buildEmbeddedBodyChildren({
+    required LanguageProvider lp,
+    required bool hasSubject,
+    required bool hasStudents,
+  }) {
+    if (!hasSubject) {
+      return [
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: _embeddedNoSubjectState(lp),
+        ),
+      ];
+    }
+
+    return [
+      const SizedBox(height: 8),
+      _buildEmbeddedToolbar(lp),
+      if (hasStudents) ...[
+        buildEmbeddedSectionHead(lp),
+        for (var i = 0; i < filteredStudentList.length; i++)
+          AttendanceStudentItem(
+            student: filteredStudentList[i],
+            // Empty status → no pill highlighted. The form starts
+            // every student unmarked so the teacher must tap.
+            currentStatus: attendanceStatus[filteredStudentList[i].id] ?? '',
+            languageProvider: lp,
+            onStatusChanged: (studentId, status) {
+              setState(() => attendanceStatus[studentId] = status);
+            },
+            index: i,
+          ),
+        const SizedBox(height: 16),
+      ] else ...[
+        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: EmptyState(
+            title: lp.getTranslatedText({
+              'en': 'No Students',
+              'id': 'Tidak ada siswa',
+            }),
+            subtitle: lp.getTranslatedText({
+              'en': 'No students found for selected class',
+              'id': 'Tidak ada siswa untuk kelas yang dipilih',
+            }),
+            icon: Icons.people_outline,
+          ),
+        ),
+      ],
+    ];
+  }
+
+  /// Compact 40dp toolbar — search field + Aksi cepat trigger.
+  /// Inlined here (rather than reusing AttendanceInputMode's mixin
+  /// version) because the embedded path no longer renders that
+  /// widget — it goes straight into BrandPageLayout's body list.
+  Widget _buildEmbeddedToolbar(LanguageProvider lp) {
+    final tr = lp.getTranslatedText;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                border: Border.all(color: ColorUtils.slate200),
+              ),
+              child: TextField(
+                controller: searchInputController,
+                onChanged: (_) => filterStudents(),
+                onSubmitted: (_) =>
+                    FocusScope.of(context).unfocus(),
+                textAlignVertical: TextAlignVertical.center,
+                style: TextStyle(color: ColorUtils.slate800, fontSize: 13),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: tr({
+                    'en': 'Search student...',
+                    'id': 'Cari siswa...',
+                  }),
+                  hintStyle: TextStyle(
+                    color: ColorUtils.slate400,
+                    fontSize: 13,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: primaryColor,
+                    size: 18,
+                  ),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            height: 40,
+            width: 40,
+            child: Material(
+              color: Colors.white,
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
+              child: InkWell(
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                onTap: () => showQuickActionsSheet(lp),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    border: Border.all(color: ColorUtils.slate200),
+                  ),
+                  alignment: Alignment.center,
+                  child: Tooltip(
+                    message: tr({
+                      'en': 'Quick Attendance',
+                      'id': 'Presensi Cepat',
+                    }),
+                    child: Icon(
+                      Icons.checklist_rtl,
+                      color: primaryColor,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Sticky bottom save button. Wrapped in SafeArea so it sits above
+  /// the system gesture bar on edge-to-edge devices, and follows the
+  /// keyboard inset thanks to Scaffold.resizeToAvoidBottomInset.
+  Widget _buildEmbeddedSubmitBar(LanguageProvider lp) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: ColorUtils.slate200)),
+          boxShadow: [
+            BoxShadow(
+              color: ColorUtils.slate900.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
           ],
         ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+        child: SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton.icon(
+            onPressed: isSubmitting ? null : submitAttendance,
+            icon: isSubmitting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.save_outlined, size: 18),
+            label: Text(
+              isSubmitting
+                  ? lp.getTranslatedText({
+                      'en': 'Saving...',
+                      'id': 'Menyimpan...',
+                    })
+                  : lp.getTranslatedText({
+                      'en': 'Save Attendance',
+                      'id': 'Simpan Absensi',
+                    }),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 2,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _embeddedNoSubjectState(LanguageProvider lp) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.touch_app_outlined,
+            size: 48,
+            color: ColorUtils.slate300,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            lp.getTranslatedText({
+              'en': 'Please select Class and Subject first',
+              'id': 'Silakan pilih Kelas dan Mapel terlebih dahulu',
+            }),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: ColorUtils.slate600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            lp.getTranslatedText({
+              'en':
+                  'Or ensure you have a schedule for the selected date',
+              'id':
+                  'Atau pastikan anda memiliki jadwal pada tanggal '
+                  'yang dipilih',
+            }),
+            style: TextStyle(fontSize: 11, color: ColorUtils.slate400),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

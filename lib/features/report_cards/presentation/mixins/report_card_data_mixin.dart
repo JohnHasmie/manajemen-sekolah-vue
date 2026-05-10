@@ -97,8 +97,36 @@ mixin ReportCardDataMixin on ConsumerState<ReportCardDetailScreen> {
         if (initialData != null && initialData['grades'] != null) {
           syncSubjectsWithRecap(List<dynamic>.from(initialData['grades']));
         }
+        // Mirror the initial-data attendance into the existing raport
+        // when the raport itself didn't ship attendance yet — used for
+        // the autofill hint on the Info tab.
+        if (initialData != null && initialData['attendance'] is Map) {
+          existingRaport!['_initial_attendance'] = Map<String, dynamic>.from(
+            initialData['attendance'] as Map,
+          );
+        }
+        // Also stash the initial-data summary so the hero pill can
+        // fall back to recap-based rerata if the raport's own
+        // raport_subjects are empty (newly-created drafts).
+        if (initialData != null && initialData['summary'] is Map) {
+          existingRaport!['_initial_summary'] = Map<String, dynamic>.from(
+            initialData['summary'] as Map,
+          );
+        }
       } else if (initialData != null) {
         populateFromInitial(initialData);
+        // Stash a synthetic raport-shaped map so the header has
+        // something to derive the hero pill from even before the
+        // first save.
+        existingRaport = {
+          '_initial_summary': initialData['summary'] is Map
+              ? Map<String, dynamic>.from(initialData['summary'] as Map)
+              : <String, dynamic>{},
+          '_initial_attendance': initialData['attendance'] is Map
+              ? Map<String, dynamic>.from(initialData['attendance'] as Map)
+              : <String, dynamic>{},
+          '_synthetic': true,
+        };
       } else {
         throw Exception('Failed to load initial data');
       }

@@ -1,32 +1,40 @@
-// Expandable sub-chapter list shown inside a chapter card on TeacherMaterialScreen.
-// Extracted from TeacherMaterialScreenState._buildSubChapterList() to keep
-// the screen file lean. Like a Vue <SubChapterList /> sub-component.
-
+// Expandable sub-chapter list shown inside a chapter card on
+// TeacherMaterialScreen — Frame B of the Materi Q.2 redesign.
+//
+// Visual contract (mockup `_design/teacher_materi_redesign.html`
+// Frame B):
+//
+//   ┌──────────────────────────────────────────────────────┐
+//   │  ☑  Planet & Bintang                       [AI]    › │
+//   │  ☑  Gravitasi & Orbit                      [AI]    › │
+//   │  ☐  Bulan & Pasang Surut              [Belum AI]   › │
+//   └──────────────────────────────────────────────────────┘
+//
+//   • 18dp cobalt-tinted square checkbox (left). When checked the
+//     sub-bab title gets struck through and dimmed to slate.
+//   • Title (12pt / 700 / slate-700, slate-500 + line-through when
+//     checked).
+//   • AI status pill on the right: violet `AI` when generated, slate
+//     `Belum AI` when not. Same colour mapping the chapter-row stat
+//     pill uses.
+//   • Slate chevron-right indicator.
+//
+// All rows are tappable — onSubChapterTap navigates to the
+// sub-chapter detail screen.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
-/// Vertical list of sub-chapter rows rendered inside an expanded chapter card.
-///
-/// Purely presentational — all state maps and callbacks come from the parent
-/// screen via constructor params, so this widget never calls setState itself.
-/// In Vue terms this is a dumb child component that emits events upward.
-///
-/// [chapter]               — the parent chapter map (needs 'id').
-/// [subChapterMaterialList]— full list of sub-chapters across all chapters.
-/// [checkedSubChapter]     — map of subChapterId → bool (checkbox state).
-/// [generatedSubChapter]   — map of subChapterId → bool. Controls whether
-///                           the three Materi/Kuis/Ref badges render in
-///                           colour (true) or grey (false). Purely visual —
-///                           does NOT affect the checkbox lock. (#141)
-/// [getCheckboxColor]      — resolves colour for a given subChapterId.
-/// [onSubChapterTap]       — called when a row is tapped (navigate to detail).
-/// [onSubChapterCheck]     — called when a checkbox is toggled.
 class MaterialSubChapterList extends StatelessWidget {
   final Map<String, dynamic> chapter;
   final List<dynamic> subChapterMaterialList;
   final Map<String, bool> checkedSubChapter;
+
+  /// Whether each sub-chapter has AI-generated content. Drives the
+  /// `AI` (violet) vs `Belum AI` (slate) pill on the right of each
+  /// row. Does NOT affect the checkbox lock — those two are
+  /// independent dimensions.
   final Map<String, bool> generatedSubChapter;
+
   final Color Function(String id, {bool isSubChapter}) getCheckboxColor;
   final void Function(Map<String, dynamic> subChapter, Map<String, dynamic> bab)
   onSubChapterTap;
@@ -52,183 +60,176 @@ class MaterialSubChapterList extends StatelessWidget {
 
     if (subChaptersForChapter.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Text(
           'Tidak ada sub-bab',
-          style: TextStyle(color: ColorUtils.slate400),
+          style: TextStyle(
+            color: ColorUtils.slate400,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
           textAlign: TextAlign.center,
         ),
       );
     }
 
-    return Column(
-      children: subChaptersForChapter.map((subChapter) {
-        final subChapterIdStr = subChapter['id'].toString();
-        final subChapterColor = ColorUtils.getColorForIndex(
-          int.parse(subChapter['urutan']?.toString() ?? '0'),
-        );
-        final isGenerated = generatedSubChapter[subChapterIdStr] ?? false;
+    final cobalt = ColorUtils.brandCobalt;
 
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => onSubChapterTap(subChapter, chapter),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: subChapterColor.withValues(alpha: 0.12),
-                      borderRadius: const BorderRadius.all(Radius.circular(8)),
-                      border: Border.all(
-                        color: subChapterColor.withValues(alpha: 0.2),
+    return Container(
+      // Cobalt-tinted background so the sub-list visually nests
+      // inside the chapter card the way the mockup shows.
+      color: ColorUtils.slate50.withValues(alpha: 0.6),
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        children: List.generate(subChaptersForChapter.length, (i) {
+          final subChapter = subChaptersForChapter[i];
+          final subChapterIdStr = subChapter['id'].toString();
+          final isChecked = checkedSubChapter[subChapterIdStr] ?? false;
+          final isGenerated = generatedSubChapter[subChapterIdStr] ?? false;
+          final isLast = i == subChaptersForChapter.length - 1;
+
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => onSubChapterTap(subChapter, chapter),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(50, 10, 14, 10),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isLast ? Colors.transparent : ColorUtils.slate100,
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _SubCheckbox(
+                      isChecked: isChecked,
+                      cobalt: cobalt,
+                      onTap: () => onSubChapterCheck(
+                        subChapterIdStr,
+                        chapter['id'].toString(),
+                        !isChecked,
                       ),
                     ),
-                    child: Center(
+                    const SizedBox(width: 12),
+                    Expanded(
                       child: Text(
-                        '${subChapter['urutan']}',
+                        subChapter['judul_sub_bab']?.toString() ?? 'Sub-Bab',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: subChapterColor,
-                          fontSize: 13,
+                          // Bumped from 12 → 14 to narrow the readability
+                          // gap with the 15pt parent title above. Sits
+                          // one tick smaller so the visual hierarchy is
+                          // still clear without straining the teacher's
+                          // eye on long sub-bab names.
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
+                          color: isChecked
+                              ? ColorUtils.slate500
+                              : ColorUtils.slate800,
+                          height: 1.3,
+                          decoration: isChecked
+                              ? TextDecoration.lineThrough
+                              : null,
+                          decorationColor: ColorUtils.slate400,
+                          decorationThickness: 1.4,
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          subChapter['judul_sub_bab'] ?? 'Judul Sub Bab',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: ColorUtils.slate800,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        // Content indicator badges — coloured when the
-                        // sub-chapter's AI materi/quiz/refs are generated,
-                        // grey otherwise. Purely informational. (#141)
-                        Row(
-                          children: [
-                            _infoBadge(
-                              Icons.menu_book_outlined,
-                              'Materi',
-                              ColorUtils.success600,
-                              isActive: isGenerated,
-                            ),
-                            const SizedBox(width: 6),
-                            _infoBadge(
-                              Icons.quiz_outlined,
-                              'Kuis',
-                              ColorUtils.warning600,
-                              isActive: isGenerated,
-                            ),
-                            const SizedBox(width: 6),
-                            _infoBadge(
-                              Icons.bookmark_outline,
-                              'Ref',
-                              ColorUtils.info600,
-                              isActive: isGenerated,
-                            ),
-                          ],
-                        ),
-                      ],
+                    const SizedBox(width: 8),
+                    _AiPill(isGenerated: isGenerated),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: ColorUtils.slate300,
                     ),
-                  ),
-                  GestureDetector(
-                    onTap: () => onSubChapterCheck(
-                      subChapterIdStr,
-                      chapter['id'].toString(),
-                      !(checkedSubChapter[subChapterIdStr] ?? false),
-                    ),
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: (checkedSubChapter[subChapterIdStr] ?? false)
-                            ? getCheckboxColor(
-                                subChapterIdStr,
-                                isSubChapter: true,
-                              ).withValues(alpha: 0.15)
-                            : ColorUtils.slate50,
-                        borderRadius: BorderRadius.circular(7),
-                        border: Border.all(
-                          color: (checkedSubChapter[subChapterIdStr] ?? false)
-                              ? getCheckboxColor(
-                                  subChapterIdStr,
-                                  isSubChapter: true,
-                                )
-                              : ColorUtils.slate300,
-                          width: (checkedSubChapter[subChapterIdStr] ?? false)
-                              ? 1.5
-                              : 1,
-                        ),
-                      ),
-                      child: (checkedSubChapter[subChapterIdStr] ?? false)
-                          ? Icon(
-                              Icons.check_rounded,
-                              size: 16,
-                              color: getCheckboxColor(
-                                subChapterIdStr,
-                                isSubChapter: true,
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: ColorUtils.slate400,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }),
+      ),
     );
   }
+}
 
-  Widget _infoBadge(
-    IconData icon,
-    String label,
-    Color color, {
-    required bool isActive,
-  }) {
-    // When the sub-chapter's AI content isn't generated yet, the badge uses
-    // a slate palette to communicate "not available" — still visible but
-    // clearly muted compared to the coloured post-generation state. (#141)
-    final effectiveColor = isActive ? color : ColorUtils.slate400;
-    final bgAlpha = isActive ? 0.08 : 0.06;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: effectiveColor.withValues(alpha: bgAlpha),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: effectiveColor),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 9,
-              color: effectiveColor,
-              fontWeight: FontWeight.w500,
-            ),
+class _SubCheckbox extends StatelessWidget {
+  final bool isChecked;
+  final Color cobalt;
+  final VoidCallback onTap;
+
+  const _SubCheckbox({
+    required this.isChecked,
+    required this.cobalt,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 18,
+        height: 18,
+        decoration: BoxDecoration(
+          color: isChecked ? cobalt : Colors.white,
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(
+            color: isChecked ? cobalt : ColorUtils.slate300,
+            width: 1.4,
           ),
-        ],
+        ),
+        child: isChecked
+            ? const Icon(
+                Icons.check_rounded,
+                size: 12,
+                color: Colors.white,
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+class _AiPill extends StatelessWidget {
+  final bool isGenerated;
+
+  const _AiPill({required this.isGenerated});
+
+  @override
+  Widget build(BuildContext context) {
+    final (bg, fg, label) = isGenerated
+        ? (
+            const Color(0xFFEDE9FE),
+            const Color(0xFF7C3AED),
+            'AI',
+          )
+        : (
+            ColorUtils.slate100,
+            ColorUtils.slate500,
+            'Belum AI',
+          );
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.3,
+          height: 1.0,
+        ),
       ),
     );
   }

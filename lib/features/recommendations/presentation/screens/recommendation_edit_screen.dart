@@ -1,18 +1,26 @@
-// Form for editing AI-generated learning recommendations.
+// Edit recommendations — Frame E of
+// `_design/teacher_rekomendasi_redesign.html`.
 //
-// Presented as a draggable bottom sheet (flat-flow pattern) on top of the
-// result sheet. Call [LearningRecommendationEditScreen.show] — do not push
-// this widget directly. Pops with `true` when the teacher saves changes.
+// Cobalt brand header with a check (Simpan) action button on the
+// right. Body is a stack of `_SectCard`s — one per recommendation —
+// each carrying Judul / Deskripsi (Quill) / Prioritas / Materi /
+// Catatan blocks. The bulk-edit semantics from the previous sheet
+// are kept (`saveChanges` writes every rec in one go); only the
+// chrome changed to match the brand pattern.
+//
+// Pushes as a MaterialPageRoute (was a 92% modal bottom sheet) so
+// the brand header gets its full SafeArea and the Quill toolbar
+// doesn't fight a parent sheet's scroll controller.
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
-import 'package:manajemensekolah/core/widgets/bottom_sheet_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/edit_controller_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/edit_form_card_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/edit_form_state_mixin.dart';
 
-/// Form view for editing AI-generated learning recommendations.
 class LearningRecommendationEditScreen extends StatefulWidget {
   final Map<String, String> teacher;
   final Map<String, dynamic> student;
@@ -25,23 +33,21 @@ class LearningRecommendationEditScreen extends StatefulWidget {
     required this.recommendations,
   });
 
-  /// Opens this form as a modal bottom sheet. Returns `true` when the
-  /// teacher saves so the caller can refresh the recommendation list.
+  /// Pushes the editor as a full Material page route. Returns `true`
+  /// when the teacher saves so the caller can refresh the rec list.
   static Future<bool?> show({
     required BuildContext context,
     required Map<String, String> teacher,
     required Map<String, dynamic> student,
     required List<dynamic> recommendations,
   }) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black54,
-      builder: (_) => LearningRecommendationEditScreen(
-        teacher: teacher,
-        student: student,
-        recommendations: recommendations,
+    return Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => LearningRecommendationEditScreen(
+          teacher: teacher,
+          student: student,
+          recommendations: recommendations,
+        ),
       ),
     );
   }
@@ -100,56 +106,53 @@ class _LearningRecommendationEditScreenState
   @override
   Map<String, String> get teacher => widget.teacher;
 
+  String get _studentName {
+    final raw =
+        widget.student['name'] ?? widget.student['student_name'] ?? 'Siswa';
+    return raw.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final primaryColor = getPrimaryColor();
-    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
-    final mediaHeight = MediaQuery.of(context).size.height;
+    final cobalt = ColorUtils.brandCobalt;
+    final count = widget.recommendations.length;
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: keyboardInset),
-      child: Container(
-        constraints: BoxConstraints(maxHeight: mediaHeight * 0.92),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              BottomSheetHeader(
-                title: 'Edit Rekomendasi',
-                subtitle:
-                    '${widget.recommendations.length} rekomendasi untuk diedit',
-                icon: Icons.edit_note_rounded,
-                primaryColor: primaryColor,
-                onClose: _isSaving ? null : () => AppNavigator.pop(context),
-              ),
-              Flexible(
-                child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  itemCount: widget.recommendations.length,
-                  itemBuilder: (context, index) {
-                    final rec = widget.recommendations[index];
-                    return buildEditCard(rec, index);
-                  },
-                ),
-              ),
-              BottomSheetFooter(
-                primaryLabel: _isSaving ? 'Menyimpan...' : 'Simpan Perubahan',
-                secondaryLabel: 'Batal',
-                primaryColor: primaryColor,
-                primaryEnabled: !_isSaving,
-                onPrimary: saveChanges,
-                onSecondary: _isSaving
-                    ? () {}
-                    : () => AppNavigator.pop(context),
+    return Scaffold(
+      backgroundColor: ColorUtils.slate50,
+      body: Column(
+        children: [
+          BrandPageHeader(
+            role: 'guru',
+            subtitle: '$_studentName · Edit Rec',
+            title: count == 1 ? 'Edit Rekomendasi' : 'Edit $count Rekomendasi',
+            onBackPressed: _isSaving ? null : () => AppNavigator.pop(context),
+            actionIcons: [
+              BrandHeaderIconButton(
+                icon: Icons.check_rounded,
+                onTap: _isSaving ? () {} : saveChanges,
               ),
             ],
           ),
-        ),
+          Expanded(
+            child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              itemCount: widget.recommendations.length,
+              itemBuilder: (context, index) {
+                final rec = widget.recommendations[index];
+                return buildEditCard(rec, index);
+              },
+            ),
+          ),
+          BottomSheetFooter(
+            primaryLabel: _isSaving ? 'Menyimpan...' : 'Simpan Perubahan',
+            secondaryLabel: 'Batal',
+            primaryColor: cobalt,
+            primaryEnabled: !_isSaving,
+            onPrimary: saveChanges,
+            onSecondary: _isSaving ? () {} : () => AppNavigator.pop(context),
+          ),
+        ],
       ),
     );
   }

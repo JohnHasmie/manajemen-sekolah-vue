@@ -1,266 +1,353 @@
+// Student row mixin for the teacher Raport class report — Frame B
+// of the `_design/teacher_raport_redesign.html` mockup.
+//
+// Each row carries:
+//   • 40dp circular avatar with 2-letter initials (cobalt tint;
+//     red tint when the student has no raport yet so absentees
+//     visually pop).
+//   • Student name + `NIS · No <urutan>` meta + status pill
+//     (TERBIT green / DRAFT amber / FINAL blue / BELUM ISI red).
+//   • Boxed `Rerata` pill on the right (green ≥ 80, amber 60-79,
+//     em-dash when no raport). Sits in a slate-50 chip with the
+//     value above the `RERATA` label.
+//   • Slate chevron-right indicator.
+//
+// All rows are tappable — opens [ReportCardDetailScreen]. After
+// the detail pops, the host's onReturnFromDetail() is invoked so
+// the list refreshes.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/widgets/status_badge.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/'
     'screens/report_card_detail_screen.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
-/// Mixin for building the student list section.
 mixin StudentListMixin {
-  /// Abstract getter for build context (provided by State).
   BuildContext get context;
-
-  /// Abstract getter for widget data.
   Widget get widgetParent;
 
-  /// Get the selected class from widget.
   Map<String, dynamic>? getSelectedClass();
-
-  /// Get the onDownloadPdf callback from widget.
   void Function(Map<String, dynamic> student)? getOnDownloadPdf();
-
-  /// Get the onReturnFromDetail callback from widget.
   VoidCallback? getOnReturnFromDetail();
 
   /// Build the student list view with filtered students.
   Widget buildStudentList(List<dynamic> filteredStudents) {
     return Expanded(
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-        itemCount: filteredStudents.length,
-        itemBuilder: (context, index) {
-          final student = filteredStudents[index];
-          return _buildStudentCard(context, student, index);
-        },
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+        children: [
+          _buildSectionHead(filteredStudents.length),
+          ...filteredStudents.map((s) => _buildStudentCard(context, s)),
+        ],
       ),
     );
   }
 
-  /// Build an individual student card with status and actions.
-  Widget _buildStudentCard(BuildContext context, dynamic student, int index) {
-    final model = Student.fromJson(student as Map<String, dynamic>);
-    final name = model.name.isNotEmpty ? model.name : 'Siswa';
-    final hasRaport = student['has_raport'] ?? false;
-    final status = student['raport_status'] ?? 'Belum ada';
-    final nis = model.studentNumber.isNotEmpty ? model.studentNumber : '-';
-    final isFinal =
-        status.toLowerCase() == 'final' || status.toLowerCase() == 'published';
-    final statusInfo = _getStatusInfo(hasRaport, status);
-
+  Widget _buildSectionHead(int count) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: () => _onStudentTap(context, student, name),
-          borderRadius: BorderRadius.circular(12),
-          child: _buildCardContent(
-            index,
-            name,
-            nis,
-            statusInfo,
-            isFinal,
-            student,
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Build the card content row layout.
-  Widget _buildCardContent(
-    int index,
-    String name,
-    String nis,
-    Map<String, Object> statusInfo,
-    bool isFinal,
-    dynamic student,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ColorUtils.slate100),
-      ),
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
       child: Row(
-        children: _buildRowChildren(
-          index,
-          name,
-          nis,
-          statusInfo,
-          isFinal,
-          student,
-        ),
-      ),
-    );
-  }
-
-  /// Build the children widgets for the card row.
-  List<Widget> _buildRowChildren(
-    int index,
-    String name,
-    String nis,
-    Map<String, Object> statusInfo,
-    bool isFinal,
-    dynamic student,
-  ) {
-    return [
-      _buildNumberBadge(index),
-      const SizedBox(width: 10),
-      _buildStudentInfo(name, nis),
-      _buildStatusBadge(
-        statusInfo['bg'] as Color,
-        statusInfo['fg'] as Color,
-        statusInfo['icon'] as IconData,
-        statusInfo['label'] as String,
-      ),
-      if (isFinal) ...[const SizedBox(width: 6), _buildPdfButton(student)],
-      const SizedBox(width: 4),
-      Icon(Icons.chevron_right, size: 18, color: ColorUtils.slate300),
-    ];
-  }
-
-  /// Build the number badge widget.
-  Widget _buildNumberBadge(int index) {
-    final badgeColor = ColorUtils.getRoleColor('guru');
-
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            badgeColor.withValues(alpha: 0.12),
-            badgeColor.withValues(alpha: 0.06),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Center(
-        child: Text(
-          '${index + 1}',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: badgeColor,
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Build the student name and NIS section.
-  Widget _buildStudentInfo(String name, String nis) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
         children: [
           Text(
-            name,
+            'DAFTAR SISWA',
             style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: ColorUtils.slate800,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 2),
+          const Spacer(),
           Text(
-            'NIS: $nis',
-            style: TextStyle(fontSize: 11, color: ColorUtils.slate400),
+            '$count siswa · urut absen',
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate500,
+            ),
           ),
         ],
       ),
     );
   }
 
-  /// Build the status badge widget.
-  Widget _buildStatusBadge(
-    Color bgColor,
-    Color fgColor,
-    IconData icon,
-    String label,
-  ) {
-    return StatusBadge(
-      label: label,
-      color: fgColor,
-      icon: icon,
-      iconSize: 12,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      fontSize: 10,
-    );
-  }
+  Widget _buildStudentCard(BuildContext context, dynamic student) {
+    final model = Student.fromJson(student as Map<String, dynamic>);
+    final name = model.name.isNotEmpty ? model.name : 'Siswa';
+    final nis = model.studentNumber.isNotEmpty ? model.studentNumber : '-';
+    final orderNo =
+        student['urutan']?.toString() ??
+        student['no_urut']?.toString() ??
+        student['order']?.toString();
+    final hasRaport = student['has_raport'] == true;
+    final rawStatus = (student['raport_status'] ?? '').toString().toLowerCase();
+    final rerata =
+        student['rerata'] ?? student['average'] ?? student['avg_score'];
+    final hasRerata = rerata is num && rerata > 0;
+    final rerataVal = hasRerata ? (rerata as num).toDouble() : 0.0;
 
-  /// Build the PDF download button.
-  Widget _buildPdfButton(dynamic student) {
-    return GestureDetector(
-      onTap: () {
-        final callback = getOnDownloadPdf();
-        if (callback != null) {
-          callback(student as Map<String, dynamic>);
-        }
-      },
-      child: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          color: ColorUtils.error600.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          Icons.picture_as_pdf_outlined,
-          size: 14,
-          color: ColorUtils.error600,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => _onStudentTap(context, student, name),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: ColorUtils.slate200),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _Avatar(name: name, isBelum: !hasRaport),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: ColorUtils.slate900,
+                        letterSpacing: -0.1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _metaLine(nis, orderNo),
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: ColorUtils.slate500,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    _StatusPill(status: rawStatus, hasRaport: hasRaport),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _RerataPill(value: rerataVal, hasValue: hasRerata),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 16,
+                color: ColorUtils.slate300,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  /// Determine status styling based on raport state.
-  Map<String, Object> _getStatusInfo(bool hasRaport, String status) {
-    if (!hasRaport) {
-      return {
-        'bg': ColorUtils.slate100,
-        'fg': ColorUtils.slate500,
-        'icon': Icons.edit_note,
-        'label': 'Belum Isi',
-      };
-    } else if (status.toLowerCase() == 'draft') {
-      return {
-        'bg': ColorUtils.warning600.withValues(alpha: 0.08),
-        'fg': ColorUtils.warning600,
-        'icon': Icons.save_outlined,
-        'label': 'Draft',
-      };
-    }
-    return {
-      'bg': ColorUtils.success600.withValues(alpha: 0.08),
-      'fg': ColorUtils.success600,
-      'icon': Icons.check_circle_outline,
-      'label': 'Selesai',
-    };
+  String _metaLine(String nis, String? orderNo) {
+    final bits = <String>[
+      if (nis != '-') 'NIS · $nis',
+      if (orderNo != null && orderNo.isNotEmpty)
+        'No ${orderNo.padLeft(2, '0')}',
+    ];
+    return bits.isEmpty ? '-' : bits.join(' · ');
   }
 
-  /// Handle student card tap navigation.
   void _onStudentTap(BuildContext context, dynamic student, String name) {
-    final selectedClass = getSelectedClass();
-    final onReturn = getOnReturnFromDetail();
-
-    final model = Student.fromJson(student as Map<String, dynamic>);
-    AppNavigator.push(
+    final classData = getSelectedClass();
+    if (classData == null) return;
+    final studentClassId =
+        (student['student_class_id'] ?? student['id'])?.toString() ?? '';
+    AppNavigator.push<void>(
       context,
       ReportCardDetailScreen(
-        studentClassId: model.studentClassId ?? '',
+        studentClassId: studentClassId,
         studentName: name,
-        className: selectedClass?['name'] ?? '',
+        className: (classData['nama'] ?? classData['name'])?.toString() ?? '',
       ),
     ).then((_) {
-      if (onReturn != null) {
-        onReturn();
-      }
+      final cb = getOnReturnFromDetail();
+      if (cb != null) cb();
     });
+  }
+}
+
+// ─── Sub-widgets ────────────────────────────────────────────────────
+
+class _Avatar extends StatelessWidget {
+  final String name;
+  final bool isBelum;
+
+  const _Avatar({required this.name, required this.isBelum});
+
+  String get _initials {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '?';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
+        .toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = isBelum ? ColorUtils.error600 : ColorUtils.brandCobalt;
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.10),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        _initials,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: accent,
+          letterSpacing: 0.3,
+          height: 1.0,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  final String status;
+  final bool hasRaport;
+
+  const _StatusPill({required this.status, required this.hasRaport});
+
+  @override
+  Widget build(BuildContext context) {
+    final (bg, fg, label) = _resolve(status, hasRaport);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.3,
+          height: 1.0,
+        ),
+      ),
+    );
+  }
+
+  static (Color, Color, String) _resolve(String status, bool hasRaport) {
+    if (!hasRaport) {
+      return (
+        ColorUtils.error600.withValues(alpha: 0.08),
+        ColorUtils.error600,
+        'BELUM ISI',
+      );
+    }
+    switch (status) {
+      case 'published':
+      case 'terbit':
+        return (
+          ColorUtils.success600.withValues(alpha: 0.10),
+          ColorUtils.success600,
+          'TERBIT',
+        );
+      case 'final':
+        return (
+          ColorUtils.info600.withValues(alpha: 0.10),
+          ColorUtils.info600,
+          'FINAL',
+        );
+      case 'draft':
+        return (
+          ColorUtils.warning600.withValues(alpha: 0.10),
+          ColorUtils.warning600,
+          'DRAFT',
+        );
+      default:
+        return (
+          ColorUtils.slate100,
+          ColorUtils.slate500,
+          status.isEmpty ? 'BELUM ISI' : status.toUpperCase(),
+        );
+    }
+  }
+}
+
+class _RerataPill extends StatelessWidget {
+  final double value;
+  final bool hasValue;
+
+  const _RerataPill({required this.value, required this.hasValue});
+
+  @override
+  Widget build(BuildContext context) {
+    final (bg, fg) = _tint();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: fg.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            hasValue ? value.toStringAsFixed(0) : '—',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+              color: fg,
+              height: 1.0,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'RERATA',
+            style: TextStyle(
+              fontSize: 8.5,
+              fontWeight: FontWeight.w800,
+              color: fg,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  (Color, Color) _tint() {
+    if (!hasValue) {
+      return (ColorUtils.slate50, ColorUtils.slate500);
+    }
+    if (value >= 80) {
+      return (
+        ColorUtils.success600.withValues(alpha: 0.06),
+        ColorUtils.success600,
+      );
+    }
+    if (value >= 60) {
+      return (
+        ColorUtils.warning600.withValues(alpha: 0.06),
+        ColorUtils.warning600,
+      );
+    }
+    return (ColorUtils.error600.withValues(alpha: 0.06), ColorUtils.error600);
   }
 }

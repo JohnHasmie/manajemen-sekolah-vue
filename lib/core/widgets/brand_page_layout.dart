@@ -43,6 +43,22 @@ class BrandPageLayout extends StatefulWidget {
   final List<Widget> bodyChildren;
   final double bottomPadding;
 
+  /// When true, the [kpiCard] stays pinned at the top of the body
+  /// region (below the gradient header) and does NOT scroll with the
+  /// content. The body's scrollable area starts below the pinned KPI
+  /// instead of at `bodyTop`.
+  ///
+  /// Default `false` keeps the existing scroll-with-body pattern.
+  /// Use `true` for screens where the KPI must remain visible while
+  /// the user scrolls a long body — e.g. Ambil Presensi where the
+  /// live status counts (Hadir / Sakit / Izin / Alpa) are the
+  /// teacher's primary feedback during data entry.
+  ///
+  /// The gradient mask layer is suppressed when sticky because there
+  /// is no "KPI scrolls past" event; the KPI itself permanently
+  /// covers the overlap zone.
+  final bool kpiSticky;
+
   const BrandPageLayout({
     super.key,
     required this.header,
@@ -52,6 +68,7 @@ class BrandPageLayout extends StatefulWidget {
     this.role = 'wali',
     this.bodyChildren = const [],
     this.bottomPadding = 24,
+    this.kpiSticky = false,
   });
 
   @override
@@ -120,6 +137,12 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
     final bodyTop =
         (_headerH - overlap).clamp(0.0, double.infinity);
 
+    // Sticky mode pulls the KPI out of the scrollable list and
+    // pins it as an absolute layer just below the header. The
+    // body's scrollable area starts below the pinned KPI so the
+    // first row isn't hidden behind it.
+    final sticky = widget.kpiSticky && hasKpi;
+
     final list = ListView(
       controller: _scrollCtrl,
       padding: EdgeInsets.only(
@@ -127,7 +150,9 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
       ),
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
-        if (hasKpi)
+        // Scroll-with-body mode: KPI is the first list item.
+        // Sticky mode: skip — KPI is rendered as an absolute layer.
+        if (hasKpi && !sticky)
           KeyedSubtree(
             key: _kpiKey,
             child: widget.kpiCard!,
@@ -160,6 +185,11 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
       );
     }
 
+    // Sticky mode pushes the body down so the first scrollable
+    // row sits below the pinned KPI rather than under it. Falls
+    // back to bodyTop on first frames before _kpiH is measured.
+    final effectiveBodyTop = sticky ? bodyTop + _kpiH : bodyTop;
+
     return SizedBox.expand(
       child: Stack(
         clipBehavior: Clip.hardEdge,
@@ -173,14 +203,27 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
           ),
           // 2. Body — in front of header. Scrollable.
           Positioned.fill(
-            top: bodyTop,
+            top: effectiveBodyTop,
             child: body,
           ),
-          // 3. Gradient mask — covers the overlap zone.
-          //    Hidden at rest (KPI visible). Shown after
-          //    KPI scrolls past (covers the gap).
-          //    IgnorePointer so touches go to the body.
-          if (_showMask && overlap > 0)
+          // 3a. Sticky KPI — pinned above the scrollable body,
+          //     overlapping the gradient header by `overlap` dp.
+          //     Doesn't scroll, so the gradient mask layer below
+          //     is never needed in this mode.
+          if (sticky)
+            Positioned(
+              top: bodyTop,
+              left: 0,
+              right: 0,
+              child: KeyedSubtree(
+                key: _kpiKey,
+                child: widget.kpiCard!,
+              ),
+            ),
+          // 3b. Gradient mask — covers the overlap zone in
+          //     scroll-with-body mode once the KPI has scrolled
+          //     past. Skipped in sticky mode (KPI never scrolls).
+          if (!sticky && _showMask && overlap > 0)
             Positioned(
               top: bodyTop,
               left: 0,

@@ -25,7 +25,6 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
   bool get isTimelineView;
   bool get isLoadingInput;
   bool get isSubmitting;
-  bool get compactMode;
   bool get hasActiveFilter;
   bool get timelineLoadingMore;
   bool get isHomeroomView;
@@ -187,34 +186,11 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
       },
       onSubmit: submitAttendance,
       scrollController: embeddedScrollController,
-      compactMode: compactMode,
       // Frame A — only embedded sheet shows the section head; the
       // standalone Take Attendance tab uses its own header chrome.
       sectionHead: widget.embedded ? buildEmbeddedSectionHead(lp) : null,
-      // Frame A bulk-row chips. Override every student → hadir, or fill
-      // only the unmarked rows with alpa. Both stay null on the
-      // standalone screen so the row stays hidden there.
-      onMarkAllHadir: widget.embedded
-          ? () {
-              setState(() {
-                for (final s in filteredStudentList) {
-                  attendanceStatus[s.id] = 'hadir';
-                }
-              });
-            }
-          : null,
-      onFillRemainingAlpa: widget.embedded
-          ? () {
-              setState(() {
-                for (final s in filteredStudentList) {
-                  final v = attendanceStatus[s.id];
-                  if (v == null || v.isEmpty) {
-                    attendanceStatus[s.id] = 'alpha';
-                  }
-                }
-              });
-            }
-          : null,
+      // Bulk-row chips ("Semua Hadir" / "Sisanya Alpa") were removed —
+      // both actions stay reachable through the Aksi cepat sheet.
     );
   }
 

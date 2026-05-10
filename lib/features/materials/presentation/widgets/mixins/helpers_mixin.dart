@@ -28,6 +28,19 @@ mixin HelpersMixin {
         .length;
   }
 
+  /// Count of sub-chapters under [chapterId] whose AI-generated flag
+  /// is set — drives the "AI N" pill on the chapter card header so
+  /// teachers can see at a glance how many sub-babs are AI-ready.
+  int getGeneratedSubCount(String chapterId) {
+    return getSubChapterMaterialList()
+        .where(
+          (sc) =>
+              sc['bab_id'].toString() == chapterId &&
+              getGeneratedSubChapter()[sc['id'].toString()] == true,
+        )
+        .length;
+  }
+
   bool isChapterExpanded(String chapterId) {
     return getExpandedChapter()[chapterId] ?? false;
   }

@@ -1,0 +1,1730 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · Jadwal · Deep redesign</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --green-50: #DCFCE7;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --indigo-50: #E0E7FF;
+    --indigo-600: #4F46E5;
+    --emerald-50: #D1FAE5;
+    --emerald-600: #059669;
+    --rose-50: #FFE4E6;
+    --rose-600: #E11D48;
+    --teal-50: #CCFBF1;
+    --teal-600: #0D9488;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 24px;
+    max-width: 920px; line-height: 1.55;
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin: 0 0 28px; padding: 14px 18px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; color: var(--slate-700); font-weight: 600;
+    max-width: 920px;
+  }
+  .legend .swatch {
+    width: 14px; height: 14px; border-radius: 4px;
+    display: inline-block; vertical-align: -2px; margin-right: 6px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 760;
+    position: relative;
+    overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+
+  /* ───── Brand header ───── */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    padding: 14px 16px 28px;
+    color: white;
+    flex: 0 0 auto;
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto;
+  }
+  .h-icon svg, .h-back svg {
+    width: 16px; height: 16px;
+    stroke-width: 2.4; fill: none; stroke: currentColor;
+  }
+  .h-title-block { flex: 1; min-width: 0; text-align: center; }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.78);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .h-title { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; }
+
+  /* Inline pulse dot for "live now" */
+  .live-dot {
+    display: inline-block; width: 6px; height: 6px;
+    border-radius: 999px; background: #22D3EE;
+    box-shadow: 0 0 0 0 rgba(34,211,238,0.8);
+    animation: pulse 1.6s infinite;
+    margin-left: 6px; vertical-align: 1px;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(34,211,238,0.8); }
+    70%  { box-shadow: 0 0 0 8px rgba(34,211,238,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,211,238,0); }
+  }
+
+  /* Role toggle row inside header bottom slot */
+  .role-row {
+    display: flex; gap: 6px; margin-top: 14px;
+  }
+  .role-chip {
+    flex: 1;
+    padding: 7px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.16);
+    color: rgba(255,255,255,.86);
+    font-size: 11px; font-weight: 800;
+    text-align: center; letter-spacing: 0.2px;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .role-chip.active {
+    background: white;
+    color: var(--brand-cobalt);
+  }
+  .role-chip svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  /* Sheet handle (for sheet variants) */
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: rgba(255,255,255,.45); border-radius: 999px;
+    margin: 0 auto 10px;
+  }
+
+  /* KPI strip below header */
+  .kpi {
+    background: white; border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    margin: -20px 16px 0;
+    padding: 12px 6px;
+    display: flex; align-items: center;
+    box-shadow: 0 6px 16px rgba(15,23,42,.06);
+    z-index: 1; position: relative;
+  }
+  .kpi-cell { flex: 1; text-align: center; }
+  .kpi-cell .v {
+    font-size: 20px; font-weight: 900;
+    line-height: 1; letter-spacing: -0.3px;
+  }
+  .kpi-cell .l {
+    font-size: 9px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: .5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .kpi-cell.cobalt .v { color: var(--brand-cobalt); }
+  .kpi-cell.green .v { color: var(--green-600); }
+  .kpi-cell.amber .v { color: var(--amber-600); }
+  .kpi-cell.red .v { color: var(--red-600); }
+  .kpi-cell.violet .v { color: var(--violet-600); }
+  .kpi-cell.slate .v { color: var(--slate-700); }
+  .kpi-divider { width: 1px; height: 24px; background: var(--slate-100); }
+
+  /* Body */
+  .body {
+    flex: 1; min-height: 0;
+    overflow-y: auto;
+    padding: 12px 16px 90px;
+  }
+
+  /* Filter chip strip (below KPI) */
+  .filter-strip {
+    display: flex; gap: 6px; margin: 14px 0 4px;
+    flex-wrap: nowrap; overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .filter-strip::-webkit-scrollbar { display: none; }
+  .fchip {
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    font-size: 11.5px; font-weight: 700;
+    color: var(--slate-700);
+    display: inline-flex; align-items: center; gap: 5px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .fchip svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .fchip.active {
+    background: rgba(27,111,184,.08);
+    border-color: rgba(27,111,184,.40);
+    color: var(--brand-cobalt);
+  }
+  .fchip .ct {
+    padding: 1px 7px; border-radius: 999px;
+    background: rgba(27,111,184,.16);
+    font-size: 10px; font-weight: 800;
+    color: var(--brand-cobalt);
+  }
+
+  /* Section heading */
+  .sect-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin: 16px 0 8px;
+  }
+  .sect-head .t {
+    font-size: 12px; font-weight: 800; color: var(--slate-700);
+    letter-spacing: .3px; text-transform: uppercase;
+  }
+  .sect-head .x {
+    font-size: 10.5px; font-weight: 700; color: var(--slate-500);
+  }
+
+  /* Day group sticky header */
+  .day-head {
+    display: flex; align-items: center; gap: 10px;
+    margin: 12px 0 10px;
+  }
+  .day-bar {
+    width: 4px; height: 22px; border-radius: 2px;
+    background: var(--brand-cobalt);
+    flex: 0 0 auto;
+  }
+  .day-label {
+    font-size: 14px; font-weight: 900;
+    color: var(--slate-900); letter-spacing: -0.2px;
+  }
+  .day-label.past { color: var(--slate-400); }
+  .day-bar.past { background: var(--slate-300); }
+  .day-today-pill {
+    padding: 2px 8px; border-radius: 999px;
+    background: rgba(27,111,184,.12);
+    color: var(--brand-cobalt);
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+  .day-count { margin-left: auto; font-size: 11px; color: var(--slate-500); font-weight: 700; }
+
+  /* ───── Schedule card (Frame A list) ───── */
+  .sch-card {
+    background: white; border: 1px solid var(--slate-200);
+    border-radius: 14px; padding: 12px 12px 0;
+    margin-bottom: 10px;
+  }
+  .sch-card.current {
+    border: 1.5px solid rgba(27,111,184,.45);
+    background: rgba(27,111,184,.04);
+    box-shadow: 0 6px 18px rgba(27,111,184,.10);
+  }
+  .sch-card.next {
+    border: 1.2px solid rgba(27,111,184,.22);
+  }
+  .sch-card.past {
+    opacity: 0.65; background: var(--slate-50);
+  }
+  .sch-row { display: flex; align-items: center; gap: 12px; }
+  .hour-chip {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--indigo-600), #6366F1);
+    color: white;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    flex: 0 0 auto;
+    box-shadow: 0 4px 10px rgba(79,70,229,.25);
+  }
+  .hour-chip .num {
+    font-size: 16px; font-weight: 900; line-height: 1;
+  }
+  .hour-chip .lbl {
+    font-size: 7.5px; font-weight: 800; letter-spacing: 0.5px;
+    color: rgba(255,255,255,.86);
+    margin-top: 1px;
+  }
+  .hour-chip.indigo { background: linear-gradient(135deg, var(--indigo-600), #6366F1); box-shadow: 0 4px 10px rgba(79,70,229,.25); }
+  .hour-chip.emerald { background: linear-gradient(135deg, var(--emerald-600), #10B981); box-shadow: 0 4px 10px rgba(5,150,105,.25); }
+  .hour-chip.amber { background: linear-gradient(135deg, var(--amber-600), #F59E0B); box-shadow: 0 4px 10px rgba(217,119,6,.25); }
+  .hour-chip.rose { background: linear-gradient(135deg, var(--rose-600), #F43F5E); box-shadow: 0 4px 10px rgba(225,29,72,.25); }
+  .hour-chip.teal { background: linear-gradient(135deg, var(--teal-600), #14B8A6); box-shadow: 0 4px 10px rgba(13,148,136,.25); }
+  .hour-chip.violet { background: linear-gradient(135deg, var(--violet-600), #8B5CF6); box-shadow: 0 4px 10px rgba(124,58,237,.25); }
+  .hour-chip.past {
+    background: var(--slate-300); color: white;
+    box-shadow: none;
+  }
+
+  .sch-info { flex: 1; min-width: 0; }
+  .sch-info-top { display: flex; align-items: center; gap: 6px; }
+  .sch-subject {
+    flex: 1; min-width: 0;
+    font-size: 14px; font-weight: 800;
+    color: var(--slate-900); letter-spacing: -0.2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sch-class-pill {
+    padding: 2px 7px; border-radius: 6px;
+    background: rgba(27,111,184,.10);
+    border: 0.5px solid rgba(27,111,184,.20);
+    color: var(--brand-cobalt);
+    font-size: 10.5px; font-weight: 800;
+    flex: 0 0 auto;
+  }
+  .sch-info-bot {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 4px;
+    font-size: 11px; color: var(--brand-cobalt);
+    font-weight: 700;
+  }
+  .sch-info-bot .t-icon {
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .sch-info-bot .t-icon svg {
+    width: 11px; height: 11px;
+    stroke: currentColor; stroke-width: 2.4; fill: none;
+  }
+  .sch-info-bot .dot { color: rgba(27,111,184,.45); font-weight: 900; }
+  .sch-info-bot .teacher { color: var(--slate-600); font-weight: 700; }
+
+  /* Status chip on the right of sch-row */
+  .status-pill {
+    padding: 3px 8px; border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    letter-spacing: 0.3px; text-transform: uppercase;
+    flex: 0 0 auto;
+  }
+  .status-pill.now {
+    background: rgba(220,38,38,.10);
+    color: var(--red-700);
+  }
+  .status-pill.next {
+    background: rgba(27,111,184,.10);
+    color: var(--brand-cobalt);
+  }
+  .status-pill.done {
+    background: var(--slate-100);
+    color: var(--slate-500);
+  }
+
+  .sch-divider {
+    margin: 10px -12px 0;
+    height: 1px; background: var(--slate-100);
+  }
+  .sch-actions {
+    display: flex; gap: 8px;
+    padding: 8px 0 10px;
+  }
+  .sch-action {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    gap: 5px; padding: 7px 6px;
+    border-radius: 10px;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    font-size: 10.5px; font-weight: 800;
+    color: var(--slate-600);
+    letter-spacing: 0.2px;
+  }
+  .sch-action svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .sch-action.filled {
+    background: rgba(22,163,74,.08);
+    border-color: rgba(22,163,74,.30);
+    color: var(--green-700);
+  }
+  .sch-action.filled-attendance {
+    background: rgba(22,163,74,.08);
+    border-color: rgba(22,163,74,.30);
+    color: var(--green-700);
+  }
+  .sch-action.cobalt {
+    background: rgba(27,111,184,.08);
+    border-color: rgba(27,111,184,.30);
+    color: var(--brand-cobalt);
+  }
+
+  /* ───── Bottom navigation hint ───── */
+  .floating-fab {
+    position: absolute; right: 16px; bottom: 24px;
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-cobalt));
+    box-shadow: 0 10px 24px rgba(20,48,104,.35);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+  }
+  .floating-fab svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  /* ───── Frame B - Table view (day tabs + session rows) ───── */
+  .day-tabs {
+    background: var(--slate-100);
+    border-radius: 12px;
+    padding: 3px;
+    display: flex; gap: 2px;
+    margin: 14px 0 12px;
+  }
+  .day-tab {
+    flex: 1; padding: 8px 4px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 11px; font-weight: 700;
+    color: var(--slate-500);
+    position: relative;
+  }
+  .day-tab.active {
+    background: white;
+    color: var(--brand-cobalt);
+    box-shadow: 0 1px 4px rgba(15,23,42,.08);
+    font-weight: 800;
+  }
+  .day-tab .today-mark {
+    width: 5px; height: 5px; border-radius: 999px;
+    background: var(--brand-cobalt);
+    margin: 2px auto 0;
+  }
+
+  .day-banner {
+    display: flex; align-items: center; gap: 10px;
+    margin: 0 0 14px;
+  }
+  .day-banner .b-bar { width: 4px; height: 22px; border-radius: 2px; background: var(--brand-cobalt); }
+  .day-banner .b-label { font-size: 15px; font-weight: 800; color: var(--slate-900); }
+  .day-banner .b-pill {
+    padding: 2px 8px; border-radius: 6px;
+    background: rgba(27,111,184,.12);
+    color: var(--brand-cobalt);
+    font-size: 10px; font-weight: 800;
+  }
+  .day-banner .b-count { margin-left: auto; font-size: 11px; color: var(--slate-500); font-weight: 700; }
+
+  /* Session row in table view */
+  .ses-row {
+    display: flex; gap: 12px;
+    padding: 12px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .ses-row.current {
+    background: rgba(27,111,184,.08);
+    border: 1.5px solid rgba(27,111,184,.45);
+    box-shadow: 0 6px 18px rgba(27,111,184,.12);
+  }
+  .ses-row.next {
+    background: rgba(27,111,184,.04);
+    border: 1.2px solid rgba(27,111,184,.22);
+  }
+  .ses-row.past { opacity: 0.6; }
+
+  .ses-time {
+    width: 56px; flex: 0 0 auto;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .ses-num {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+    background: var(--slate-100); color: var(--slate-700);
+  }
+  .ses-num.active { background: var(--brand-cobalt); color: white; }
+  .ses-num.past { background: var(--slate-200); color: var(--slate-500); }
+  .ses-start { font-size: 10px; font-weight: 700; color: var(--slate-700); margin-top: 4px; }
+  .ses-end { font-size: 9px; color: var(--slate-400); }
+
+  .ses-divider {
+    width: 1px; background: var(--slate-200); align-self: stretch;
+    flex: 0 0 auto;
+  }
+
+  .ses-info { flex: 1; min-width: 0; }
+  .ses-row-top {
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .ses-subject {
+    font-size: 13.5px; font-weight: 800; color: var(--slate-900);
+    flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ses-class {
+    padding: 2px 6px; border-radius: 5px;
+    background: rgba(27,111,184,.10);
+    color: var(--brand-cobalt);
+    font-size: 10px; font-weight: 800;
+  }
+  .ses-row-bot {
+    display: flex; gap: 10px; align-items: center;
+    margin-top: 6px;
+  }
+  .ses-action-pills {
+    display: flex; gap: 4px;
+  }
+  .ses-action-mini {
+    padding: 3px 7px; border-radius: 999px;
+    background: var(--slate-100);
+    color: var(--slate-500);
+    font-size: 9.5px; font-weight: 800;
+    display: inline-flex; align-items: center; gap: 3px;
+    letter-spacing: 0.3px;
+  }
+  .ses-action-mini svg { width: 9px; height: 9px; stroke: currentColor; stroke-width: 3; fill: none; }
+  .ses-action-mini.filled {
+    background: rgba(22,163,74,.10); color: var(--green-700);
+  }
+  .ses-action-mini.warn {
+    background: rgba(217,119,6,.10); color: var(--amber-700);
+  }
+  .ses-action-mini.cobalt {
+    background: rgba(27,111,184,.10); color: var(--brand-cobalt);
+  }
+
+  /* ───── Frame C - Quick action sheet ───── */
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    overflow: hidden;
+    box-shadow: 0 -8px 30px rgba(15,23,42,.20);
+    max-height: 84%;
+    display: flex; flex-direction: column;
+  }
+  .sheet-header {
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-cobalt));
+    padding: 10px 16px 22px;
+    color: white;
+  }
+  .sheet-handle-light {
+    width: 40px; height: 4px;
+    background: rgba(255,255,255,.45);
+    border-radius: 999px;
+    margin: 0 auto 12px;
+  }
+  .sheet-title-row { display: flex; align-items: center; gap: 10px; }
+  .sheet-icon-box {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sheet-icon-box svg {
+    width: 18px; height: 18px;
+    stroke: white; stroke-width: 2.4; fill: none;
+  }
+  .sheet-title-text { flex: 1; min-width: 0; }
+  .sheet-kicker {
+    font-size: 9px; font-weight: 800;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    color: rgba(255,255,255,.78);
+    margin-bottom: 2px;
+  }
+  .sheet-title { font-size: 16px; font-weight: 900; letter-spacing: -0.3px; }
+
+  .sheet-body { padding: 14px 16px 24px; overflow-y: auto; flex: 1; }
+
+  /* Day overview chip pulled out of header */
+  .ov-strip {
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    margin: -16px 16px 16px;
+    padding: 12px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+    box-shadow: 0 6px 16px rgba(15,23,42,.06);
+    position: relative; z-index: 1;
+  }
+  .ov-cell {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ov-mini {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .ov-mini svg { width: 13px; height: 13px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .ov-mini.green { background: rgba(22,163,74,.12); color: var(--green-700); }
+  .ov-mini.amber { background: rgba(217,119,6,.12); color: var(--amber-700); }
+  .ov-mini.cobalt { background: rgba(27,111,184,.12); color: var(--brand-cobalt); }
+  .ov-text .v { font-size: 13px; font-weight: 900; color: var(--slate-900); line-height: 1; }
+  .ov-text .l {
+    font-size: 8.5px; font-weight: 800; color: var(--slate-500);
+    letter-spacing: 0.4px; text-transform: uppercase; margin-top: 2px;
+  }
+
+  /* Action rows in sheet */
+  .qa-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px; margin-bottom: 8px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+  }
+  .qa-row .ic {
+    width: 40px; height: 40px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .qa-row .ic svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .qa-row.green .ic { background: rgba(22,163,74,.12); color: var(--green-700); }
+  .qa-row.amber .ic { background: rgba(217,119,6,.12); color: var(--amber-700); }
+  .qa-row.cobalt .ic { background: rgba(27,111,184,.12); color: var(--brand-cobalt); }
+
+  .qa-text { flex: 1; min-width: 0; }
+  .qa-text .t { font-size: 13.5px; font-weight: 800; color: var(--slate-900); }
+  .qa-text .s { font-size: 11px; color: var(--slate-500); margin-top: 2px; font-weight: 600; }
+  .qa-row .chev { color: var(--slate-400); }
+  .qa-row .chev svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  /* ───── Frame D - Filter sheet ───── */
+  .filter-section { margin-bottom: 18px; }
+  .filter-label {
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-700); letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .filter-label svg {
+    width: 13px; height: 13px;
+    stroke: var(--brand-cobalt); stroke-width: 2.4; fill: none;
+  }
+  .chip-grid {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .chip {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    font-size: 11.5px; font-weight: 700;
+    color: var(--slate-700);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .chip svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .chip.active {
+    background: rgba(27,111,184,.10);
+    border-color: var(--brand-cobalt);
+    color: var(--brand-cobalt);
+  }
+
+  .day-toggle {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+  }
+  .day-cell {
+    padding: 10px 0; border-radius: 10px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    text-align: center;
+    font-size: 11px; font-weight: 700;
+    color: var(--slate-700);
+  }
+  .day-cell.active {
+    background: rgba(27,111,184,.10);
+    border-color: var(--brand-cobalt);
+    color: var(--brand-cobalt);
+  }
+  .day-cell .num { display: block; font-size: 9.5px; color: var(--slate-400); margin-top: 2px; font-weight: 800; }
+  .day-cell.active .num { color: var(--brand-cobalt); }
+
+  .footer-bar {
+    background: white;
+    border-top: 1px solid var(--slate-200);
+    padding: 12px 16px 18px;
+    display: flex; gap: 10px;
+  }
+  .btn-secondary {
+    flex: 0 0 auto;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: var(--slate-100);
+    color: var(--slate-700);
+    font-size: 13px; font-weight: 800;
+  }
+  .btn-primary {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: var(--brand-cobalt);
+    color: white;
+    font-size: 13px; font-weight: 800;
+    box-shadow: 0 4px 12px rgba(27,111,184,.30);
+  }
+
+  /* ───── Frame E - Session detail screen ───── */
+  .detail-hero {
+    margin: -20px 16px 0;
+    background: white; border-radius: 18px;
+    padding: 16px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 6px 18px rgba(15,23,42,.06);
+    z-index: 1; position: relative;
+  }
+  .detail-hero-row { display: flex; gap: 14px; align-items: center; }
+  .detail-hero-icon {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-cobalt));
+    color: white;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+    box-shadow: 0 6px 14px rgba(27,111,184,.25);
+  }
+  .detail-hero-icon .num { font-size: 22px; font-weight: 900; line-height: 1; }
+  .detail-hero-icon .lbl {
+    font-size: 8px; font-weight: 800; letter-spacing: 0.5px;
+    color: rgba(255,255,255,.85); margin-top: 2px;
+  }
+  .detail-hero-text { flex: 1; min-width: 0; }
+  .detail-hero-text .subj {
+    font-size: 17px; font-weight: 900; color: var(--slate-900);
+    letter-spacing: -0.3px;
+  }
+  .detail-hero-text .meta {
+    font-size: 12px; color: var(--slate-500);
+    margin-top: 3px; font-weight: 600;
+  }
+  .detail-hero-text .meta strong { color: var(--brand-cobalt); font-weight: 800; }
+  .detail-status {
+    margin-top: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(220,38,38,.06);
+    border: 1px solid rgba(220,38,38,.18);
+    font-size: 11px; font-weight: 700;
+    color: var(--red-700);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .detail-status.next {
+    background: rgba(27,111,184,.06);
+    border-color: rgba(27,111,184,.18);
+    color: var(--brand-cobalt);
+  }
+  .detail-status svg { width: 13px; height: 13px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  /* Detail action grid */
+  .det-actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    margin: 14px 0 14px;
+  }
+  .det-action {
+    padding: 14px 12px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    display: flex; flex-direction: column;
+    align-items: flex-start; gap: 10px;
+  }
+  .det-action .ic {
+    width: 36px; height: 36px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .det-action .ic svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .det-action.green .ic { background: rgba(22,163,74,.12); color: var(--green-700); }
+  .det-action.amber .ic { background: rgba(217,119,6,.12); color: var(--amber-700); }
+  .det-action.cobalt .ic { background: rgba(27,111,184,.12); color: var(--brand-cobalt); }
+  .det-action.violet .ic { background: rgba(124,58,237,.12); color: var(--violet-600); }
+  .det-action .t {
+    font-size: 13px; font-weight: 800; color: var(--slate-900);
+    letter-spacing: -0.1px;
+  }
+  .det-action .s {
+    font-size: 10.5px; color: var(--slate-500);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  /* Section titles within detail */
+  .det-sect-h {
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin: 6px 0 8px;
+  }
+  .det-list { display: flex; flex-direction: column; gap: 8px; }
+  .det-list-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+  }
+  .det-list-row .ic {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: rgba(27,111,184,.08);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .det-list-row .ic svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .det-list-row .t { font-size: 12.5px; font-weight: 700; color: var(--slate-800); flex: 1; }
+  .det-list-row .v { font-size: 12.5px; font-weight: 800; color: var(--brand-cobalt); }
+
+  /* Today CTA banner inside hub list */
+  .today-banner {
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-cobalt));
+    color: white;
+    border-radius: 16px;
+    padding: 14px;
+    margin-top: 12px;
+    box-shadow: 0 6px 16px rgba(27,111,184,.20);
+  }
+  .today-banner .h {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.6px; text-transform: uppercase;
+    color: rgba(255,255,255,.85);
+  }
+  .today-banner .h svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .today-banner .v {
+    font-size: 22px; font-weight: 900; letter-spacing: -0.4px;
+    margin-top: 6px; line-height: 1.1;
+  }
+  .today-banner .s {
+    font-size: 11.5px; font-weight: 600;
+    color: rgba(255,255,255,.85); margin-top: 4px;
+  }
+  .today-banner .progress {
+    margin-top: 10px;
+    background: rgba(255,255,255,.18);
+    height: 5px; border-radius: 999px;
+    overflow: hidden;
+  }
+  .today-banner .progress > div {
+    width: 60%; height: 100%;
+    background: white;
+    border-radius: 999px;
+  }
+
+  /* Search hint */
+  .search-row {
+    display: flex; align-items: center; gap: 8px;
+    margin: 12px 0 4px;
+    padding: 10px 12px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+  }
+  .search-row svg.s {
+    width: 14px; height: 14px; stroke: var(--slate-400);
+    stroke-width: 2.4; fill: none;
+  }
+  .search-row .placeholder {
+    flex: 1; font-size: 12.5px; color: var(--slate-400);
+    font-weight: 600;
+  }
+  .search-row .filter-btn {
+    padding: 6px 9px; border-radius: 8px;
+    background: rgba(27,111,184,.08);
+    color: var(--brand-cobalt);
+    font-size: 11px; font-weight: 800;
+    display: inline-flex; align-items: center; gap: 4px;
+    position: relative;
+  }
+  .search-row .filter-btn svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .search-row .filter-btn .badge {
+    position: absolute; top: -3px; right: -3px;
+    width: 14px; height: 14px;
+    border-radius: 999px;
+    background: var(--red-600);
+    color: white;
+    font-size: 9px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Empty state */
+  .empty {
+    margin: 32px 16px;
+    padding: 28px 18px;
+    background: white;
+    border: 1px dashed var(--slate-300);
+    border-radius: 14px;
+    text-align: center;
+  }
+  .empty .ic {
+    width: 52px; height: 52px; border-radius: 16px;
+    background: rgba(27,111,184,.08);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+  }
+  .empty .ic svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .empty .t { font-size: 13.5px; font-weight: 800; color: var(--slate-700); }
+  .empty .s { font-size: 11.5px; color: var(--slate-500); margin-top: 4px; line-height: 1.5; }
+
+  /* View toggle pill (top-right of header trailing slot) */
+  .view-toggle {
+    display: inline-flex;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    padding: 3px;
+  }
+  .view-toggle .seg {
+    padding: 5px 8px; border-radius: 8px;
+    color: rgba(255,255,255,.7);
+    font-size: 11px; font-weight: 800;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .view-toggle .seg.active {
+    background: white;
+    color: var(--brand-cobalt);
+  }
+  .view-toggle .seg svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+</style>
+</head>
+<body>
+
+<h1>Teacher · Jadwal · Deep redesign</h1>
+<p class="subtitle">
+  Six frames covering the teacher Jadwal hub, weekly table view, day banner, session detail, quick action sheet, and filter sheet.
+  All chrome derives from the brand kit shipped on Buku Nilai / RPP — cobalt header, KPI overlap card, BrandFilterChipStrip, RoleToggleChipRow,
+  AppDraggableSheet, FilterChipGrid. Day-color identity dots only ever live on the hour chip; the rest is consistently cobalt for the teacher role.
+</p>
+
+<div class="legend">
+  <div><span class="swatch" style="background:var(--brand-cobalt)"></span>Teacher cobalt — primary</div>
+  <div><span class="swatch" style="background:var(--indigo-600)"></span>Senin · indigo</div>
+  <div><span class="swatch" style="background:var(--emerald-600)"></span>Selasa · emerald</div>
+  <div><span class="swatch" style="background:var(--amber-600)"></span>Rabu · amber</div>
+  <div><span class="swatch" style="background:var(--rose-600)"></span>Kamis · rose</div>
+  <div><span class="swatch" style="background:var(--teal-600)"></span>Jumat · teal</div>
+  <div><span class="swatch" style="background:var(--violet-600)"></span>Sabtu · violet</div>
+</div>
+
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- FRAME A — JADWAL HUB (CARD VIEW)                              -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">A</span>Jadwal hub · card view<span class="desc">brand header · KPI overlap · today banner · day groups</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+          <div class="h-title-block">
+            <div class="h-kicker">Jadwal Mengajar<span class="live-dot"></span></div>
+            <div class="h-title">Pekan Ini</div>
+          </div>
+          <div class="view-toggle">
+            <div class="seg active"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></div>
+            <div class="seg"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+          </div>
+        </div>
+        <div class="role-row">
+          <div class="role-chip active">
+            <svg viewBox="0 0 24 24"><path d="M12 14c-3.3 0-6 2.2-6 5v1h12v-1c0-2.8-2.7-5-6-5z"/><circle cx="12" cy="8" r="4"/></svg>
+            Mengajar
+          </div>
+          <div class="role-chip">
+            <svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10z"/></svg>
+            Wali · 7A
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-cell cobalt"><div class="v">24</div><div class="l">Sesi/Pekan</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v">3</div><div class="l">Hari Ini</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">5</div><div class="l">Mapel</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell slate"><div class="v">8</div><div class="l">Kelas</div></div>
+      </div>
+
+      <div class="body">
+        <div class="search-row">
+          <svg class="s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.5" y2="16.5"/></svg>
+          <div class="placeholder">Cari mata pelajaran atau kelas…</div>
+          <div class="filter-btn">
+            <svg viewBox="0 0 24 24"><polygon points="3 4 21 4 14 13 14 20 10 20 10 13"/></svg>
+            Filter
+            <span class="badge">2</span>
+          </div>
+        </div>
+
+        <div class="filter-strip">
+          <div class="fchip active">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+            Smt 1 2025/26
+          </div>
+          <div class="fchip">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="13" x2="16" y2="15"/></svg>
+            Semua Hari
+          </div>
+          <div class="fchip">
+            <svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Semua Kelas
+          </div>
+        </div>
+
+        <div class="today-banner">
+          <div class="h">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="15" y2="14"/></svg>
+            Hari ini · Jumat, 9 Mei
+          </div>
+          <div class="v">3 sesi · 1 sedang berlangsung</div>
+          <div class="s">Selesai 1 dari 3 — IPA 7A baru dimulai 09.10</div>
+          <div class="progress"><div></div></div>
+        </div>
+
+        <div class="day-head">
+          <div class="day-bar past"></div>
+          <div class="day-label past">Senin</div>
+          <div class="day-count">4 sesi</div>
+        </div>
+
+        <div class="sch-card past">
+          <div class="sch-row">
+            <div class="hour-chip past"><div class="num">1</div><div class="lbl">JP</div></div>
+            <div class="sch-info">
+              <div class="sch-info-top">
+                <div class="sch-subject">Bahasa Indonesia</div>
+                <div class="sch-class-pill">7A</div>
+              </div>
+              <div class="sch-info-bot">
+                <div class="t-icon" style="color:var(--slate-500)">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                  07.00 – 07.40
+                </div>
+              </div>
+            </div>
+            <div class="status-pill done">Selesai</div>
+          </div>
+          <div class="sch-divider"></div>
+          <div class="sch-actions">
+            <div class="sch-action filled-attendance">
+              <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
+              28/28 Hadir
+            </div>
+            <div class="sch-action filled">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><line x1="4" y1="10" x2="20" y2="10"/></svg>
+              2 Kegiatan
+            </div>
+            <div class="sch-action">
+              <svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><line x1="5" y1="9" x2="19" y2="9"/></svg>
+              Materi
+            </div>
+          </div>
+        </div>
+
+        <div class="day-head">
+          <div class="day-bar"></div>
+          <div class="day-label">Jumat</div>
+          <div class="day-today-pill">HARI INI</div>
+          <div class="day-count">3 sesi</div>
+        </div>
+
+        <div class="sch-card current">
+          <div class="sch-row">
+            <div class="hour-chip teal"><div class="num">3</div><div class="lbl">JP</div></div>
+            <div class="sch-info">
+              <div class="sch-info-top">
+                <div class="sch-subject">IPA Terpadu</div>
+                <div class="sch-class-pill">7A</div>
+              </div>
+              <div class="sch-info-bot">
+                <div class="t-icon">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                  09.10 – 09.50
+                </div>
+                <div class="dot">·</div>
+                <div class="t-icon" style="color:var(--brand-cobalt)">
+                  <svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                  R.Lab IPA
+                </div>
+              </div>
+            </div>
+            <div class="status-pill now">SEDANG</div>
+          </div>
+          <div class="sch-divider"></div>
+          <div class="sch-actions">
+            <div class="sch-action cobalt">
+              <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
+              Ambil Presensi
+            </div>
+            <div class="sch-action">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/></svg>
+              Kegiatan
+            </div>
+            <div class="sch-action">
+              <svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/></svg>
+              Materi
+            </div>
+          </div>
+        </div>
+
+        <div class="sch-card next">
+          <div class="sch-row">
+            <div class="hour-chip teal"><div class="num">4</div><div class="lbl">JP</div></div>
+            <div class="sch-info">
+              <div class="sch-info-top">
+                <div class="sch-subject">IPA Terpadu</div>
+                <div class="sch-class-pill">7B</div>
+              </div>
+              <div class="sch-info-bot">
+                <div class="t-icon">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                  09.50 – 10.30
+                </div>
+              </div>
+            </div>
+            <div class="status-pill next">SELANJUTNYA</div>
+          </div>
+          <div class="sch-divider"></div>
+          <div class="sch-actions">
+            <div class="sch-action">
+              <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
+              Presensi
+            </div>
+            <div class="sch-action">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/></svg>
+              Kegiatan
+            </div>
+            <div class="sch-action">
+              <svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/></svg>
+              Materi
+            </div>
+          </div>
+        </div>
+
+        <div class="sch-card">
+          <div class="sch-row">
+            <div class="hour-chip teal"><div class="num">7</div><div class="lbl">JP</div></div>
+            <div class="sch-info">
+              <div class="sch-info-top">
+                <div class="sch-subject">Prakarya</div>
+                <div class="sch-class-pill">8A</div>
+              </div>
+              <div class="sch-info-bot">
+                <div class="t-icon">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                  12.30 – 13.10
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sch-divider"></div>
+          <div class="sch-actions">
+            <div class="sch-action">Presensi</div>
+            <div class="sch-action">Kegiatan</div>
+            <div class="sch-action">Materi</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME B — TABLE VIEW (DAY TABS + SESSION ROWS)                -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">B</span>Table view · day tabs<span class="desc">brand header · day pill tabs · session rows · current/next/past states</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Jadwal Mengajar<span class="live-dot"></span></div>
+            <div class="h-title">Tampilan Tabel</div>
+          </div>
+          <div class="view-toggle">
+            <div class="seg"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></div>
+            <div class="seg active"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+          </div>
+        </div>
+        <div class="role-row">
+          <div class="role-chip active">Mengajar</div>
+          <div class="role-chip">Wali · 7A</div>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-cell cobalt"><div class="v">24</div><div class="l">Sesi/Pekan</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v">3</div><div class="l">Hari Ini</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">5</div><div class="l">Mapel</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell slate"><div class="v">8</div><div class="l">Kelas</div></div>
+      </div>
+
+      <div class="body">
+        <div class="day-tabs">
+          <div class="day-tab">Sen</div>
+          <div class="day-tab">Sel</div>
+          <div class="day-tab">Rab</div>
+          <div class="day-tab">Kam</div>
+          <div class="day-tab active">Jum<div class="today-mark"></div></div>
+          <div class="day-tab">Sab</div>
+        </div>
+
+        <div class="day-banner">
+          <div class="b-bar"></div>
+          <div class="b-label">Jumat</div>
+          <div class="b-pill">Hari ini</div>
+          <div class="b-count">3 sesi</div>
+        </div>
+
+        <div class="ses-row past">
+          <div class="ses-time">
+            <div class="ses-num past">1</div>
+            <div class="ses-start">07.00</div>
+            <div class="ses-end">07.40</div>
+          </div>
+          <div class="ses-divider"></div>
+          <div class="ses-info">
+            <div class="ses-row-top">
+              <div class="ses-subject">Bahasa Inggris</div>
+              <div class="ses-class">7C</div>
+            </div>
+            <div class="ses-row-bot">
+              <div class="ses-action-pills">
+                <span class="ses-action-mini filled"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>30/30</span>
+                <span class="ses-action-mini">Materi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ses-row past">
+          <div class="ses-time">
+            <div class="ses-num past">2</div>
+            <div class="ses-start">07.40</div>
+            <div class="ses-end">08.20</div>
+          </div>
+          <div class="ses-divider"></div>
+          <div class="ses-info">
+            <div class="ses-row-top">
+              <div class="ses-subject">Matematika</div>
+              <div class="ses-class">8B</div>
+            </div>
+            <div class="ses-row-bot">
+              <div class="ses-action-pills">
+                <span class="ses-action-mini filled"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>32/32</span>
+                <span class="ses-action-mini warn">! Kegiatan</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ses-row current">
+          <div class="ses-time">
+            <div class="ses-num active">3</div>
+            <div class="ses-start" style="color:var(--brand-cobalt)">09.10</div>
+            <div class="ses-end" style="color:rgba(27,111,184,0.6)">09.50</div>
+          </div>
+          <div class="ses-divider"></div>
+          <div class="ses-info">
+            <div class="ses-row-top">
+              <div class="ses-subject">IPA Terpadu</div>
+              <div class="ses-class">7A</div>
+            </div>
+            <div class="ses-row-bot">
+              <div class="ses-action-pills">
+                <span class="ses-action-mini cobalt">Ambil Presensi</span>
+                <span class="ses-action-mini">Kegiatan</span>
+                <span class="ses-action-mini">Materi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ses-row next">
+          <div class="ses-time">
+            <div class="ses-num active">4</div>
+            <div class="ses-start" style="color:var(--brand-cobalt)">09.50</div>
+            <div class="ses-end" style="color:rgba(27,111,184,0.6)">10.30</div>
+          </div>
+          <div class="ses-divider"></div>
+          <div class="ses-info">
+            <div class="ses-row-top">
+              <div class="ses-subject">IPA Terpadu</div>
+              <div class="ses-class">7B</div>
+            </div>
+            <div class="ses-row-bot">
+              <div class="ses-action-pills">
+                <span class="ses-action-mini">Presensi</span>
+                <span class="ses-action-mini">Kegiatan</span>
+                <span class="ses-action-mini">Materi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ses-row">
+          <div class="ses-time">
+            <div class="ses-num">7</div>
+            <div class="ses-start">12.30</div>
+            <div class="ses-end">13.10</div>
+          </div>
+          <div class="ses-divider"></div>
+          <div class="ses-info">
+            <div class="ses-row-top">
+              <div class="ses-subject">Prakarya</div>
+              <div class="ses-class">8A</div>
+            </div>
+            <div class="ses-row-bot">
+              <div class="ses-action-pills">
+                <span class="ses-action-mini">Presensi</span>
+                <span class="ses-action-mini">Kegiatan</span>
+                <span class="ses-action-mini">Materi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME C — QUICK ACTION SHEET (TAP CARD)                       -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">C</span>Quick action sheet<span class="desc">AppDraggableSheet · brand header · ov-strip · 3 jump rows</span></div>
+    <div class="phone" style="background:rgba(15,23,42,.32)">
+      <div class="sheet" style="bottom:0">
+        <div class="sheet-header">
+          <div class="sheet-handle-light"></div>
+          <div class="sheet-title-row">
+            <div class="sheet-icon-box">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+            </div>
+            <div class="sheet-title-text">
+              <div class="sheet-kicker">JP 3 · Jumat 09.10–09.50</div>
+              <div class="sheet-title">IPA Terpadu — 7A</div>
+            </div>
+          </div>
+        </div>
+        <div class="ov-strip">
+          <div class="ov-cell">
+            <div class="ov-mini green"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
+            <div class="ov-text"><div class="v">28/28</div><div class="l">Presensi</div></div>
+          </div>
+          <div class="ov-cell">
+            <div class="ov-mini amber"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><line x1="4" y1="10" x2="20" y2="10"/></svg></div>
+            <div class="ov-text"><div class="v">2</div><div class="l">Kegiatan</div></div>
+          </div>
+          <div class="ov-cell">
+            <div class="ov-mini cobalt"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><line x1="5" y1="9" x2="19" y2="9"/></svg></div>
+            <div class="ov-text"><div class="v">3/8</div><div class="l">Materi</div></div>
+          </div>
+        </div>
+        <div class="sheet-body">
+          <div class="qa-row green">
+            <div class="ic"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
+            <div class="qa-text">
+              <div class="t">Buka Presensi Sesi Ini</div>
+              <div class="s">Hadir 28 · Sakit 0 · Izin 0 · Alpha 0</div>
+            </div>
+            <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+          </div>
+          <div class="qa-row amber">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><line x1="4" y1="10" x2="20" y2="10"/></svg></div>
+            <div class="qa-text">
+              <div class="t">Catat Kegiatan Kelas</div>
+              <div class="s">2 kegiatan tercatat untuk sesi ini</div>
+            </div>
+            <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+          </div>
+          <div class="qa-row cobalt">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><line x1="5" y1="9" x2="19" y2="9"/></svg></div>
+            <div class="qa-text">
+              <div class="t">Tandai Materi & RPP</div>
+              <div class="s">Bab 3 dari 8 sudah ditandai</div>
+            </div>
+            <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME D — FILTER SHEET                                        -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">D</span>Filter sheet<span class="desc">AppFilterBottomSheet · semester chips · class FilterChipGrid · day matrix</span></div>
+    <div class="phone" style="background:rgba(15,23,42,.32)">
+      <div class="sheet" style="bottom:0; max-height: 92%">
+        <div class="sheet-header">
+          <div class="sheet-handle-light"></div>
+          <div class="sheet-title-row">
+            <div class="sheet-icon-box">
+              <svg viewBox="0 0 24 24"><polygon points="3 4 21 4 14 13 14 20 10 20 10 13"/></svg>
+            </div>
+            <div class="sheet-title-text">
+              <div class="sheet-kicker">Filter Jadwal</div>
+              <div class="sheet-title">Saring Tampilan</div>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-body">
+
+          <div class="filter-section">
+            <div class="filter-label">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+              Semester
+            </div>
+            <div class="chip-grid">
+              <div class="chip active">Smt 1 · 2025/26</div>
+              <div class="chip">Smt 2 · 2025/26</div>
+              <div class="chip">Smt 1 · 2024/25</div>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <div class="filter-label">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="13" x2="16" y2="15"/></svg>
+              Hari
+            </div>
+            <div class="day-toggle">
+              <div class="day-cell">Sen<span class="num">1</span></div>
+              <div class="day-cell">Sel<span class="num">2</span></div>
+              <div class="day-cell active">Rab<span class="num">3</span></div>
+              <div class="day-cell">Kam<span class="num">4</span></div>
+              <div class="day-cell active">Jum<span class="num">5</span></div>
+              <div class="day-cell">Sab<span class="num">6</span></div>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <div class="filter-label">
+              <svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              Kelas
+            </div>
+            <div class="chip-grid">
+              <div class="chip active">7A</div>
+              <div class="chip">7B</div>
+              <div class="chip">7C</div>
+              <div class="chip">8A</div>
+              <div class="chip">8B</div>
+              <div class="chip">9A</div>
+            </div>
+          </div>
+
+        </div>
+        <div class="footer-bar">
+          <div class="btn-secondary">Reset</div>
+          <div class="btn-primary">Terapkan Filter</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME E — SESSION DETAIL (FULL PAGE, REPLACES SUMMARY SHEET)  -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">E</span>Session detail · full page<span class="desc">brand header · hero card · 4 action tiles · attendance + activity + material lists</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Detail Sesi · Jumat 9 Mei</div>
+            <div class="h-title">JP 3 · IPA · 7A</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg></div>
+        </div>
+      </div>
+
+      <div class="detail-hero">
+        <div class="detail-hero-row">
+          <div class="detail-hero-icon">
+            <div class="num">3</div>
+            <div class="lbl">JP</div>
+          </div>
+          <div class="detail-hero-text">
+            <div class="subj">IPA Terpadu</div>
+            <div class="meta"><strong>7A</strong> · 09.10 – 09.50 · R.Lab IPA</div>
+          </div>
+        </div>
+        <div class="detail-status">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+          Sedang berlangsung — sisa 28 menit
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="det-actions">
+          <div class="det-action green">
+            <div class="ic"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
+            <div class="t">Ambil Presensi</div>
+            <div class="s">Belum diisi · 28 siswa</div>
+          </div>
+          <div class="det-action amber">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><line x1="4" y1="10" x2="20" y2="10"/></svg></div>
+            <div class="t">Kegiatan Kelas</div>
+            <div class="s">2 kegiatan tercatat</div>
+          </div>
+          <div class="det-action cobalt">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><line x1="5" y1="9" x2="19" y2="9"/></svg></div>
+            <div class="t">Materi & RPP</div>
+            <div class="s">Bab 3/8 ditandai</div>
+          </div>
+          <div class="det-action violet">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <div class="t">Buku Nilai</div>
+            <div class="s">3 asesmen tercatat</div>
+          </div>
+        </div>
+
+        <div class="det-sect-h">Detail Sesi</div>
+        <div class="det-list">
+          <div class="det-list-row">
+            <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></div>
+            <div class="t">Waktu</div>
+            <div class="v">09.10 – 09.50</div>
+          </div>
+          <div class="det-list-row">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+            <div class="t">Ruangan</div>
+            <div class="v">R.Lab IPA</div>
+          </div>
+          <div class="det-list-row">
+            <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 22c0-4 4-7 8-7s8 3 8 7"/></svg></div>
+            <div class="t">Wali Kelas</div>
+            <div class="v">Bu Rini</div>
+          </div>
+          <div class="det-list-row">
+            <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/></svg></div>
+            <div class="t">Periode</div>
+            <div class="v">Smt 1 · 2025/26</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME F — WALI KELAS VARIANT (SAME HUB BUT WITH TEACHER NAME) -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">F</span>Wali kelas variant<span class="desc">role toggle = Wali · 7A · cards show teacher names · KPIs swap to homeroom counts</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Jadwal Kelas 7A<span class="live-dot"></span></div>
+            <div class="h-title">Wali Kelas</div>
+          </div>
+          <div class="view-toggle">
+            <div class="seg active"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></div>
+            <div class="seg"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+          </div>
+        </div>
+        <div class="role-row">
+          <div class="role-chip">Mengajar</div>
+          <div class="role-chip active">
+            <svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10z"/></svg>
+            Wali · 7A
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-cell cobalt"><div class="v">36</div><div class="l">Sesi/Pekan</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v">7</div><div class="l">Hari Ini</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">12</div><div class="l">Mapel</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell slate"><div class="v">8</div><div class="l">Pengajar</div></div>
+      </div>
+
+      <div class="body">
+        <div class="day-head">
+          <div class="day-bar"></div>
+          <div class="day-label">Jumat</div>
+          <div class="day-today-pill">HARI INI</div>
+          <div class="day-count">7 sesi</div>
+        </div>
+
+        <div class="sch-card current">
+          <div class="sch-row">
+            <div class="hour-chip teal"><div class="num">3</div><div class="lbl">JP</div></div>
+            <div class="sch-info">
+              <div class="sch-info-top">
+                <div class="sch-subject">IPA Terpadu</div>
+                <div class="sch-class-pill">7A</div>
+              </div>
+              <div class="sch-info-bot">
+                <div class="t-icon">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                  09.10 – 09.50
+                </div>
+                <div class="dot">·</div>
+                <div class="teacher">Pak Doni</div>
+              </div>
+            </div>
+            <div class="status-pill now">SEDANG</div>
+          </div>
+          <div class="sch-divider"></div>
+          <div class="sch-actions">
+            <div class="sch-action filled">28/28 Hadir</div>
+            <div class="sch-action">2 Kegiatan</div>
+            <div class="sch-action">Materi</div>
+          </div>
+        </div>
+
+        <div class="sch-card next">
+          <div class="sch-row">
+            <div class="hour-chip teal"><div class="num">4</div><div class="lbl">JP</div></div>
+            <div class="sch-info">
+              <div class="sch-info-top">
+                <div class="sch-subject">Bahasa Inggris</div>
+                <div class="sch-class-pill">7A</div>
+              </div>
+              <div class="sch-info-bot">
+                <div class="t-icon">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                  09.50 – 10.30
+                </div>
+                <div class="dot">·</div>
+                <div class="teacher">Bu Sari</div>
+              </div>
+            </div>
+            <div class="status-pill next">SELANJUTNYA</div>
+          </div>
+          <div class="sch-divider"></div>
+          <div class="sch-actions">
+            <div class="sch-action">Presensi</div>
+            <div class="sch-action">Kegiatan</div>
+            <div class="sch-action">Materi</div>
+          </div>
+        </div>
+
+        <div class="sch-card">
+          <div class="sch-row">
+            <div class="hour-chip teal"><div class="num">5</div><div class="lbl">JP</div></div>
+            <div class="sch-info">
+              <div class="sch-info-top">
+                <div class="sch-subject">Matematika</div>
+                <div class="sch-class-pill">7A</div>
+              </div>
+              <div class="sch-info-bot">
+                <div class="t-icon">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                  10.45 – 11.25
+                </div>
+                <div class="dot">·</div>
+                <div class="teacher">Pak Adi</div>
+              </div>
+            </div>
+          </div>
+          <div class="sch-divider"></div>
+          <div class="sch-actions">
+            <div class="sch-action">Presensi</div>
+            <div class="sch-action">Kegiatan</div>
+            <div class="sch-action">Materi</div>
+          </div>
+        </div>
+
+        <div class="sch-card">
+          <div class="sch-row">
+            <div class="hour-chip teal"><div class="num">6</div><div class="lbl">JP</div></div>
+            <div class="sch-info">
+              <div class="sch-info-top">
+                <div class="sch-subject">PJOK</div>
+                <div class="sch-class-pill">7A</div>
+              </div>
+              <div class="sch-info-bot">
+                <div class="t-icon">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                  11.25 – 12.05
+                </div>
+                <div class="dot">·</div>
+                <div class="teacher">Pak Bambang</div>
+              </div>
+            </div>
+          </div>
+          <div class="sch-divider"></div>
+          <div class="sch-actions">
+            <div class="sch-action">Presensi</div>
+            <div class="sch-action">Kegiatan</div>
+            <div class="sch-action">Materi</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

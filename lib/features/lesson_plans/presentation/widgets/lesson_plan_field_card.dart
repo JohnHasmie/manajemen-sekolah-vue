@@ -2,6 +2,7 @@
 // Shows a labelled section (e.g. "Kompetensi Inti") with a regen count badge and trigger button.
 // Like a `<FieldCard>` Vue component — display + one interaction delegated via callback.
 import 'package:flutter/material.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
@@ -28,6 +29,20 @@ class LessonPlanFieldCard extends StatelessWidget {
   final VoidCallback onRegenTap;
   final String Function(String) stripHtml;
 
+  /// Optional pencil button next to the regen icon. When non-null,
+  /// renders a small edit pill that opens the per-section editor
+  /// sheet — the new edit affordance from `_design/teacher_rpp_edit_redesign.html`
+  /// (Frame A → B). Pre-existing call sites that don't pass this
+  /// stay unchanged (admin web app etc.).
+  final VoidCallback? onEditTap;
+
+  /// Optional format-specific body widget. When non-null, replaces the
+  /// generic `HtmlWidget(value)` body — used by AI RPP preview to
+  /// render K13 identitas as a 2×2 grid, langkah_kegiatan as numbered
+  /// step rows, Modul Ajar tujuan as TP cards, etc. See
+  /// `lesson_plan_section_renderers.dart`.
+  final Widget? customBody;
+
   const LessonPlanFieldCard({
     super.key,
     required this.fieldKey,
@@ -39,6 +54,8 @@ class LessonPlanFieldCard extends StatelessWidget {
     required this.primaryColor,
     required this.onRegenTap,
     required this.stripHtml,
+    this.onEditTap,
+    this.customBody,
   });
 
   @override
@@ -116,6 +133,34 @@ class LessonPlanFieldCard extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                 ],
+                // Edit pencil — opens per-section editor sheet.
+                // Renders only when a callback is supplied, so the
+                // admin web app's read-only field card is unaffected.
+                if (onEditTap != null) ...[
+                  Material(
+                    color: Colors.transparent,
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                    child: InkWell(
+                      onTap: isRegeneratingThis ? null : onEditTap,
+                      borderRadius: const BorderRadius.all(Radius.circular(8)),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: ColorUtils.slate100,
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(8)),
+                          border: Border.all(color: ColorUtils.slate200),
+                        ),
+                        child: Icon(
+                          Icons.edit_rounded,
+                          size: 14,
+                          color: ColorUtils.slate600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
                 // Regen trigger button (star icon)
                 Material(
                   color: Colors.transparent,
@@ -160,17 +205,67 @@ class LessonPlanFieldCard extends StatelessWidget {
               ],
             ),
           ),
-          // Field content (HTML stripped by caller-provided function)
+          // Field content. Priority chain:
+          //   1) customBody (format-specific renderer like K13 identitas
+          //      grid, Pendahuluan/Inti/Penutup step rows, TP cards)
+          //   2) HtmlWidget rendering of `value` so headings/lists/tables/
+          //      bold-italic survive
+          //   3) "—" placeholder when value is empty
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: SelectableText(
-              stripHtml(value),
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.6,
-                color: ColorUtils.slate700,
-              ),
-            ),
+            child: customBody != null
+                ? customBody!
+                : value.trim().isEmpty
+                ? Text(
+                    '—',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: ColorUtils.slate400,
+                    ),
+                  )
+                : HtmlWidget(
+                    value,
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      height: 1.6,
+                      color: ColorUtils.slate700,
+                    ),
+                    customStylesBuilder: (e) {
+                      switch (e.localName) {
+                        case 'h1':
+                        case 'h2':
+                        case 'h3':
+                          return {
+                            'font-size': '14px',
+                            'font-weight': '800',
+                            'color': '#0f172a',
+                            'margin': '8px 0 4px',
+                          };
+                        case 'strong':
+                        case 'b':
+                          return {
+                            'font-weight': '800',
+                            'color': '#0f172a',
+                          };
+                        case 'p':
+                          return {'margin': '0 0 6px'};
+                        case 'ol':
+                        case 'ul':
+                          return {
+                            'margin': '4px 0 6px',
+                            'padding-left': '18px',
+                          };
+                        case 'li':
+                          return {'margin-bottom': '3px'};
+                        case 'td':
+                          return {
+                            'padding': '4px 8px',
+                            'vertical-align': 'top',
+                          };
+                      }
+                      return null;
+                    },
+                  ),
           ),
         ],
       ),

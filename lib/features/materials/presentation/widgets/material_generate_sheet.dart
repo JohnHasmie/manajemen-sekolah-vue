@@ -1,17 +1,45 @@
-// Bottom sheet showing checked materials summary and "Generate" button.
+// "Generate Materi AI" bottom sheet — surfaces the checked bab/sub-bab
+// items the teacher has queued for AI generation along with an estimated
+// runtime, and a single primary action to kick the job off.
 //
-// Extracted from teacher_material_screen.dart `_showGenerateSheet()`.
+// Visual contract — Frame G of the Materi mockup:
+//
+//   ┌──────────────────────────────────────────────────────┐
+//   │  ✦   GENERATE MATERI AI · IPA · 7A                   │
+//   │      7 Item Belum AI                                  │
+//   ├──────────────────────────────────────────────────────┤
+//   │  ┌──────────────┬───────────────┐                    │
+//   │  │      7       │    ~5 mnt     │                    │
+//   │  │ AKAN DIGEN.  │  ESTIM. WAKTU │                    │
+//   │  └──────────────┴───────────────┘                    │
+//   │                                                       │
+//   │  DAFTAR DIPILIH                                       │
+//   │  ▢ Bab 1 — Tata Surya / Bulan & Pasang Surut    ~40s │
+//   │  ▢ Bab 3 — Energi (3 sub-bab)                    ~2m │
+//   │  …                                                    │
+//   │  ──────────────────────────────────────────────────── │
+//   │       ✦ Generate Sekarang                             │
+//   └──────────────────────────────────────────────────────┘
+//
+// Time estimate: ~40s per item (chapter or sub-chapter). The chapter
+// estimate is `subCount × 40s` if any sub-babs are bundled with it,
+// otherwise a flat 40s.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 
-/// Shows a summary of checked materials with a single
-/// "Generate Kegiatan Kelas" action button.
 class MaterialGenerateSheet extends StatelessWidget {
   final List<Map<String, dynamic>> checkedChapters;
   final List<Map<String, dynamic>> checkedSubChapters;
+
+  /// Full chapter list — used to look up the parent bab title for
+  /// each checked sub-chapter so item rows can render
+  /// "Bab N — {bab title} / {sub title}".
+  final List<dynamic> chapterMaterialList;
+
   final String subjectName;
+  final String className;
   final Color primaryColor;
   final LanguageProvider languageProvider;
   final VoidCallback onGenerate;
@@ -20,18 +48,24 @@ class MaterialGenerateSheet extends StatelessWidget {
     super.key,
     required this.checkedChapters,
     required this.checkedSubChapters,
+    required this.chapterMaterialList,
     required this.subjectName,
+    required this.className,
     required this.primaryColor,
     required this.languageProvider,
     required this.onGenerate,
   });
+
+  static const _violet = Color(0xFF7C3AED);
 
   /// Helper to show this sheet as a modal bottom sheet.
   static void show({
     required BuildContext context,
     required List<Map<String, dynamic>> checkedChapters,
     required List<Map<String, dynamic>> checkedSubChapters,
+    required List<dynamic> chapterMaterialList,
     required String subjectName,
+    required String className,
     required Color primaryColor,
     required LanguageProvider languageProvider,
     required VoidCallback onGenerate,
@@ -39,25 +73,34 @@ class MaterialGenerateSheet extends StatelessWidget {
     final lp = languageProvider;
     final totalChecked = checkedChapters.length + checkedSubChapters.length;
 
+    final kickerSubject = subjectName.trim().isNotEmpty
+        ? subjectName.toUpperCase()
+        : '-';
+    final kickerClass = className.trim().isNotEmpty
+        ? className.toUpperCase()
+        : '-';
+
     AppBottomSheet.show(
       context: context,
       title: lp.getTranslatedText({
-        'en': 'Generate Class Activity',
-        'id': 'Generate Kegiatan Kelas',
+        'en': '$totalChecked Items Belum AI',
+        'id': '$totalChecked Item Belum AI',
       }),
+      subtitle: 'GENERATE MATERI AI · $kickerSubject · $kickerClass',
       icon: Icons.auto_awesome,
       primaryColor: primaryColor,
       content: MaterialGenerateSheet(
         checkedChapters: checkedChapters,
         checkedSubChapters: checkedSubChapters,
+        chapterMaterialList: chapterMaterialList,
         subjectName: subjectName,
+        className: className,
         primaryColor: primaryColor,
         languageProvider: languageProvider,
         onGenerate: onGenerate,
       ),
       footer: _MaterialGenerateFooter(
         totalChecked: totalChecked,
-        primaryColor: primaryColor,
         languageProvider: lp,
         onGenerate: onGenerate,
       ),
@@ -66,56 +109,275 @@ class MaterialGenerateSheet extends StatelessWidget {
 
   int get _totalChecked => checkedChapters.length + checkedSubChapters.length;
 
+  // ── ETA helpers ─────────────────────────────────────────────
+  // Tuned to match the mockup: a single sub-bab generates in ~40s,
+  // a chapter rolls up its sub-babs (so a 3-sub-bab chapter shows
+  // ~2m, a 1-sub-bab chapter shows ~40s, a chapter with no sub-babs
+  // also shows ~40s for the bab itself).
+  static const _secondsPerItem = 40;
+
+  int _subCountForChapter(String chapterId) {
+    return checkedSubChapters
+        .where((s) => s['bab_id']?.toString() == chapterId)
+        .length;
+  }
+
+  int _etaSecondsForChapter(Map<String, dynamic> chapter) {
+    final subs = _subCountForChapter(chapter['id'].toString());
+    final n = subs > 0 ? subs : 1;
+    return n * _secondsPerItem;
+  }
+
+  int _etaSecondsForSubChapter() => _secondsPerItem;
+
+  int _totalEtaSeconds() {
+    var total = 0;
+    for (final c in checkedChapters) {
+      total += _etaSecondsForChapter(c);
+    }
+    total += checkedSubChapters.length * _secondsPerItem;
+    // De-dupe: when both a chapter AND its sub-babs are checked, the
+    // chapter loop already counted the sub-babs (subs > 0 branch).
+    // Subtract the overlap.
+    var overlap = 0;
+    for (final c in checkedChapters) {
+      overlap += _subCountForChapter(c['id'].toString()) * _secondsPerItem;
+    }
+    return total - overlap;
+  }
+
+  String _formatEta(int seconds) {
+    if (seconds < 60) return '~${seconds}s';
+    final mins = seconds / 60;
+    if (mins < 1.5) return '~1m';
+    if (mins == mins.roundToDouble()) {
+      return '~${mins.toInt()}m';
+    }
+    return '~${mins.toStringAsFixed(1)}m';
+  }
+
+  String _formatEtaLong(int seconds) {
+    if (seconds < 60) return '~$seconds dtk';
+    final mins = (seconds / 60).round();
+    return '~$mins mnt';
+  }
+
+  // ── Item label helpers ─────────────────────────────────────
+  String? _chapterTitleById(String id) {
+    for (final c in chapterMaterialList) {
+      if (c is Map && c['id']?.toString() == id) {
+        return c['judul_bab']?.toString();
+      }
+    }
+    return null;
+  }
+
+  int? _chapterUrutanById(String id) {
+    for (final c in chapterMaterialList) {
+      if (c is Map && c['id']?.toString() == id) {
+        final u = c['urutan'];
+        return u is num ? u.toInt() : int.tryParse(u?.toString() ?? '');
+      }
+    }
+    return null;
+  }
+
+  /// Builds the unified item list shown in DAFTAR DIPILIH. Each entry
+  /// carries the display label and an ETA.
+  List<({String label, int etaSeconds})> _buildItems() {
+    final out = <({String label, int etaSeconds})>[];
+    // Chapters that DON'T have any of their sub-babs in the checked
+    // sub list — show the bab as a single roll-up entry.
+    for (final c in checkedChapters) {
+      final id = c['id'].toString();
+      final urut = c['urutan']?.toString() ?? '?';
+      final title = c['judul_bab']?.toString() ?? '-';
+      final subCount = _subCountForChapter(id);
+      final label = subCount > 0
+          ? 'Bab $urut — $title ($subCount sub-bab)'
+          : 'Bab $urut — $title';
+      out.add((label: label, etaSeconds: _etaSecondsForChapter(c)));
+    }
+    // Sub-bab entries — only include those whose parent bab isn't
+    // already in `checkedChapters` (otherwise the bab roll-up above
+    // already covers them).
+    final coveredChapterIds =
+        checkedChapters.map((c) => c['id'].toString()).toSet();
+    for (final s in checkedSubChapters) {
+      final babId = s['bab_id']?.toString() ?? '';
+      if (coveredChapterIds.contains(babId)) continue;
+      final urut = _chapterUrutanById(babId)?.toString() ?? '?';
+      final babTitle = _chapterTitleById(babId) ?? '-';
+      final subTitle = s['judul_sub_bab']?.toString() ?? '-';
+      final label = 'Bab $urut — $babTitle / $subTitle';
+      out.add((label: label, etaSeconds: _etaSecondsForSubChapter()));
+    }
+    return out;
+  }
+
+  // ── Build ──────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    final lp = languageProvider;
-    final p = primaryColor;
+    if (_totalChecked == 0) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        child: _emptyState(),
+      );
+    }
+
+    final items = _buildItems();
+    final totalEtaSeconds = _totalEtaSeconds();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: [_buildSummary(lp, p)],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+          child: _kpiCard(_totalChecked, totalEtaSeconds),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+          child: Text(
+            'DAFTAR DIPILIH',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
+              color: ColorUtils.slate500,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Column(
+            children: [
+              for (final it in items) ...[
+                _itemCard(it.label, _formatEta(it.etaSeconds)),
+                const SizedBox(height: 8),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildHeader(LanguageProvider lp, Color p) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+  Widget _kpiCard(int count, int totalSeconds) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: _kpiCell(
+                value: '$count',
+                label: 'AKAN DIGENERATE',
+              ),
+            ),
+            Container(
+              width: 1,
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              color: ColorUtils.slate100,
+            ),
+            Expanded(
+              child: _kpiCell(
+                value: _formatEtaLong(totalSeconds),
+                label: 'ESTIMASI WAKTU',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kpiCell({required String value, required String label}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: _violet,
+            height: 1,
+            letterSpacing: -0.4,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+            color: ColorUtils.slate500,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _itemCard(String label, String eta) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
-              color: p.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              color: _violet.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.auto_awesome, size: 18, color: p),
+            child: const Icon(
+              Icons.description_outlined,
+              size: 16,
+              color: _violet,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  lp.getTranslatedText({
-                    'en': 'Generate Class Activity',
-                    'id': 'Generate Kegiatan Kelas',
-                  }),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: ColorUtils.slate800,
-                  ),
-                ),
-                Text(
-                  subjectName,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: p,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: ColorUtils.slate800,
+                height: 1.3,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            eta,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate400,
+              letterSpacing: 0.2,
             ),
           ),
         ],
@@ -123,111 +385,34 @@ class MaterialGenerateSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildSummary(LanguageProvider lp, Color p) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: ColorUtils.slate50,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: _totalChecked == 0
-            ? _buildEmptySummary(lp)
-            : _buildItemsSummary(lp),
+  Widget _emptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(12),
       ),
-    );
-  }
-
-  Widget _buildEmptySummary(LanguageProvider lp) {
-    return Column(
-      children: [
-        Icon(Icons.info_outline, size: 32, color: ColorUtils.slate400),
-        const SizedBox(height: 8),
-        Text(
-          lp.getTranslatedText({
-            'en': 'No chapters selected yet',
-            'id': 'Belum ada bab yang dipilih',
-          }),
-          style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          lp.getTranslatedText({
-            'en':
-                'Check chapters/sub-chapters first, '
-                'then generate',
-            'id': 'Centang bab/sub-bab terlebih dahulu',
-          }),
-          style: TextStyle(fontSize: 11, color: ColorUtils.slate400),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildItemsSummary(LanguageProvider lp) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: 16,
-              color: ColorUtils.success600,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '$_totalChecked ${lp.getTranslatedText({'en': 'items ready to generate', 'id': 'materi siap di-generate'})}',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: ColorUtils.slate700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ...checkedChapters
-            .take(3)
-            .map((c) => _itemRow(Icons.folder_outlined, c['judul_bab'] ?? '-')),
-        ...checkedSubChapters
-            .take(3)
-            .map(
-              (s) => _itemRow(
-                Icons.description_outlined,
-                s['judul_sub_bab'] ?? '-',
-              ),
-            ),
-        if (_totalChecked > 6)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              '+${_totalChecked - 6} ${lp.getTranslatedText({'en': 'more', 'id': 'lainnya'})}',
-              style: TextStyle(fontSize: 11, color: ColorUtils.slate400),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _itemRow(IconData icon, String label) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Row(
+      child: Column(
         children: [
-          Icon(icon, size: 14, color: ColorUtils.slate400),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(fontSize: 12, color: ColorUtils.slate600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+          Icon(Icons.info_outline, size: 32, color: ColorUtils.slate400),
+          const SizedBox(height: 8),
+          Text(
+            languageProvider.getTranslatedText({
+              'en': 'No chapters selected yet',
+              'id': 'Belum ada bab yang dipilih',
+            }),
+            style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            languageProvider.getTranslatedText({
+              'en': 'Check chapters/sub-chapters first, then generate',
+              'id': 'Centang bab/sub-bab terlebih dahulu',
+            }),
+            style: TextStyle(fontSize: 11, color: ColorUtils.slate400),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -235,16 +420,14 @@ class MaterialGenerateSheet extends StatelessWidget {
   }
 }
 
-/// Custom footer for material generate sheet with generate button.
+/// Sticky footer — single CTA "Generate Sekarang".
 class _MaterialGenerateFooter extends StatelessWidget {
   final int totalChecked;
-  final Color primaryColor;
   final LanguageProvider languageProvider;
   final VoidCallback onGenerate;
 
   const _MaterialGenerateFooter({
     required this.totalChecked,
-    required this.primaryColor,
     required this.languageProvider,
     required this.onGenerate,
   });
@@ -253,28 +436,22 @@ class _MaterialGenerateFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     final lp = languageProvider;
     final enabled = totalChecked > 0;
+    const violet = MaterialGenerateSheet._violet;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
         20,
-        16,
+        14,
         20,
-        16 + MediaQuery.of(context).padding.bottom,
+        14 + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        border: Border(top: BorderSide(color: ColorUtils.slate200)),
       ),
       child: SizedBox(
         width: double.infinity,
-        height: 48,
+        height: 50,
         child: ElevatedButton.icon(
           onPressed: enabled
               ? () {
@@ -286,21 +463,25 @@ class _MaterialGenerateFooter extends StatelessWidget {
           label: Text(
             enabled
                 ? lp.getTranslatedText({
-                    'en': 'Generate $totalChecked Items',
-                    'id': 'Generate $totalChecked Materi',
+                    'en': 'Generate Now',
+                    'id': 'Generate Sekarang',
                   })
                 : lp.getTranslatedText({
                     'en': 'Select Materials First',
                     'id': 'Pilih Materi Dulu',
                   }),
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+            ),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
+            backgroundColor: violet,
             foregroundColor: Colors.white,
             disabledBackgroundColor: ColorUtils.slate200,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
             elevation: 0,
           ),

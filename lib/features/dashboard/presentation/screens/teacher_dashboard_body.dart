@@ -26,6 +26,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
+import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
 import 'package:manajemensekolah/core/widgets/pending_inbox_card.dart';
 import 'package:manajemensekolah/core/widgets/quick_action_grid.dart';
@@ -362,8 +363,13 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
      child: Stack(
       clipBehavior: Clip.none,
       children: [
+        // 100dp bottom padding leaves an empty teal band where the
+        // KPI carousel floats. Bumped from 70dp (single-row) to match
+        // admin / parent (which use the same BrandKpiCarousel) — at
+        // 70dp the 134dp-tall carousel was overlapping the school
+        // pill instead of an empty band below it.
         Padding(
-          padding: const EdgeInsets.only(bottom: 70),
+          padding: const EdgeInsets.only(bottom: 100),
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -465,10 +471,14 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
             ),
           ),
         ),
+        // KPI strip floats at the bottom of the gradient. Edge-to-edge
+        // (left: 0, right: 0) — BrandKpiCarousel applies its own 16dp
+        // horizontal padding so we don't double-pad. Matches admin /
+        // parent positioning.
         Positioned(
           key: widget.statsSectionKey,
-          left: 16,
-          right: 16,
+          left: 0,
+          right: 0,
           bottom: 0,
           child: _buildKpiCards(),
         ),
@@ -477,40 +487,150 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     );
   }
 
-  /// Build 3 KPI cards in a single horizontal row (unified for all roles).
+  /// Build the teacher KPI carousel — same pattern as admin / parent.
+  ///
+  /// Slice axis (auto-cycles ~6 s, story-style progress strip):
+  ///   • Mengajar      — all teaching classes, today scope
+  ///   • Wali <X>      — one slice per homeroom class held
+  ///   • Hari Ini      — time view, today
+  ///   • Pekan Ini     — time view, current week
+  ///
+  /// 4 cards per slice → 2 pages (perPage=2):
+  ///   Page 1: Sesi Hari Ini · Kehadiran (with delta vs prior window)
+  ///   Page 2: RPP (status mix) · Nilai Belum Input
+  ///
+  /// Auto-slide is on; tap pauses (matches admin / wali murid). With
+  /// only one slice (teacher with no homeroom + backend without slices
+  /// yet), the slice strip is suppressed automatically by the carousel.
   Widget _buildKpiCards() {
-    final approvedRppCount = _asInt(
-      widget.state.stats['approved_lesson_plans'] ?? 0,
+    final slices = _parseGuruSlices(widget.state.stats);
+    return BrandKpiCarousel(
+      scope: 'teacher_dashboard',
+      sliceCount: slices.length,
+      autoSlideCards: true,
+      cardBuilder: (sliceIndex) {
+        final slice = slices[sliceIndex.clamp(0, slices.length - 1)];
+        return _buildGuruSliceCards(slice);
+      },
     );
+  }
 
-    return HeroStatsRow(
-      cards: [
-        HeroStatsCard(
-          label: AppLocalizations.dbStudentsTaught.tr,
-          value: _formatNumber(_studentCount),
-          icon: Icons.school_outlined,
-          accentColor: widget.primaryColor,
-          caption: '${_classCount} ${AppLocalizations.dbClasses.tr}',
-          onTap: () {},
-        ),
-        HeroStatsCard(
-          label: AppLocalizations.dbSessionsToday.tr,
-          value: _formatNumber(_sessionsTodayCount),
-          icon: Icons.schedule_outlined,
-          accentColor: ColorUtils.success600,
-          caption: AppLocalizations.dbSchedule.tr,
-          onTap: () {},
-        ),
-        HeroStatsCard(
-          label: AppLocalizations.dbTeacher.tr == 'Guru' ? 'RPP' : 'Lesson Plans',
-          value: _formatNumber(_totalRppCount),
-          icon: Icons.description_outlined,
-          accentColor: ColorUtils.warning600,
-          caption: '$approvedRppCount ${AppLocalizations.dbApproved.tr}',
-          onTap: () {},
-        ),
-      ],
-    );
+  List<HeroStatsCard> _buildGuruSliceCards(_GuruSlice slice) {
+    // TODO(i18n): promote the inline copy below to AppLocalizations
+    // once the EN strings are signed off. Mirrors admin/parent
+    // dashboards which already mix literal id-locale strings for
+    // late-binding labels — keeps this migration shippable without
+    // touching the (large) localization tables.
+    final isEn = AppLocalizations.dbTeacher.tr != 'Guru';
+
+    // Card 1 — Sesi Hari Ini (with done/total ratio)
+    final sessionsCaption = slice.sessionsToday > 0
+        ? '${slice.sessionsTodayDone} ${isEn ? 'done' : 'selesai'} · '
+            '${slice.sessionsToday - slice.sessionsTodayDone} ${isEn ? 'pending' : 'belum'}'
+        : (isEn ? 'No sessions today' : 'Tidak ada sesi hari ini');
+
+    // Card 2 — Kehadiran (with delta if non-zero)
+    final attendanceTrend = slice.attendanceDelta == 0
+        ? null
+        : StatTrend(
+            direction: slice.attendanceDelta > 0
+                ? StatTrendDirection.up
+                : StatTrendDirection.down,
+            label:
+                '${slice.attendanceDelta > 0 ? '+' : ''}${slice.attendanceDelta}%',
+          );
+
+    // Card 3 — RPP status mix. Pending+revision drives the warning
+    // accent so the teacher's eye lands on what needs attention.
+    final rppNeedsAttention =
+        slice.lessonPlansPending + slice.lessonPlansRevision;
+    final rppCaption = rppNeedsAttention > 0
+        ? '${slice.lessonPlansPending} ${isEn ? 'waiting' : 'menunggu'} · '
+            '${slice.lessonPlansRevision} ${isEn ? 'revision' : 'revisi'}'
+        : '${slice.lessonPlansApproved} ${AppLocalizations.dbApproved.tr.toLowerCase()}';
+
+    // Card 4 — Nilai Belum Input
+    final gradesCaption = slice.gradesPendingSessions > 0
+        ? (isEn ? 'Needs grade input' : 'Butuh input nilai')
+        : (isEn ? 'All grades in' : 'Semua nilai masuk');
+
+    return [
+      HeroStatsCard(
+        label: AppLocalizations.dbSessionsToday.tr,
+        sliceLabel: slice.label,
+        sliceLabelMuted: slice.isAggregate,
+        value: _formatNumber(slice.sessionsToday),
+        icon: Icons.schedule_outlined,
+        accentColor: widget.primaryColor,
+        caption: sessionsCaption,
+        onTap: _openSchedule,
+      ),
+      HeroStatsCard(
+        label: isEn ? 'Attendance' : 'Kehadiran',
+        sliceLabel: slice.label,
+        sliceLabelMuted: slice.isAggregate,
+        value: '${slice.attendanceRateWindow}%',
+        icon: Icons.check_circle_outline_rounded,
+        accentColor: ColorUtils.success600,
+        caption: isEn ? 'avg this period' : 'rata-rata periode',
+        trend: attendanceTrend,
+        onTap: _openAttendance,
+      ),
+      HeroStatsCard(
+        label: isEn ? 'Lesson Plans' : 'RPP',
+        sliceLabel: slice.label,
+        sliceLabelMuted: slice.isAggregate,
+        value: _formatNumber(slice.lessonPlansApproved),
+        icon: Icons.description_outlined,
+        accentColor: rppNeedsAttention > 0
+            ? ColorUtils.warning600
+            : ColorUtils.success600,
+        caption: rppCaption,
+        onTap: _openLessonPlans,
+      ),
+      HeroStatsCard(
+        label: isEn ? 'Grades Pending' : 'Nilai Belum Input',
+        sliceLabel: slice.label,
+        sliceLabelMuted: slice.isAggregate,
+        value: _formatNumber(slice.gradesPendingSessions),
+        icon: Icons.edit_note_outlined,
+        accentColor: slice.gradesPendingSessions > 0
+            ? const Color(0xFF6366F1)
+            : ColorUtils.success600,
+        caption: gradesCaption,
+        onTap: _openGrades,
+      ),
+    ];
+  }
+
+  /// Parse the teacher slices array out of [DashboardState.stats]. Falls
+  /// back to a single "Mengajar" slice synthesised from top-level
+  /// counts so the migration ships gracefully when the backend hasn't
+  /// yet emitted the slices array (older API versions).
+  List<_GuruSlice> _parseGuruSlices(Map<String, dynamic> stats) {
+    final raw = stats['slices'];
+    if (raw is List && raw.isNotEmpty) {
+      final parsed = raw
+          .whereType<Map>()
+          .map((e) => _GuruSlice.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+      if (parsed.isNotEmpty) return parsed;
+    }
+    return [
+      _GuruSlice(
+        key: 'mengajar',
+        label: 'Mengajar',
+        isAggregate: true,
+        sessionsToday: _asInt(stats['classes_today'] ?? stats['sessions_today']),
+        sessionsTodayDone: 0,
+        attendanceRateWindow: 0,
+        attendanceDelta: 0,
+        lessonPlansApproved: _asInt(stats['rpp_approved']),
+        lessonPlansPending: _asInt(stats['rpp_pending']),
+        lessonPlansRevision: _asInt(stats['rpp_rejected']),
+        gradesPendingSessions: 0,
+      ),
+    ];
   }
 
   String _formatNumber(int n) {
@@ -785,6 +905,61 @@ class _HeroIconButton extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// One slice of the teacher BrandKpiCarousel — either the aggregate
+/// "Mengajar" / "Hari Ini" / "Pekan Ini" view, or one per homeroom
+/// class the teacher holds. Built server-side in
+/// `DashboardController::buildGuruSlices` and passed through
+/// untouched by the dashboard transformer.
+class _GuruSlice {
+  final String key;
+  final String label;
+  final bool isAggregate;
+  final int sessionsToday;
+  final int sessionsTodayDone;
+  final int attendanceRateWindow;
+  final int attendanceDelta;
+  final int lessonPlansApproved;
+  final int lessonPlansPending;
+  final int lessonPlansRevision;
+  final int gradesPendingSessions;
+
+  const _GuruSlice({
+    required this.key,
+    required this.label,
+    required this.isAggregate,
+    required this.sessionsToday,
+    required this.sessionsTodayDone,
+    required this.attendanceRateWindow,
+    required this.attendanceDelta,
+    required this.lessonPlansApproved,
+    required this.lessonPlansPending,
+    required this.lessonPlansRevision,
+    required this.gradesPendingSessions,
+  });
+
+  factory _GuruSlice.fromJson(Map<String, dynamic> json) {
+    int asInt(Object? v) {
+      if (v is int) return v;
+      if (v is num) return v.round();
+      return int.tryParse('$v') ?? 0;
+    }
+
+    return _GuruSlice(
+      key: (json['key'] ?? '').toString(),
+      label: (json['label'] ?? '').toString(),
+      isAggregate: json['is_aggregate'] == true,
+      sessionsToday: asInt(json['sessions_today']),
+      sessionsTodayDone: asInt(json['sessions_today_done']),
+      attendanceRateWindow: asInt(json['attendance_rate_window']),
+      attendanceDelta: asInt(json['attendance_delta']),
+      lessonPlansApproved: asInt(json['lesson_plans_approved']),
+      lessonPlansPending: asInt(json['lesson_plans_pending']),
+      lessonPlansRevision: asInt(json['lesson_plans_revision']),
+      gradesPendingSessions: asInt(json['grades_pending_sessions']),
     );
   }
 }

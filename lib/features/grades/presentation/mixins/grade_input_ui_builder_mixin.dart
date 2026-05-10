@@ -24,87 +24,100 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
   void focusStudent(int index);
   Future<void> submit();
 
+  /// Brand-aligned cobalt header — mirrors the shape that
+  /// `BrandPageHeader` paints on full-page screens (RPP / Presensi
+  /// / Kegiatan Kelas). Drag handle inlined into the gradient so the
+  /// cobalt reaches the rounded top edge with no white strip.
+  /// Centered kicker + title pattern matches the rest of the
+  /// teacher chrome.
   Widget buildFormHeader(Color primaryColor) {
     final subjectName = Subject.fromJson(widget.subject).name;
-
+    final cobaltDark =
+        Color.lerp(primaryColor, Colors.black, 0.18) ?? primaryColor;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
+          colors: [cobaltDark, primaryColor],
         ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 14),
       child: Column(
         children: [
-          Container(
-            margin: const EdgeInsets.only(top: 10),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
+          // Drag handle inside the gradient so the cobalt reaches
+          // the rounded edge — no white strip between the sheet
+          // top and the header.
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(999),
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 12, 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.add_chart_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Input Nilai Baru',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+          Row(
+            children: [
+              const SizedBox(width: 4),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'BUKU NILAI · ${subjectName.toUpperCase()}',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white.withValues(alpha: 0.78),
+                        letterSpacing: 1.2,
                       ),
-                      Text(
-                        subjectName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Input Nilai Baru',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Container(
-                    width: 32,
-                    height: 32,
+              ),
+              const SizedBox(width: 4),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => Navigator.pop(context),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white.withValues(alpha: 0.20),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.30),
+                      ),
                     ),
                     child: const Icon(
-                      Icons.close,
-                      color: Colors.white,
+                      Icons.close_rounded,
                       size: 18,
+                      color: Colors.white,
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -118,8 +131,12 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Type chips — Frame E styling: active chips fill cobalt
+          // with white text + soft cobalt shadow so the active type
+          // jumps out at a glance. Replaces the legacy outline-tint
+          // (low contrast).
           SizedBox(
-            height: 32,
+            height: 36,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: types.map((t) {
@@ -128,30 +145,38 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                   padding: const EdgeInsets.only(right: 6),
                   child: GestureDetector(
                     onTap: () => setSelectedType(t),
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                        horizontal: 14,
+                        vertical: 7,
                       ),
                       decoration: BoxDecoration(
-                        color: selected
-                            ? primaryColor.withValues(alpha: 0.1)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        color: selected ? primaryColor : Colors.white,
+                        borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: selected
-                              ? primaryColor.withValues(alpha: 0.3)
+                              ? primaryColor
                               : ColorUtils.slate200,
                         ),
+                        boxShadow: selected
+                            ? [
+                                BoxShadow(
+                                  color:
+                                      primaryColor.withValues(alpha: 0.22),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Text(
                         typeLabels[t] ?? t.toUpperCase(),
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight: selected
-                              ? FontWeight.w600
-                              : FontWeight.w400,
-                          color: selected ? primaryColor : ColorUtils.slate500,
+                          fontWeight: FontWeight.w800,
+                          color: selected ? Colors.white : ColorUtils.slate600,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ),
@@ -160,7 +185,10 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
               }).toList(),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+          // Date + Judul row — Frame E styling: cobalt-tinted date
+          // chip with calendar icon, taller title field, both with
+          // 10px radius matching the type chip pill family.
           Row(
             children: [
               GestureDetector(
@@ -174,12 +202,15 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
+                    horizontal: 12,
+                    vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: ColorUtils.slate50,
-                    borderRadius: BorderRadius.circular(8),
+                    color: primaryColor.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: primaryColor.withValues(alpha: 0.18),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -193,9 +224,10 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                       Text(
                         formatDate(selectedDate),
                         style: TextStyle(
-                          fontSize: 11,
-                          color: ColorUtils.slate700,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 11.5,
+                          color: primaryColor,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ],
@@ -206,22 +238,35 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
               Expanded(
                 child: TextField(
                   controller: titleController,
-                  style: const TextStyle(fontSize: 12),
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: ColorUtils.slate900,
+                    fontWeight: FontWeight.w600,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Judul (opsional)',
                     hintStyle: TextStyle(
-                      fontSize: 11,
+                      fontSize: 11.5,
                       color: ColorUtils.slate400,
+                      fontWeight: FontWeight.w500,
                     ),
                     filled: true,
-                    fillColor: ColorUtils.slate50,
+                    fillColor: Colors.white,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: ColorUtils.slate200),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: ColorUtils.slate200),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: primaryColor, width: 1.6),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
+                      horizontal: 12,
+                      vertical: 10,
                     ),
                     isDense: true,
                   ),
@@ -234,121 +279,444 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
     );
   }
 
+  /// Frame B per-student input row — avatar + name + NIS + 92×56
+  /// score box. State-aware tinting: empty rows stay white-on-slate,
+  /// filled rows tint cobalt (no KKM data yet), green when score is
+  /// ≥ 75 (KKM), red when below. Avatar tints red on under-KKM rows
+  /// so the warning is visible even when the score box scrolls off
+  /// or is being edited.
   Widget buildStudentListItem(int index, Color primaryColor) {
     final student = widget.studentList[index];
     final ctrl = scoreControllers[student.id]!;
     final focusNode = scoreFocusNodes[student.id]!;
+    final hasValue = ctrl.text.trim().isNotEmpty;
+    final score = double.tryParse(ctrl.text.trim());
+    final isOverKkm = score != null && score >= 75;
+    final isUnderKkm = score != null && score < 75;
+
+    // Pick a row tint based on the score state.
+    final Color rowBg;
+    final Color rowBorder;
+    final List<BoxShadow>? rowShadow;
+    if (isOverKkm) {
+      rowBg = ColorUtils.success600.withValues(alpha: 0.06);
+      rowBorder = ColorUtils.success600.withValues(alpha: 0.30);
+      rowShadow = [
+        BoxShadow(
+          color: ColorUtils.success600.withValues(alpha: 0.08),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ];
+    } else if (isUnderKkm) {
+      rowBg = ColorUtils.error600.withValues(alpha: 0.06);
+      rowBorder = ColorUtils.error600.withValues(alpha: 0.30);
+      rowShadow = [
+        BoxShadow(
+          color: ColorUtils.error600.withValues(alpha: 0.08),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ];
+    } else if (hasValue) {
+      rowBg = primaryColor.withValues(alpha: 0.04);
+      rowBorder = primaryColor.withValues(alpha: 0.30);
+      rowShadow = [
+        BoxShadow(
+          color: primaryColor.withValues(alpha: 0.06),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ];
+    } else {
+      rowBg = Colors.white;
+      rowBorder = ColorUtils.slate200;
+      rowShadow = null;
+    }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       decoration: BoxDecoration(
-        color: index.isEven ? Colors.white : ColorUtils.slate50,
-        border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
+        color: rowBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: rowBorder),
+        boxShadow: rowShadow,
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 24,
+          // Avatar — tints red on under-KKM rows so the warning is
+          // visible at a glance even before the teacher reads the
+          // score. Otherwise cobalt-tinted matching the rest of the
+          // teacher tools.
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isUnderKkm
+                  ? ColorUtils.error600.withValues(alpha: 0.12)
+                  : primaryColor.withValues(alpha: 0.10),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
             child: Text(
-              '${index + 1}',
+              _initialsFor(student.name),
               style: TextStyle(
-                fontSize: 10,
-                color: ColorUtils.slate400,
-                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: isUnderKkm ? ColorUtils.error600 : primaryColor,
+                letterSpacing: 0.2,
               ),
             ),
           ),
+          const SizedBox(width: 10),
+          // Name + NIS column.
           Expanded(
-            child: Text(
-              student.name,
-              style: TextStyle(fontSize: 13, color: ColorUtils.slate800),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  student.name,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.slate900,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (student.studentNumber.isNotEmpty)
+                  Text(
+                    student.studentNumber,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: ColorUtils.slate500,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
             ),
           ),
-          SizedBox(
-            width: 64,
-            child: TextField(
-              controller: ctrl,
-              focusNode: focusNode,
-              keyboardType: TextInputType.number,
-              textInputAction: index < widget.studentList.length - 1
-                  ? TextInputAction.next
-                  : TextInputAction.done,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: primaryColor,
-              ),
-              decoration: InputDecoration(
-                hintText: '-',
-                hintStyle: TextStyle(
-                  color: ColorUtils.slate300,
-                  fontWeight: FontWeight.w400,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: ColorUtils.slate200),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: ColorUtils.slate200),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: primaryColor, width: 1.5),
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                isDense: true,
-              ),
-              onSubmitted: (_) => focusStudent(index + 1),
-            ),
+          // 92×56 score box — state-aware fill (slate empty / cobalt
+          // filled / green over-KKM / red under-KKM). Big 22pt 900
+          // score number with `/ 100` denominator caption when
+          // filled. Empty state shows cobalt edit icon + uppercase
+          // "Nilai" hint behind an IgnorePointer so the tap still
+          // focuses the input.
+          _buildScoreBox(
+            ctrl: ctrl,
+            focusNode: focusNode,
+            hasValue: hasValue,
+            isOverKkm: isOverKkm,
+            isUnderKkm: isUnderKkm,
+            primaryColor: primaryColor,
+            onSubmittedNext: () => focusStudent(index + 1),
+            isLast: index >= widget.studentList.length - 1,
           ),
         ],
       ),
     );
   }
 
+  /// State-aware 92×56 score box. Cobalt-tinted by default, green
+  /// when the score is ≥75, red when below. Empty state shows a
+  /// cobalt edit icon + "NILAI" hint behind an IgnorePointer so taps
+  /// still focus the field. Enter advances to the next student via
+  /// `onSubmittedNext` (`focusStudent(index + 1)`).
+  Widget _buildScoreBox({
+    required TextEditingController ctrl,
+    required FocusNode focusNode,
+    required bool hasValue,
+    required bool isOverKkm,
+    required bool isUnderKkm,
+    required Color primaryColor,
+    required VoidCallback onSubmittedNext,
+    required bool isLast,
+  }) {
+    Color fillColor;
+    Color borderColor;
+    Color numberColor;
+    if (isOverKkm) {
+      fillColor = ColorUtils.success600.withValues(alpha: 0.10);
+      borderColor = ColorUtils.success600.withValues(alpha: 0.45);
+      numberColor = ColorUtils.success600;
+    } else if (isUnderKkm) {
+      fillColor = ColorUtils.error600.withValues(alpha: 0.10);
+      borderColor = ColorUtils.error600.withValues(alpha: 0.45);
+      numberColor = ColorUtils.error600;
+    } else if (hasValue) {
+      fillColor = primaryColor.withValues(alpha: 0.10);
+      borderColor = primaryColor.withValues(alpha: 0.45);
+      numberColor = primaryColor;
+    } else {
+      fillColor = ColorUtils.slate50;
+      borderColor = ColorUtils.slate200;
+      numberColor = ColorUtils.slate900;
+    }
+    // "Nilai" placeholder uses the TextField's native hintText
+    // (instead of an IgnorePointer overlay) so it lays out exactly
+    // like the score number — same TextField → same baseline → no
+    // centering drift. The overlay approach was anchoring at the
+    // top of the Stack despite Positioned.fill + Center, because
+    // the SizedBox-Stack sequence doesn't always propagate full
+    // bounds to nested Center widgets.
+    return SizedBox(
+      width: 92,
+      height: 56,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: TextField(
+              controller: ctrl,
+              focusNode: focusNode,
+              keyboardType: TextInputType.number,
+              textInputAction: isLast
+                  ? TextInputAction.done
+                  : TextInputAction.next,
+              textAlign: TextAlign.center,
+              textAlignVertical: TextAlignVertical.center,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: numberColor,
+                letterSpacing: -0.5,
+                height: 1.0,
+              ),
+              decoration: InputDecoration(
+                hintText: focusNode.hasFocus ? '' : 'Nilai',
+                hintStyle: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: primaryColor.withValues(alpha: 0.50),
+                  letterSpacing: 0.3,
+                  height: 1.0,
+                ),
+                filled: true,
+                fillColor: fillColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: primaryColor, width: 2),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 8,
+                ),
+                isDense: true,
+              ),
+              onChanged: (_) {
+                // Trigger a rebuild so the row + score box pick up
+                // the new state-aware tinting (filled / over / under
+                // KKM) immediately as the teacher types.
+                setState(() {});
+              },
+              onSubmitted: (_) {
+                // Enter / Next — move keyboard focus to the next
+                // student's score box. The `focusStudent(index + 1)`
+                // helper from the form mixin handles the iteration
+                // so the teacher can crank through a class without
+                // taking their hands off the keyboard.
+                onSubmittedNext();
+              },
+            ),
+          ),
+          // "/ 100" denominator caption — only when filled, sits at
+          // the bottom edge of the box.
+          if (hasValue)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 4,
+              child: IgnorePointer(
+                child: Center(
+                  child: Text(
+                    '/ 100',
+                    style: TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w800,
+                      color: ColorUtils.slate400,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 1-2 character initials helper for the avatar circles. Mirrors
+  /// the helper inside `student_card_list_widget.dart`. Picks the
+  /// first letter of the first two whitespace-separated tokens; falls
+  /// back to the first two letters of the trimmed name; falls back
+  /// to "?" for empty.
+  String _initialsFor(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return '?';
+    final parts =
+        trimmed.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    if (parts[0].length >= 2) {
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  }
+
+  /// Frame B footer — progress bar + dynamic "Simpan N" button. The
+  /// teacher always sees how many cells are filled out of total, plus
+  /// how many remain. Replaces the legacy full-width "Simpan Nilai"
+  /// button.
   Widget buildBottomBar(Color primaryColor) {
+    final filled = scoreControllers.values
+        .where((c) => c.text.trim().isNotEmpty)
+        .length;
+    final total = widget.studentList.length;
+    final remaining = total - filled;
+    final progress = total == 0 ? 0.0 : filled / total;
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border(top: BorderSide(color: ColorUtils.slate100)),
         ),
-        child: SizedBox(
-          width: double.infinity,
-          height: 46,
-          child: ElevatedButton(
-            onPressed: isSaving ? null : submit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              disabledBackgroundColor: ColorUtils.slate300,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        child: Row(
+          children: [
+            // Progress strip — slate track + cobalt fill + count text.
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 4,
+                      backgroundColor: ColorUtils.slate100,
+                      valueColor: AlwaysStoppedAnimation(primaryColor),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        '$filled',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: ColorUtils.slate900,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      Text(
+                        '/$total',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: ColorUtils.slate400,
+                        ),
+                      ),
+                      if (remaining > 0) ...[
+                        Text(
+                          ' · ',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            color: ColorUtils.slate300,
+                          ),
+                        ),
+                        Text(
+                          '$remaining belum',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: ColorUtils.slate500,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ),
             ),
-            child: isSaving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text(
-                    'Simpan Nilai',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            const SizedBox(width: 12),
+            // CTA — "Simpan 3" / "Simpan Nilai" / spinner. Disables
+            // when no rows have a value yet so a stray tap doesn't
+            // POST an empty payload.
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: (isSaving || filled == 0) ? null : submit,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
                   ),
-          ),
+                  decoration: BoxDecoration(
+                    color: filled == 0 ? ColorUtils.slate200 : primaryColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: filled == 0
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: primaryColor.withValues(alpha: 0.28),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_rounded,
+                              size: 16,
+                              color: filled == 0
+                                  ? ColorUtils.slate400
+                                  : Colors.white,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              filled == 0 ? 'Simpan' : 'Simpan $filled',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w900,
+                                color: filled == 0
+                                    ? ColorUtils.slate400
+                                    : Colors.white,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

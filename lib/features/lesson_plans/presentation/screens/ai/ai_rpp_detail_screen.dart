@@ -31,12 +31,15 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_alert_dialog.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/screens/ai/ai_rpp_editor_view.dart';
+import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan_format.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_identity_edit_sheet.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_section_editor_sheet.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/ai/ai_rpp_preview_view.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_content_formatter.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_pdf_builder.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_detail_header.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_regen_sheet.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 
@@ -58,13 +61,19 @@ class AiRppDetailScreen extends StatefulWidget {
     required Map<String, dynamic> lessonPlanData,
     bool isNew = false,
   }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black54,
-      builder: (_) =>
-          AiRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew),
+    // Pushed as a full-page route (was a modal bottom sheet) so
+    //   • the BrandPageHeader gets the system status bar inside its
+    //     SafeArea (no more "05:16" clock clipping the back button)
+    //   • the system back / ESC behaviour matches the rest of the
+    //     app (you don't lose unsaved per-section state to a stray
+    //     barrier-tap or ESC press)
+    //   • it feels like the file detail page (ManualRppDetailScreen)
+    //     instead of a half-height sheet.
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) =>
+            AiRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew),
+      ),
     );
   }
 
@@ -76,7 +85,7 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
   late Map<String, dynamic> _lessonPlanData;
   Map<String, dynamic> _regenLimits = {};
 
-  bool _isEditing = false;
+  // (Edit toggle dropped — see "Removed" note further down.)
   bool _isSaving = false;
   bool _isLoadingLimits = false;
   bool _isDownloading = false;
@@ -84,38 +93,75 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
 
   Color get _primary => ColorUtils.getRoleColor('guru');
 
-  static const List<Map<String, String>> _fields = [
-    {
-      'key': 'core_competence',
-      'label': 'Kompetensi Inti (KI)',
-      'altKey': 'kompetensi_inti',
-    },
-    {
-      'key': 'basic_competence',
-      'label': 'Kompetensi Dasar (KD)',
-      'altKey': 'kompetensi_dasar',
-    },
-    {'key': 'indicator', 'label': 'Indikator', 'altKey': 'indikator'},
-    {
-      'key': 'learning_objective',
-      'label': 'Tujuan Pembelajaran',
-      'altKey': 'tujuan_pembelajaran',
-    },
-    {'key': 'main_material', 'label': 'Materi Pokok', 'altKey': ''},
-    {'key': 'learning_method', 'label': 'Metode Pembelajaran', 'altKey': ''},
-    {'key': 'media_tools', 'label': 'Media / Alat', 'altKey': ''},
-    {'key': 'learning_source', 'label': 'Sumber Belajar', 'altKey': ''},
-    {
-      'key': 'learning_activities',
-      'label': 'Kegiatan Pembelajaran',
-      'altKey': 'kegiatan_inti',
-    },
-    {
-      'key': 'assessment',
-      'label': 'Penilaian (Asesmen)',
-      'altKey': 'penilaian',
-    },
-  ];
+  /// Format-aware section list. Reads the lesson plan's `format`
+  /// column and emits the section keys + labels for that format. Each
+  /// section's `key` is what gets written to `format_data` on save and
+  /// what the regen sheet uses to know which sections are valid.
+  ///
+  /// `altKey` is a legacy fallback so K13 rows that haven't been
+  /// migrated to format_data yet still render their content from the
+  /// dedicated text columns.
+  ///
+  /// File-format rows route through ManualRppDetailScreen, so they
+  /// never reach this getter — falling back to K13 here is fine.
+  List<Map<String, String>> get _fields {
+    final format = LessonPlanFormat.fromMap(_lessonPlanData);
+    switch (format) {
+      case LessonPlanFormat.k13:
+        return const [
+          {
+            'key': 'identitas',
+            'label': 'Identitas',
+            'altKey': '',
+          },
+          {
+            'key': 'kd_indikator',
+            'label': 'Kompetensi Dasar & Indikator',
+            'altKey': 'basic_competence',
+          },
+          {
+            'key': 'tujuan',
+            'label': 'Tujuan Pembelajaran',
+            'altKey': 'learning_objective',
+          },
+          {
+            'key': 'langkah_kegiatan',
+            'label': 'Langkah Kegiatan',
+            'altKey': 'learning_activities',
+          },
+          {
+            'key': 'penilaian',
+            'label': 'Penilaian',
+            'altKey': 'assessment',
+          },
+        ];
+      case LessonPlanFormat.rpp1Halaman:
+        return const [
+          {'key': 'tujuan', 'label': 'Tujuan Pembelajaran', 'altKey': ''},
+          {'key': 'kegiatan', 'label': 'Kegiatan Pembelajaran', 'altKey': ''},
+          {'key': 'asesmen', 'label': 'Asesmen', 'altKey': ''},
+        ];
+      case LessonPlanFormat.modulAjar:
+        return const [
+          {'key': 'info_umum', 'label': 'Informasi Umum', 'altKey': ''},
+          {'key': 'capaian', 'label': 'Capaian Pembelajaran', 'altKey': ''},
+          {'key': 'tujuan', 'label': 'Tujuan Pembelajaran', 'altKey': ''},
+          {
+            'key': 'pemahaman_pemantik',
+            'label': 'Pemahaman Bermakna & Pemantik',
+            'altKey': '',
+          },
+          {'key': 'kegiatan', 'label': 'Kegiatan Pembelajaran', 'altKey': ''},
+          {
+            'key': 'asesmen_refleksi',
+            'label': 'Asesmen & Refleksi',
+            'altKey': '',
+          },
+        ];
+      case LessonPlanFormat.file:
+        return const [];
+    }
+  }
 
   @override
   void initState() {
@@ -152,10 +198,26 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
   }
 
   String _getFieldValue(String key, String altKey) {
+    // 1. New format-data path. The backend writes structured sections
+    //    into format_data JSONB on every save; reads from there are
+    //    the source of truth.
+    final formatData = _lessonPlanData['format_data'];
+    if (formatData is Map) {
+      final v = formatData[key];
+      if (v != null && v.toString().trim().isNotEmpty) {
+        return v.toString().trim();
+      }
+    }
+
+    // 2. Top-level column fallback. K13 rows whose format_data was
+    //    backfilled by the migration also live here, and pre-format
+    //    legacy rows still write to these columns.
     final v = _lessonPlanData[key];
     if (v != null && v.toString().trim().isNotEmpty) {
       return v.toString().trim();
     }
+
+    // 3. Legacy K13 column alias (e.g. tujuan ↔ learning_objective).
     if (altKey.isNotEmpty) {
       final alt = _lessonPlanData[altKey];
       if (alt != null && alt.toString().trim().isNotEmpty) {
@@ -178,55 +240,192 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
-    final mediaHeight = MediaQuery.of(context).size.height;
+    // Full-page Scaffold (was modal bottom sheet) — lets the
+    // BrandPageHeader claim the system status bar area for its
+    // gradient and back-button row, matching ManualRppDetailScreen
+    // (file detail) and every other teacher detail screen.
+    //
+    // Frame D chrome — shared BrandPageLayout with cobalt
+    // BrandPageHeader + 3-cell KPI overlap (Section · Alokasi ·
+    // Status). Body is scrollable and only carries the file card +
+    // section cards. The legacy "Detail RPP / Rencana Pelaksanaan…"
+    // double-title block + the "Regenerasi Semua Field" hero are
+    // gone — title lives in the brand header, regen lives per-section.
+    return Scaffold(
+      backgroundColor: const Color(0xFFF1F5F9),
+      resizeToAvoidBottomInset: true,
+      body: BrandPageLayout(
+        role: 'guru',
+        header: _buildBrandHeader(),
+        kpiCard: _buildBrandKpi(),
+        bodyChildren: [_body()],
+      ),
+    );
+  }
+
+  // ── Brand chrome (Frame D) ──
+
+  Widget _buildBrandHeader() {
+    final model = LessonPlan.fromJson(_lessonPlanData);
+    final format = LessonPlanFormat.fromMap(_lessonPlanData);
+    final subject = (model.subjectName ?? '').trim();
+    final className = (model.className ?? '').trim();
+    final kicker = [
+      'RPP · ${format.shortLabel}',
+      if (className.isNotEmpty) className.toUpperCase(),
+      if (subject.isNotEmpty) subject.toUpperCase(),
+    ].join(' · ');
+
+    return BrandPageHeader(
+      role: 'guru',
+      title: model.title.isNotEmpty ? model.title : 'Detail RPP',
+      subtitle: kicker,
+      isRealtimeFresh: true,
+      kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: Icons.edit_rounded,
+          onTap: _openIdentityEditor,
+        ),
+        BrandHeaderIconButton(
+          icon: Icons.more_vert_rounded,
+          onTap: _showExportMenu,
+        ),
+      ],
+    );
+  }
+
+  /// 3-cell KPI overlap card per Frame D — Section count · Alokasi
+  /// (best-effort from time_allocation if set, else "-") · Status.
+  Widget _buildBrandKpi() {
+    final fields = _fields;
+    final filled = fields.where((f) {
+      final v = _getFieldValue(f['key']!, f['altKey'] ?? '');
+      return v.isNotEmpty;
+    }).length;
+    final alokasi = (_lessonPlanData['time_allocation'] ??
+            _lessonPlanData['alokasi_waktu'] ??
+            '')
+        .toString();
+    final statusRaw = (_lessonPlanData['status'] ?? '').toString();
+    final stat = _statusBadge(statusRaw);
 
     return Padding(
-      padding: EdgeInsets.only(bottom: keyboardInset),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        constraints: BoxConstraints(maxHeight: mediaHeight * 0.95),
         decoration: BoxDecoration(
-          color: ColorUtils.lightGray,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LessonPlanDetailHeader(
-                  title: 'Detail RPP',
-                  subtitle: _displayTitle(),
-                  isEditing: _isEditing,
-                  isSaving: _isSaving,
-                  primaryColor: _primary,
-                  onEditTap: _toggleEdit,
-                  onSaveTap: _save,
-                  onExportTap: _showExportMenu,
-                  onCopyTap: _copyToClipboard,
-                ),
-                Expanded(child: _body()),
-              ],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ColorUtils.slate200),
+          boxShadow: [
+            BoxShadow(
+              color: ColorUtils.slate900.withValues(alpha: 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
-          ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+        child: Row(
+          children: [
+            _kpi(
+              label: 'Section',
+              value: fields.isEmpty ? '-' : '$filled/${fields.length}',
+              color: _primary,
+            ),
+            _kpiDivider(),
+            _kpi(
+              label: 'Alokasi',
+              value: alokasi.isEmpty ? '-' : _shortenAlokasi(alokasi),
+              color: ColorUtils.info600,
+              compact: true,
+            ),
+            _kpiDivider(),
+            _kpi(
+              label: 'Status',
+              value: stat.label,
+              color: stat.color,
+              compact: true,
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _body() {
-    if (_isEditing) {
-      return AiRppEditorView(
-        primaryColor: _primary,
-        lessonPlanData: _lessonPlanData,
-        fieldDefinitions: _fields,
-        onFieldChanged: _updateField,
+  Widget _kpi({
+    required String label,
+    required String value,
+    required Color color,
+    bool compact = false,
+  }) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: compact ? 13 : 22,
+              fontWeight: FontWeight.w900,
+              color: color,
+              height: 1,
+              letterSpacing: compact ? 0 : -0.5,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiDivider() => Container(
+        width: 1,
+        height: 28,
+        color: ColorUtils.slate100,
       );
+
+  ({String label, Color color}) _statusBadge(String raw) {
+    final s = raw.toLowerCase();
+    if (s == 'approved' || s == 'disetujui') {
+      return (label: 'Disetujui', color: ColorUtils.success600);
     }
+    if (s == 'rejected' || s == 'ditolak' || s == 'revision') {
+      return (label: 'Revisi', color: ColorUtils.error600);
+    }
+    if (s == 'pending' || s == 'submitted' || s == 'menunggu') {
+      return (label: 'Pending', color: ColorUtils.warning600);
+    }
+    return (label: 'Draf', color: ColorUtils.slate500);
+  }
+
+  String _shortenAlokasi(String raw) {
+    // "2 JP × 45 menit" → "2 JP". KPI cell only has room for ~6 chars.
+    final m = RegExp(r'^(\d+\s*JP)', caseSensitive: false).firstMatch(raw);
+    if (m != null) return m.group(1)!.toUpperCase();
+    return raw.length <= 8 ? raw : '${raw.substring(0, 7)}…';
+  }
+
+  Widget _body() {
+    // Always-preview rendering — the legacy global edit toggle is
+    // gone. Editing happens in scoped sheets opened by the per-section
+    // pencil button (showLessonPlanSectionEditorSheet — draggable
+    // sheet at 96% viewport, covers the bottom nav) or the header
+    // pencil (LessonPlanIdentityEditSheet).
     return AiRppPreviewView(
       lessonPlanData: _lessonPlanData,
+      format: LessonPlanFormat.fromMap(_lessonPlanData),
       canRegen: _lessonPlanId != null,
       isRegeneratingAll: _regeneratingField == 'all',
       isLoadingLimits: _isLoadingLimits,
@@ -239,60 +438,95 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
       stripHtml: _stripHtml,
       onRegenAllTap: _onRegenAllTap,
       onFieldRegenTap: _onFieldRegenTap,
+      onFieldEditTap: _onFieldEditTap,
       onFileDownloadTap: _downloadAndOpenFile,
     );
   }
 
-  // ── Edit + save ───────────────────────────────────────────────
+  // ── New scoped-edit handlers ─────────────────────────────────
 
-  void _toggleEdit() => setState(() => _isEditing = !_isEditing);
-
-  void _updateField(String fieldKey, String value) {
-    _lessonPlanData[fieldKey] = value;
-  }
-
-  Future<void> _save() async {
+  /// Open the per-section editor sheet for the tapped field. Save
+  /// merges the new HTML back into local format_data so the card
+  /// re-renders with the edit. PATCH already happened inside the
+  /// sheet — no further save needed here.
+  Future<void> _onFieldEditTap(String fieldKey, String fieldLabel) async {
     final id = _lessonPlanId;
     if (id == null) {
       SnackBarUtils.showError(context, 'ID RPP tidak ditemukan.');
       return;
     }
-    setState(() => _isSaving = true);
-    try {
-      final payload = <String, dynamic>{
-        'title': (_lessonPlanData['title'] ?? _lessonPlanData['judul'] ?? '')
-            .toString(),
-      };
-      for (final f in _fields) {
-        final key = f['key']!;
-        final altKey = f['altKey'] ?? '';
-        final v = _getFieldValue(key, altKey);
-        if (v.isNotEmpty) payload[key] = v;
-      }
+    final altKey = _altKeyFor(fieldKey);
+    final currentHtml = _getFieldValue(fieldKey, altKey);
+    final regen = _getFieldRegenInfo(fieldKey);
 
-      await getIt<ApiSubjectService>().updateLessonPlanFields(id, payload);
+    final result = await showLessonPlanSectionEditorSheet(
+      context: context,
+      lessonPlanId: id,
+      fieldKey: fieldKey,
+      fieldLabel: fieldLabel,
+      currentHtml: currentHtml,
+      regenInfo: regen,
+      formatLabel: LessonPlanFormat.fromMap(_lessonPlanData).label,
+    );
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
-              'en': 'Lesson plan saved successfully',
-              'id': 'RPP berhasil disimpan',
-            }),
-          ),
-        ),
-      );
-      setState(() => _isEditing = false);
-    } catch (e) {
-      AppLogger.error('lesson_plan', e);
-      if (mounted) {
-        SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
+    if (result == null || !mounted) return;
+
+    setState(() {
+      // Mirror the saved HTML into both stores so the next read sees
+      // the new value regardless of which path it checks first.
+      final fd = _lessonPlanData['format_data'];
+      final formatData = fd is Map<String, dynamic>
+          ? Map<String, dynamic>.from(fd)
+          : <String, dynamic>{};
+      formatData[result.fieldKey] = result.newHtml;
+      _lessonPlanData['format_data'] = formatData;
+      _lessonPlanData[result.fieldKey] = result.newHtml;
+    });
+    SnackBarUtils.showInfo(context, '$fieldLabel tersimpan');
+    // Refresh regen quota — the sheet may have consumed one regen
+    // attempt during the edit session.
+    _loadRegenLimits();
   }
+
+  /// Open the identity edit sheet (header pencil). On save, merge the
+  /// metadata patch into local data so the title in the AppBar updates
+  /// without a re-fetch.
+  Future<void> _openIdentityEditor() async {
+    if (_isSaving) return;
+    final teacherId = (_lessonPlanData['teacher_id'] ??
+            _lessonPlanData['teacher']?['id'] ??
+            '')
+        .toString();
+    final result = await showLessonPlanIdentityEditSheet(
+      context: context,
+      lessonPlan: _lessonPlanData,
+      teacherId: teacherId,
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _lessonPlanData.addAll(result.updatedFields);
+    });
+    SnackBarUtils.showInfo(context, 'Identitas RPP tersimpan');
+  }
+
+  String _altKeyFor(String fieldKey) {
+    for (final f in _fields) {
+      if (f['key'] == fieldKey) return f['altKey'] ?? '';
+    }
+    return '';
+  }
+
+  // ── (Removed) global edit-mode + bulk save ──
+  //
+  // The legacy `_toggleEdit` / `_updateField` / `_save` trio is gone.
+  // Edits now flow through scoped sheets:
+  //   • per-section content → showLessonPlanSectionEditorSheet
+  //     (draggable sheet at 96% viewport, Quill editor that PATCHes
+  //     only that key in format_data)
+  //   • metadata (title/kelas/mapel/semester/year) →
+  //     LessonPlanIdentityEditSheet (PATCHes top-level fields only)
+  // The detail screen never holds dirty state across the whole row,
+  // so there's no risk of a partial save wiping unrelated sections.
 
   // ── Regenerate-limits load ────────────────────────────────────
 

@@ -12,13 +12,13 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/widgets/bottom_sheet_header.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/data_loading_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/generate_flow_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/tour_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/build_mixin.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_generate_sheet.dart';
 import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 
@@ -160,15 +160,13 @@ class _LearningRecommendationClassScreenState
     return ColorUtils.getRoleColor(Teacher.fromJson(widget.teacher).role);
   }
 
-  /// Override generateForClass to handle full flow with proper error
-  /// handling and user feedback.
+  /// Override generateForClass to use the unified Frame D Generate AI
+  /// sheet (violet header + scope tiles + subject FilterChipGrid +
+  /// periode chip + token estimate + violet Generate CTA). The sheet
+  /// returns a single [GenerateConfig] that we then fan out into N
+  /// API calls, one per selected subject.
   @override
   Future<void> generateForClass(String classId, String className) async {
-    // Step 1: Pick scope (all students or only those who need)
-    final includeOnTrack = await showScopePicker(className);
-    if (includeOnTrack == null || !mounted) return;
-
-    // Step 2: Pick subject
     final subjects = getSubjectsForClass(classId);
     if (subjects.isEmpty) {
       if (mounted) {
@@ -181,78 +179,93 @@ class _LearningRecommendationClassScreenState
       return;
     }
 
-    Map<String, String>? selectedSubject;
-    if (subjects.length == 1) {
-      selectedSubject = subjects.first;
-    } else {
-      selectedSubject = await _showSubjectPicker(subjects, className);
-    }
+    final summary = classSummaries[classId];
+    final studentCount = summary?['student_count'] is num
+        ? (summary!['student_count'] as num).toInt()
+        : (summary?['total_students'] is num
+              ? (summary!['total_students'] as num).toInt()
+              : 0);
+    final atRiskCount = summary?['at_risk_count'] is num
+        ? (summary!['at_risk_count'] as num).toInt()
+        : (studentCount > 0 ? (studentCount * 0.3).round() : 0);
 
-    if (selectedSubject == null || !mounted) return;
+    final ayLabel =
+        ref
+            .read(academicYearRiverpod)
+            .selectedAcademicYear?['year']
+            ?.toString() ??
+        'Periode aktif';
 
-    // Step 3: Generate
+    final config = await showRecommendationGenerateSheet(
+      context: context,
+      className: className,
+      totalStudents: studentCount,
+      atRiskCount: atRiskCount,
+      subjects: subjects,
+      periodeLabel: 'Tahun $ayLabel',
+    );
+    if (config == null || !mounted) return;
+
     setState(() => generating[classId] = true);
-
     AppLogger.debug('recommendation', 'Generate Recommendation Params:');
     AppLogger.debug('recommendation', '   teacherId: $effectiveTeacherId');
     AppLogger.debug('recommendation', '   classId: $classId');
-    AppLogger.debug('recommendation', '   subjectId: ${selectedSubject['id']}');
     AppLogger.debug(
       'recommendation',
-      '   subjectName: ${selectedSubject['name']}',
+      '   subjectIds: ${config.subjectIds.join(", ")}',
     );
-    AppLogger.debug('recommendation', '   includeOnTrack: $includeOnTrack');
-    AppLogger.debug('recommendation', '   className: $className');
+    AppLogger.debug('recommendation', '   scope: ${config.scope}');
+
+    final includeOnTrack = config.scope == 'all';
 
     try {
       final ayId = ref
           .read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
-      final result = await getIt<ApiRecommendationService>().generateForClass(
-        teacherId: effectiveTeacherId,
-        classId: classId,
-        subjectId: selectedSubject['id'] ?? '',
-        includeOnTrack: includeOnTrack,
-        academicYearId: ayId,
-      );
 
-      if (result['async'] == true) {
-        final jobId = result['job_id']?.toString();
-        if (jobId != null && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Sedang memproses...')),
-          );
-
-          try {
-            await getIt<ApiRecommendationService>().pollJobUntilComplete(
-              jobId,
-              onProgress: (status, attempt) {
-                AppLogger.debug(
-                  'recommendation',
-                  'Job $jobId: $status (attempt $attempt)',
-                );
-              },
-            );
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Rekomendasi berhasil dibuat!')),
+      // Fan-out one call per selected subject. The generate API
+      // accepts a single subject_id; running them in series keeps
+      // the rate-limit math simple.
+      var failures = 0;
+      for (final subjectId in config.subjectIds) {
+        try {
+          final result = await getIt<ApiRecommendationService>()
+              .generateForClass(
+                teacherId: effectiveTeacherId,
+                classId: classId,
+                subjectId: subjectId,
+                includeOnTrack: includeOnTrack,
+                academicYearId: ayId,
+              );
+          if (result['async'] == true) {
+            final jobId = result['job_id']?.toString();
+            if (jobId != null) {
+              await getIt<ApiRecommendationService>().pollJobUntilComplete(
+                jobId,
               );
             }
-          } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Gagal: $e')));
-            }
           }
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Rekomendasi berhasil dibuat!')),
+        } catch (e) {
+          failures++;
+          AppLogger.error(
+            'recommendation',
+            'Generate failed for subject $subjectId: $e',
           );
         }
+      }
+
+      if (mounted) {
+        final ok = config.subjectIds.length - failures;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              failures == 0
+                  ? 'Rekomendasi berhasil dibuat untuk $ok mapel.'
+                  : '$ok berhasil, $failures gagal.',
+            ),
+          ),
+        );
       }
 
       // Invalidate cache and refresh data
@@ -281,111 +294,5 @@ class _LearningRecommendationClassScreenState
     } finally {
       if (mounted) setState(() => generating[classId] = false);
     }
-  }
-
-  /// Shows a bottom-sheet subject picker. Dismisses with the chosen
-  /// subject Map, or `null` if the teacher backs out.
-  Future<Map<String, String>?> _showSubjectPicker(
-    List<Map<String, String>> subjects,
-    String className,
-  ) async {
-    final primaryColor = getPrimaryColor();
-
-    return showModalBottomSheet<Map<String, String>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            BottomSheetHeader(
-              title: 'Pilih Mata Pelajaran',
-              subtitle: 'Generate rekomendasi AI untuk $className',
-              icon: Icons.menu_book_rounded,
-              primaryColor: primaryColor,
-            ),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                itemCount: subjects.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 6),
-                itemBuilder: (_, i) {
-                  final subject = subjects[i];
-                  final name = subject['name'] ?? 'Mata Pelajaran';
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => Navigator.pop(ctx, subject),
-                      borderRadius: const BorderRadius.all(Radius.circular(12)),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.04),
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(12),
-                          ),
-                          border: Border.all(
-                            color: primaryColor.withValues(alpha: 0.12),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: primaryColor.withValues(alpha: 0.1),
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(10),
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.menu_book_rounded,
-                                size: 18,
-                                color: primaryColor,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                name,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: ColorUtils.slate800,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Icons.chevron_right_rounded,
-                              size: 20,
-                              color: primaryColor.withValues(alpha: 0.7),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(ctx).padding.bottom + 8),
-          ],
-        ),
-      ),
-    );
   }
 }

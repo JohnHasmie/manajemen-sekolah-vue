@@ -25,6 +25,12 @@ mixin SubChapterTabContentMixin on ConsumerState<SubBabDetailPage> {
   /// Callback when AI result is tapped - must be implemented by consumer.
   void onAiResultTap();
 
+  /// Callback when a per-card pencil is tapped — opens the section
+  /// editor sheet. Optional: only wired by `SubBabDetailPage`.
+  void onEditSection(String fieldKey, String fieldLabel, String currentValue) {
+    // Default no-op; the screen overrides this to open the editor.
+  }
+
   /// Builds the material tab content.
   Widget buildMaterialTab(
     bool isRegeneratingMateri,
@@ -42,6 +48,7 @@ mixin SubChapterTabContentMixin on ConsumerState<SubBabDetailPage> {
       primaryColor: getPrimaryColor(),
       stripHtml: stripHtml,
       onRegenerateTap: onAiResultTap,
+      onEditSection: onEditSection,
     );
   }
 

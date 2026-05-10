@@ -88,25 +88,47 @@ mixin SessionActionButtonsMixin on State<TeacherScheduleTableView> {
     bool isNext,
     Color primary,
   ) {
+    final cobalt = ColorUtils.brandCobalt;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Flexible(
+        Expanded(
           child: Text(
             subjectName,
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: isPast ? ColorUtils.slate500 : ColorUtils.slate800,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w800,
+              color: isPast ? ColorUtils.slate500 : ColorUtils.slate900,
+              letterSpacing: -0.2,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(width: 8),
-        _buildClassBadge(className, isPast, isCurrent, isNext, primary),
+        _buildClassPill(className, isPast, cobalt),
       ],
+    );
+  }
+
+  Widget _buildClassPill(String className, bool isPast, Color cobalt) {
+    final color = isPast ? ColorUtils.slate500 : cobalt;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        className,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: color,
+          height: 1.0,
+        ),
+      ),
     );
   }
 
@@ -129,34 +151,6 @@ mixin SessionActionButtonsMixin on State<TeacherScheduleTableView> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildClassBadge(
-    String className,
-    bool isPast,
-    bool isCurrent,
-    bool isNext,
-    Color primary,
-  ) {
-    return Container(
-      padding: isCurrent || isNext
-          ? const EdgeInsets.symmetric(horizontal: 6, vertical: 2)
-          : EdgeInsets.zero,
-      decoration: isCurrent || isNext
-          ? BoxDecoration(
-              color: primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
-            )
-          : null,
-      child: Text(
-        '${(this as dynamic).tr({'en': 'Class', 'id': 'Kelas'}) as String}: $className',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: isPast ? ColorUtils.slate400 : primary,
-        ),
-      ),
     );
   }
 
@@ -187,16 +181,29 @@ mixin SessionActionButtonsMixin on State<TeacherScheduleTableView> {
     Map<String, dynamic> schedule,
     String dayName,
   ) {
-    return _buildMiniButton(
-      label: (this as dynamic).tr({'en': 'Atten', 'id': 'Presensi'}) as String,
-      isFilled: attFilled,
-      isPast: isPast,
-      primary: primary,
+    final summary =
+        (this as dynamic).getSummary(schedule, dayName)
+            as Map<String, dynamic>?;
+    final att = summary?['attendance'];
+    String label =
+        (this as dynamic).tr({'en': 'Atten', 'id': 'Presensi'}) as String;
+    if (attFilled && att is Map && att['filled'] == true) {
+      final hadir = (att['hadir'] is num) ? (att['hadir'] as num).toInt() : 0;
+      final total = (att['total'] is num) ? (att['total'] as num).toInt() : 0;
+      if (total > 0) label = '$hadir/$total';
+    }
+
+    return _buildMiniPill(
+      label: label,
+      icon: Icons.fact_check_rounded,
+      kind: attFilled
+          ? _MiniKind.filled
+          : (isPast ? _MiniKind.muted : _MiniKind.cobalt),
       onTap: () => (this as dynamic).openAttendance(
         context,
         schedule,
         attFilled,
-        (this as dynamic).getSummary(schedule, dayName),
+        summary,
       ),
     );
   }
@@ -207,11 +214,12 @@ mixin SessionActionButtonsMixin on State<TeacherScheduleTableView> {
     Color primary,
     Map<String, dynamic> schedule,
   ) {
-    return _buildMiniButton(
+    return _buildMiniPill(
       label: (this as dynamic).tr({'en': 'Mat', 'id': 'Materi'}) as String,
-      isFilled: matFilled,
-      isPast: isPast,
-      primary: primary,
+      icon: Icons.library_books_rounded,
+      kind: matFilled
+          ? _MiniKind.filled
+          : (isPast ? _MiniKind.muted : _MiniKind.outline),
       onTap: () => (this as dynamic).openMaterial(context, schedule),
     );
   }
@@ -222,51 +230,68 @@ mixin SessionActionButtonsMixin on State<TeacherScheduleTableView> {
     Color primary,
     Map<String, dynamic> schedule,
   ) {
-    return _buildMiniButton(
+    return _buildMiniPill(
       label: (this as dynamic).tr({'en': 'Act', 'id': 'Kegiatan'}) as String,
-      isFilled: actFilled,
-      isPast: isPast,
-      primary: primary,
+      icon: Icons.assignment_rounded,
+      kind: actFilled
+          ? _MiniKind.warn
+          : (isPast ? _MiniKind.muted : _MiniKind.outline),
       onTap: () => (this as dynamic).openClassActivity(context, schedule),
     );
   }
 
-  Widget _buildMiniButton({
+  Widget _buildMiniPill({
     required String label,
-    required bool isFilled,
-    required bool isPast,
-    required Color primary,
+    required IconData icon,
+    required _MiniKind kind,
     required VoidCallback onTap,
   }) {
-    final color = isFilled ? primary : Colors.transparent;
-    final borderColor = isFilled
-        ? color
-        : (isPast ? ColorUtils.slate200 : ColorUtils.slate200);
-    final textColor = isFilled
-        ? Colors.white
-        : (isPast ? ColorUtils.slate400 : primary);
+    final (bg, fg) = switch (kind) {
+      _MiniKind.outline => (ColorUtils.slate100, ColorUtils.slate500),
+      _MiniKind.muted => (ColorUtils.slate100, ColorUtils.slate400),
+      _MiniKind.cobalt => (
+        ColorUtils.brandCobalt.withValues(alpha: 0.10),
+        ColorUtils.brandCobalt,
+      ),
+      _MiniKind.filled => (
+        ColorUtils.success600.withValues(alpha: 0.10),
+        ColorUtils.success600,
+      ),
+      _MiniKind.warn => (
+        ColorUtils.warning600.withValues(alpha: 0.10),
+        ColorUtils.warning600,
+      ),
+    };
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        constraints: const BoxConstraints(minWidth: 60),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: borderColor, width: 1),
+          color: bg,
+          borderRadius: BorderRadius.circular(999),
         ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 10, color: fg),
+            const SizedBox(width: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.w800,
+                color: fg,
+                letterSpacing: 0.3,
+                height: 1.0,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
+enum _MiniKind { outline, muted, cobalt, filled, warn }

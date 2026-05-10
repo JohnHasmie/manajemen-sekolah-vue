@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/widgets/mixins/summary_bar_mixin.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/widgets/mixins/progress_bar_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/mixins/search_bar_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/mixins/student_list_mixin.dart';
 
@@ -24,7 +22,7 @@ class ReportCardStudentList extends StatefulWidget {
 }
 
 class _ReportCardStudentListState extends State<ReportCardStudentList>
-    with SummaryBarMixin, ProgressBarMixin, SearchBarMixin, StudentListMixin {
+    with SearchBarMixin, StudentListMixin {
   String _searchQuery = '';
 
   @override
@@ -85,14 +83,13 @@ class _ReportCardStudentListState extends State<ReportCardStudentList>
     final notFilled = total - filled;
     final filtered = _filteredStudents;
 
-    return Column(
-      children: [
-        buildSummaryBar(total, filled, drafts, notFilled),
-        buildProgressBar(total, filled),
-        buildSearchBar(),
-        buildStudentList(filtered),
-      ],
-    );
+    // Note: SummaryBar + ProgressBar were dropped in the Raport T.2
+    // redesign — the 4-cell KPI overlap strip in the brand header
+    // already surfaces Siswa / Terbit / Draft / Rerata, so the
+    // duplicated bars below were just visual noise.
+    // ignore: unused_local_variable
+    final _ = (total, filled, drafts, notFilled);
+    return Column(children: [buildSearchBar(), buildStudentList(filtered)]);
   }
 
   /// Build the empty state widget.

@@ -84,50 +84,13 @@ class AttendanceInputForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (embedded) {
-      final dateStr = DateFormat('EEE, dd MMM', 'id_ID').format(selectedDate);
-
-      return Container(
-        margin: const EdgeInsets.fromLTRB(12, 6, 12, 2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: primaryColor.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: primaryColor.withValues(alpha: 0.15)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.menu_book_rounded, size: 14, color: primaryColor),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                '${initialSubjectName ?? '-'} · ${initialClassName ?? '-'} · Jam ke-${initialLessonHourNumber ?? '-'}',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: ColorUtils.slate700,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.calendar_today_rounded,
-              size: 11,
-              color: ColorUtils.slate400,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              dateStr,
-              style: TextStyle(
-                fontSize: 11,
-                color: ColorUtils.slate500,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      );
+      // Embedded mode no longer renders a context bar inline — the
+      // session identity (subject · class · jam ke + date) now lives
+      // in the BrandPageHeader's bottomSlot context strip, mirroring
+      // the detail screen pattern. Returning a zero-size widget here
+      // keeps the existing layout chain intact without painting
+      // anything redundant above the toolbar.
+      return const SizedBox.shrink();
     }
 
     return Container(

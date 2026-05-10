@@ -45,17 +45,20 @@ mixin MaterialNavigationMixin on ConsumerState<TeacherMaterialScreen> {
 
   // ── Navigation ──
 
-  /// Navigate to sub-chapter detail screen in bottom sheet.
+  /// Push the sub-chapter detail as a full Material page route.
+  ///
+  /// Was a 92% AppDraggableSheet — switched to a full screen so the
+  /// BrandPageHeader gets its full SafeArea (no clock / battery
+  /// overlap), system-back / ESC behave predictably, and the tabbed
+  /// content (Materi / Soal / Referensi) doesn't fight the sheet's
+  /// inner scroll controller.
   void navigateToSubChapterDetail(
     Map<String, dynamic> subChapter,
     Map<String, dynamic> bab,
   ) {
-    AppDraggableSheet.show<void>(
-      context: context,
-      initialSize: 0.92,
-      builder: (_, _) => ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        child: SubBabDetailPage(
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => SubBabDetailPage(
           teacherId: teacherProfileId ?? Teacher.fromJson(widget.teacher).id,
           subjectId: selectedSubject ?? '',
           classId: selectedClassId,
@@ -80,25 +83,31 @@ mixin MaterialNavigationMixin on ConsumerState<TeacherMaterialScreen> {
     );
   }
 
-  /// Open chapter sheet for embedded view.
+  /// Push the chapter content view as a full Material page route
+  /// (Frame B of the Materi mockup).
+  ///
+  /// Was an `AppDraggableSheet` with `embedded: true` which rendered
+  /// the legacy timeline view. Replaced with a full screen so the
+  /// teacher sees the full brand chrome — BrandPageHeader, 4-cell
+  /// KPI strip (Bab / Sub-Bab / Tercatat / AI Siap), search row,
+  /// expandable cobalt chapter cards, and the violet "Generate AI"
+  /// FAB. The screen auto-resolves `selectedSubject` /
+  /// `selectedClassId` from the initial props on init via
+  /// `material_data_load_mixin`.
   void openChapterSheet(
     String classId,
     String cn,
     String subjectId,
     String sn,
   ) {
-    AppDraggableSheet.show<void>(
-      context: context,
-      initialSize: 0.9,
-      builder: (_, _) => ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: TeacherMaterialScreen(
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => TeacherMaterialScreen(
           teacher: widget.teacher,
           initialClassId: classId,
           initialClassName: cn,
           initialSubjectId: subjectId,
           initialSubjectName: sn,
-          embedded: true,
         ),
       ),
     );

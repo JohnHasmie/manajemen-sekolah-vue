@@ -23,20 +23,16 @@ class AttendanceInputMode extends ConsumerStatefulWidget {
   final void Function(String studentId, String status) onStatusChanged;
   final VoidCallback onSubmit;
   final ScrollController? scrollController;
-  final bool compactMode;
 
   /// Optional widget rendered between the toolbar and the student list.
   /// Used by the embedded sheet (Frame A) for the "Daftar Siswa · N
   /// siswa" section head — pass null for the standalone screen.
   final Widget? sectionHead;
 
-  /// Frame A bulk-row "Semua Hadir" chip handler. When null the chip
-  /// is hidden inside the toolbar.
-  final VoidCallback? onMarkAllHadir;
-
-  /// Frame A bulk-row "Sisanya Alpa" chip handler. Same nullability
-  /// semantics as [onMarkAllHadir].
-  final VoidCallback? onFillRemainingAlpa;
+  // Density toggle removed — the screen ships only the compact
+  // single-row layout, so the prop is gone.
+  // Frame A bulk-row chips were removed — both bulk actions live in
+  // the Aksi cepat sheet now.
 
   const AttendanceInputMode({
     super.key,
@@ -53,10 +49,7 @@ class AttendanceInputMode extends ConsumerStatefulWidget {
     required this.onStatusChanged,
     required this.onSubmit,
     this.scrollController,
-    this.compactMode = false,
     this.sectionHead,
-    this.onMarkAllHadir,
-    this.onFillRemainingAlpa,
   });
 
   @override
@@ -180,7 +173,6 @@ class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode>
             languageProvider: lang,
             onStatusChanged: widget.onStatusChanged,
             index: index,
-            compactMode: widget.compactMode,
           );
         },
       ),
@@ -220,7 +212,6 @@ class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode>
           languageProvider: lang,
           onStatusChanged: widget.onStatusChanged,
           index: index,
-          compactMode: widget.compactMode,
         );
       },
     );
@@ -375,9 +366,6 @@ class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode>
   @override
   TextEditingController get toolbarSearchController => widget.searchController;
 
-  @override
-  VoidCallback? get onToolbarMarkAllHadir => widget.onMarkAllHadir;
-
-  @override
-  VoidCallback? get onToolbarFillRemainingAlpa => widget.onFillRemainingAlpa;
+  // onToolbarMarkAllHadir / onToolbarFillRemainingAlpa overrides
+  // were retired alongside the bulk-row chips in the toolbar mixin.
 }

@@ -65,7 +65,11 @@ class DashboardStateTransformer {
           : {}
       ..['unread_notifications'] = toInt(data['unread_notifications'])
       ..['unread_announcements'] = toInt(data['unread_announcements'])
-      ..['unread_class_activities'] = toInt(data['unread_class_activities']);
+      ..['unread_class_activities'] = toInt(data['unread_class_activities'])
+      // Per-slice KPI carousel data — fed straight to `_GuruSlice.fromJson`
+      // in teacher_dashboard_body.dart. Same convention as the parent
+      // transformer: pass the raw List through without re-typing here.
+      ..['slices'] = data['slices'] is List ? data['slices'] : const [];
   }
 
   static void _applyAdminStats(

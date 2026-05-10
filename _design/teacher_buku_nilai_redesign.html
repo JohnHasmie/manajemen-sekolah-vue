@@ -1,0 +1,1349 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · Buku Nilai Redesign · Mockup</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --green-50: #DCFCE7;
+    --green-100: #BBF7D0;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-100: #FECACA;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+    --violet-700: #6D28D9;
+    --indigo-50: #E0E7FF;
+    --indigo-600: #4338CA;
+    --emerald-50: #D1FAE5;
+    --emerald-600: #047857;
+    --rose-50: #FFE4E6;
+    --rose-600: #E11D48;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 24px;
+    max-width: 920px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 760;
+    position: relative;
+    overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+
+  /* ───── Brand header (cobalt teacher gradient) ───── */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    padding: 12px 16px 28px;
+    color: white;
+    flex: 0 0 auto;
+    position: relative;
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto;
+  }
+  .h-icon svg, .h-back svg { width: 16px; height: 16px; stroke-width: 2.2; fill: none; stroke: currentColor; }
+  .h-title-block { flex: 1; min-width: 0; text-align: center; }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.72);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .h-title-row { display: flex; align-items: center; gap: 8px; justify-content: center; }
+  .h-dot {
+    width: 8px; height: 8px;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34,197,94,.6);
+    flex: 0 0 auto;
+  }
+  .h-title { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+  .h-actions { display: flex; gap: 4px; flex: 0 0 auto; }
+
+  /* Filter chip strip below header */
+  .h-chips {
+    display: flex; gap: 6px; margin-top: 12px;
+    overflow-x: auto;
+  }
+  .h-chip {
+    padding: 6px 10px;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.24);
+    border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+    color: white;
+    display: flex; align-items: center; gap: 4px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .h-chip.has-value {
+    background: rgba(255,255,255,.30);
+    border-color: rgba(255,255,255,.40);
+  }
+  .h-chip svg { width: 11px; height: 11px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .h-chip .label-tag { font-weight: 800; opacity: .75; font-size: 9.5px; letter-spacing: .5px; text-transform: uppercase; }
+  .h-chip .v { font-weight: 800; }
+
+  /* ───── KPI overlap card ───── */
+  .kpi {
+    background: white; border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    margin: -22px 16px 0;
+    padding: 14px 6px;
+    display: flex; align-items: center;
+    box-shadow: 0 6px 16px rgba(15,23,42,.06);
+    z-index: 1;
+  }
+  .kpi-cell {
+    flex: 1; text-align: center;
+  }
+  .kpi-cell .v {
+    font-size: 22px; font-weight: 900;
+    line-height: 1; letter-spacing: -0.5px;
+  }
+  .kpi-cell .l {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: .5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .kpi-cell.green .v { color: var(--green-600); }
+  .kpi-cell.blue .v { color: var(--blue-600); }
+  .kpi-cell.amber .v { color: var(--amber-600); }
+  .kpi-cell.violet .v { color: var(--violet-600); }
+  .kpi-cell.cobalt .v { color: var(--brand-cobalt); }
+  .kpi-cell.red .v { color: var(--red-600); }
+  .kpi-divider { width: 1px; height: 28px; background: var(--slate-100); }
+
+  /* ───── Body scroll ───── */
+  .body {
+    flex: 1; min-height: 0;
+    overflow-y: auto;
+    padding: 12px 16px 90px;
+  }
+
+  /* ───── Section heading ───── */
+  .sect-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin: 16px 0 8px;
+  }
+  .sect-head .t {
+    font-size: 13px; font-weight: 800; color: var(--slate-900);
+  }
+  .sect-head .x {
+    font-size: 10.5px; font-weight: 700; color: var(--slate-500);
+  }
+
+  /* ───── Class+subject card (Frame A) ───── */
+  .cs-card {
+    background: white; border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    display: flex; flex-direction: column; gap: 10px;
+    box-shadow: 0 2px 6px rgba(15,23,42,.04);
+  }
+  .cs-head {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .cs-icon {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    background: rgba(27,111,184,.10);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .cs-icon svg { width: 18px; height: 18px; stroke-width: 2.2; fill: none; stroke: currentColor; }
+  .cs-title { flex: 1; min-width: 0; }
+  .cs-cls {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  .cs-mapel {
+    font-size: 14px; font-weight: 800; color: var(--slate-900);
+    letter-spacing: -0.2px; margin-top: 1px;
+  }
+  .cs-avg {
+    text-align: right; flex: 0 0 auto;
+  }
+  .cs-avg .num { font-size: 20px; font-weight: 900; color: var(--brand-cobalt); line-height: 1; }
+  .cs-avg .lbl { font-size: 9px; font-weight: 800; color: var(--slate-400); letter-spacing: .5px; text-transform: uppercase; margin-top: 2px; }
+
+  .cs-meta { display: flex; gap: 8px; }
+  .cs-meta-cell {
+    flex: 1; text-align: center;
+    background: var(--slate-50);
+    border-radius: 9px;
+    padding: 8px 6px;
+  }
+  .cs-meta-cell .v { font-size: 13px; font-weight: 800; color: var(--slate-900); }
+  .cs-meta-cell .l { font-size: 8.5px; font-weight: 800; color: var(--slate-500); letter-spacing: .4px; text-transform: uppercase; margin-top: 2px; }
+
+  .cs-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 8px; border-top: 1px dashed var(--slate-200);
+  }
+  .cs-foot .pills { display: flex; gap: 4px; flex-wrap: wrap; }
+  .cs-pill {
+    padding: 3px 7px; border-radius: 999px;
+    background: var(--slate-100);
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-700);
+    letter-spacing: .3px;
+  }
+  .cs-pill.uh { background: var(--blue-50); color: var(--blue-600); }
+  .cs-pill.tg { background: var(--violet-50); color: var(--violet-600); }
+  .cs-pill.uts { background: var(--amber-50); color: var(--amber-600); }
+  .cs-pill.uas { background: var(--rose-50); color: var(--rose-600); }
+  .cs-foot .cta {
+    font-size: 11px; font-weight: 700; color: var(--brand-cobalt);
+    display: flex; align-items: center; gap: 3px;
+  }
+  .cs-foot .cta svg { width: 12px; height: 12px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+
+  /* Progress strip */
+  .cs-progress {
+    display: flex; gap: 4px; padding-top: 4px;
+  }
+  .cs-progress-bar {
+    flex: 1; height: 4px; border-radius: 999px;
+    background: var(--slate-200);
+    overflow: hidden;
+  }
+  .cs-progress-bar .fill {
+    height: 100%;
+    background: var(--green-600);
+    border-radius: 999px;
+  }
+  .cs-progress-bar.partial .fill { background: var(--amber-600); }
+  .cs-progress-bar.empty .fill { background: var(--red-600); width: 8% !important; }
+
+  /* ───── Score grid (Frame C/D) ───── */
+  .grid-head {
+    background: var(--slate-50);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid var(--slate-200);
+  }
+  .grid-head .l { display: flex; align-items: center; gap: 8px; }
+  .grid-head .l .icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: rgba(27,111,184,.10); color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .grid-head .l .icon svg { width: 14px; height: 14px; stroke-width: 2.2; fill: none; stroke: currentColor; }
+  .grid-head .l .t { font-size: 12px; font-weight: 800; color: var(--slate-900); }
+  .grid-head .l .s { font-size: 10px; color: var(--slate-500); margin-top: 1px; }
+  .grid-head .x { font-size: 10px; font-weight: 700; color: var(--slate-500); }
+
+  /* Type filter chips */
+  .type-chips {
+    display: flex; gap: 6px; margin-bottom: 10px;
+    overflow-x: auto;
+  }
+  .type-chip {
+    padding: 6px 10px; border-radius: 999px;
+    background: var(--slate-100);
+    border: 1px solid var(--slate-200);
+    font-size: 11px; font-weight: 700;
+    color: var(--slate-700);
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .type-chip.on {
+    background: var(--brand-cobalt);
+    border-color: var(--brand-cobalt);
+    color: white;
+  }
+  .type-chip .ct {
+    font-size: 9.5px; font-weight: 900;
+    background: rgba(255,255,255,.25);
+    padding: 1px 5px; border-radius: 999px;
+  }
+  .type-chip:not(.on) .ct {
+    background: var(--slate-200);
+    color: var(--slate-700);
+  }
+
+  /* Student card view */
+  .stu-card {
+    background: white; border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .stu-head {
+    padding: 10px 12px; display: flex; align-items: center; gap: 10px;
+  }
+  .stu-avatar {
+    width: 32px; height: 32px; border-radius: 999px;
+    background: var(--slate-100); color: var(--slate-700);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800;
+    flex: 0 0 auto;
+  }
+  .stu-name { flex: 1; min-width: 0; }
+  .stu-name .n { font-size: 12.5px; font-weight: 800; color: var(--slate-900); }
+  .stu-name .nis { font-size: 10px; color: var(--slate-500); }
+  .stu-overall {
+    text-align: right;
+    flex: 0 0 auto;
+  }
+  .stu-overall .num {
+    font-size: 16px; font-weight: 900;
+    color: var(--green-700);
+    line-height: 1;
+  }
+  .stu-overall .lbl {
+    font-size: 8.5px; font-weight: 800;
+    color: var(--slate-400); letter-spacing: .4px;
+    text-transform: uppercase; margin-top: 1px;
+  }
+
+  .stu-scores {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--slate-100);
+    padding: 1px;
+  }
+  .score-cell {
+    background: white;
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .score-cell .l {
+    font-size: 8.5px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: .4px;
+    text-transform: uppercase;
+  }
+  .score-cell .v {
+    font-size: 14px; font-weight: 800; color: var(--slate-900);
+    margin-top: 2px;
+  }
+  .score-cell.empty .v { color: var(--slate-300); font-weight: 500; }
+  .score-cell.green .v { color: var(--green-700); }
+  .score-cell.amber .v { color: var(--amber-700); }
+  .score-cell.red .v { color: var(--red-700); }
+
+  /* Frozen-column table */
+  .table-wrap {
+    background: white; border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .table-row {
+    display: grid;
+    grid-template-columns: 100px 32px 32px 32px 32px 38px 16px;
+    align-items: center;
+  }
+  .table-row.head {
+    background: var(--brand-cobalt);
+    color: white;
+    font-size: 9.5px; font-weight: 800;
+    letter-spacing: .4px; text-transform: uppercase;
+  }
+  .table-row.head > div {
+    padding: 9px 4px; text-align: center;
+  }
+  .table-row.head > div:first-child {
+    text-align: left; padding-left: 10px;
+  }
+  .table-row > div { padding: 8px 2px; text-align: center; font-size: 11px; }
+  .table-row > div:first-child {
+    text-align: left; padding-left: 10px;
+    font-weight: 700; color: var(--slate-900); font-size: 11px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .table-row + .table-row { border-top: 1px solid var(--slate-100); }
+  .table-row .green { color: var(--green-700); font-weight: 800; }
+  .table-row .amber { color: var(--amber-700); font-weight: 800; }
+  .table-row .red { color: var(--red-700); font-weight: 800; }
+  .table-row .em { color: var(--slate-300); }
+  .table-row .avg { font-weight: 900; }
+
+  /* ───── Sheet (overlay) ───── */
+  .sheet {
+    background: white;
+    border-radius: 22px 22px 0 0;
+    overflow: hidden;
+  }
+  .sheet-head {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    padding: 8px 14px 14px;
+    color: white;
+  }
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: rgba(255,255,255,.45); border-radius: 999px;
+    margin: 0 auto 10px;
+  }
+  .sheet-h-row { display: flex; align-items: center; gap: 8px; }
+  .sheet-h-back, .sheet-h-close {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    background: rgba(255,255,255,.20);
+    border: 1px solid rgba(255,255,255,.30);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto;
+  }
+  .sheet-h-back svg, .sheet-h-close svg { width: 14px; height: 14px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .sheet-h-title { flex: 1; text-align: center; }
+  .sheet-h-title .k {
+    font-size: 9px; font-weight: 800;
+    color: rgba(255,255,255,.78);
+    letter-spacing: 1.2px; text-transform: uppercase;
+  }
+  .sheet-h-title .t {
+    font-size: 14.5px; font-weight: 800; letter-spacing: -.2px;
+    margin-top: 1px;
+  }
+
+  .sheet-body { padding: 14px 16px 18px; }
+  .sheet-foot {
+    padding: 10px 14px 14px;
+    border-top: 1px solid var(--slate-100);
+    background: white;
+    display: flex; gap: 8px;
+  }
+  .btn-secondary {
+    flex: 1;
+    padding: 10px; border-radius: 11px;
+    background: white; border: 1px solid var(--slate-200);
+    color: var(--slate-700); font-size: 12px; font-weight: 800;
+    text-align: center;
+  }
+  .btn-primary {
+    flex: 2;
+    padding: 10px; border-radius: 11px;
+    background: var(--brand-cobalt); color: white;
+    font-size: 12px; font-weight: 800;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(27,111,184,.28);
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .btn-primary svg { width: 13px; height: 13px; stroke-width: 2.6; fill: none; stroke: currentColor; }
+  .btn-primary.disabled { background: var(--slate-200); color: var(--slate-400); box-shadow: none; }
+  .btn-primary.danger { background: var(--red-600); box-shadow: 0 4px 10px rgba(220,38,38,.28); }
+  .btn-violet { background: var(--violet-600); box-shadow: 0 4px 10px rgba(124,58,237,.28); }
+
+  /* Form fields inside sheets */
+  .field-label {
+    font-size: 10px; font-weight: 800; color: var(--slate-700);
+    letter-spacing: .5px; text-transform: uppercase;
+    margin: 12px 0 6px;
+  }
+  .field-input {
+    background: white; border: 1px solid var(--slate-200);
+    border-radius: 11px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--slate-900);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .field-input.placeholder { color: var(--slate-400); }
+  .field-input.large {
+    font-size: 36px; font-weight: 900;
+    text-align: center; justify-content: center;
+    padding: 14px 12px;
+    color: var(--brand-cobalt);
+    letter-spacing: -1px;
+  }
+  .field-input .of {
+    font-size: 18px; font-weight: 700; color: var(--slate-400);
+  }
+
+  .chip-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .chip {
+    padding: 6px 10px; border-radius: 999px;
+    background: white; border: 1px solid var(--slate-200);
+    font-size: 11px; font-weight: 700; color: var(--slate-700);
+  }
+  .chip.on {
+    background: var(--brand-cobalt); border-color: var(--brand-cobalt);
+    color: white;
+  }
+  .chip.violet.on { background: var(--violet-600); border-color: var(--violet-600); }
+  .chip.green.on { background: var(--green-600); border-color: var(--green-600); }
+
+  /* Score editor preview */
+  .score-preview {
+    background: var(--slate-50); border-radius: 12px;
+    padding: 14px; margin-top: 14px;
+    display: flex; gap: 12px; align-items: center;
+  }
+  .score-preview .ring {
+    width: 56px; height: 56px; border-radius: 999px;
+    border: 5px solid var(--green-600);
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900; color: var(--green-700);
+    flex: 0 0 auto;
+  }
+  .score-preview .info { flex: 1; min-width: 0; }
+  .score-preview .info .n { font-size: 12px; font-weight: 800; color: var(--slate-900); }
+  .score-preview .info .l { font-size: 10.5px; color: var(--slate-500); margin-top: 2px; }
+
+  /* Empty state */
+  .empty {
+    text-align: center; padding: 40px 16px;
+    color: var(--slate-500);
+  }
+  .empty .icn {
+    width: 48px; height: 48px; border-radius: 14px;
+    background: var(--slate-100);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+    color: var(--slate-400);
+  }
+  .empty .icn svg { width: 24px; height: 24px; stroke-width: 2.2; fill: none; stroke: currentColor; }
+  .empty .t { font-size: 13px; font-weight: 800; color: var(--slate-700); margin-bottom: 4px; }
+  .empty .s { font-size: 11.5px; color: var(--slate-500); }
+
+  /* Dim overlay (for sheet frames) */
+  .dim {
+    position: absolute; inset: 0;
+    background: rgba(15,23,42,.45);
+    z-index: 0;
+  }
+  .sheet-overlay {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    max-height: 92%;
+    display: flex; flex-direction: column;
+  }
+
+  /* Tab bar */
+  .tab {
+    background: white;
+    border-top: 1px solid var(--slate-200);
+    padding: 6px 0 8px;
+    display: flex; align-items: center;
+    flex: 0 0 auto;
+  }
+  .tab-cell { flex: 1; text-align: center; }
+  .tab-cell svg { width: 18px; height: 18px; stroke-width: 2.2; fill: none; stroke: currentColor; color: var(--slate-400); }
+  .tab-cell.on svg { color: var(--brand-cobalt); }
+  .tab-cell .l { font-size: 9.5px; font-weight: 700; color: var(--slate-500); margin-top: 2px; }
+  .tab-cell.on .l { color: var(--brand-cobalt); }
+
+  /* FAB */
+  .fab {
+    position: absolute;
+    bottom: 70px; right: 16px;
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: var(--brand-cobalt);
+    box-shadow: 0 6px 14px rgba(27,111,184,.45);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    z-index: 1;
+  }
+  .fab svg { width: 22px; height: 22px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+
+  /* Notes block in score editor */
+  .note-block {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 11px;
+    padding: 10px 12px;
+    min-height: 60px;
+    font-size: 11.5px;
+    color: var(--slate-700);
+    line-height: 1.5;
+  }
+
+  .desc-list { font-size: 13px; color: var(--slate-700); line-height: 1.65; max-width: 780px; margin: 6px 0 32px; }
+  .desc-list li { margin-bottom: 6px; }
+  .desc-list code { background: var(--slate-100); padding: 1px 6px; border-radius: 5px; font-size: 12px; color: var(--brand-dark); font-family: monospace; }
+</style>
+</head>
+<body>
+
+<h1>Buku Nilai · Teacher Redesign</h1>
+<p class="subtitle">
+  Deep redesign of the teacher Buku Nilai (Grade Input) feature, mirroring
+  the same patterns already shipped for Presensi, Kegiatan Kelas, Rekap
+  Nilai, and RPP. Cobalt teacher chrome (<code>BrandPageHeader</code> +
+  KPI overlap), <code>FilterChipGrid</code> selectors everywhere,
+  full-width sheets at 96% viewport for editing, and a clean per-cell
+  score editor with grade-type chips + note. Six frames cover list,
+  grid, and editor flows.
+</p>
+
+<ul class="desc-list">
+  <li><b>Frame A · Overview</b> — class+subject cards with assessment-type chip pills + per-card progress strip + cobalt KPI strip.</li>
+  <li><b>Frame B · Score grid (card view)</b> — student cards with 4-cell mini scoreboard, tappable per cell.</li>
+  <li><b>Frame C · Score grid (table view)</b> — frozen-column table, color-coded scores, stacked sticky header.</li>
+  <li><b>Frame D · Per-cell score editor sheet</b> — big number input, grade-type chips, note field, violet ✦ "Salin dari rerata" suggestion.</li>
+  <li><b>Frame E · Add assessment header sheet</b> — assessment name + type chips + date + max score, all chip-driven.</li>
+  <li><b>Frame F · Filter sheet</b> — kelas + mapel + grade-type filter chips, follows the RPP filter sheet shape.</li>
+</ul>
+
+<div class="grid">
+
+  <!-- ═════════════ FRAME A · Overview ═════════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">A</span> Overview · class+subject cards <span class="desc">replaces flat table list</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back">
+            <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+          </div>
+          <div class="h-title-block">
+            <div class="h-kicker">Akademik · Buku Nilai</div>
+            <div class="h-title-row">
+              <div class="h-dot"></div>
+              <div class="h-title">Nilai Siswa</div>
+            </div>
+          </div>
+          <div class="h-actions">
+            <div class="h-icon">
+              <svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="h-chips">
+          <div class="h-chip has-value"><span class="label-tag">Mengajar</span></div>
+          <div class="h-chip"><span class="label-tag">Kelas</span></div>
+          <div class="h-chip"><span class="label-tag">Mapel</span></div>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-cell green"><div class="v">5/6</div><div class="l">Lengkap</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">23</div><div class="l">Belum diisi</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">82.4</div><div class="l">Rerata</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell red"><div class="v">4</div><div class="l">Di bawah</div></div>
+      </div>
+
+      <div class="body">
+        <div class="sect-head">
+          <div class="t">Mengajar 6 kelas · 3 mapel</div>
+          <div class="x">Pekan 14</div>
+        </div>
+
+        <!-- Class+subject card 1 -->
+        <div class="cs-card">
+          <div class="cs-head">
+            <div class="cs-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 19V5l8-2 8 2v14"/><path d="M4 19h16"/><path d="M9 14h6"/></svg>
+            </div>
+            <div class="cs-title">
+              <div class="cs-cls">Kelas 7A</div>
+              <div class="cs-mapel">Bahasa Arab</div>
+            </div>
+            <div class="cs-avg">
+              <div class="num">84</div>
+              <div class="lbl">Avg</div>
+            </div>
+          </div>
+          <div class="cs-meta">
+            <div class="cs-meta-cell"><div class="v">28</div><div class="l">Siswa</div></div>
+            <div class="cs-meta-cell"><div class="v">12</div><div class="l">Asesmen</div></div>
+            <div class="cs-meta-cell"><div class="v">336</div><div class="l">Nilai</div></div>
+          </div>
+          <div class="cs-foot">
+            <div class="pills">
+              <div class="cs-pill uh">UH ×4</div>
+              <div class="cs-pill tg">TG ×3</div>
+              <div class="cs-pill uts">UTS ×1</div>
+              <div class="cs-pill uas">UAS ×1</div>
+            </div>
+            <div class="cta">Buka
+              <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+          </div>
+          <div class="cs-progress">
+            <div class="cs-progress-bar"><div class="fill" style="width:100%"></div></div>
+            <div class="cs-progress-bar"><div class="fill" style="width:100%"></div></div>
+            <div class="cs-progress-bar"><div class="fill" style="width:100%"></div></div>
+            <div class="cs-progress-bar partial"><div class="fill" style="width:62%"></div></div>
+          </div>
+        </div>
+
+        <!-- Class+subject card 2 (partial) -->
+        <div class="cs-card">
+          <div class="cs-head">
+            <div class="cs-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 19V5l8-2 8 2v14"/><path d="M4 19h16"/><path d="M9 14h6"/></svg>
+            </div>
+            <div class="cs-title">
+              <div class="cs-cls">Kelas 7B</div>
+              <div class="cs-mapel">Bahasa Arab</div>
+            </div>
+            <div class="cs-avg">
+              <div class="num" style="color: var(--amber-600);">76</div>
+              <div class="lbl">Avg</div>
+            </div>
+          </div>
+          <div class="cs-meta">
+            <div class="cs-meta-cell"><div class="v">26</div><div class="l">Siswa</div></div>
+            <div class="cs-meta-cell"><div class="v">8</div><div class="l">Asesmen</div></div>
+            <div class="cs-meta-cell"><div class="v" style="color: var(--amber-700);">182</div><div class="l">Nilai</div></div>
+          </div>
+          <div class="cs-foot">
+            <div class="pills">
+              <div class="cs-pill uh">UH ×3</div>
+              <div class="cs-pill tg">TG ×2</div>
+              <div class="cs-pill uts">UTS ×1</div>
+            </div>
+            <div class="cta">Buka
+              <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+            </div>
+          </div>
+          <div class="cs-progress">
+            <div class="cs-progress-bar"><div class="fill" style="width:100%"></div></div>
+            <div class="cs-progress-bar partial"><div class="fill" style="width:78%"></div></div>
+            <div class="cs-progress-bar partial"><div class="fill" style="width:35%"></div></div>
+            <div class="cs-progress-bar empty"><div class="fill"></div></div>
+          </div>
+        </div>
+
+        <!-- Class+subject card 3 (empty drafts) -->
+        <div class="cs-card">
+          <div class="cs-head">
+            <div class="cs-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 19V5l8-2 8 2v14"/><path d="M4 19h16"/><path d="M9 14h6"/></svg>
+            </div>
+            <div class="cs-title">
+              <div class="cs-cls">Kelas 8A</div>
+              <div class="cs-mapel">Bahasa Arab</div>
+            </div>
+            <div class="cs-avg">
+              <div class="num" style="color: var(--slate-400);">—</div>
+              <div class="lbl">Belum</div>
+            </div>
+          </div>
+          <div class="cs-meta">
+            <div class="cs-meta-cell"><div class="v">30</div><div class="l">Siswa</div></div>
+            <div class="cs-meta-cell"><div class="v" style="color: var(--slate-400);">0</div><div class="l">Asesmen</div></div>
+            <div class="cs-meta-cell"><div class="v" style="color: var(--slate-400);">0</div><div class="l">Nilai</div></div>
+          </div>
+          <div class="cs-foot">
+            <div class="pills">
+              <div class="cs-pill" style="color: var(--slate-400);">Belum ada asesmen</div>
+            </div>
+            <div class="cta" style="color: var(--violet-600);">+ Mulai
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fab">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+
+      <div class="tab">
+        <div class="tab-cell"><svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg><div class="l">Beranda</div></div>
+        <div class="tab-cell"><svg viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5l6 3 6-3v-5"/></svg><div class="l">Mengajar</div></div>
+        <div class="tab-cell on"><svg viewBox="0 0 24 24"><path d="M3 4h18v4H3z"/><path d="M3 12h18v8H3z"/><path d="M9 8v12"/></svg><div class="l">Nilai</div></div>
+        <div class="tab-cell"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg><div class="l">Lainnya</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════ FRAME B · Score grid card view ═════════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">B</span> Score grid · card view <span class="desc">tap row to open card → tap cell to edit</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back">
+            <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+          </div>
+          <div class="h-title-block">
+            <div class="h-kicker">Buku Nilai · 7A · B. ARAB</div>
+            <div class="h-title-row">
+              <div class="h-dot"></div>
+              <div class="h-title">Hiwar Profesi</div>
+            </div>
+          </div>
+          <div class="h-actions">
+            <div class="h-icon">
+              <svg viewBox="0 0 24 24"><path d="M3 4h18v4H3z"/><path d="M3 12h18v8H3z"/><path d="M9 8v12"/></svg>
+            </div>
+            <div class="h-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="18" r="1"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-cell green"><div class="v">28</div><div class="l">Siswa</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell cobalt"><div class="v">9</div><div class="l">Asesmen</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">84</div><div class="l">Avg</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell red"><div class="v">3</div><div class="l">&lt;75</div></div>
+      </div>
+
+      <div class="body">
+        <div class="type-chips">
+          <div class="type-chip on">Semua <span class="ct">9</span></div>
+          <div class="type-chip">UH <span class="ct">4</span></div>
+          <div class="type-chip">TG <span class="ct">3</span></div>
+          <div class="type-chip">UTS <span class="ct">1</span></div>
+          <div class="type-chip">UAS <span class="ct">1</span></div>
+        </div>
+
+        <!-- Student card 1 -->
+        <div class="stu-card">
+          <div class="stu-head">
+            <div class="stu-avatar">AR</div>
+            <div class="stu-name">
+              <div class="n">Ahmad Rizki</div>
+              <div class="nis">NIS 24001</div>
+            </div>
+            <div class="stu-overall">
+              <div class="num">87</div>
+              <div class="lbl">Rerata</div>
+            </div>
+          </div>
+          <div class="stu-scores">
+            <div class="score-cell green"><div class="l">UH 1</div><div class="v">85</div></div>
+            <div class="score-cell green"><div class="l">UH 2</div><div class="v">90</div></div>
+            <div class="score-cell amber"><div class="l">TG 1</div><div class="v">78</div></div>
+            <div class="score-cell empty"><div class="l">UTS</div><div class="v">—</div></div>
+          </div>
+        </div>
+
+        <!-- Student card 2 -->
+        <div class="stu-card">
+          <div class="stu-head">
+            <div class="stu-avatar">BS</div>
+            <div class="stu-name">
+              <div class="n">Bilqis Salsabila</div>
+              <div class="nis">NIS 24002</div>
+            </div>
+            <div class="stu-overall">
+              <div class="num" style="color: var(--green-700);">92</div>
+              <div class="lbl">Rerata</div>
+            </div>
+          </div>
+          <div class="stu-scores">
+            <div class="score-cell green"><div class="l">UH 1</div><div class="v">95</div></div>
+            <div class="score-cell green"><div class="l">UH 2</div><div class="v">90</div></div>
+            <div class="score-cell green"><div class="l">TG 1</div><div class="v">88</div></div>
+            <div class="score-cell green"><div class="l">UTS</div><div class="v">95</div></div>
+          </div>
+        </div>
+
+        <!-- Student card 3 (warning) -->
+        <div class="stu-card">
+          <div class="stu-head">
+            <div class="stu-avatar" style="background: var(--red-50); color: var(--red-700);">DK</div>
+            <div class="stu-name">
+              <div class="n">Daffa Kurniawan</div>
+              <div class="nis">NIS 24003</div>
+            </div>
+            <div class="stu-overall">
+              <div class="num" style="color: var(--red-700);">68</div>
+              <div class="lbl">Rerata</div>
+            </div>
+          </div>
+          <div class="stu-scores">
+            <div class="score-cell red"><div class="l">UH 1</div><div class="v">62</div></div>
+            <div class="score-cell amber"><div class="l">UH 2</div><div class="v">75</div></div>
+            <div class="score-cell red"><div class="l">TG 1</div><div class="v">65</div></div>
+            <div class="score-cell red"><div class="l">UTS</div><div class="v">70</div></div>
+          </div>
+        </div>
+
+        <!-- Student card 4 (incomplete) -->
+        <div class="stu-card">
+          <div class="stu-head">
+            <div class="stu-avatar">EN</div>
+            <div class="stu-name">
+              <div class="n">Ekhwan Nugroho</div>
+              <div class="nis">NIS 24004</div>
+            </div>
+            <div class="stu-overall">
+              <div class="num" style="color: var(--slate-400);">—</div>
+              <div class="lbl">Belum</div>
+            </div>
+          </div>
+          <div class="stu-scores">
+            <div class="score-cell empty"><div class="l">UH 1</div><div class="v">—</div></div>
+            <div class="score-cell empty"><div class="l">UH 2</div><div class="v">—</div></div>
+            <div class="score-cell empty"><div class="l">TG 1</div><div class="v">—</div></div>
+            <div class="score-cell empty"><div class="l">UTS</div><div class="v">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fab" style="background: var(--violet-600); box-shadow: 0 6px 14px rgba(124,58,237,.45);">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════ FRAME C · Score grid table view ═════════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">C</span> Score grid · table view <span class="desc">frozen kelas/nama, scrollable assessments</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back">
+            <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+          </div>
+          <div class="h-title-block">
+            <div class="h-kicker">Buku Nilai · 7A · B. ARAB</div>
+            <div class="h-title-row">
+              <div class="h-dot"></div>
+              <div class="h-title">Hiwar Profesi</div>
+            </div>
+          </div>
+          <div class="h-actions">
+            <div class="h-icon" style="background: rgba(255,255,255,.32);">
+              <svg viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5l6 3 6-3v-5"/></svg>
+            </div>
+            <div class="h-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="18" r="1"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-cell green"><div class="v">28</div><div class="l">Siswa</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell cobalt"><div class="v">9</div><div class="l">Asesmen</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">84</div><div class="l">Avg</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell red"><div class="v">3</div><div class="l">&lt;75</div></div>
+      </div>
+
+      <div class="body">
+        <div class="type-chips">
+          <div class="type-chip on">UH <span class="ct">4</span></div>
+          <div class="type-chip">TG <span class="ct">3</span></div>
+          <div class="type-chip">UTS <span class="ct">1</span></div>
+          <div class="type-chip">UAS <span class="ct">1</span></div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-row head">
+            <div>Siswa</div>
+            <div>UH1</div>
+            <div>UH2</div>
+            <div>UH3</div>
+            <div>UH4</div>
+            <div>Avg</div>
+            <div></div>
+          </div>
+          <div class="table-row">
+            <div>Ahmad Rizki</div>
+            <div class="green">85</div>
+            <div class="green">90</div>
+            <div class="amber">78</div>
+            <div class="green">82</div>
+            <div class="avg green">84</div>
+            <div style="color: var(--slate-300);">›</div>
+          </div>
+          <div class="table-row">
+            <div>Bilqis Salsabila</div>
+            <div class="green">95</div>
+            <div class="green">90</div>
+            <div class="green">88</div>
+            <div class="green">92</div>
+            <div class="avg green">91</div>
+            <div style="color: var(--slate-300);">›</div>
+          </div>
+          <div class="table-row">
+            <div>Daffa Kurnia</div>
+            <div class="red">62</div>
+            <div class="amber">75</div>
+            <div class="red">65</div>
+            <div class="amber">70</div>
+            <div class="avg red">68</div>
+            <div style="color: var(--slate-300);">›</div>
+          </div>
+          <div class="table-row">
+            <div>Ekhwan Nugroho</div>
+            <div class="em">—</div>
+            <div class="em">—</div>
+            <div class="em">—</div>
+            <div class="em">—</div>
+            <div class="avg em">—</div>
+            <div style="color: var(--slate-300);">›</div>
+          </div>
+          <div class="table-row">
+            <div>Faiz Hidayat</div>
+            <div class="green">88</div>
+            <div class="amber">76</div>
+            <div class="green">82</div>
+            <div class="em">—</div>
+            <div class="avg amber">82</div>
+            <div style="color: var(--slate-300);">›</div>
+          </div>
+          <div class="table-row">
+            <div>Galih Pratama</div>
+            <div class="green">90</div>
+            <div class="green">85</div>
+            <div class="green">95</div>
+            <div class="green">88</div>
+            <div class="avg green">90</div>
+            <div style="color: var(--slate-300);">›</div>
+          </div>
+          <div class="table-row">
+            <div>Hana Rahmawati</div>
+            <div class="green">82</div>
+            <div class="green">85</div>
+            <div class="amber">78</div>
+            <div class="green">80</div>
+            <div class="avg green">81</div>
+            <div style="color: var(--slate-300);">›</div>
+          </div>
+          <div class="table-row">
+            <div>Iqbal Maulana</div>
+            <div class="amber">75</div>
+            <div class="green">80</div>
+            <div class="amber">78</div>
+            <div class="amber">76</div>
+            <div class="avg amber">77</div>
+            <div style="color: var(--slate-300);">›</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fab" style="background: var(--violet-600); box-shadow: 0 6px 14px rgba(124,58,237,.45);">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════ FRAME D · Score editor sheet ═════════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">D</span> Per-cell score editor sheet <span class="desc">tap a score → big number input</span></div>
+    <div class="phone">
+      <!-- background: dim list -->
+      <div class="header" style="opacity:.45;">
+        <div class="h-row">
+          <div class="h-back">
+            <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+          </div>
+          <div class="h-title-block">
+            <div class="h-kicker">Buku Nilai · 7A · B. Arab</div>
+            <div class="h-title-row">
+              <div class="h-dot"></div>
+              <div class="h-title">Hiwar Profesi</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dim"></div>
+
+      <div class="sheet-overlay">
+        <div class="sheet">
+          <div class="sheet-head">
+            <div class="sheet-handle"></div>
+            <div class="sheet-h-row">
+              <div class="sheet-h-back">
+                <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+              </div>
+              <div class="sheet-h-title">
+                <div class="k">RPP · UH 2 · Nilai</div>
+                <div class="t">Ahmad Rizki</div>
+              </div>
+              <div class="sheet-h-close">
+                <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="sheet-body" style="background: white; max-height: 480px; overflow-y: auto;">
+            <!-- Score preview -->
+            <div class="score-preview">
+              <div class="ring">90</div>
+              <div class="info">
+                <div class="n">Nilai sebelumnya: 85</div>
+                <div class="l">+5 dari rerata kelas (84)</div>
+              </div>
+            </div>
+
+            <!-- Score input -->
+            <div class="field-label">Nilai (0–100)</div>
+            <div class="field-input large">
+              90<span class="of">/ 100</span>
+            </div>
+
+            <!-- Tipe asesmen -->
+            <div class="field-label">Tipe asesmen</div>
+            <div class="chip-row">
+              <div class="chip on">UH</div>
+              <div class="chip">TG</div>
+              <div class="chip">UTS</div>
+              <div class="chip">UAS</div>
+              <div class="chip">PRT</div>
+            </div>
+
+            <!-- Asesmen ke- -->
+            <div class="field-label">Asesmen ke-</div>
+            <div class="chip-row">
+              <div class="chip">1</div>
+              <div class="chip on">2</div>
+              <div class="chip">3</div>
+              <div class="chip">4</div>
+              <div class="chip">+ Baru</div>
+            </div>
+
+            <!-- Catatan -->
+            <div class="field-label">Catatan (opsional)</div>
+            <div class="note-block">
+              Bagus, percakapan lancar. Perhatikan pelafalan خ dan ح.
+            </div>
+          </div>
+          <div class="sheet-foot">
+            <div class="btn-secondary">Batal</div>
+            <div class="btn-primary">
+              <svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-9"/></svg>
+              Simpan
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════ FRAME E · Add assessment header ═════════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">E</span> Add assessment header sheet <span class="desc">FAB tap → kolom asesmen baru</span></div>
+    <div class="phone">
+      <div class="header" style="opacity:.45;">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Buku Nilai · 7A · B. ARAB</div>
+            <div class="h-title-row"><div class="h-dot"></div><div class="h-title">Hiwar Profesi</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="dim"></div>
+
+      <div class="sheet-overlay">
+        <div class="sheet">
+          <div class="sheet-head">
+            <div class="sheet-handle"></div>
+            <div class="sheet-h-row">
+              <div class="sheet-h-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div>
+              <div class="sheet-h-title">
+                <div class="k">RPP · 7A · B. ARAB</div>
+                <div class="t">Asesmen Baru</div>
+              </div>
+              <div class="sheet-h-close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            </div>
+          </div>
+          <div class="sheet-body" style="background: white; max-height: 500px; overflow-y: auto;">
+
+            <div class="field-label">Tipe asesmen</div>
+            <div class="chip-row">
+              <div class="chip on">Ulangan Harian</div>
+              <div class="chip">Tugas</div>
+              <div class="chip">UTS</div>
+              <div class="chip">UAS</div>
+              <div class="chip">Praktik</div>
+            </div>
+
+            <div class="field-label">Judul</div>
+            <div class="field-input">
+              UH 5 · Hiwar Cita-cita
+            </div>
+
+            <div class="field-label">Tanggal pelaksanaan</div>
+            <div class="chip-row">
+              <div class="chip">Hari ini</div>
+              <div class="chip on">Besok</div>
+              <div class="chip">Pekan ini</div>
+              <div class="chip">Pilih tanggal</div>
+            </div>
+
+            <div class="field-label">Nilai maksimum</div>
+            <div class="chip-row">
+              <div class="chip">50</div>
+              <div class="chip">75</div>
+              <div class="chip on">100</div>
+              <div class="chip">Custom</div>
+            </div>
+
+            <div class="field-label">Materi terkait (opsional)</div>
+            <div class="field-input placeholder">
+              <svg style="width:13px;height:13px;color:var(--slate-400);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19V5l8-2 8 2v14"/></svg>
+              Pilih materi…
+            </div>
+          </div>
+          <div class="sheet-foot">
+            <div class="btn-secondary">Batal</div>
+            <div class="btn-primary">
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              Buat asesmen
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════ FRAME F · Filter sheet ═════════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">F</span> Filter sheet <span class="desc">kelas + mapel + tipe</span></div>
+    <div class="phone">
+      <div class="header" style="opacity:.45;">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Akademik · Buku Nilai</div>
+            <div class="h-title-row"><div class="h-dot"></div><div class="h-title">Nilai Siswa</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="dim"></div>
+
+      <div class="sheet-overlay">
+        <div class="sheet">
+          <div class="sheet-head">
+            <div class="sheet-handle"></div>
+            <div class="sheet-h-row">
+              <div class="sheet-h-back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div>
+              <div class="sheet-h-title">
+                <div class="k">Filter</div>
+                <div class="t">Saring Buku Nilai</div>
+              </div>
+              <div class="sheet-h-close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+            </div>
+          </div>
+          <div class="sheet-body" style="background: white; max-height: 500px; overflow-y: auto;">
+
+            <div class="field-label">Mata pelajaran</div>
+            <div class="chip-row">
+              <div class="chip on">Bahasa Arab</div>
+              <div class="chip">Bahasa Inggris</div>
+              <div class="chip">Fiqih</div>
+            </div>
+
+            <div class="field-label">Kelas</div>
+            <div class="chip-row">
+              <div class="chip on">7A</div>
+              <div class="chip on">7B</div>
+              <div class="chip">8A</div>
+              <div class="chip">8B</div>
+              <div class="chip">9A</div>
+            </div>
+
+            <div class="field-label">Tipe asesmen</div>
+            <div class="chip-row">
+              <div class="chip on">UH</div>
+              <div class="chip on">TG</div>
+              <div class="chip">UTS</div>
+              <div class="chip">UAS</div>
+              <div class="chip">Praktik</div>
+            </div>
+
+            <div class="field-label">Status</div>
+            <div class="chip-row">
+              <div class="chip">Lengkap</div>
+              <div class="chip on">Belum diisi</div>
+              <div class="chip">Di bawah KKM</div>
+            </div>
+
+            <div class="field-label">Tahun ajaran</div>
+            <div class="chip-row">
+              <div class="chip">2024/2025</div>
+              <div class="chip on">2025/2026</div>
+              <div class="chip">2026/2027</div>
+            </div>
+
+          </div>
+          <div class="sheet-foot">
+            <div class="btn-secondary">Reset</div>
+            <div class="btn-primary">
+              <svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-9"/></svg>
+              Terapkan · 5
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
