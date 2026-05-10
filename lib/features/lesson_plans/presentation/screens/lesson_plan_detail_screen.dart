@@ -1,16 +1,21 @@
-// RPP detail bottom sheet — public dispatcher.
+// RPP detail page — public dispatcher.
 //
-// At entry it inspects the lesson-plan payload once and routes to
-// either:
+// Routes to the right detail surface for the lesson-plan's format:
 //
-//   • [AiRppDetailScreen]      (lib/features/lesson_plans/presentation
-//                               /screens/ai/) for AI-generated plans —
-//                               structured per-section editor + regen +
-//                               AI-backend save.
+//   • format == 'file'  → [ManualRppDetailScreen] — non-editable file
+//     preview + download. (E.2 Frame H file detail will replace this
+//     when the dedicated FileDetailView lands.)
 //
-//   • [ManualRppDetailScreen]  (.../manual/) for teacher-uploaded
-//                               plans — file download + form-dialog
-//                               edit + core-backend save.
+//   • format == 'k13' / 'rpp_1_halaman' / 'modul_ajar' →
+//     [AiRppDetailScreen] — structured per-section editor + regen +
+//     AI-backend save. The screen reads the section schema from
+//     `format_section_keys` (or falls back to the legacy K13 list)
+//     so it works for all three structured formats today; per-format
+//     hi-fi detail views (Frames D/E/F) layer on top in E.2-E.4.
+//
+//   • Legacy rows where the new `format` column is missing fall back
+//     to the original AI-vs-manual heuristic so older payloads keep
+//     opening the right screen during the rollout window.
 //
 // Call sites still go through `RPPDetailPage.show(...)` so the public
 // surface is unchanged. The two screens never re-check the kind once
@@ -19,10 +24,11 @@
 // silently / UI flips after save" regression we hit.
 import 'package:flutter/material.dart';
 
+import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan_format.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/ai/ai_rpp_detail_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/manual/manual_rpp_detail_screen.dart';
 
-/// Public entry point for opening a lesson-plan detail sheet.
+/// Public entry point for opening a lesson-plan detail page.
 ///
 /// Internally a dispatcher: the actual UI is in [AiRppDetailScreen]
 /// or [ManualRppDetailScreen] depending on what the payload looks
@@ -38,12 +44,27 @@ class RPPDetailPage extends StatelessWidget {
     this.isNew = false,
   });
 
-  /// Opens the right detail sheet for [lessonPlanData].
+  /// Opens the right detail page for [lessonPlanData].
   static Future<void> show({
     required BuildContext context,
     required Map<String, dynamic> lessonPlanData,
     bool isNew = false,
   }) {
+    if (_routeToFileDetail(lessonPlanData)) {
+      return ManualRppDetailScreen.show(
+        context: context,
+        lessonPlanData: lessonPlanData,
+        isNew: isNew,
+      );
+    }
+    if (_routeToStructuredDetail(lessonPlanData)) {
+      return AiRppDetailScreen.show(
+        context: context,
+        lessonPlanData: lessonPlanData,
+        isNew: isNew,
+      );
+    }
+    // Legacy fallback for payloads predating the format column.
     if (_isAiGenerated(lessonPlanData)) {
       return AiRppDetailScreen.show(
         context: context,
@@ -63,6 +84,15 @@ class RPPDetailPage extends StatelessWidget {
     // Direct widget construction is rare (call sites prefer .show())
     // but kept as a fallback so legacy `Navigator.push(RPPDetailPage(…))`
     // still works.
+    if (_routeToFileDetail(lessonPlanData)) {
+      return ManualRppDetailScreen(
+        lessonPlanData: lessonPlanData,
+        isNew: isNew,
+      );
+    }
+    if (_routeToStructuredDetail(lessonPlanData)) {
+      return AiRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew);
+    }
     if (_isAiGenerated(lessonPlanData)) {
       return AiRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew);
     }
@@ -70,6 +100,25 @@ class RPPDetailPage extends StatelessWidget {
       lessonPlanData: lessonPlanData,
       isNew: isNew,
     );
+  }
+
+  /// True for `format == 'file'` rows — the lesson plan is a PDF/DOCX
+  /// upload with no editable sections. Falls back to a heuristic (file
+  /// path present + no structured content) for legacy rows.
+  static bool _routeToFileDetail(Map<String, dynamic> data) {
+    final format = LessonPlanFormat.fromMap(data);
+    if (format == LessonPlanFormat.file) return true;
+    return false;
+  }
+
+  /// True for the three structured formats (K13 / RPP 1 Halaman /
+  /// Modul Ajar). Returns false when `format` is missing so the legacy
+  /// AI-vs-manual heuristic gets a chance.
+  static bool _routeToStructuredDetail(Map<String, dynamic> data) {
+    final raw = data['format'];
+    if (raw is! String || raw.isEmpty) return false;
+    final format = LessonPlanFormat.fromValue(raw);
+    return format.isStructured;
   }
 
   /// Inclusive AI detection. Any of:

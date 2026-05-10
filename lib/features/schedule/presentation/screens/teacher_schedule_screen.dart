@@ -1,21 +1,45 @@
-/// Teaching schedule screen -- the teacher's timetable/calendar view.
-/// Displays the teacher's weekly schedule with two view modes: card and
-/// table view. Supports filtering by day, semester, class, real-time sync
-/// via FCM push notifications, and quick navigation to related screens.
+/// Teaching schedule screen — the teacher's timetable / calendar view.
+///
+/// Brand-aligned redesign (Jadwal P.3 — May 2026)
+/// ----------------------------------------------
+/// Replaces the legacy `TeacherPageHeader` shell with the same brand
+/// chrome shipped on Presensi / Kegiatan Kelas / Rekap Nilai / RPP /
+/// Buku Nilai:
+///
+///   • [BrandPageHeader] — cobalt gradient, kicker `Jadwal Mengajar`
+///     with inline live dot, title `Pekan Ini` (or `Wali · 7A` in
+///     homeroom mode), centered. Action icons: filter (with badge) +
+///     view-toggle (card/table). Back button auto-resolves.
+///   • [RoleToggleChipRow] in `childSelector` slot — Mengajar plus one
+///     chip per homeroom class (`Wali · 7A`, `Wali · 8B`).
+///   • Pinned KPI strip below the header — Sesi/Pekan, Hari Ini,
+///     Mapel, Kelas (or Pengajar in wali mode). Computed client-side
+///     from the loaded schedule list.
+///   • [TeacherTodayBanner] — cobalt gradient banner at the top of the
+///     body showing the day's progress (`X selesai dari Y`) plus the
+///     live or next subject. Renders only when there are schedules
+///     today.
+///   • Body: kept as `TeacherAsyncView` with its own scrollable. We
+///     don't wrap in BrandPageLayout because the inner scrollable would
+///     nest inside a ListView and throw "vertical viewport given
+///     unbounded height" — same trade-off Buku Nilai made.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/role_toggle_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
-import 'package:manajemensekolah/core/widgets/teacher_page_header.dart';
-import 'package:manajemensekolah/core/widgets/view_toggle_button.dart';
+import 'package:manajemensekolah/core/widgets/teacher_role_options.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_schedule_card_view.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_schedule_table_view.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_today_banner.dart';
 import 'package:manajemensekolah/features/schedule/presentation/mixins/schedule_tour_mixin.dart';
 import 'package:manajemensekolah/features/schedule/presentation/mixins/teacher_schedule_data_loading_mixin.dart';
 import 'package:manajemensekolah/features/schedule/presentation/mixins/teacher_schedule_cache_mixin.dart';
@@ -89,9 +113,11 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
     super.dispose();
   }
 
+  // ── Build ────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    final languageProvider = ref.watch(languageRiverpod);
+    final lp = ref.watch(languageRiverpod);
     final filteredSchedules = getFilteredSchedules(
       scheduleList,
       _searchController.text,
@@ -101,126 +127,423 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          TeacherPageHeader(
-            primaryColor: getPrimaryColor(),
-            title: languageProvider.getTranslatedText({
-              'en': 'Teaching Schedule',
-              'id': 'Jadwal Mengajar',
-            }),
-            subtitle: languageProvider.getTranslatedText({
-              'en': isHomeroomView && selectedHomeroomClass != null
-                  ? 'Viewing Homeroom Schedule'
-                  : 'View your teaching schedule',
-              'id': isHomeroomView && selectedHomeroomClass != null
-                  ? 'Melihat Jadwal Wali Kelas'
-                  : 'Lihat jadwal mengajar Anda',
-            }),
-            showRoleToggle: homeroomClassesList.isNotEmpty,
-            isHomeroomView: isHomeroomView,
-            onRoleChanged: (isHomeroom) {
-              setState(() {
-                isHomeroomView = isHomeroom;
-                if (isHomeroom &&
-                    selectedHomeroomClass == null &&
-                    homeroomClassesList.isNotEmpty) {
-                  selectedHomeroomClass = homeroomClassesList.first;
-                }
-                scheduleList = [];
-                isLoading = true;
-              });
-              loadSchedule(
-                useCache: true,
-                searchController: _searchController,
-                selectedDayIds: selectedDayIds,
-                selectedClassId: selectedClassId,
-                selectedFilterSemester: selectedFilterSemester,
-                dayIdMap: dayIdMap,
-              );
-            },
-            homeroomClassName: selectedHomeroomClass?['name'],
-            showSearchFilter: true,
-            searchController: _searchController,
-            onSearchChanged: (_) => setState(() {}),
-            onFilterTap: () => showFilterSheet(
-              getPrimaryColor(),
-              languageProvider,
-              selectedTerm,
-              ({
-                required dayIdMap,
-                required searchController,
-                required selectedDayIds,
-                required selectedClassId,
-                required selectedFilterSemester,
-              }) => loadSchedule(
-                useCache: true,
-                searchController: searchController,
-                selectedDayIds: selectedDayIds,
-                selectedClassId: selectedClassId,
-                selectedFilterSemester: selectedFilterSemester,
-                dayIdMap: dayIdMap,
-              ),
-              _searchController,
+          _buildBrandHeader(lp),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: _buildKpiStrip(filteredSchedules),
+          ),
+          if (filteredSchedules.isNotEmpty)
+            TeacherTodayBanner(
+              allSchedules: filteredSchedules,
+              dailySummary: dailySummary,
             ),
-            hasActiveFilter: hasActiveFilter,
-            searchHintText: languageProvider.getTranslatedText({
-              'en': 'Search schedules...',
-              'id': 'Cari jadwal...',
-            }),
-            onBackPressed: () => AppNavigator.pop(context),
-            activeFilters: hasActiveFilter
-                ? buildFilterChips(
-                    languageProvider,
-                    selectedTerm,
-                    ({
-                      required dayIdMap,
-                      required searchController,
-                      required selectedDayIds,
-                      required selectedClassId,
-                      required selectedFilterSemester,
-                    }) => loadSchedule(
-                      useCache: true,
-                      searchController: searchController,
-                      selectedDayIds: selectedDayIds,
-                      selectedClassId: selectedClassId,
-                      selectedFilterSemester: selectedFilterSemester,
-                      dayIdMap: dayIdMap,
-                    ),
-                    _searchController,
-                  )
-                : null,
-            onClearAllFilters: () => clearAllFilters(
-              selectedTerm,
-              loadTermData,
-              ({
-                required dayIdMap,
-                required searchController,
-                required selectedDayIds,
-                required selectedClassId,
-                required selectedFilterSemester,
-              }) => loadSchedule(
-                useCache: true,
-                searchController: searchController,
-                selectedDayIds: selectedDayIds,
-                selectedClassId: selectedClassId,
-                selectedFilterSemester: selectedFilterSemester,
-                dayIdMap: dayIdMap,
-              ),
-              _searchController,
+          Expanded(child: _buildBody(lp, filteredSchedules)),
+        ],
+      ),
+    );
+  }
+
+  // ── Brand header ─────────────────────────────────────────────────
+
+  Widget _buildBrandHeader(LanguageProvider lp) {
+    final activeFilters = hasActiveFilter ? buildFilterChipsForCount() : 0;
+    final isWali = isHomeroomView && (selectedHomeroomClass?['name'] != null);
+    final title = isWali
+        ? 'Wali · ${selectedHomeroomClass!['name']}'
+        : lp.getTranslatedText({'en': 'This Week', 'id': 'Pekan Ini'});
+
+    return BrandPageHeader(
+      role: 'guru',
+      subtitle: lp.getTranslatedText({
+        'en': 'Teaching Schedule',
+        'id': 'Jadwal Mengajar',
+      }),
+      title: title,
+      isRealtimeFresh: true,
+      kpiOverlayHeight: 0,
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: isTableView
+              ? Icons.view_agenda_rounded
+              : Icons.calendar_view_week_rounded,
+          // `toggleView` flips the bool AND persists it via
+          // LocalCacheService — same call site Buku Nilai uses for
+          // its card/table preference.
+          onTap: toggleView,
+        ),
+        BrandHeaderIconButton(
+          icon: Icons.tune_rounded,
+          onTap: () => showFilterSheet(
+            getPrimaryColor(),
+            ref.read(languageRiverpod),
+            selectedTerm,
+            ({
+              required dayIdMap,
+              required searchController,
+              required selectedDayIds,
+              required selectedClassId,
+              required selectedFilterSemester,
+            }) => loadSchedule(
+              useCache: true,
+              searchController: searchController,
+              selectedDayIds: selectedDayIds,
+              selectedClassId: selectedClassId,
+              selectedFilterSemester: selectedFilterSemester,
+              dayIdMap: dayIdMap,
             ),
-            trailing: ViewToggleButton(
-              key: _toggleViewKey,
-              currentMode: isTableView ? ViewMode.table : ViewMode.card,
-              availableModes: const [ViewMode.card, ViewMode.table],
-              onChanged: (mode) => setState(() {
-                isTableView = mode == ViewMode.table;
-              }),
+            _searchController,
+          ),
+          badgeCount: activeFilters > 0 ? activeFilters : null,
+          badgeBorderColor: ColorUtils.brandDarkBlue,
+        ),
+      ],
+      childSelector: _buildRoleSelector(lp),
+      bottomSlot: _buildSearchOrChips(lp),
+    );
+  }
+
+  /// Returns the count of active filters for the badge — same logic as
+  /// `buildFilterChips` but cheaper (no widget construction).
+  int buildFilterChipsForCount() {
+    var count = selectedDayIdsInternal.length;
+    if (selectedClassIdInternal != null) count++;
+    if (selectedFilterSemesterInternal != null &&
+        selectedFilterSemesterInternal != selectedTerm)
+      count++;
+    return count;
+  }
+
+  /// Mengajar / Wali · 7A / Wali · 8B chip strip. Returns null when
+  /// the teacher has no homeroom classes — `BrandPageHeader` will skip
+  /// the slot entirely.
+  Widget? _buildRoleSelector(LanguageProvider lp) {
+    if (homeroomClassesList.isEmpty) return null;
+    final selectedId = isHomeroomView && selectedHomeroomClass?['id'] != null
+        ? 'wali:${selectedHomeroomClass!['id']}'
+        : 'mengajar';
+    return RoleToggleChipRow(
+      roles: buildMultiWaliRoleOptions(
+        homeroomClasses: homeroomClassesList,
+        lp: lp,
+      ),
+      selectedRoleId: selectedId,
+      accentColor: ColorUtils.brandCobalt,
+      onSelected: (id) {
+        if (id == 'mengajar') {
+          if (!isHomeroomView) return;
+          setState(() {
+            isHomeroomView = false;
+            scheduleList = [];
+            isLoading = true;
+          });
+        } else {
+          // wali:<classId>
+          final classId = id.substring('wali:'.length);
+          final cls = homeroomClassesList.firstWhere(
+            (c) => (c is Map ? c['id']?.toString() : '') == classId,
+            orElse: () => homeroomClassesList.first,
+          );
+          setState(() {
+            isHomeroomView = true;
+            selectedHomeroomClass = Map<String, dynamic>.from(cls as Map);
+            scheduleList = [];
+            isLoading = true;
+          });
+        }
+        loadSchedule(
+          useCache: true,
+          searchController: _searchController,
+          selectedDayIds: selectedDayIds,
+          selectedClassId: selectedClassId,
+          selectedFilterSemester: selectedFilterSemester,
+          dayIdMap: dayIdMap,
+        );
+      },
+    );
+  }
+
+  /// Bottom slot under the title — currently surfaces the active
+  /// filters as a `BrandFilterChipStrip`. The strip auto-hides when
+  /// no filters are applied.
+  Widget? _buildSearchOrChips(LanguageProvider lp) {
+    if (!hasActiveFilter) return null;
+
+    final chips = <BrandFilterChip>[];
+
+    // Day chips (one per selected day).
+    for (final dayId in selectedDayIdsInternal) {
+      final dayName = dayOptionsInternal.firstWhere(
+        (n) => dayIdMapInternal[n] == dayId,
+        orElse: () => 'Hari',
+      );
+      chips.add(
+        BrandFilterChip(
+          label: 'Hari',
+          value: dayName,
+          showChevron: false,
+          onTap: () {
+            setState(() {
+              selectedDayIdsInternal.remove(dayId);
+              checkActiveFilter(selectedTerm);
+            });
+            loadSchedule(
+              useCache: true,
+              searchController: _searchController,
+              selectedDayIds: selectedDayIdsInternal,
+              selectedClassId: selectedClassIdInternal,
+              selectedFilterSemester: selectedFilterSemesterInternal,
+              dayIdMap: dayIdMapInternal,
+            );
+          },
+        ),
+      );
+    }
+
+    // Class chip.
+    if (selectedClassIdInternal != null) {
+      final cls = availableClassesInternal.firstWhere(
+        (c) => c['id'] == selectedClassIdInternal,
+        orElse: () => {'name': 'Kelas'},
+      );
+      chips.add(
+        BrandFilterChip(
+          label: 'Kelas',
+          value: cls['name'] ?? 'Kelas',
+          showChevron: false,
+          onTap: () {
+            setState(() {
+              selectedClassIdInternal = null;
+              checkActiveFilter(selectedTerm);
+            });
+            loadSchedule(
+              useCache: true,
+              searchController: _searchController,
+              selectedDayIds: selectedDayIdsInternal,
+              selectedClassId: selectedClassIdInternal,
+              selectedFilterSemester: selectedFilterSemesterInternal,
+              dayIdMap: dayIdMapInternal,
+            );
+          },
+        ),
+      );
+    }
+
+    // Semester chip — only when overridden from the default.
+    if (selectedFilterSemesterInternal != null &&
+        selectedFilterSemesterInternal != selectedTerm) {
+      final semester = termListInternal.firstWhere(
+        (s) => s['id'].toString() == selectedFilterSemesterInternal,
+        orElse: () => {'nama': 'Smt $selectedFilterSemesterInternal'},
+      );
+      chips.add(
+        BrandFilterChip(
+          label: 'Semester',
+          value: (semester['nama'] ?? 'Smt').toString(),
+          showChevron: false,
+          onTap: () {
+            setState(() {
+              selectedFilterSemesterInternal = null;
+              checkActiveFilter(selectedTerm);
+            });
+            loadSchedule(
+              useCache: true,
+              searchController: _searchController,
+              selectedDayIds: selectedDayIdsInternal,
+              selectedClassId: selectedClassIdInternal,
+              selectedFilterSemester: selectedFilterSemesterInternal,
+              dayIdMap: dayIdMapInternal,
+            );
+          },
+        ),
+      );
+    }
+
+    if (chips.isEmpty) return null;
+    return BrandFilterChipStrip(chips: chips);
+  }
+
+  // ── KPI strip ────────────────────────────────────────────────────
+
+  Widget _buildKpiStrip(List<dynamic> schedules) {
+    final stats = _kpiStats(schedules);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            _kpiCell(
+              '${stats.weekTotal}',
+              'SESI/PEKAN',
+              ColorUtils.brandCobalt,
+            ),
+            _kpiDivider(),
+            _kpiCell('${stats.todayCount}', 'HARI INI', ColorUtils.success600),
+            _kpiDivider(),
+            _kpiCell('${stats.subjectCount}', 'MAPEL', ColorUtils.warning600),
+            _kpiDivider(),
+            _kpiCell(
+              '${stats.fourthCount}',
+              isHomeroomView ? 'PENGAJAR' : 'KELAS',
+              ColorUtils.slate700,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kpiCell(String value, String label, Color color) {
+    return Expanded(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: color,
+              letterSpacing: -0.3,
+              height: 1,
             ),
           ),
-          Expanded(
-            child: TeacherAsyncView(
-              isLoading: isLoading,
-              errorMessage: errorMessage,
-              isEmpty: filteredSchedules.isEmpty,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiDivider() {
+    return Container(
+      width: 1,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      color: ColorUtils.slate100,
+    );
+  }
+
+  ({int weekTotal, int todayCount, int subjectCount, int fourthCount})
+  _kpiStats(List<dynamic> schedules) {
+    final today = DateTime.now();
+    final todayName = _todayIndoName(today.weekday);
+    final subjectIds = <String>{};
+    final classIds = <String>{};
+    final teacherIds = <String>{};
+    var todayCount = 0;
+
+    for (final s in schedules) {
+      if (s is! Map) continue;
+      final m = Schedule.fromJson(Map<String, dynamic>.from(s as Map));
+      if ((m.subjectId ?? '').isNotEmpty) subjectIds.add(m.subjectId!);
+      if ((m.classId ?? '').isNotEmpty) classIds.add(m.classId!);
+      if ((m.teacherId ?? '').isNotEmpty) teacherIds.add(m.teacherId!);
+      final raw = (m.dayName ?? '').toLowerCase();
+      if (raw.contains(todayName.toLowerCase()) ||
+          raw.contains(_todayEngName(today.weekday).toLowerCase())) {
+        todayCount++;
+      }
+    }
+
+    return (
+      weekTotal: schedules.length,
+      todayCount: todayCount,
+      subjectCount: subjectIds.length,
+      fourthCount: isHomeroomView ? teacherIds.length : classIds.length,
+    );
+  }
+
+  static String _todayIndoName(int wd) => switch (wd) {
+    DateTime.monday => 'Senin',
+    DateTime.tuesday => 'Selasa',
+    DateTime.wednesday => 'Rabu',
+    DateTime.thursday => 'Kamis',
+    DateTime.friday => 'Jumat',
+    DateTime.saturday => 'Sabtu',
+    _ => 'Minggu',
+  };
+
+  static String _todayEngName(int wd) => switch (wd) {
+    DateTime.monday => 'Monday',
+    DateTime.tuesday => 'Tuesday',
+    DateTime.wednesday => 'Wednesday',
+    DateTime.thursday => 'Thursday',
+    DateTime.friday => 'Friday',
+    DateTime.saturday => 'Saturday',
+    _ => 'Sunday',
+  };
+
+  // ── Body — async view + card/table swap ─────────────────────────
+
+  Widget _buildBody(LanguageProvider lp, List<dynamic> filteredSchedules) {
+    return TeacherAsyncView(
+      isLoading: isLoading,
+      errorMessage: errorMessage,
+      isEmpty: filteredSchedules.isEmpty,
+      onRefresh: () => forceRefresh(
+        _searchController,
+        selectedDayIds,
+        selectedClassId,
+        selectedFilterSemester,
+        dayIdMap,
+        ({
+          required searchController,
+          required selectedDayIds,
+          required selectedClassId,
+          required selectedFilterSemester,
+        }) => loadSchedule(
+          useCache: true,
+          searchController: searchController,
+          selectedDayIds: selectedDayIds,
+          selectedClassId: selectedClassId,
+          selectedFilterSemester: selectedFilterSemester,
+          dayIdMap: dayIdMap,
+        ),
+      ),
+      role: 'guru',
+      emptyTitle: lp.getTranslatedText({
+        'en': 'No Teaching Schedules',
+        'id': 'Belum ada jadwal',
+      }),
+      emptySubtitle: lp.getTranslatedText({
+        'en': _searchController.text.isNotEmpty || hasActiveFilter
+            ? 'No schedules found for search and filters'
+            : 'There are no teaching schedules available',
+        'id': _searchController.text.isNotEmpty || hasActiveFilter
+            ? 'Tidak ada jadwal yang sesuai filter'
+            : 'Tidak ada jadwal mengajar pekan ini',
+      }),
+      emptyIcon: Icons.calendar_today_rounded,
+      childBuilder: () => isTableView
+          ? TeacherScheduleTableView(
+              schedules: filteredSchedules,
+              dayIdMap: dayIdMap,
+              dayColorMap: dayColorMap,
+              dayOptions: dayOptions,
+              primaryColor: getPrimaryColor(),
+              teacherId: teacherId,
+              teacherNama: teacherNama,
+              dailySummary: dailySummary,
+              isHomeroomView: isHomeroomView,
               onRefresh: () => forceRefresh(
                 _searchController,
                 selectedDayIds,
@@ -241,73 +564,24 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
                   dayIdMap: dayIdMap,
                 ),
               ),
-              role: 'guru',
-              emptyTitle: languageProvider.getTranslatedText({
-                'en': 'No Teaching Schedules',
-                'id': 'Tidak Ada Jadwal Mengajar',
-              }),
-              emptySubtitle: languageProvider.getTranslatedText({
-                'en': _searchController.text.isNotEmpty || hasActiveFilter
-                    ? 'No schedules found for search and filters'
-                    : 'There are no teaching schedules available',
-                'id': _searchController.text.isNotEmpty || hasActiveFilter
-                    ? 'Tidak ada jadwal yang sesuai'
-                    : 'Tidak ada jadwal mengajar',
-              }),
-              emptyIcon: Icons.schedule_outlined,
-              childBuilder: () => isTableView
-                  ? TeacherScheduleTableView(
-                      schedules: filteredSchedules,
-                      dayIdMap: dayIdMap,
-                      dayColorMap: dayColorMap,
-                      dayOptions: dayOptions,
-                      primaryColor: getPrimaryColor(),
-                      teacherId: teacherId,
-                      teacherNama: teacherNama,
-                      dailySummary: dailySummary,
-                      isHomeroomView: isHomeroomView,
-                      onRefresh: () => forceRefresh(
-                        _searchController,
-                        selectedDayIds,
-                        selectedClassId,
-                        selectedFilterSemester,
-                        dayIdMap,
-                        ({
-                          required searchController,
-                          required selectedDayIds,
-                          required selectedClassId,
-                          required selectedFilterSemester,
-                        }) => loadSchedule(
-                          useCache: true,
-                          searchController: searchController,
-                          selectedDayIds: selectedDayIds,
-                          selectedClassId: selectedClassId,
-                          selectedFilterSemester: selectedFilterSemester,
-                          dayIdMap: dayIdMap,
-                        ),
-                      ),
-                      languageProvider: languageProvider,
-                    )
-                  : TeacherScheduleCardView(
-                      schedules: filteredSchedules,
-                      languageProvider: languageProvider,
-                      dayIdMap: dayIdMap,
-                      dayColorMap: dayColorMap,
-                      dayOptions: dayOptions,
-                      selectedAcademicYear: selectedAcademicYear,
-                      teacherId: teacherId,
-                      teacherNama: teacherNama,
-                      firstScheduleKey: _firstScheduleKey,
-                      actionButtonsKey: _actionButtonsKey,
-                      dailySummary: dailySummary,
-                      onRefresh: refreshDailySummary,
-                      isHomeroomView: isHomeroomView,
-                      autoScroll: _isInitialLoad,
-                    ),
+              languageProvider: lp,
+            )
+          : TeacherScheduleCardView(
+              schedules: filteredSchedules,
+              languageProvider: lp,
+              dayIdMap: dayIdMap,
+              dayColorMap: dayColorMap,
+              dayOptions: dayOptions,
+              selectedAcademicYear: selectedAcademicYear,
+              teacherId: teacherId,
+              teacherNama: teacherNama,
+              firstScheduleKey: _firstScheduleKey,
+              actionButtonsKey: _actionButtonsKey,
+              dailySummary: dailySummary,
+              onRefresh: refreshDailySummary,
+              isHomeroomView: isHomeroomView,
+              autoScroll: _isInitialLoad,
             ),
-          ),
-        ],
-      ),
     );
   }
 }

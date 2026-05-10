@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_type_bottom_sheet.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/widgets/add_activity_dialog.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/class_activity/data/class_activity_service.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_form_sheet.dart';
 import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
 
@@ -100,44 +102,54 @@ mixin TeacherActivityScheduleMixin
     }
   }
 
-  void showActivityTypeSelector(
+  /// Auto-fired when the active teaching slot detection finds a
+  /// matching schedule entry. Skips the legacy "Pilih Jenis Kegiatan"
+  /// picker and opens the unified [showActivityFormSheet] (Frame B —
+  /// "Tambah Kegiatan") with the slot's class + mapel pre-filled. The
+  /// teacher picks the type inside the same sheet, so it's one less
+  /// hop than the old two-step flow.
+  Future<void> showActivityTypeSelector(
     String classId,
     String className,
     String subjectId,
     String subjectName,
     LanguageProvider lp, {
     String? lessonHourId,
-  }) {
-    ActivityTypeBottomSheet.show(
+  }) async {
+    final svc = getIt<ApiClassActivityService>();
+    final res = await showActivityFormSheet(
       context: context,
-      primaryColor: primaryColor,
-      languageProvider: lp,
-      onActivityTypeSelected: (type) {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (_) => AddActivityDialog(
-            teacherId: teacherId,
-            teacherName: teacherName,
-            scheduleList: const [],
-            subjectList: const [],
-            chapterList: const [],
-            subChapterList: const [],
-            onSubjectSelected: (_) async {},
-            onChapterSelected: (_) async {},
-            onActivityAdded: forceRefresh,
-            initialTarget: 'umum',
-            activityType: type,
-            initialSubjectId: subjectId,
-            initialSubjectName: subjectName,
-            initialClassId: classId,
-            initialClassName: className,
-            lessonHourId: lessonHourId,
-          ),
-        );
+      classes: [
+        {'id': classId, 'name': className},
+      ],
+      subjects: [
+        {'id': subjectId, 'name': subjectName},
+      ],
+      initial: {
+        'class_id': classId,
+        'class_name': className,
+        'subject_id': subjectId,
+        'subject_name': subjectName,
+        if (lessonHourId != null) 'lesson_hour_id': lessonHourId,
+      },
+      onSave: (payload) async {
+        await svc.createActivity({
+          ...payload,
+          'teacher_id': teacherId,
+          if (lessonHourId != null) 'lesson_hour_id': lessonHourId,
+        });
       },
     );
+    if (res != null && mounted) {
+      SnackBarUtils.showSuccess(
+        context,
+        lp.getTranslatedText({
+          'en': 'Activity saved',
+          'id': 'Kegiatan tersimpan',
+        }),
+      );
+      await forceRefresh();
+    }
   }
 
   // Abstract getters and methods

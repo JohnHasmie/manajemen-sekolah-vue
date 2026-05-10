@@ -7,9 +7,11 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
-import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/frozen_column_table.dart';
-import 'package:manajemensekolah/core/widgets/teacher_page_header.dart';
+import 'package:manajemensekolah/core/widgets/role_toggle_chip_row.dart';
+import 'package:manajemensekolah/core/widgets/teacher_role_options.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/features/grades/data/grade_service.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_input_content_mixin.dart';
@@ -283,38 +285,34 @@ class GradePageState extends ConsumerState<GradePage>
   @override
   void openGradeBook(dynamic classData, dynamic subject) {
     final subj = Subject.fromJson(subject as Map<String, dynamic>);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.95,
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          child: GradeBookPage(
-            teacher: widget.teacher,
-            subject: {
-              'id': subj.id,
-              'nama': subj.name,
-              'name': subj.name,
-              'kode': subj.code,
-              'code': subj.code,
-            },
-            classData: {
-              'id': classData['class_id'],
-              'nama': classData['class_name'],
-              'name': classData['class_name'],
-              'grade_level': classData['grade_level'],
-            },
-          ),
+    // Pushed as a Material page route (was a 95% modal bottom sheet)
+    // so the BrandPageHeader gets its full SafeArea — no more clock /
+    // back-button overlap, and ESC / system-back behaves predictably.
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => GradeBookPage(
+          teacher: widget.teacher,
+          subject: {
+            'id': subj.id,
+            'nama': subj.name,
+            'name': subj.name,
+            'kode': subj.code,
+            'code': subj.code,
+          },
+          classData: {
+            'id': classData['class_id'],
+            'nama': classData['class_name'],
+            'name': classData['class_name'],
+            'grade_level': classData['grade_level'],
+          },
         ),
       ),
     ).then((_) {
-      // Force a fresh fetch when returning from the grade book — the user
-      // may have edited/added/deleted grades, so the cached summary could be
-      // stale. useCache: false skips the 1-hour local-cache flash and pulls
-      // straight from the API (which itself has been invalidated server-side
-      // by any grade write).
+      // Force a fresh fetch on return — the teacher may have edited /
+      // added / deleted grades, so the cached summary could be stale.
+      // useCache: false skips the 1-hour local-cache flash and pulls
+      // straight from the API (which itself has been invalidated
+      // server-side by any grade write).
       return loadData(useCache: false);
     });
   }
@@ -344,32 +342,36 @@ class GradePageState extends ConsumerState<GradePage>
     super.dispose();
   }
 
+  // ── Build ─────────────────────────────────────────────────────
+  //
+  // Replaces the legacy `Column [TeacherPageHeader, Expanded(content)]`
+  // shell with the same brand pattern Presensi / Kegiatan Kelas /
+  // Rekap Nilai / RPP all use:
+  //   • BrandPageHeader — cobalt gradient, kicker `Akademik · Buku
+  //     Nilai`, title `Nilai Siswa`, action icons (filter + view
+  //     toggle), and a BrandFilterChipStrip in the bottom slot
+  //     showing Mengajar/Wali · Kelas · Mapel chip pills.
+  //   • 4-cell KPI strip below the header — Lengkap / Belum / Rerata /
+  //     < KKM. Pinned (no scroll-overlap effect) because the body
+  //     `TeacherAsyncView` brings its own scrollable, and nesting
+  //     it inside BrandPageLayout's ListView body throws "vertical
+  //     viewport was given unbounded height".
+  //   • Body: `Expanded(buildContent)` — the content mixin handles
+  //     loading / error / empty states and renders either the new
+  //     class+subject card list (Frame A) or the flat
+  //     `_GradeSummaryTableView` table.
   @override
   Widget build(BuildContext context) {
     final lp = ref.watch(languageRiverpod);
-    final isHomeroomTeacher = ref.watch(teacherRiverpod).isHomeroomTeacher;
     return Scaffold(
-      backgroundColor: ColorUtils.slate50,
+      backgroundColor: const Color(0xFFF1F5F9),
+      resizeToAvoidBottomInset: true,
       body: Column(
         children: [
-          TeacherPageHeader(
-            title: lp.getTranslatedText({'en': 'Grades', 'id': 'Nilai'}),
-            subtitle: lp.getTranslatedText({
-              'en': 'Manage student grades',
-              'id': 'Kelola nilai siswa',
-            }),
-            primaryColor: primaryColor,
-            showRoleToggle: isHomeroomTeacher,
-            isHomeroomView: _isHomeroomView,
-            onRoleChanged: _handleRoleChange,
-            showSearchFilter: true,
-            searchController: _searchController,
-            onSearchChanged: (_) => setState(() {}),
-            onFilterTap: () => showFilterDialog(lp),
-            hasActiveFilter: getActiveFilterCount() > 0,
-            activeFilters: _buildActiveFilters(),
-            onClearAllFilters: _clearAllFilters,
-            trailing: _buildViewToggle(),
+          _buildBrandHeader(lp),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: _buildBrandKpi(lp),
           ),
           Expanded(child: buildContent(lp)),
         ],
@@ -377,81 +379,293 @@ class GradePageState extends ConsumerState<GradePage>
     );
   }
 
-  void _handleRoleChange(bool isHomeroom) {
-    setState(() {
-      _isHomeroomView = isHomeroom;
-      _filterClassId = null;
-      _filterClassName = null;
-      _filterSubjectId = null;
-      _filterSubjectName = null;
-    });
-    loadData();
-  }
-
-  void _clearAllFilters() {
-    setState(() {
-      _filterClassId = null;
-      _filterClassName = null;
-      _filterSubjectId = null;
-      _filterSubjectName = null;
-    });
-    loadData();
-  }
-
-  List<ActiveFilter> _buildActiveFilters() {
-    final filters = <ActiveFilter>[];
-    if (_filterClassName != null) {
-      filters.add(
-        ActiveFilter(
-          label: _filterClassName!,
-          onRemove: () {
-            setState(() {
-              _filterClassId = null;
-              _filterClassName = null;
-            });
-            loadData();
+  Widget _buildBrandHeader(LanguageProvider lp) {
+    final activeCount = getActiveFilterCount();
+    return BrandPageHeader(
+      role: 'guru',
+      title: lp.getTranslatedText({'en': 'Grades', 'id': 'Nilai Siswa'}),
+      subtitle: lp.getTranslatedText({
+        'en': 'Academic · Grade Book',
+        'id': 'Akademik · Buku Nilai',
+      }),
+      isRealtimeFresh: true,
+      // No KPI overlap — the KPI strip is rendered as a separate
+      // pinned card below the header (see build()). TeacherAsyncView's
+      // inner scrollable can't safely nest inside the layout's ListView.
+      kpiOverlayHeight: 0,
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: _isTableView
+              ? Icons.view_agenda_rounded
+              : Icons.table_chart_rounded,
+          onTap: () {
+            setState(() => _isTableView = !_isTableView);
+            saveViewPreference();
           },
         ),
-      );
-    }
-    if (_filterSubjectName != null) {
-      filters.add(
-        ActiveFilter(
-          label: _filterSubjectName!,
-          onRemove: () {
-            setState(() {
-              _filterSubjectId = null;
-              _filterSubjectName = null;
-            });
-            loadData();
-          },
+        BrandHeaderIconButton(
+          icon: Icons.tune_rounded,
+          onTap: () => showFilterDialog(lp),
+          badgeCount: activeCount > 0 ? activeCount : null,
+          badgeBorderColor: ColorUtils.brandDarkBlue,
         ),
-      );
-    }
-    return filters;
+      ],
+      // Mengajar / Wali Kelas role toggle — same shared widget that
+      // Presensi / Kegiatan Kelas / Rekap Nilai use, with the multi-
+      // wali option (one chip per homeroom class) when the teacher is
+      // homeroom for more than one class. Hidden for non-homeroom
+      // teachers (returns null).
+      childSelector: _buildRoleSelector(lp),
+      bottomSlot: BrandFilterChipStrip(chips: _buildHeaderChips(lp)),
+    );
   }
 
-  Widget _buildViewToggle() {
-    return GestureDetector(
-      onTap: () {
-        setState(() => _isTableView = !_isTableView);
-        saveViewPreference();
+  /// Mengajar / Wali Kelas role selector. Returns null for teachers
+  /// without homeroom assignments — the chip row hides entirely.
+  Widget? _buildRoleSelector(LanguageProvider lp) {
+    final teacherState = ref.watch(teacherRiverpod);
+    final homeroomClasses = teacherState.homeroomClasses;
+    if (homeroomClasses.isEmpty) return null;
+    final selectedId = _isHomeroomView && _filterClassId != null
+        ? 'wali:$_filterClassId'
+        : 'mengajar';
+    return RoleToggleChipRow(
+      roles: buildMultiWaliRoleOptions(
+        homeroomClasses: homeroomClasses,
+        lp: lp,
+      ),
+      selectedRoleId: selectedId,
+      accentColor: ColorUtils.brandCobalt,
+      onSelected: (id) {
+        if (id == 'mengajar') {
+          if (!_isHomeroomView &&
+              _filterClassId == null &&
+              _filterSubjectId == null) {
+            return;
+          }
+          setState(() {
+            _isHomeroomView = false;
+            _filterClassId = null;
+            _filterClassName = null;
+            _filterSubjectId = null;
+            _filterSubjectName = null;
+          });
+          loadData();
+        } else if (id.startsWith('wali:')) {
+          final classId = id.substring(5);
+          // Resolve the picked homeroom class so we can stash its
+          // human-readable name in the filter chip strip.
+          Map<String, dynamic>? picked;
+          for (final c in homeroomClasses) {
+            if (c is Map && (c['id'] ?? '').toString() == classId) {
+              picked = Map<String, dynamic>.from(c);
+              break;
+            }
+          }
+          final pickedName =
+              (picked?['name'] ?? picked?['nama'] ?? '').toString();
+          if (_isHomeroomView && _filterClassId == classId) return;
+          setState(() {
+            _isHomeroomView = true;
+            _filterClassId = classId;
+            _filterClassName = pickedName;
+            _filterSubjectId = null;
+            _filterSubjectName = null;
+          });
+          loadData();
+        }
       },
+    );
+  }
+
+  /// Header chip strip — Kelas + Mapel filter chips. The legacy
+  /// "Peran" chip is gone — the role toggle is a dedicated child
+  /// selector above the chips now (matches Rekap Nilai / Presensi).
+  List<BrandFilterChip> _buildHeaderChips(LanguageProvider lp) {
+    void tap() => showFilterDialog(lp);
+    return [
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+        value: _filterClassName,
+        onTap: tap,
+      ),
+      BrandFilterChip(
+        label: lp.getTranslatedText({'en': 'Subject', 'id': 'Mapel'}),
+        value: _filterSubjectName,
+        onTap: tap,
+      ),
+    ];
+  }
+
+  /// 4-cell overlap KPI card — server data isn't ready yet, so we
+  /// tally over the loaded summary list. Counts are accurate because
+  /// the backend returns the FULL list (not paginated), unlike the
+  /// RPP card.
+  Widget _buildBrandKpi(LanguageProvider lp) {
+    final stats = _resolveKpiStats();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        width: 36,
-        height: 36,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          _isTableView ? Icons.view_agenda_rounded : Icons.table_chart_rounded,
           color: Colors.white,
-          size: 18,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ColorUtils.slate200),
+          boxShadow: [
+            BoxShadow(
+              color: ColorUtils.slate900.withValues(alpha: 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
+        child: Row(
+          children: [
+            _kpiCell(
+              label: lp.getTranslatedText({
+                'en': 'Complete',
+                'id': 'Lengkap',
+              }),
+              value: '${stats.complete}/${stats.totalGroups}',
+              color: ColorUtils.success600,
+            ),
+            _kpiDivider(),
+            _kpiCell(
+              label: lp.getTranslatedText({
+                'en': 'Pending',
+                'id': 'Belum',
+              }),
+              value: '${stats.pending}',
+              color: ColorUtils.warning600,
+            ),
+            _kpiDivider(),
+            _kpiCell(
+              label: lp.getTranslatedText({
+                'en': 'Average',
+                'id': 'Rerata',
+              }),
+              value: stats.avg == null ? '—' : stats.avg!.toStringAsFixed(0),
+              color: ColorUtils.info600,
+            ),
+            _kpiDivider(),
+            _kpiCell(
+              label: lp.getTranslatedText({'en': '< KKM', 'id': '< KKM'}),
+              value: '${stats.belowKkm}',
+              color: ColorUtils.error600,
+              compact: stats.belowKkm > 99,
+            ),
+          ],
         ),
       ),
     );
   }
+
+  Widget _kpiCell({
+    required String label,
+    required String value,
+    required Color color,
+    bool compact = false,
+  }) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: compact ? 16 : 22,
+              fontWeight: FontWeight.w900,
+              color: color,
+              height: 1,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiDivider() {
+    return Container(width: 1, height: 28, color: ColorUtils.slate100);
+  }
+
+  /// Tally KPI stats over the loaded class+subject groups. Because
+  /// `getTeacherGradeSummary` returns the FULL list (no pagination),
+  /// these client-side counts match what the server has — no scroll
+  /// drift like the RPP KPI bug.
+  _BukuNilaiKpiStats _resolveKpiStats() {
+    var totalGroups = 0;
+    var completeGroups = 0;
+    var pending = 0;
+    var belowKkm = 0;
+    var sumAvg = 0.0;
+    var countAvg = 0;
+    for (final g in _groupedData) {
+      if (g is! Map) continue;
+      final subjects = (g['subjects'] as List?) ?? const [];
+      for (final s in subjects) {
+        if (s is! Map) continue;
+        totalGroups++;
+        final assessments = (s['assessments'] as List?) ?? const [];
+        final filledCount = assessments
+            .where(
+              (a) => a is Map && a['avg'] is num,
+            )
+            .length;
+        if (assessments.isNotEmpty && filledCount == assessments.length) {
+          completeGroups++;
+        }
+        // Rough "belum diisi" — number of assessments where avg is
+        // still null. Doesn't try to expand to per-student × per-cell
+        // (the summary endpoint doesn't carry that detail).
+        pending += assessments.length - filledCount;
+
+        final raw = s['avg_score'];
+        if (raw is num) {
+          sumAvg += raw.toDouble();
+          countAvg++;
+          if (raw < 75) belowKkm++;
+        }
+      }
+    }
+    return _BukuNilaiKpiStats(
+      totalGroups: totalGroups,
+      complete: completeGroups,
+      pending: pending,
+      avg: countAvg == 0 ? null : sumAvg / countAvg,
+      belowKkm: belowKkm,
+    );
+  }
+
+}
+
+/// Simple POD struct for the overview KPI overlap card.
+class _BukuNilaiKpiStats {
+  final int totalGroups;
+  final int complete;
+  final int pending;
+  final double? avg;
+  final int belowKkm;
+  const _BukuNilaiKpiStats({
+    required this.totalGroups,
+    required this.complete,
+    required this.pending,
+    required this.avg,
+    required this.belowKkm,
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

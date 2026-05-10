@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · Isi Raport · Tabs deep redesign</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --green-50: #DCFCE7;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --indigo-50: #E0E7FF;
+    --indigo-600: #4F46E5;
+    --emerald-50: #D1FAE5;
+    --emerald-600: #059669;
+    --rose-50: #FFE4E6;
+    --rose-600: #E11D48;
+    --teal-50: #CCFBF1;
+    --teal-600: #0D9488;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg); margin: 0; padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 24px;
+    max-width: 920px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px; align-items: start;
+  }
+  .frame {
+    background: var(--surface); border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 760;
+    position: relative; overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+
+  /* ───── Brand header ───── */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    padding: 14px 16px 56px;
+    color: white; flex: 0 0 auto;
+    border-radius: 0 0 28px 28px;
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto;
+  }
+  .h-icon svg, .h-back svg {
+    width: 16px; height: 16px;
+    stroke-width: 2.4; fill: none; stroke: currentColor;
+  }
+  .h-title-block { flex: 1; min-width: 0; text-align: center; }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.78);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .h-title { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; }
+
+  /* Hero card overlap */
+  .hero-card {
+    background: white;
+    border-radius: 18px;
+    margin: -36px 16px 0;
+    padding: 14px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 6px 18px rgba(15,23,42,.06);
+    z-index: 1; position: relative;
+  }
+  .hero-row { display: flex; align-items: center; gap: 14px; }
+  .avatar-lg {
+    width: 56px; height: 56px;
+    border-radius: 999px;
+    background: rgba(27,111,184,.10);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; letter-spacing: 0.3px;
+    flex: 0 0 auto;
+  }
+  .hero-text { flex: 1; min-width: 0; }
+  .hero-text .nm {
+    font-size: 16px; font-weight: 900;
+    color: var(--slate-900); letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+  .hero-text .meta {
+    font-size: 11px; color: var(--slate-500);
+    margin-top: 3px; font-weight: 600;
+  }
+  .hero-text .meta strong { color: var(--brand-cobalt); font-weight: 800; }
+
+  .rerata-pill {
+    padding: 5px 10px; border-radius: 10px;
+    background: rgba(22,163,74,.08);
+    border: 1px solid rgba(22,163,74,.18);
+    text-align: center; flex: 0 0 auto;
+  }
+  .rerata-pill .v {
+    font-size: 16px; font-weight: 900;
+    color: var(--green-700); line-height: 1.0;
+  }
+  .rerata-pill .l {
+    font-size: 8.5px; font-weight: 800;
+    color: var(--green-700); letter-spacing: 0.4px;
+    text-transform: uppercase; margin-top: 2px;
+  }
+  .rerata-pill.amber {
+    background: rgba(217,119,6,.08); border-color: rgba(217,119,6,.18);
+  }
+  .rerata-pill.amber .v, .rerata-pill.amber .l { color: var(--amber-700); }
+  .rerata-pill.empty {
+    background: var(--slate-50); border-color: var(--slate-200);
+  }
+  .rerata-pill.empty .v, .rerata-pill.empty .l { color: var(--slate-500); }
+
+  .status-row { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .status-pill {
+    padding: 3px 8px; border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+  .status-pill.terbit { background: rgba(22,163,74,.10); color: var(--green-700); }
+  .status-pill.final { background: rgba(29,78,216,.10); color: var(--blue-600); }
+  .status-pill.draft { background: rgba(217,119,6,.10); color: var(--amber-700); }
+  .status-pill.belum { background: rgba(220,38,38,.10); color: var(--red-700); }
+  .status-pill.cobalt { background: rgba(27,111,184,.10); color: var(--brand-cobalt); }
+  .status-pill.green { background: rgba(22,163,74,.08); color: var(--green-700); }
+
+  /* Tab bar */
+  .tabs {
+    background: var(--slate-100);
+    border-radius: 12px;
+    padding: 3px;
+    display: flex; gap: 2px;
+    margin: 16px 16px 12px;
+  }
+  .tab {
+    flex: 1; padding: 8px 4px;
+    border-radius: 10px; text-align: center;
+    font-size: 10.5px; font-weight: 700;
+    color: var(--slate-500);
+  }
+  .tab.active {
+    background: white; color: var(--brand-cobalt);
+    font-weight: 800; box-shadow: 0 1px 3px rgba(15,23,42,.06);
+  }
+
+  /* Body */
+  .body { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 16px 90px; }
+
+  /* Section card */
+  .sect-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .sect-head {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .sect-icon {
+    width: 28px; height: 28px;
+    border-radius: 9px;
+    background: rgba(27,111,184,.10);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sect-icon svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+  .sect-icon.violet { background: rgba(124,58,237,.10); color: var(--violet-600); }
+  .sect-icon.green { background: rgba(22,163,74,.10); color: var(--green-700); }
+  .sect-icon.amber { background: rgba(217,119,6,.10); color: var(--amber-700); }
+  .sect-icon.indigo { background: rgba(79,70,229,.10); color: var(--indigo-600); }
+  .sect-head .t {
+    font-size: 13px; font-weight: 800;
+    color: var(--slate-900); letter-spacing: -0.1px;
+  }
+  .sect-head .ct {
+    margin-left: auto;
+    padding: 2px 7px; border-radius: 999px;
+    background: var(--slate-100);
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-600);
+  }
+
+  .field-label {
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-700); letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin: 6px 0 6px;
+  }
+
+  /* Predikat chip selector */
+  .predikat-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .predikat-chip {
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; font-weight: 700;
+    color: var(--slate-700);
+  }
+  .predikat-chip.active {
+    background: rgba(27,111,184,.08);
+    border-color: var(--brand-cobalt);
+    color: var(--brand-cobalt);
+    border-width: 1.5px;
+  }
+
+  .desc-input {
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px; color: var(--slate-700);
+    line-height: 1.5;
+    min-height: 80px;
+  }
+  .desc-input.placeholder { color: var(--slate-400); }
+
+  /* ───── Frame Nilai · subject row ───── */
+  .nilai-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .nilai-row .ic {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .nilai-row .ic.indigo { background: var(--indigo-50); color: var(--indigo-600); }
+  .nilai-row .ic.green { background: var(--green-50); color: var(--green-700); }
+  .nilai-row .ic.amber { background: var(--amber-50); color: var(--amber-700); }
+  .nilai-row .ic.violet { background: var(--violet-50); color: var(--violet-600); }
+  .nilai-row .ic.rose { background: var(--rose-50); color: var(--rose-600); }
+  .nilai-row .ic svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+  .nilai-row .nm { flex: 1; min-width: 0; }
+  .nilai-row .nm .t {
+    font-size: 12.5px; font-weight: 800;
+    color: var(--slate-900); letter-spacing: -0.1px;
+  }
+  .nilai-row .nm .s {
+    font-size: 10px; color: var(--slate-500);
+    font-weight: 700; margin-top: 2px; letter-spacing: 0.3px;
+  }
+  .score-input {
+    width: 72px; height: 40px;
+    background: white;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 10px;
+    text-align: center;
+    font-size: 16px; font-weight: 900;
+    color: var(--slate-900);
+    flex: 0 0 auto;
+  }
+  .score-input.green {
+    background: rgba(22,163,74,.06);
+    border-color: rgba(22,163,74,.30);
+    color: var(--green-700);
+  }
+  .score-input.amber {
+    background: rgba(217,119,6,.06);
+    border-color: rgba(217,119,6,.30);
+    color: var(--amber-700);
+  }
+  .score-input.red {
+    background: rgba(220,38,38,.06);
+    border-color: rgba(220,38,38,.30);
+    color: var(--red-700);
+  }
+
+  /* ───── Frame Tambahan · activity card ───── */
+  .add-card {
+    background: white;
+    border: 1px dashed var(--slate-300);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .add-card .ic {
+    width: 38px; height: 38px; border-radius: 12px;
+    background: rgba(27,111,184,.08);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 8px;
+  }
+  .add-card .ic svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+  .add-card .t { font-size: 12.5px; font-weight: 800; color: var(--brand-cobalt); }
+  .add-card .s { font-size: 10.5px; color: var(--slate-500); font-weight: 600; margin-top: 2px; }
+
+  .extra-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    margin-bottom: 6px;
+  }
+  .extra-row .ic {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: rgba(13,148,136,.10);
+    color: var(--teal-600);
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .extra-row .ic.violet { background: rgba(124,58,237,.10); color: var(--violet-600); }
+  .extra-row .ic svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+  .extra-row .text { flex: 1; min-width: 0; }
+  .extra-row .text .t {
+    font-size: 12px; font-weight: 800;
+    color: var(--slate-900);
+  }
+  .extra-row .text .s {
+    font-size: 10px; color: var(--slate-500);
+    font-weight: 600; margin-top: 2px;
+  }
+  .extra-row .grade-pill {
+    padding: 3px 7px; border-radius: 6px;
+    background: rgba(13,148,136,.10);
+    color: var(--teal-600);
+    font-size: 10px; font-weight: 800;
+    flex: 0 0 auto;
+  }
+  .extra-row .del {
+    color: var(--slate-400);
+  }
+  .extra-row .del svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+
+  /* ───── Frame Info · 3-cell kehadiran ───── */
+  .kpi3 {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px 6px;
+    display: flex; gap: 4px;
+    margin-bottom: 12px;
+  }
+  .kpi3-cell { flex: 1; text-align: center; padding: 4px; }
+  .kpi3-cell .v {
+    font-size: 22px; font-weight: 900;
+    line-height: 1.0; letter-spacing: -0.4px;
+  }
+  .kpi3-cell .l {
+    font-size: 9px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.4px;
+    text-transform: uppercase; margin-top: 4px;
+  }
+  .kpi3-cell.amber .v { color: var(--amber-600); }
+  .kpi3-cell.cobalt .v { color: var(--brand-cobalt); }
+  .kpi3-cell.red .v { color: var(--red-600); }
+  .kpi3-divider { width: 1px; height: 24px; background: var(--slate-100); align-self: center; }
+
+  /* Keputusan radio row */
+  .keputusan-row {
+    display: flex; gap: 6px;
+  }
+  .keputusan-chip {
+    flex: 1;
+    padding: 14px 10px;
+    border-radius: 12px;
+    background: white;
+    border: 1.5px solid var(--slate-200);
+    text-align: center;
+  }
+  .keputusan-chip .ic {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: rgba(22,163,74,.10);
+    color: var(--green-700);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 6px;
+  }
+  .keputusan-chip .ic svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+  .keputusan-chip.red .ic { background: rgba(220,38,38,.10); color: var(--red-700); }
+  .keputusan-chip .t { font-size: 12px; font-weight: 800; color: var(--slate-900); }
+  .keputusan-chip .s { font-size: 10px; color: var(--slate-500); font-weight: 600; margin-top: 2px; }
+  .keputusan-chip.active {
+    background: rgba(22,163,74,.06);
+    border-color: var(--green-600);
+  }
+  .keputusan-chip.red.active {
+    background: rgba(220,38,38,.06);
+    border-color: var(--red-600);
+  }
+
+  /* Bottom action bar */
+  .action-bar {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: white;
+    border-top: 1px solid var(--slate-200);
+    padding: 12px 16px 18px;
+    display: flex; gap: 10px;
+  }
+  .btn-secondary {
+    flex: 1; padding: 12px 16px;
+    border-radius: 12px;
+    background: var(--slate-100);
+    color: var(--slate-700);
+    text-align: center;
+    font-size: 13px; font-weight: 800;
+  }
+  .btn-primary {
+    flex: 1; padding: 12px 16px;
+    border-radius: 12px;
+    background: var(--brand-cobalt);
+    color: white;
+    text-align: center;
+    font-size: 13px; font-weight: 800;
+    box-shadow: 0 4px 12px rgba(27,111,184,.30);
+  }
+</style>
+</head>
+<body>
+
+<h1>Teacher · Isi Raport · Tabs deep redesign</h1>
+<p class="subtitle">
+  Five frames covering the wali kelas Isi Raport flow. The hero card now matches the viewing-mode mockup (Rerata pill + status row),
+  and each tab gets its own brand-aligned content design.
+</p>
+
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- HERO HEADER + FRAME SIKAP                                     -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">A</span>Hero header + Sikap tab<span class="desc">cobalt header · hero card with rerata pill + status row · predikat chips · deskripsi</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Kelas 7A · ISI RAPORT</div>
+            <div class="h-title">Ahmad Alvarro</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg></div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="hero-row">
+          <div class="avatar-lg">AA</div>
+          <div class="hero-text">
+            <div class="nm">Ahmad Alvarro</div>
+            <div class="meta"><strong>NIS 24015</strong> · No 01 · Kelas 7A</div>
+          </div>
+          <div class="rerata-pill">
+            <div class="v">88,4</div>
+            <div class="l">Rerata</div>
+          </div>
+        </div>
+        <div class="status-row">
+          <span class="status-pill draft">DRAFT</span>
+          <span class="status-pill cobalt">RANK 3 / 28</span>
+          <span class="status-pill green">8 KKM ✓</span>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active">Sikap</div>
+        <div class="tab">Nilai</div>
+        <div class="tab">Tambahan</div>
+        <div class="tab">Info</div>
+      </div>
+
+      <div class="body">
+        <!-- Sikap Spiritual section -->
+        <div class="sect-card">
+          <div class="sect-head">
+            <div class="sect-icon violet">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+            </div>
+            <div class="t">Sikap Spiritual</div>
+            <div class="ct">Wajib</div>
+          </div>
+          <div class="field-label">Predikat</div>
+          <div class="predikat-row">
+            <div class="predikat-chip">Sangat Baik</div>
+            <div class="predikat-chip active">Baik</div>
+            <div class="predikat-chip">Cukup</div>
+            <div class="predikat-chip">Kurang</div>
+          </div>
+          <div class="field-label" style="margin-top:14px">Deskripsi</div>
+          <div class="desc-input">
+            Selalu menjaga sikap doa di awal dan akhir pelajaran, hormat kepada guru, dan menghargai teman yang berbeda keyakinan.
+          </div>
+        </div>
+
+        <!-- Sikap Sosial section -->
+        <div class="sect-card">
+          <div class="sect-head">
+            <div class="sect-icon">
+              <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><circle cx="17" cy="9" r="3"/><path d="M3 21v-1c0-3.3 2.7-6 6-6s6 2.7 6 6v1"/></svg>
+            </div>
+            <div class="t">Sikap Sosial</div>
+            <div class="ct">Wajib</div>
+          </div>
+          <div class="field-label">Predikat</div>
+          <div class="predikat-row">
+            <div class="predikat-chip">Sangat Baik</div>
+            <div class="predikat-chip active">Baik</div>
+            <div class="predikat-chip">Cukup</div>
+            <div class="predikat-chip">Kurang</div>
+          </div>
+          <div class="field-label" style="margin-top:14px">Deskripsi</div>
+          <div class="desc-input placeholder">Tulis deskripsi sikap sosial siswa…</div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <div class="btn-secondary">Simpan Draft</div>
+        <div class="btn-primary">Selesaikan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME NILAI AKADEMIK                                          -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">B</span>Nilai Akademik tab<span class="desc">per-mapel rows · KKM meta · color-coded score input</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Kelas 7A · ISI RAPORT</div>
+            <div class="h-title">Ahmad Alvarro</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg></div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="hero-row">
+          <div class="avatar-lg">AA</div>
+          <div class="hero-text">
+            <div class="nm">Ahmad Alvarro</div>
+            <div class="meta"><strong>NIS 24015</strong> · No 01 · Kelas 7A</div>
+          </div>
+          <div class="rerata-pill">
+            <div class="v">88,4</div>
+            <div class="l">Rerata</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab">Sikap</div>
+        <div class="tab active">Nilai</div>
+        <div class="tab">Tambahan</div>
+        <div class="tab">Info</div>
+      </div>
+
+      <div class="body">
+        <div class="sect-head" style="margin: 4px 0 8px">
+          <div style="font-size:11px;font-weight:800;color:var(--slate-500);letter-spacing:.5px;text-transform:uppercase">DAFTAR MAPEL · 8 MAPEL</div>
+          <div class="ct" style="margin-left:auto">8 KKM ✓</div>
+        </div>
+
+        <div class="nilai-row">
+          <div class="ic indigo"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+          <div class="nm">
+            <div class="t">Bahasa Indonesia</div>
+            <div class="s">KKM 75 · Bu Sari</div>
+          </div>
+          <input class="score-input green" value="94" />
+        </div>
+        <div class="nilai-row">
+          <div class="ic green"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/></svg></div>
+          <div class="nm">
+            <div class="t">IPA Terpadu</div>
+            <div class="s">KKM 75 · Pak Doni</div>
+          </div>
+          <input class="score-input green" value="88" />
+        </div>
+        <div class="nilai-row">
+          <div class="ic amber"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></div>
+          <div class="nm">
+            <div class="t">Matematika</div>
+            <div class="s">KKM 75 · Pak Adi</div>
+          </div>
+          <input class="score-input amber" value="82" />
+        </div>
+        <div class="nilai-row">
+          <div class="ic violet"><svg viewBox="0 0 24 24"><path d="M12 2l2.39 4.84 5.34.78-3.86 3.76.91 5.31L12 14.17l-4.78 2.52.91-5.31L4.27 7.62l5.34-.78L12 2z"/></svg></div>
+          <div class="nm">
+            <div class="t">Bahasa Inggris</div>
+            <div class="s">KKM 75 · Bu Rini</div>
+          </div>
+          <input class="score-input green" value="90" />
+        </div>
+        <div class="nilai-row">
+          <div class="ic rose"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+          <div class="nm">
+            <div class="t">PJOK</div>
+            <div class="s">KKM 75 · Pak Bambang</div>
+          </div>
+          <input class="score-input" value="" placeholder="–" />
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <div class="btn-secondary">Simpan Draft</div>
+        <div class="btn-primary">Selesaikan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME TAMBAHAN                                                -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">C</span>Tambahan tab<span class="desc">ekstrakurikuler · prestasi · tap-to-add cards</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Kelas 7A · ISI RAPORT</div>
+            <div class="h-title">Ahmad Alvarro</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg></div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="hero-row">
+          <div class="avatar-lg">AA</div>
+          <div class="hero-text">
+            <div class="nm">Ahmad Alvarro</div>
+            <div class="meta"><strong>NIS 24015</strong> · No 01 · Kelas 7A</div>
+          </div>
+          <div class="rerata-pill">
+            <div class="v">88,4</div>
+            <div class="l">Rerata</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab">Sikap</div>
+        <div class="tab">Nilai</div>
+        <div class="tab active">Tambahan</div>
+        <div class="tab">Info</div>
+      </div>
+
+      <div class="body">
+        <!-- Ekstrakurikuler section -->
+        <div class="sect-card">
+          <div class="sect-head">
+            <div class="sect-icon" style="background:rgba(13,148,136,.10);color:var(--teal-600)">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            </div>
+            <div class="t">Ekstrakurikuler</div>
+            <div class="ct">2 aktif</div>
+          </div>
+
+          <div class="extra-row">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg></div>
+            <div class="text">
+              <div class="t">Pramuka</div>
+              <div class="s">Pembina · Kak Adi · Sabtu pagi</div>
+            </div>
+            <div class="grade-pill">A</div>
+            <div class="del"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+          </div>
+          <div class="extra-row">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+            <div class="text">
+              <div class="t">English Club</div>
+              <div class="s">Pembina · Bu Rini · Rabu sore</div>
+            </div>
+            <div class="grade-pill">B</div>
+            <div class="del"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+          </div>
+
+          <div class="add-card">
+            <div class="ic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+            <div class="t">Tambah Ekstrakurikuler</div>
+            <div class="s">Catat kegiatan rutin & nilai</div>
+          </div>
+        </div>
+
+        <!-- Prestasi section -->
+        <div class="sect-card">
+          <div class="sect-head">
+            <div class="sect-icon amber">
+              <svg viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 22V12h12v10"/><path d="M3 9h18"/><path d="M3 12h18"/></svg>
+            </div>
+            <div class="t">Prestasi</div>
+            <div class="ct">1 prestasi</div>
+          </div>
+
+          <div class="extra-row">
+            <div class="ic" style="background:rgba(217,119,6,.10);color:var(--amber-700)">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><polyline points="8.21 13.89 7 23 12 19.5 17 23 15.79 13.88"/></svg>
+            </div>
+            <div class="text">
+              <div class="t">Juara 2 OSN Matematika</div>
+              <div class="s">Akademik · Tingkat Kabupaten · Sep 2025</div>
+            </div>
+            <div class="del"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+          </div>
+
+          <div class="add-card">
+            <div class="ic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+            <div class="t">Tambah Prestasi</div>
+            <div class="s">Akademik / Non-akademik</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <div class="btn-secondary">Simpan Draft</div>
+        <div class="btn-primary">Selesaikan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME INFO & KEPUTUSAN                                        -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">D</span>Info & Keputusan tab<span class="desc">3-cell kehadiran KPI · catatan wali · keputusan radio chips</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Kelas 7A · ISI RAPORT</div>
+            <div class="h-title">Ahmad Alvarro</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg></div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="hero-row">
+          <div class="avatar-lg">AA</div>
+          <div class="hero-text">
+            <div class="nm">Ahmad Alvarro</div>
+            <div class="meta"><strong>NIS 24015</strong> · No 01 · Kelas 7A</div>
+          </div>
+          <div class="rerata-pill">
+            <div class="v">88,4</div>
+            <div class="l">Rerata</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab">Sikap</div>
+        <div class="tab">Nilai</div>
+        <div class="tab">Tambahan</div>
+        <div class="tab active">Info</div>
+      </div>
+
+      <div class="body">
+        <!-- Kehadiran 3-cell KPI -->
+        <div class="sect-card">
+          <div class="sect-head">
+            <div class="sect-icon green">
+              <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
+            </div>
+            <div class="t">Kehadiran Semester Ini</div>
+            <div class="ct">Total 92 hari</div>
+          </div>
+          <div class="kpi3">
+            <div class="kpi3-cell amber"><div class="v">2</div><div class="l">Sakit</div></div>
+            <div class="kpi3-divider"></div>
+            <div class="kpi3-cell cobalt"><div class="v">1</div><div class="l">Izin</div></div>
+            <div class="kpi3-divider"></div>
+            <div class="kpi3-cell red"><div class="v">0</div><div class="l">Alpha</div></div>
+          </div>
+          <div style="font-size:11px;color:var(--slate-500);font-weight:600;line-height:1.5;padding:6px 10px;background:rgba(27,111,184,.04);border-radius:8px">
+            <strong style="color:var(--brand-cobalt);font-weight:800">89 hari hadir.</strong>
+            Otomatis terisi dari Presensi · ubah manual jika perlu.
+          </div>
+        </div>
+
+        <!-- Catatan wali -->
+        <div class="sect-card">
+          <div class="sect-head">
+            <div class="sect-icon">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="t">Catatan Wali Kelas</div>
+            <div class="ct">Opsional</div>
+          </div>
+          <div class="desc-input">
+            Ahmad menunjukkan perkembangan signifikan di semester ini, terutama dalam Matematika dan IPA. Pertahankan kerajinan dan kedisiplinan.
+          </div>
+        </div>
+
+        <!-- Keputusan -->
+        <div class="sect-card">
+          <div class="sect-head">
+            <div class="sect-icon indigo">
+              <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div class="t">Keputusan Akhir Tahun</div>
+            <div class="ct">Wajib</div>
+          </div>
+          <div class="keputusan-row">
+            <div class="keputusan-chip active">
+              <div class="ic"><svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg></div>
+              <div class="t">Naik Kelas</div>
+              <div class="s">Lanjut ke 8A</div>
+            </div>
+            <div class="keputusan-chip red">
+              <div class="ic"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+              <div class="t">Tinggal Kelas</div>
+              <div class="s">Mengulang 7A</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <div class="btn-secondary">Simpan Draft</div>
+        <div class="btn-primary">Selesaikan</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -12,6 +12,7 @@ import 'package:manajemensekolah/features/attendance/presentation/controllers/te
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_detail.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_date_slot_picker.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
+import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Builds the gradient header for the attendance detail screen.
 ///
@@ -92,8 +93,36 @@ mixin TeacherAttendanceDetailHeaderMixin
       );
       return;
     }
+
+    final exportData = state.attendanceRecords.map((record) {
+      final student = state.students.firstWhere(
+        (s) => s.id == record.studentId,
+        orElse: () => const Student(
+          id: '',
+          name: '',
+          className: '',
+          studentNumber: '',
+          address: '',
+          guardianName: '',
+          phoneNumber: '',
+        ),
+      );
+
+      return {
+        'nis': student.studentNumber,
+        'student_name': student.name,
+        'class_name': student.className.isNotEmpty ? student.className : widget.className,
+        'subject_name': record.subjectName ?? widget.subjectName,
+        'date': DateFormat('yyyy-MM-dd').format(record.date),
+        'status': record.status,
+        'notes': '',
+        'teacher_name': widget.teacher['name'] ?? '',
+        'lesson_hour': record.lessonHourName ?? widget.lessonHourName ?? '',
+      };
+    }).toList();
+
     await ExcelPresenceService.exportPresenceToExcel(
-      presenceData: state.attendanceRecords,
+      presenceData: exportData,
       context: context,
       filters: {
         'class_id': widget.classId,

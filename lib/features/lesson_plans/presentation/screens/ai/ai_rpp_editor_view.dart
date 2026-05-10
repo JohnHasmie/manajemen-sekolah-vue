@@ -64,18 +64,18 @@ class _AiRppEditorViewState extends State<AiRppEditorView> {
     'assessment': Icons.grading_rounded,
   };
 
-  // Per-section accent colours (cycles for any extras).
+  // Per-section accent colours.
+  //
+  // Cobalt-aligned palette — keeps the RPP editor reading as a
+  // teacher tool (cobalt theme) instead of a rainbow. The 4 hues
+  // here are the same status/role family the rest of the app uses,
+  // and we cycle them for any format that has more than 4 sections
+  // (Modul Ajar has 6).
   static const List<Color> _sectionColors = [
-    Color(0xFF3B82F6), // blue
-    Color(0xFF8B5CF6), // violet
-    Color(0xFF10B981), // emerald
-    Color(0xFFF59E0B), // amber
-    Color(0xFFEF4444), // red
-    Color(0xFF06B6D4), // cyan
-    Color(0xFFEC4899), // pink
-    Color(0xFF14B8A6), // teal
-    Color(0xFF6366F1), // indigo
-    Color(0xFFF97316), // orange
+    Color(0xFF1B6FB8), // cobalt — teacher accent
+    Color(0xFF143068), // brand dark blue
+    Color(0xFF21AFE6), // azure
+    Color(0xFF0891B2), // info-cyan
   ];
 
   @override

@@ -6,7 +6,7 @@ import 'package:manajemensekolah/features/class_activity/presentation/screens/'
 import 'package:manajemensekolah/features/materials/presentation/screens/'
     'teacher_material_screen.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
-import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_card_summary_sheet.dart';
+import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_session_detail_screen.dart';
 
 /// Mixin for modal dialogs and sheets in schedule cards.
 mixin ScheduleCardModalMixin {
@@ -35,44 +35,44 @@ mixin ScheduleCardModalMixin {
   // Refresh callback from parent screen.
   VoidCallback? get onRefresh => null;
 
-  /// Opens material modal bottom sheet.
-  /// When the sheet closes, records a material-view event and then
-  /// refreshes the schedule summary so the materi button turns green.
+  /// Pushes the full TeacherMaterialScreen as a Material page route
+  /// pre-resolved to the session's class+subject. Drops the legacy
+  /// `embedded: true` flag so the screen renders the full brand
+  /// chrome (BrandPageHeader, KPI strip, search row, expandable
+  /// chapter cards, violet Generate AI FAB) — same surface the user
+  /// gets when entering Materi from the bottom-nav.
+  ///
+  /// Records a material-view event when the page pops so the schedule
+  /// card's "Materi" action chip turns green.
   void openMaterial(BuildContext ctx) {
-    showModalBottomSheet(
-      context: ctx,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => SizedBox(
-        height: MediaQuery.of(ctx).size.height * 0.9,
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          child: TeacherMaterialScreen(
-            teacher: {'id': teacherId, 'nama': teacherNama},
-            initialSubjectId: subjectId,
-            initialSubjectName: subjectName,
-            initialClassId: classId,
-            initialClassName: className,
-            embedded: true,
+    Navigator.of(ctx)
+        .push<void>(
+          MaterialPageRoute(
+            builder: (_) => TeacherMaterialScreen(
+              teacher: {'id': teacherId, 'nama': teacherNama},
+              initialSubjectId: subjectId,
+              initialSubjectName: subjectName,
+              initialClassId: classId,
+              initialClassName: className,
+            ),
           ),
-        ),
-      ),
-    ).then((_) async {
-      // Record material view after the user interacted and closed.
-      final cId = classId;
-      final sId = subjectId;
-      if (cId != null && sId != null && teacherId.isNotEmpty) {
-        final date = DateFormat('yyyy-MM-dd').format(computeScheduleDate());
-        await getIt<ApiScheduleService>().recordMaterialView(
-          teacherId: teacherId,
-          classId: cId,
-          subjectId: sId,
-          date: date,
-          lessonHourId: lessonHourId,
-        );
-      }
-      onRefresh?.call();
-    });
+        )
+        .then((_) async {
+          final cId = classId;
+          final sId = subjectId;
+          if (cId != null && sId != null && teacherId.isNotEmpty) {
+            final date =
+                DateFormat('yyyy-MM-dd').format(computeScheduleDate());
+            await getIt<ApiScheduleService>().recordMaterialView(
+              teacherId: teacherId,
+              classId: cId,
+              subjectId: sId,
+              date: date,
+              lessonHourId: lessonHourId,
+            );
+          }
+          onRefresh?.call();
+        });
   }
 
   /// Opens class activity modal bottom sheet.
@@ -101,30 +101,27 @@ mixin ScheduleCardModalMixin {
     ).then((_) => onRefresh?.call());
   }
 
-  /// Shows summary sheet for the schedule card.
+  /// Pushes the full-page session detail screen — Frame E of the
+  /// Jadwal redesign. Replaces the legacy modal-bottom-sheet summary
+  /// (`ScheduleCardSummarySheet`) so the BrandPageHeader gets its full
+  /// SafeArea and ESC / system-back behave predictably.
+  ///
+  /// IMPORTANT — do NOT `Navigator.pop` the detail screen before
+  /// opening a sub-action sheet. The legacy bottom-sheet implementation
+  /// popped the sheet first because the sheet otherwise covered the
+  /// schedule list underneath; with the full-page detail screen we
+  /// want the user to land BACK on the detail screen when they close
+  /// the attendance / activity / material modal — popping here would
+  /// silently dump them to the hub, which is what bug #1 reported.
   void showSummarySheet(BuildContext ctx, Map<String, dynamic>? summary) {
-    showModalBottomSheet(
-      context: ctx,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ScheduleCardSummarySheet(
-        schedule: schedule,
-        summary: summary,
-        languageProvider: languageProvider,
-        primary: getPrimaryColor(),
-        onAttendanceTap: () {
-          Navigator.pop(ctx);
-          openAttendance(ctx, hasAttendance(summary));
-        },
-        onMaterialTap: () {
-          Navigator.pop(ctx);
-          openMaterial(ctx);
-        },
-        onActivityTap: () {
-          Navigator.pop(ctx);
-          openClassActivity(ctx);
-        },
-      ),
+    TeacherScheduleSessionDetailScreen.push(
+      ctx,
+      schedule: schedule,
+      summary: summary,
+      languageProvider: languageProvider,
+      onAttendanceTap: () => openAttendance(ctx, hasAttendance(summary)),
+      onMaterialTap: () => openMaterial(ctx),
+      onActivityTap: () => openClassActivity(ctx),
     );
   }
 }

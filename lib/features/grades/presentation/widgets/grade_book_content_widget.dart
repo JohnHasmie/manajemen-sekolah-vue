@@ -108,108 +108,53 @@ class GradeBookContentWidget extends StatelessWidget {
 
     return Column(
       children: [
-        // Search bar
+        // Search bar — Frame B styling: 12px radius, soft slate
+        // shadow, slightly taller for thumb-friendly tap. The student-
+        // count pill + grade-type filter chips that used to sit below
+        // were retired: the pill restated information already shown in
+        // the table header, and the chip row duplicated the column
+        // visibility controls in the column-options sheet.
         Container(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-          color: ColorUtils.slate50,
-          child: Column(
-            children: [
-              Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: ColorUtils.slate200),
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+          color: const Color(0xFFF1F5F9),
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: ColorUtils.slate200),
+              boxShadow: [
+                BoxShadow(
+                  color: ColorUtils.slate900.withValues(alpha: 0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
-                child: TextField(
-                  controller: searchController,
-                  style: TextStyle(color: ColorUtils.slate900, fontSize: 13),
-                  textAlignVertical: TextAlignVertical.center,
-                  decoration: InputDecoration(
-                    hintText: languageProvider.getTranslatedText({
-                      'en': 'Search students...',
-                      'id': 'Cari siswa...',
-                    }),
-                    hintStyle: TextStyle(
-                      color: ColorUtils.slate400,
-                      fontSize: 13,
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: ColorUtils.slate400,
-                      size: 18,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-                    isCollapsed: true,
-                  ),
-                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
+              ],
+            ),
+            child: TextField(
+              controller: searchController,
+              style: TextStyle(color: ColorUtils.slate900, fontSize: 13),
+              textAlignVertical: TextAlignVertical.center,
+              decoration: InputDecoration(
+                hintText: languageProvider.getTranslatedText({
+                  'en': 'Search students...',
+                  'id': 'Cari siswa...',
+                }),
+                hintStyle: TextStyle(
+                  color: ColorUtils.slate400,
+                  fontSize: 13,
                 ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: ColorUtils.slate400,
+                  size: 18,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                isCollapsed: true,
               ),
-              const SizedBox(height: 8),
-              // Filter chips + student count
-              Row(
-                children: [
-                  Text(
-                    '${filteredStudentList.length} siswa',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: ColorUtils.slate500,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: allGradeTypeList.map((type) {
-                          final isActive = gradeTypeFilter[type] ?? true;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: GestureDetector(
-                              onTap: () {
-                                gradeTypeFilter[type] = !isActive;
-                                onFilterChanged();
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isActive
-                                      ? primaryColor.withValues(alpha: 0.1)
-                                      : Colors.white,
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: isActive
-                                        ? primaryColor.withValues(alpha: 0.3)
-                                        : ColorUtils.slate200,
-                                  ),
-                                ),
-                                child: Text(
-                                  getGradeTypeLabel(type, languageProvider),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: isActive
-                                        ? FontWeight.w600
-                                        : FontWeight.w400,
-                                    color: isActive
-                                        ? primaryColor
-                                        : ColorUtils.slate400,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              onSubmitted: (_) => FocusScope.of(context).unfocus(),
+            ),
           ),
         ),
         // Content with pull-to-refresh

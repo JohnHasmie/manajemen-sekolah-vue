@@ -82,6 +82,10 @@ class ApiEndpoints {
   // ── Lesson Plans (RPP) ──
   static const lessonPlans = '/rpp';
   static const uploadLessonPlan = '/upload/rpp';
+  // AI generation endpoint lives on the kamiledu-ai backend.
+  // Currently dioClient routes /lesson-plans/* to the AI backend via
+  // the same baseUrl + Sanctum cookie flow.
+  static const generateLessonPlan = '/lesson-plans/generate';
 
   // ── Announcements ──
   static const announcements = '/announcement';

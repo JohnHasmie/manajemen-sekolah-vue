@@ -255,6 +255,145 @@ class ApiRecommendationService {
     return response.data;
   }
 
+  // ==================== SHARE-TO-PARENT ====================
+
+  /// Bagikan ke Wali — fan out a recommendation to one or more parents.
+  ///
+  /// Backend rejects (422) if the rec is still `pending` or
+  /// `dismissed`. Returns the updated recommendation with
+  /// `share_recipients` eager-loaded so the card can refresh
+  /// in-place without another round-trip.
+  Future<Map<String, dynamic>> shareRecommendation({
+    required String recommendationId,
+    required String teacherId,
+    required List<Map<String, dynamic>> parents,
+    String? message,
+    String? tone,
+    bool channelPush = true,
+    bool channelWhatsapp = false,
+  }) async {
+    final response = await _aiDio.post(
+      '/recommendations/$recommendationId/share',
+      data: {
+        'teacher_id': teacherId,
+        'parents': parents,
+        if (message != null) 'message': message,
+        if (tone != null) 'tone': tone,
+        'channels': {'push': channelPush, 'whatsapp': channelWhatsapp},
+      },
+      options: Options(validateStatus: (s) => s != null && s < 500),
+    );
+
+    AppLogger.debug(
+      'recommendation',
+      'Share rec $recommendationId: ${response.statusCode}',
+    );
+
+    if (response.statusCode == 403 || response.statusCode == 422) {
+      throw Exception(
+        response.data?['message']?.toString() ??
+            'Gagal membagikan rekomendasi.',
+      );
+    }
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Riwayat Pengiriman — per-recipient timeline with sent/read/replied stamps.
+  Future<Map<String, dynamic>> getShareStatus(String recommendationId) async {
+    final response = await _aiDio.get(
+      '/recommendations/$recommendationId/share-status',
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Ingatkan Ulang — re-stamp sent_at for one recipient + bump resend.
+  Future<Map<String, dynamic>> remindRecipient({
+    required String recommendationId,
+    required String recipientId,
+  }) async {
+    final response = await _aiDio.post(
+      '/recommendations/$recommendationId/share/$recipientId/remind',
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Tarik Pesan — flag a recipient as revoked.
+  Future<Map<String, dynamic>> revokeRecipient({
+    required String recommendationId,
+    required String recipientId,
+    String? reason,
+  }) async {
+    final response = await _aiDio.post(
+      '/recommendations/$recommendationId/share/$recipientId/revoke',
+      data: {if (reason != null) 'reason': reason},
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Edit & Kirim Ulang — patch the rec's shared_message/tone and
+  /// re-stamp this recipient's sent_at without losing read state.
+  Future<Map<String, dynamic>> editAndResendRecipient({
+    required String recommendationId,
+    required String recipientId,
+    String? message,
+    String? tone,
+  }) async {
+    final response = await _aiDio.patch(
+      '/recommendations/$recommendationId/share/$recipientId',
+      data: {
+        if (message != null) 'message': message,
+        if (tone != null) 'tone': tone,
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Parent app: flip read_at on the recipient row when the parent
+  /// opens the rec card. Idempotent — backend no-ops when read_at is
+  /// already set.
+  Future<void> markRecommendationRead({
+    required String recommendationId,
+    required String parentUserId,
+  }) async {
+    await _aiDio.post(
+      '/recommendations/$recommendationId/share/mark-read',
+      data: {'parent_user_id': parentUserId},
+      options: Options(validateStatus: (s) => s != null && s < 500),
+    );
+  }
+
+  /// Parent reply — stamps replied_at + reply_text on the recipient row.
+  Future<Map<String, dynamic>> replyToRecommendation({
+    required String recommendationId,
+    required String parentUserId,
+    required String replyText,
+  }) async {
+    final response = await _aiDio.post(
+      '/recommendations/$recommendationId/share/reply',
+      data: {'parent_user_id': parentUserId, 'reply_text': replyText},
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Parent inbox — recommendations shared with the authenticated wali.
+  Future<List<dynamic>> getParentInbox({
+    required String parentUserId,
+    String? studentId,
+    bool unreadOnly = false,
+  }) async {
+    final response = await _aiDio.get(
+      '/recommendations/parent-inbox',
+      queryParameters: {
+        'parent_user_id': parentUserId,
+        if (studentId != null) 'student_id': studentId,
+        if (unreadOnly) 'unread_only': 'true',
+      },
+    );
+    return (response.data?['data'] as List?) ?? [];
+  }
+
+  // ==================== CLASS SUMMARY ====================
+
   /// Get class summary (aggregated recommendations by category/priority/status)
   Future<Map<String, dynamic>> getClassSummary(
     String classId, {

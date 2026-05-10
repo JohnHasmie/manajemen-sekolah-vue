@@ -35,10 +35,14 @@ mixin FilterManagementMixin {
       primaryColor: _getPrimaryColorForFilter(),
       languageProvider: lp,
       currentStatus: _selectedStatusFilter,
-      onApply: (status) {
+      // Admin screen still drives status only — formats + method
+      // axes ride along but aren't surfaced on admin yet (admin has
+      // its own RPP review hub which isn't part of the teacher
+      // migration).
+      onApply: (result) {
         setState(() {
-          _selectedStatusFilter = status;
-          _hasActiveFilter = status != null;
+          _selectedStatusFilter = result.status;
+          _hasActiveFilter = result.activeCount > 0;
         });
       },
     );

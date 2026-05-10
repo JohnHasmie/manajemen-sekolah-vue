@@ -1,0 +1,1126 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · Raport · Deep redesign</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --green-50: #DCFCE7;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --indigo-50: #E0E7FF;
+    --indigo-600: #4F46E5;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .subtitle { color: var(--slate-500); font-size: 14px; margin: 0 0 24px; max-width: 920px; line-height: 1.55; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin: 0 0 28px; padding: 14px 18px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; color: var(--slate-700); font-weight: 600;
+    max-width: 920px;
+  }
+  .legend .swatch {
+    width: 14px; height: 14px; border-radius: 4px;
+    display: inline-block; vertical-align: -2px; margin-right: 6px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%; aspect-ratio: 380 / 760;
+    position: relative; overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+
+  /* Brand header */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    padding: 14px 16px 60px;
+    color: white; flex: 0 0 auto;
+    border-radius: 0 0 28px 28px;
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto;
+  }
+  .h-icon svg, .h-back svg {
+    width: 16px; height: 16px;
+    stroke-width: 2.4; fill: none; stroke: currentColor;
+  }
+  .h-title-block { flex: 1; min-width: 0; text-align: center; }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.78);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .h-title { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; }
+  .live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 999px; background: #22D3EE; margin-left: 6px; vertical-align: 1px; }
+
+  /* Periode chip strip in bottom slot */
+  .period-row {
+    display: flex; gap: 6px; margin-top: 14px;
+    flex-wrap: nowrap; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .period-row::-webkit-scrollbar { display: none; }
+  .pchip {
+    flex: 0 0 auto; white-space: nowrap;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.16);
+    color: rgba(255,255,255,.86);
+    font-size: 11px; font-weight: 800;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .pchip svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .pchip.active { background: white; color: var(--brand-cobalt); }
+
+  /* KPI overlap card */
+  .kpi {
+    background: white; border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    margin: -36px 16px 0;
+    padding: 12px 6px;
+    display: flex; align-items: center;
+    box-shadow: 0 6px 16px rgba(15,23,42,.06);
+    z-index: 1; position: relative;
+  }
+  .kpi-cell { flex: 1; text-align: center; }
+  .kpi-cell .v {
+    font-size: 20px; font-weight: 900;
+    line-height: 1; letter-spacing: -0.3px;
+  }
+  .kpi-cell .l {
+    font-size: 9px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: .5px;
+    text-transform: uppercase; margin-top: 4px;
+  }
+  .kpi-cell.cobalt .v { color: var(--brand-cobalt); }
+  .kpi-cell.green .v { color: var(--green-600); }
+  .kpi-cell.amber .v { color: var(--amber-600); }
+  .kpi-cell.red .v { color: var(--red-600); }
+  .kpi-cell.blue .v { color: var(--blue-600); }
+  .kpi-cell.slate .v { color: var(--slate-700); }
+  .kpi-divider { width: 1px; height: 24px; background: var(--slate-100); }
+
+  /* Body */
+  .body {
+    flex: 1; min-height: 0;
+    overflow-y: auto;
+    padding: 16px 16px 90px;
+  }
+
+  /* Section heading */
+  .sect-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin: 14px 0 8px;
+  }
+  .sect-head .t {
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .sect-head .x {
+    font-size: 10.5px; font-weight: 700; color: var(--slate-500);
+  }
+
+  /* ───── Frame A · class card ───── */
+  .ov-card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .ov-row { display: flex; align-items: center; gap: 12px; }
+  .ov-ring {
+    width: 50px; height: 50px;
+    border-radius: 999px;
+    padding: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .ov-ring.green { background: conic-gradient(var(--green-600) 0% 92%, var(--slate-100) 92% 100%); }
+  .ov-ring.amber { background: conic-gradient(var(--amber-600) 0% 55%, var(--slate-100) 55% 100%); }
+  .ov-ring.cobalt { background: conic-gradient(var(--brand-cobalt) 0% 65%, var(--slate-100) 65% 100%); }
+  .ov-ring.red { background: conic-gradient(var(--red-600) 0% 8%, var(--slate-100) 8% 100%); }
+  .ov-ring .inner {
+    width: 100%; height: 100%; border-radius: 999px; background: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 900; letter-spacing: -0.3px;
+  }
+  .ov-ring.green .inner { color: var(--green-700); }
+  .ov-ring.amber .inner { color: var(--amber-700); }
+  .ov-ring.cobalt .inner { color: var(--brand-cobalt); }
+  .ov-ring.red .inner { color: var(--red-700); }
+
+  .ov-text { flex: 1; min-width: 0; }
+  .ov-text .kicker {
+    font-size: 10px; font-weight: 800;
+    color: var(--brand-cobalt); letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-bottom: 1px;
+  }
+  .ov-text .name {
+    font-size: 14px; font-weight: 800;
+    color: var(--slate-900); letter-spacing: -0.2px;
+    line-height: 1.2;
+  }
+  .ov-text .meta {
+    font-size: 11px; font-weight: 600;
+    color: var(--slate-500); margin-top: 2px;
+  }
+  .ov-chev { color: var(--slate-400); flex: 0 0 auto; }
+  .ov-chev svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  .ov-stats { display: flex; gap: 6px; margin-top: 10px; }
+  .ov-stat {
+    flex: 1;
+    padding: 6px 6px;
+    border-radius: 8px;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-100);
+    text-align: center;
+  }
+  .ov-stat .v {
+    font-size: 13px; font-weight: 900;
+    color: var(--slate-900); line-height: 1;
+  }
+  .ov-stat .l {
+    font-size: 8.5px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.4px;
+    text-transform: uppercase; margin-top: 3px;
+  }
+  .ov-stat.cobalt { background: rgba(27,111,184,.06); border-color: rgba(27,111,184,.16); }
+  .ov-stat.cobalt .v, .ov-stat.cobalt .l { color: var(--brand-cobalt); }
+  .ov-stat.green { background: rgba(22,163,74,.06); border-color: rgba(22,163,74,.18); }
+  .ov-stat.green .v, .ov-stat.green .l { color: var(--green-700); }
+  .ov-stat.amber { background: rgba(217,119,6,.06); border-color: rgba(217,119,6,.18); }
+  .ov-stat.amber .v, .ov-stat.amber .l { color: var(--amber-700); }
+  .ov-stat.red { background: rgba(220,38,38,.06); border-color: rgba(220,38,38,.18); }
+  .ov-stat.red .v, .ov-stat.red .l { color: var(--red-700); }
+
+  .ov-bar {
+    height: 5px; border-radius: 999px;
+    background: var(--slate-100);
+    margin-top: 10px; overflow: hidden;
+  }
+  .ov-bar > div {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--brand-cobalt), var(--brand-azure));
+  }
+  .ov-bar.green > div { background: var(--green-600); }
+  .ov-bar.amber > div { background: var(--amber-600); }
+  .ov-bar.red > div { background: var(--red-600); }
+
+  /* Empty state */
+  .empty {
+    margin: 28px 16px;
+    padding: 28px 18px;
+    background: white;
+    border: 1px dashed var(--slate-300);
+    border-radius: 16px;
+    text-align: center;
+  }
+  .empty .ic {
+    width: 52px; height: 52px; border-radius: 16px;
+    background: rgba(27,111,184,.08); color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 10px;
+  }
+  .empty .ic svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .empty .t { font-size: 13.5px; font-weight: 800; color: var(--slate-700); }
+  .empty .s { font-size: 11.5px; color: var(--slate-500); margin-top: 4px; line-height: 1.5; }
+
+  /* FAB */
+  .floating-fab {
+    position: absolute; right: 16px; bottom: 24px;
+    height: 48px; padding: 0 18px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-cobalt));
+    box-shadow: 0 10px 24px rgba(20,48,104,.35);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 13px; font-weight: 800;
+    gap: 8px;
+  }
+  .floating-fab svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+
+  /* ───── Frame B · student row ───── */
+  .stu-card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .avatar {
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    background: rgba(27,111,184,.10);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; letter-spacing: 0.3px;
+    flex: 0 0 auto;
+  }
+  .stu-info { flex: 1; min-width: 0; }
+  .stu-info .nm {
+    font-size: 13px; font-weight: 800;
+    color: var(--slate-900); letter-spacing: -0.1px;
+  }
+  .stu-info .nis {
+    font-size: 10.5px; color: var(--slate-500);
+    margin-top: 2px; font-weight: 700; letter-spacing: 0.2px;
+  }
+  .stu-meta {
+    display: flex; gap: 4px; margin-top: 6px;
+  }
+  .status-pill {
+    padding: 2px 7px; border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+  .status-pill.draft { background: rgba(217,119,6,.10); color: var(--amber-700); }
+  .status-pill.final { background: rgba(29,78,216,.10); color: var(--blue-600); }
+  .status-pill.published { background: rgba(22,163,74,.10); color: var(--green-700); }
+  .status-pill.empty { background: var(--slate-100); color: var(--slate-500); }
+  .status-pill.belum { background: rgba(220,38,38,.08); color: var(--red-700); }
+
+  .stu-rerata {
+    flex: 0 0 auto;
+    text-align: center;
+    padding: 4px 10px;
+    border-radius: 10px;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+  }
+  .stu-rerata .v {
+    font-size: 14px; font-weight: 900; line-height: 1.0;
+    color: var(--slate-900);
+  }
+  .stu-rerata .l {
+    font-size: 8.5px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.4px;
+    text-transform: uppercase; margin-top: 2px;
+  }
+  .stu-rerata.green { background: rgba(22,163,74,.06); border-color: rgba(22,163,74,.18); }
+  .stu-rerata.green .v { color: var(--green-700); }
+  .stu-rerata.amber { background: rgba(217,119,6,.06); border-color: rgba(217,119,6,.18); }
+  .stu-rerata.amber .v { color: var(--amber-700); }
+
+  .stu-arrow { color: var(--slate-300); }
+  .stu-arrow svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  /* ───── Frame C · student detail ───── */
+  .det-hero {
+    background: white;
+    border-radius: 18px;
+    margin: -36px 16px 0;
+    padding: 14px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 6px 18px rgba(15,23,42,.06);
+    z-index: 1; position: relative;
+  }
+  .det-hero-row { display: flex; align-items: center; gap: 14px; }
+  .avatar-lg {
+    width: 56px; height: 56px;
+    border-radius: 999px;
+    background: rgba(27,111,184,.10);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; letter-spacing: 0.3px;
+    flex: 0 0 auto;
+  }
+  .det-hero-text { flex: 1; min-width: 0; }
+  .det-hero-text .nm {
+    font-size: 16px; font-weight: 900;
+    color: var(--slate-900); letter-spacing: -0.3px;
+  }
+  .det-hero-text .meta {
+    font-size: 11px; color: var(--slate-500);
+    margin-top: 3px; font-weight: 600;
+  }
+  .det-hero-text .meta strong { color: var(--brand-cobalt); font-weight: 800; }
+
+  .det-rerata-pill {
+    padding: 5px 10px; border-radius: 10px;
+    background: rgba(22,163,74,.08);
+    border: 1px solid rgba(22,163,74,.18);
+    text-align: center;
+  }
+  .det-rerata-pill .v {
+    font-size: 16px; font-weight: 900;
+    color: var(--green-700); line-height: 1.0;
+  }
+  .det-rerata-pill .l {
+    font-size: 8.5px; font-weight: 800;
+    color: var(--green-700); letter-spacing: 0.4px;
+    text-transform: uppercase; margin-top: 2px;
+  }
+
+  .det-status-row {
+    display: flex; gap: 6px; margin-top: 12px;
+  }
+
+  .det-tabs {
+    background: var(--slate-100);
+    border-radius: 12px;
+    padding: 3px;
+    display: flex; gap: 2px;
+    margin: 16px 16px 12px;
+  }
+  .det-tab {
+    flex: 1; padding: 8px 4px;
+    border-radius: 10px; text-align: center;
+    font-size: 11.5px; font-weight: 700;
+    color: var(--slate-500);
+  }
+  .det-tab.active {
+    background: white; color: var(--brand-cobalt);
+    font-weight: 800; box-shadow: 0 1px 3px rgba(15,23,42,.08);
+  }
+
+  /* Subject grade list */
+  .sub-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .sub-row .ic {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .sub-row .ic.indigo { background: var(--indigo-50); color: var(--indigo-600); }
+  .sub-row .ic.amber { background: var(--amber-50); color: var(--amber-600); }
+  .sub-row .ic.green { background: var(--green-50); color: var(--green-700); }
+  .sub-row .ic.violet { background: var(--violet-50); color: var(--violet-600); }
+  .sub-row .ic svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+  .sub-row .nm { flex: 1; min-width: 0; }
+  .sub-row .nm .t {
+    font-size: 12.5px; font-weight: 800;
+    color: var(--slate-900); letter-spacing: -0.1px;
+  }
+  .sub-row .nm .s {
+    font-size: 10px; color: var(--slate-500);
+    font-weight: 600; margin-top: 2px; letter-spacing: 0.3px;
+  }
+  .grade-pill {
+    padding: 6px 10px; border-radius: 10px;
+    font-size: 14px; font-weight: 900;
+    letter-spacing: -0.2px;
+    flex: 0 0 auto;
+  }
+  .grade-pill.green { background: rgba(22,163,74,.10); color: var(--green-700); }
+  .grade-pill.amber { background: rgba(217,119,6,.10); color: var(--amber-700); }
+  .grade-pill.red { background: rgba(220,38,38,.10); color: var(--red-700); }
+  .grade-pill.empty { background: var(--slate-100); color: var(--slate-500); font-size: 11px; }
+
+  /* Final summary card */
+  .summary-card {
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-cobalt));
+    color: white;
+    border-radius: 16px;
+    padding: 14px;
+    margin: 4px 0 12px;
+  }
+  .summary-card .h {
+    font-size: 10px; font-weight: 800;
+    color: rgba(255,255,255,.85); letter-spacing: 0.6px;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .summary-card .v {
+    font-size: 26px; font-weight: 900;
+    letter-spacing: -0.5px; line-height: 1.0;
+  }
+  .summary-card .s {
+    font-size: 11.5px; font-weight: 600;
+    color: rgba(255,255,255,.85); margin-top: 4px;
+  }
+  .summary-stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px; margin-top: 12px;
+  }
+  .summary-stat {
+    padding: 8px;
+    background: rgba(255,255,255,.10);
+    border-radius: 10px;
+    text-align: center;
+  }
+  .summary-stat .v {
+    font-size: 14px; font-weight: 900;
+    line-height: 1.0; color: white;
+  }
+  .summary-stat .l {
+    font-size: 9px; font-weight: 800;
+    color: rgba(255,255,255,.85); letter-spacing: 0.4px;
+    text-transform: uppercase; margin-top: 3px;
+  }
+
+  /* ───── Frame D · Filter sheet ───── */
+  .sheet-wrap {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    overflow: hidden;
+    box-shadow: 0 -8px 30px rgba(15,23,42,.20);
+    max-height: 90%;
+    display: flex; flex-direction: column;
+  }
+  .sheet-header {
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-cobalt));
+    padding: 10px 16px 22px;
+    color: white;
+  }
+  .sheet-handle-light {
+    width: 40px; height: 4px;
+    background: rgba(255,255,255,.45);
+    border-radius: 999px;
+    margin: 0 auto 12px;
+  }
+  .sheet-title-row { display: flex; align-items: center; gap: 10px; }
+  .sheet-icon-box {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sheet-icon-box svg {
+    width: 18px; height: 18px;
+    stroke: white; stroke-width: 2.4; fill: none;
+  }
+  .sheet-kicker {
+    font-size: 9px; font-weight: 800;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    color: rgba(255,255,255,.78);
+    margin-bottom: 2px;
+  }
+  .sheet-title { font-size: 16px; font-weight: 900; letter-spacing: -0.3px; }
+  .sheet-body { padding: 14px 16px 24px; overflow-y: auto; flex: 1; }
+
+  .filter-section { margin-bottom: 18px; }
+  .filter-label {
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-700); letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .filter-label svg {
+    width: 13px; height: 13px;
+    stroke: var(--brand-cobalt); stroke-width: 2.4; fill: none;
+  }
+  .chip-grid {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .chip {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    font-size: 11.5px; font-weight: 700;
+    color: var(--slate-700);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .chip svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .chip.active {
+    background: rgba(27,111,184,.10);
+    border-color: var(--brand-cobalt);
+    color: var(--brand-cobalt);
+  }
+  .footer-bar {
+    background: white;
+    border-top: 1px solid var(--slate-200);
+    padding: 12px 16px 18px;
+    display: flex; gap: 10px;
+  }
+  .btn-secondary {
+    flex: 0 0 auto;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: var(--slate-100);
+    color: var(--slate-700);
+    font-size: 13px; font-weight: 800;
+  }
+  .btn-primary {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: var(--brand-cobalt);
+    color: white;
+    font-size: 13px; font-weight: 800;
+    box-shadow: 0 4px 12px rgba(27,111,184,.30);
+  }
+
+  /* ───── Frame E · Export sheet ───── */
+  .ex-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+  .ex-row .ic {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .ex-row .ic svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .ex-row.excel .ic { background: rgba(22,163,74,.12); color: var(--green-700); }
+  .ex-row.pdf .ic { background: rgba(220,38,38,.12); color: var(--red-700); }
+  .ex-row .text { flex: 1; min-width: 0; }
+  .ex-row .text .t { font-size: 14px; font-weight: 800; color: var(--slate-900); }
+  .ex-row .text .s { font-size: 11px; color: var(--slate-500); font-weight: 600; margin-top: 2px; }
+  .ex-row .chev { color: var(--slate-400); }
+  .ex-row .chev svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  /* View toggle */
+  .view-toggle {
+    display: inline-flex;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    padding: 3px;
+  }
+  .view-toggle .seg {
+    padding: 5px 8px; border-radius: 8px;
+    color: rgba(255,255,255,.7);
+  }
+  .view-toggle .seg.active { background: white; color: var(--brand-cobalt); }
+  .view-toggle .seg svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+</style>
+</head>
+<body>
+
+<h1>Teacher · Raport · Deep redesign</h1>
+<p class="subtitle">
+  Five frames covering the teacher (wali kelas) Raport hub, class report, student detail, filter sheet, and export sheet.
+  Same brand chrome shipped on Buku Nilai / RPP / Jadwal / Materi — cobalt header, KPI overlap card with periode chip strip,
+  expandable class+student cards, AppDraggableSheet for sheets, FilterChipGrid for selectors. Status pills follow the
+  raport workflow vocabulary: Draft (amber) → Final (blue) → Terbit (green); Belum (red) when no draft exists.
+</p>
+
+<div class="legend">
+  <div><span class="swatch" style="background:var(--brand-cobalt)"></span>Teacher cobalt — primary</div>
+  <div><span class="swatch" style="background:var(--amber-600)"></span>Draft</div>
+  <div><span class="swatch" style="background:var(--blue-600)"></span>Final</div>
+  <div><span class="swatch" style="background:var(--green-600)"></span>Terbit</div>
+  <div><span class="swatch" style="background:var(--red-600)"></span>Belum</div>
+</div>
+
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- FRAME A — RAPORT HUB OVERVIEW                                 -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">A</span>Raport hub · class cards<span class="desc">brand header · periode chip · KPI overlap · per-class progress</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Raport Akhir Semester<span class="live-dot"></span></div>
+            <div class="h-title">Wali Kelas</div>
+          </div>
+          <div class="view-toggle">
+            <div class="seg active"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+            <div class="seg"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg></div>
+          </div>
+        </div>
+        <div class="period-row">
+          <div class="pchip active">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+            Smt 1 · 2025/26
+          </div>
+          <div class="pchip">Smt 2 · 25/26</div>
+          <div class="pchip">Smt 1 · 24/25</div>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-cell cobalt"><div class="v">28</div><div class="l">Siswa</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v">22</div><div class="l">Terbit</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">4</div><div class="l">Draft</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell red"><div class="v">2</div><div class="l">Belum</div></div>
+      </div>
+
+      <div class="body">
+        <div class="sect-head">
+          <div class="t">KELAS WALI · 2 KELAS</div>
+          <div class="x">26 / 28 raport</div>
+        </div>
+
+        <!-- Class 1: high progress -->
+        <div class="ov-card">
+          <div class="ov-row">
+            <div class="ov-ring green"><div class="inner">92%</div></div>
+            <div class="ov-text">
+              <div class="kicker">VII A · WALI</div>
+              <div class="name">Kelas 7A</div>
+              <div class="meta">28 siswa · 26 raport siap</div>
+            </div>
+            <div class="ov-chev"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+          </div>
+          <div class="ov-stats">
+            <div class="ov-stat green"><div class="v">22</div><div class="l">Terbit</div></div>
+            <div class="ov-stat amber"><div class="v">4</div><div class="l">Draft</div></div>
+            <div class="ov-stat red"><div class="v">2</div><div class="l">Belum</div></div>
+          </div>
+          <div class="ov-bar green"><div style="width:92%"></div></div>
+        </div>
+
+        <!-- Class 2: in progress -->
+        <div class="ov-card">
+          <div class="ov-row">
+            <div class="ov-ring amber"><div class="inner">55%</div></div>
+            <div class="ov-text">
+              <div class="kicker">VII B · WALI</div>
+              <div class="name">Kelas 7B</div>
+              <div class="meta">30 siswa · 16 raport siap</div>
+            </div>
+            <div class="ov-chev"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+          </div>
+          <div class="ov-stats">
+            <div class="ov-stat green"><div class="v">10</div><div class="l">Terbit</div></div>
+            <div class="ov-stat amber"><div class="v">6</div><div class="l">Draft</div></div>
+            <div class="ov-stat red"><div class="v">14</div><div class="l">Belum</div></div>
+          </div>
+          <div class="ov-bar amber"><div style="width:55%"></div></div>
+        </div>
+      </div>
+
+      <div class="floating-fab">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Buat Raport
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME B — CLASS REPORT (student list)                         -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">B</span>Class report · student list<span class="desc">brand header · KPI · status pill per student · rerata pill</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Smt 1 · 2025/26</div>
+            <div class="h-title">Raport Kelas 7A</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi-cell cobalt"><div class="v">28</div><div class="l">Siswa</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v">22</div><div class="l">Terbit</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">4</div><div class="l">Draft</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">82.4</div><div class="l">Rerata</div></div>
+      </div>
+
+      <div class="body">
+        <div class="sect-head">
+          <div class="t">DAFTAR SISWA</div>
+          <div class="x">Urut nomor absen</div>
+        </div>
+
+        <!-- Student rows -->
+        <div class="stu-card">
+          <div class="avatar">AA</div>
+          <div class="stu-info">
+            <div class="nm">Ahmad Alvarro</div>
+            <div class="nis">NIS · 24015 · No 01</div>
+            <div class="stu-meta">
+              <span class="status-pill published">TERBIT</span>
+            </div>
+          </div>
+          <div class="stu-rerata green">
+            <div class="v">88</div><div class="l">Rerata</div>
+          </div>
+          <div class="stu-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+        </div>
+
+        <div class="stu-card">
+          <div class="avatar">BL</div>
+          <div class="stu-info">
+            <div class="nm">Budi Lestari</div>
+            <div class="nis">NIS · 24016 · No 02</div>
+            <div class="stu-meta">
+              <span class="status-pill draft">DRAFT</span>
+            </div>
+          </div>
+          <div class="stu-rerata amber">
+            <div class="v">76</div><div class="l">Rerata</div>
+          </div>
+          <div class="stu-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+        </div>
+
+        <div class="stu-card">
+          <div class="avatar">CR</div>
+          <div class="stu-info">
+            <div class="nm">Citra Rahayu</div>
+            <div class="nis">NIS · 24017 · No 03</div>
+            <div class="stu-meta">
+              <span class="status-pill final">FINAL</span>
+            </div>
+          </div>
+          <div class="stu-rerata green">
+            <div class="v">91</div><div class="l">Rerata</div>
+          </div>
+          <div class="stu-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+        </div>
+
+        <div class="stu-card">
+          <div class="avatar" style="background:rgba(220,38,38,.10);color:var(--red-700)">DR</div>
+          <div class="stu-info">
+            <div class="nm">Dimas Rahmat</div>
+            <div class="nis">NIS · 24018 · No 04</div>
+            <div class="stu-meta">
+              <span class="status-pill belum">BELUM ISI</span>
+            </div>
+          </div>
+          <div class="stu-rerata">
+            <div class="v">—</div><div class="l">Rerata</div>
+          </div>
+          <div class="stu-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+        </div>
+
+        <div class="stu-card">
+          <div class="avatar">EP</div>
+          <div class="stu-info">
+            <div class="nm">Erika Putri</div>
+            <div class="nis">NIS · 24019 · No 05</div>
+            <div class="stu-meta">
+              <span class="status-pill published">TERBIT</span>
+            </div>
+          </div>
+          <div class="stu-rerata green">
+            <div class="v">94</div><div class="l">Rerata</div>
+          </div>
+          <div class="stu-arrow"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME C — STUDENT DETAIL                                      -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">C</span>Student detail · subject grades + tabs<span class="desc">brand header · hero card · summary banner · subject list · tab bar</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Wali · 7A · Smt 1</div>
+            <div class="h-title">Detail Raport</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg></div>
+        </div>
+      </div>
+
+      <div class="det-hero">
+        <div class="det-hero-row">
+          <div class="avatar-lg">AA</div>
+          <div class="det-hero-text">
+            <div class="nm">Ahmad Alvarro</div>
+            <div class="meta"><strong>NIS 24015</strong> · No Absen 01 · Kelas 7A</div>
+          </div>
+          <div class="det-rerata-pill">
+            <div class="v">88,4</div>
+            <div class="l">Rerata</div>
+          </div>
+        </div>
+        <div class="det-status-row">
+          <span class="status-pill published">TERBIT</span>
+          <span class="status-pill" style="background:rgba(27,111,184,.08);color:var(--brand-cobalt)">RANK 3 / 28</span>
+          <span class="status-pill" style="background:rgba(22,163,74,.08);color:var(--green-700)">8 KKM ✓</span>
+        </div>
+      </div>
+
+      <div class="det-tabs">
+        <div class="det-tab active">Nilai</div>
+        <div class="det-tab">Kehadiran</div>
+        <div class="det-tab">Catatan</div>
+      </div>
+
+      <div class="body" style="padding-top:0">
+        <div class="summary-card">
+          <div class="h">RINGKASAN AKHIR SEMESTER</div>
+          <div class="v">88,4</div>
+          <div class="s">Rerata 8 mata pelajaran · 8 di atas KKM</div>
+          <div class="summary-stats">
+            <div class="summary-stat"><div class="v">94</div><div class="l">Tertinggi</div></div>
+            <div class="summary-stat"><div class="v">82</div><div class="l">Terendah</div></div>
+            <div class="summary-stat"><div class="v">A</div><div class="l">Predikat</div></div>
+          </div>
+        </div>
+
+        <div class="sect-head">
+          <div class="t">DAFTAR MATA PELAJARAN</div>
+          <div class="x">8 mapel</div>
+        </div>
+
+        <div class="sub-row">
+          <div class="ic indigo">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          </div>
+          <div class="nm">
+            <div class="t">Bahasa Indonesia</div>
+            <div class="s">KKM 75 · Bu Sari</div>
+          </div>
+          <div class="grade-pill green">94</div>
+        </div>
+
+        <div class="sub-row">
+          <div class="ic green">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+          </div>
+          <div class="nm">
+            <div class="t">IPA Terpadu</div>
+            <div class="s">KKM 75 · Pak Doni</div>
+          </div>
+          <div class="grade-pill green">88</div>
+        </div>
+
+        <div class="sub-row">
+          <div class="ic amber">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+          </div>
+          <div class="nm">
+            <div class="t">Matematika</div>
+            <div class="s">KKM 75 · Pak Adi</div>
+          </div>
+          <div class="grade-pill amber">82</div>
+        </div>
+
+        <div class="sub-row">
+          <div class="ic violet">
+            <svg viewBox="0 0 24 24"><path d="M12 2l2.39 4.84 5.34.78-3.86 3.76.91 5.31L12 14.17l-4.78 2.52.91-5.31L4.27 7.62l5.34-.78L12 2z"/></svg>
+          </div>
+          <div class="nm">
+            <div class="t">Bahasa Inggris</div>
+            <div class="s">KKM 75 · Bu Rini</div>
+          </div>
+          <div class="grade-pill green">90</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME D — FILTER SHEET                                        -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">D</span>Filter sheet<span class="desc">AppFilterBottomSheet · status chips · class chips</span></div>
+    <div class="phone" style="background:rgba(15,23,42,.32)">
+      <div class="sheet-wrap" style="max-height:88%">
+        <div class="sheet-header">
+          <div class="sheet-handle-light"></div>
+          <div class="sheet-title-row">
+            <div class="sheet-icon-box">
+              <svg viewBox="0 0 24 24"><polygon points="3 4 21 4 14 13 14 20 10 20 10 13"/></svg>
+            </div>
+            <div>
+              <div class="sheet-kicker">Filter Raport</div>
+              <div class="sheet-title">Saring Tampilan</div>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-body">
+
+          <div class="filter-section">
+            <div class="filter-label">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+              Status Raport
+            </div>
+            <div class="chip-grid">
+              <div class="chip active">Semua</div>
+              <div class="chip">Belum</div>
+              <div class="chip">Draft</div>
+              <div class="chip">Final</div>
+              <div class="chip">Terbit</div>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <div class="filter-label">
+              <svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              Kelas
+            </div>
+            <div class="chip-grid">
+              <div class="chip active">7A</div>
+              <div class="chip">7B</div>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <div class="filter-label">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
+              Periode
+            </div>
+            <div class="chip-grid">
+              <div class="chip active">Smt 1 · 2025/26</div>
+              <div class="chip">Smt 2 · 2025/26</div>
+              <div class="chip">Smt 1 · 2024/25</div>
+            </div>
+          </div>
+
+        </div>
+        <div class="footer-bar">
+          <div class="btn-secondary">Reset</div>
+          <div class="btn-primary">Terapkan Filter</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME E — EXPORT SHEET                                        -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">E</span>Export sheet<span class="desc">AppDraggableSheet · format options · per-student or all</span></div>
+    <div class="phone" style="background:rgba(15,23,42,.32)">
+      <div class="sheet-wrap" style="max-height:78%">
+        <div class="sheet-header">
+          <div class="sheet-handle-light"></div>
+          <div class="sheet-title-row">
+            <div class="sheet-icon-box">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+            <div>
+              <div class="sheet-kicker">Ekspor Raport · 7A</div>
+              <div class="sheet-title">Pilih Format</div>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-body">
+
+          <div class="ex-row excel">
+            <div class="ic">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+            </div>
+            <div class="text">
+              <div class="t">Excel · Rekap 28 Siswa</div>
+              <div class="s">Per kelas · siap dibagikan ke admin</div>
+            </div>
+            <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+          </div>
+
+          <div class="ex-row pdf">
+            <div class="ic">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="text">
+              <div class="t">PDF · Per Siswa</div>
+              <div class="s">28 file siap cetak / dibagikan ke wali murid</div>
+            </div>
+            <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+          </div>
+
+          <div class="ex-row pdf">
+            <div class="ic">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="text">
+              <div class="t">PDF · Rekap Kelas</div>
+              <div class="s">Satu file dengan semua siswa</div>
+            </div>
+            <div class="chev"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></div>
+          </div>
+
+          <div style="margin-top:10px;padding:10px 12px;background:rgba(27,111,184,.05);border-radius:10px;border:1px solid rgba(27,111,184,.18)">
+            <div style="font-size:10.5px;font-weight:800;color:var(--brand-cobalt);letter-spacing:.4px;text-transform:uppercase">CATATAN</div>
+            <div style="font-size:11.5px;color:var(--slate-700);font-weight:600;margin-top:4px;line-height:1.5">
+              Hanya raport berstatus <strong>Final</strong> atau <strong>Terbit</strong> yang ikut diekspor.
+              4 raport draft akan dilewati.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -18,7 +18,7 @@ class ScheduleCardContainer extends StatelessWidget {
     required this.boxShadow,
     required this.onTap,
     required this.child,
-    this.borderRadius = const BorderRadius.all(Radius.circular(12)),
+    this.borderRadius = const BorderRadius.all(Radius.circular(14)),
   });
 
   @override
@@ -31,7 +31,7 @@ class ScheduleCardContainer extends StatelessWidget {
           onTap: onTap,
           borderRadius: borderRadius,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
             decoration: BoxDecoration(
               color: cardBg,
               borderRadius: borderRadius,

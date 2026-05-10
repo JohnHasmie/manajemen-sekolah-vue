@@ -12,7 +12,7 @@ import 'package:manajemensekolah/features/grades/presentation/controllers/grade_
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/features/grades/presentation/widgets/grade_book_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_book_content_widget.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_book_tour_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_book_data_mixin.dart';
@@ -253,27 +253,44 @@ class GradeBookPageState extends ConsumerState<GradeBookPage>
   Widget build(BuildContext context) {
     final lp = ref.watch(languageRiverpod);
     final pc = getPrimaryColor(widget.teacher);
+    // BrandPageHeader (cobalt teacher chrome) replaces the bespoke
+    // `GradeBookHeader`. View toggle + export action icons live in
+    // the header's `actionIcons`; the legacy "drag handle" handle bar
+    // is dropped because this is a real page route now (was a 95%
+    // modal sheet — see GradePage.openGradeBook for the route fix).
+    final subjectName = Subject.fromJson(widget.subject).name;
+    final className = Classroom.fromJson(widget.classData).name;
     return Scaffold(
-      backgroundColor: ColorUtils.slate50,
+      backgroundColor: const Color(0xFFF1F5F9),
+      resizeToAvoidBottomInset: true,
       body: GestureDetector(
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Column(
           children: [
-            GradeBookHeader(
-              primaryColor: pc,
-              title: lp.getTranslatedText({
-                'en': 'Grade Book',
-                'id': 'Buku Nilai',
-              }),
+            BrandPageHeader(
+              role: 'guru',
+              title: subjectName,
               subtitle:
-                  '${Subject.fromJson(widget.subject).name} - ${Classroom.fromJson(widget.classData).name}',
-              isCardView: _isCardView,
-              onBack: () => widget.onBack != null
-                  ? widget.onBack!()
-                  : AppNavigator.pop(context),
-              onExport: () => exportGrades(lp),
-              onToggleView: () => setCardViewMode(!_isCardView),
+                  'BUKU NILAI · ${className.toUpperCase()}',
+              isRealtimeFresh: true,
+              kpiOverlayHeight: 0,
+              actionIcons: [
+                BrandHeaderIconButton(
+                  icon: _isCardView
+                      ? Icons.table_chart_rounded
+                      : Icons.view_agenda_rounded,
+                  onTap: () => setCardViewMode(!_isCardView),
+                ),
+                BrandHeaderIconButton(
+                  icon: Icons.file_download_rounded,
+                  onTap: () => exportGrades(lp),
+                ),
+              ],
             ),
+            // KPI strip — Siswa · Asesmen · Avg · <KKM. Sits flush
+            // below the header (no overlap zone since the body has
+            // its own internal scrolling tables).
+            _buildKpiStrip(),
             Expanded(
               child: GradeBookContentWidget(
                 isLoading: _isLoading,
@@ -352,10 +369,138 @@ class GradeBookPageState extends ConsumerState<GradeBookPage>
           : FloatingActionButton(
               key: _addGradeKey,
               onPressed: () => openNewInputForm(lp),
+              // Teacher cobalt theme — was briefly violet to suggest
+              // a "secondary action", but the FAB launches the same
+              // grade-input flow as the cell-tap edit, not an AI
+              // affordance. Cobalt matches the rest of the teacher
+              // tools so the action feels native to the screen.
               backgroundColor: pc,
               foregroundColor: Colors.white,
               child: const Icon(Icons.add),
             ),
     );
   }
+
+  /// 4-cell KPI strip — Siswa count, Asesmen header count, Avg score,
+  /// Below-KKM (<75) student count. Sits below the brand header as a
+  /// pinned reference card while the teacher edits.
+  Widget _buildKpiStrip() {
+    final studentCount = _filteredStudentList.length;
+    var assessmentCount = 0;
+    for (final entry in _assessmentHeaders.entries) {
+      assessmentCount += entry.value.length;
+    }
+    // Compute avg + below-KKM tally over the loaded grade list.
+    var sum = 0.0;
+    var count = 0;
+    final perStudentSums = <String, _StudentScore>{};
+    for (final g in _gradeList) {
+      final s = g['score'];
+      if (s is num) {
+        sum += s.toDouble();
+        count++;
+        final sid = g['student_id']?.toString() ?? '';
+        if (sid.isNotEmpty) {
+          final acc = perStudentSums[sid] ?? const _StudentScore(0, 0);
+          perStudentSums[sid] = _StudentScore(
+            acc.sum + s.toDouble(),
+            acc.count + 1,
+          );
+        }
+      }
+    }
+    final avg = count == 0 ? null : sum / count;
+    final belowKkm = perStudentSums.values
+        .where((v) => v.count > 0 && (v.sum / v.count) < 75)
+        .length;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _kpiCell(
+            value: '$studentCount',
+            label: 'SISWA',
+            color: ColorUtils.success600,
+          ),
+          _kpiDivider(),
+          _kpiCell(
+            value: '$assessmentCount',
+            label: 'ASESMEN',
+            color: ColorUtils.getRoleColor('guru'),
+          ),
+          _kpiDivider(),
+          _kpiCell(
+            value: avg == null ? '—' : avg.toStringAsFixed(0),
+            label: 'AVG',
+            color: ColorUtils.info600,
+          ),
+          _kpiDivider(),
+          _kpiCell(
+            value: '$belowKkm',
+            label: '< KKM',
+            color: ColorUtils.error600,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiCell({
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: color,
+              height: 1,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiDivider() {
+    return Container(width: 1, height: 24, color: ColorUtils.slate100);
+  }
+}
+
+/// Internal helper for tallying per-student score sums.
+class _StudentScore {
+  final double sum;
+  final int count;
+  const _StudentScore(this.sum, this.count);
 }

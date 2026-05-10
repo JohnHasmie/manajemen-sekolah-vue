@@ -4,13 +4,14 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
+import 'package:manajemensekolah/core/widgets/role_toggle_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
-import 'package:manajemensekolah/core/widgets/teacher_page_header.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_student_screen.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_class_card.dart';
@@ -200,71 +201,236 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = getPrimaryColor();
     final isHomeroomTeacher = ref.watch(teacherRiverpod).isHomeroomTeacher;
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
         children: [
-          TeacherPageHeader(
-            title: 'Rekomendasi Belajar',
-            subtitle: isHomeroomView
-                ? 'Rekomendasi kelas perwalian'
-                : 'Pilih kelas untuk melihat rekomendasi',
-            primaryColor: primaryColor,
-            onBackPressed: () => AppNavigator.pop(context),
-            // Role toggle (only visible if teacher has a perwalian).
-            showRoleToggle: isHomeroomTeacher,
-            isHomeroomView: isHomeroomView,
-            onRoleChanged: (val) {
-              setState(() {
-                isHomeroomView = val;
-                // Filters are scope-specific — reset them on switch so
-                // users don't land on an apparently-empty list because
-                // the "empty" filter was still active from the other tab.
-                _statusFilter = null;
-                _searchController.clear();
-                _searchQuery = '';
-              });
-              onRoleToggled(val);
-            },
-            teachingLabel: 'Mengajar',
-            homeroomLabel: 'Wali Kelas',
-            homeroomClassName: _homeroomClassName,
-            // Search + filter bar inside the gradient header.
-            showSearchFilter: true,
-            searchController: _searchController,
-            searchHintText: 'Cari kelas...',
-            onSearchChanged: (v) => setState(() => _searchQuery = v),
-            onFilterTap: _showFilterSheet,
-            hasActiveFilter: _hasActiveFilter,
-            // Active filter chip row below header.
-            activeFilters: _buildActiveFilters(),
-            onClearAllFilters: _clearAllFilters,
-            // View toggle pinned to the title row.
-            trailing: _buildViewToggleTrailing(),
+          // Brand header + 4-cell KPI overlap. Same Stack +
+          // Transform.translate idiom shipped on Raport / Materi /
+          // Buku Nilai so the rekomendasi hub matches the rest of
+          // the teacher surfaces.
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              _buildBrandHeader(isHomeroomTeacher),
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 0,
+                child: Transform.translate(
+                  offset: const Offset(0, 22),
+                  child: _buildKpiStrip(),
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 36),
+          _buildSearchBar(),
+          if (_buildActiveFilters().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: ActiveFilterChips(
+                filters: _buildActiveFilters(),
+                onClearAll: _clearAllFilters,
+              ),
+            ),
           Expanded(child: _buildBody(context)),
         ],
       ),
     );
   }
 
-  /// View-toggle icon button that sits in the header title row.
-  Widget _buildViewToggleTrailing() {
-    return GestureDetector(
+  /// Frame A header — cobalt gradient, Mengajar/Wali Kelas role
+  /// toggle in the bottom slot when the teacher has a perwalian,
+  /// view-toggle + filter action icons on the right.
+  Widget _buildBrandHeader(bool isHomeroomTeacher) {
+    final filterIcon = BrandHeaderIconButton(
+      icon: Icons.tune_rounded,
+      onTap: _showFilterSheet,
+      badgeCount: _hasActiveFilter ? 1 : null,
+      badgeBorderColor: ColorUtils.brandDarkBlue,
+    );
+    final viewToggle = BrandHeaderIconButton(
+      icon: _isGridView ? Icons.view_agenda_rounded : Icons.grid_view_rounded,
       onTap: () => setState(() => _isGridView = !_isGridView),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(10),
+    );
+
+    return BrandPageHeader(
+      role: 'guru',
+      subtitle: 'Guru · Rekomendasi',
+      title: 'Rekomendasi AI',
+      isRealtimeFresh: true,
+      kpiOverlayHeight: 45,
+      onBackPressed: () => AppNavigator.pop(context),
+      actionIcons: [viewToggle, filterIcon],
+      bottomSlot: isHomeroomTeacher ? _buildRoleToggle() : null,
+    );
+  }
+
+  /// Mengajar / Wali Kelas role toggle. The widget renders nothing
+  /// when there's only one role available, which matches the brand
+  /// pattern shipped on Materi.
+  Widget _buildRoleToggle() {
+    final homeroom = _homeroomClassName;
+    return RoleToggleChipRow(
+      roles: [
+        RoleOption.mengajar(subLabel: 'Mengajar'),
+        RoleOption.waliKelas(
+          classId: homeroom ?? 'wali',
+          className: homeroom ?? 'Wali',
+          subLabel: homeroom != null ? 'Kelas $homeroom' : 'Wali Kelas',
         ),
-        child: Icon(
-          _isGridView ? Icons.view_agenda_rounded : Icons.grid_view_rounded,
+      ],
+      selectedRoleId: isHomeroomView
+          ? 'wali:${homeroom ?? 'wali'}'
+          : 'mengajar',
+      onSelected: (id) {
+        final nowHomeroom = id.startsWith('wali');
+        if (nowHomeroom == isHomeroomView) return;
+        setState(() {
+          isHomeroomView = nowHomeroom;
+          _statusFilter = null;
+          _searchController.clear();
+          _searchQuery = '';
+        });
+        onRoleToggled(nowHomeroom);
+      },
+      accentColor: ColorUtils.brandCobalt,
+    );
+  }
+
+  /// Cobalt 4-cell KPI strip (Kelas / Pending / Selesai / Total AI).
+  /// Aggregates across every class summary the loader has pulled.
+  Widget _buildKpiStrip() {
+    final kelas = _sourceClasses.length;
+    var pending = 0;
+    var selesai = 0;
+    var total = 0;
+    for (final cls in _sourceClasses) {
+      final id = cls['id']?.toString() ?? '';
+      final summary = classSummaries[id];
+      final byStatus = _toCountMap(summary?['by_status']);
+      pending += byStatus['pending'] ?? 0;
+      pending += byStatus['in_progress'] ?? 0;
+      selesai += byStatus['completed'] ?? 0;
+      total += byStatus.values.fold<int>(0, (s, v) => s + v);
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            _kpiCell('$kelas', 'KELAS', ColorUtils.brandCobalt),
+            _kpiDivider(),
+            _kpiCell('$pending', 'PENDING', ColorUtils.warning600),
+            _kpiDivider(),
+            _kpiCell('$selesai', 'SELESAI', ColorUtils.success600),
+            _kpiDivider(),
+            _kpiCell('$total', 'TOTAL AI', ColorUtils.violet700),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kpiCell(String value, String label, Color color) {
+    return Expanded(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: color,
+              letterSpacing: -0.3,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiDivider() => Container(
+    width: 1,
+    margin: const EdgeInsets.symmetric(vertical: 4),
+    color: ColorUtils.slate100,
+  );
+
+  /// Cobalt-flat search bar matching the rest of the brand surfaces.
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Container(
+        decoration: BoxDecoration(
           color: Colors.white,
-          size: 18,
+          border: Border.all(color: ColorUtils.slate200),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 12),
+            Icon(Icons.search_rounded, size: 16, color: ColorUtils.slate400),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                onChanged: (v) => setState(() => _searchQuery = v),
+                style: TextStyle(fontSize: 12.5, color: ColorUtils.slate900),
+                decoration: InputDecoration(
+                  hintText: 'Cari kelas atau mata pelajaran…',
+                  hintStyle: TextStyle(
+                    fontSize: 12,
+                    color: ColorUtils.slate400,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+            ),
+            if (_searchQuery.isNotEmpty)
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  Icons.close_rounded,
+                  size: 14,
+                  color: ColorUtils.slate400,
+                ),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
+              ),
+            const SizedBox(width: 4),
+          ],
         ),
       ),
     );
@@ -429,6 +595,7 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
         schedulesLoaded: schedulesLoaded,
         history: history,
         isLoadingHistory: isLoadingHistory,
+        isHomeroom: isHomeroomView,
         onGenerate: () => generateForClass(classId, className),
         onViewStudents: () => _navigateToStudentScreen(context, cls),
         onHistoryItemTap: (entry) => _navigateToStudentScreen(context, cls),

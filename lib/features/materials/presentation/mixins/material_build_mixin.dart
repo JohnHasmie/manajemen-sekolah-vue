@@ -6,13 +6,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/role_toggle_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
-import 'package:manajemensekolah/core/widgets/teacher_page_header.dart';
+import 'package:manajemensekolah/core/widgets/teacher_role_options.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/material_generate_sheet.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/material_overview_view.dart';
@@ -153,6 +156,17 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
   // ── Build methods ──
 
   /// Build main screen with header.
+  ///
+  /// Layout (Materi Q.2 redesign — May 2026):
+  ///   • [BrandPageHeader] — cobalt gradient, kicker `Materi
+  ///     Pembelajaran`, title `Bab & Sub-Bab` (or class+subject when
+  ///     drilled in), live dot, RoleToggleChipRow (Mengajar / Wali
+  ///     · NN), BrandFilterChipStrip in bottom slot for active
+  ///     class/subject filters, view-toggle + filter icon trailing.
+  ///   • Pinned 4-cell KPI strip — Bab / Tercatat / Belum / AI Siap
+  ///     (computed client-side from overviewSummary or chapter list).
+  ///   • Body: [TeacherAsyncView] wrapping the existing chapter or
+  ///     overview content.
   Widget buildMain(LanguageProvider lp) {
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -160,7 +174,33 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
         backgroundColor: ColorUtils.slate50,
         body: Column(
           children: [
-            buildHeaderBar(lp),
+            // Header + KPI overlap. The header reserves 45dp of
+            // bottom padding via `kpiOverlayHeight` (matches
+            // BrandPageLayout.kpiOverlapHeight). The Stack lets the
+            // KPI hang halfway out of the gradient: top half inside
+            // the cobalt, bottom half on the slate-50 body — same
+            // visual idiom shipped on Presensi / Rekap Nilai /
+            // Kegiatan Kelas. Stack itself doesn't grow because the
+            // KPI is in `Positioned`, so layout is identical to a
+            // bare header with extra padding.
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                buildBrandHeader(lp),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 0,
+                  child: Transform.translate(
+                    offset: const Offset(0, 22),
+                    child: buildKpiStrip(lp),
+                  ),
+                ),
+              ],
+            ),
+            // Spacer that absorbs the 22dp the KPI hangs below the
+            // header; without this the body would overlap the KPI.
+            const SizedBox(height: 32),
             Expanded(child: buildContent(lp)),
           ],
         ),
@@ -169,29 +209,107 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
     );
   }
 
-  /// Build embedded screen (in bottom sheet).
+  /// Build the embedded view used inside an `AppDraggableSheet` (e.g.
+  /// when opened from a Jadwal session card's "Materi" action).
+  ///
+  /// Brand-aligned drag-sheet shell:
+  ///   • Cobalt-gradient header with a translucent drag-handle, close
+  ///     button, kicker `Materi · <class>`, and bold subject title.
+  ///   • Same chapter content body as the full screen.
   Widget buildEmbedded(LanguageProvider lp) {
+    final subjectName = widget.initialSubjectName ?? '-';
+    final className = widget.initialClassName ?? '';
+    final cobalt = ColorUtils.brandCobalt;
+    final dark = ColorUtils.brandDarkBlue;
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      appBar: AppBar(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          '${lp.getTranslatedText({'en': 'Material', 'id': 'Materi'})} — '
-          '${widget.initialSubjectName ?? ''} '
-          '${widget.initialClassName ?? ''}',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        elevation: 0,
-      ),
       body: GestureDetector(
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Column(
           children: [
+            // Cobalt-gradient sheet header — matches the brand chrome
+            // shipped on every other teacher screen sheet (Buku Nilai
+            // edit / RPP regen / Jadwal session detail).
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [dark, cobalt],
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+              child: Column(
+                children: [
+                  // Drag handle.
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Material(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: () => Navigator.of(context).pop(),
+                          child: const SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'MATERI${className.isNotEmpty ? ' · ${className.toUpperCase()}' : ''}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white.withValues(alpha: 0.78),
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              subjectName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 32),
+                    ],
+                  ),
+                ],
+              ),
+            ),
             AppSpacing.v8,
             Expanded(child: buildContent(lp)),
           ],
@@ -200,97 +318,226 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
     );
   }
 
-  /// Build header with search and filter buttons.
-  Widget buildHeaderBar(LanguageProvider lp) {
-    final isHomeroomTeacher = ref.watch(teacherRiverpod).isHomeroomTeacher;
-    return TeacherPageHeader(
-      title: lp.getTranslatedText({
-        'en': 'Teaching Materials',
-        'id': 'Materi Pembelajaran',
-      }),
-      subtitle: isHomeroomView
-          ? lp.getTranslatedText({
-              'en': 'Material progress for your homeroom class',
-              'id': 'Progress materi kelas perwalian',
-            })
-          : lp.getTranslatedText({
-              'en': 'Browse chapters and sub-chapters',
-              'id': 'Jelajahi bab dan sub-bab materi',
-            }),
-      primaryColor: primaryColor,
-      showRoleToggle: isHomeroomTeacher,
-      isHomeroomView: isHomeroomView,
-      onRoleChanged: _handleRoleChange,
-      showSearchFilter: true,
-      searchController: searchController,
-      onSearchTap: performSearch,
-      onSearchSubmitted: (_) => performSearch(),
-      onFilterTap: () => showFilterDialog(lp),
-      hasActiveFilter: hasActiveFilter(),
-      searchHintText: lp.getTranslatedText(
-        selectedSubject != null
-            ? {'en': 'Search chapters...', 'id': 'Cari bab...'}
-            : {
-                'en': 'Search class or subject...',
-                'id': 'Cari kelas atau mapel...',
-              },
+  /// Build the brand-aligned hero header.
+  ///
+  /// The Mengajar / Wali Kelas toggle was intentionally removed:
+  /// materi belongs to a (teacher · subject · class) teaching
+  /// assignment, not to a homeroom role. A wali kelas doesn't write
+  /// materi for *every* subject in 8B — only for the subjects they
+  /// personally teach, which the Mengajar view already covers.
+  /// Same reasoning as RPP. This also fixes the stuck-skeleton on
+  /// "Wali 8B": that view returned an empty payload but the loading
+  /// gate could be left dangling on slow / unresolved responses.
+  Widget buildBrandHeader(LanguageProvider lp) {
+    final hasFilters = hasActiveFilter();
+
+    final title = selectedSubject != null
+        ? getSelectedSubjectName()
+        : lp.getTranslatedText({
+            'en': 'Chapters & Sub-chapters',
+            'id': 'Bab & Sub-Bab',
+          });
+
+    final kicker = selectedSubject != null && selectedClassName != null
+        ? '${selectedClassName!.toUpperCase()} · MATERI'
+        : lp.getTranslatedText({
+            'en': 'Teaching Materials',
+            'id': 'Materi Pembelajaran',
+          });
+
+    return BrandPageHeader(
+      role: 'guru',
+      subtitle: kicker,
+      title: title,
+      isRealtimeFresh: true,
+      kpiOverlayHeight: 45,
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: isListView
+              ? Icons.grid_view_rounded
+              : Icons.view_agenda_rounded,
+          onTap: toggleViewMode,
+        ),
+        BrandHeaderIconButton(
+          icon: Icons.tune_rounded,
+          onTap: () => showFilterDialog(lp),
+          badgeCount: hasFilters ? _activeFilterCount() : null,
+          badgeBorderColor: ColorUtils.brandDarkBlue,
+        ),
+      ],
+      bottomSlot: hasFilters ? _buildBrandFilterStrip(lp) : null,
+    );
+  }
+
+  // _onRoleSelected was the role-toggle handler. The wali toggle was
+  // removed from the materi header (a wali kelas doesn't write materi
+  // for every subject in the homeroom — same reasoning as RPP), so
+  // the handler is no longer wired up.
+
+  /// Build the BrandFilterChipStrip for the bottom slot — surfaces
+  /// active class/subject filters as cobalt-tinted pills inside the
+  /// gradient header. Returns null when no filters are active.
+  Widget? _buildBrandFilterStrip(LanguageProvider lp) {
+    final chips = <BrandFilterChip>[];
+    if (selectedClassId != null) {
+      chips.add(
+        BrandFilterChip(
+          label: 'Kelas',
+          value: selectedClassName ?? '-',
+          showChevron: false,
+          onTap: clearClassFilter,
+        ),
+      );
+    }
+    if (selectedSubject != null) {
+      chips.add(
+        BrandFilterChip(
+          label: 'Mapel',
+          value: getSelectedSubjectName(),
+          showChevron: false,
+          onTap: clearSubjectFilter,
+        ),
+      );
+    }
+    if (chips.isEmpty) return null;
+    return BrandFilterChipStrip(chips: chips);
+  }
+
+  int _activeFilterCount() {
+    var n = 0;
+    if (selectedClassId != null) n++;
+    if (selectedSubject != null) n++;
+    return n;
+  }
+
+  /// Build the 4-cell KPI strip (Bab / Tercatat / Belum / AI Siap).
+  /// Computes totals client-side from `overviewSummary` (or from the
+  /// chapter content + checked maps when a subject is selected).
+  Widget buildKpiStrip(LanguageProvider lp) {
+    final stats = _computeKpiStats();
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      activeFilters: _buildActiveFilterChips(lp),
-      onClearAllFilters: clearAllFilters,
-      trailing: GestureDetector(
-        onTap: toggleViewMode,
-        child: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            isListView ? Icons.grid_view_rounded : Icons.view_list_rounded,
-            color: Colors.white,
-            size: 18,
-          ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            _kpiCell('${stats.totalChapters}', 'BAB', ColorUtils.brandCobalt),
+            _kpiDivider(),
+            _kpiCell(
+              '${stats.totalSubChapters}',
+              'SUB-BAB',
+              ColorUtils.slate800,
+            ),
+            _kpiDivider(),
+            _kpiCell('${stats.checked}', 'TERCATAT', ColorUtils.success600),
+            _kpiDivider(),
+            _kpiCell('${stats.generated}', 'AI SIAP', const Color(0xFF7C3AED)),
+          ],
         ),
       ),
     );
   }
 
-  /// Handle role toggle (Mengajar ↔ Wali Kelas).
-  void _handleRoleChange(bool val) {
-    setState(() {
-      isHomeroomView = val;
-      // Reset to overview when switching views
-      overviewSummary = [];
-      isLoadingOverview = true;
-    });
-    clearAllFilters();
-    forceRefresh();
+  Widget _kpiCell(String value, String label, Color color) {
+    return Expanded(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: color,
+              letterSpacing: -0.3,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  /// Build active filter chips for display.
-  List<ActiveFilter> _buildActiveFilterChips(LanguageProvider lp) {
-    final filters = <ActiveFilter>[];
+  Widget _kpiDivider() {
+    return Container(
+      width: 1,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      color: ColorUtils.slate100,
+    );
+  }
 
-    if (selectedClassId != null) {
-      filters.add(
-        ActiveFilter(
-          label: selectedClassName ?? '-',
-          onRemove: clearClassFilter,
-        ),
-      );
-    }
-
+  ({
+    int totalChapters,
+    int totalSubChapters,
+    int checked,
+    int generated,
+  })
+  _computeKpiStats() {
     if (selectedSubject != null) {
-      filters.add(
-        ActiveFilter(
-          label: getSelectedSubjectName(),
-          onRemove: clearSubjectFilter,
-        ),
+      // In subject-detail mode, count from the loaded chapter list.
+      final totalCh = chapterMaterialList.length;
+      final totalSub = subChapterMaterialList.length;
+      final checked =
+          checkedChapter.values.where((v) => v).length +
+          checkedSubChapter.values.where((v) => v).length;
+      final generated =
+          generatedChapter.values.where((v) => v).length +
+          generatedSubChapter.values.where((v) => v).length;
+      return (
+        totalChapters: totalCh,
+        totalSubChapters: totalSub,
+        checked: checked,
+        generated: generated,
       );
     }
-
-    return filters;
+    var totalCh = 0;
+    var totalSub = 0;
+    var checked = 0;
+    var generated = 0;
+    for (final row in overviewSummary) {
+      if (row is! Map) continue;
+      final t = (row['total_chapters'] is num)
+          ? (row['total_chapters'] as num).toInt()
+          : 0;
+      final s = (row['total_sub_chapters'] is num)
+          ? (row['total_sub_chapters'] as num).toInt()
+          : 0;
+      final c = (row['checked'] is num) ? (row['checked'] as num).toInt() : 0;
+      final g = (row['generated'] is num)
+          ? (row['generated'] as num).toInt()
+          : 0;
+      totalCh += t;
+      totalSub += s;
+      checked += c;
+      generated += g;
+    }
+    return (
+      totalChapters: totalCh,
+      totalSubChapters: totalSub,
+      checked: checked,
+      generated: generated,
+    );
   }
 
   /// Toggle between list and grid view.
@@ -303,27 +550,70 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
     });
   }
 
-  /// Build FAB for generating activity.
+  /// Build the violet "Generate AI" FAB.
+  ///
+  /// Violet (`#7C3AED`) is the brand's reserved AI affordance color —
+  /// matches the AI sub-pill, AI-empty CTA on sub-chapter detail, and
+  /// the violet header on the generate sheet. Cobalt is the teacher
+  /// primary; we never use it for AI actions.
+  ///
+  /// The FAB only appears when a subject is selected AND there's at
+  /// least one bab/sub-bab marked-as-taught that hasn't been
+  /// generated yet — otherwise the action would do nothing.
   Widget? buildFab(LanguageProvider lp) {
     if (selectedSubject == null) return null;
+    final pendingCount =
+        getCheckedNotGeneratedChapters().length +
+        getCheckedNotGeneratedSubChapters().length;
+    if (pendingCount == 0) return null;
+
+    const violet = Color(0xFF7C3AED);
+
     return FloatingActionButton.extended(
       onPressed: () => MaterialGenerateSheet.show(
         context: context,
         checkedChapters: getCheckedNotGeneratedChapters(),
         checkedSubChapters: getCheckedNotGeneratedSubChapters(),
+        chapterMaterialList: chapterMaterialList,
         subjectName: getSelectedSubjectName(),
-        primaryColor: primaryColor,
+        className: selectedClassName ?? '',
+        primaryColor: violet,
         languageProvider: lp,
         onGenerate: openGenerateActivitySheet,
       ),
-      backgroundColor: primaryColor,
-      icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
-      label: Text(
-        lp.getTranslatedText({'en': 'Generate', 'id': 'Generate'}),
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
+      backgroundColor: violet,
+      foregroundColor: Colors.white,
+      elevation: 4,
+      icon: const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            lp.getTranslatedText({'en': 'Generate AI', 'id': 'Generate AI'}),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.20),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '$pendingCount',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                height: 1.0,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

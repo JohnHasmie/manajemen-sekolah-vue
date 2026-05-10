@@ -158,14 +158,82 @@ class ModernGradeEditorScoreHero extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: percent,
-              minHeight: 6,
-              backgroundColor: ColorUtils.slate100,
-              valueColor: AlwaysStoppedAnimation(predikat.color),
-            ),
+          // Score progress bar with KKM marker. The thin tick at 75
+          // gives the teacher a visual reference for where pass/fail
+          // lands — matches the Frame D mockup's KKM dotted line.
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final w = constraints.maxWidth;
+              return SizedBox(
+                height: 10,
+                child: Stack(
+                  children: [
+                    // Track.
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: ColorUtils.slate100,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    // Filled portion.
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: (percent * w).clamp(0.0, w),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              predikat.color.withValues(alpha: 0.85),
+                              predikat.color,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    // KKM tick (75/100). Thin slate-400 vertical
+                    // line so the teacher always sees where the pass
+                    // threshold sits relative to the current score.
+                    Positioned(
+                      left: w * 0.75 - 1,
+                      top: -2,
+                      bottom: -2,
+                      child: Container(
+                        width: 2,
+                        decoration: BoxDecoration(
+                          color: ColorUtils.slate400,
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 4),
+          // KKM legend — small uppercase caption pointing to the
+          // tick mark. Uses Flex spacers (3 left, 1 right) to land
+          // under the 75% mark without nesting an unbounded Stack
+          // inside a Column (which crashes with "size.isFinite").
+          Row(
+            children: [
+              const Spacer(flex: 3),
+              Text(
+                'KKM 75',
+                style: TextStyle(
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w800,
+                  color: ColorUtils.slate500,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              const Spacer(flex: 1),
+            ],
           ),
         ],
       ),

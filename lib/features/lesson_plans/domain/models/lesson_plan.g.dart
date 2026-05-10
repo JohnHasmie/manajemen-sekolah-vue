@@ -18,6 +18,13 @@ _LessonPlan _$LessonPlanFromJson(Map<String, dynamic> json) => _LessonPlan(
   notes: json['notes'] as String?,
   adminNotes: json['admin_notes'] as String?,
   createdAt: json['created_at'] as String?,
+  format: json['format'] as String? ?? 'k13',
+  aiGenerated: json['ai_generated'] as bool? ?? false,
+  filePath: json['file_path'] as String?,
+  fileName: json['file_name'] as String?,
+  fileUrl: json['file_url'] as String?,
+  fileSize: (json['file_size'] as num?)?.toInt(),
+  fileMime: json['file_mime'] as String?,
 );
 
 Map<String, dynamic> _$LessonPlanToJson(_LessonPlan instance) =>
@@ -33,4 +40,11 @@ Map<String, dynamic> _$LessonPlanToJson(_LessonPlan instance) =>
       'notes': instance.notes,
       'admin_notes': instance.adminNotes,
       'created_at': instance.createdAt,
+      'format': instance.format,
+      'ai_generated': instance.aiGenerated,
+      'file_path': instance.filePath,
+      'file_name': instance.fileName,
+      'file_url': instance.fileUrl,
+      'file_size': instance.fileSize,
+      'file_mime': instance.fileMime,
     };

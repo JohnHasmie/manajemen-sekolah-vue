@@ -1,91 +1,114 @@
+// Compact tri-state action chip used in the schedule-card footer
+// (Frame A · v2 redesign).
+//
+// Three visual states:
+//
+//   • outline   — slate-50 background, slate-200 border, slate-600 text.
+//                 Default state when there's no data and the lesson
+//                 isn't current.
+//   • filled    — green-tinted (success) chip indicating the action
+//                 has data attached. Used for "X/Y Hadir", "N Kegiatan",
+//                 etc.
+//   • cobalt    — cobalt-tinted CTA on the live row (the lesson
+//                 happening right now). Pulls the teacher's eye to
+//                 the next obvious action ("Ambil Presensi").
+//
+// All three states share the same 7×6 padding + 10dp radius so the
+// row stays optically aligned even when only one chip is in the
+// cobalt state.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 
-/// A compact action button with filled/outline states — horizontal layout.
+enum ScheduleActionState { outline, filled, cobalt }
+
 class ScheduleCardActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
-  final bool isFilled;
-  final Color primary;
+
+  /// Resolved tri-state. Hosts call [resolveState] with their
+  /// `isFilled` + `isCurrent` flags.
+  final ScheduleActionState state;
+
   final VoidCallback onPressed;
 
   const ScheduleCardActionButton({
     super.key,
     required this.icon,
     required this.label,
-    required this.isFilled,
-    required this.primary,
+    required this.state,
     required this.onPressed,
   });
 
+  /// Convenience for callers that only know `isFilled` + `isCurrent`.
+  /// `isCobaltCta` overrides everything; otherwise `filled` wins over
+  /// `outline`.
+  static ScheduleActionState resolveState({
+    required bool isFilled,
+    bool isCobaltCta = false,
+  }) {
+    if (isCobaltCta) return ScheduleActionState.cobalt;
+    if (isFilled) return ScheduleActionState.filled;
+    return ScheduleActionState.outline;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (isFilled) {
-      return _buildFilledButton();
-    }
-    return _buildOutlineButton();
-  }
-
-  Widget _buildFilledButton() {
-    return SizedBox(
-      height: 30,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: Colors.white,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          elevation: 0,
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: _buildContent(),
+    final (bg, border, fg) = switch (state) {
+      ScheduleActionState.outline => (
+        ColorUtils.slate50,
+        ColorUtils.slate200,
+        ColorUtils.slate600,
       ),
-    );
-  }
-
-  Widget _buildOutlineButton() {
-    return SizedBox(
-      height: 30,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: primary,
-          side: BorderSide(color: primary.withValues(alpha: 0.35), width: 1),
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: _buildContent(isOutline: true),
+      ScheduleActionState.filled => (
+        ColorUtils.success600.withValues(alpha: 0.08),
+        ColorUtils.success600.withValues(alpha: 0.30),
+        ColorUtils.success600,
       ),
-    );
-  }
+      ScheduleActionState.cobalt => (
+        ColorUtils.brandCobalt.withValues(alpha: 0.08),
+        ColorUtils.brandCobalt.withValues(alpha: 0.30),
+        ColorUtils.brandCobalt,
+      ),
+    };
 
-  Widget _buildContent({bool isOutline = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13),
-        const SizedBox(width: 3),
-        Flexible(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: isOutline ? primary : null,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onPressed,
+        child: Container(
+          height: 32,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: border, width: 1),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 12, color: fg),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: fg,
+                    letterSpacing: 0.1,
+                    height: 1.0,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

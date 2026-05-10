@@ -127,14 +127,18 @@ class ScheduleCardItem extends StatelessWidget
             languageProvider: languageProvider,
             dayColor: dayColor,
             isPast: isPast,
+            isCurrent: isCurrent,
+            isNext: isNext,
             isHomeroomView: isHomeroomView,
           ),
+          // Hairline divider between header and action row. Sits
+          // inside the card's 12dp horizontal padding (used to bleed
+          // edge-to-edge with a negative margin, which Container
+          // doesn't support — this is simpler and visually equivalent
+          // at 1dp height).
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Divider(
-              height: 1,
-              color: Colors.grey.withValues(alpha: 0.10),
-            ),
+            padding: const EdgeInsets.only(top: 10, bottom: 8),
+            child: Container(height: 1, color: ColorUtils.slate100),
           ),
           buildActionButtons(
             primary,
@@ -142,6 +146,7 @@ class ScheduleCardItem extends StatelessWidget
             fillStates.activityFilled,
             fillStates.materialFilled,
             ctx: context,
+            isCurrent: isCurrent,
           ),
         ],
       ),

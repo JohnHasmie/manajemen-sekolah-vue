@@ -208,8 +208,15 @@ class _LessonPlanSummaryViewState extends State<LessonPlanSummaryView> {
   Widget build(BuildContext context) {
     final groups = _buildSummaryGroups();
 
+    // BrandPageLayout already provides the outer scroll viewport.
+    // Using a non-shrinkWrap ListView here would request unbounded
+    // height inside that scrollable, causing a layout assertion.
+    // shrinkWrap + NeverScrollable means this ListView lays out
+    // each child at its intrinsic height inline, with the parent
+    // owning all scrolling.
     return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.only(top: 8, bottom: 100, left: 16, right: 16),
       itemCount: groups.length,
       itemBuilder: (context, index) {

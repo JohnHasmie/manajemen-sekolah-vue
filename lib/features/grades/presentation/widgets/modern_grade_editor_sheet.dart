@@ -426,12 +426,13 @@ class _ModernGradeEditorSheetState
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const DragHandle(topMargin: 10, bottomMargin: 4),
-            _buildTopBar(lang, primary),
-            Flexible(
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildBrandHeader(lang, primary),
+              Flexible(
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
@@ -466,18 +467,117 @@ class _ModernGradeEditorSheetState
                 ),
               ),
             ),
-            ModernGradeEditorFooter(
-              lang: lang,
-              primary: primary,
-              isEditing: _isEditing,
-              isReadOnly: _isReadOnly,
-              isSaving: _isSaving,
-              isDeleting: _isDeleting,
-              onSave: _save,
-              onDelete: _confirmDelete,
-            ),
-          ],
+              ModernGradeEditorFooter(
+                lang: lang,
+                primary: primary,
+                isEditing: _isEditing,
+                isReadOnly: _isReadOnly,
+                isSaving: _isSaving,
+                isDeleting: _isDeleting,
+                onSave: _save,
+                onDelete: _confirmDelete,
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  /// Cobalt gradient brand header — replaces the legacy white top
+  /// bar (small primary-tinted "TUGAS" pill + slate-800 "Ubah
+  /// Nilai"). Matches the same chrome used by RPP / Presensi /
+  /// Kegiatan Kelas sheets so the editor feels native to the new
+  /// teacher tool kit.
+  Widget _buildBrandHeader(LanguageProvider lang, Color primary) {
+    final cobaltDark = Color.lerp(primary, Colors.black, 0.18) ?? primary;
+    final typeLabel = _typeLabel(widget.gradeType, lang).toUpperCase();
+    final title = _isEditing
+        ? lang.getTranslatedText({'en': 'Edit Grade', 'id': 'Ubah Nilai'})
+        : lang.getTranslatedText({'en': 'Input Grade', 'id': 'Input Nilai'});
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [cobaltDark, primary],
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              const SizedBox(width: 4),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'NILAI · $typeLabel',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white.withValues(alpha: 0.78),
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => Navigator.of(context).pop(),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.20),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.30),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -563,11 +663,18 @@ class _ModernGradeEditorSheetState
             ),
             alignment: Alignment.center,
             child: Text(
-              widget.student.initials,
+              // 2-letter initials for visual consistency with the
+              // class+subject card avatars and the create-assessment
+              // dialog. The Student model's built-in `initials` getter
+              // only returns the first letter — works for the legacy
+              // avatar but reads as a typo next to "AA / BS / DK"
+              // initials elsewhere.
+              _twoLetterInitials(widget.student.name),
               style: const TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                letterSpacing: 0.3,
               ),
             ),
           ),
@@ -682,57 +789,105 @@ class _ModernGradeEditorSheetState
     );
   }
 
+  /// Cobalt-tinted pill stepper. Plus deltas tint stronger so they
+  /// read as primary actions, minus deltas stay slate-on-cobalt for
+  /// contrast.
   Widget _stepperButton(String label, int delta, Color primary) {
+    final isPlus = delta > 0;
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 3),
-        child: OutlinedButton(
-          onPressed: () => _bumpScore(delta),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: primary,
-            side: BorderSide(color: primary.withValues(alpha: 0.35)),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _bumpScore(delta),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isPlus
+                    ? primary.withValues(alpha: 0.10)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isPlus
+                      ? primary.withValues(alpha: 0.30)
+                      : ColorUtils.slate200,
+                ),
+                boxShadow: isPlus
+                    ? [
+                        BoxShadow(
+                          color: primary.withValues(alpha: 0.10),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  color: isPlus ? primary : ColorUtils.slate700,
+                  letterSpacing: 0.2,
+                ),
+              ),
             ),
-          ),
-          child: Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
           ),
         ),
       ),
     );
   }
 
+  /// Inline cobalt-tinted chip toggle for the optional Detail
+  /// lainnya section. Replaces the legacy bare row of icon+text so
+  /// the affordance reads as an interactive control.
   Widget _buildDetailsToggle(LanguageProvider lang, Color primary) {
-    return InkWell(
-      onTap: () => setState(() => _showDetails = !_showDetails),
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          children: [
-            Icon(
-              _showDetails
-                  ? Icons.expand_less_rounded
-                  : Icons.expand_more_rounded,
-              size: 18,
-              color: primary,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() => _showDetails = !_showDetails),
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: _showDetails
+                ? primary.withValues(alpha: 0.10)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: _showDetails
+                  ? primary.withValues(alpha: 0.25)
+                  : ColorUtils.slate200,
             ),
-            const SizedBox(width: 4),
-            Text(
-              lang.getTranslatedText({
-                'en': _showDetails ? 'Hide details' : 'More details',
-                'id': _showDetails ? 'Sembunyikan detail' : 'Detail lainnya',
-              }),
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _showDetails
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+                size: 16,
                 color: primary,
               ),
-            ),
-          ],
+              const SizedBox(width: 4),
+              Text(
+                lang.getTranslatedText({
+                  'en': _showDetails ? 'Hide details' : 'More details',
+                  'id': _showDetails ? 'Sembunyikan detail' : 'Detail lainnya',
+                }),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: primary,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -770,30 +925,39 @@ class _ModernGradeEditorSheetState
       }),
       icon: Icons.calendar_today_rounded,
       primary: primary,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: _pickDate,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: ColorUtils.slate200),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  formatted,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: ColorUtils.slate800,
+      // Cobalt-tinted tap target instead of the legacy white-with-
+      // slate-border field. Matches the date chip in the create-
+      // assessment dialog so the two surfaces feel like one design.
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: _pickDate,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: primary.withValues(alpha: 0.20)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.calendar_today_rounded, size: 14, color: primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    formatted,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
+                      color: primary,
+                      letterSpacing: 0.2,
+                    ),
                   ),
                 ),
-              ),
-              Icon(Icons.edit_calendar_outlined, size: 18, color: primary),
-            ],
+                Icon(Icons.edit_calendar_outlined, size: 16, color: primary),
+              ],
+            ),
           ),
         ),
       ),
@@ -829,7 +993,11 @@ class _ModernGradeEditorSheetState
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
+      hintStyle: TextStyle(
+        color: ColorUtils.slate400,
+        fontSize: 12.5,
+        fontWeight: FontWeight.w500,
+      ),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -843,11 +1011,15 @@ class _ModernGradeEditorSheetState
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: primary, width: 1.5),
+        borderSide: BorderSide(color: primary, width: 1.6),
       ),
     );
   }
 
+  /// Labeled section header — small cobalt icon + slate uppercase
+  /// label with letter-spacing. Matches the `_fieldLabel` style used
+  /// in the RPP setup / upload sheets so all teacher form sections
+  /// read the same.
   Widget _labeledField({
     required String label,
     required IconData icon,
@@ -859,22 +1031,50 @@ class _ModernGradeEditorSheetState
       children: [
         Row(
           children: [
-            Icon(icon, size: 14, color: primary),
-            const SizedBox(width: 6),
+            Container(
+              width: 22,
+              height: 22,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Icon(icon, size: 12, color: primary),
+            ),
+            const SizedBox(width: 8),
             Text(
-              label,
+              label.toUpperCase(),
               style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
                 color: ColorUtils.slate600,
-                letterSpacing: 0.3,
+                letterSpacing: 0.5,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         child,
       ],
     );
+  }
+
+  /// 1-2 character initials for the avatar. Same logic as the
+  /// student card list / create-assessment dialog helpers — picks
+  /// the first letter of the first two whitespace-separated tokens;
+  /// falls back to the first two letters of single-word names; falls
+  /// back to "?" for empty.
+  String _twoLetterInitials(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return '?';
+    final parts =
+        trimmed.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    if (parts[0].length >= 2) {
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
   }
 }

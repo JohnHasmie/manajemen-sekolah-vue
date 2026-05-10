@@ -114,11 +114,8 @@ class AttendancePageState extends ConsumerState<AttendancePage>
   String? _selectedLessonHourId;
   final TextEditingController _searchCtrlInput = TextEditingController();
   String? _selectedStatusFilter;
-  // Default to compact mode — matches the Frame A "take attendance" design:
-  // single-line row per student with full-word status buttons (Hadir / Telat /
-  // Sakit / Izin / Alpa) at ≈40dp tall. The toggle remains so users who
-  // prefer the spacier two-row descriptive layout can flip back.
-  bool _compactMode = true;
+  // Density-toggle state was removed alongside the in-header switch
+  // icon: the screen now ships only the compact single-row layout.
   final ScrollController _scrollController = ScrollController();
 
   /// KPI bundle returned alongside the grouped attendance summary —
@@ -248,8 +245,6 @@ class AttendancePageState extends ConsumerState<AttendancePage>
   @override
   bool get isSubmitting => _isSubmitting;
   @override
-  bool get compactMode => _compactMode;
-  @override
   TextEditingController get searchInputController => _searchCtrlInput;
   @override
   ScrollController get scrollController => _scrollController;
@@ -275,8 +270,6 @@ class AttendancePageState extends ConsumerState<AttendancePage>
   @override
   void setSelectedLessonHourId(String? v) =>
       setState(() => _selectedLessonHourId = v);
-  @override
-  void setCompactMode(bool v) => setState(() => _compactMode = v);
 
   // ── Frame A — embedded sheet KPI strip + section-head accessors ──
   // Live counts derived from the in-memory `_attendanceStatus` map.

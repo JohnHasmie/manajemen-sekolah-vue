@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · Rekap Nilai · Card Redesign</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --green-50: #DCFCE7;
+    --green-100: #BBF7D0;
+    --green-600: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-100: #FDE68A;
+    --amber-600: #B45309;
+    --red-50: #FEE2E2;
+    --red-100: #FECACA;
+    --red-600: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-100: #BFDBFE;
+    --blue-600: #1D4ED8;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+    --rose-50: #FFE4E6;
+    --rose-600: #BE185D;
+    --indigo-50: #E0E7FF;
+    --indigo-600: #4338CA;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 {
+    font-size: 24px; margin: 0 0 8px;
+    color: var(--brand-dark); letter-spacing: -0.4px;
+  }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 32px;
+    max-width: 880px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 32px;
+    align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px;
+    margin-left: 10px;
+  }
+
+  /* ════════════ NEW CARD DESIGN ════════════ */
+  .body-pad { padding: 16px; background: var(--slate-50); }
+
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .card .avatar {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .card .avatar.amber  { background: var(--amber-50);  color: var(--amber-600); }
+  .card .avatar.blue   { background: var(--blue-50);   color: var(--blue-600); }
+  .card .avatar.violet { background: var(--violet-50); color: var(--violet-600); }
+  .card .avatar.green  { background: var(--green-50);  color: var(--green-600); }
+  .card .avatar.rose   { background: var(--rose-50);   color: var(--rose-600); }
+  .card .avatar.indigo { background: var(--indigo-50); color: var(--indigo-600); }
+
+  .card .body { flex: 1; min-width: 0; }
+  .card .head {
+    display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px;
+  }
+  .card .head .name {
+    font-size: 14.5px; font-weight: 800;
+    color: var(--slate-900); letter-spacing: -0.2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    flex: 1; min-width: 0;
+  }
+  .card .head .class {
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-600); flex: 0 0 auto;
+    padding: 2px 7px; background: var(--slate-100);
+    border-radius: 999px;
+  }
+  .card .sub-row {
+    display: flex; align-items: center;
+    font-size: 11px; color: var(--slate-500);
+    font-weight: 600; gap: 6px;
+    margin-bottom: 10px;
+  }
+  .card .sub-row svg {
+    width: 11px; height: 11px;
+    color: var(--slate-400);
+    stroke-width: 2.4;
+  }
+  .card .sub-row .dot { color: var(--slate-300); }
+  .card .sub-row .teacher {
+    color: var(--slate-500); font-weight: 600;
+  }
+
+  /* Stats grid — 3 cells, dividers between */
+  .card .stats {
+    display: flex;
+    align-items: stretch;
+    background: var(--slate-50);
+    border-radius: 10px;
+    padding: 8px 0;
+    margin-bottom: 10px;
+  }
+  .card .stat {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; line-height: 1.1;
+  }
+  .card .stat .v {
+    font-size: 14px; font-weight: 900;
+    color: var(--slate-900);
+  }
+  .card .stat.muted .v { color: var(--slate-400); }
+  .card .stat.green .v { color: var(--green-600); }
+  .card .stat.amber .v { color: var(--amber-600); }
+  .card .stat.red .v { color: var(--red-600); }
+  .card .stat.blue .v { color: var(--blue-600); }
+  .card .stat .l {
+    font-size: 8.5px; font-weight: 800;
+    color: var(--slate-500); margin-top: 2px;
+    letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .card .stat-divider {
+    width: 1px; background: var(--slate-200);
+    margin: 4px 0;
+  }
+
+  /* Progress row */
+  .card .progress-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card .progress-bar {
+    flex: 1; height: 6px;
+    background: var(--slate-100);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .card .progress-bar > .fill { height: 100%; border-radius: 999px; }
+  .card .progress-bar.green .fill  { background: var(--green-600); }
+  .card .progress-bar.amber .fill  { background: var(--amber-600); }
+  .card .progress-bar.red .fill    { background: var(--red-600); }
+  .card .progress-bar.muted { background: var(--slate-100); }
+  .card .progress-bar.muted .fill {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--slate-200) 0,
+      var(--slate-200) 4px,
+      var(--slate-100) 4px,
+      var(--slate-100) 8px
+    );
+  }
+  .card .progress-pct {
+    font-size: 11.5px; font-weight: 800;
+    flex: 0 0 auto; min-width: 32px; text-align: right;
+  }
+  .card .progress-pct.green { color: var(--green-600); }
+  .card .progress-pct.amber { color: var(--amber-600); }
+  .card .progress-pct.red   { color: var(--red-600); }
+  .card .progress-pct.muted { color: var(--slate-400); }
+  .card .progress-cta {
+    font-size: 11.5px; font-weight: 800;
+    color: var(--brand-cobalt); flex: 0 0 auto;
+    display: flex; align-items: center; gap: 3px;
+  }
+  .card .progress-cta svg { width: 12px; height: 12px; stroke-width: 2.6; }
+
+  /* Status banner — top-right corner subtle indicator */
+  .card .status-tag {
+    margin-left: auto; flex: 0 0 auto;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .card .status-tag.empty { background: var(--slate-100); color: var(--slate-600); }
+  .card .status-tag.warn  { background: var(--amber-50); color: var(--amber-600); }
+  .card .status-tag.good  { background: var(--green-50); color: var(--green-600); }
+  .card .status-tag.alert { background: var(--red-50); color: var(--red-600); }
+
+  /* ════════════ OLD CARD (for comparison) ════════════ */
+  .old-card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .old-card .avatar {
+    width: 42px; height: 42px;
+    border-radius: 11px;
+    background: var(--amber-50); color: var(--amber-600);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .old-card .body { flex: 1; min-width: 0; }
+  .old-card .head { display: flex; align-items: center; gap: 6px; }
+  .old-card .head .name {
+    font-size: 13px; font-weight: 800; color: var(--slate-900);
+    flex: 1;
+  }
+  .old-card .class-pill {
+    font-size: 10px; font-weight: 800;
+    background: rgba(185,28,28,.12); color: var(--red-600);
+    padding: 2px 7px; border-radius: 999px;
+  }
+  .old-card .pbar { display: flex; align-items: center; gap: 8px; margin: 6px 0 6px; }
+  .old-card .pbar > .b {
+    flex: 1; height: 5px; background: var(--slate-100); border-radius: 999px;
+  }
+  .old-card .pbar > .pct { color: var(--red-600); font-size: 11px; font-weight: 800; }
+  .old-card .pills {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .old-card .pills .p {
+    font-size: 9.5px; font-weight: 800;
+    padding: 2px 7px; border-radius: 999px;
+  }
+  .old-card .pills .p.red { background: var(--red-50); color: var(--red-600); }
+  .old-card .pills .p.gray { background: var(--slate-100); color: var(--slate-600); }
+  .old-card .avg-badge {
+    width: 44px; height: 44px;
+    background: var(--red-50); border: 1px solid rgba(185,28,28,.25);
+    border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .old-card .avg-badge .v { font-size: 15px; font-weight: 900; color: var(--red-600); }
+  .old-card .avg-badge .l { font-size: 7px; font-weight: 700; color: rgba(185,28,28,.78); }
+  .old-card .chevron { color: var(--slate-300); width: 18px; height: 18px; }
+
+  /* SVG icon */
+  svg.ic { width: 14px; height: 14px; stroke-width: 2; }
+
+  .legend {
+    margin: 32px 0 8px;
+    padding: 16px;
+    background: white; border-radius: 12px;
+    font-size: 12px; color: var(--slate-600); line-height: 1.6;
+    border: 1px solid var(--slate-200);
+  }
+  .legend strong { color: var(--slate-900); }
+  .legend code {
+    background: var(--slate-100); color: var(--brand-cobalt);
+    padding: 1px 6px; border-radius: 4px;
+    font-size: 11px; font-family: 'SF Mono', Menlo, monospace;
+  }
+  .legend ul li { margin: 6px 0; }
+</style>
+</head>
+<body>
+
+<h1>Rekap Nilai · Card Redesign</h1>
+<p class="subtitle">
+  The current overview cards stack subject name, class pill, an empty progress
+  bar, and a row of red "0 nilai · siswa · Perlu input" pills — three red
+  signals when really nothing is wrong, just empty. The redesign separates
+  identity, stats, and progress into clear bands; uses muted colors for empty
+  states (no false alarms); and keeps the rata-rata badge consistent across
+  rows.
+</p>
+
+<div class="grid">
+
+<!-- ═══════ BEFORE ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A</span>BEFORE <span class="desc">Current production layout — 4 red pills + 0 avg badge</span></div>
+  <div class="body-pad">
+
+    <div class="old-card">
+      <div class="avatar">B</div>
+      <div class="body">
+        <div class="head">
+          <div class="name">B. Arab</div>
+          <div class="class-pill">7A</div>
+        </div>
+        <div class="pbar">
+          <div class="b"></div>
+          <div class="pct">0%</div>
+        </div>
+        <div class="pills">
+          <span class="p gray">1 bab</span>
+          <span class="p red">0 nilai</span>
+          <span class="p gray">16 siswa</span>
+          <span class="p red">Perlu input</span>
+        </div>
+      </div>
+      <div class="avg-badge">
+        <div class="v">0</div>
+        <div class="l">avg</div>
+      </div>
+    </div>
+
+    <div class="old-card">
+      <div class="avatar">B</div>
+      <div class="body">
+        <div class="head">
+          <div class="name">B. Arab</div>
+          <div class="class-pill">7B</div>
+        </div>
+        <div class="pbar">
+          <div class="b"></div>
+          <div class="pct">0%</div>
+        </div>
+        <div class="pills">
+          <span class="p red">0 nilai</span>
+          <span class="p gray">11 siswa</span>
+          <span class="p red">Perlu input</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="old-card">
+      <div class="avatar">B</div>
+      <div class="body">
+        <div class="head">
+          <div class="name">B. Arab</div>
+          <div class="class-pill">8A</div>
+        </div>
+        <div class="pbar">
+          <div class="b"></div>
+          <div class="pct">0%</div>
+        </div>
+        <div class="pills">
+          <span class="p red">0 nilai</span>
+          <span class="p gray">10 siswa</span>
+          <span class="p red">Perlu input</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════ AFTER ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">B</span>AFTER <span class="desc">Stats grid + muted empty state + clear progress band</span></div>
+  <div class="body-pad">
+
+    <!-- Empty (0%) — muted, inviting -->
+    <div class="card">
+      <div class="avatar amber">B</div>
+      <div class="body">
+        <div class="head">
+          <div class="name">B. Arab</div>
+          <div class="class">7A</div>
+          <span class="status-tag empty">Belum mulai</span>
+        </div>
+        <div class="sub-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>16 siswa</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="v">1</div><div class="l">Bab</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat muted"><div class="v">0</div><div class="l">Nilai</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat muted"><div class="v">—</div><div class="l">Rata-rata</div></div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-bar muted"></div>
+          <div class="progress-cta">
+            Mulai input
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Partial (38%) — amber, "Lanjutkan" -->
+    <div class="card">
+      <div class="avatar amber">B</div>
+      <div class="body">
+        <div class="head">
+          <div class="name">B. Arab</div>
+          <div class="class">7B</div>
+          <span class="status-tag warn">Sebagian</span>
+        </div>
+        <div class="sub-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>11 siswa</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="v">2</div><div class="l">Bab</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat amber"><div class="v">4</div><div class="l">Nilai</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat amber"><div class="v">68</div><div class="l">Rata-rata</div></div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-bar amber"><div class="fill" style="width:38%"></div></div>
+          <div class="progress-pct amber">38%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Most done (84%) — green -->
+    <div class="card">
+      <div class="avatar blue">M</div>
+      <div class="body">
+        <div class="head">
+          <div class="name">Matematika</div>
+          <div class="class">7A</div>
+          <span class="status-tag good">Hampir tuntas</span>
+        </div>
+        <div class="sub-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>28 siswa</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="v">4</div><div class="l">Bab</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat green"><div class="v">23</div><div class="l">Nilai</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat green"><div class="v">82</div><div class="l">Rata-rata</div></div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-bar green"><div class="fill" style="width:84%"></div></div>
+          <div class="progress-pct green">84%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Complete (100%) -->
+    <div class="card">
+      <div class="avatar green">B</div>
+      <div class="body">
+        <div class="head">
+          <div class="name">B. Indonesia</div>
+          <div class="class">7C</div>
+          <span class="status-tag good">Tuntas</span>
+        </div>
+        <div class="sub-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>30 siswa</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="v">5</div><div class="l">Bab</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat green"><div class="v">30</div><div class="l">Nilai</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat green"><div class="v">88</div><div class="l">Rata-rata</div></div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-bar green"><div class="fill" style="width:100%"></div></div>
+          <div class="progress-pct green">100%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wali kelas variant — teacher row -->
+    <div class="card">
+      <div class="avatar violet">F</div>
+      <div class="body">
+        <div class="head">
+          <div class="name">Fisika</div>
+          <div class="class">8A</div>
+          <span class="status-tag warn">Sebagian</span>
+        </div>
+        <div class="sub-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>26 siswa</span>
+          <span class="dot">·</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-3-3.87"/><path d="M4 21v-2a4 4 0 0 1 3-3.87"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="teacher">Pak Hadi</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="v">3</div><div class="l">Bab</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat amber"><div class="v">14</div><div class="l">Nilai</div></div>
+          <div class="stat-divider"></div>
+          <div class="stat amber"><div class="v">72</div><div class="l">Rata-rata</div></div>
+        </div>
+        <div class="progress-row">
+          <div class="progress-bar amber"><div class="fill" style="width:62%"></div></div>
+          <div class="progress-pct amber">62%</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<div class="legend">
+  <strong>What's changing &amp; why</strong>
+  <ul>
+    <li><strong>Stats grid replaces the pill row.</strong> 3 cells (Bab · Nilai · Rata-rata) on a soft slate-50 chip with hairline dividers. Equal width, balanced visual weight, no reds-by-default.</li>
+    <li><strong>Status tag in the header.</strong> One small all-caps pill (<code>Belum mulai</code> / <code>Sebagian</code> / <code>Hampir tuntas</code> / <code>Tuntas</code>) replaces the "Perlu input" red alarm. Empty state is slate-tinted, not red — accurate signal.</li>
+    <li><strong>Empty state has a CTA.</strong> Instead of a 0% red bar + red badge, we show a striped muted bar and a "Mulai input ›" affordance — feels like an open task rather than a broken card.</li>
+    <li><strong>Avg lives inside the stats grid.</strong> Drops the floating right-side avg badge so all rows have identical horizontal alignment, no skipped column on rows without data.</li>
+    <li><strong>Class pill simplified.</strong> Slate-tinted instead of red — semantic only when something's actually wrong.</li>
+    <li><strong>Progress bar paired with %.</strong> Percent text right-aligned to the bar, color matches: green ≥80, amber 40-79, red &lt;40 (only when there IS data — otherwise muted).</li>
+    <li><strong>Wali-kelas line.</strong> Subject teacher name shown with a person icon under the head, separated from the student count with a thin · dot. Same line, no extra row.</li>
+  </ul>
+</div>
+
+</body>
+</html>

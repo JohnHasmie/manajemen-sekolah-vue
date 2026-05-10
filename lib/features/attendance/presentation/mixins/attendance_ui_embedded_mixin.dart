@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 
 /// Builds the embedded bottom-sheet chrome for the attendance UI.
@@ -13,9 +15,6 @@ import 'package:manajemensekolah/features/attendance/presentation/screens/teache
 /// computed by the consumer so this mixin stays presentation-only.
 mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
   // ── Abstract state accessors ──
-  bool get compactMode;
-
-  void setCompactMode(bool v);
 
   /// Live status counts from the consumer (`{hadir, terlambat, sakit,
   /// izin, alpha}`). Empty before the first student loads.
@@ -30,8 +29,10 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
   // ─────────────────────────────────────────
 
   /// Brand-aligned header for the take-attendance flow. Same gradient
-  /// + centered title pattern as the main Presensi page; the density
-  /// toggle (compact/spacious rows) sits in the action icon row.
+  /// + centered title pattern as the detail screen, with a context
+  /// strip in the bottom slot showing `Subject · Class · Jam ke-N`
+  /// + the date — so the teacher always sees the full session
+  /// identity at a glance.
   ///
   /// The drag handle and explicit close button are gone — the screen
   /// is no longer a draggable sheet, and the back button is provided
@@ -48,14 +49,105 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
         'id': 'Presensi · Input',
       }),
       isRealtimeFresh: true,
-      actionIcons: [
-        BrandHeaderIconButton(
-          icon: compactMode
-              ? Icons.view_agenda_outlined
-              : Icons.density_small_rounded,
-          onTap: () => setState(() => setCompactMode(!compactMode)),
-        ),
-      ],
+      // Reserve enough gradient at the bottom for the KPI strip
+      // to overlap into — same convention as the main Presensi
+      // page and the detail screen.
+      kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
+      // Density toggle removed — the screen now ships a single
+      // compact view (one row per student with inline status
+      // pills). Keeping just one layout simplifies the mental
+      // model and frees the action slot for a future affordance.
+      bottomSlot: _buildEmbeddedContextStrip(lp),
+    );
+  }
+
+  /// Translucent card showing `Subject · Class` + date / lesson hour
+  /// — same shape as the detail screen's context strip so the two
+  /// surfaces feel like one flow. Falls back gracefully when any
+  /// field is missing (e.g. during the brief moment before initial
+  /// data hydrates).
+  Widget _buildEmbeddedContextStrip(LanguageProvider lp) {
+    final subjectName = (widget.initialSubjectName ?? '').trim();
+    final className = (widget.initialClassName ?? '').trim();
+    final lessonHourNumber = widget.initialLessonHourNumber;
+    final date = widget.initialDate ?? DateTime.now();
+
+    final initial = subjectName.isNotEmpty
+        ? subjectName[0].toUpperCase()
+        : '?';
+    final titleParts = <String>[
+      if (subjectName.isNotEmpty) subjectName,
+      if (className.isNotEmpty) className,
+    ];
+    final title = titleParts.isEmpty ? '-' : titleParts.join(' · ');
+
+    final dateStr = DateFormat('EEE, d MMM yyyy', 'id_ID').format(date);
+    final subtitleParts = <String>[
+      dateStr,
+      if (lessonHourNumber != null) 'Jam ke-$lessonHourNumber',
+    ];
+    final subtitle = subtitleParts.join(' · ');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              initial,
+              style: TextStyle(
+                color: ColorUtils.getRoleColor('guru'),
+                fontWeight: FontWeight.w900,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.78),
+                    fontWeight: FontWeight.w500,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

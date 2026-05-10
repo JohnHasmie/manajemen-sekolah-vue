@@ -6,13 +6,18 @@ import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_
 
 /// Mixin for UI helpers (colors, gradients, filtering).
 mixin TeacherScheduleUiMixin on ConsumerState<TeachingScheduleScreen> {
+  // Day-color identity for the schedule-card hour chip — Senin indigo,
+  // Selasa emerald, Rabu amber, Kamis rose/red, Jumat teal, Sabtu
+  // violet. Matches the day-of-week swatches in the
+  // `_design/teacher_jadwal_redesign.html` legend so the visual story
+  // stays in sync between mockup and shipped UI.
   final Map<String, Color> dayColorMapInternal = {
     'Senin': ColorUtils.indigo500,
     'Selasa': ColorUtils.emerald500,
     'Rabu': ColorUtils.amber500,
     'Kamis': ColorUtils.red500,
-    'Jumat': ColorUtils.violet500,
-    'Sabtu': ColorUtils.cyan500,
+    'Jumat': ColorUtils.cyan500,
+    'Sabtu': ColorUtils.violet500,
   };
 
   Color getPrimaryColor() {

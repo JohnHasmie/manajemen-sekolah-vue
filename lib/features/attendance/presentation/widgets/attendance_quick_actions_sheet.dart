@@ -77,10 +77,10 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildHandle(),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _buildTitle(),
             _buildSubtitle(),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             _SheetButton(
               icon: Icons.check_rounded,
               iconBg: const Color(0xFFDCFCE7),
@@ -179,8 +179,8 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
 
   Widget _buildHandle() {
     return Container(
-      margin: const EdgeInsets.only(top: 12),
-      width: 40,
+      margin: const EdgeInsets.only(top: 8),
+      width: 36,
       height: 4,
       decoration: BoxDecoration(
         color: ColorUtils.slate300,
@@ -191,15 +191,16 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
 
   Widget _buildTitle() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
           _tr({'en': 'Quick actions', 'id': 'Aksi cepat'}),
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w900,
             color: ColorUtils.slate900,
+            height: 1.2,
           ),
         ),
       ),
@@ -208,7 +209,7 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
 
   Widget _buildSubtitle() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
@@ -221,9 +222,9 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
                 'dinilai.',
           }),
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 10.5,
             color: ColorUtils.slate500,
-            height: 1.4,
+            height: 1.3,
           ),
         ),
       ),
@@ -252,32 +253,32 @@ class _SheetButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
       child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               border: Border.all(color: ColorUtils.slate200),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: 30,
+                  height: 30,
                   decoration: BoxDecoration(
                     color: iconBg,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(icon, size: 18, color: iconFg),
+                  child: Icon(icon, size: 16, color: iconFg),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,19 +287,20 @@ class _SheetButton extends StatelessWidget {
                       Text(
                         title,
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w800,
                           color: ColorUtils.slate900,
+                          height: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 1),
                       Text(
                         desc,
                         style: TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 10,
                           color: ColorUtils.slate500,
                           fontWeight: FontWeight.w500,
-                          height: 1.3,
+                          height: 1.25,
                         ),
                       ),
                     ],
@@ -306,7 +308,7 @@ class _SheetButton extends StatelessWidget {
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
-                  size: 18,
+                  size: 16,
                   color: ColorUtils.slate300,
                 ),
               ],

@@ -56,14 +56,16 @@ class DashboardTodaysOverview extends StatelessWidget {
             crossAxisCount: 2,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,
-            // Was 1.4 — that was ~5dp too tight at 360dp logical width on
-            // Samsung S24 (1080×2340 @ 480 dpi). The schedule and material
-            // slider cards (which reserve a bottom strip for the page-dot
-            // indicator) overflowed by 3–6 px on the teacher dashboard.
-            // 1.3 gives ~9dp more height per card with no visible empty
-            // padding on the simpler `OverviewCard` variants (mainAxisSize:
-            // min so they stay snug to their content).
-            childAspectRatio: 1.3,
+            // Tuned down progressively to absorb tiny overflow incidents
+            // on different screen sizes:
+            //   1.4 → 1.3: fixed S24 5dp overflow on slider cards.
+            //   1.3 → 1.2: fixed a recurring 2.6px overflow on iPhone 13/14
+            //     (390dp logical width) where the slider cards' header row +
+            //     subject + class + dot indicator reserved space added up to
+            //     just barely past the grid cell height.
+            // OverviewCard variants use mainAxisSize.min so they stay snug
+            // to their content even when the grid grants extra height.
+            childAspectRatio: 1.2,
             children: isLoaded
                 ? cards
                 : List.generate(4, (_) => const OverviewCardSkeleton()),

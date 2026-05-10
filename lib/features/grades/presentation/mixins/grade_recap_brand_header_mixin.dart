@@ -47,23 +47,63 @@ mixin GradeRecapBrandHeaderMixin on ConsumerState<GradeRecapOverviewPage> {
   }
 
   Widget? _buildRoleSelector(LanguageProvider lp) {
-    final isHomeroomTeacher = ref.watch(teacherRiverpod).isHomeroomTeacher;
-    if (!isHomeroomTeacher) return null;
+    final teacherState = ref.watch(teacherRiverpod);
+    final homeroomClasses = teacherState.homeroomClasses;
+    if (homeroomClasses.isEmpty) return null;
+
+    // Selected id mirrors the multi-wali pattern used by Presensi /
+    // Kegiatan Kelas: `wali:<classId>` when a specific homeroom class
+    // is active, otherwise `mengajar`.
+    final selectedId = isHomeroomView && filterClassId != null
+        ? 'wali:$filterClassId'
+        : 'mengajar';
+
     return RoleToggleChipRow(
-      roles: buildSingleWaliRoleOptions(lp: lp),
-      selectedRoleId: isHomeroomView ? 'wali:all' : 'mengajar',
+      roles: buildMultiWaliRoleOptions(
+        homeroomClasses: homeroomClasses,
+        lp: lp,
+      ),
+      selectedRoleId: selectedId,
       accentColor: ColorUtils.brandCobalt,
       onSelected: (id) {
-        final wali = id.startsWith('wali');
-        if (wali == isHomeroomView) return;
-        setState(() {
-          isHomeroomView = wali;
-          filterClassId = null;
-          filterClassName = null;
-          filterSubjectId = null;
-          filterSubjectName = null;
-        });
-        loadData();
+        if (id == 'mengajar') {
+          if (!isHomeroomView &&
+              filterClassId == null &&
+              filterSubjectId == null) {
+            return;
+          }
+          setState(() {
+            isHomeroomView = false;
+            filterClassId = null;
+            filterClassName = null;
+            filterSubjectId = null;
+            filterSubjectName = null;
+          });
+          loadData();
+        } else if (id.startsWith('wali:')) {
+          final classId = id.substring(5);
+          // Resolve the picked homeroom class so we can stash its
+          // human-readable name in the filter state too — the chip
+          // strip below the header reads `filterClassName`.
+          Map<String, dynamic>? picked;
+          for (final c in homeroomClasses) {
+            if (c is Map && (c['id'] ?? '').toString() == classId) {
+              picked = Map<String, dynamic>.from(c);
+              break;
+            }
+          }
+          final pickedName =
+              (picked?['name'] ?? picked?['nama'] ?? '').toString();
+          if (isHomeroomView && filterClassId == classId) return;
+          setState(() {
+            isHomeroomView = true;
+            filterClassId = classId;
+            filterClassName = pickedName;
+            filterSubjectId = null;
+            filterSubjectName = null;
+          });
+          loadData();
+        }
       },
     );
   }

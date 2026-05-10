@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'lesson_plan_format.dart';
+
 part 'lesson_plan.freezed.dart';
 part 'lesson_plan.g.dart';
 
@@ -29,6 +31,16 @@ abstract class LessonPlan with _$LessonPlan {
     String? notes,
     @JsonKey(name: 'admin_notes') String? adminNotes,
     @JsonKey(name: 'created_at') String? createdAt,
+    // Format axis (k13 / rpp_1_halaman / modul_ajar / file). Defaults
+    // to k13 for legacy rows where the column is empty.
+    @Default('k13') String format,
+    @JsonKey(name: 'ai_generated') @Default(false) bool aiGenerated,
+    // File upload metadata (only populated when format == 'file')
+    @JsonKey(name: 'file_path') String? filePath,
+    @JsonKey(name: 'file_name') String? fileName,
+    @JsonKey(name: 'file_url') String? fileUrl,
+    @JsonKey(name: 'file_size') int? fileSize,
+    @JsonKey(name: 'file_mime') String? fileMime,
   }) = _LessonPlan;
 
   factory LessonPlan.fromJson(Map<String, dynamic> json) =>
@@ -46,6 +58,15 @@ abstract class LessonPlan with _$LessonPlan {
 
   /// True when the lesson plan has non-empty teacher notes.
   bool get hasNotes => (notes ?? '').isNotEmpty;
+
+  /// Resolved format enum. Falls back to K13 for legacy rows.
+  LessonPlanFormat get resolvedFormat => LessonPlanFormat.fromValue(format);
+
+  /// True when this row is a file upload (PDF/DOCX) — used by the
+  /// list-card to render the FILE badge and skip the AI sparkle hint.
+  bool get isFileFormat =>
+      resolvedFormat == LessonPlanFormat.file ||
+      ((filePath ?? '').isNotEmpty && format == 'k13' && (notes ?? '').isEmpty);
 
   static Map<String, dynamic> _standardizeJson(Map<String, dynamic> json) {
     final Map<String, dynamic> m = Map<String, dynamic>.from(json);

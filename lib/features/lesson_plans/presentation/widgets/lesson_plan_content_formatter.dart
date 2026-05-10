@@ -281,18 +281,13 @@ class LessonPlanContentFormatter {
       buffer.writeln();
     }
 
-    // Tanda Tangan
+    // Tanda Tangan placeholder marker — the PDF builder draws its
+    // own signature block (cleaner, with proper spacing), so we just
+    // emit the marker headers here. The text export still reads
+    // naturally and the PDF skips these lines anyway.
     buffer.writeln('Mengetahui');
-    buffer.writeln();
     buffer.writeln('Kepala Sekolah');
-    buffer.writeln();
-    buffer.writeln('...................................');
-    buffer.writeln('NIP ..............................');
-    buffer.writeln();
     buffer.writeln('Guru Mata Pelajaran');
-    buffer.writeln();
-    buffer.writeln('...................................');
-    buffer.writeln('NIP ..............................');
 
     if (lessonPlanData['ai_generated'] == true ||
         lessonPlanData['is_ai_generated'] == true) {

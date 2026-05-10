@@ -1,0 +1,1133 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · RPP Edit Redesign · Mockup</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --green-50: #DCFCE7;
+    --green-600: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-600: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+    --violet-700: #6D28D9;
+    --indigo-50: #E0E7FF;
+    --indigo-600: #4338CA;
+    --indigo-700: #3730A3;
+    --emerald-50: #D1FAE5;
+    --emerald-600: #047857;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 24px;
+    max-width: 920px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 760;
+    position: relative;
+    overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+
+  /* Brand header (cobalt teacher gradient) */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    padding: 14px 16px 22px;
+    color: white;
+    flex: 0 0 auto;
+  }
+  .header.indigo {
+    background: linear-gradient(135deg, var(--indigo-700) 0%, var(--indigo-600) 100%);
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto;
+  }
+  .h-icon svg { width: 16px; height: 16px; stroke-width: 2.2; }
+  .h-back svg { width: 18px; height: 18px; stroke-width: 2.2; }
+  .h-title-block { flex: 1; min-width: 0; }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.72);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .h-title-row { display: flex; align-items: center; gap: 8px; }
+  .h-dot {
+    width: 8px; height: 8px;
+    border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34,197,94,.6);
+    flex: 0 0 auto;
+  }
+  .h-title {
+    font-size: 18px; font-weight: 900;
+    color: white; letter-spacing: -0.3px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 100%;
+  }
+
+  /* KPI overlap */
+  .kpi-card {
+    margin: -22px 12px 0;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 14px 8px;
+    box-shadow: 0 4px 12px rgba(15,23,42,.06);
+    position: relative; z-index: 2;
+    flex: 0 0 auto;
+  }
+  .kpi-row { display: flex; align-items: center; }
+  .kpi-cell { flex: 1; display: flex; flex-direction: column; align-items: center; line-height: 1; }
+  .kpi-cell .v { font-size: 22px; font-weight: 900; color: var(--slate-900); letter-spacing: -0.5px; }
+  .kpi-cell.indigo .v { color: var(--indigo-600); }
+  .kpi-cell.blue .v { color: var(--blue-600); }
+  .kpi-cell.amber .v { color: var(--amber-600); font-size: 13px; letter-spacing: 0; }
+  .kpi-cell .l {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-500); margin-top: 4px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .kpi-divider { width: 1px; height: 28px; background: var(--slate-100); }
+
+  /* Body */
+  .body { padding: 12px 12px 88px; flex: 1; overflow-y: auto; }
+
+  /* Detail section card */
+  .detail-section {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 14px;
+    margin: 8px 4px;
+    position: relative;
+  }
+  .detail-section .label {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px; text-transform: uppercase;
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .detail-section.k13 .label .num {
+    background: var(--indigo-50); color: var(--indigo-600);
+  }
+  .detail-section .label .num {
+    width: 16px; height: 16px;
+    border-radius: 5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 900; letter-spacing: 0;
+  }
+  .detail-section .value {
+    font-size: 12.5px; color: var(--slate-800);
+    font-weight: 500; line-height: 1.55;
+  }
+  .detail-section .value strong { color: var(--slate-900); font-weight: 800; }
+
+  /* The new pencil affordance — corner button on each section card */
+  .section-edit {
+    position: absolute; top: 10px; right: 10px;
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: var(--slate-100);
+    color: var(--slate-500);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .section-edit svg { width: 12px; height: 12px; stroke-width: 2.2; }
+  .section-edit.active {
+    background: var(--brand-cobalt);
+    color: white;
+  }
+
+  /* Pulse ring to highlight the affordance in the mockup */
+  .section-edit.pulse::after {
+    content: '';
+    position: absolute; inset: -4px;
+    border-radius: 11px;
+    border: 2px solid rgba(27,111,184,.45);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: .55; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.08); }
+  }
+
+  /* Identitas grid (K13 detail) */
+  .id-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    margin-top: 4px;
+  }
+  .id-cell {
+    background: var(--slate-50);
+    border-radius: 8px;
+    padding: 8px 10px;
+    line-height: 1.25;
+  }
+  .id-cell .l {
+    font-size: 9px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .id-cell .v {
+    font-size: 11.5px; font-weight: 700;
+    color: var(--slate-800); margin-top: 2px;
+  }
+
+  /* Step rows (K13 langkah kegiatan) */
+  .step-row {
+    display: flex; gap: 8px;
+    padding: 8px 0;
+    border-top: 1px dashed var(--slate-200);
+  }
+  .step-row:first-child { border-top: none; padding-top: 0; }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 7px;
+    background: var(--indigo-50); color: var(--indigo-600);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .step-text { flex: 1; line-height: 1.4; }
+  .step-text .h { font-size: 11px; font-weight: 800; color: var(--slate-900); }
+  .step-text .b { font-size: 11px; color: var(--slate-600); margin-top: 2px; }
+  .step-text .b .min {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-500); margin-left: 4px; letter-spacing: 0.3px;
+  }
+
+  /* Sheet primitives (draggable / fixed) */
+  .scrim {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(15,23,42,0) 0%, rgba(15,23,42,.45) 30%);
+  }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: white;
+    border-top-left-radius: 20px; border-top-right-radius: 20px;
+    box-shadow: 0 -8px 24px rgba(15,23,42,.16);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .sheet.dragable { top: 14%; }
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--slate-300);
+    border-radius: 999px;
+    margin: 8px auto 0;
+    flex: 0 0 auto;
+  }
+  .sheet-header {
+    padding: 12px 16px 10px;
+    display: flex; align-items: center; gap: 10px;
+    flex: 0 0 auto;
+  }
+  .sheet-header .ic {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    background: var(--indigo-50); color: var(--indigo-600);
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .sheet-header .ic svg { width: 15px; height: 15px; stroke-width: 2.2; }
+  .sheet-header .title-block { flex: 1; min-width: 0; line-height: 1.2; }
+  .sheet-header .title { font-size: 14px; font-weight: 900; color: var(--slate-900); }
+  .sheet-header .sub {
+    font-size: 11px; color: var(--slate-500);
+    font-weight: 500; margin-top: 2px;
+  }
+  .sheet-header .close {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: var(--slate-100); color: var(--slate-500);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sheet-header .close svg { width: 12px; height: 12px; stroke-width: 2.4; }
+
+  /* Quill toolbar */
+  .quill-toolbar {
+    margin: 4px 12px 8px;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 5px 6px;
+    display: flex; gap: 2px; flex-wrap: wrap;
+    flex: 0 0 auto;
+  }
+  .qt-btn {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    color: var(--slate-700);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11.5px; font-weight: 700;
+  }
+  .qt-btn.active { background: white; box-shadow: 0 1px 2px rgba(15,23,42,.06); }
+  .qt-btn svg { width: 13px; height: 13px; stroke-width: 2.2; }
+  .qt-divider { width: 1px; height: 18px; background: var(--slate-200); margin: 5px 4px; }
+
+  /* Quill body */
+  .quill-body {
+    margin: 0 12px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 12px 12px;
+    flex: 1;
+    overflow-y: auto;
+    font-size: 12.5px;
+    color: var(--slate-800);
+    line-height: 1.55;
+  }
+  .quill-body p { margin: 0 0 8px; }
+  .quill-body p:last-child { margin-bottom: 0; }
+  .quill-body ol { margin: 0 0 8px; padding-left: 18px; }
+  .quill-body li { margin-bottom: 3px; }
+  .quill-caret {
+    display: inline-block;
+    width: 1.5px; height: 14px;
+    background: var(--brand-cobalt);
+    vertical-align: text-bottom;
+    margin-left: 1px;
+    animation: caret 1s step-end infinite;
+  }
+  @keyframes caret { 50% { opacity: 0; } }
+
+  /* Sheet ai hint card */
+  .sheet-ai-card {
+    margin: 8px 12px 0;
+    background: linear-gradient(135deg, rgba(124,58,237,.06) 0%, rgba(67,56,202,.04) 100%);
+    border: 1px solid rgba(124,58,237,.2);
+    border-radius: 10px;
+    padding: 9px 10px;
+    display: flex; align-items: center; gap: 9px;
+    flex: 0 0 auto;
+  }
+  .sheet-ai-card .ic {
+    width: 24px; height: 24px;
+    border-radius: 7px;
+    background: var(--violet-600); color: white;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .sheet-ai-card .ic svg { width: 11px; height: 11px; stroke-width: 2.4; }
+  .sheet-ai-card .body-col { flex: 1; line-height: 1.3; }
+  .sheet-ai-card .t {
+    font-size: 11px; font-weight: 800;
+    color: var(--violet-600);
+  }
+  .sheet-ai-card .d {
+    font-size: 10px; color: var(--slate-600);
+    font-weight: 500; margin-top: 2px;
+  }
+  .sheet-ai-card .cta {
+    height: 26px; padding: 0 10px;
+    background: white; color: var(--violet-600);
+    border: 1px solid rgba(124,58,237,.22);
+    border-radius: 999px;
+    font-size: 10.5px; font-weight: 800;
+    display: flex; align-items: center; gap: 4px;
+    flex: 0 0 auto;
+  }
+  .sheet-ai-card .cta svg { width: 10px; height: 10px; stroke-width: 2.4; }
+
+  /* Footer / save bar */
+  .footer-save {
+    background: white;
+    border-top: 1px solid var(--slate-100);
+    padding: 12px 16px 16px;
+    display: flex; gap: 8px;
+    flex: 0 0 auto;
+  }
+  .footer-save .btn {
+    height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; gap: 6px;
+  }
+  .footer-save .btn.secondary {
+    flex: 1; background: white; color: var(--slate-700);
+    border: 1px solid var(--slate-200);
+  }
+  .footer-save .btn.primary {
+    flex: 2; background: var(--brand-cobalt); color: white;
+    box-shadow: 0 6px 14px rgba(27,111,184,.28);
+  }
+  .footer-save .btn.primary.dirty { background: var(--brand-cobalt); }
+  .footer-save .btn.primary.disabled {
+    background: var(--slate-200); color: var(--slate-400);
+    box-shadow: none;
+  }
+  .footer-save .btn.violet {
+    flex: 0 0 44px; background: white; color: var(--violet-600);
+    border: 1px solid rgba(124,58,237,.22);
+  }
+  .footer-save .btn.violet svg { width: 14px; height: 14px; stroke-width: 2.4; }
+
+  /* Field label (form fields) */
+  .field-label {
+    margin: 12px 16px 6px;
+    font-size: 10px; font-weight: 800;
+    color: var(--slate-700);
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .field {
+    margin: 0 12px 6px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 12px; color: var(--slate-800);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .field svg.field-ic {
+    width: 14px; height: 14px; color: var(--slate-400);
+    stroke-width: 2; flex: 0 0 auto;
+  }
+  .field svg.chev {
+    width: 14px; height: 14px; color: var(--slate-400);
+    stroke-width: 2.4;
+  }
+  .field-row { display: flex; gap: 8px; margin: 0 12px; }
+  .field-row > .field { flex: 1; margin: 0 0 6px; }
+
+  /* Chip-style selectors (matches FilterChipGrid) */
+  .chip-strip {
+    display: flex; flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 16px 4px;
+  }
+  .chip {
+    height: 32px; padding: 0 12px;
+    border-radius: 999px;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    font-size: 12px; font-weight: 700;
+    color: var(--slate-700);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .chip.on {
+    background: rgba(27,111,184,.10);
+    border-color: var(--brand-cobalt);
+    color: var(--brand-cobalt);
+  }
+
+  /* Toast / dirty indicator */
+  .toast {
+    position: absolute; left: 16px; right: 16px; bottom: 80px;
+    background: var(--slate-900);
+    color: white; font-size: 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 8px 24px rgba(15,23,42,.3);
+  }
+  .toast svg { width: 14px; height: 14px; color: #22c55e; stroke-width: 2.4; }
+
+  .legend {
+    margin: 32px 0 8px;
+    padding: 16px;
+    background: white; border-radius: 12px;
+    font-size: 12px; color: var(--slate-600); line-height: 1.6;
+    border: 1px solid var(--slate-200);
+  }
+  .legend strong { color: var(--slate-900); }
+  .legend code {
+    background: var(--slate-100); color: var(--brand-cobalt);
+    padding: 1px 6px; border-radius: 4px;
+    font-size: 11px; font-family: 'SF Mono', Menlo, monospace;
+  }
+  .legend ul li { margin: 6px 0; }
+
+  /* Caption beneath each frame */
+  .frame-caption {
+    padding: 12px 16px;
+    background: white;
+    border-top: 1px solid var(--slate-100);
+    font-size: 11px; line-height: 1.5;
+    color: var(--slate-600);
+  }
+  .frame-caption strong { color: var(--slate-900); font-weight: 800; }
+</style>
+</head>
+<body>
+
+<h1>RPP · Edit Redesign · Mockup</h1>
+<p class="subtitle">
+  Replaces the legacy "global edit toggle" on the detail screen with
+  three scoped sheets — same pattern as Kegiatan Kelas (tap into the
+  thing you want to change). The detail page stays read-only at all
+  times. Each pencil opens a small sheet for one concern only:
+  <strong>section editor</strong>, <strong>identity edit</strong>, or
+  <strong>file replace</strong>. Backend save = partial PATCH against
+  <code>format_data</code> JSONB — backend already merges, so
+  individual section edits never wipe sibling sections.
+</p>
+
+<div class="grid">
+
+<!-- ═══════ A · DETAIL (read-only) with edit affordances ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A</span>DETAIL · READ-ONLY <span class="desc">K13 example · pencil per section + header pencil</span></div>
+  <div class="phone">
+    <div class="header indigo">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">RPP · K13 · 7B MATEMATIKA</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 4 · Trigonometri</span></div>
+        </div>
+        <!-- Header pencil — opens identity edit sheet (Frame E) -->
+        <div class="h-icon" style="background:rgba(255,255,255,.28)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell indigo"><div class="v">5</div><div class="l">Section</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">2 JP</div><div class="l">Alokasi</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">Pending</div><div class="l">Status</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="detail-section k13">
+        <div class="label"><span class="num">3</span> Tujuan Pembelajaran</div>
+        <div class="value">Siswa memahami aturan sinus, menerapkan dalam segitiga sebarang, dan menyelesaikan soal kontekstual dengan tepat.</div>
+        <div class="section-edit pulse">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+      </div>
+      <div class="detail-section k13">
+        <div class="label"><span class="num">4</span> Langkah Kegiatan</div>
+        <div class="step-row">
+          <div class="step-num">A</div>
+          <div class="step-text"><div class="h">Pendahuluan <span class="b min">10 MENIT</span></div><div class="b">Apersepsi · motivasi · sampaikan tujuan.</div></div>
+        </div>
+        <div class="step-row">
+          <div class="step-num">B</div>
+          <div class="step-text"><div class="h">Inti <span class="b min">65 MENIT</span></div><div class="b">Diskusi terbimbing · kelompok 4 siswa.</div></div>
+        </div>
+        <div class="section-edit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+      </div>
+      <div class="detail-section k13">
+        <div class="label"><span class="num">5</span> Penilaian</div>
+        <div class="value"><strong>Sikap</strong> observasi · <strong>Pengetahuan</strong> UH · <strong>Keterampilan</strong> tugas pemodelan.</div>
+        <div class="section-edit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="frame-caption">
+    <strong>What changed</strong> — small pencil button appears in the top-right of every section card. Tap → opens Frame B (section editor sheet) for that section only. Header pencil opens Frame F (identity edit). No more "edit mode" toggle.
+  </div>
+</div>
+
+<!-- ═══════ B · SECTION EDITOR — CLEAN ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">B</span>SECTION EDITOR <span class="desc">AppDraggableSheet · Quill toolbar + body · sticky footer</span></div>
+  <div class="phone">
+    <div class="header indigo" style="filter:brightness(.78) saturate(.8)">
+      <div class="h-row"><div class="h-back">‹</div><div class="h-title-block"><div class="h-kicker">RPP · K13</div><div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 4 · Trigonometri</span></div></div></div>
+    </div>
+    <div class="scrim"></div>
+    <div class="sheet dragable">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <div class="title-block">
+          <div class="title">Edit Tujuan Pembelajaran</div>
+          <div class="sub">Section 3 · K13 · perubahan tersimpan ke <code style="font-family:inherit;background:var(--slate-100);padding:1px 5px;border-radius:4px;color:var(--brand-cobalt)">format_data.tujuan</code></div>
+        </div>
+        <div class="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      </div>
+
+      <div class="quill-toolbar">
+        <div class="qt-btn active" style="font-weight:800">B</div>
+        <div class="qt-btn" style="font-style:italic">I</div>
+        <div class="qt-btn" style="text-decoration:underline">U</div>
+        <div class="qt-divider"></div>
+        <div class="qt-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </div>
+        <div class="qt-btn active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+        </div>
+        <div class="qt-divider"></div>
+        <div class="qt-btn">H1</div>
+        <div class="qt-btn">H2</div>
+        <div class="qt-btn">H3</div>
+        <div class="qt-divider"></div>
+        <div class="qt-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="qt-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 7 8 12 3 17"/><polyline points="21 7 16 12 21 17"/></svg>
+        </div>
+      </div>
+
+      <div class="quill-body">
+        <p>Setelah mengikuti pembelajaran, peserta didik mampu:</p>
+        <ol>
+          <li>Memahami konsep aturan sinus pada segitiga sebarang.</li>
+          <li>Menerapkan aturan sinus untuk menyelesaikan masalah kontekstual yang melibatkan segitiga sebarang.</li>
+          <li>Mengevaluasi penyelesaian masalah dengan tepat<span class="quill-caret"></span></li>
+        </ol>
+      </div>
+
+      <div class="footer-save">
+        <div class="btn secondary">Batal</div>
+        <div class="btn violet" title="Generate ulang">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg>
+        </div>
+        <div class="btn primary dirty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Simpan
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="frame-caption">
+    <strong>Single-section editor</strong> — full Quill toolbar + body for one section. Footer has <em>Batal</em>, a violet <em>Generate ulang</em> mini-button (per-section AI regen — replaces the separate regen sheet for the common case), and a primary <em>Simpan</em>. Save → PATCH <code>{format_data: {tujuan: html}}</code> only.
+  </div>
+</div>
+
+<!-- ═══════ C · SECTION EDITOR — IDLE (no changes) ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">C</span>EDITOR · IDLE <span class="desc">Simpan disabled until edits exist</span></div>
+  <div class="phone">
+    <div class="header indigo" style="filter:brightness(.78) saturate(.8)">
+      <div class="h-row"><div class="h-back">‹</div><div class="h-title-block"><div class="h-kicker">RPP · K13</div><div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 4 · Trigonometri</span></div></div></div>
+    </div>
+    <div class="scrim"></div>
+    <div class="sheet dragable">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <div class="title-block">
+          <div class="title">Edit Penilaian</div>
+          <div class="sub">Section 5 · K13 · belum diubah</div>
+        </div>
+        <div class="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      </div>
+
+      <div class="quill-toolbar">
+        <div class="qt-btn" style="font-weight:800">B</div>
+        <div class="qt-btn" style="font-style:italic">I</div>
+        <div class="qt-btn" style="text-decoration:underline">U</div>
+        <div class="qt-divider"></div>
+        <div class="qt-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+        <div class="qt-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></div>
+        <div class="qt-divider"></div>
+        <div class="qt-btn">H1</div>
+        <div class="qt-btn">H2</div>
+        <div class="qt-btn">H3</div>
+      </div>
+
+      <div class="sheet-ai-card">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg>
+        </div>
+        <div class="body-col">
+          <div class="t">Mau AI tulis ulang section ini?</div>
+          <div class="d">Sisa kuota regenerasi: <strong>2/2</strong> — gratis untuk section ini.</div>
+        </div>
+        <div class="cta">Generate<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+
+      <div class="quill-body">
+        <h3 style="margin:0 0 6px;font-size:13px;color:var(--slate-900);">Sikap</h3>
+        <p>Observasi diskusi (rubrik 4 level).</p>
+        <h3 style="margin:8px 0 6px;font-size:13px;color:var(--slate-900);">Pengetahuan</h3>
+        <p>UH 1 (8 PG + 2 essay).</p>
+        <h3 style="margin:8px 0 6px;font-size:13px;color:var(--slate-900);">Keterampilan</h3>
+        <p>Tugas pemodelan kontekstual.</p>
+      </div>
+
+      <div class="footer-save">
+        <div class="btn secondary">Batal</div>
+        <div class="btn violet" title="Generate ulang">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg>
+        </div>
+        <div class="btn primary disabled">Simpan</div>
+      </div>
+    </div>
+  </div>
+  <div class="frame-caption">
+    <strong>Idle / no-change state</strong> — Quill loaded with current content but unedited. <em>Simpan</em> is disabled (grey) so the user knows there's nothing to save. AI hint card appears prominently when sisa kuota &gt; 0; clicking it triggers the regen flow inline (replaces the Quill content with a generated draft).
+  </div>
+</div>
+
+<!-- ═══════ D · SECTION EDITOR — REGENERATING ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">D</span>EDITOR · REGENERATING <span class="desc">AI is rewriting · Quill body shows skeleton</span></div>
+  <div class="phone">
+    <div class="header indigo" style="filter:brightness(.78) saturate(.8)">
+      <div class="h-row"><div class="h-back">‹</div><div class="h-title-block"><div class="h-kicker">RPP · K13</div><div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 4 · Trigonometri</span></div></div></div>
+    </div>
+    <div class="scrim"></div>
+    <div class="sheet dragable">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="ic" style="background:var(--violet-50);color:var(--violet-600)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg>
+        </div>
+        <div class="title-block">
+          <div class="title" style="color:var(--violet-700)">Generate ulang…</div>
+          <div class="sub">AI sedang menulis ulang Tujuan Pembelajaran · ~10 detik</div>
+        </div>
+        <div class="close" style="opacity:.4;pointer-events:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      </div>
+
+      <div class="quill-toolbar" style="opacity:.4">
+        <div class="qt-btn" style="font-weight:800">B</div>
+        <div class="qt-btn" style="font-style:italic">I</div>
+        <div class="qt-btn" style="text-decoration:underline">U</div>
+        <div class="qt-divider"></div>
+        <div class="qt-btn">H1</div>
+        <div class="qt-btn">H2</div>
+        <div class="qt-btn">H3</div>
+      </div>
+
+      <div class="quill-body" style="opacity:.7">
+        <div style="height:8px;background:var(--slate-100);border-radius:4px;margin-bottom:10px;width:80%"></div>
+        <div style="height:8px;background:var(--slate-100);border-radius:4px;margin-bottom:10px;width:65%"></div>
+        <div style="height:8px;background:var(--slate-100);border-radius:4px;margin-bottom:10px;width:90%"></div>
+        <div style="height:8px;background:var(--slate-100);border-radius:4px;margin-bottom:10px;width:50%"></div>
+        <div style="height:8px;background:var(--slate-100);border-radius:4px;margin-bottom:10px;width:75%"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:18px">
+          <div style="width:24px;height:24px;border:2.5px solid var(--violet-50);border-top-color:var(--violet-600);border-radius:999px;animation:spin 1s linear infinite"></div>
+          <div style="font-size:11px;color:var(--violet-600);font-weight:700">Mengirim ke AI · langkah 2 dari 3</div>
+        </div>
+      </div>
+
+      <div class="footer-save" style="opacity:.6;pointer-events:none">
+        <div class="btn secondary">Batal</div>
+        <div class="btn violet">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.09 3.36L16 6.27l-2.91 2.18L14 12l-2-1.5-2 1.5.91-3.55L8 6.27l2.91-.91L12 2z"/></svg>
+        </div>
+        <div class="btn primary disabled">Simpan</div>
+      </div>
+    </div>
+  </div>
+  <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+  <div class="frame-caption">
+    <strong>Regenerasi inline</strong> — when "Generate ulang" is tapped, Quill body skeleton-fades while AI is working. Backend: same <code>POST /lesson-plans/{id}/regen/{field}</code> endpoint already in place. Result lands as the new Quill content (teacher can still edit it before tapping Simpan).
+  </div>
+</div>
+
+<!-- ═══════ E · IDENTITY EDIT SHEET ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">E</span>IDENTITY EDIT <span class="desc">AppBottomSheet · chip-style fields (matches setup sheet)</span></div>
+  <div class="phone">
+    <div class="header indigo" style="filter:brightness(.78) saturate(.8)">
+      <div class="h-row"><div class="h-back">‹</div><div class="h-title-block"><div class="h-kicker">RPP · K13</div><div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 4 · Trigonometri</span></div></div></div>
+    </div>
+    <div class="scrim"></div>
+    <div class="sheet" style="top:18%">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+        <div class="title-block">
+          <div class="title">Edit Identitas RPP</div>
+          <div class="sub">Judul · kelas · mapel · semester · alokasi</div>
+        </div>
+        <div class="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      </div>
+
+      <div class="field-label">Judul</div>
+      <div class="field"><span style="flex:1;color:var(--slate-900);font-weight:700">Bab 4 · Trigonometri</span></div>
+
+      <div class="field-label">Mata pelajaran &amp; kelas</div>
+      <div class="field-row">
+        <div class="field"><svg class="field-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v14a3 3 0 0 0-3-3H2zM22 4h-7a3 3 0 0 0-3 3v14a3 3 0 0 1 3-3h7z"/></svg><span style="flex:1;color:var(--slate-900);font-weight:700">Matematika</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        <div class="field"><svg class="field-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span style="flex:1;color:var(--slate-900);font-weight:700">7B</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+
+      <div class="field-label">Alokasi waktu</div>
+      <div class="chip-strip">
+        <div class="chip">1 JP</div>
+        <div class="chip on">2 JP</div>
+        <div class="chip">2 JP · 40m</div>
+        <div class="chip">4 JP</div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="field-label">Semester</div>
+      <div class="chip-strip">
+        <div class="chip on">Ganjil</div>
+        <div class="chip">Genap</div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="field-label">Tahun ajaran</div>
+      <div class="chip-strip">
+        <div class="chip">2024/2025</div>
+        <div class="chip on">2025/2026</div>
+        <div class="chip">2026/2027</div>
+      </div>
+
+      <div style="flex:1"></div>
+      <div class="footer-save">
+        <div class="btn secondary">Batal</div>
+        <div class="btn primary dirty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Simpan
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="frame-caption">
+    <strong>Identity edit sheet</strong> — opens from the header pencil. Reuses <code>FilterChipGrid</code> for alokasi / semester / tahun ajaran (the same chips the setup sheet got in J.4). Title is a <code>TextField</code>, kelas / mapel are picker fields. Save → PATCH metadata fields only — never touches <code>format_data</code>.
+  </div>
+</div>
+
+<!-- ═══════ G · FILE DETAIL · EDIT AFFORDANCES ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">G</span>FILE DETAIL · READ-ONLY <span class="desc">format=file · pencil opens replace sheet</span></div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">RPP · FILE · 7A B. INDONESIA</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 5 · Teks Eksplanasi</span></div>
+        </div>
+        <!-- Pencil opens Frame H (file edit sheet) -->
+        <div class="h-icon" style="background:rgba(255,255,255,.28)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell" style="--c:var(--blue-600)">
+          <div class="v" style="color:var(--blue-600)">PDF</div>
+          <div class="l">Tipe</div>
+        </div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell" style="--c:var(--brand-cobalt)">
+          <div class="v" style="color:var(--brand-cobalt)">2.4 MB</div>
+          <div class="l">Ukuran</div>
+        </div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v" style="color:var(--amber-600);font-size:13px;letter-spacing:0">Draf</div><div class="l">Status</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div style="margin:0 4px 8px;background:var(--blue-50);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:8px">
+        <svg style="width:14px;height:14px;color:var(--blue-600);stroke-width:2.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div style="font-size:10.5px;color:var(--blue-600);font-weight:700;line-height:1.4">Versi file — isi tidak bisa diedit dalam app. Tap pencil untuk ganti file.</div>
+      </div>
+      <div style="background:white;border:1px solid var(--slate-200);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;background:var(--red-50);border-radius:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto">
+          <svg style="width:20px;height:20px;color:var(--red-600);stroke-width:1.8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div style="flex:1;line-height:1.3">
+          <div style="font-size:13px;font-weight:800;color:var(--slate-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">RPP-Bab5-Teks-Eksplanasi.pdf</div>
+          <div style="font-size:10.5px;color:var(--slate-500);font-weight:600;margin-top:2px">2.4 MB · diunggah 7 Mei</div>
+        </div>
+        <div style="width:36px;height:36px;background:var(--slate-100);border-radius:10px;display:flex;align-items:center;justify-content:center">
+          <svg style="width:16px;height:16px;color:var(--slate-700);stroke-width:2.2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+      </div>
+      <div style="margin-top:8px;background:white;border:1px solid var(--slate-200);border-radius:14px;padding:14px">
+        <div style="font-size:9.5px;font-weight:800;color:var(--slate-500);letter-spacing:.6px;margin-bottom:8px">METADATA</div>
+        <div class="id-grid" style="margin-top:0">
+          <div class="id-cell"><div class="l">Bab/Judul</div><div class="v">Bab 5 · Teks Eksplanasi</div></div>
+          <div class="id-cell"><div class="l">Kelas</div><div class="v">VII A</div></div>
+          <div class="id-cell"><div class="l">Mapel</div><div class="v">B. Indonesia</div></div>
+          <div class="id-cell"><div class="l">Tahun ajaran</div><div class="v">2025/2026</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="frame-caption">
+    <strong>File detail</strong> stays the same as the page already shipped (cobalt BrandPageHeader). Tap header pencil → opens Frame H. <em>No section pencils for file format</em> — file rows have no editable sections, just file + metadata.
+  </div>
+</div>
+
+<!-- ═══════ H · FILE EDIT — INITIAL ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">H</span>FILE EDIT · INITIAL <span class="desc">Current file shown · metadata pre-filled · Ganti file CTA</span></div>
+  <div class="phone">
+    <div class="header" style="filter:brightness(.78) saturate(.8)">
+      <div class="h-row"><div class="h-back">‹</div><div class="h-title-block"><div class="h-kicker">RPP · FILE</div><div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 5 · Teks Eksplanasi</span></div></div></div>
+    </div>
+    <div class="scrim"></div>
+    <div class="sheet dragable">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <div class="title-block">
+          <div class="title">Edit RPP File</div>
+          <div class="sub">Ganti file atau ubah metadata</div>
+        </div>
+        <div class="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      </div>
+
+      <div style="padding:0 12px 4px;flex:1;overflow-y:auto">
+        <!-- Current file row — replaces the upload drop zone when in edit mode -->
+        <div style="background:white;border:1px solid var(--slate-200);border-radius:14px;padding:12px;display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;background:var(--red-50);border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto">
+            <svg style="width:18px;height:18px;color:var(--red-600);stroke-width:1.8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div style="flex:1;line-height:1.3;min-width:0">
+            <div style="font-size:12.5px;font-weight:800;color:var(--slate-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">RPP-Bab5-Teks-Eksplanasi.pdf</div>
+            <div style="font-size:10.5px;color:var(--slate-500);font-weight:600;margin-top:2px">2.4 MB · file saat ini</div>
+          </div>
+          <!-- Single primary action: ganti file -->
+          <div style="height:32px;padding:0 12px;background:var(--brand-cobalt);color:white;border-radius:8px;font-size:11.5px;font-weight:800;display:flex;align-items:center;gap:5px">
+            <svg style="width:12px;height:12px;stroke-width:2.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Ganti file
+          </div>
+        </div>
+
+        <div class="field-label">Judul</div>
+        <div class="field"><span style="flex:1;color:var(--slate-900);font-weight:700">Bab 5 · Teks Eksplanasi</span></div>
+
+        <div class="field-label">Mata pelajaran &amp; kelas</div>
+        <div class="field-row">
+          <div class="field"><svg class="field-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v14a3 3 0 0 0-3-3H2zM22 4h-7a3 3 0 0 0-3 3v14a3 3 0 0 1 3-3h7z"/></svg><span style="flex:1;color:var(--slate-900);font-weight:700">B. Indonesia</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+          <div class="field"><svg class="field-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span style="flex:1;color:var(--slate-900);font-weight:700">7A</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+
+        <div class="field-label">Semester</div>
+        <div class="chip-strip" style="padding:0 4px 4px">
+          <div class="chip on">Ganjil</div>
+          <div class="chip">Genap</div>
+        </div>
+        <div style="height:8px"></div>
+        <div class="field-label">Tahun ajaran</div>
+        <div class="chip-strip" style="padding:0 4px 4px">
+          <div class="chip">2024/2025</div>
+          <div class="chip on">2025/2026</div>
+        </div>
+
+        <div class="field-label">Catatan (opsional)</div>
+        <div class="field" style="min-height:60px;align-items:flex-start">
+          <span style="flex:1;color:var(--slate-700);line-height:1.5">Revisi versi 2025 — sumber Buku Siswa Kemendikbud halaman 88.</span>
+        </div>
+        <div style="height:12px"></div>
+      </div>
+
+      <div class="footer-save">
+        <div class="btn secondary">Batal</div>
+        <div class="btn primary disabled">Simpan</div>
+      </div>
+    </div>
+  </div>
+  <div class="frame-caption">
+    <strong>File edit sheet · initial state</strong> — same component as <code>LessonPlanUploadSheet</code> but in edit mode. Current file is rendered as a file-card with a single <em>Ganti file</em> primary action; metadata fields are pre-filled. <em>Simpan</em> stays disabled until at least one field changes (or a new file is picked).
+  </div>
+</div>
+
+<!-- ═══════ I · FILE EDIT — REPLACED ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">I</span>FILE EDIT · REPLACED <span class="desc">New file picked · Simpan enabled · old-file warning</span></div>
+  <div class="phone">
+    <div class="header" style="filter:brightness(.78) saturate(.8)">
+      <div class="h-row"><div class="h-back">‹</div><div class="h-title-block"><div class="h-kicker">RPP · FILE</div><div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 5 · Teks Eksplanasi</span></div></div></div>
+    </div>
+    <div class="scrim"></div>
+    <div class="sheet dragable">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="ic" style="background:var(--green-50);color:var(--green-600)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="title-block">
+          <div class="title">File baru dipilih</div>
+          <div class="sub">Tap Simpan untuk mengganti</div>
+        </div>
+        <div class="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+      </div>
+
+      <div style="padding:0 12px 4px;flex:1;overflow-y:auto">
+        <!-- New file (just picked) — green tint shows it's the replacement -->
+        <div style="background:rgba(21,128,61,.04);border:1.5px solid var(--green-600);border-radius:14px;padding:12px;display:flex;align-items:center;gap:12px;position:relative">
+          <div style="width:40px;height:40px;background:var(--red-50);border-radius:10px;display:flex;align-items:center;justify-content:center;flex:0 0 auto">
+            <svg style="width:18px;height:18px;color:var(--red-600);stroke-width:1.8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div style="flex:1;line-height:1.3;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <div style="font-size:8.5px;font-weight:900;letter-spacing:.5px;background:var(--green-600);color:white;padding:1px 5px;border-radius:4px">BARU</div>
+              <div style="font-size:12.5px;font-weight:800;color:var(--slate-900);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">RPP-Bab5-Revisi-Final.pdf</div>
+            </div>
+            <div style="font-size:10.5px;color:var(--green-600);font-weight:700">3.1 MB · siap diunggah</div>
+          </div>
+          <div style="width:32px;height:32px;background:var(--slate-100);border-radius:8px;color:var(--slate-700);display:flex;align-items:center;justify-content:center">
+            <svg style="width:14px;height:14px;stroke-width:2.4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+        </div>
+
+        <!-- Old file — preserved below as context (greyed out) -->
+        <div style="margin-top:8px;background:var(--slate-50);border:1px dashed var(--slate-300);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:12px;opacity:.65">
+          <svg style="width:14px;height:14px;color:var(--slate-400);stroke-width:2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          <div style="flex:1;line-height:1.2;font-size:10.5px;color:var(--slate-600);font-weight:600">
+            <strong style="color:var(--slate-700)">Akan diganti:</strong> RPP-Bab5-Teks-Eksplanasi.pdf · 2.4 MB
+          </div>
+        </div>
+
+        <div class="field-label">Judul</div>
+        <div class="field"><span style="flex:1;color:var(--slate-900);font-weight:700">Bab 5 · Teks Eksplanasi</span></div>
+
+        <div class="field-label">Mata pelajaran &amp; kelas</div>
+        <div class="field-row">
+          <div class="field"><svg class="field-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v14a3 3 0 0 0-3-3H2zM22 4h-7a3 3 0 0 0-3 3v14a3 3 0 0 1 3-3h7z"/></svg><span style="flex:1;color:var(--slate-900);font-weight:700">B. Indonesia</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+          <div class="field"><svg class="field-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span style="flex:1;color:var(--slate-900);font-weight:700">7A</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+
+        <div style="height:12px"></div>
+      </div>
+
+      <div class="footer-save">
+        <div class="btn secondary">Batal</div>
+        <div class="btn primary dirty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Simpan ganti file
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="frame-caption">
+    <strong>After tap Ganti file</strong> — picker opens, teacher selects a new PDF/DOCX. New file appears at top tinted green with a <strong>BARU</strong> tag; old file shows below dashed/greyed with <em>"Akan diganti"</em> warning. Save → uploads new file, PATCHes lesson plan with new file_path/name/size/mime, backend's <code>UpdateLessonPlanAction</code> auto-cleans the orphaned old file from disk (already implemented).
+  </div>
+</div>
+
+<!-- ═══════ F · TOAST AFTER SAVE ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">F</span>POST-SAVE TOAST <span class="desc">Snackbar at bottom · sheet auto-dismissed</span></div>
+  <div class="phone">
+    <div class="header indigo">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="h-title-block">
+          <div class="h-kicker">RPP · K13 · 7B MATEMATIKA</div>
+          <div class="h-title-row"><span class="h-dot"></span><span class="h-title">Bab 4 · Trigonometri</span></div>
+        </div>
+        <div class="h-icon" style="background:rgba(255,255,255,.28)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-row">
+        <div class="kpi-cell indigo"><div class="v">5</div><div class="l">Section</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell blue"><div class="v">2 JP</div><div class="l">Alokasi</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">Pending</div><div class="l">Status</div></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="detail-section k13" style="border-color:var(--brand-cobalt);background:rgba(27,111,184,.04)">
+        <div class="label"><span class="num">3</span> Tujuan Pembelajaran</div>
+        <div class="value">Setelah mengikuti pembelajaran, peserta didik mampu memahami konsep aturan sinus pada segitiga sebarang, menerapkan dalam masalah kontekstual, dan mengevaluasi penyelesaian dengan tepat.</div>
+        <div class="section-edit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+      </div>
+      <div class="detail-section k13">
+        <div class="label"><span class="num">4</span> Langkah Kegiatan</div>
+        <div class="value" style="color:var(--slate-500)">Pendahuluan · Inti · Penutup…</div>
+        <div class="section-edit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="toast">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Tujuan Pembelajaran tersimpan
+    </div>
+  </div>
+  <div class="frame-caption">
+    <strong>Visual confirmation</strong> — sheet auto-pops on save. Section card briefly tints cobalt to highlight what changed. Snackbar confirms which section was saved. Other sections untouched (because PATCH only sent that one key).
+  </div>
+</div>
+
+</div>
+
+<div class="legend">
+  <strong>Why this works better than the legacy "edit mode"</strong>
+  <ul>
+    <li><strong>Smaller blast radius.</strong> One section save = one PATCH key. Backend's <code>UpdateLessonPlanAction</code> already merges <code>format_data</code> partials, so editing Tujuan can't accidentally clear Penilaian.</li>
+    <li><strong>Regen sits next to the edit it modifies.</strong> The violet <em>Generate ulang</em> button is a footer action on the same sheet that shows the section. No separate regen sheet for the common case (the multi-section regen sheet J from the original mockup is still there for the rare bulk regen).</li>
+    <li><strong>Identity edit reuses setup-sheet patterns.</strong> Same chip-style fields the teacher saw when creating the RPP. Drops <code>LessonPlanFormDialog</code> for the structured formats.</li>
+    <li><strong>No "edit mode" state.</strong> The detail page has one shape always. Eliminates a whole class of "what mode am I in?" bugs and makes back-button behaviour obvious (always returns to the list).</li>
+    <li><strong>Format-aware out of the box.</strong> The pencil affordance only renders for sections in <code>format_section_keys</code>. K13 → 5 pencils. RPP 1 Halaman → 3. Modul Ajar → 6. File → no pencils (file detail uses upload sheet for replacement, header pencil disabled).</li>
+    <li><strong>Implementation impact</strong> — two new sheet files (<code>lesson_plan_section_editor_sheet.dart</code>, <code>lesson_plan_identity_edit_sheet.dart</code>). Drop the global <code>isEditing</code> toggle from <code>AiRppDetailScreen</code>. Drop <code>AiRppEditorView</code> entirely (replaced by per-section sheet). Keep <code>LessonPlanFormDialog</code> only for the file-format ganti-file flow until <code>LessonPlanUploadSheet</code> grows an edit mode.</li>
+  </ul>
+</div>
+
+</body>
+</html>

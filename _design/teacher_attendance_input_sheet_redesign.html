@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · Ambil Presensi · Sheet Redesign</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --green-50: #DCFCE7;
+    --green-100: #BBF7D0;
+    --green-600: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-100: #FDE68A;
+    --amber-600: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-600: #1D4ED8;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+    --rose-50: #FFE4E6;
+    --rose-600: #BE185D;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 32px;
+    max-width: 880px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px;
+    align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px;
+    margin-left: 10px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 700;
+    position: relative;
+    overflow: hidden;
+    background: var(--slate-50);
+  }
+  .scrim {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(15,23,42,.0) 0%, rgba(15,23,42,.45) 30%);
+  }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--surface);
+    border-top-left-radius: 22px;
+    border-top-right-radius: 22px;
+    box-shadow: 0 -8px 24px rgba(15,23,42,.16);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .sheet.compact { top: 25%; }
+  .sheet.tall    { top: 12%; }
+
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--slate-300);
+    border-radius: 999px;
+    margin: 8px auto 6px;
+    flex: 0 0 auto;
+  }
+
+  .sheet-header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    padding: 14px 16px 16px;
+    color: white;
+    flex: 0 0 auto;
+  }
+  .sheet-header .title-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sheet-header .icon-tile {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sheet-header .icon-tile svg { width: 16px; height: 16px; stroke-width: 2.2; color: white; }
+  .sheet-header .title-block { flex: 1; min-width: 0; line-height: 1.2; }
+  .sheet-header .kicker {
+    font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.72);
+    letter-spacing: 1.2px; text-transform: uppercase;
+  }
+  .sheet-header .title {
+    font-size: 17px; font-weight: 900;
+    color: white; letter-spacing: -0.2px;
+    margin-top: 2px;
+  }
+  .sheet-header .reset {
+    height: 30px; padding: 0 12px;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 999px;
+    color: white; font-size: 11px; font-weight: 800;
+    display: flex; align-items: center;
+  }
+  .sheet-header .ctx-strip {
+    margin-top: 12px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sheet-header .ctx-strip svg { width: 14px; height: 14px; stroke-width: 2; color: white; }
+  .sheet-header .ctx-text { flex: 1; line-height: 1.2; }
+  .sheet-header .ctx-text .a { font-size: 12px; font-weight: 800; color: white; }
+  .sheet-header .ctx-text .b { font-size: 10.5px; color: rgba(255,255,255,.78); margin-top: 1px; }
+  .sheet-header .ctx-edit {
+    height: 26px; padding: 0 10px;
+    background: rgba(255,255,255,.95);
+    color: var(--brand-cobalt);
+    border-radius: 999px;
+    font-size: 10px; font-weight: 800;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .sheet-header .ctx-edit svg { width: 11px; height: 11px; stroke-width: 2.4; color: var(--brand-cobalt); }
+
+  /* Tabs */
+  .seg-tabs {
+    margin-top: 12px;
+    background: rgba(255,255,255,.16);
+    border-radius: 999px;
+    padding: 3px;
+    display: flex;
+  }
+  .seg-tabs > .tab {
+    flex: 1; height: 30px;
+    border-radius: 999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11.5px; font-weight: 800;
+    color: rgba(255,255,255,.72);
+    gap: 5px;
+  }
+  .seg-tabs > .tab.active { background: white; color: var(--brand-cobalt); }
+  .seg-tabs > .tab svg { width: 12px; height: 12px; stroke-width: 2.4; }
+
+  /* Body */
+  .sheet-body {
+    flex: 1; overflow-y: auto;
+    background: var(--slate-50);
+    padding: 14px 12px 0;
+  }
+
+  /* Section header */
+  .sec-head {
+    display: flex; align-items: center; gap: 6px;
+    margin: 4px 4px 8px;
+  }
+  .sec-head .t {
+    flex: 1;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-700); letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+  .sec-head .a {
+    font-size: 10.5px; color: var(--slate-500); font-weight: 700;
+  }
+
+  /* Schedule card (Frame A primary) */
+  .sch-card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 11px 12px;
+    margin-bottom: 8px;
+    display: flex; gap: 12px; align-items: stretch;
+  }
+  .sch-card.now {
+    border: 1.5px solid var(--brand-cobalt);
+    box-shadow: 0 4px 12px rgba(27,111,184,.14);
+  }
+  .sch-card .time-rail {
+    width: 52px; flex: 0 0 auto;
+    border-right: 1px solid var(--slate-100);
+    padding-right: 12px;
+    line-height: 1.1;
+  }
+  .sch-card .time-rail .jam {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--brand-cobalt); letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .sch-card .time-rail .start {
+    font-size: 16px; font-weight: 900;
+    color: var(--slate-900); margin-top: 2px;
+    letter-spacing: -0.4px;
+  }
+  .sch-card .time-rail .end {
+    font-size: 10px; color: var(--slate-400); font-weight: 600;
+    margin-top: 2px;
+  }
+  .sch-card .body { flex: 1; min-width: 0; line-height: 1.2; }
+  .sch-card .head {
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .sch-card .head .subj {
+    font-size: 13.5px; font-weight: 800; color: var(--slate-900);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    flex: 1;
+  }
+  .sch-card .head .class {
+    font-size: 10.5px; font-weight: 800;
+    background: var(--blue-50); color: var(--blue-600);
+    padding: 2px 7px; border-radius: 999px;
+    flex: 0 0 auto;
+  }
+  .sch-card .meta {
+    font-size: 10.5px; color: var(--slate-500);
+    margin-top: 4px; font-weight: 600;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .sch-card .meta svg { width: 11px; height: 11px; stroke-width: 2.2; color: var(--slate-400); }
+  .sch-card .status {
+    margin-top: 6px;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px;
+    font-size: 10px; font-weight: 800;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
+  }
+  .sch-card .status.belum { background: var(--amber-50); color: var(--amber-600); }
+  .sch-card .status.sudah { background: var(--green-50); color: var(--green-600); }
+  .sch-card .status.sedang { background: var(--brand-cobalt); color: white; }
+  .sch-card .status svg { width: 10px; height: 10px; stroke-width: 2.4; }
+  .sch-card .chev {
+    align-self: center;
+    color: var(--slate-300); font-size: 18px;
+  }
+  .sch-card .chev svg { width: 16px; height: 16px; stroke-width: 2.4; }
+
+  /* Now-banner — pins the live session at the top */
+  .now-banner {
+    background: linear-gradient(135deg, rgba(27,111,184,.10) 0%, rgba(33,175,230,.10) 100%);
+    border: 1px solid rgba(27,111,184,.22);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .now-banner .pulse {
+    width: 8px; height: 8px; border-radius: 999px;
+    background: #22c55e;
+    box-shadow: 0 0 0 4px rgba(34,197,94,.22);
+    flex: 0 0 auto;
+  }
+  .now-banner .body { flex: 1; line-height: 1.2; }
+  .now-banner .body .a { font-size: 11.5px; font-weight: 800; color: var(--brand-cobalt); }
+  .now-banner .body .b { font-size: 10.5px; color: var(--slate-600); margin-top: 1px; font-weight: 600; }
+  .now-banner .cta {
+    height: 30px; padding: 0 12px;
+    background: var(--brand-cobalt); color: white;
+    border-radius: 999px;
+    font-size: 11px; font-weight: 900;
+    display: flex; align-items: center;
+  }
+
+  /* Manual form (Frame B) */
+  .field-group {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .field-group .label {
+    font-size: 10px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .picker-row { display: flex; align-items: center; gap: 8px; }
+  .picker-row .pick {
+    flex: 1; height: 38px;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 0 10px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; font-weight: 700; color: var(--slate-900);
+  }
+  .picker-row .pick.placeholder { color: var(--slate-400); font-weight: 500; }
+  .picker-row .pick svg { width: 14px; height: 14px; stroke-width: 2.2; color: var(--slate-400); flex: 0 0 auto; }
+  .picker-row .pick .val { flex: 1; }
+
+  .chip-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .chip {
+    height: 32px; padding: 0 12px;
+    border-radius: 999px;
+    background: var(--slate-50); border: 1px solid var(--slate-200);
+    font-size: 12px; font-weight: 700; color: var(--slate-700);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .chip.on {
+    background: rgba(27,111,184,.10);
+    border-color: var(--brand-cobalt);
+    color: var(--brand-cobalt);
+  }
+  .chip.dim { opacity: 0.5; }
+  .chip svg { width: 12px; height: 12px; stroke-width: 2.4; }
+
+  /* Footer */
+  .sheet-footer {
+    flex: 0 0 auto;
+    background: white;
+    border-top: 1px solid var(--slate-100);
+    padding: 12px 14px 16px;
+    display: flex; gap: 8px;
+  }
+  .sheet-footer .btn {
+    height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900;
+  }
+  .sheet-footer .btn.secondary {
+    flex: 1; background: white; color: var(--slate-700);
+    border: 1px solid var(--slate-200);
+  }
+  .sheet-footer .btn.primary {
+    flex: 2; background: var(--brand-cobalt); color: white;
+    box-shadow: 0 6px 14px rgba(27,111,184,.28);
+    gap: 6px;
+  }
+  .sheet-footer .btn.primary svg { width: 14px; height: 14px; stroke-width: 2.6; }
+  .sheet-footer .btn.primary.disabled {
+    background: var(--slate-200); color: var(--slate-500);
+    box-shadow: none;
+  }
+
+  /* Empty state (Frame C) */
+  .empty-card {
+    margin: 28px 16px;
+    padding: 24px 18px;
+    background: white;
+    border: 1px dashed var(--slate-300);
+    border-radius: 16px;
+    text-align: center;
+  }
+  .empty-card .icon-bubble {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    background: var(--blue-50); color: var(--blue-600);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px;
+  }
+  .empty-card .icon-bubble svg { width: 22px; height: 22px; stroke-width: 1.8; }
+  .empty-card .t { font-size: 14px; font-weight: 900; color: var(--slate-900); margin-bottom: 4px; }
+  .empty-card .d { font-size: 11px; color: var(--slate-500); line-height: 1.5; }
+  .empty-card .cta {
+    margin-top: 14px;
+    display: inline-flex; align-items: center; gap: 5px;
+    height: 34px; padding: 0 14px;
+    background: var(--brand-cobalt); color: white;
+    border-radius: 999px;
+    font-size: 12px; font-weight: 900;
+  }
+  .empty-card .cta svg { width: 12px; height: 12px; stroke-width: 2.6; }
+
+  .legend {
+    margin: 32px 0 8px;
+    padding: 16px;
+    background: white; border-radius: 12px;
+    font-size: 12px; color: var(--slate-600); line-height: 1.6;
+    border: 1px solid var(--slate-200);
+  }
+  .legend strong { color: var(--slate-900); }
+  .legend code { background: var(--slate-100); color: var(--brand-cobalt); padding: 1px 6px; border-radius: 4px; font-size: 11px; font-family: 'SF Mono', Menlo, monospace; }
+  .legend ul li { margin: 6px 0; }
+</style>
+</head>
+<body>
+
+<h1>Ambil Presensi · Sheet Redesign</h1>
+<p class="subtitle">
+  The current sheet is a chip picker (Pilih Kelas + Pilih Mapel) with no
+  temporal context — no date, no jam ke-N, no awareness of the teacher's
+  actual schedule. The redesign leads with <strong>today's schedule as
+  tappable cards</strong> (Jam 1 · 7A · B. Arab · 07.00–07.45 · status pill),
+  pins the live "Sesi sekarang" session at the top, and keeps a manual
+  fallback tab for off-schedule input.
+</p>
+
+<div class="grid">
+
+<!-- ═══════ A · SCHEDULE-DRIVEN (default) ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A</span>SCHEDULE-DRIVEN <span class="desc">Tap a session to start — status-aware, time-aware</span></div>
+  <div class="phone">
+    <div class="scrim"></div>
+    <div class="sheet tall">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="title-row">
+          <div class="icon-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="title-block">
+            <div class="kicker">Akademik · Presensi</div>
+            <div class="title">Ambil Presensi</div>
+          </div>
+          <div class="reset">Senin, 12 Mei</div>
+        </div>
+        <div class="seg-tabs">
+          <div class="tab active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Jadwal hari ini
+          </div>
+          <div class="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Atur sendiri
+          </div>
+        </div>
+      </div>
+      <div class="sheet-body">
+
+        <!-- Now banner -->
+        <div class="now-banner">
+          <div class="pulse"></div>
+          <div class="body">
+            <div class="a">Sesi sekarang · Jam 2 · 7A · B. Arab</div>
+            <div class="b">08.00 – 08.45 · 22 siswa</div>
+          </div>
+          <div class="cta">Mulai</div>
+        </div>
+
+        <div class="sec-head">
+          <div class="t">Jadwal hari ini</div>
+          <div class="a">4 sesi</div>
+        </div>
+
+        <!-- Past — already taken -->
+        <div class="sch-card">
+          <div class="time-rail">
+            <div class="jam">Jam 1</div>
+            <div class="start">07.00</div>
+            <div class="end">07.45</div>
+          </div>
+          <div class="body">
+            <div class="head">
+              <div class="subj">B. Arab</div>
+              <div class="class">8B</div>
+            </div>
+            <div class="meta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              24 siswa
+            </div>
+            <div class="status sudah">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Sudah · 22 hadir
+            </div>
+          </div>
+          <div class="chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Now — live -->
+        <div class="sch-card now">
+          <div class="time-rail">
+            <div class="jam">Jam 2</div>
+            <div class="start">08.00</div>
+            <div class="end">08.45</div>
+          </div>
+          <div class="body">
+            <div class="head">
+              <div class="subj">B. Arab</div>
+              <div class="class">7A</div>
+            </div>
+            <div class="meta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              22 siswa
+            </div>
+            <div class="status sedang">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Sedang berlangsung
+            </div>
+          </div>
+          <div class="chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Upcoming -->
+        <div class="sch-card">
+          <div class="time-rail">
+            <div class="jam">Jam 3</div>
+            <div class="start">10.00</div>
+            <div class="end">10.45</div>
+          </div>
+          <div class="body">
+            <div class="head">
+              <div class="subj">B. Arab</div>
+              <div class="class">7B</div>
+            </div>
+            <div class="meta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              26 siswa
+            </div>
+            <div class="status belum">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Belum diabsen
+            </div>
+          </div>
+          <div class="chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+
+        <div class="sch-card">
+          <div class="time-rail">
+            <div class="jam">Jam 4</div>
+            <div class="start">11.00</div>
+            <div class="end">11.45</div>
+          </div>
+          <div class="body">
+            <div class="head">
+              <div class="subj">B. Arab</div>
+              <div class="class">8A</div>
+            </div>
+            <div class="meta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              25 siswa
+            </div>
+            <div class="status belum">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Belum diabsen
+            </div>
+          </div>
+          <div class="chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+        <div style="height:12px"></div>
+      </div>
+      <div class="sheet-footer">
+        <div class="btn secondary">Batal</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ B · MANUAL MODE ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">B</span>MANUAL MODE <span class="desc">Pick date · jam · class · subject — fallback for off-schedule</span></div>
+  <div class="phone">
+    <div class="scrim"></div>
+    <div class="sheet tall">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="title-row">
+          <div class="icon-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="title-block">
+            <div class="kicker">Akademik · Presensi</div>
+            <div class="title">Ambil Presensi</div>
+          </div>
+          <div class="reset">Reset</div>
+        </div>
+        <div class="seg-tabs">
+          <div class="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Jadwal hari ini
+          </div>
+          <div class="tab active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Atur sendiri
+          </div>
+        </div>
+      </div>
+      <div class="sheet-body">
+
+        <div class="field-group">
+          <div class="label">Tanggal &amp; Jam</div>
+          <div class="picker-row">
+            <div class="pick">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span class="val">Sen, 12 Mei</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="pick">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="val">Jam 2 · 08.00</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="label">Kelas</div>
+          <div class="chip-row">
+            <div class="chip">8B</div>
+            <div class="chip on">7A</div>
+            <div class="chip">7B</div>
+            <div class="chip">8A</div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="label">Mata Pelajaran <span style="color:var(--slate-400);font-weight:600;text-transform:none;letter-spacing:0">— hanya yang Anda ajar di 7A</span></div>
+          <div class="chip-row">
+            <div class="chip on">B. Arab</div>
+            <div class="chip dim">Tahsin</div>
+          </div>
+        </div>
+
+        <div style="margin: 8px 4px 0;padding:10px 12px;background:white;border:1px solid var(--slate-200);border-radius:12px;display:flex;gap:10px;align-items:flex-start">
+          <svg style="width:14px;height:14px;color:var(--blue-600);stroke-width:2;flex:0 0 auto;margin-top:2px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div style="font-size:11px;color:var(--slate-600);line-height:1.5">
+            Belum diabsen pada slot ini. Sesi terakhir: <strong style="color:var(--slate-900)">Senin lalu, Jam 2</strong> — 22 hadir.
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+      </div>
+      <div class="sheet-footer">
+        <div class="btn secondary">Batal</div>
+        <div class="btn primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          Mulai Absen
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ C · NO SCHEDULE TODAY ═══════ -->
+<div class="frame">
+  <div class="frame-label"><span class="num">C</span>NO SCHEDULE TODAY <span class="desc">Sunday / holiday — empty state nudges to manual</span></div>
+  <div class="phone">
+    <div class="scrim"></div>
+    <div class="sheet compact">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div class="title-row">
+          <div class="icon-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="title-block">
+            <div class="kicker">Akademik · Presensi</div>
+            <div class="title">Ambil Presensi</div>
+          </div>
+          <div class="reset">Min, 11 Mei</div>
+        </div>
+        <div class="seg-tabs">
+          <div class="tab active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Jadwal hari ini
+          </div>
+          <div class="tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/></svg>
+            Atur sendiri
+          </div>
+        </div>
+      </div>
+      <div class="sheet-body">
+        <div class="empty-card">
+          <div class="icon-bubble">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><path d="M3 10h18"/></svg>
+          </div>
+          <div class="t">Tidak ada jadwal hari ini</div>
+          <div class="d">Hari Minggu — tidak ada sesi mengajar terjadwal. Anda masih bisa mencatat presensi manual untuk tanggal &amp; sesi tertentu.</div>
+          <div class="cta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12h-2M5 12H3"/></svg>
+            Atur sendiri
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="legend">
+  <strong>What's changing &amp; why</strong>
+  <ul>
+    <li><strong>Schedule-driven default.</strong> The sheet leads with today's <em>actual</em> teaching slots from <code>teaching_schedules</code>. Each card shows Jam ke-N, time range, subject, class, student count, and a status pill (<code>belum</code> / <code>sudah</code> / <code>sedang</code>). Tap a card → goes straight to the per-student picker for that exact session — no chip-juggling.</li>
+    <li><strong>"Sesi sekarang" pinned banner.</strong> Pulse dot + cobalt CTA when the current time falls inside a scheduled slot. One-tap to start the live session, which is the most common case.</li>
+    <li><strong>Sudah-diabsen state.</strong> Past sessions show "Sudah · 22 hadir" instead of being unavailable — tapping opens detail/edit, so teachers can fix mistakes without leaving the sheet.</li>
+    <li><strong>Manual mode preserved as a tab.</strong> "Atur sendiri" keeps the date/jam/class/subject pickers for off-schedule input (substitute teaching, makeup classes, holidays). The redesign tightens it: tanggal + jam in a row, then class chips, then subject chips filtered by what the teacher actually teaches in that class. A small footer note tells them when the slot was last absent (anti-duplicate).</li>
+    <li><strong>Empty state for non-school days.</strong> Sundays/holidays show a friendly "no schedule today" card that nudges to manual mode rather than an empty list.</li>
+    <li><strong>Brand-cobalt header instead of plain white.</strong> Matches the rest of the brand surfaces (Presensi list, Kegiatan Kelas detail) — feels like the same app.</li>
+  </ul>
+</div>
+
+</body>
+</html>

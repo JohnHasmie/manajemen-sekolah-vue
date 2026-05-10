@@ -1,12 +1,11 @@
 // Scrollable chapter list for TeacherMaterialScreen.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/features/materials/presentation/widgets/mixins/progress_card_mixin.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/mixins/chapter_card_mixin.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/mixins/helpers_mixin.dart';
 
 class MaterialContentList extends StatelessWidget
-    with HelpersMixin, ProgressCardMixin, ChapterCardMixin {
+    with HelpersMixin, ChapterCardMixin {
   final List<dynamic> filteredChapterMaterials;
   final List<dynamic> subChapterMaterialList;
   final Map<String, bool> expandedChapter;
@@ -27,6 +26,12 @@ class MaterialContentList extends StatelessWidget
   final void Function(String subChapterId, String chapterId, bool? value)
   onSubChapterCheck;
 
+  /// When true, the ListView shrink-wraps and disables its own
+  /// scrolling so the parent owns the viewport. Used by the
+  /// search+section-header wrapper in [MaterialBuildListMixin] to
+  /// avoid nested-scrollable layout assertions.
+  final bool shrinkWrap;
+
   const MaterialContentList({
     super.key,
     required this.filteredChapterMaterials,
@@ -40,26 +45,25 @@ class MaterialContentList extends StatelessWidget
     required this.onChapterCheck,
     required this.onSubChapterTap,
     required this.onSubChapterCheck,
+    this.shrinkWrap = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final totalChapters = filteredChapterMaterials.length;
-    final completedChapters = filteredChapterMaterials
-        .where((c) => checkedChapter[c['id'].toString()] == true)
-        .length;
-    final totalSubs = subChapterMaterialList.length;
-    final completedSubs = checkedSubChapter.values.where((v) => v).length;
-
+    // Note: progress card was removed in the Materi Q.2 redesign — the
+    // 4-cell KPI strip in the brand header already surfaces Bab /
+    // Tercatat / Belum / AI Siap, so duplicating the same numbers
+    // inline here was just visual noise.
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      shrinkWrap: shrinkWrap,
+      physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.lg + 60,
+      ),
       children: [
-        buildProgressCard(
-          totalChapters: totalChapters,
-          completedChapters: completedChapters,
-          totalSubs: totalSubs,
-          completedSubs: completedSubs,
-        ),
         ...filteredChapterMaterials.asMap().entries.map((entry) {
           final index = entry.key;
           final chapter = entry.value;
