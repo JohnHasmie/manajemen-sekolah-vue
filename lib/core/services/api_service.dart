@@ -106,6 +106,17 @@ class ApiService {
     }
   }
 
+  /// Performs an authenticated PATCH request.
+  Future<dynamic> patch(String endpoint, Map<String, dynamic> data) async {
+    try {
+      final response = await dioClient.patch(endpoint, data: data);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.error is Exception) throw e.error as Exception;
+      rethrow;
+    }
+  }
+
   /// Downloads a file as raw bytes.
   static Future<Uint8List> downloadFile(String endpoint) async {
     try {
