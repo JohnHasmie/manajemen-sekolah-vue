@@ -50,16 +50,18 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
 
   Future<void> showFilterDialog(LanguageProvider lp) async {
     String? tClassId = filterClassId;
-    final String? tClassName = filterClassName;
+    // Mutable — the in-sheet class onSelected has to keep this in sync
+    // with tClassId, otherwise Apply commits classId='7A-id' alongside
+    // className=null and the outer header chip stays stuck on the
+    // "+ Kelas" placeholder even though the filter is active.
+    String? tClassName = filterClassName;
     String? tSubjectId = filterSubjectId;
     String? tSubjectName = filterSubjectName;
     List<dynamic> tSubjectList = [];
 
-    if (tClassId != null) {
-      _fetchTeacherSubjectsForClass(tClassId).then((list) {
-        tSubjectList = list;
-      });
-    }
+    // Once-flag for the in-builder prefetch below. Without this, the
+    // fetch would re-fire on every StatefulBuilder rebuild.
+    bool prefetchStarted = false;
 
     if (!mounted) return;
 
@@ -89,7 +91,23 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
       },
       content: StatefulBuilder(
         builder: (ctx, setSS) {
-          final classes = getAvailableClasses()
+          // Run the subject prefetch on the first build only — the
+          // outer `if (tClassId != null) { fetch.then(...) }` was the
+          // original location, but at that point the StatefulBuilder
+          // wasn't built yet so there was no setSS to capture. Doing
+          // it here gives us a reliable setSS and the once-flag stops
+          // it firing on every rebuild.
+          if (!prefetchStarted && tClassId != null) {
+            prefetchStarted = true;
+            _fetchTeacherSubjectsForClass(tClassId!).then((list) {
+              setSS(() {
+                tSubjectList = list;
+              });
+            });
+          }
+
+          final availableClasses = getAvailableClasses();
+          final classes = availableClasses
               .map(
                 (c) => FilterOption<String>(value: c['id']!, label: c['name']!),
               )
@@ -120,8 +138,24 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
                     options: classes,
                     selectedValue: tClassId,
                     onSelected: (v) {
+                      // Resolve the human-readable class name from
+                      // the available-classes lookup so Apply commits
+                      // both classId AND className to the outer
+                      // state. Without this, the header chip falls
+                      // back to its "+ Kelas" placeholder even after
+                      // a successful Apply.
+                      String? pickedName;
+                      if (v != null) {
+                        for (final c in availableClasses) {
+                          if (c['id'] == v) {
+                            pickedName = c['name'];
+                            break;
+                          }
+                        }
+                      }
                       setSS(() {
                         tClassId = v;
+                        tClassName = pickedName;
                         tSubjectList = [];
                         tSubjectId = null;
                         tSubjectName = null;
