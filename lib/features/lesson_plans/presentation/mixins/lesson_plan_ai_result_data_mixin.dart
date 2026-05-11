@@ -31,16 +31,6 @@ mixin LessonPlanAiResultDataMixin
   quill.QuillController get _basicCompetencyController =>
       basicCompetencyController;
 
-  TextEditingController get _titleController => titleController;
-  TextEditingController get _educationUnitController => educationUnitController;
-  TextEditingController get _subjectNameController => subjectNameController;
-  TextEditingController get _chapterController => chapterController;
-  TextEditingController get _subChapterController => subChapterController;
-  TextEditingController get _lessonNumberController => lessonNumberController;
-  TextEditingController get _classSemesterController => classSemesterController;
-  TextEditingController get _timeAllocationController =>
-      timeAllocationController;
-
   void initControllers(Map<String, dynamic> data) {
     _initTextControllers(data);
     _initQuillControllers(data);

@@ -156,7 +156,9 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
       final raw = r.data;
       final list = raw is List
           ? raw
-          : (raw is Map && raw['data'] is List ? raw['data'] as List : const []);
+          : (raw is Map && raw['data'] is List
+                ? raw['data'] as List
+                : const []);
       if (!mounted) return;
       setState(() {
         _manualSubjectList = list;
@@ -178,7 +180,8 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
       final s = _sessions[i];
       final start = _parseHm((s['start_time'] ?? '').toString());
       final end = _parseHm((s['end_time'] ?? '').toString());
-      if (start != null && end != null &&
+      if (start != null &&
+          end != null &&
           nowMinutes >= start &&
           nowMinutes < end) {
         return i;
@@ -200,32 +203,36 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
   void _confirm(AmbilPresensiPick pick) => Navigator.of(context).pop(pick);
 
   void _selectScheduleSession(Map<String, dynamic> s) {
-    _confirm(AmbilPresensiPick(
-      classId: (s['class_id'] ?? '').toString(),
-      className: (s['class_name'] ?? '').toString(),
-      subjectId: (s['subject_id'] ?? '').toString(),
-      subjectName: (s['subject_name'] ?? '').toString(),
-      lessonHourId: (s['lesson_hour_id'] ?? '').toString().isEmpty
-          ? null
-          : s['lesson_hour_id'].toString(),
-      lessonHourName: s['lesson_hour_name']?.toString(),
-      startTime: s['start_time']?.toString(),
-      endTime: s['end_time']?.toString(),
-      date: (s['date'] ?? '').toString().isEmpty
-          ? DateFormat('yyyy-MM-dd').format(DateTime.now())
-          : (s['date']).toString(),
-    ));
+    _confirm(
+      AmbilPresensiPick(
+        classId: (s['class_id'] ?? '').toString(),
+        className: (s['class_name'] ?? '').toString(),
+        subjectId: (s['subject_id'] ?? '').toString(),
+        subjectName: (s['subject_name'] ?? '').toString(),
+        lessonHourId: (s['lesson_hour_id'] ?? '').toString().isEmpty
+            ? null
+            : s['lesson_hour_id'].toString(),
+        lessonHourName: s['lesson_hour_name']?.toString(),
+        startTime: s['start_time']?.toString(),
+        endTime: s['end_time']?.toString(),
+        date: (s['date'] ?? '').toString().isEmpty
+            ? DateFormat('yyyy-MM-dd').format(DateTime.now())
+            : (s['date']).toString(),
+      ),
+    );
   }
 
   void _applyManual() {
     if (_manualClassId == null || _manualSubjectId == null) return;
-    _confirm(AmbilPresensiPick(
-      classId: _manualClassId!,
-      className: _manualClassName ?? '',
-      subjectId: _manualSubjectId!,
-      subjectName: _manualSubjectName ?? '',
-      date: DateFormat('yyyy-MM-dd').format(_manualDate),
-    ));
+    _confirm(
+      AmbilPresensiPick(
+        classId: _manualClassId!,
+        className: _manualClassName ?? '',
+        subjectId: _manualSubjectId!,
+        subjectName: _manualSubjectName ?? '',
+        date: DateFormat('yyyy-MM-dd').format(_manualDate),
+      ),
+    );
   }
 
   @override
@@ -522,9 +529,9 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
               children: [
                 Text(
                   widget.lp.getTranslatedText({
-                    'en': 'Live now',
-                    'id': 'Sesi sekarang',
-                  }) +
+                        'en': 'Live now',
+                        'id': 'Sesi sekarang',
+                      }) +
                       ' · ${s['lesson_hour_name'] ?? ''} · ${s['class_name'] ?? ''} · ${s['subject_name'] ?? ''}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -616,8 +623,9 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
     final status = (s['status'] ?? 'pending').toString();
     final startTime = _clipTime((s['start_time'] ?? '').toString());
     final endTime = _clipTime((s['end_time'] ?? '').toString());
-    final lessonHourName =
-        (s['lesson_hour_name'] ?? '').toString().toUpperCase();
+    final lessonHourName = (s['lesson_hour_name'] ?? '')
+        .toString()
+        .toUpperCase();
     final subjectName = (s['subject_name'] ?? '-').toString();
     final className = (s['class_name'] ?? '-').toString();
     final studentCount = ((s['student_count'] ?? 0) as num).toInt();
@@ -654,14 +662,16 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
               children: [
                 _timeRail(lessonHourName, startTime, endTime),
                 const SizedBox(width: 10),
-                Expanded(child: _scheduleCardBody(
-                  subjectName: subjectName,
-                  className: className,
-                  studentCount: studentCount,
-                  status: status,
-                  recordedCount: recordedCount,
-                  live: live,
-                )),
+                Expanded(
+                  child: _scheduleCardBody(
+                    subjectName: subjectName,
+                    className: className,
+                    studentCount: studentCount,
+                    status: status,
+                    recordedCount: recordedCount,
+                    live: live,
+                  ),
+                ),
                 Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
@@ -680,9 +690,7 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
       width: 56,
       padding: const EdgeInsets.only(right: 10),
       decoration: BoxDecoration(
-        border: Border(
-          right: BorderSide(color: ColorUtils.slate100),
-        ),
+        border: Border(right: BorderSide(color: ColorUtils.slate100)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -806,10 +814,8 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
       fg = Colors.white;
       icon = Icons.radio_button_checked;
     } else if (status == 'recorded') {
-      label = widget.lp.getTranslatedText({
-            'en': 'Done',
-            'id': 'Sudah',
-          }) +
+      label =
+          widget.lp.getTranslatedText({'en': 'Done', 'id': 'Sudah'}) +
           ' · $recordedCount hadir';
       tint = ColorUtils.success600.withValues(alpha: 0.14);
       fg = ColorUtils.success600;
@@ -858,7 +864,10 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border.all(color: ColorUtils.slate300, style: BorderStyle.solid),
+              border: Border.all(
+                color: ColorUtils.slate300,
+                style: BorderStyle.solid,
+              ),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -944,10 +953,7 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
       padding: const EdgeInsets.fromLTRB(12, 14, 12, 16),
       children: [
         _fieldGroup(
-          label: widget.lp.getTranslatedText({
-            'en': 'Date',
-            'id': 'Tanggal',
-          }),
+          label: widget.lp.getTranslatedText({'en': 'Date', 'id': 'Tanggal'}),
           child: _datePicker(),
         ),
         _fieldGroup(
@@ -1117,8 +1123,8 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
               onTap: () {
                 setState(() {
                   _manualSubjectId = (s['id'] ?? '').toString();
-                  _manualSubjectName =
-                      (s['name'] ?? s['nama'] ?? '').toString();
+                  _manualSubjectName = (s['name'] ?? s['nama'] ?? '')
+                      .toString();
                 });
               },
             ),
@@ -1195,10 +1201,12 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  child: Text(widget.lp.getTranslatedText({
-                    'en': 'Cancel',
-                    'id': 'Batal',
-                  })),
+                  child: Text(
+                    widget.lp.getTranslatedText({
+                      'en': 'Cancel',
+                      'id': 'Batal',
+                    }),
+                  ),
                 ),
               ),
             ),
@@ -1210,10 +1218,12 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
                 child: ElevatedButton.icon(
                   onPressed: canApply ? _applyManual : null,
                   icon: const Icon(Icons.chevron_right_rounded, size: 18),
-                  label: Text(widget.lp.getTranslatedText({
-                    'en': 'Start',
-                    'id': 'Mulai Absen',
-                  })),
+                  label: Text(
+                    widget.lp.getTranslatedText({
+                      'en': 'Start',
+                      'id': 'Mulai Absen',
+                    }),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ColorUtils.brandCobalt,
                     foregroundColor: Colors.white,

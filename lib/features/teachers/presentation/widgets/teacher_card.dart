@@ -70,10 +70,7 @@ class TeacherCard extends ConsumerWidget {
       secondaryChip: secondaryChip,
       trailingActionLabel: selected
           ? null
-          : lang.getTranslatedText(const {
-              'en': 'Detail',
-              'id': 'Detail',
-            }),
+          : lang.getTranslatedText(const {'en': 'Detail', 'id': 'Detail'}),
       trailingActionColor: accent,
       onTap: onTap,
       onLongPress: onLongPress ?? (isReadOnly ? null : onEdit),

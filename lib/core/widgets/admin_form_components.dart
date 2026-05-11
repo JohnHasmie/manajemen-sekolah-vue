@@ -148,11 +148,7 @@ class AdminFormChoice<T> {
   /// Optional small leading icon.
   final IconData? icon;
 
-  const AdminFormChoice({
-    required this.value,
-    required this.label,
-    this.icon,
-  });
+  const AdminFormChoice({required this.value, required this.label, this.icon});
 }
 
 /// Segmented chip-row selector — replaces dropdowns for 2–3 short

@@ -127,11 +127,7 @@ mixin AttendanceInputToolbarMixin implements _InputToolbarStateGetter {
             alignment: Alignment.center,
             child: Tooltip(
               message: tr({'en': 'Quick Attendance', 'id': 'Presensi Cepat'}),
-              child: Icon(
-                Icons.checklist_rtl,
-                color: primary,
-                size: 18,
-              ),
+              child: Icon(Icons.checklist_rtl, color: primary, size: 18),
             ),
           ),
         ),

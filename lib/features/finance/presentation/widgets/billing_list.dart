@@ -57,41 +57,25 @@ class BillingKpiOverlay extends ConsumerWidget {
             'id': 'Total bulan ini',
           }),
           value: _formatRupiahShort(stats.totalThisMonth),
-          sub: '${stats.countThisMonth} '
-              '${lp.getTranslatedText({
-                'en': 'bills',
-                'id': 'tagihan',
-              })}',
+          sub:
+              '${stats.countThisMonth} '
+              '${lp.getTranslatedText({'en': 'bills', 'id': 'tagihan'})}',
         ),
         BrandKpiColumn(
-          label: lp.getTranslatedText({
-            'en': 'Paid',
-            'id': 'Sudah lunas',
-          }),
+          label: lp.getTranslatedText({'en': 'Paid', 'id': 'Sudah lunas'}),
           value: _formatRupiahShort(stats.paid),
           badge: stats.paidCount > 0
-              ? '${stats.paidCount} ${lp.getTranslatedText({
-                    'en': 'bills',
-                    'id': 'tagihan',
-                  })}'
+              ? '${stats.paidCount} ${lp.getTranslatedText({'en': 'bills', 'id': 'tagihan'})}'
               : null,
           badgeColor: const Color(0xFF15803D),
           badgeIcon: Icons.check_rounded,
         ),
         BrandKpiColumn(
-          label: lp.getTranslatedText({
-            'en': 'Unpaid',
-            'id': 'Belum lunas',
-          }),
+          label: lp.getTranslatedText({'en': 'Unpaid', 'id': 'Belum lunas'}),
           value: _formatRupiahShort(stats.unpaid),
-          valueColor: stats.unpaid > 0
-              ? const Color(0xFFDC2626)
-              : null,
+          valueColor: stats.unpaid > 0 ? const Color(0xFFDC2626) : null,
           badge: stats.overdueCount > 0
-              ? '${stats.overdueCount} ${lp.getTranslatedText({
-                    'en': 'late',
-                    'id': 'telat',
-                  })}'
+              ? '${stats.overdueCount} ${lp.getTranslatedText({'en': 'late', 'id': 'telat'})}'
               : null,
           badgeColor: const Color(0xFFDC2626),
           badgeIcon: Icons.priority_high_rounded,

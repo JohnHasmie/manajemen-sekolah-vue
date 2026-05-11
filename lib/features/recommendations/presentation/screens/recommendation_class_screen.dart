@@ -16,7 +16,6 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/data_loading_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/generate_flow_mixin.dart';
-import 'package:manajemensekolah/features/recommendations/presentation/mixins/tour_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/build_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_generate_sheet.dart';
 import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
@@ -61,11 +60,10 @@ class LearningRecommendationClassScreen extends ConsumerStatefulWidget {
 /// Uses mixins for organizing logic into concerns:
 /// - [DataLoadingMixin] - data loading & caching
 /// - [GenerateFlowMixin] - recommendation generation flow
-/// - [TourMixin] - onboarding tour
 /// - [BuildMixin] - UI construction
 class _LearningRecommendationClassScreenState
     extends ConsumerState<LearningRecommendationClassScreen>
-    with DataLoadingMixin, GenerateFlowMixin, TourMixin, BuildMixin {
+    with DataLoadingMixin, GenerateFlowMixin, BuildMixin {
   final GlobalKey _classListKey = GlobalKey();
 
   @override
@@ -80,16 +78,12 @@ class _LearningRecommendationClassScreenState
   @override
   bool isHomeroomView = false;
 
-  /// Like Vue's `mounted()` -- loads all data and schedules the
-  /// onboarding tour.
+  /// Like Vue's `mounted()` — loads all data.
   @override
   void initState() {
     super.initState();
     loadAllData();
     _ensureFreshClassCounts();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) checkAndShowTour();
-    });
   }
 
   /// Handle role-toggle: clear the per-scope caches + reload so the
@@ -150,7 +144,6 @@ class _LearningRecommendationClassScreenState
   @override
   Future<void> forceRefresh() async {
     await LocalCacheService.clearStartingWith('recommendation_');
-    await LocalCacheService.clearStartingWith('tour_recommendation_class_');
     // Refetch /teacher/{id}/classes so students_count reflects backend state.
     await ref.read(teacherRiverpod).refresh();
     await loadAllData(useCache: false);
@@ -187,7 +180,8 @@ class _LearningRecommendationClassScreenState
   /// every variant key the backend emits across endpoints.
   int _readStudentCount(Map<String, dynamic>? classData) {
     if (classData == null) return 0;
-    final raw = classData['students_count'] ??
+    final raw =
+        classData['students_count'] ??
         classData['student_count'] ??
         classData['jumlah_siswa'] ??
         classData['siswa_count'];
@@ -338,8 +332,9 @@ class _LearningRecommendationClassScreenState
               if (result['async'] == true) {
                 final jobId = result['job_id']?.toString();
                 if (jobId != null) {
-                  await getIt<ApiRecommendationService>()
-                      .pollJobUntilComplete(jobId);
+                  await getIt<ApiRecommendationService>().pollJobUntilComplete(
+                    jobId,
+                  );
                 }
               }
             } catch (e) {

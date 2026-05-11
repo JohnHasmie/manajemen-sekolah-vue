@@ -57,7 +57,7 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
           AppLogger.info(
             'lesson_plan',
             'File uploaded successfully: $filePath '
-            '(name=$uploadedFileName)',
+                '(name=$uploadedFileName)',
           );
 
           // Sanity check: backend should return a relative
@@ -67,9 +67,7 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
           if (filePath == null ||
               filePath.isEmpty ||
               !filePath.startsWith('rpp_files/')) {
-            throw Exception(
-              'Upload mengembalikan path tidak valid: $filePath',
-            );
+            throw Exception('Upload mengembalikan path tidak valid: $filePath');
           }
         } catch (uploadError) {
           AppLogger.error(
@@ -101,10 +99,8 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
       // otherwise keep the existing record's file_path
       // unchanged. NEVER fall back to the bare local
       // filename — that's not a real storage path.
-      final existingFilePath =
-          widget.lessonPlanData?['file_path']?.toString();
-      final existingFileName =
-          widget.lessonPlanData?['file_name']?.toString();
+      final existingFilePath = widget.lessonPlanData?['file_path']?.toString();
+      final existingFileName = widget.lessonPlanData?['file_name']?.toString();
       final resolvedFilePath = filePath ?? existingFilePath;
       // When a new file was uploaded, keep its original filename;
       // otherwise carry the existing name forward so the update
@@ -114,8 +110,8 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
       AppLogger.debug(
         'lesson_plan',
         'Resolved file_path: $resolvedFilePath '
-        '(upload=$filePath, existing=$existingFilePath) '
-        'file_name=$resolvedFileName',
+            '(upload=$filePath, existing=$existingFilePath) '
+            'file_name=$resolvedFileName',
       );
 
       final lessonPlanData = {
@@ -124,11 +120,9 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
         'title': titleController.text,
         'semester': selectedTerm,
         'academic_year': academicYearController.text,
-        if (resolvedFilePath != null &&
-            resolvedFilePath.isNotEmpty)
+        if (resolvedFilePath != null && resolvedFilePath.isNotEmpty)
           'file_path': resolvedFilePath,
-        if (resolvedFileName != null &&
-            resolvedFileName.isNotEmpty)
+        if (resolvedFileName != null && resolvedFileName.isNotEmpty)
           'file_name': resolvedFileName,
       };
 

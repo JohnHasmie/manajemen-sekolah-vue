@@ -59,8 +59,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   String get _address =>
       (_userData['address'] ?? _userData['alamat'] ?? '-').toString();
   String get _schoolName =>
-      (_userData['school_name'] ?? _userData['nama_sekolah'] ?? '-')
-          .toString();
+      (_userData['school_name'] ?? _userData['nama_sekolah'] ?? '-').toString();
   String get _roleLabel {
     return switch (_role) {
       'admin' => 'Admin',
@@ -208,10 +207,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 4),
                 Text(
                   _email,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: ColorUtils.slate500,
-                  ),
+                  style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
                 ),
                 const SizedBox(height: 8),
                 Container(
@@ -304,10 +300,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-            width: 0.75,
-          ),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.75),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -334,18 +327,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
               child: Text(
                 'Tap pensil di kanan atas untuk edit',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: ColorUtils.slate400,
-                ),
+                style: TextStyle(fontSize: 10, color: ColorUtils.slate400),
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(
-                color: const Color(0xFFF1F5F9),
-                height: 20,
-              ),
+              child: Divider(color: const Color(0xFFF1F5F9), height: 20),
             ),
             _InfoRow(label: 'EMAIL', value: _email),
             _InfoRow(
@@ -388,15 +375,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (route.endsWith('/change-password')) {
                 showDialog(
                   context: context,
-                  builder: (_) => ChangePasswordDialog(
-                    primaryColor: _accentColor,
-                  ),
+                  builder: (_) =>
+                      ChangePasswordDialog(primaryColor: _accentColor),
                 );
               } else {
-                SnackBarUtils.showError(
-                  context,
-                  'Aksi belum tersedia: $route',
-                );
+                SnackBarUtils.showError(context, 'Aksi belum tersedia: $route');
               }
             }),
           ),
@@ -429,10 +412,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-            width: 0.75,
-          ),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.75),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -457,10 +437,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(
-                color: const Color(0xFFF1F5F9),
-                height: 20,
-              ),
+              child: Divider(color: const Color(0xFFF1F5F9), height: 20),
             ),
             _AccessRow(
               icon: Icons.person_outline,
@@ -520,11 +497,7 @@ class _InfoRow extends StatelessWidget {
   final String value;
   final Widget? trailing;
 
-  const _InfoRow({
-    required this.label,
-    required this.value,
-    this.trailing,
-  });
+  const _InfoRow({required this.label, required this.value, this.trailing});
 
   @override
   Widget build(BuildContext context) {

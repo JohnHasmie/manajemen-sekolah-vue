@@ -178,7 +178,6 @@ mixin TeacherActivityPaginationMixin
   Future<void> forceRefresh() async {
     // Clear class activity caches before refreshing
     await LocalCacheService.clearStartingWith('class_activity_');
-    await LocalCacheService.clearStartingWith('tour_class_activity_');
     await LocalCacheService.clearStartingWith('activity_teacher_summary_');
 
     if (isTimelineView) {

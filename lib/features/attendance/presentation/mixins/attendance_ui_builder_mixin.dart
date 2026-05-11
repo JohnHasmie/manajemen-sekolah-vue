@@ -196,8 +196,7 @@ mixin AttendanceUIBuilderMixin
               child: TextField(
                 controller: searchInputController,
                 onChanged: (_) => filterStudents(),
-                onSubmitted: (_) =>
-                    FocusScope.of(context).unfocus(),
+                onSubmitted: (_) => FocusScope.of(context).unfocus(),
                 textAlignVertical: TextAlignVertical.center,
                 style: TextStyle(color: ColorUtils.slate800, fontSize: 13),
                 decoration: InputDecoration(
@@ -210,11 +209,7 @@ mixin AttendanceUIBuilderMixin
                     color: ColorUtils.slate400,
                     fontSize: 13,
                   ),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: primaryColor,
-                    size: 18,
-                  ),
+                  prefixIcon: Icon(Icons.search, color: primaryColor, size: 18),
                   prefixIconConstraints: const BoxConstraints(
                     minWidth: 36,
                     minHeight: 36,
@@ -294,8 +289,7 @@ mixin AttendanceUIBuilderMixin
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
                 : const Icon(Icons.save_outlined, size: 18),
@@ -309,10 +303,7 @@ mixin AttendanceUIBuilderMixin
                       'en': 'Save Attendance',
                       'id': 'Simpan Absensi',
                     }),
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
@@ -335,11 +326,7 @@ mixin AttendanceUIBuilderMixin
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.touch_app_outlined,
-            size: 48,
-            color: ColorUtils.slate300,
-          ),
+          Icon(Icons.touch_app_outlined, size: 48, color: ColorUtils.slate300),
           const SizedBox(height: 12),
           Text(
             lp.getTranslatedText({
@@ -356,8 +343,7 @@ mixin AttendanceUIBuilderMixin
           const SizedBox(height: 4),
           Text(
             lp.getTranslatedText({
-              'en':
-                  'Or ensure you have a schedule for the selected date',
+              'en': 'Or ensure you have a schedule for the selected date',
               'id':
                   'Atau pastikan anda memiliki jadwal pada tanggal '
                   'yang dipilih',

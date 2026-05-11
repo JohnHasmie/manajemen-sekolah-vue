@@ -32,9 +32,9 @@ mixin ClassroomAddEditHeaderMixin {
     return AdminFormSheetHeader(
       title: isEdit
           ? lp.getTranslatedText({'en': 'Edit Class', 'id': 'Edit Kelas'})
-              as String
+                as String
           : lp.getTranslatedText({'en': 'Add Class', 'id': 'Tambah Kelas'})
-              as String,
+                as String,
       isEditMode: isEdit,
       kicker: isEdit ? 'EDIT DATA' : 'TAMBAH BARU',
       editingContext: ctx,

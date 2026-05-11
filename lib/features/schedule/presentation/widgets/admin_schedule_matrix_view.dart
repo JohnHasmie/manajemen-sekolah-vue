@@ -118,9 +118,7 @@ class AdminScheduleMatrixView extends StatelessWidget {
       if (start.isEmpty) continue;
       final dedupeKey = '$hour|$start|$end';
       if (!seen.add(dedupeKey)) continue;
-      axes.add(
-        _TimeSlotAxis(hourNumber: hour, startTime: start, endTime: end),
-      );
+      axes.add(_TimeSlotAxis(hourNumber: hour, startTime: start, endTime: end));
     }
     axes.sort((a, b) => a.startTime.compareTo(b.startTime));
     return axes;

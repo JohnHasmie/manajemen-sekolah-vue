@@ -270,13 +270,14 @@ class _LanguageTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       internationalName,
-                      style: TextStyle(fontSize: 11, color: ColorUtils.slate600),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: ColorUtils.slate600,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      active
-                          ? 'Aktif sekarang'
-                          : 'Tap untuk mengaktifkan',
+                      active ? 'Aktif sekarang' : 'Tap untuk mengaktifkan',
                       style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: active ? FontWeight.w700 : FontWeight.w400,
@@ -336,10 +337,7 @@ class _IndonesianFlag extends StatelessWidget {
           Container(color: const Color(0xFFFF0000)),
           Align(
             alignment: Alignment.bottomCenter,
-            child: Container(
-              height: 24,
-              color: Colors.white,
-            ),
+            child: Container(height: 24, color: Colors.white),
           ),
         ],
       ),
@@ -388,22 +386,10 @@ class _UnionJackPainter extends CustomPainter {
     canvas.drawLine(Offset(w, 0), Offset(0, h), red);
 
     // Cross (white wide then red thin)
-    canvas.drawRect(
-      Rect.fromLTWH((w - 8) / 2, 0, 8, h),
-      whiteFill,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(0, (h - 8) / 2, w, 8),
-      whiteFill,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH((w - 4) / 2, 0, 4, h),
-      redFill,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(0, (h - 4) / 2, w, 4),
-      redFill,
-    );
+    canvas.drawRect(Rect.fromLTWH((w - 8) / 2, 0, 8, h), whiteFill);
+    canvas.drawRect(Rect.fromLTWH(0, (h - 8) / 2, w, 8), whiteFill);
+    canvas.drawRect(Rect.fromLTWH((w - 4) / 2, 0, 4, h), redFill);
+    canvas.drawRect(Rect.fromLTWH(0, (h - 4) / 2, w, 4), redFill);
   }
 
   @override

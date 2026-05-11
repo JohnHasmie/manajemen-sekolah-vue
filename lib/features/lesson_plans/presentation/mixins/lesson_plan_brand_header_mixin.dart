@@ -73,8 +73,9 @@ mixin LessonPlanBrandHeaderMixin on ConsumerState<LessonPlanScreen> {
         BrandHeaderIconButton(
           icon: Icons.tune_rounded,
           onTap: showFilterSheet,
-          badgeCount:
-              totalActiveFilterCount > 0 ? totalActiveFilterCount : null,
+          badgeCount: totalActiveFilterCount > 0
+              ? totalActiveFilterCount
+              : null,
           badgeBorderColor: ColorUtils.brandDarkBlue,
         ),
       ],
@@ -196,10 +197,7 @@ mixin LessonPlanBrandHeaderMixin on ConsumerState<LessonPlanScreen> {
             ),
             _kpiDivider(),
             _kpiCell(
-              label: lp.getTranslatedText({
-                'en': 'Open',
-                'id': 'Belum',
-              }),
+              label: lp.getTranslatedText({'en': 'Open', 'id': 'Belum'}),
               value: '${stats.open}',
               color: ColorUtils.warning600,
             ),
@@ -253,11 +251,7 @@ mixin LessonPlanBrandHeaderMixin on ConsumerState<LessonPlanScreen> {
   }
 
   Widget _kpiDivider() {
-    return Container(
-      width: 1,
-      height: 28,
-      color: ColorUtils.slate100,
-    );
+    return Container(width: 1, height: 28, color: ColorUtils.slate100);
   }
 
   /// Resolve KPI counts. Prefers server-computed `kpiData` (global,

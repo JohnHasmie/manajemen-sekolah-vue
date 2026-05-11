@@ -42,7 +42,6 @@ class AudiencePreviewService {
   }
 }
 
-final audiencePreviewServiceProvider =
-    Provider<AudiencePreviewService>((ref) {
+final audiencePreviewServiceProvider = Provider<AudiencePreviewService>((ref) {
   return AudiencePreviewService(ApiService());
 });

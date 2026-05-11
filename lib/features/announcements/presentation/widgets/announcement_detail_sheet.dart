@@ -24,28 +24,28 @@ class AnnouncementDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final title = (announcementData['title'] ?? 'Tanpa Judul').toString();
     final content = (announcementData['content'] ?? '').toString();
-    final isImportant = ['penting', 'important']
-        .contains((announcementData['priority'] ?? '').toString().toLowerCase());
-    final roleTarget =
-        (announcementData['role_target'] ?? 'all').toString();
-    final creatorName = announcementData['pembuat_nama'] ??
+    final isImportant = [
+      'penting',
+      'important',
+    ].contains((announcementData['priority'] ?? '').toString().toLowerCase());
+    final roleTarget = (announcementData['role_target'] ?? 'all').toString();
+    final creatorName =
+        announcementData['pembuat_nama'] ??
         (announcementData['creator'] is Map
             ? (announcementData['creator'] as Map)['name']
             : null) ??
         '-';
-    final filePath = (announcementData['file_path'] ??
-            announcementData['attachment_url'] ??
-            '')
-        .toString();
-    final fileName = announcementData['attachment_name']?.toString() ??
+    final filePath =
+        (announcementData['file_path'] ??
+                announcementData['attachment_url'] ??
+                '')
+            .toString();
+    final fileName =
+        announcementData['attachment_name']?.toString() ??
         announcementData['file_name']?.toString() ??
         (filePath.isNotEmpty ? filePath.split('/').last : '');
-    final startDate = _formatDate(
-      announcementData['start_date']?.toString(),
-    );
-    final endDate = _formatDate(
-      announcementData['end_date']?.toString(),
-    );
+    final startDate = _formatDate(announcementData['start_date']?.toString());
+    final endDate = _formatDate(announcementData['end_date']?.toString());
     final createdAt = _formatDateTime(
       announcementData['created_at']?.toString(),
     );
@@ -81,9 +81,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
             child: Stack(
               children: [
                 SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    24, 28, 24, 20 + bottomPadding,
-                  ),
+                  padding: EdgeInsets.fromLTRB(24, 28, 24, 20 + bottomPadding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -254,10 +252,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       // Row 3
-                      _MetaCell(
-                        label: 'Dibuat pada',
-                        value: createdAt ?? '-',
-                      ),
+                      _MetaCell(label: 'Dibuat pada', value: createdAt ?? '-'),
                     ],
                   ),
                 ),
@@ -330,10 +325,7 @@ class _MetaCell extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 9.5,
-            color: Color(0xFF94A3B8),
-          ),
+          style: const TextStyle(fontSize: 9.5, color: Color(0xFF94A3B8)),
         ),
         const SizedBox(height: 4),
         Text(

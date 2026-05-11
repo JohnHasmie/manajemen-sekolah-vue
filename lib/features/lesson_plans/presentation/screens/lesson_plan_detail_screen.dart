@@ -96,10 +96,7 @@ class RPPDetailPage extends StatelessWidget {
     if (_isAiGenerated(lessonPlanData)) {
       return AiRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew);
     }
-    return ManualRppDetailScreen(
-      lessonPlanData: lessonPlanData,
-      isNew: isNew,
-    );
+    return ManualRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew);
   }
 
   /// True for `format == 'file'` rows — the lesson plan is a PDF/DOCX

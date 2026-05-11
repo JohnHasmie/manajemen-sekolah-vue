@@ -41,8 +41,6 @@ mixin AdminDataLoadingMixin on ConsumerState<AdminAnnouncementScreen> {
 
   String? mapStatusFilter(String? value);
 
-  Future<void> checkAndShowTour();
-
   void updatePaginationFromMeta(Map<String, dynamic>? meta);
 
   String? buildAnnouncementCacheKey() {
@@ -61,7 +59,6 @@ mixin AdminDataLoadingMixin on ConsumerState<AdminAnnouncementScreen> {
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
     }
-    await LocalCacheService.clearStartingWith('tour_announcement_');
     await LocalCacheService.invalidate(
       CacheKeyBuilder.custom('announcement', 'filter_options'),
     );
@@ -143,9 +140,6 @@ mixin AdminDataLoadingMixin on ConsumerState<AdminAnnouncementScreen> {
                 isLoading = false;
               });
               AppLogger.info('announcement', 'Announcements loaded from cache');
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) checkAndShowTour();
-              });
               return;
             }
           }
@@ -221,11 +215,7 @@ mixin AdminDataLoadingMixin on ConsumerState<AdminAnnouncementScreen> {
         '${ErrorUtils.getFriendlyMessage(e)}',
       );
     } finally {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          checkAndShowTour();
-        }
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {});
     }
   }
 

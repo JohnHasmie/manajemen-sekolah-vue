@@ -25,11 +25,8 @@ mixin ResultFetchMixin on ConsumerState<LearningRecommendationResultScreen> {
   }
 
   /// Forces refresh by clearing cache and fetching fresh data.
-  ///
-  /// Invalidates both recommendations cache and related tour cache.
   Future<void> forceRefresh() async {
     await LocalCacheService.invalidate(buildRecommendationsCacheKey());
-    await LocalCacheService.clearStartingWith('tour_recommendation_result_');
     fetchRecommendations(useCache: false);
   }
 
@@ -37,7 +34,6 @@ mixin ResultFetchMixin on ConsumerState<LearningRecommendationResultScreen> {
   ///
   /// Attempts to load from cache first, falls back to API if not cached.
   /// Handles rate limiting errors gracefully and maintains error state.
-  /// Calls [checkAndShowTour] on successful fetch.
   Future<void> fetchRecommendations({bool useCache = true}) async {
     final cacheKey = buildRecommendationsCacheKey();
 
@@ -55,9 +51,6 @@ mixin ResultFetchMixin on ConsumerState<LearningRecommendationResultScreen> {
           'recommendation',
           'RecommendationResult: from cache (${cached.length})',
         );
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) checkAndShowTour();
-        });
         return;
       }
     }
@@ -125,12 +118,6 @@ mixin ResultFetchMixin on ConsumerState<LearningRecommendationResultScreen> {
           isLoading = false;
           errorMessage = '';
         });
-
-        if (recs.isNotEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) checkAndShowTour();
-          });
-        }
       } else {
         if (!mounted) return;
         if (recommendations.isEmpty) {
@@ -169,9 +156,6 @@ mixin ResultFetchMixin on ConsumerState<LearningRecommendationResultScreen> {
   /// Gets or sets recommendations list.
   List<dynamic> get recommendations;
   set recommendations(List<dynamic> value);
-
-  /// Checks and shows tour if needed.
-  Future<void> checkAndShowTour();
 
   /// Sets state using setState.
   @override

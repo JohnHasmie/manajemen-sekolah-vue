@@ -64,8 +64,9 @@ class _ParentAttendanceTabState extends ConsumerState<ParentAttendanceTab> {
         }
         return;
       }
-      final students =
-          await ApiStudentService().getStudent(guardianEmail: email);
+      final students = await ApiStudentService().getStudent(
+        guardianEmail: email,
+      );
       if (!mounted) return;
       setState(() {
         _loading = false;
@@ -84,9 +85,7 @@ class _ParentAttendanceTabState extends ConsumerState<ParentAttendanceTab> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_error != null) {
       return _ErrorOrEmpty(
@@ -106,7 +105,7 @@ class _ParentAttendanceTabState extends ConsumerState<ParentAttendanceTab> {
         title: 'Belum ada anak terdaftar',
         subtitle:
             'Akun ini belum tertaut dengan siswa manapun. Hubungi admin '
-                'sekolah untuk menautkan.',
+            'sekolah untuk menautkan.',
       );
     }
 

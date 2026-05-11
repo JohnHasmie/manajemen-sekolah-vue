@@ -18,7 +18,7 @@ import 'package:manajemensekolah/features/grades/presentation/mixins/grade_input
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_input_filter_dialog_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/grade_book_screen.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
-import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
+
 
 class GradePage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
@@ -41,36 +41,13 @@ class GradePageState extends ConsumerState<GradePage>
   String? _filterSubjectName;
 
   @override
-  List<dynamic> get groupedData => _groupedData;
-
-  @override
-  set groupedData(List<dynamic> value) {
-    _groupedData = value;
-  }
-
-  @override
   bool get isLoading => _isLoading;
-
-  @override
-  set isLoading(bool value) {
-    _isLoading = value;
-  }
 
   @override
   bool get isHomeroomView => _isHomeroomView;
 
   @override
-  set isHomeroomView(bool value) {
-    _isHomeroomView = value;
-  }
-
-  @override
   bool get isTableView => _isTableView;
-
-  @override
-  set isTableView(bool value) {
-    _isTableView = value;
-  }
 
   @override
   String? get filterClassId => _filterClassId;
@@ -104,7 +81,6 @@ class GradePageState extends ConsumerState<GradePage>
     _filterSubjectName = value;
   }
 
-  @override
   TextEditingController get searchController => _searchController;
 
   /// Resolve the teacher id with a riverpod fallback. The widget.teacher
@@ -112,9 +88,10 @@ class GradePageState extends ConsumerState<GradePage>
   /// reached through a navigation that only had user data); falling
   /// through to teacherRiverpod keeps the grade-summary call from
   /// 500'ing with "teacher_id is required".
+  @override
   String get teacherId {
-    final fromWidget =
-        (widget.teacher['teacher_id'] ?? widget.teacher['id'])?.toString();
+    final fromWidget = (widget.teacher['teacher_id'] ?? widget.teacher['id'])
+        ?.toString();
     if (fromWidget != null && fromWidget.isNotEmpty) return fromWidget;
     return ref.read(teacherRiverpod).teacherId ?? '';
   }
@@ -182,7 +159,7 @@ class GradePageState extends ConsumerState<GradePage>
     return _GradeSummaryTableView(
       data: data,
       primaryColor: primaryColor,
-      onSubjectTap: (classData, subject) => openGradeBook(classData, subject),
+      onSubjectTap: openGradeBook,
     );
   }
 
@@ -227,10 +204,38 @@ class GradePageState extends ConsumerState<GradePage>
       // staring at an infinite skeleton that looks like a crash. With this
       // guard, a stuck request converts to a TimeoutException → caught below →
       // friendly "Koneksi terlalu lambat" error screen with a retry button.
+
+      // ENSURE DEPENDENCIES ARE READY (Fix for race condition on cold start)
+      // If the user navigates here immediately after app start (e.g. from
+      // bottom nav tab before dashboard fully resolves), the providers might
+      // still be empty or loading.
+      final ayProvider = ref.read(academicYearRiverpod);
+      if (ayProvider.selectedAcademicYear == null && ayProvider.isLoading) {
+        // Wait for academic year to finish loading if it's already in progress
+        int retries = 0;
+        while (ref.read(academicYearRiverpod).selectedAcademicYear == null &&
+            ref.read(academicYearRiverpod).isLoading &&
+            mounted &&
+            retries < 20) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          retries++;
+        }
+      }
+
+      final teacherProvider = ref.read(teacherRiverpod);
+      if (teacherId.isEmpty || !teacherProvider.isLoaded) {
+        await teacherProvider.ensureLoaded();
+      }
+
       final ayId = ref
           .read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
+
+      if (teacherId.isEmpty) {
+        throw Exception('ID Guru tidak ditemukan. Silakan coba lagi.');
+      }
+
       final data =
           await GradeService.getTeacherGradeSummary(
             teacherId: teacherId,

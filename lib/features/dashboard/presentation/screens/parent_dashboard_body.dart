@@ -165,13 +165,6 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     return (raw == null || raw.isEmpty) ? AppLocalizations.pdParent.tr : raw;
   }
 
-  // KPI counts
-  int get _childrenCount => _asInt(widget.state.stats['children_count']);
-  int get _attendanceRate => _asInt(widget.state.stats['attendance_rate']);
-  int get _newGradesCount => _asInt(widget.state.stats['new_grades_7days']);
-  int get _overdueBillsCount =>
-      _asInt(widget.state.stats['overdue_bills_count']);
-
   // Inbox counts
   int get _overdueBills => _asInt(widget.state.stats['overdue_bills_count']);
   int get _newGrades => _asInt(widget.state.stats['unread_grades']);

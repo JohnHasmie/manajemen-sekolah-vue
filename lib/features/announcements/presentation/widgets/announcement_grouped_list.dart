@@ -296,8 +296,7 @@ class _LifecycleSectionHeader extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
               color: tone.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(999),
@@ -312,11 +311,7 @@ class _LifecycleSectionHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Container(
-            height: 1,
-            width: 36,
-            color: ColorUtils.slate200,
-          ),
+          Container(height: 1, width: 36, color: ColorUtils.slate200),
         ],
       ),
     );

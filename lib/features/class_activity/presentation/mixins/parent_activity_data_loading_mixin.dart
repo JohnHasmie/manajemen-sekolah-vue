@@ -16,7 +16,6 @@ import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 mixin ParentActivityDataLoadingMixin
     on ConsumerState<ParentClassActivityScreen> {
-
   // Access public fields on the state class
   ParentClassActivityScreenState get _state =>
       this as ParentClassActivityScreenState;
@@ -134,11 +133,7 @@ mixin ParentActivityDataLoadingMixin
           _state.hasFreshData = false;
           _state.isLoading = false;
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _state.studentList.isNotEmpty) {
-            checkAndShowTour();
-          }
-        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {});
       }
     }
 
@@ -188,17 +183,12 @@ mixin ParentActivityDataLoadingMixin
         SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _state.studentList.isNotEmpty) {
-          checkAndShowTour();
-        }
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {});
     }
   }
 
   Future<void> forceRefresh() async {
     await LocalCacheService.clearStartingWith('parent_activity_');
-    await LocalCacheService.clearStartingWith('tour_parent_class_activity_');
     loadUserData(useCache: false);
   }
 
@@ -209,6 +199,4 @@ mixin ParentActivityDataLoadingMixin
       AppLogger.error('class_activity', 'Error silent auto-marking read: $e');
     }
   }
-
-  void checkAndShowTour();
 }

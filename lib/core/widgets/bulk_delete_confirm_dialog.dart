@@ -295,8 +295,7 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         backgroundColor: accent,
-                        disabledBackgroundColor:
-                            accent.withValues(alpha: 0.35),
+                        disabledBackgroundColor: accent.withValues(alpha: 0.35),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

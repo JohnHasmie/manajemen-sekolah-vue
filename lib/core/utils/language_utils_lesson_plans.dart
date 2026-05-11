@@ -141,7 +141,6 @@ const _kAcademicYearRequired = {
   'id': 'Tahun ajaran harus diisi',
 };
 const _kWordDocument = {'en': 'Word Document', 'id': 'Dokumen Word'};
-const _kLpPdfDocument = {'en': 'PDF Document', 'id': 'Dokumen PDF'};
 const _kSupportedFormats = {
   'en': 'Supported formats: .doc, .docx, .pdf',
   'id': 'Format yang didukung: .doc, .docx, .pdf',

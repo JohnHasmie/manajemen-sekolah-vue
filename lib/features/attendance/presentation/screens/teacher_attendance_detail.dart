@@ -121,10 +121,7 @@ class _TeacherAttendanceDetailPageState
                   'en': 'Saving changes...',
                   'id': 'Menyimpan perubahan...',
                 }),
-                style: TextStyle(
-                  color: ColorUtils.slate500,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: ColorUtils.slate500, fontSize: 14),
               ),
             ],
           ),
@@ -258,12 +255,7 @@ class _TeacherAttendanceDetailPageState
             // ListView here (would crash with unbounded vertical
             // viewport).
             for (var i = 0; i < state.students.length; i++)
-              buildStudentCard(
-                state.students[i],
-                languageProvider,
-                state,
-                i,
-              ),
+              buildStudentCard(state.students[i], languageProvider, state, i),
         ],
         bottomPadding: 96,
       ),

@@ -32,8 +32,7 @@ List<RoleOption> buildMultiWaliRoleOptions({
     for (final hc in homeroomClasses)
       RoleOption.waliKelas(
         classId: (hc is Map ? hc['id'] : '').toString(),
-        className:
-            (hc is Map ? (hc['name'] ?? hc['nama']) : '').toString(),
+        className: (hc is Map ? (hc['name'] ?? hc['nama']) : '').toString(),
         subLabel: _waliSubLabel(lp),
       ),
   ];

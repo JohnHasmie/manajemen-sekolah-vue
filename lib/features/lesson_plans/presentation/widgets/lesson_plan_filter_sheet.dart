@@ -95,8 +95,9 @@ class _LessonPlanFilterSheetContent extends StatefulWidget {
 class _LessonPlanFilterSheetContentState
     extends State<_LessonPlanFilterSheetContent> {
   late String? _tempStatus = widget.currentStatus;
-  late Set<LessonPlanFormat> _tempFormats =
-      Set<LessonPlanFormat>.from(widget.currentFormats);
+  late Set<LessonPlanFormat> _tempFormats = Set<LessonPlanFormat>.from(
+    widget.currentFormats,
+  );
   late String? _tempMethod = widget.currentMethod;
 
   @override
@@ -156,18 +157,14 @@ class _LessonPlanFilterSheetContentState
         children: [
           // ── Format (multi-select) ──
           FilterSectionHeader(
-            title: lang.getTranslatedText({
-              'en': 'Format',
-              'id': 'Format',
-            }),
+            title: lang.getTranslatedText({'en': 'Format', 'id': 'Format'}),
             icon: Icons.category_rounded,
             primaryColor: widget.primaryColor,
           ),
           FilterChipGrid<LessonPlanFormat>(
             options: formatOptions,
             selectedValues: _tempFormats,
-            onMultiSelected: (values) =>
-                setState(() => _tempFormats = values),
+            onMultiSelected: (values) => setState(() => _tempFormats = values),
             // The shared chip grid only colors with a single brand
             // color, so we color each chip by its own format brand
             // via the iconBuilder hook (a small dot prefix). The
@@ -180,10 +177,7 @@ class _LessonPlanFilterSheetContentState
 
           // ── Metode (single-select: All / AI / Manual) ──
           FilterSectionHeader(
-            title: lang.getTranslatedText({
-              'en': 'Method',
-              'id': 'Metode',
-            }),
+            title: lang.getTranslatedText({'en': 'Method', 'id': 'Metode'}),
             icon: Icons.auto_awesome_outlined,
             primaryColor: widget.primaryColor,
           ),
@@ -211,11 +205,13 @@ class _LessonPlanFilterSheetContentState
         ],
       ),
       onApply: () {
-        widget.onApply(LessonPlanFilterResult(
-          status: _tempStatus,
-          formats: _tempFormats,
-          method: _tempMethod,
-        ));
+        widget.onApply(
+          LessonPlanFilterResult(
+            status: _tempStatus,
+            formats: _tempFormats,
+            method: _tempMethod,
+          ),
+        );
         Navigator.pop(context);
       },
       onReset: () => setState(() {

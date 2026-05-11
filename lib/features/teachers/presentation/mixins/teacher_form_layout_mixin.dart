@@ -29,10 +29,11 @@ mixin TeacherFormLayoutMixin on ConsumerState<TeacherFormDialog> {
               if (name.isEmpty) return extra;
               return extra.isEmpty ? name : '$name · $extra';
             }(),
-            initials: (widget.teacher!['name'] ??
-                    widget.teacher!['user']?['name'] ??
-                    '?')
-                .toString(),
+            initials:
+                (widget.teacher!['name'] ??
+                        widget.teacher!['user']?['name'] ??
+                        '?')
+                    .toString(),
           )
         : null;
     return AdminFormSheetHeader(

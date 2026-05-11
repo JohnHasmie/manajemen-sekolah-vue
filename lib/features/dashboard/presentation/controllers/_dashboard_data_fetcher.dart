@@ -5,7 +5,6 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/features/dashboard/data/dashboard_service.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
 import 'package:manajemensekolah/features/finance/data/finance_service.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 
@@ -153,9 +152,7 @@ class DashboardDataFetcher {
 
   /// Prefetch tours for the platform.
   Future<void> prefetchTours(String role) async {
-    try {
-      await ApiTourService.getCompletedTours(platform: 'mobile');
-    } catch (e) {
+    try {} catch (e) {
       AppLogger.error('dashboard_data_fetcher', 'Error prefetching tours: $e');
     }
   }

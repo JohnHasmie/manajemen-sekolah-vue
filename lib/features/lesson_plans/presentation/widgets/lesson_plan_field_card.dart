@@ -147,8 +147,9 @@ class LessonPlanFieldCard extends StatelessWidget {
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: ColorUtils.slate100,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(8)),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(8),
+                          ),
                           border: Border.all(color: ColorUtils.slate200),
                         ),
                         child: Icon(
@@ -218,10 +219,7 @@ class LessonPlanFieldCard extends StatelessWidget {
                 : value.trim().isEmpty
                 ? Text(
                     '—',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: ColorUtils.slate400,
-                    ),
+                    style: TextStyle(fontSize: 14, color: ColorUtils.slate400),
                   )
                 : HtmlWidget(
                     value,
@@ -243,10 +241,7 @@ class LessonPlanFieldCard extends StatelessWidget {
                           };
                         case 'strong':
                         case 'b':
-                          return {
-                            'font-weight': '800',
-                            'color': '#0f172a',
-                          };
+                          return {'font-weight': '800', 'color': '#0f172a'};
                         case 'p':
                           return {'margin': '0 0 6px'};
                         case 'ol':

@@ -67,7 +67,9 @@ mixin TeacherActivityNavigationMixin
       final raw = r.data;
       final list = raw is List
           ? raw
-          : (raw is Map && raw['data'] is List ? raw['data'] as List : const []);
+          : (raw is Map && raw['data'] is List
+                ? raw['data'] as List
+                : const []);
       subjects = list
           .whereType<Map>()
           .map((e) => Map<String, dynamic>.from(e))
@@ -84,10 +86,7 @@ mixin TeacherActivityNavigationMixin
       classes: classes,
       subjects: subjects,
       onSave: (payload) async {
-        await svc.createActivity({
-          ...payload,
-          'teacher_id': teacherId,
-        });
+        await svc.createActivity({...payload, 'teacher_id': teacherId});
       },
     );
     if (res != null && mounted) {

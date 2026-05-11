@@ -48,13 +48,16 @@ class AnnouncementDetailDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Announcement.fromJson(announcementData);
-    final isImportant = ['penting', 'important']
-        .contains(announcementData['priority']);
+    final isImportant = [
+      'penting',
+      'important',
+    ].contains(announcementData['priority']);
     final filePath = announcementData['file_path']?.toString();
     final fileName = announcementData['file_name']?.toString();
-    final creator = announcementData['creator']?['name']
-        ?? announcementData['creator_name']
-        ?? '—';
+    final creator =
+        announcementData['creator']?['name'] ??
+        announcementData['creator_name'] ??
+        '—';
 
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
@@ -128,11 +131,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
             ),
           ),
           // Close-X in top-right
-          Positioned(
-            right: 8,
-            top: -2,
-            child: _CloseButton(),
-          ),
+          Positioned(right: 8, top: -2, child: _CloseButton()),
         ],
       ),
     );
@@ -200,10 +199,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
       'id': 'PENGUMUMAN',
     });
     if (!isImportant) return '$base · UMUM';
-    return '$base · ${languageProvider.getTranslatedText({
-      'en': 'IMPORTANT',
-      'id': 'PENTING',
-    })}';
+    return '$base · ${languageProvider.getTranslatedText({'en': 'IMPORTANT', 'id': 'PENTING'})}';
   }
 
   Widget _buildBody(Announcement model) {
@@ -284,19 +280,12 @@ class AnnouncementDetailDialog extends StatelessWidget {
                       'en': 'Tap to open',
                       'id': 'Ketuk untuk membuka',
                     }),
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: ColorUtils.slate500,
-                    ),
+                    style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.download_rounded,
-              size: 18,
-              color: ColorUtils.slate400,
-            ),
+            Icon(Icons.download_rounded, size: 18, color: ColorUtils.slate400),
           ],
         ),
       ),
@@ -421,10 +410,7 @@ class _DetailCell extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 9.5,
-            color: ColorUtils.slate500,
-          ),
+          style: TextStyle(fontSize: 9.5, color: ColorUtils.slate500),
         ),
         const SizedBox(height: 2),
         Text(

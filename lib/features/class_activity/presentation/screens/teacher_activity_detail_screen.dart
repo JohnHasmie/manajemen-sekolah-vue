@@ -133,14 +133,15 @@ class _TeacherActivityDetailScreenState
       if (!mounted) return;
       // Sort: pending first, then late, submitted, excused.
       const order = ['pending', 'late', 'submitted', 'excused'];
-      final sorted = [...rows]..sort((x, y) {
-        final xi = order.indexOf((x['status'] ?? 'pending').toString());
-        final yi = order.indexOf((y['status'] ?? 'pending').toString());
-        if (xi != yi) return xi.compareTo(yi);
-        return ((x['student_name'] ?? '').toString()).compareTo(
-          (y['student_name'] ?? '').toString(),
-        );
-      });
+      final sorted = [...rows]
+        ..sort((x, y) {
+          final xi = order.indexOf((x['status'] ?? 'pending').toString());
+          final yi = order.indexOf((y['status'] ?? 'pending').toString());
+          if (xi != yi) return xi.compareTo(yi);
+          return ((x['student_name'] ?? '').toString()).compareTo(
+            (y['student_name'] ?? '').toString(),
+          );
+        });
       setState(() => _submissions = sorted);
     } catch (e) {
       AppLogger.error('class_activity_detail', 'getSubmissions failed: $e');
@@ -319,9 +320,12 @@ class _TeacherActivityDetailScreenState
     //                          so we surface useful context instead of 0/0)
     final type = (a['type'] ?? a['tipe'] ?? '').toString().toLowerCase();
     final tracksSubmissions =
-        type == 'tugas' || type == 'assignment' ||
-        type == 'ujian' || type == 'exam' ||
-        type == 'kuis' || type == 'quiz';
+        type == 'tugas' ||
+        type == 'assignment' ||
+        type == 'ujian' ||
+        type == 'exam' ||
+        type == 'kuis' ||
+        type == 'quiz';
 
     final siswa = a['student_count'] ?? a['jumlah_siswa'];
 
@@ -679,10 +683,7 @@ class _TeacherActivityDetailScreenState
             height: 44,
             child: ElevatedButton.icon(
               onPressed: _openCatatSubmit,
-              icon: const Icon(
-                Icons.assignment_turned_in_rounded,
-                size: 16,
-              ),
+              icon: const Icon(Icons.assignment_turned_in_rounded, size: 16),
               label: Text(
                 lp.getTranslatedText({
                   'en': 'Record submit',
@@ -743,9 +744,7 @@ class _TeacherActivityDetailScreenState
             child: ElevatedButton.icon(
               onPressed: widget.onEdit == null ? null : _onEditPressed,
               icon: const Icon(Icons.edit_rounded, size: 16),
-              label: Text(
-                lp.getTranslatedText({'en': 'Edit', 'id': 'Edit'}),
-              ),
+              label: Text(lp.getTranslatedText({'en': 'Edit', 'id': 'Edit'})),
               style: ElevatedButton.styleFrom(
                 backgroundColor: ColorUtils.brandCobalt,
                 foregroundColor: Colors.white,

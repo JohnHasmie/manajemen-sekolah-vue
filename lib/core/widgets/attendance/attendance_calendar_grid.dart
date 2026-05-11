@@ -77,8 +77,9 @@ class AttendanceCalendarGrid extends StatelessWidget {
                           status: day == null
                               ? AttendanceStatus.none
                               : dayStatuses[_normalize(day)] ??
-                                  AttendanceStatus.none,
-                          isSelected: selectedDate != null &&
+                                    AttendanceStatus.none,
+                          isSelected:
+                              selectedDate != null &&
                               day != null &&
                               _normalize(selectedDate!) == _normalize(day),
                           brandColor: brandColor,
@@ -100,8 +101,11 @@ class AttendanceCalendarGrid extends StatelessWidget {
   /// surrounding weekdays. Empty slots are `null`.
   List<List<DateTime?>> _buildCells() {
     final firstOfMonth = DateTime(month.year, month.month, 1);
-    final lastOfMonth =
-        DateTime(month.year, month.month + 1, 0); // day 0 of next month
+    final lastOfMonth = DateTime(
+      month.year,
+      month.month + 1,
+      0,
+    ); // day 0 of next month
     // Indonesian weeks start on Monday → weekday=1 ⇒ first column.
     // weekday=7 (Sun) ⇒ last column.
     final firstWeekdayIdx = firstOfMonth.weekday - 1; // 0..6
@@ -113,8 +117,7 @@ class AttendanceCalendarGrid extends StatelessWidget {
     for (var r = 0; r < rows; r++) {
       final week = <DateTime?>[];
       for (var c = 0; c < 7; c++) {
-        if (slotIdx < firstWeekdayIdx ||
-            dayCounter > lastOfMonth.day) {
+        if (slotIdx < firstWeekdayIdx || dayCounter > lastOfMonth.day) {
           week.add(null);
         } else {
           week.add(DateTime(month.year, month.month, dayCounter));
@@ -127,8 +130,7 @@ class AttendanceCalendarGrid extends StatelessWidget {
     return cells;
   }
 
-  static DateTime _normalize(DateTime d) =>
-      DateTime(d.year, d.month, d.day);
+  static DateTime _normalize(DateTime d) => DateTime(d.year, d.month, d.day);
 }
 
 class _Weekdays extends StatelessWidget {
@@ -146,9 +148,7 @@ class _Weekdays extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.2,
-                  color: i >= 5
-                      ? const Color(0xFF94A3B8)
-                      : ColorUtils.slate500,
+                  color: i >= 5 ? const Color(0xFF94A3B8) : ColorUtils.slate500,
                 ),
               ),
             ),
@@ -207,9 +207,7 @@ class _DayCell extends StatelessWidget {
         ? Colors.transparent
         : palette.bg;
     final cellText = status == AttendanceStatus.none
-        ? (isWeekend
-            ? const Color(0xFF94A3B8)
-            : const Color(0xFF475569))
+        ? (isWeekend ? const Color(0xFF94A3B8) : const Color(0xFF475569))
         : palette.text;
 
     final cell = Container(

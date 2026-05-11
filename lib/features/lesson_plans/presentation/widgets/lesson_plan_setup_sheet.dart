@@ -152,8 +152,9 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
 
   Future<void> _loadClassesForSubject(String subjectId) async {
     try {
-      final result = await ApiService()
-          .get('/class-by-mata-pelajaran?mata_pelajaran_id=$subjectId');
+      final result = await ApiService().get(
+        '/class-by-mata-pelajaran?mata_pelajaran_id=$subjectId',
+      );
       if (!mounted) return;
       setState(() {
         if (result is Map && result['data'] is List) {
@@ -172,8 +173,9 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
 
   Future<void> _loadChaptersForSubject(String subjectId) async {
     try {
-      final result = await getIt<ApiSubjectService>()
-          .getChapterMaterials(subjectId: subjectId);
+      final result = await getIt<ApiSubjectService>().getChapterMaterials(
+        subjectId: subjectId,
+      );
       if (!mounted) return;
       setState(() => _chapters = result);
     } catch (e) {
@@ -184,8 +186,9 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
 
   Future<void> _loadSubChaptersForChapter(String chapterId) async {
     try {
-      final result = await getIt<ApiSubjectService>()
-          .getSubChapterMaterials(chapterId: chapterId);
+      final result = await getIt<ApiSubjectService>().getSubChapterMaterials(
+        chapterId: chapterId,
+      );
       if (!mounted) return;
       setState(() => _subChapters = result);
     } catch (e) {
@@ -200,7 +203,8 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
     if (_isSubmitting) return false;
     if (_subjectId == null || _classId == null) return false;
     if (_method == LessonPlanMethod.ai && _chapterId == null) return false;
-    if (_method == LessonPlanMethod.manual && _titleController.text.trim().isEmpty) {
+    if (_method == LessonPlanMethod.manual &&
+        _titleController.text.trim().isEmpty) {
       return false;
     }
     return true;
@@ -303,7 +307,8 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
   /// The unwrapped data is shaped as `{job_id, status, poll_url}` in
   /// that case.
   bool _isAsyncJobResponse(Map<String, dynamic> data) {
-    final hasJobId = (data['job_id'] ?? data['jobId'] ?? data['id']) != null &&
+    final hasJobId =
+        (data['job_id'] ?? data['jobId'] ?? data['id']) != null &&
         (data['status']?.toString().toLowerCase() == 'pending' ||
             data['status']?.toString().toLowerCase() == 'queued' ||
             data['status']?.toString().toLowerCase() == 'processing');
@@ -317,10 +322,8 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
   /// screen runs over the underlying RPP list and presents the proper
   /// detail screen once the job completes.
   void _routeToAiPolling(Map<String, dynamic> data) {
-    final pollUrl =
-        (data['poll_url'] ?? data['polling_url'])?.toString();
-    final jobId =
-        (data['job_id'] ?? data['jobId'] ?? data['id'])?.toString();
+    final pollUrl = (data['poll_url'] ?? data['polling_url'])?.toString();
+    final jobId = (data['job_id'] ?? data['jobId'] ?? data['id'])?.toString();
     final pollingMetadata = <String, dynamic>{
       'mata_pelajaran_id': _subjectId,
       'mata_pelajaran_nama': _subjectName ?? '',
@@ -475,10 +478,12 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
           ),
           BottomSheetFooter(
             primaryLabel: _isSubmitting
-                ? (_method == LessonPlanMethod.ai ? 'Generating…' : 'Menyimpan…')
+                ? (_method == LessonPlanMethod.ai
+                      ? 'Generating…'
+                      : 'Menyimpan…')
                 : (_method == LessonPlanMethod.ai
-                    ? 'Generate dengan AI'
-                    : 'Buat draf RPP'),
+                      ? 'Generate dengan AI'
+                      : 'Buat draf RPP'),
             // AI mode: violet — the app-wide AI signature.
             // Manual mode: cobalt (teacher role color) — keeps the
             // submit button consistent with the rest of the teacher
@@ -624,9 +629,7 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
 
   Widget _buildSubjectChips(Color accent) {
     if (_subjects.isEmpty) {
-      return _ChipPlaceholder(
-        text: 'Belum ada mata pelajaran ditugaskan',
-      );
+      return _ChipPlaceholder(text: 'Belum ada mata pelajaran ditugaskan');
     }
     return FilterChipGrid<String>(
       options: [
@@ -646,8 +649,9 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
         if (picked == null) return;
         setState(() {
           _subjectId = id;
-          _subjectName = (picked['mata_pelajaran_nama'] ?? picked['name'] ?? '-')
-              .toString();
+          _subjectName =
+              (picked['mata_pelajaran_nama'] ?? picked['name'] ?? '-')
+                  .toString();
           // Reset dependent picks — class / chapter / sub-chapter all
           // belong to the previous subject's tree.
           _classId = null;
@@ -692,7 +696,8 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
         if (picked == null) return;
         setState(() {
           _classId = id;
-          _className = (picked['kelas_nama'] ?? picked['name'] ?? '-').toString();
+          _className = (picked['kelas_nama'] ?? picked['name'] ?? '-')
+              .toString();
         });
       },
       selectedColor: accent,
@@ -715,12 +720,9 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
             // chapter title (Chapter model column is `title` — the
             // controller maps it). Fall through to `title` / `judul`
             // / `nama` for legacy responses.
-            label: (c['judul_bab'] ??
-                    c['title'] ??
-                    c['judul'] ??
-                    c['nama'] ??
-                    '-')
-                .toString(),
+            label:
+                (c['judul_bab'] ?? c['title'] ?? c['judul'] ?? c['nama'] ?? '-')
+                    .toString(),
           ),
       ],
       selectedValue: _chapterId,
@@ -733,12 +735,13 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
         if (picked == null) return;
         setState(() {
           _chapterId = id;
-          _chapterTitle = (picked['judul_bab'] ??
-                  picked['title'] ??
-                  picked['judul'] ??
-                  picked['nama'] ??
-                  '-')
-              .toString();
+          _chapterTitle =
+              (picked['judul_bab'] ??
+                      picked['title'] ??
+                      picked['judul'] ??
+                      picked['nama'] ??
+                      '-')
+                  .toString();
           _subChapterId = null;
           _subChapterTitle = null;
           _subChapters = [];
@@ -762,12 +765,13 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
           FilterOption(
             value: c['id'].toString(),
             // `/sub-bab-material` returns `judul_sub_bab`.
-            label: (c['judul_sub_bab'] ??
-                    c['title'] ??
-                    c['judul'] ??
-                    c['nama'] ??
-                    '-')
-                .toString(),
+            label:
+                (c['judul_sub_bab'] ??
+                        c['title'] ??
+                        c['judul'] ??
+                        c['nama'] ??
+                        '-')
+                    .toString(),
           ),
       ],
       selectedValue: _subChapterId,
@@ -786,12 +790,13 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
         if (picked == null) return;
         setState(() {
           _subChapterId = id;
-          _subChapterTitle = (picked['judul_sub_bab'] ??
-                  picked['title'] ??
-                  picked['judul'] ??
-                  picked['nama'] ??
-                  '-')
-              .toString();
+          _subChapterTitle =
+              (picked['judul_sub_bab'] ??
+                      picked['title'] ??
+                      picked['judul'] ??
+                      picked['nama'] ??
+                      '-')
+                  .toString();
         });
       },
       selectedColor: accent,

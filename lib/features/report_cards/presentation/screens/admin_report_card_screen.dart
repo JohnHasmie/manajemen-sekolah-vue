@@ -11,6 +11,7 @@
 /// Existing data/action mixins are reused unchanged — only the render
 /// surface was rebuilt.
 library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
@@ -19,7 +20,6 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/admin_report_card_actions_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/admin_report_card_data_mixin.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/mixins/admin_report_card_tour_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/admin_report_card_utils_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/admin_report_card_body.dart';
 
@@ -38,7 +38,6 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
     with
         AdminReportCardDataMixin,
         AdminReportCardActionsMixin,
-        AdminReportCardTourMixin,
         AdminReportCardUtilsMixin {
   late LanguageProvider _languageProvider;
 
@@ -70,9 +69,9 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
     final targetId = widget.initialClassId;
     if (targetId != null && _classes.isNotEmpty) {
       final match = _classes.cast<Map<String, dynamic>?>().firstWhere(
-            (c) => c?['id']?.toString() == targetId,
-            orElse: () => null,
-          );
+        (c) => c?['id']?.toString() == targetId,
+        orElse: () => null,
+      );
       if (match != null) {
         setState(() {
           _selectedClass = match;
@@ -116,9 +115,7 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
         body: Column(
           children: [
             _buildHero(navy),
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            ),
+            const Expanded(child: Center(child: CircularProgressIndicator())),
           ],
         ),
       );
@@ -144,8 +141,11 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.cloud_off_rounded,
-                            size: 36, color: Color(0xFFDC2626)),
+                        const Icon(
+                          Icons.cloud_off_rounded,
+                          size: 36,
+                          color: Color(0xFFDC2626),
+                        ),
                         const SizedBox(height: 10),
                         Text(
                           'Gagal memuat data raport',
@@ -260,16 +260,22 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
                         color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.more_vert,
-                          color: Colors.white, size: 18),
+                      child: const Icon(
+                        Icons.more_vert,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                     itemBuilder: (_) => [
                       PopupMenuItem<String>(
                         value: 'refresh',
                         child: Row(
                           children: [
-                            Icon(Icons.refresh,
-                                size: 18, color: ColorUtils.info600),
+                            Icon(
+                              Icons.refresh,
+                              size: 18,
+                              color: ColorUtils.info600,
+                            ),
                             const SizedBox(width: 8),
                             Text(AppLocalizations.updateData.tr),
                           ],
@@ -323,9 +329,7 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
             // Stats strip
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
-              child: hasClass
-                  ? _buildStatsStrip()
-                  : _buildClassCountHint(),
+              child: hasClass ? _buildStatsStrip() : _buildClassCountHint(),
             ),
           ],
         ),
@@ -403,9 +407,7 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
             blurRadius: 12,
           ),
         ],
-        border: Border(
-          top: BorderSide(color: ColorUtils.slate200, width: 1),
-        ),
+        border: Border(top: BorderSide(color: ColorUtils.slate200, width: 1)),
       ),
       child: SafeArea(
         top: false,

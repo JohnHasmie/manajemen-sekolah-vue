@@ -15,7 +15,6 @@ import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/teacher_report_card_cache_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/teacher_report_card_data_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/teacher_report_card_export_mixin.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/mixins/teacher_report_card_tour_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/teacher_report_card_ui_mixin.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 
@@ -46,7 +45,6 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen>
         TeacherReportCardCacheMixin,
         TeacherReportCardDataMixin,
         TeacherReportCardExportMixin,
-        TeacherReportCardTourMixin,
         TeacherReportCardUiMixin {
   final LanguageProvider _languageProvider = LanguageProvider();
 
@@ -160,29 +158,17 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen>
     }
   }
 
-  String? _getAcademicYearId() {
-    final provider = ref.read(academicYearRiverpod);
-    return (provider.selectedAcademicYear?['id'] ??
-            provider.activeAcademicYear?['id'])
-        ?.toString();
-  }
-
   // Mixin implementation: TeacherReportCardExportMixin
   @override
   void setExporting(bool value) {
     setState(() => _isExporting = value);
   }
 
-  // Mixin implementation: TeacherReportCardTourMixin
+  // Widget anchor keys (kept as plain GlobalKeys after the tour feature
+  // was retired — the UI mixin still needs `getClassSelectorKey()` to
+  // anchor the selector pill).
   @override
   GlobalKey getClassSelectorKey() => _classSelectorKey;
-
-  @override
-  GlobalKey getExportKey() => _exportKey;
-
-  @override
-  bool shouldShowExportTour() =>
-      _selectedClass != null && !_isLoading && !_isLoadingStudents;
 
   // Mixin implementation: TeacherReportCardUiMixin
   @override

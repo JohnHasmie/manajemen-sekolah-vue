@@ -19,7 +19,10 @@ final _uuidRegex = RegExp(
 String _initials(String name) {
   final trimmed = name.trim();
   if (trimmed.isEmpty) return '?';
-  final parts = trimmed.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+  final parts = trimmed
+      .split(RegExp(r'\s+'))
+      .where((s) => s.isNotEmpty)
+      .toList();
   if (parts.length >= 2) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
@@ -315,9 +318,9 @@ class StudentCardListWidget extends StatelessWidget {
                             .toList();
                         final typeAvg = typeScores.isNotEmpty
                             ? typeScores
-                                    .map((s) => s.toDouble())
-                                    .reduce((a, b) => a + b) /
-                                typeScores.length
+                                      .map((s) => s.toDouble())
+                                      .reduce((a, b) => a + b) /
+                                  typeScores.length
                             : null;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,10 +346,8 @@ class StudentCardListWidget extends StatelessWidget {
                               final displayTitle = cleanTitle.isNotEmpty
                                   ? cleanTitle
                                   : typeLabel;
-                              final date = g['tanggal']
-                                      ?.toString()
-                                      .split('T')
-                                      .first ??
+                              final date =
+                                  g['tanggal']?.toString().split('T').first ??
                                   '';
                               final dateFormatted = date.length >= 10
                                   ? '${date.substring(8, 10)}/${date.substring(5, 7)}'
@@ -354,14 +355,13 @@ class StudentCardListWidget extends StatelessWidget {
 
                               return InkWell(
                                 onTap: () {
-                                  final assessmentId =
-                                      g['assessment_id']?.toString();
-                                  final type =
-                                      (g['jenis'] ?? g['type'] ?? '').toString();
+                                  final assessmentId = g['assessment_id']
+                                      ?.toString();
+                                  final type = (g['jenis'] ?? g['type'] ?? '')
+                                      .toString();
                                   final headers = assessmentHeaders[type] ?? [];
                                   final matchedHeader = headers.firstWhere(
-                                    (h) =>
-                                        h['id']?.toString() == assessmentId,
+                                    (h) => h['id']?.toString() == assessmentId,
                                     orElse: () => <String, dynamic>{
                                       'id': assessmentId,
                                       'date': date,
@@ -423,18 +423,15 @@ class StudentCardListWidget extends StatelessWidget {
                                             ),
                                             if (dateFormatted.isNotEmpty)
                                               Padding(
-                                                padding:
-                                                    const EdgeInsets.only(
+                                                padding: const EdgeInsets.only(
                                                   top: 2,
                                                 ),
                                                 child: Text(
                                                   dateFormatted,
                                                   style: TextStyle(
                                                     fontSize: 10.5,
-                                                    fontWeight:
-                                                        FontWeight.w600,
-                                                    color:
-                                                        ColorUtils.slate500,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: ColorUtils.slate500,
                                                   ),
                                                 ),
                                               ),
@@ -537,9 +534,7 @@ class StudentCardListWidget extends StatelessWidget {
         );
       }
       final score = g['score'];
-      final type = shortTypeLabel(
-        (g['jenis'] ?? g['type'] ?? '').toString(),
-      );
+      final type = shortTypeLabel((g['jenis'] ?? g['type'] ?? '').toString());
       final color = score is num
           ? scoreColor(score.toDouble())
           : ColorUtils.slate400;
@@ -718,9 +713,7 @@ class StudentCardListWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(0, 12, 0, 8),
       decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: ColorUtils.slate100, width: 1),
-        ),
+        border: Border(top: BorderSide(color: ColorUtils.slate100, width: 1)),
       ),
       child: Row(
         children: [
@@ -811,11 +804,7 @@ class StudentCardListWidget extends StatelessWidget {
             ),
             if (canEdit) ...[
               const SizedBox(width: 6),
-              Icon(
-                Icons.edit_rounded,
-                size: 11,
-                color: ColorUtils.slate400,
-              ),
+              Icon(Icons.edit_rounded, size: 11, color: ColorUtils.slate400),
             ],
           ],
         ),
@@ -882,35 +871,17 @@ class StudentCardListWidget extends StatelessWidget {
     switch (type.toLowerCase()) {
       case 'tg':
       case 'tugas':
-        return (
-          bg: const Color(0xFFEDE9FE),
-          fg: const Color(0xFF7C3AED),
-        );
+        return (bg: const Color(0xFFEDE9FE), fg: const Color(0xFF7C3AED));
       case 'uh':
-        return (
-          bg: const Color(0xFFDBEAFE),
-          fg: const Color(0xFF1D4ED8),
-        );
+        return (bg: const Color(0xFFDBEAFE), fg: const Color(0xFF1D4ED8));
       case 'uts':
-        return (
-          bg: const Color(0xFFFEF3C7),
-          fg: const Color(0xFFD97706),
-        );
+        return (bg: const Color(0xFFFEF3C7), fg: const Color(0xFFD97706));
       case 'uas':
-        return (
-          bg: const Color(0xFFFFE4E6),
-          fg: const Color(0xFFE11D48),
-        );
+        return (bg: const Color(0xFFFFE4E6), fg: const Color(0xFFE11D48));
       case 'pr':
       case 'praktik':
-        return (
-          bg: const Color(0xFFD1FAE5),
-          fg: const Color(0xFF047857),
-        );
+        return (bg: const Color(0xFFD1FAE5), fg: const Color(0xFF047857));
     }
-    return (
-      bg: ColorUtils.slate100,
-      fg: ColorUtils.slate600,
-    );
+    return (bg: ColorUtils.slate100, fg: ColorUtils.slate600);
   }
 }

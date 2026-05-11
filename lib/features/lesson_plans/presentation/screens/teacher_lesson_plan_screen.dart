@@ -29,7 +29,6 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/less
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_upload_sheet.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_brand_header_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_filter_mixin.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_tour_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_status_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_crud_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
@@ -62,7 +61,6 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
         PaginationMixin<LessonPlanScreen>,
         LessonPlanFilterMixin,
         LessonPlanBrandHeaderMixin,
-        LessonPlanTourMixin,
         LessonPlanStatusMixin,
         LessonPlanCrudMixin {
   List<dynamic> _lessonPlanList = [];
@@ -239,7 +237,6 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
             _isLoading = false;
             _errorMessage = null;
           });
-          checkAndShowTour();
         }
         AppLogger.debug(
           'lesson_plan',
@@ -281,9 +278,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
       }
     } finally {
       endPaginationReset();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) checkAndShowTour();
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {});
     }
   }
 
@@ -417,8 +412,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
     }
 
     if (_lessonPlanList.isEmpty) {
-      final hasFilter =
-          _searchController.text.isNotEmpty || _hasActiveFilter;
+      final hasFilter = _searchController.text.isNotEmpty || _hasActiveFilter;
       // Wrap in a bounded SizedBox: BrandPageLayout's outer ListView
       // gives bodyChildren unbounded height, and EmptyState uses
       // `Center` + `MainAxisAlignment.center` which collapses to zero

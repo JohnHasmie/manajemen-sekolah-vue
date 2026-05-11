@@ -69,7 +69,6 @@ mixin MaterialDataMixin on ConsumerState<TeacherMaterialScreen> {
 
   // Callback that the main state provides
   void applyProgressToMaps(List<dynamic> progress);
-  void checkAndShowTour();
   void loadContentProgress(String subjectId);
   void autoSelectCurrentSchedule(List<dynamic> classes, List<dynamic> subjects);
   Future<void> loadChapterContent(
@@ -205,7 +204,6 @@ mixin MaterialDataMixin on ConsumerState<TeacherMaterialScreen> {
 
   Future<void> forceRefresh() async {
     await LocalCacheService.clearStartingWith('materi_');
-    await LocalCacheService.clearStartingWith('tour_materi_');
     await LocalCacheService.clearStartingWith('teacher_classes_');
     await LocalCacheService.clearStartingWith('teacher_profile_');
     setState(() {

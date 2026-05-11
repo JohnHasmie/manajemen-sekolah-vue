@@ -224,9 +224,7 @@ class _SchoolSwitcherSheet extends StatelessWidget {
         if (newKey == currentKey) {
           ref.read(shellProvider(newKey).notifier).resetNavigatorStacks();
           bumpSchoolEpoch(ref);
-          await ref
-              .read(dashboardProvider.notifier)
-              .reinitialize(newRole);
+          await ref.read(dashboardProvider.notifier).reinitialize(newRole);
         } else {
           ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
           bumpSchoolEpoch(ref);
@@ -279,7 +277,8 @@ class _RoleSwitcherSheet extends StatelessWidget {
     if (state != null) {
       for (final s in state.accessibleSchools) {
         if ((s['school_id'] ?? s['id'])?.toString() == schoolId) {
-          targetSchoolName = s['nama_sekolah']?.toString() ??
+          targetSchoolName =
+              s['nama_sekolah']?.toString() ??
               s['name']?.toString() ??
               s['school_name']?.toString();
           break;
@@ -372,13 +371,9 @@ class _RoleSwitcherSheet extends StatelessWidget {
           // Same role → reset Navigator GlobalKeys + bump epoch so the
           // IndexedStack subtree fully rebuilds with fresh per-tab
           // state. (Matches the same logic from school-switch.)
-          ref
-              .read(shellProvider(newKey).notifier)
-              .resetNavigatorStacks();
+          ref.read(shellProvider(newKey).notifier).resetNavigatorStacks();
           bumpSchoolEpoch(ref);
-          await ref
-              .read(dashboardProvider.notifier)
-              .reinitialize(newRole);
+          await ref.read(dashboardProvider.notifier).reinitialize(newRole);
         } else {
           ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
           bumpSchoolEpoch(ref);

@@ -39,6 +39,8 @@ import 'package:manajemensekolah/features/grades/presentation/screens/teacher_gr
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teacher_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_overview.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_screen.dart';
@@ -693,9 +695,22 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         _openGradeRecap();
         break;
       case 'recommendation_detail':
-        // TODO(FF.12-followup): rec detail is currently scoped by
-        // class. Need a "open by recommendation_id" path on the
-        // class screen, or a dedicated detail route.
+        // Mark-as-seen fires at TAP, not at screen open. Tapping
+        // the inbox row IS the "I acknowledge this" signal — even
+        // if the teacher doesn't drill into the rec, the dashboard
+        // should drop the row on the next refresh.
+        // Fire-and-forget; failures swallowed by the service.
+        final recId = params['recommendation_id']?.toString();
+        if (recId != null && recId.isNotEmpty) {
+          unawaited(
+            getIt<ApiRecommendationService>()
+                .markRecommendationSharesSeenByTeacher(
+                  recommendationId: recId,
+                ),
+          );
+        }
+        // TODO(FF.12-followup): route to a rec-detail surface using
+        // `recommendation_id` (GG.6). For now we open the class hub.
         _openRecommendation();
         break;
       default:

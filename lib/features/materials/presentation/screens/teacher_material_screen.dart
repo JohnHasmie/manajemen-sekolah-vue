@@ -24,7 +24,6 @@ import 'package:manajemensekolah/features/materials/presentation/mixins/material
 import 'package:manajemensekolah/features/materials/presentation/mixins/material_progress_mixin.dart';
 import 'package:manajemensekolah/features/materials/presentation/mixins/material_resolve_mixin.dart';
 import 'package:manajemensekolah/features/materials/presentation/mixins/material_ui_helpers_mixin.dart';
-import 'package:manajemensekolah/features/materials/presentation/widgets/material_tour_helper.dart';
 
 /// Teaching material browser with subject, chapter,
 /// and sub-chapter navigation.
@@ -90,14 +89,12 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen>
   final Map<String, bool> _generatedSubChapter = {};
   final Map<String, bool> _usedChapter = {};
   final Map<String, bool> _usedSubChapter = {};
+  // filter / search button anchor keys. These used to double as
+  // MaterialTourHelper targets; the tour wiring was removed per
+  // [Tour Cleanup BB.4] but the keys are still exposed via the
+  // `filterKey` / `searchKey` getters that consuming mixins read.
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _searchKey = GlobalKey();
-  final bool _hasAutoExpanded = false;
-
-  late final _tourHelper = MaterialTourHelper(
-    filterKey: _filterKey,
-    searchKey: _searchKey,
-  );
 
   // ── Bridge accessors (for mixins) ──
 
@@ -179,8 +176,6 @@ class TeacherMaterialScreenState extends ConsumerState<TeacherMaterialScreen>
   bool get isHomeroomView => _isHomeroomView;
   @override
   set isHomeroomView(bool v) => _isHomeroomView = v;
-  @override
-  void checkAndShowTour() => _tourHelper.checkAndShow(context);
   @override
   bool get isListView => _isListView;
   @override

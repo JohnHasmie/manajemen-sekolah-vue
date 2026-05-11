@@ -123,10 +123,12 @@ class FilterRosterProvider extends ChangeNotifier {
       return _subjects;
     }
     final allowedSet = allowed.toSet();
-    return _subjects.where((s) {
-      if (s is! Map) return false;
-      return allowedSet.contains(s['id']?.toString());
-    }).toList(growable: false);
+    return _subjects
+        .where((s) {
+          if (s is! Map) return false;
+          return allowedSet.contains(s['id']?.toString());
+        })
+        .toList(growable: false);
   }
 
   /// Cross-axis lookup — the classes that teach [subjectId].
@@ -147,10 +149,12 @@ class FilterRosterProvider extends ChangeNotifier {
     final allowed = _classesBySubject[subjectId];
     if (allowed == null || allowed.isEmpty) return base;
     final allowedSet = allowed.toSet();
-    return base.where((c) {
-      if (c is! Map) return false;
-      return allowedSet.contains(c['id']?.toString());
-    }).toList(growable: false);
+    return base
+        .where((c) {
+          if (c is! Map) return false;
+          return allowedSet.contains(c['id']?.toString());
+        })
+        .toList(growable: false);
   }
 
   /// Returns the entire `class_subjects` map. Exposed for callers
@@ -166,10 +170,7 @@ class FilterRosterProvider extends ChangeNotifier {
   ///
   /// Reads through `FilterOptionsService`'s 6h cache, so repeated
   /// calls within the TTL are free.
-  Future<void> hydrate({
-    required String role,
-    String? academicYearId,
-  }) async {
+  Future<void> hydrate({required String role, String? academicYearId}) async {
     if (_isLoaded && _role == role && _academicYearId == academicYearId) {
       return;
     }
@@ -179,10 +180,7 @@ class FilterRosterProvider extends ChangeNotifier {
   /// Force a fresh fetch — used on academic year change, on admin
   /// mutations that affect rosters (via `CacheInvalidationService`),
   /// and on pull-to-refresh of the dashboard.
-  Future<void> refresh({
-    required String role,
-    String? academicYearId,
-  }) {
+  Future<void> refresh({required String role, String? academicYearId}) {
     return _load(role: role, academicYearId: academicYearId, force: true);
   }
 
@@ -295,5 +293,5 @@ class FilterRosterProvider extends ChangeNotifier {
 /// dashboard controller after login.
 final filterRosterRiverpod =
     riverpod_legacy.ChangeNotifierProvider<FilterRosterProvider>(
-  (ref) => FilterRosterProvider(),
-);
+      (ref) => FilterRosterProvider(),
+    );

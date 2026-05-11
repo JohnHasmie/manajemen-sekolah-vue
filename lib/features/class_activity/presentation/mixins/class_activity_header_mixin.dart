@@ -23,10 +23,7 @@ mixin ClassActivityHeaderMixin on ConsumerState<AdminClassActivityScreen> {
       onBackPressed: _handleBack,
       showBackButton: true,
       actionIcons: [
-        BrandHeaderIconButton(
-          icon: Icons.refresh_rounded,
-          onTap: forceRefresh,
-        ),
+        BrandHeaderIconButton(icon: Icons.refresh_rounded, onTap: forceRefresh),
       ],
       bottomSlot: _buildSearchField(lp),
     );

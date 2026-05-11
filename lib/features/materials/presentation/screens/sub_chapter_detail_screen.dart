@@ -302,11 +302,7 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
   /// local cache only. When that endpoint lands, this method should
   /// also POST the merged JSON.
   @override
-  void onEditSection(
-    String fieldKey,
-    String fieldLabel,
-    String currentValue,
-  ) {
+  void onEditSection(String fieldKey, String fieldLabel, String currentValue) {
     _openSectionEditor(fieldKey, fieldLabel, currentValue);
   }
 

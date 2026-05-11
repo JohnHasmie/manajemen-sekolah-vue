@@ -174,8 +174,7 @@ class BrandListRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: selected ? accent.withValues(alpha: 0.04) : Colors.white,
               border: Border.all(
-                color:
-                    selected ? accent : const Color(0xFFE2E8F0), // slate-200
+                color: selected ? accent : const Color(0xFFE2E8F0), // slate-200
                 width: selected ? 1.4 : 0.75,
               ),
               borderRadius: const BorderRadius.all(Radius.circular(16)),

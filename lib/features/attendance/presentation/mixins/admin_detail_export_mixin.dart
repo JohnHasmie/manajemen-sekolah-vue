@@ -44,7 +44,9 @@ mixin admin_detail_export_mixin on ConsumerState<AdminAttendanceDetailPage> {
         return {
           'nis': student.studentNumber,
           'student_name': student.name,
-          'class_name': student.className.isNotEmpty ? student.className : widget.className,
+          'class_name': student.className.isNotEmpty
+              ? student.className
+              : widget.className,
           'subject_name': record.subjectName ?? widget.subjectName,
           'date': DateFormat('yyyy-MM-dd').format(record.date),
           'status': record.status,

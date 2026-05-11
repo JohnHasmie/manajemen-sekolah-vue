@@ -64,8 +64,10 @@ mixin LessonPlanFilterMixin on ConsumerState<LessonPlanScreen> {
     if (selectedMethod != null) {
       final label = selectedMethod == 'ai'
           ? languageProvider.getTranslatedText({'en': 'AI', 'id': 'AI'})
-          : languageProvider
-              .getTranslatedText({'en': 'Manual', 'id': 'Manual'});
+          : languageProvider.getTranslatedText({
+              'en': 'Manual',
+              'id': 'Manual',
+            });
       parts.add(
         '${languageProvider.getTranslatedText({'en': 'Method', 'id': 'Metode'})}: $label',
       );

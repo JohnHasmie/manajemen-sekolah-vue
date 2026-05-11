@@ -49,9 +49,7 @@ class AdminScheduleCard extends StatelessWidget {
     final teacherName = (model.teacherName ?? '').isEmpty
         ? '-'
         : model.teacherName!;
-    final className = (model.className ?? '').isEmpty
-        ? '-'
-        : model.className!;
+    final className = (model.className ?? '').isEmpty ? '-' : model.className!;
 
     final topMeta = '$dayLabel · $timeLabel';
 

@@ -80,7 +80,6 @@ mixin CacheManagementMixin {
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
     }
-    await LocalCacheService.clearStartingWith('tour_schedule_management_');
     await LocalCacheService.invalidate(
       CacheKeyBuilder.custom('schedule_filter_options', selectedAcademicYear),
     );

@@ -47,18 +47,14 @@ class _AdminRppReviewHubScreenState
 
   void _setStatusFilter(String? key) {
     setState(() {
-      _statusFilter =
-          (_statusFilter == key) ? null : key;
+      _statusFilter = (_statusFilter == key) ? null : key;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(adminLessonPlanQueueProvider);
-    final queue = async.maybeWhen(
-      data: (q) => q,
-      orElse: () => null,
-    );
+    final queue = async.maybeWhen(data: (q) => q, orElse: () => null);
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
@@ -101,8 +97,7 @@ class _AdminRppReviewHubScreenState
           const SizedBox(height: AppSpacing.md),
           _buildBody(context, async),
           SizedBox(
-            height: AppSpacing.xl +
-                MediaQuery.of(context).padding.bottom,
+            height: AppSpacing.xl + MediaQuery.of(context).padding.bottom,
           ),
         ],
       ),
@@ -158,32 +153,21 @@ class _AdminRppReviewHubScreenState
           children: [
             Text(
               'Gagal memuat: $e',
-              style: const TextStyle(
-                color: Color(0xFFDC2626),
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Color(0xFFDC2626), fontSize: 12),
             ),
             const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: _refresh,
-              child: const Text('Coba lagi'),
-            ),
+            OutlinedButton(onPressed: _refresh, child: const Text('Coba lagi')),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQueue(
-    BuildContext context,
-    AdminLessonPlanQueue queue,
-  ) {
+  Widget _buildQueue(BuildContext context, AdminLessonPlanQueue queue) {
     // Filter tiers by status if a filter is active.
     var tiers = queue.tiers;
     if (_statusFilter != null) {
-      tiers = tiers
-          .where((t) => t.key == _statusFilter)
-          .toList();
+      tiers = tiers.where((t) => t.key == _statusFilter).toList();
     }
 
     if (tiers.isEmpty) {
@@ -193,38 +177,27 @@ class _AdminRppReviewHubScreenState
           child: Text(
             _statusFilter != null
                 ? 'Tidak ada RPP dengan status '
-                    '"${_filterLabel(_statusFilter!)}"'
+                      '"${_filterLabel(_statusFilter!)}"'
                 : 'Belum ada RPP.',
-            style: TextStyle(
-              fontSize: 12,
-              color: ColorUtils.slate500,
-            ),
+            style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
           ),
         ),
       );
     }
 
     final rendered = tiers.map((t) {
-      final cards = t.items
-          .take(t.key == 'approved' ? 3 : 5)
-          .map((item) {
+      final cards = t.items.take(t.key == 'approved' ? 3 : 5).map((item) {
         return SwipeableQueueCard(
           subtitle: item.subtitle,
           title: item.title,
           tone: t.tone,
           rejectionReason: item.rejectionReason,
           meta: [
-            _StatusPill(
-              label: item.status,
-              tone: t.tone,
-            ),
+            _StatusPill(label: item.status, tone: t.tone),
             if (item.updatedAtHuman != null)
               Text(
                 item.updatedAtHuman!,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  color: ColorUtils.slate500,
-                ),
+                style: TextStyle(fontSize: 10.5, color: ColorUtils.slate500),
               ),
           ],
           footer: item.teacherName,
@@ -268,14 +241,13 @@ class _AdminRppReviewHubScreenState
         totalCount: t.totalCount,
         tone: t.tone,
         cards: cards,
-        collapsed:
-            t.key == 'approved' && t.items.length > 3,
+        collapsed: t.key == 'approved' && t.items.length > 3,
         onSeeAll: t.key == 'approved'
             ? () => SnackBarUtils.showInfo(
-                  context,
-                  'Daftar lengkap akan tersedia '
-                  'di rilis berikutnya.',
-                )
+                context,
+                'Daftar lengkap akan tersedia '
+                'di rilis berikutnya.',
+              )
             : null,
       );
     }).toList();
@@ -285,10 +257,7 @@ class _AdminRppReviewHubScreenState
 
   // ── Actions ──
 
-  Future<void> _handleApprove(
-    BuildContext context,
-    String id,
-  ) async {
+  Future<void> _handleApprove(BuildContext context, String id) async {
     try {
       await ref
           .read(adminLessonPlanQueueServiceProvider)
@@ -307,11 +276,11 @@ class _AdminRppReviewHubScreenState
   // ── Status filter sheet ──
 
   String _filterLabel(String key) => switch (key) {
-        'pending' => 'Perlu Review',
-        'approved' => 'Disetujui',
-        'rejected' => 'Ditolak',
-        _ => key,
-      };
+    'pending' => 'Perlu Review',
+    'approved' => 'Disetujui',
+    'rejected' => 'Ditolak',
+    _ => key,
+  };
 
   void _showStatusSheet(BuildContext context) {
     final navy = ColorUtils.getRoleColor('admin');
@@ -319,9 +288,7 @@ class _AdminRppReviewHubScreenState
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) => SafeArea(
         child: Column(
@@ -355,17 +322,11 @@ class _AdminRppReviewHubScreenState
                     fontWeight: _statusFilter == key
                         ? FontWeight.w800
                         : FontWeight.w500,
-                    color: _statusFilter == key
-                        ? navy
-                        : ColorUtils.slate700,
+                    color: _statusFilter == key ? navy : ColorUtils.slate700,
                   ),
                 ),
                 trailing: _statusFilter == key
-                    ? Icon(
-                        Icons.check_rounded,
-                        color: navy,
-                        size: 18,
-                      )
+                    ? Icon(Icons.check_rounded, color: navy, size: 18)
                     : null,
                 onTap: () {
                   Navigator.pop(ctx);
@@ -402,43 +363,24 @@ class _AdminRppReviewHubScreenState
 class _StatusPill extends StatelessWidget {
   final String label;
   final QueueTone tone;
-  const _StatusPill({
-    required this.label,
-    required this.tone,
-  });
+  const _StatusPill({required this.label, required this.tone});
 
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (tone) {
-      QueueTone.warn => (
-        const Color(0xFFFFFBEB),
-        const Color(0xFF92400E),
-      ),
-      QueueTone.good => (
-        const Color(0xFFF0FDF4),
-        const Color(0xFF166534),
-      ),
-      QueueTone.bad => (
-        const Color(0xFFFEF2F2),
-        const Color(0xFF991B1B),
-      ),
+      QueueTone.warn => (const Color(0xFFFFFBEB), const Color(0xFF92400E)),
+      QueueTone.good => (const Color(0xFFF0FDF4), const Color(0xFF166534)),
+      QueueTone.bad => (const Color(0xFFFEF2F2), const Color(0xFF991B1B)),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 3,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 9.5,
-          fontWeight: FontWeight.w800,
-          color: fg,
-        ),
+        style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: fg),
       ),
     );
   }
@@ -466,18 +408,12 @@ class _ActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 5,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: primary
                 ? null
-                : Border.all(
-                    color: ColorUtils.slate300,
-                    width: 1,
-                  ),
+                : Border.all(color: ColorUtils.slate300, width: 1),
           ),
           child: Text(
             label,

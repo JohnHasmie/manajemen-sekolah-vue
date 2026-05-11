@@ -34,7 +34,6 @@ mixin TeacherReportCardDataMixin on ConsumerState<ReportCardScreen> {
           onClassesLoaded(classes);
           onLoadingComplete();
           loadStudentsForClass();
-          checkAndShowTour();
         }
         AppLogger.debug(
           'report_card',
@@ -53,7 +52,6 @@ mixin TeacherReportCardDataMixin on ConsumerState<ReportCardScreen> {
         onClassesLoaded(List<dynamic>.from(cached));
         onLoadingComplete();
         loadStudentsForClass();
-        checkAndShowTour();
       }
       AppLogger.debug('report_card', 'Classes from cache (${cached.length})');
       return true;
@@ -82,10 +80,6 @@ mixin TeacherReportCardDataMixin on ConsumerState<ReportCardScreen> {
       await LocalCacheService.save(cacheKey, classes);
     } catch (e) {
       if (mounted) onClassesLoadError(e.toString());
-    } finally {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) checkAndShowTour();
-      });
     }
   }
 
@@ -194,5 +188,4 @@ mixin TeacherReportCardDataMixin on ConsumerState<ReportCardScreen> {
   void onLoadingComplete();
   void onClassesLoadError(String error);
   void onStudentsLoadError(String error);
-  void checkAndShowTour();
 }

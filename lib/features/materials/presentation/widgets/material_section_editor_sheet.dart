@@ -171,8 +171,7 @@ class _MaterialSectionEditorSheetState
                     color: ColorUtils.slate800,
                   ),
                   decoration: InputDecoration(
-                    hintText:
-                        widget.hint ?? 'Tulis isi ${widget.fieldLabel}…',
+                    hintText: widget.hint ?? 'Tulis isi ${widget.fieldLabel}…',
                     hintStyle: TextStyle(
                       fontSize: 14,
                       color: ColorUtils.slate400,

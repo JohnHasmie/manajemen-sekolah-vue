@@ -36,18 +36,8 @@ const _kMinutesAgo = {'en': 'minutes ago', 'id': 'menit lalu'};
 const _kHoursAgo = {'en': 'hours ago', 'id': 'jam lalu'};
 const _kDaysAgo = {'en': 'days ago', 'id': 'hari lalu'};
 const _kFailedToLoad = {'en': 'Failed to load', 'id': 'Gagal memuat'};
-const _kFailedToDelete = {'en': 'Failed to delete', 'id': 'Gagal menghapus'};
-const _kFailedToExport = {'en': 'Failed to export', 'id': 'Gagal mengexport'};
-const _kAuth2FailedToImport = {
-  'en': 'Failed to import file',
-  'id': 'Gagal mengimpor file',
-};
 const _kFailedToGenerate = {'en': 'Failed to generate', 'id': 'Gagal generate'};
 const _kFailedToUpdate = {'en': 'Failed to update', 'id': 'Gagal mengupdate'};
-const _kAuth2FailedToVerify = {
-  'en': 'Failed to verify',
-  'id': 'Gagal memverifikasi',
-};
 const _kFailedToDownload = {
   'en': 'Failed to download file',
   'id': 'Gagal mengunduh file',
@@ -56,29 +46,9 @@ const _kFailedToOpenFile = {
   'en': 'Failed to open file',
   'id': 'Gagal membuka file',
 };
-const _kAuth2FailedToProcess = {
-  'en': 'Failed to process',
-  'id': 'Gagal memproses',
-};
-const _kAuth2FailedToLoadInitialData = {
-  'en': 'Failed to load initial data',
-  'id': 'Gagal memuat data awal',
-};
 const _kFailedToLoadDetail = {
   'en': 'Failed to load detail',
   'id': 'Gagal memuat detail',
-};
-const _kAuth2FailedToLoadImage = {
-  'en': 'Failed to load image',
-  'id': 'Gagal memuat gambar',
-};
-const _kFailedToLoadSchedule = {
-  'en': 'Failed to load schedule data',
-  'id': 'Gagal memuat data jadwal',
-};
-const _kAuth2FailedToLoadTeacherSubjects = {
-  'en': 'Failed to load teacher subjects',
-  'id': 'Gagal memuat mata pelajaran guru',
 };
 const _kFailedToCreatePdfPreview = {
   'en': 'Failed to create PDF preview',
@@ -108,14 +78,6 @@ const _kNoStudentsFoundForCriteria = {
   'en': 'No students found for the selected class and criteria.',
   'id': 'Tidak ada siswa yang ditemukan untuk kelas dan kriteria yang dipilih.',
 };
-const _kAuth2NoStudentsMatchSearch = {
-  'en': 'No students match the search',
-  'id': 'Tidak ada siswa yang cocok dengan pencarian',
-};
-const _kAuth2NoPaymentProof = {
-  'en': 'No payment proof',
-  'id': 'Tidak ada bukti pembayaran',
-};
 const _kNoTeachingSubjects = {
   'en': 'No teaching subjects. Please check your schedule.',
   'id': 'Tidak ada mata pelajaran mengajar. Silakan periksa jadwal Anda.',
@@ -131,7 +93,6 @@ const _kNoActiveClasses = {
       'Tidak ada kelas aktif saat ini. Anda dapat mengisi dari jam pelajaran mulai sampai +23 jam.',
 };
 const _kNoChapters = {'en': 'No chapters', 'id': 'Tidak ada bab'};
-const _kAuth2NoStudentsInClass = {'en': 'No students', 'id': 'Tidak ada siswa'};
 const _kNoAnnouncementsMatchSearch = {
   'en': 'No announcements match your search',
   'id': 'Tidak ada pengumuman yang sesuai dengan pencarian',
@@ -140,10 +101,6 @@ const _kNoAnnouncementsAvailable = {
   'en': 'No announcements available at this time',
   'id': 'Tidak ada pengumuman yang tersedia saat ini',
 };
-const _kAuth2FailedToLoadReportCard = {
-  'en': 'Failed to load e-report card.',
-  'id': 'Gagal memuat e-raport.',
-};
 const _kFailedToSaveReportCard = {
   'en': 'Failed to save report card.',
   'id': 'Gagal menyimpan raport.',
@@ -151,26 +108,6 @@ const _kFailedToSaveReportCard = {
 const _kFailedToLoadMaterial = {
   'en': 'Failed to load material.',
   'id': 'Gagal memuat materi.',
-};
-const _kAuth2PaymentRecordedSuccessfully = {
-  'en': 'Payment recorded successfully',
-  'id': 'Pembayaran berhasil dicatat',
-};
-const _kAuth2PaymentCancelled = {
-  'en': 'Payment cancelled',
-  'id': 'Pembayaran dibatalkan',
-};
-const _kAuth2PaymentVerifiedSuccessfully = {
-  'en': 'Payment verified successfully',
-  'id': 'Pembayaran berhasil diverifikasi',
-};
-const _kAuth2PaymentRejectedSuccessfully = {
-  'en': 'Payment rejected successfully',
-  'id': 'Pembayaran berhasil ditolak',
-};
-const _kAuth2GradeRecapSaved = {
-  'en': 'Grade recap saved successfully',
-  'id': 'Rekap Nilai berhasil disimpan',
 };
 const _kLessonPlanRegeneratedSuccessfully = {
   'en': 'RPP regenerated successfully!',
@@ -209,10 +146,6 @@ const _kFailedToGenerateLessonPlan = {
 const _kFailedToGenerateMaterial = {
   'en': 'Failed to Generate Material',
   'id': 'Gagal Generate Materi',
-};
-const _kAuth2NoGradeDataFound = {
-  'en': 'No grade data found.',
-  'id': 'Tidak ada data nilai yang ditemukan.',
 };
 const _kFailedToRegenerateLessonPlan = {
   'en': 'Failed to regenerate RPP',

@@ -176,14 +176,13 @@ class _ChildChip extends StatelessWidget {
     final pillColor = isActive
         ? Colors.white
         : const Color(0x38FFFFFF); // 22% white, solid
-    final borderColor =
-        isActive ? Colors.transparent : Colors.white;
-    final avatarColor =
-        isActive ? accentColor : const Color(0x66FFFFFF); // 40% white
+    final borderColor = isActive ? Colors.transparent : Colors.white;
+    final avatarColor = isActive
+        ? accentColor
+        : const Color(0x66FFFFFF); // 40% white
     const avatarTextColor = Colors.white;
     final nameColor = isActive ? const Color(0xFF0F172A) : Colors.white;
-    final klassColor =
-        isActive ? const Color(0xFF475569) : Colors.white;
+    final klassColor = isActive ? const Color(0xFF475569) : Colors.white;
 
     return InkWell(
       borderRadius: const BorderRadius.all(Radius.circular(12)),

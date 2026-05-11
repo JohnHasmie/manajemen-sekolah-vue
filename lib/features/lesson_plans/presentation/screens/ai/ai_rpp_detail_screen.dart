@@ -109,11 +109,7 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
     switch (format) {
       case LessonPlanFormat.k13:
         return const [
-          {
-            'key': 'identitas',
-            'label': 'Identitas',
-            'altKey': '',
-          },
+          {'key': 'identitas', 'label': 'Identitas', 'altKey': ''},
           {
             'key': 'kd_indikator',
             'label': 'Kompetensi Dasar & Indikator',
@@ -129,11 +125,7 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
             'label': 'Langkah Kegiatan',
             'altKey': 'learning_activities',
           },
-          {
-            'key': 'penilaian',
-            'label': 'Penilaian',
-            'altKey': 'assessment',
-          },
+          {'key': 'penilaian', 'label': 'Penilaian', 'altKey': 'assessment'},
         ];
       case LessonPlanFormat.rpp1Halaman:
         return const [
@@ -173,7 +165,8 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
   // ── Identity / lookup helpers ──────────────────────────────────
 
   String? get _lessonPlanId {
-    final id = _lessonPlanData['id'] ??
+    final id =
+        _lessonPlanData['id'] ??
         _lessonPlanData['rpp_id'] ??
         _lessonPlanData['lesson_plan_id'];
     final s = id?.toString();
@@ -190,11 +183,6 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
       return fp.toString().trim();
     }
     return null;
-  }
-
-  String _displayTitle() {
-    final title = LessonPlan.fromJson(_lessonPlanData).title;
-    return title.isNotEmpty ? title : 'RPP';
   }
 
   String _getFieldValue(String key, String altKey) {
@@ -233,8 +221,7 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
     return (fields is Map) ? fields[fieldKey] as Map<String, dynamic>? : null;
   }
 
-  String _stripHtml(String html) =>
-      LessonPlanContentFormatter.stripHtml(html);
+  String _stripHtml(String html) => LessonPlanContentFormatter.stripHtml(html);
 
   // ── Build ─────────────────────────────────────────────────────
 
@@ -303,10 +290,11 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
       final v = _getFieldValue(f['key']!, f['altKey'] ?? '');
       return v.isNotEmpty;
     }).length;
-    final alokasi = (_lessonPlanData['time_allocation'] ??
-            _lessonPlanData['alokasi_waktu'] ??
-            '')
-        .toString();
+    final alokasi =
+        (_lessonPlanData['time_allocation'] ??
+                _lessonPlanData['alokasi_waktu'] ??
+                '')
+            .toString();
     final statusRaw = (_lessonPlanData['status'] ?? '').toString();
     final stat = _statusBadge(statusRaw);
 
@@ -390,11 +378,8 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
     );
   }
 
-  Widget _kpiDivider() => Container(
-        width: 1,
-        height: 28,
-        color: ColorUtils.slate100,
-      );
+  Widget _kpiDivider() =>
+      Container(width: 1, height: 28, color: ColorUtils.slate100);
 
   ({String label, Color color}) _statusBadge(String raw) {
     final s = raw.toLowerCase();
@@ -493,10 +478,11 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
   /// without a re-fetch.
   Future<void> _openIdentityEditor() async {
     if (_isSaving) return;
-    final teacherId = (_lessonPlanData['teacher_id'] ??
-            _lessonPlanData['teacher']?['id'] ??
-            '')
-        .toString();
+    final teacherId =
+        (_lessonPlanData['teacher_id'] ??
+                _lessonPlanData['teacher']?['id'] ??
+                '')
+            .toString();
     final result = await showLessonPlanIdentityEditSheet(
       context: context,
       lessonPlan: _lessonPlanData,
@@ -535,8 +521,9 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
     if (id == null) return;
     setState(() => _isLoadingLimits = true);
     try {
-      final result =
-          await getIt<ApiSubjectService>().getLessonPlanRegenLimits(id);
+      final result = await getIt<ApiSubjectService>().getLessonPlanRegenLimits(
+        id,
+      );
       if (!mounted) return;
       Map<String, dynamic> parsed = {};
       if (result is Map<String, dynamic>) {
@@ -577,8 +564,10 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
   }
 
   Future<void> _onRegenAllTap() async {
-    final confirmed =
-        await LessonPlanRegenSheet.showRegenAllDialog(context, _primary);
+    final confirmed = await LessonPlanRegenSheet.showRegenAllDialog(
+      context,
+      _primary,
+    );
     if (confirmed != true || !mounted) return;
     await _regenerateAllFields('');
   }
@@ -644,10 +633,9 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
       }
 
       if (response.statusCode == 202) {
-        final jobId = (body['job_id'] ??
-                body['data']?['id'] ??
-                body['data']?['job_id'])
-            ?.toString();
+        final jobId =
+            (body['job_id'] ?? body['data']?['id'] ?? body['data']?['job_id'])
+                ?.toString();
         if (jobId != null) {
           await _pollJob(jobId, fieldKey, fieldLabel);
         } else {
@@ -696,12 +684,12 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
       }
 
       try {
-        final response =
-            await getIt<ApiSubjectService>().regenLessonPlanFieldRaw(
-          id,
-          key,
-          additionalText: additionalText.isNotEmpty ? additionalText : null,
-        );
+        final response = await getIt<ApiSubjectService>()
+            .regenLessonPlanFieldRaw(
+              id,
+              key,
+              additionalText: additionalText.isNotEmpty ? additionalText : null,
+            );
         if (!mounted) return;
         final body = response.data is Map<String, dynamic>
             ? response.data as Map<String, dynamic>
@@ -715,8 +703,7 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
           }
           ok++;
         } else if (response.statusCode == 202) {
-          final jobId =
-              (body['job_id'] ?? body['data']?['id'])?.toString();
+          final jobId = (body['job_id'] ?? body['data']?['id'])?.toString();
           if (jobId != null) {
             await _pollJobSync(jobId, key);
             ok++;
@@ -735,8 +722,7 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
     if (!mounted) return;
     setState(() => _regeneratingField = null);
     await _loadRegenLimits();
-    var msg =
-        '$ok field ${AppLocalizations.fieldRegeneratedSuccessfully.tr}';
+    var msg = '$ok field ${AppLocalizations.fieldRegeneratedSuccessfully.tr}';
     if (fail > 0) {
       msg += ', $fail ${AppLocalizations.failedExceededLimit.tr}';
     }
@@ -753,20 +739,20 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
       await Future.delayed(const Duration(seconds: 5));
       if (!mounted) return;
       try {
-        final response =
-            await getIt<ApiSubjectService>().pollAiJob(jobId, token);
+        final response = await getIt<ApiSubjectService>().pollAiJob(
+          jobId,
+          token,
+        );
         final body = response.data is Map<String, dynamic>
             ? response.data as Map<String, dynamic>
             : <String, dynamic>{};
-        final jobData =
-            (body['data'] ?? body) as Map<String, dynamic>;
+        final jobData = (body['data'] ?? body) as Map<String, dynamic>;
         final status = jobData['status'] ?? body['status'];
 
         if (status == 'completed' || status == 'success') {
-          final result = (jobData['result'] ??
-              jobData['data'] ??
-              body['result'] ??
-              body) as Map<String, dynamic>;
+          final result =
+              (jobData['result'] ?? jobData['data'] ?? body['result'] ?? body)
+                  as Map<String, dynamic>;
           if (result[fieldKey] != null) {
             setState(() {
               _lessonPlanData[fieldKey] = result[fieldKey];
@@ -811,18 +797,19 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
       await Future.delayed(const Duration(seconds: 5));
       if (!mounted) return;
       try {
-        final response =
-            await getIt<ApiSubjectService>().pollAiJob(jobId, token);
+        final response = await getIt<ApiSubjectService>().pollAiJob(
+          jobId,
+          token,
+        );
         final body = response.data is Map<String, dynamic>
             ? response.data as Map<String, dynamic>
             : <String, dynamic>{};
         final jobData = (body['data'] ?? body) as Map<String, dynamic>;
         final status = jobData['status'] ?? body['status'];
         if (status == 'completed' || status == 'success') {
-          final result = (jobData['result'] ??
-              jobData['data'] ??
-              body['result'] ??
-              body) as Map<String, dynamic>;
+          final result =
+              (jobData['result'] ?? jobData['data'] ?? body['result'] ?? body)
+                  as Map<String, dynamic>;
           if (result[fieldKey] != null) {
             _lessonPlanData[fieldKey] = result[fieldKey];
           } else {
@@ -890,21 +877,9 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
     );
   }
 
-  Future<void> _copyToClipboard() async {
-    final formatted = LessonPlanContentFormatter.format(_lessonPlanData);
-    await Clipboard.setData(ClipboardData(text: formatted));
-    if (mounted) {
-      SnackBarUtils.showInfo(
-        context,
-        AppLocalizations.lessonPlanCopiedToClipboard.tr,
-      );
-    }
-  }
-
   Future<void> _exportToPdf() async {
     try {
-      final body =
-          LessonPlanContentFormatter.format(_lessonPlanData);
+      final body = LessonPlanContentFormatter.format(_lessonPlanData);
       final bytes = await LessonPlanPdfBuilder.build(
         data: _lessonPlanData,
         formattedBody: body,
@@ -918,10 +893,7 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
       await file.writeAsBytes(bytes, flush: true);
       await OpenFile.open(file.path);
       if (mounted) {
-        SnackBarUtils.showInfo(
-          context,
-          'RPP berhasil diexport ke PDF',
-        );
+        SnackBarUtils.showInfo(context, 'RPP berhasil diexport ke PDF');
       }
     } catch (e) {
       AppLogger.error('lesson_plan', e);
@@ -960,13 +932,11 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
   // ── Attachment download ───────────────────────────────────────
 
   String _resolveDownloadUrl(String filePath) {
-    if (filePath.startsWith('http://') ||
-        filePath.startsWith('https://')) {
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
       return filePath;
     }
     final base = ApiService.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
-    final clean =
-        filePath.startsWith('/') ? filePath.substring(1) : filePath;
+    final clean = filePath.startsWith('/') ? filePath.substring(1) : filePath;
     if (clean.startsWith('storage/')) return '$base/$clean';
     return '$base/storage/$clean';
   }

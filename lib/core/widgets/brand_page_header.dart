@@ -137,13 +137,12 @@ class BrandPageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusBarHeight = MediaQuery.of(context).viewPadding.top;
     final accentColor = ColorUtils.getRoleColor(role);
-    final showBack = showBackButton ??
-        (onBackPressed != null || Navigator.canPop(context));
+    final showBack =
+        showBackButton ?? (onBackPressed != null || Navigator.canPop(context));
 
     final List<Widget> rightIcons = actionIcons ?? const [];
 
-    final bool hasBottomSection =
-        childSelector != null || bottomSlot != null;
+    final bool hasBottomSection = childSelector != null || bottomSlot != null;
 
     return Container(
       width: double.infinity,
@@ -189,8 +188,7 @@ class BrandPageHeader extends StatelessWidget {
                 width: 32,
                 child: showBack
                     ? _HeaderBackButton(
-                        onTap:
-                            onBackPressed ?? () => AppNavigator.pop(context),
+                        onTap: onBackPressed ?? () => AppNavigator.pop(context),
                       )
                     : null,
               ),

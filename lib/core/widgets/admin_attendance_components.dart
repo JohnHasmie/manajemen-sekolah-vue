@@ -196,8 +196,10 @@ class _LegendCell extends StatelessWidget {
             Container(
               width: 8,
               height: 8,
-              decoration:
-                  BoxDecoration(color: entry.color, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: entry.color,
+                shape: BoxShape.circle,
+              ),
             ),
             const SizedBox(width: 6),
             Text(
@@ -301,8 +303,7 @@ class TrendSparkRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -361,7 +362,9 @@ class TrendSparkRow extends StatelessWidget {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(8),
@@ -508,8 +511,10 @@ class CalendarHeatmap extends StatelessWidget {
         if (cells.isEmpty) return SizedBox(height: height);
         final n = cells.length;
         final totalGaps = gap * (n - 1);
-        final cellWidth = ((constraints.maxWidth - totalGaps) / n)
-            .clamp(4.0, double.infinity);
+        final cellWidth = ((constraints.maxWidth - totalGaps) / n).clamp(
+          4.0,
+          double.infinity,
+        );
 
         return SizedBox(
           height: height,
@@ -560,9 +565,7 @@ class _Cell extends StatelessWidget {
         decoration: BoxDecoration(
           color: state.color,
           borderRadius: BorderRadius.circular(2),
-          border: selected
-              ? Border.all(color: navy, width: 2)
-              : null,
+          border: selected ? Border.all(color: navy, width: 2) : null,
         ),
       ),
     );
@@ -614,10 +617,7 @@ class StudentRowHeader extends StatelessWidget {
           width: 28,
           height: 28,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: avatarColor,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: avatarColor, shape: BoxShape.circle),
           child: Text(
             avatarInitials,
             style: const TextStyle(
@@ -645,16 +645,11 @@ class StudentRowHeader extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                alert && alertCopy != null
-                    ? '⚠ $alertCopy'
-                    : classRoll,
+                alert && alertCopy != null ? '⚠ $alertCopy' : classRoll,
                 style: TextStyle(
                   fontSize: 10.5,
-                  fontWeight:
-                      alert ? FontWeight.w700 : FontWeight.w500,
-                  color: alert
-                      ? AttendancePalette.alpha
-                      : ColorUtils.slate500,
+                  fontWeight: alert ? FontWeight.w700 : FontWeight.w500,
+                  color: alert ? AttendancePalette.alpha : ColorUtils.slate500,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -676,10 +671,7 @@ class StudentRowHeader extends StatelessWidget {
             ),
             Text(
               '$presentDays/$totalDays',
-              style: TextStyle(
-                fontSize: 10,
-                color: ColorUtils.slate500,
-              ),
+              style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
             ),
           ],
         ),

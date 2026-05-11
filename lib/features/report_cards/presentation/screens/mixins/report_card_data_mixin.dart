@@ -121,7 +121,6 @@ mixin ReportCardDataMixin<T extends StatefulWidget> on State<T> {
     }
   }
 
-
   Future<void> fetchParentReportCards() async {
     final provider = getAcademicYearProvider();
     final yearId =

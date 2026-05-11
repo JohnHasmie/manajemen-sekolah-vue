@@ -378,16 +378,20 @@ mixin TeacherActivityBodyBuilderMixin
                   primaryColor: primaryColor,
                   isHomeroomView: isHomeroomView,
                   onTap: () => openActivityList(
-                    classId: raw['class_id']?.toString() ??
+                    classId:
+                        raw['class_id']?.toString() ??
                         raw['kelas_id']?.toString() ??
                         '',
-                    className: raw['class_name']?.toString() ??
+                    className:
+                        raw['class_name']?.toString() ??
                         raw['kelas_nama']?.toString() ??
                         '',
-                    subjectId: raw['subject_id']?.toString() ??
+                    subjectId:
+                        raw['subject_id']?.toString() ??
                         raw['mata_pelajaran_id']?.toString() ??
                         '',
-                    subjectName: raw['subject_name']?.toString() ??
+                    subjectName:
+                        raw['subject_name']?.toString() ??
                         raw['mata_pelajaran_nama']?.toString() ??
                         '',
                   ),

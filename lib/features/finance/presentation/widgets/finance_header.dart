@@ -82,11 +82,3 @@ class FinanceHeader extends ConsumerWidget {
     );
   }
 }
-
-// `ColorUtils` import shield — preserved to avoid analyzer warnings if
-// a future helper lands here, mirroring the pattern in the previous
-// revision of this file.
-// ignore: unused_element
-void _ensureColorUtilsImport() {
-  ColorUtils.getRoleColor('admin');
-}

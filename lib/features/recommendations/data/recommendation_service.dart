@@ -18,6 +18,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:manajemensekolah/core/config/ai_config.dart';
+import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
@@ -362,6 +363,29 @@ class ApiRecommendationService {
     );
   }
 
+  /// Teacher app: flip `teacher_seen_at` on every share recipient of
+  /// the rec the wali kelas just opened. Drives Signal E (parent
+  /// reply unread) on the priority inbox — once seen, the dashboard
+  /// stops surfacing the same reply on every refresh.
+  ///
+  /// Fire-and-forget by design: the call is made on rec-detail open
+  /// and a failure should never block the screen from rendering. We
+  /// swallow non-2xx responses and log them via Dio's interceptor
+  /// stack; the inbox auto-corrects on the next composer run anyway.
+  Future<void> markRecommendationSharesSeenByTeacher({
+    required String recommendationId,
+  }) async {
+    try {
+      await _aiDio.post(
+        '/recommendations/$recommendationId/mark-shares-seen',
+        options: Options(validateStatus: (s) => s != null && s < 500),
+      );
+    } catch (_) {
+      // Transparent — the inbox will re-fire next refresh if it
+      // matters. No UI affordance / snackbar.
+    }
+  }
+
   /// Parent reply — stamps replied_at + reply_text on the recipient row.
   Future<Map<String, dynamic>> replyToRecommendation({
     required String recommendationId,
@@ -376,11 +400,32 @@ class ApiRecommendationService {
   }
 
   /// Parent inbox — recommendations shared with the authenticated wali.
+  ///
+  /// Cached locally for **5 minutes** (`useCache: true` by default) so
+  /// the screen feels instant on tab-switches and quick re-opens.
+  /// Pass `useCache: false` from a pull-to-refresh / reply / tandai
+  /// selesai handler to force a fresh fetch — the screen invalidates
+  /// the cache and re-saves with the updated rows.
   Future<List<dynamic>> getParentInbox({
     required String parentUserId,
     String? studentId,
     bool unreadOnly = false,
+    bool useCache = true,
   }) async {
+    final cacheKey = _parentInboxCacheKey(
+      parentUserId: parentUserId,
+      studentId: studentId,
+      unreadOnly: unreadOnly,
+    );
+
+    if (useCache) {
+      final cached = await LocalCacheService.load(
+        cacheKey,
+        ttl: const Duration(minutes: 5),
+      );
+      if (cached is List) return cached;
+    }
+
     final response = await _aiDio.get(
       '/recommendations/parent-inbox',
       queryParameters: {
@@ -389,23 +434,62 @@ class ApiRecommendationService {
         if (unreadOnly) 'unread_only': 'true',
       },
     );
-    return (response.data?['data'] as List?) ?? [];
+    final rows = (response.data?['data'] as List?) ?? const <dynamic>[];
+    // Best-effort cache write — failures are logged but don't sink
+    // the response.
+    await LocalCacheService.save(cacheKey, rows);
+    return rows;
+  }
+
+  /// Invalidate every cached `getParentInbox` variant for a given
+  /// parent (Semua / per-child / unread-only). Called from the screen
+  /// after reply / tandai selesai so the next fetch is fresh.
+  Future<void> invalidateParentInboxCache({
+    required String parentUserId,
+  }) async {
+    await LocalCacheService.clearStartingWith('parent_inbox_$parentUserId');
+    await LocalCacheService.clearStartingWith('parent_summary_$parentUserId');
+  }
+
+  String _parentInboxCacheKey({
+    required String parentUserId,
+    String? studentId,
+    required bool unreadOnly,
+  }) {
+    return 'parent_inbox_${parentUserId}_${studentId ?? 'all'}_${unreadOnly ? 'u' : 'a'}';
   }
 
   /// Per-child summary used by the parent multi-child hub (Frame A).
   /// Returns `{ children: [...], totals: {...} }` — one card per child
   /// with counts for total / unread / replied / completed / high
   /// priority + the most recent send timestamp.
+  ///
+  /// Cached for 5 minutes so the multi-child hub doesn't re-fetch on
+  /// every back-navigation.
   Future<Map<String, dynamic>> getParentSummary({
     required String parentUserId,
+    bool useCache = true,
   }) async {
+    final cacheKey = 'parent_summary_${parentUserId}_v1';
+
+    if (useCache) {
+      final cached = await LocalCacheService.load(
+        cacheKey,
+        ttl: const Duration(minutes: 5),
+      );
+      if (cached is Map) return Map<String, dynamic>.from(cached);
+    }
+
     final response = await _aiDio.get(
       '/recommendations/parent-summary',
       queryParameters: {'parent_user_id': parentUserId},
     );
     final data = response.data?['data'];
-    if (data is Map<String, dynamic>) return data;
-    return <String, dynamic>{'children': const [], 'totals': const {}};
+    final result = data is Map<String, dynamic>
+        ? data
+        : <String, dynamic>{'children': const [], 'totals': const {}};
+    await LocalCacheService.save(cacheKey, result);
+    return result;
   }
 
   /// Parent confirmation that a shared rec was applied at home —
@@ -649,10 +733,7 @@ class _AiLoggingInterceptor extends Interceptor {
     // caller can read it.
     final code = err.response?.statusCode ?? 0;
     if (code >= 500 && err.response?.data != null) {
-      AppLogger.error(
-        'recommendation',
-        'AI 500 body: ${err.response!.data}',
-      );
+      AppLogger.error('recommendation', 'AI 500 body: ${err.response!.data}');
     }
     handler.next(err);
   }

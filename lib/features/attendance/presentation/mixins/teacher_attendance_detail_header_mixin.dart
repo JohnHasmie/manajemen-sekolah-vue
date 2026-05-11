@@ -54,8 +54,10 @@ mixin TeacherAttendanceDetailHeaderMixin
             'id': 'Presensi · Arsip',
           });
     final title = canEdit
-        ? languageProvider
-            .getTranslatedText({'en': 'Edit Attendance', 'id': 'Edit Presensi'})
+        ? languageProvider.getTranslatedText({
+            'en': 'Edit Attendance',
+            'id': 'Edit Presensi',
+          })
         : languageProvider.getTranslatedText({
             'en': 'View Attendance',
             'id': 'Lihat Presensi',
@@ -73,9 +75,7 @@ mixin TeacherAttendanceDetailHeaderMixin
           : [
               BrandHeaderIconButton(
                 icon: Icons.download_rounded,
-                onTap: state == null
-                    ? () {}
-                    : () => _exportAttendance(state),
+                onTap: state == null ? () {} : () => _exportAttendance(state),
               ),
             ],
       bottomSlot: _contextStrip(languageProvider),
@@ -111,7 +111,9 @@ mixin TeacherAttendanceDetailHeaderMixin
       return {
         'nis': student.studentNumber,
         'student_name': student.name,
-        'class_name': student.className.isNotEmpty ? student.className : widget.className,
+        'class_name': student.className.isNotEmpty
+            ? student.className
+            : widget.className,
         'subject_name': record.subjectName ?? widget.subjectName,
         'date': DateFormat('yyyy-MM-dd').format(record.date),
         'status': record.status,

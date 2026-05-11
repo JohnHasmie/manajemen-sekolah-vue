@@ -14,7 +14,6 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_book_content_widget.dart';
-import 'package:manajemensekolah/features/grades/presentation/mixins/grade_book_tour_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_book_data_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_score_formatter_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_book_dialogs_mixin.dart';
@@ -44,7 +43,6 @@ class GradeBookPage extends ConsumerStatefulWidget {
 /// State with 7 mixins: tour, data, formatter, dialogs, edit, navigation, export.
 class GradeBookPageState extends ConsumerState<GradeBookPage>
     with
-        GradeBookTourMixin,
         GradeBookDataMixin,
         GradeScoreFormatterMixin,
         GradeBookDialogsMixin,
@@ -105,7 +103,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage>
   @override
   Map<String, dynamic> get classData => widget.classData;
   @override
-  void onDataLoaded() => checkAndShowTour();
+  void onDataLoaded() {}
   @override
   GlobalKey get addGradeKey => _addGradeKey;
   @override
@@ -270,8 +268,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage>
             BrandPageHeader(
               role: 'guru',
               title: subjectName,
-              subtitle:
-                  'BUKU NILAI · ${className.toUpperCase()}',
+              subtitle: 'BUKU NILAI · ${className.toUpperCase()}',
               isRealtimeFresh: true,
               kpiOverlayHeight: 0,
               actionIcons: [

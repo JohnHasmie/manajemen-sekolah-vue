@@ -383,7 +383,10 @@ const _kDbClasses = {'en': 'classes', 'id': 'kelas'};
 const _kDbSchedule = {'en': 'schedule', 'id': 'jadwal'};
 const _kDbApproved = {'en': 'approved', 'id': 'disetujui'};
 
-const _kViewFullProfile = {'en': 'View Full Profile', 'id': 'Lihat Profil Lengkap'};
+const _kViewFullProfile = {
+  'en': 'View Full Profile',
+  'id': 'Lihat Profil Lengkap',
+};
 const _kMyAccess = {'en': 'MY ACCESS', 'id': 'AKSES SAYA'};
 const _kActiveRole = {'en': 'Active Role', 'id': 'Peran aktif'};
 const _kActiveSchool = {'en': 'Active School', 'id': 'Sekolah aktif'};
@@ -729,11 +732,13 @@ class AppLocalizations {
   static Map<String, String> get dbTotalWaiting => _kDbTotalWaiting;
   static Map<String, String> get dbSeeAll => _kDbSeeAll;
   static Map<String, String> get dbAttentionRequired => _kDbAttentionRequired;
-  static Map<String, String> get dbPaymentVerification => _kDbPaymentVerification;
+  static Map<String, String> get dbPaymentVerification =>
+      _kDbPaymentVerification;
   static Map<String, String> get dbProofWaitingReview => _kDbProofWaitingReview;
   static Map<String, String> get dbNoNewProof => _kDbNoNewProof;
   static Map<String, String> get dbRppWaitingReview => _kDbRppWaitingReview;
-  static Map<String, String> get dbRppTeacherWaitingApproval => _kDbRppTeacherWaitingApproval;
+  static Map<String, String> get dbRppTeacherWaitingApproval =>
+      _kDbRppTeacherWaitingApproval;
   static Map<String, String> get dbAllRppReviewed => _kDbAllRppReviewed;
   static Map<String, String> get dbAnnouncementDrafts => _kDbAnnouncementDrafts;
   static Map<String, String> get dbDraftNotPublished => _kDbDraftNotPublished;
@@ -744,22 +749,28 @@ class AppLocalizations {
   static Map<String, String> get dbRppNeedsRevision => _kDbRppNeedsRevision;
   static Map<String, String> get dbRppNeedsFix => _kDbRppNeedsFix;
   static Map<String, String> get dbAllRppCompliant => _kDbAllRppCompliant;
-  static Map<String, String> get dbMaterialsNotPublished => _kDbMaterialsNotPublished;
-  static Map<String, String> get dbMaterialsWaitingPublication => _kDbMaterialsWaitingPublication;
-  static Map<String, String> get dbAllMaterialsPublished => _kDbAllMaterialsPublished;
+  static Map<String, String> get dbMaterialsNotPublished =>
+      _kDbMaterialsNotPublished;
+  static Map<String, String> get dbMaterialsWaitingPublication =>
+      _kDbMaterialsWaitingPublication;
+  static Map<String, String> get dbAllMaterialsPublished =>
+      _kDbAllMaterialsPublished;
   static Map<String, String> get dbPendingActivities => _kDbPendingActivities;
-  static Map<String, String> get dbClassActivitiesWaiting => _kDbClassActivitiesWaiting;
-  static Map<String, String> get dbNoPendingActivities => _kDbNoPendingActivities;
+  static Map<String, String> get dbClassActivitiesWaiting =>
+      _kDbClassActivitiesWaiting;
+  static Map<String, String> get dbNoPendingActivities =>
+      _kDbNoPendingActivities;
   static Map<String, String> get dbDataManagement => _kDbDataManagement;
   static Map<String, String> get dbTypesAndBills => _kDbTypesAndBills;
-  static Map<String, String> get dbGradesAndReportCards => _kDbGradesAndReportCards;
+  static Map<String, String> get dbGradesAndReportCards =>
+      _kDbGradesAndReportCards;
   static Map<String, String> get dbOtherModules => _kDbOtherModules;
   static Map<String, String> get dbSwitch => _kDbSwitch;
 
   static Map<String, String> get pdAcademic => _kPdAcademic;
   static Map<String, String> get pdPayment => _kPdPayment;
   static Map<String, String> get pdParent => _kPdParent;
-  
+
   static Map<String, String> get viewFullProfile => _kViewFullProfile;
   static Map<String, String> get myAccess => _kMyAccess;
   static Map<String, String> get activeRole => _kActiveRole;
@@ -770,7 +781,8 @@ class AppLocalizations {
   static Map<String, String> get changeAction => _kChangeAction;
 
   static String greeting(int hour) {
-    if (hour < 11) return welcome.tr; // "Selamat datang," fallback if specific missing
+    if (hour < 11)
+      return welcome.tr; // "Selamat datang," fallback if specific missing
     if (hour < 11) return goodMorning.tr;
     if (hour < 15) return goodAfternoon.tr;
     if (hour < 18) return _kDbGoodSore.tr;

@@ -140,10 +140,7 @@ class _DashboardState extends ConsumerState<Dashboard>
   /// under `lib/core/shell/tabs/<role>/`.
   @override
   Widget build(BuildContext context) {
-    return RoleShell(
-      role: effectiveRole,
-      tabBuilder: _buildShellTabRoot,
-    );
+    return RoleShell(role: effectiveRole, tabBuilder: _buildShellTabRoot);
   }
 
   /// Tab-root dispatcher used by [RoleShell.tabBuilder].
@@ -248,7 +245,8 @@ class _DashboardState extends ConsumerState<Dashboard>
           onLanguageTap: () =>
               showLanguageDialog(context, languageProvider, primaryColor),
         ),
-        onSchoolSwitchTap: () => showSchoolSelectionDialog(context, state, primaryColor),
+        onSchoolSwitchTap: () =>
+            showSchoolSelectionDialog(context, state, primaryColor),
       );
     }
 
@@ -278,7 +276,8 @@ class _DashboardState extends ConsumerState<Dashboard>
           onLanguageTap: () =>
               showLanguageDialog(context, languageProvider, primaryColor),
         ),
-        onSchoolSwitchTap: () => showSchoolSelectionDialog(context, state, primaryColor),
+        onSchoolSwitchTap: () =>
+            showSchoolSelectionDialog(context, state, primaryColor),
       );
     }
 
@@ -308,7 +307,8 @@ class _DashboardState extends ConsumerState<Dashboard>
           onLanguageTap: () =>
               showLanguageDialog(context, languageProvider, primaryColor),
         ),
-        onSchoolSwitchTap: () => showSchoolSelectionDialog(context, state, primaryColor),
+        onSchoolSwitchTap: () =>
+            showSchoolSelectionDialog(context, state, primaryColor),
       );
     }
 
@@ -399,7 +399,12 @@ class _DashboardState extends ConsumerState<Dashboard>
         onLanguageTap: () =>
             showLanguageDialog(context, languageProvider, primaryColor),
       ),
-      () => showSchoolSelectionDialog(context, ref.read(dashboardProvider).value ?? const DashboardState(isStatsLoaded: false), primaryColor),
+      () => showSchoolSelectionDialog(
+        context,
+        ref.read(dashboardProvider).value ??
+            const DashboardState(isStatsLoaded: false),
+        primaryColor,
+      ),
     );
   }
 }

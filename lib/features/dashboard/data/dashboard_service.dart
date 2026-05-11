@@ -60,10 +60,7 @@ class DashboardService {
   /// aktivitas / raport. The `category` parameter narrows server-side
   /// — passing `'all'` fetches everything.
   static Future<({List<Map<String, dynamic>> items, Map<String, int> counts})>
-      getParentInbox({
-    String category = 'all',
-    int limit = 50,
-  }) async {
+  getParentInbox({String category = 'all', int limit = 50}) async {
     try {
       final response = await dioClient.get(
         ApiEndpoints.parentInbox,
@@ -74,11 +71,11 @@ class DashboardService {
         final raw = result['data'];
         final items = raw is List
             ? raw
-                .whereType<Map>()
-                .map<Map<String, dynamic>>(
-                  (e) => Map<String, dynamic>.from(e),
-                )
-                .toList(growable: false)
+                  .whereType<Map>()
+                  .map<Map<String, dynamic>>(
+                    (e) => Map<String, dynamic>.from(e),
+                  )
+                  .toList(growable: false)
             : <Map<String, dynamic>>[];
         final counts = <String, int>{};
         final c = result['counts'];
@@ -91,10 +88,16 @@ class DashboardService {
         }
         return (items: items, counts: counts);
       }
-      return (items: const <Map<String, dynamic>>[], counts: const <String, int>{});
+      return (
+        items: const <Map<String, dynamic>>[],
+        counts: const <String, int>{},
+      );
     } catch (e) {
       AppLogger.error('api', 'Error fetching parent inbox: $e');
-      return (items: const <Map<String, dynamic>>[], counts: const <String, int>{});
+      return (
+        items: const <Map<String, dynamic>>[],
+        counts: const <String, int>{},
+      );
     }
   }
 
@@ -117,9 +120,7 @@ class DashboardService {
         if (raw is List) {
           return raw
               .whereType<Map>()
-              .map<Map<String, dynamic>>(
-                (e) => Map<String, dynamic>.from(e),
-              )
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
               .toList(growable: false);
         }
       }

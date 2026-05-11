@@ -65,10 +65,8 @@ class ManualRppDetailScreen extends StatefulWidget {
     // isn't clipped by the sheet's rounded-top chrome.
     return Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (_) => ManualRppDetailScreen(
-          lessonPlanData: lessonPlanData,
-          isNew: isNew,
-        ),
+        builder: (_) =>
+            ManualRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew),
       ),
     );
   }
@@ -96,7 +94,8 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
   }
 
   String? get _lessonPlanId {
-    final id = _lessonPlanData['id'] ??
+    final id =
+        _lessonPlanData['id'] ??
         _lessonPlanData['rpp_id'] ??
         _lessonPlanData['lesson_plan_id'];
     final s = id?.toString();
@@ -168,10 +167,7 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
       // Pencil = open the LessonPlanFormDialog (ganti file + metadata).
       // 3-dot = export menu (PDF / text).
       actionIcons: [
-        BrandHeaderIconButton(
-          icon: Icons.edit_rounded,
-          onTap: _openEditForm,
-        ),
+        BrandHeaderIconButton(icon: Icons.edit_rounded, onTap: _openEditForm),
         BrandHeaderIconButton(
           icon: Icons.more_vert_rounded,
           onTap: _showExportMenu,
@@ -264,8 +260,8 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
     final tipe = mime.contains('pdf')
         ? 'PDF'
         : (mime.contains('word') || mime.contains('docx'))
-            ? 'DOCX'
-            : 'FILE';
+        ? 'DOCX'
+        : 'FILE';
     final mb = _humanFileSize() ?? '—';
     final status = (_lessonPlanData['status'] ?? '').toString();
     final stat = _statusLabel(status);
@@ -342,11 +338,8 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
     );
   }
 
-  Widget _kpiDivider() => Container(
-        width: 1,
-        height: 28,
-        color: ColorUtils.slate100,
-      );
+  Widget _kpiDivider() =>
+      Container(width: 1, height: 28, color: ColorUtils.slate100);
 
   ({String label, Color color}) _statusLabel(String raw) {
     final s = raw.toLowerCase();
@@ -410,11 +403,11 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
           _buildMetadataCard(),
 
           // notes (optional)
-          if ((LessonPlan.fromJson(_lessonPlanData).notes ?? '').isNotEmpty)
-            ...[
-              const SizedBox(height: 8),
-              _buildNotesCard(),
-            ],
+          if ((LessonPlan.fromJson(_lessonPlanData).notes ?? '')
+              .isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _buildNotesCard(),
+          ],
 
           // AI conversion suggestion (defer to backend phase 2)
           const SizedBox(height: 8),
@@ -772,10 +765,11 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
 
   Future<void> _openEditForm() async {
     if (_lessonPlanId == null) return;
-    final teacherId = (_lessonPlanData['teacher_id'] ??
-            _lessonPlanData['teacher']?['id'] ??
-            '')
-        .toString();
+    final teacherId =
+        (_lessonPlanData['teacher_id'] ??
+                _lessonPlanData['teacher']?['id'] ??
+                '')
+            .toString();
     final result = await showLessonPlanUploadSheet(
       context: context,
       teacherId: teacherId,
@@ -845,16 +839,6 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
     );
   }
 
-  Future<void> _copyToClipboard() async {
-    await Clipboard.setData(ClipboardData(text: _formattedContent()));
-    if (mounted) {
-      SnackBarUtils.showInfo(
-        context,
-        AppLocalizations.lessonPlanCopiedToClipboard.tr,
-      );
-    }
-  }
-
   Future<void> _exportToPdf() async {
     try {
       final bytes = await LessonPlanPdfBuilder.build(
@@ -916,15 +900,12 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
       // both local storage and S3/Minio. The mobile
       // client cannot resolve the internal Docker
       // hostname (e.g. minio:9000) in file_url.
-      final bytes = await ApiService.downloadFile(
-        '/rpp/$id/download',
-      );
+      final bytes = await ApiService.downloadFile('/rpp/$id/download');
       final dir = await getTemporaryDirectory();
       // Prefer the persisted original filename so the local copy
       // matches what the teacher uploaded. Fall back to the storage
       // path's basename for legacy rows that don't have file_name.
-      final originalName =
-          _lessonPlanData['file_name']?.toString().trim();
+      final originalName = _lessonPlanData['file_name']?.toString().trim();
       final fileName = (originalName != null && originalName.isNotEmpty)
           ? originalName
           : Uri.parse(fp).pathSegments.last;
@@ -940,10 +921,7 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
     } catch (e) {
       AppLogger.error('lesson_plan', e);
       if (mounted) {
-        SnackBarUtils.showError(
-          context,
-          ErrorUtils.getFriendlyMessage(e),
-        );
+        SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       if (mounted) setState(() => _isDownloading = false);

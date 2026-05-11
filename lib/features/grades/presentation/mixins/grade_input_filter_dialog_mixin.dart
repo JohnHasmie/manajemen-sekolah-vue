@@ -125,10 +125,9 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
                           // the currently-picked subject, drop the
                           // subject selection.
                           if (tSubjectId != null && v != null) {
-                            final allowed =
-                                roster.subjectsForClass(v).map(
-                                  (s) => (s as Map)['id']?.toString(),
-                                );
+                            final allowed = roster
+                                .subjectsForClass(v)
+                                .map((s) => (s as Map)['id']?.toString());
                             if (!allowed.contains(tSubjectId)) {
                               tSubjectId = null;
                               tSubjectName = null;
@@ -139,11 +138,12 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
                           if (v != null && tSubjectId == null) {
                             final only = roster.subjectsForClass(v);
                             if (only.length == 1 && only.first is Map) {
-                              tSubjectId =
-                                  (only.first as Map)['id']?.toString();
-                              tSubjectName = ((only.first as Map)['name'] ??
-                                      (only.first as Map)['nama'])
+                              tSubjectId = (only.first as Map)['id']
                                   ?.toString();
+                              tSubjectName =
+                                  ((only.first as Map)['name'] ??
+                                          (only.first as Map)['nama'])
+                                      ?.toString();
                             }
                           }
                         });
@@ -181,11 +181,11 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
                               isHomeroomView: isHomeroomView,
                             );
                             if (only.length == 1 && only.first is Map) {
-                              tClassId =
-                                  (only.first as Map)['id']?.toString();
-                              tClassName = ((only.first as Map)['name'] ??
-                                      (only.first as Map)['nama'])
-                                  ?.toString();
+                              tClassId = (only.first as Map)['id']?.toString();
+                              tClassName =
+                                  ((only.first as Map)['name'] ??
+                                          (only.first as Map)['nama'])
+                                      ?.toString();
                             }
                           }
                         });

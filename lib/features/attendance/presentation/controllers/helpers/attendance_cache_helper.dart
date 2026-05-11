@@ -207,8 +207,6 @@ class AttendanceCacheHelper {
       showTableView: showTableView,
     );
     if (summaryKey != null) await LocalCacheService.invalidate(summaryKey);
-
-    await LocalCacheService.clearStartingWith('tour_presence_report_');
   }
 }
 

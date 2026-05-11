@@ -52,7 +52,6 @@ class AcademicYearChip extends StatelessWidget {
         onTap: onTap,
         borderRadius: const BorderRadius.all(Radius.circular(14)),
         child: Container(
-
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.28),
@@ -62,14 +61,12 @@ class AcademicYearChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
                     Text(
                       yearLabel.isEmpty ? '—' : yearLabel,
                       maxLines: 1,
@@ -113,5 +110,3 @@ class AcademicYearChip extends StatelessWidget {
     );
   }
 }
-
-

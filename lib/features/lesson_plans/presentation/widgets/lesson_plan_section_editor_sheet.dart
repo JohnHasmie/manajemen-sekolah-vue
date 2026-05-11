@@ -156,7 +156,8 @@ class _SectionEditorSheetState extends State<_SectionEditorSheet> {
   }
 
   int? get _regenMax {
-    final v = widget.regenInfo?['max_regenerations'] ?? widget.regenInfo?['max'];
+    final v =
+        widget.regenInfo?['max_regenerations'] ?? widget.regenInfo?['max'];
     return v is int ? v : null;
   }
 
@@ -241,11 +242,9 @@ class _SectionEditorSheetState extends State<_SectionEditorSheet> {
       final inner = body['data'] is Map<String, dynamic>
           ? body['data'] as Map<String, dynamic>
           : body;
-      final newContent = (inner['content'] ??
-              inner[widget.fieldKey] ??
-              body['content'] ??
-              '')
-          .toString();
+      final newContent =
+          (inner['content'] ?? inner[widget.fieldKey] ?? body['content'] ?? '')
+              .toString();
 
       if (newContent.isEmpty) {
         SnackBarUtils.showError(
@@ -481,9 +480,7 @@ class _SectionEditorSheetState extends State<_SectionEditorSheet> {
               borderRadius: BorderRadius.circular(9),
             ),
             child: Icon(
-              _isRegenerating
-                  ? Icons.auto_awesome_rounded
-                  : Icons.edit_rounded,
+              _isRegenerating ? Icons.auto_awesome_rounded : Icons.edit_rounded,
               size: 16,
               color: _isRegenerating ? _aiAccent : _accent,
             ),
@@ -877,6 +874,3 @@ String _escape(String s) {
       .replaceAll('<', '&lt;')
       .replaceAll('>', '&gt;');
 }
-
-// ignore: unused_element
-const _kQuillJsonShim = JsonEncoder.withIndent('  ');

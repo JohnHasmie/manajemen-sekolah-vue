@@ -100,16 +100,14 @@ class _LessonPlanFormDialogState extends ConsumerState<LessonPlanFormDialog>
       // storage path's basename for legacy rows that don't have a
       // file_name yet — the user still sees something readable
       // instead of the full storage path.
-      final initialFileName =
-          widget.lessonPlanData!['file_name']?.toString();
-      final initialFilePath =
-          widget.lessonPlanData!['file_path']?.toString();
-      _selectedFileName = (initialFileName != null &&
-              initialFileName.isNotEmpty)
+      final initialFileName = widget.lessonPlanData!['file_name']?.toString();
+      final initialFilePath = widget.lessonPlanData!['file_path']?.toString();
+      _selectedFileName =
+          (initialFileName != null && initialFileName.isNotEmpty)
           ? initialFileName
           : (initialFilePath != null && initialFilePath.isNotEmpty
-              ? initialFilePath.split('/').last
-              : null);
+                ? initialFilePath.split('/').last
+                : null);
 
       if (_selectedSubjectId != null) {
         loadClassesBySubject(_selectedSubjectId!);

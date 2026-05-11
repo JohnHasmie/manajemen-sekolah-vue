@@ -92,8 +92,7 @@ class SubjectAiService {
     }
 
     throw Exception(
-      extractedMessage ??
-          'Request failed with status: ${response.statusCode}',
+      extractedMessage ?? 'Request failed with status: ${response.statusCode}',
     );
   }
 

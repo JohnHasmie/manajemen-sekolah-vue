@@ -82,17 +82,13 @@ class SecurityStatusResult {
   const SecurityStatusResult({required this.items, this.computedAt});
 
   /// Convert to [SecurityCheck] list, attaching navigation callbacks.
-  List<SecurityCheck> toChecks(
-    void Function(String route) onAction,
-  ) {
+  List<SecurityCheck> toChecks(void Function(String route) onAction) {
     return items.map((p) {
       return SecurityCheck(
         label: p.label,
         state: p.state,
         actionLabel: p.actionLabel,
-        onAction: p.actionRoute == null
-            ? null
-            : () => onAction(p.actionRoute!),
+        onAction: p.actionRoute == null ? null : () => onAction(p.actionRoute!),
       );
     }).toList();
   }
@@ -126,10 +122,11 @@ final profileServiceProvider = Provider<ProfileService>((ref) {
 /// Use as `ref.watch(securityStatusProvider)` from the profile screen
 /// — `AsyncValue<SecurityStatusResult>` lets the screen render
 /// loading / error / data states identically to the rest of the app.
-final securityStatusProvider =
-    FutureProvider.autoDispose<SecurityStatusResult>((ref) async {
-  return ref.read(profileServiceProvider).fetchSecurityStatus();
-});
+final securityStatusProvider = FutureProvider.autoDispose<SecurityStatusResult>(
+  (ref) async {
+    return ref.read(profileServiceProvider).fetchSecurityStatus();
+  },
+);
 
 /// Result of [ProfileService.fetchManagedSchools]. Always non-null
 /// fields so the UI doesn't have to defend against nulls.
@@ -146,7 +143,8 @@ class ManagedSchoolsResult {
 
 /// Loads schools the current user can switch into. Used by the
 /// account-sheet's [RoleScopeChips] (Mockup #15).
-final managedSchoolsProvider =
-    FutureProvider.autoDispose<ManagedSchoolsResult>((ref) async {
-  return ref.read(profileServiceProvider).fetchManagedSchools();
-});
+final managedSchoolsProvider = FutureProvider.autoDispose<ManagedSchoolsResult>(
+  (ref) async {
+    return ref.read(profileServiceProvider).fetchManagedSchools();
+  },
+);

@@ -69,7 +69,13 @@ class DashboardStateTransformer {
       // Per-slice KPI carousel data — fed straight to `_GuruSlice.fromJson`
       // in teacher_dashboard_body.dart. Same convention as the parent
       // transformer: pass the raw List through without re-typing here.
-      ..['slices'] = data['slices'] is List ? data['slices'] : const [];
+      ..['slices'] = data['slices'] is List ? data['slices'] : const []
+      // Server-ranked "Perlu Perhatian" rows. Backend ranks + caps at
+      // 5; frontend renders verbatim (see PriorityInboxItem.parseList).
+      // Null means the feature flag is off; renderer shows empty state.
+      ..['priority_inbox'] = data['priority_inbox'] is List
+          ? data['priority_inbox']
+          : null;
   }
 
   static void _applyAdminStats(

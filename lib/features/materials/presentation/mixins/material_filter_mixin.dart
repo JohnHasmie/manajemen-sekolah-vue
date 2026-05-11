@@ -102,8 +102,8 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
                   value: s['id']?.toString() ?? '',
                   label:
                       (s['name'] ?? s['mata_pelajaran_name'] ?? s['nama'])
-                              ?.toString() ??
-                          '-',
+                          ?.toString() ??
+                      '-',
                 ),
               )
               .toList();
@@ -148,8 +148,8 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
                           if (v != null && tSubjectId == null) {
                             final only = roster.subjectsForClass(v);
                             if (only.length == 1 && only.first is Map) {
-                              tSubjectId =
-                                  (only.first as Map)['id']?.toString();
+                              tSubjectId = (only.first as Map)['id']
+                                  ?.toString();
                             }
                           }
                         });
@@ -183,11 +183,11 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
                               isHomeroomView: isHomeroomView,
                             );
                             if (only.length == 1 && only.first is Map) {
-                              tClassId =
-                                  (only.first as Map)['id']?.toString();
-                              tClassName = ((only.first as Map)['name'] ??
-                                      (only.first as Map)['nama'])
-                                  ?.toString();
+                              tClassId = (only.first as Map)['id']?.toString();
+                              tClassName =
+                                  ((only.first as Map)['name'] ??
+                                          (only.first as Map)['nama'])
+                                      ?.toString();
                             }
                           }
                         });

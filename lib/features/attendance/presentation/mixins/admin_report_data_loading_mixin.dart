@@ -67,9 +67,6 @@ mixin AdminReportDataLoadingMixin
         isLoadingClasses = false;
       });
       AppLogger.info('attendance', 'Filter data loaded from cache');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) checkAndShowTour();
-      });
     }
   }
 
@@ -99,9 +96,6 @@ mixin AdminReportDataLoadingMixin
     } finally {
       if (mounted) {
         setState(() => isLoadingClasses = false);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) checkAndShowTour();
-        });
       }
     }
   }
@@ -278,6 +272,4 @@ mixin AdminReportDataLoadingMixin
       }
     }
   }
-
-  Future<void> checkAndShowTour();
 }

@@ -209,11 +209,12 @@ class _AdminEntityDetailSheet extends StatelessWidget {
                       _DetailSectionView(section: sections[i], accent: accent),
                 ),
               ),
-              if (showFooter) _Footer(
-                accent: accent,
-                onEdit: canEdit ? onEdit : null,
-                onDelete: canDelete ? onDelete : null,
-              ),
+              if (showFooter)
+                _Footer(
+                  accent: accent,
+                  onEdit: canEdit ? onEdit : null,
+                  onDelete: canDelete ? onDelete : null,
+                ),
             ],
           ),
         ),
@@ -248,9 +249,7 @@ class _HeroBand extends StatelessWidget {
     final topInset = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: ColorUtils.brandGradient('admin'),
-      ),
+      decoration: BoxDecoration(gradient: ColorUtils.brandGradient('admin')),
       padding: EdgeInsets.fromLTRB(20, topInset + 8, 16, 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,8 +509,11 @@ class _DetailRowView extends StatelessWidget {
             ),
           ] else if (isInteractive) ...[
             const SizedBox(width: 4),
-            Icon(Icons.chevron_right_rounded,
-                size: 18, color: ColorUtils.slate400),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: ColorUtils.slate400,
+            ),
           ],
         ],
       ),

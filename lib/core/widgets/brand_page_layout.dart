@@ -72,8 +72,7 @@ class BrandPageLayout extends StatefulWidget {
   });
 
   @override
-  State<BrandPageLayout> createState() =>
-      _BrandPageLayoutState();
+  State<BrandPageLayout> createState() => _BrandPageLayoutState();
 }
 
 class _BrandPageLayoutState extends State<BrandPageLayout> {
@@ -108,8 +107,7 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
 
   void _measure() {
     // Measure header.
-    final hRo = _headerKey.currentContext
-        ?.findRenderObject() as RenderBox?;
+    final hRo = _headerKey.currentContext?.findRenderObject() as RenderBox?;
     if (hRo != null && hRo.hasSize) {
       final h = hRo.size.height;
       if ((h - _headerH).abs() > 1) {
@@ -117,8 +115,7 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
       }
     }
     // Measure KPI card.
-    final kRo = _kpiKey.currentContext
-        ?.findRenderObject() as RenderBox?;
+    final kRo = _kpiKey.currentContext?.findRenderObject() as RenderBox?;
     if (kRo != null && kRo.hasSize) {
       final h = kRo.size.height;
       if ((h - _kpiH).abs() > 1) _kpiH = h;
@@ -134,8 +131,7 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
     final accent = ColorUtils.getRoleColor(widget.role);
     final hasKpi = widget.kpiCard != null;
     final overlap = hasKpi ? widget.overlapHeight : 0.0;
-    final bodyTop =
-        (_headerH - overlap).clamp(0.0, double.infinity);
+    final bodyTop = (_headerH - overlap).clamp(0.0, double.infinity);
 
     // Sticky mode pulls the KPI out of the scrollable list and
     // pins it as an absolute layer just below the header. The
@@ -145,18 +141,13 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
 
     final list = ListView(
       controller: _scrollCtrl,
-      padding: EdgeInsets.only(
-        bottom: widget.bottomPadding,
-      ),
+      padding: EdgeInsets.only(bottom: widget.bottomPadding),
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         // Scroll-with-body mode: KPI is the first list item.
         // Sticky mode: skip — KPI is rendered as an absolute layer.
         if (hasKpi && !sticky)
-          KeyedSubtree(
-            key: _kpiKey,
-            child: widget.kpiCard!,
-          ),
+          KeyedSubtree(key: _kpiKey, child: widget.kpiCard!),
         ...widget.bodyChildren,
       ],
     );
@@ -170,10 +161,7 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
           )
         : list;
 
-    final headerWidget = KeyedSubtree(
-      key: _headerKey,
-      child: widget.header,
-    );
+    final headerWidget = KeyedSubtree(key: _headerKey, child: widget.header);
 
     // Before measured: Column so header can lay out.
     if (_headerH == 0) {
@@ -195,17 +183,9 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
         clipBehavior: Clip.hardEdge,
         children: [
           // 1. Header — behind everything.
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: headerWidget,
-          ),
+          Positioned(top: 0, left: 0, right: 0, child: headerWidget),
           // 2. Body — in front of header. Scrollable.
-          Positioned.fill(
-            top: effectiveBodyTop,
-            child: body,
-          ),
+          Positioned.fill(top: effectiveBodyTop, child: body),
           // 3a. Sticky KPI — pinned above the scrollable body,
           //     overlapping the gradient header by `overlap` dp.
           //     Doesn't scroll, so the gradient mask layer below
@@ -215,10 +195,7 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
               top: bodyTop,
               left: 0,
               right: 0,
-              child: KeyedSubtree(
-                key: _kpiKey,
-                child: widget.kpiCard!,
-              ),
+              child: KeyedSubtree(key: _kpiKey, child: widget.kpiCard!),
             ),
           // 3b. Gradient mask — covers the overlap zone in
           //     scroll-with-body mode once the KPI has scrolled
@@ -232,9 +209,7 @@ class _BrandPageLayoutState extends State<BrandPageLayout> {
               child: IgnorePointer(
                 child: Container(
                   decoration: BoxDecoration(
-                    gradient: ColorUtils.brandGradient(
-                      widget.role,
-                    ),
+                    gradient: ColorUtils.brandGradient(widget.role),
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(28),
                       bottomRight: Radius.circular(28),

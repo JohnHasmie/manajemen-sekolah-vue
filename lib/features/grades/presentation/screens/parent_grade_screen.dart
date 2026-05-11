@@ -23,7 +23,6 @@ import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grad
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_detail_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_filter_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_read_tracking_mixin.dart';
-import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_tour_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_ui_mixin.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
@@ -51,7 +50,6 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
         PaginationMixin<ParentGradeScreen>,
         ParentGradeReadTrackingMixin,
         ParentGradeDataLoadingMixin,
-        ParentGradeTourMixin,
         ParentGradeDetailMixin,
         ParentGradeFilterMixin,
         ParentGradeUiMixin {
@@ -195,7 +193,8 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
   /// Falls back to the loading skeleton or empty state via the
   /// existing `buildGradeList()` mixin call when there's no data.
   // Cached aggregates recomputed when grade list changes.
-  ({int scored, int pending, double avg, double min, double max}) _gradeAggregates() {
+  ({int scored, int pending, double avg, double min, double max})
+  _gradeAggregates() {
     final scores = _gradeList
         .map((g) => double.tryParse((g as Map)['score']?.toString() ?? ''))
         .whereType<double>()
@@ -203,7 +202,9 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
     return (
       scored: scores.length,
       pending: _gradeList.length - scores.length,
-      avg: scores.isEmpty ? 0.0 : scores.reduce((a, b) => a + b) / scores.length,
+      avg: scores.isEmpty
+          ? 0.0
+          : scores.reduce((a, b) => a + b) / scores.length,
       min: scores.isEmpty ? 0.0 : scores.reduce((a, b) => a < b ? a : b),
       max: scores.isEmpty ? 0.0 : scores.reduce((a, b) => a > b ? a : b),
     );
@@ -302,19 +303,13 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
           sub: '$scored sudah · $pending menunggu',
         ),
         BrandKpiColumn(
-          label: lang.getTranslatedText({
-            'en': 'Average',
-            'id': 'Rata-rata',
-          }),
+          label: lang.getTranslatedText({'en': 'Average', 'id': 'Rata-rata'}),
           value: fmtScore(avg),
           badge: avgLabel(),
           badgeColor: avgColor(),
         ),
         BrandKpiColumn(
-          label: lang.getTranslatedText({
-            'en': 'Range',
-            'id': 'Rentang',
-          }),
+          label: lang.getTranslatedText({'en': 'Range', 'id': 'Rentang'}),
           value: '${fmtScore(minScore)} — ${fmtScore(maxScore)}',
         ),
       ],

@@ -117,12 +117,13 @@ class AdminReportCardBody extends StatelessWidget {
             ],
           ),
         ),
-        ...classes
-            .map((cls) => _ClassCard(
-                  data: cls as Map<String, dynamic>,
-                  navy: primaryColor,
-                  onTap: () => onClassChanged(cls),
-                )),
+        ...classes.map(
+          (cls) => _ClassCard(
+            data: cls as Map<String, dynamic>,
+            navy: primaryColor,
+            onTap: () => onClassChanged(cls),
+          ),
+        ),
       ],
     );
   }
@@ -177,47 +178,50 @@ class AdminReportCardBody extends StatelessWidget {
           child: isLoadingStudents
               ? const Center(child: CircularProgressIndicator())
               : students.isEmpty
-                  ? Center(
-                      child: Container(
-                        margin: const EdgeInsets.all(24),
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: ColorUtils.slate200),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.inbox_outlined,
-                                color: ColorUtils.slate400, size: 22),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Belum ada siswa pada kelas ini.',
-                                style: TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: ColorUtils.slate500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      key: studentListKey,
-                      padding: const EdgeInsets.only(top: 4, bottom: 16),
-                      itemCount: students.length,
-                      itemBuilder: (context, index) => _StudentRow(
-                        data: students[index] as Map<String, dynamic>,
-                        navy: primaryColor,
-                        onTap: () =>
-                            onViewDetail(students[index] as Map<String, dynamic>),
-                        onPdf: () =>
-                            onDownloadPdf(students[index] as Map<String, dynamic>),
-                      ),
+              ? Center(
+                  child: Container(
+                    margin: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: ColorUtils.slate200),
                     ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.inbox_outlined,
+                          color: ColorUtils.slate400,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Belum ada siswa pada kelas ini.',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: ColorUtils.slate500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  key: studentListKey,
+                  padding: const EdgeInsets.only(top: 4, bottom: 16),
+                  itemCount: students.length,
+                  itemBuilder: (context, index) => _StudentRow(
+                    data: students[index] as Map<String, dynamic>,
+                    navy: primaryColor,
+                    onTap: () =>
+                        onViewDetail(students[index] as Map<String, dynamic>),
+                    onPdf: () =>
+                        onDownloadPdf(students[index] as Map<String, dynamic>),
+                  ),
+                ),
         ),
       ],
     );
@@ -260,11 +264,12 @@ class _ClassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = (data['name'] ?? 'Unknown').toString();
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
-    final studentCount = (data['student_count'] ??
-            data['students_count'] ??
-            data['jumlah_siswa'] ??
-            0)
-        .toString();
+    final studentCount =
+        (data['student_count'] ??
+                data['students_count'] ??
+                data['jumlah_siswa'] ??
+                0)
+            .toString();
     final tingkat = data['grade_level'] ?? data['tingkat'];
     final subtitle = tingkat != null
         ? 'Tingkat $tingkat · $studentCount siswa'
@@ -510,8 +515,10 @@ class _ClassPickerSheet extends StatelessWidget {
                     ),
                     trailing: isActive
                         ? Icon(Icons.check_circle_rounded, color: navy)
-                        : Icon(Icons.chevron_right_rounded,
-                            color: ColorUtils.slate300),
+                        : Icon(
+                            Icons.chevron_right_rounded,
+                            color: ColorUtils.slate300,
+                          ),
                   );
                 },
               ),
@@ -636,9 +643,7 @@ class _StudentRow extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              model.name.isNotEmpty
-                                  ? model.name
-                                  : 'Tanpa nama',
+                              model.name.isNotEmpty ? model.name : 'Tanpa nama',
                               style: const TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
@@ -660,7 +665,9 @@ class _StudentRow extends StatelessWidget {
                             const SizedBox(height: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: pillBg,
                                 borderRadius: BorderRadius.circular(7),
@@ -703,8 +710,11 @@ class _StudentRow extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Icon(Icons.chevron_right_rounded,
-                          color: ColorUtils.slate400, size: 20),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: ColorUtils.slate400,
+                        size: 20,
+                      ),
                     ],
                   ),
                 ),
@@ -715,13 +725,4 @@ class _StudentRow extends StatelessWidget {
       ),
     );
   }
-}
-
-// Re-export the AppSpacing constant so existing imports inside this
-// file's siblings keep resolving without changes.
-// ignore: unused_element
-void _ensureAppSpacingImport() {
-  // Reference to keep the AppSpacing import alive for other files that
-  // share the same package import string at runtime.
-  AppSpacing.lg;
 }

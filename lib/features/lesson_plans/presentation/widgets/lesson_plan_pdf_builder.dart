@@ -113,10 +113,7 @@ class LessonPlanPdfBuilder {
     final captionBold = await _ttf('assets/fonts/Poppins-Bold.ttf', 8.5);
     // Loaded for the identitas PdfGrid only — body Arabic lines go
     // through [_renderArabicPng] and don't use a Syncfusion font.
-    final arabic = await _ttf(
-      'assets/fonts/NotoSansArabic-Regular.ttf',
-      11,
-    );
+    final arabic = await _ttf('assets/fonts/NotoSansArabic-Regular.ttf', 11);
 
     final document = PdfDocument();
     document.pageSettings.margins.all = 0;
@@ -157,14 +154,38 @@ class LessonPlanPdfBuilder {
     y += 32;
 
     final identitasRows = <List<String>>[
-      ['Judul', _str(data, ['title', 'judul'])],
-      ['Mata Pelajaran', _str(data, ['subject_name', 'mata_pelajaran_nama'])],
-      ['Kelas', _str(data, ['class_name', 'kelas_nama'])],
-      ['Semester', _str(data, ['semester'])],
-      ['Tahun Ajaran', _str(data, ['academic_year', 'tahun_ajaran'])],
-      ['Alokasi Waktu', _str(data, ['time_allocation', 'alokasi_waktu'])],
-      ['Guru', _str(data, ['teacher_name', 'guru_nama'])],
-      ['Status', _str(data, ['status'])],
+      [
+        'Judul',
+        _str(data, ['title', 'judul']),
+      ],
+      [
+        'Mata Pelajaran',
+        _str(data, ['subject_name', 'mata_pelajaran_nama']),
+      ],
+      [
+        'Kelas',
+        _str(data, ['class_name', 'kelas_nama']),
+      ],
+      [
+        'Semester',
+        _str(data, ['semester']),
+      ],
+      [
+        'Tahun Ajaran',
+        _str(data, ['academic_year', 'tahun_ajaran']),
+      ],
+      [
+        'Alokasi Waktu',
+        _str(data, ['time_allocation', 'alokasi_waktu']),
+      ],
+      [
+        'Guru',
+        _str(data, ['teacher_name', 'guru_nama']),
+      ],
+      [
+        'Status',
+        _str(data, ['status']),
+      ],
     ].where((r) => r[1].trim().isNotEmpty).toList();
 
     final grid = PdfGrid();
@@ -189,7 +210,9 @@ class LessonPlanPdfBuilder {
       r.cells[1].style = PdfGridCellStyle(
         font: hasArabicValue ? arabic : regular,
         textBrush: PdfSolidBrush(_slate900),
-        backgroundBrush: PdfSolidBrush(altRow ? _slate50 : PdfColor(255, 255, 255)),
+        backgroundBrush: PdfSolidBrush(
+          altRow ? _slate50 : PdfColor(255, 255, 255),
+        ),
         cellPadding: PdfPaddings(left: 12, right: 8, top: 7, bottom: 7),
       );
     }
@@ -236,10 +259,9 @@ class LessonPlanPdfBuilder {
       final hasArabic = _hasArabic(line);
 
       // ── Section detector — "A. KOMPETENSI INTI" / "B. KOMPETENSI DASAR" / …
-      final sectionMatch = RegExp(
-        r'^([A-Z])\.\s+(.+)$',
-      ).firstMatch(line);
-      if (sectionMatch != null && _looksLikeSectionTitle(sectionMatch.group(2)!)) {
+      final sectionMatch = RegExp(r'^([A-Z])\.\s+(.+)$').firstMatch(line);
+      if (sectionMatch != null &&
+          _looksLikeSectionTitle(sectionMatch.group(2)!)) {
         // Pluck "(NN menit)" trailing on a section title into a
         // pill so the duration is callout-styled instead of just
         // running into the heading text. Common on K13 langkah_kegiatan
@@ -552,12 +574,7 @@ class LessonPlanPdfBuilder {
       title,
       sectionTitleFont,
       brush: PdfBrushes.white,
-      bounds: Rect.fromLTWH(
-        x + 30,
-        y,
-        titleEnd - x - 30,
-        barHeight,
-      ),
+      bounds: Rect.fromLTWH(x + 30, y, titleEnd - x - 30, barHeight),
       format: PdfStringFormat(
         alignment: PdfTextAlignment.left,
         lineAlignment: PdfVerticalAlignment.middle,
@@ -616,12 +633,7 @@ class LessonPlanPdfBuilder {
       title,
       font,
       brush: PdfSolidBrush(_navy),
-      bounds: Rect.fromLTWH(
-        x + 12,
-        y,
-        titleEnd - x - 12,
-        labelHeight,
-      ),
+      bounds: Rect.fromLTWH(x + 12, y, titleEnd - x - 12, labelHeight),
       format: PdfStringFormat(
         alignment: PdfTextAlignment.left,
         lineAlignment: PdfVerticalAlignment.middle,
@@ -728,8 +740,9 @@ class LessonPlanPdfBuilder {
     if (formatLabel.isNotEmpty) {
       // Format pill on the left.
       const pillHeight = 14.0;
-      final pillWidth =
-          (formatLabel.length * 5.5 + 16).clamp(48.0, 110.0).toDouble();
+      final pillWidth = (formatLabel.length * 5.5 + 16)
+          .clamp(48.0, 110.0)
+          .toDouble();
       page.graphics.drawRectangle(
         brush: PdfSolidBrush(_navy),
         bounds: Rect.fromLTWH(margin, footerY + 5, pillWidth, pillHeight),
@@ -738,8 +751,7 @@ class LessonPlanPdfBuilder {
         formatLabel.toUpperCase(),
         captionBold,
         brush: PdfBrushes.white,
-        bounds:
-            Rect.fromLTWH(margin, footerY + 5, pillWidth, pillHeight),
+        bounds: Rect.fromLTWH(margin, footerY + 5, pillWidth, pillHeight),
         format: PdfStringFormat(
           alignment: PdfTextAlignment.center,
           lineAlignment: PdfVerticalAlignment.middle,
@@ -799,24 +811,25 @@ class LessonPlanPdfBuilder {
     const pixelRatio = 3.0;
     final widthPx = widthPt * pixelRatio;
 
-    final builder = ui.ParagraphBuilder(
-      ui.ParagraphStyle(
-        textAlign: TextAlign.right,
-        textDirection: ui.TextDirection.rtl,
-        fontSize: fontSize * pixelRatio,
-        fontWeight: weight,
-        fontFamily: 'NotoSansArabic',
-        height: 1.4,
-      ),
-    )
-      ..pushStyle(
-        ui.TextStyle(
-          color: color,
-          fontFamily: 'NotoSansArabic',
-          fontFamilyFallback: const ['Poppins'],
-        ),
-      )
-      ..addText(text);
+    final builder =
+        ui.ParagraphBuilder(
+            ui.ParagraphStyle(
+              textAlign: TextAlign.right,
+              textDirection: ui.TextDirection.rtl,
+              fontSize: fontSize * pixelRatio,
+              fontWeight: weight,
+              fontFamily: 'NotoSansArabic',
+              height: 1.4,
+            ),
+          )
+          ..pushStyle(
+            ui.TextStyle(
+              color: color,
+              fontFamily: 'NotoSansArabic',
+              fontFamilyFallback: const ['Poppins'],
+            ),
+          )
+          ..addText(text);
 
     final paragraph = builder.build()
       ..layout(ui.ParagraphConstraints(width: widthPx));
@@ -824,9 +837,10 @@ class LessonPlanPdfBuilder {
     final heightPx = paragraph.height.ceil() + 2;
     final recorder = ui.PictureRecorder();
     Canvas(recorder).drawParagraph(paragraph, Offset.zero);
-    final image = await recorder
-        .endRecording()
-        .toImage(widthPx.ceil(), heightPx);
+    final image = await recorder.endRecording().toImage(
+      widthPx.ceil(),
+      heightPx,
+    );
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     image.dispose();
 

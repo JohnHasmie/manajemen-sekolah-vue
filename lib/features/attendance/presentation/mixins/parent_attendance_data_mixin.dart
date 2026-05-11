@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -47,9 +46,6 @@ mixin ParentAttendanceDataMixin
             'attendance',
             'PresenceParent: from cache (${attendance.length})',
           );
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && student != null) checkAndShowTour();
-          });
           return;
         }
       }
@@ -99,45 +95,14 @@ mixin ParentAttendanceDataMixin
       if (attendanceData.isEmpty && mounted) {
         SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
-    } finally {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && student != null) checkAndShowTour();
-      });
     }
   }
 
   Future<void> forceRefresh() async {
     final cacheKey = _getCacheKey();
     await LocalCacheService.invalidate(cacheKey);
-    await LocalCacheService.clearStartingWith('tour_parent_presence_');
     loadData(useCache: false);
   }
-
-  Future<void> checkAndShowTour() async {
-    try {
-      final tourCacheKey = CacheKeyBuilder.tourStatus(
-        'parent_presence_screen',
-        'wali',
-      );
-      final cached = await LocalCacheService.load(
-        tourCacheKey,
-        ttl: const Duration(hours: 24),
-      );
-      if (cached != null && cached is Map) {
-        if (cached['should_show'] == true) {
-          if (mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) showTour();
-            });
-          }
-        }
-      }
-    } catch (e) {
-      AppLogger.error('attendance', e);
-    }
-  }
-
-  void showTour();
 
   String _getCacheKey() =>
       'parent_presence_${currentStudentId}_'

@@ -12,7 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/admin_lesson_plan_data_mixin.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/admin_lesson_plan_tour_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/filter_management_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/navigation_helper_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/build_helper_mixin.dart';
@@ -50,7 +49,6 @@ class AdminLessonPlanScreen extends ConsumerStatefulWidget {
 class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen>
     with
         AdminLessonPlanDataMixin,
-        AdminLessonPlanTourMixin,
         FilterManagementMixin,
         NavigationHelperMixin,
         BuildHelperMixin {
@@ -118,9 +116,7 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen>
       loadTeachersPaginated(reset: true);
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) checkAndShowTour();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {});
   }
 
   @override
@@ -192,8 +188,6 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen>
       loadLessonPlansPaginated(reset: true);
     }
   }
-
-  Color _getPrimaryColorForFilter() => getPrimaryColor();
 
   // ── Build ────────────────────────────────────
 

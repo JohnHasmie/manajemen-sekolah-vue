@@ -16,7 +16,6 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/class_activity_data_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/class_activity_header_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/class_activity_navigation_mixin.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/mixins/class_activity_tour_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/class_activity_ui_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/admin_class_activity_cards.dart';
 
@@ -50,7 +49,6 @@ class AdminClassActivityScreenState
         ClassActivityDataMixin,
         ClassActivityHeaderMixin,
         ClassActivityNavigationMixin,
-        ClassActivityTourMixin,
         ClassActivityUiMixin {
   // Data state
   List<dynamic> _teacherList = [];

@@ -53,8 +53,6 @@ class CacheKeyBuilder {
       'grade_classes_${teacherId}_$yearId';
 
   // ── Tour ──
-  static String tourStatus(String screenName, String role) =>
-      'tour_${screenName}_$role';
 
   // ── Announcement ──
   static String announcementFilters(String schoolId) =>

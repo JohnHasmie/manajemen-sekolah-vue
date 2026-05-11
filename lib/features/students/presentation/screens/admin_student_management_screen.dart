@@ -379,14 +379,11 @@ class StudentManagementScreenState
     final genderText = ref
         .read(adminStudentControllerProvider)
         .getGenderText(model.gender, lang);
-    final guardianName = (student['guardian_name'] ??
-            student['parent_name'] ??
-            '-')
-        .toString();
-    final guardianPhone = (student['guardian_phone'] ??
-            student['parent_phone'] ??
-            '-')
-        .toString();
+    final guardianName =
+        (student['guardian_name'] ?? student['parent_name'] ?? '-').toString();
+    final guardianPhone =
+        (student['guardian_phone'] ?? student['parent_phone'] ?? '-')
+            .toString();
     final birthDate = (student['birth_date'] ?? student['tanggal_lahir'] ?? '-')
         .toString();
     final address = (student['address'] ?? student['alamat'] ?? '-').toString();
@@ -415,10 +412,7 @@ class StudentManagementScreenState
               }),
               value: className,
             ),
-            EntityDetailRow(
-              label: 'NIS',
-              value: nis.isEmpty ? '-' : nis,
-            ),
+            EntityDetailRow(label: 'NIS', value: nis.isEmpty ? '-' : nis),
           ],
         ),
         EntityDetailSection(
@@ -458,10 +452,7 @@ class StudentManagementScreenState
           }),
           rows: [
             EntityDetailRow(
-              label: lang.getTranslatedText(const {
-                'en': 'Name',
-                'id': 'Nama',
-              }),
+              label: lang.getTranslatedText(const {'en': 'Name', 'id': 'Nama'}),
               value: guardianName,
             ),
             EntityDetailRow(
@@ -556,10 +547,7 @@ class StudentManagementScreenState
     // pickers, swap each onTap to its single-filter BrandHeroSheet picker.
     final brandChips = <BrandFilterChip>[
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Status',
-          'id': 'Status',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Status', 'id': 'Status'}),
         value: _selectedStatusFilter == null
             ? null
             : lang.getTranslatedText(switch (_selectedStatusFilter) {
@@ -567,51 +555,48 @@ class StudentManagementScreenState
                 'inactive' => const {'en': 'Inactive', 'id': 'Nonaktif'},
                 'unverified' => const {
                   'en': 'Unverified',
-                  'id': 'Belum diverifikasi'
+                  'id': 'Belum diverifikasi',
                 },
-                _ => {'en': _selectedStatusFilter!, 'id': _selectedStatusFilter!},
+                _ => {
+                  'en': _selectedStatusFilter!,
+                  'id': _selectedStatusFilter!,
+                },
               }),
         onTap: _openFilterSheet,
       ),
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Class',
-          'id': 'Kelas',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Class', 'id': 'Kelas'}),
         value: _selectedClassIds.isEmpty
             ? null
             : (_selectedClassIds.length == 1
-                ? _classList
-                    .cast<Map<String, dynamic>>()
-                    .firstWhere(
-                      (c) => c['id']?.toString() == _selectedClassIds.first,
-                      orElse: () => const {'name': '1 kelas'},
-                    )['name']
-                    .toString()
-                : '${_selectedClassIds.length} kelas'),
+                  ? _classList
+                        .cast<Map<String, dynamic>>()
+                        .firstWhere(
+                          (c) => c['id']?.toString() == _selectedClassIds.first,
+                          orElse: () => const {'name': '1 kelas'},
+                        )['name']
+                        .toString()
+                  : '${_selectedClassIds.length} kelas'),
         onTap: _openFilterSheet,
       ),
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Gender',
-          'id': 'Gender',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Gender', 'id': 'Gender'}),
         value: _selectedGenderFilter == null
             ? null
             : lang.getTranslatedText(switch (_selectedGenderFilter) {
                 'L' => const {'en': 'Male', 'id': 'Laki-laki'},
                 'P' => const {'en': 'Female', 'id': 'Perempuan'},
-                _ => {'en': _selectedGenderFilter!, 'id': _selectedGenderFilter!},
+                _ => {
+                  'en': _selectedGenderFilter!,
+                  'id': _selectedGenderFilter!,
+                },
               }),
         onTap: _openFilterSheet,
       ),
     ];
 
     return AdminCrudScaffold(
-      title: lang.getTranslatedText(const {
-        'en': 'Students',
-        'id': 'Siswa',
-      }),
+      title: lang.getTranslatedText(const {'en': 'Students', 'id': 'Siswa'}),
       subtitle: lang.getTranslatedText(const {
         'en': 'Manage and monitor students',
         'id': 'Kelola dan pantau siswa',
@@ -631,10 +616,8 @@ class StudentManagementScreenState
         'en': 'DATA MANAGEMENT',
         'id': 'MANAJEMEN DATA',
       }),
-      counterLabel: '${_students.length} ${lang.getTranslatedText(const {
-        'en': 'students',
-        'id': 'siswa',
-      })}',
+      counterLabel:
+          '${_students.length} ${lang.getTranslatedText(const {'en': 'students', 'id': 'siswa'})}',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,
@@ -702,10 +685,7 @@ class StudentManagementScreenState
       bulkActions: [
         BulkAction(
           icon: Icons.delete_outline_rounded,
-          label: lang.getTranslatedText(const {
-            'en': 'Delete',
-            'id': 'Hapus',
-          }),
+          label: lang.getTranslatedText(const {'en': 'Delete', 'id': 'Hapus'}),
           onTap: _bulkDeleteSelected,
           isDestructive: true,
         ),

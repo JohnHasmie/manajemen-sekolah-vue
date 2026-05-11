@@ -86,23 +86,13 @@ class BrandKpiStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 14,
-          horizontal: 4,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.all(
-            Radius.circular(16),
-          ),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-            width: 0.75,
-          ),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          border: Border.all(color: const Color(0xFFE2E8F0), width: 0.75),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -119,9 +109,7 @@ class BrandKpiStrip extends StatelessWidget {
                 if (i < columns.length - 1)
                   Container(
                     width: 1,
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 4,
-                    ),
+                    margin: const EdgeInsets.symmetric(vertical: 4),
                     color: const Color(0xFFF1F5F9),
                   ),
               ],
@@ -204,29 +192,17 @@ class _BadgePill extends StatelessWidget {
   final Color? textColor;
   final IconData? icon;
 
-  const _BadgePill({
-    required this.text,
-    this.color,
-    this.textColor,
-    this.icon,
-  });
+  const _BadgePill({required this.text, this.color, this.textColor, this.icon});
 
   @override
   Widget build(BuildContext context) {
-    final bg =
-        (color ?? Colors.green).withValues(alpha: 0.12);
-    final fg =
-        textColor ?? color ?? const Color(0xFF15803D);
+    final bg = (color ?? Colors.green).withValues(alpha: 0.12);
+    final fg = textColor ?? color ?? const Color(0xFF15803D);
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 3,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: const BorderRadius.all(
-          Radius.circular(9),
-        ),
+        borderRadius: const BorderRadius.all(Radius.circular(9)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

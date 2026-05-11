@@ -104,9 +104,7 @@ class _ActivitySubmissionPickerSheetState
     final id = (r['student_id'] ?? '').toString();
     return _scoreCtrls.putIfAbsent(id, () {
       final initial = r['score'];
-      return TextEditingController(
-        text: initial == null ? '' : '$initial',
-      );
+      return TextEditingController(text: initial == null ? '' : '$initial');
     });
   }
 
@@ -135,18 +133,19 @@ class _ActivitySubmissionPickerSheetState
       // teacher's eye lands on actionable rows immediately. Within a
       // status group, preserve backend-provided ordering (typically
       // alphabetical by student name).
-      final sorted = [...rows]..sort((a, b) {
-        final ai = _statusOrder.indexOf(
-          (a['status'] ?? _statusBelum).toString(),
-        );
-        final bi = _statusOrder.indexOf(
-          (b['status'] ?? _statusBelum).toString(),
-        );
-        if (ai != bi) return ai.compareTo(bi);
-        return ((a['student_name'] ?? '').toString()).compareTo(
-          (b['student_name'] ?? '').toString(),
-        );
-      });
+      final sorted = [...rows]
+        ..sort((a, b) {
+          final ai = _statusOrder.indexOf(
+            (a['status'] ?? _statusBelum).toString(),
+          );
+          final bi = _statusOrder.indexOf(
+            (b['status'] ?? _statusBelum).toString(),
+          );
+          if (ai != bi) return ai.compareTo(bi);
+          return ((a['student_name'] ?? '').toString()).compareTo(
+            (b['student_name'] ?? '').toString(),
+          );
+        });
       if (!mounted) return;
       setState(() {
         _rows = sorted;
@@ -192,9 +191,7 @@ class _ActivitySubmissionPickerSheetState
   }
 
   Future<void> _editNote(Map<String, dynamic> r) async {
-    final ctrl = TextEditingController(
-      text: (r['note'] ?? '').toString(),
-    );
+    final ctrl = TextEditingController(text: (r['note'] ?? '').toString());
     final saved = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -223,10 +220,7 @@ class _ActivitySubmissionPickerSheetState
               maxLength: 200,
               decoration: InputDecoration(
                 hintText: 'Sakit, lupa bawa, izin pulang…',
-                hintStyle: TextStyle(
-                  color: ColorUtils.slate400,
-                  fontSize: 13,
-                ),
+                hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -823,10 +817,7 @@ class _ActivitySubmissionPickerSheetState
                     ),
                   ),
                 ),
-                if (_isScored) ...[
-                  const SizedBox(width: 8),
-                  _scoreField(r),
-                ],
+                if (_isScored) ...[const SizedBox(width: 8), _scoreField(r)],
               ],
             ),
           ],

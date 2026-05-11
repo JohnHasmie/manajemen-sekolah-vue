@@ -84,15 +84,17 @@ class AdminLessonPlanQueueService {
         .map((m) {
           final items = (m['items'] as List? ?? const [])
               .map((c) => Map<String, dynamic>.from(c as Map))
-              .map((c) => QueueItem(
-                    id: (c['id'] ?? '').toString(),
-                    title: (c['title'] ?? '').toString(),
-                    subtitle: (c['subtitle'] ?? '').toString(),
-                    teacherName: (c['teacher_name'] ?? '').toString(),
-                    status: (c['status'] ?? '').toString(),
-                    rejectionReason: c['rejection_reason']?.toString(),
-                    updatedAtHuman: c['updated_at_human']?.toString(),
-                  ))
+              .map(
+                (c) => QueueItem(
+                  id: (c['id'] ?? '').toString(),
+                  title: (c['title'] ?? '').toString(),
+                  subtitle: (c['subtitle'] ?? '').toString(),
+                  teacherName: (c['teacher_name'] ?? '').toString(),
+                  status: (c['status'] ?? '').toString(),
+                  rejectionReason: c['rejection_reason']?.toString(),
+                  updatedAtHuman: c['updated_at_human']?.toString(),
+                ),
+              )
               .toList();
           return QueueTier(
             key: (m['key'] ?? '').toString(),
@@ -110,8 +112,11 @@ class AdminLessonPlanQueueService {
 
   /// POST /api/lesson-plans/{id}/status
   /// Used for inline approve/reject from the queue card.
-  Future<void> updateStatus(String id, String newStatus,
-      {String? reason}) async {
+  Future<void> updateStatus(
+    String id,
+    String newStatus, {
+    String? reason,
+  }) async {
     final body = <String, dynamic>{'status': newStatus};
     if (reason != null && reason.isNotEmpty) {
       body['rejection_reason'] = reason;
@@ -126,10 +131,10 @@ class AdminLessonPlanQueueService {
 
 final adminLessonPlanQueueServiceProvider =
     Provider<AdminLessonPlanQueueService>((ref) {
-  return AdminLessonPlanQueueService(ApiService());
-});
+      return AdminLessonPlanQueueService(ApiService());
+    });
 
 final adminLessonPlanQueueProvider =
     FutureProvider.autoDispose<AdminLessonPlanQueue>((ref) async {
-  return ref.read(adminLessonPlanQueueServiceProvider).fetch();
-});
+      return ref.read(adminLessonPlanQueueServiceProvider).fetch();
+    });

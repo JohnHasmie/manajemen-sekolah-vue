@@ -24,7 +24,6 @@ import 'package:manajemensekolah/features/students/data/student_service.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/class_activity/data/class_activity_service.dart';
-import 'package:manajemensekolah/core/services/tour_service.dart';
 import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 
 /// Global service locator instance. Like Laravel's `app()` helper.
@@ -60,7 +59,6 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<ApiClassActivityService>(
     ApiClassActivityService.new,
   );
-  getIt.registerLazySingleton<ApiTourService>(ApiTourService.new);
   getIt.registerLazySingleton<ApiRecommendationService>(
     ApiRecommendationService.new,
   );

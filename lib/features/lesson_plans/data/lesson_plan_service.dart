@@ -162,10 +162,8 @@ class LessonPlanService {
   ///
   /// Older callers can still grab `groups` with [getLessonPlanSummary]
   /// for backwards-compatibility.
-  static Future<({
-    List<Map<String, dynamic>> groups,
-    Map<String, int> kpi,
-  })> getLessonPlanSummaryWithKpi({
+  static Future<({List<Map<String, dynamic>> groups, Map<String, int> kpi})>
+  getLessonPlanSummaryWithKpi({
     String? teacherId,
     String? academicYearId,
     String? status,
@@ -414,9 +412,7 @@ class LessonPlanService {
     }
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(
-        result['message']?.toString() ?? 'Gagal generate RPP',
-      );
+      throw Exception(result['message']?.toString() ?? 'Gagal generate RPP');
     }
 
     await CacheInvalidationService.onLessonPlanChanged();

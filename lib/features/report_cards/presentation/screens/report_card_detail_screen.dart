@@ -11,7 +11,6 @@ import 'package:manajemensekolah/features/report_cards/presentation/widgets/repo
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/report_card_data_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/report_card_populate_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/report_card_save_mixin.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/mixins/report_card_tour_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/report_card_ui_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/report_card_nav_mixin.dart';
 
@@ -51,7 +50,6 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
         ReportCardDataMixin,
         ReportCardPopulateMixin,
         ReportCardSaveMixin,
-        ReportCardTourMixin,
         ReportCardUIMixin,
         ReportCardNavMixin {
   late TabController tabController;

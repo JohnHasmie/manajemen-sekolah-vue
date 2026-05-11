@@ -344,10 +344,7 @@ class GradeRecapTableView extends StatelessWidget {
                 ),
               ),
               ListTile(
-                leading: Icon(
-                  Icons.edit_outlined,
-                  color: ColorUtils.slate700,
-                ),
+                leading: Icon(Icons.edit_outlined, color: ColorUtils.slate700),
                 title: const Text('Ubah nama bab'),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
