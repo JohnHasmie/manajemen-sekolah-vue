@@ -8,6 +8,32 @@
 //
 // This file centralises the contract so every new filter sheet starts
 // from a working pattern instead of reinventing it.
+//
+// ─── BRAND FILTER RULE ────────────────────────────────────────────────
+//
+// Every filter sheet's class / subject / teacher / day / semester chip
+// set MUST come from `ref.watch(filterRosterRiverpod)`. That provider
+// is hydrated once at dashboard init from the role-aware
+// `GET /filter-options` endpoint and cached for 6 hours. Filter sheets
+// must NEVER derive chip options from:
+//
+//   • the page's currently-displayed list (`_groupedData`, paginated
+//     lists), because that list is server-filtered — applying a filter
+//     shrinks it to the picked value and the chip set collapses with it
+//   • a per-screen "all classes" state field loaded independently of
+//     `/filter-options`, because the two will drift (e.g. one includes
+//     grade-authored classes, the other doesn't, and the filter shows
+//     a different set than the screen surfaces)
+//
+// For the teacher mengajar ↔ wali kelas dichotomy use
+// `FilterRosterProvider.classesForView(isHomeroomView: ...)` — the
+// backend already partitions the roster for you.
+//
+// If a filter needs a narrower set than the global roster (e.g. "which
+// subjects does this teacher use *for the currently-picked class*"),
+// fetch that on demand from a dedicated endpoint such as
+// `/teacher/{id}/subjects?class_id=X` — that's a different question
+// than the global roster, not a violation of the rule.
 
 import 'package:flutter/material.dart';
 
@@ -97,7 +123,10 @@ class FilterSheetHelpers {
   /// onSelected: (id) {
   ///   setSS(() {
   ///     tClassId = id;
-  ///     tClassName = FilterSheetHelpers.labelForId(classList, id);
+  ///     tClassName = FilterSheetHelpers.labelForId(
+  ///       ref.read(filterRosterRiverpod).classes,
+  ///       id,
+  ///     );
   ///   });
   /// }
   /// ```

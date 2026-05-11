@@ -5,6 +5,7 @@
 // filters across class, subject, and chapter selections.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
@@ -15,6 +16,8 @@ import 'package:manajemensekolah/features/materials/presentation/screens/teacher
 
 /// Mixin providing filter logic for [TeacherMaterialScreenState].
 mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
+  /// Wali kelas vs mengajar — picks the right roster partition.
+  bool get isHomeroomView;
   // ── Getters the main state must expose ──
   String? get selectedSubject;
   set selectedSubject(String? v);
@@ -50,7 +53,6 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
     String? tClassId = selectedClassId;
     String? tClassName = selectedClassName;
     String? tSubjectId = selectedSubject;
-    List<dynamic> tSubjectList = subjectList;
 
     if (!mounted) return;
 
@@ -61,12 +63,32 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
         'id': 'Filter Materi',
       }),
       primaryColor: primaryColor,
-      onApply: () =>
-          _applyFilter(context, tClassId, tClassName, tSubjectId, tSubjectList),
+      onApply: () {
+        // Resolve subject list at apply-time from the roster so the
+        // screen's downstream `applyFilter` (which still stores
+        // `subjectList` for non-filter UI) gets the right subset.
+        final roster = ref.read(filterRosterRiverpod);
+        final resolvedSubjects = roster.subjectsForClass(tClassId);
+        _applyFilter(
+          context,
+          tClassId,
+          tClassName,
+          tSubjectId,
+          resolvedSubjects,
+        );
+      },
       onReset: () => FilterSheetHelpers.reset(context, clearAllFilters),
       content: StatefulBuilder(
         builder: (ctx, setSS) {
-          final classes = classList
+          // Brand filter rule: source chips from the pre-fetched
+          // roster + cross-axis maps. No on-tap fetches.
+          final roster = ref.watch(filterRosterRiverpod);
+          final rosterClasses = roster.classesForSubject(
+            tSubjectId,
+            isHomeroomView: isHomeroomView,
+          );
+          final rosterSubjects = roster.subjectsForClass(tClassId);
+          final classes = rosterClasses
               .map(
                 (c) => FilterOption<String>(
                   value: c['id']?.toString() ?? '',
@@ -74,57 +96,68 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
                 ),
               )
               .toList();
-
-          final subjects = tSubjectList
+          final subjects = rosterSubjects
               .map(
                 (s) => FilterOption<String>(
                   value: s['id']?.toString() ?? '',
                   label:
-                      (s['name'] ?? s['mata_pelajaran_name'])?.toString() ??
-                      '-',
+                      (s['name'] ?? s['mata_pelajaran_name'] ?? s['nama'])
+                              ?.toString() ??
+                          '-',
                 ),
               )
               .toList();
 
           return TeacherFilterContent(
             sections: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FilterSectionHeader(
-                    title: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
-                    icon: Icons.class_outlined,
-                    primaryColor: primaryColor,
-                  ),
-                  FilterChipGrid<String>(
-                    options: classes,
-                    selectedValue: tClassId,
-                    onSelected: (v) {
-                      // Keep tClassName in sync with tClassId via the
-                      // shared label-lookup helper, so Apply commits
-                      // both the id and the human-readable name to
-                      // the outer state.
-                      setSS(() {
-                        tClassId = v;
-                        tClassName = FilterSheetHelpers.labelForId(
-                          classList,
-                          v,
-                        );
-                        tSubjectId = null;
-                        tSubjectList = [];
-                      });
-                      if (v != null) {
-                        getSubjectsForClass(v).then((subjects) {
-                          setSS(() {
-                            tSubjectList = subjects;
-                          });
+              // Kelas section hides in wali kelas mode — the role
+              // toggle in the page header already locked the class.
+              if (!isHomeroomView)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FilterSectionHeader(
+                      title: lp.getTranslatedText({
+                        'en': 'Class',
+                        'id': 'Kelas',
+                      }),
+                      icon: Icons.class_outlined,
+                      primaryColor: primaryColor,
+                    ),
+                    FilterChipGrid<String>(
+                      options: classes,
+                      selectedValue: tClassId,
+                      onSelected: (v) {
+                        setSS(() {
+                          tClassId = v;
+                          tClassName = FilterSheetHelpers.labelForId(
+                            rosterClasses,
+                            v,
+                          );
+                          // Cross-axis: drop subject if new class
+                          // doesn't teach it.
+                          if (tSubjectId != null && v != null) {
+                            final allowed = roster
+                                .subjectsForClass(v)
+                                .map((s) => (s as Map)['id']?.toString());
+                            if (!allowed.contains(tSubjectId)) {
+                              tSubjectId = null;
+                            }
+                          }
+                          // Auto-select-on-single.
+                          if (v != null && tSubjectId == null) {
+                            final only = roster.subjectsForClass(v);
+                            if (only.length == 1 && only.first is Map) {
+                              tSubjectId =
+                                  (only.first as Map)['id']?.toString();
+                            }
+                          }
                         });
-                      }
-                    },
-                    selectedColor: primaryColor,
-                  ),
-                ],
-              ),
+                      },
+                      selectedColor: primaryColor,
+                    ),
+                  ],
+                ),
               if (subjects.isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,6 +176,20 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
                       onSelected: (v) {
                         setSS(() {
                           tSubjectId = v;
+                          // Cross-axis inverse: auto-select sole class.
+                          if (v != null && tClassId == null) {
+                            final only = roster.classesForSubject(
+                              v,
+                              isHomeroomView: isHomeroomView,
+                            );
+                            if (only.length == 1 && only.first is Map) {
+                              tClassId =
+                                  (only.first as Map)['id']?.toString();
+                              tClassName = ((only.first as Map)['name'] ??
+                                      (only.first as Map)['nama'])
+                                  ?.toString();
+                            }
+                          }
                         });
                       },
                       selectedColor: primaryColor,

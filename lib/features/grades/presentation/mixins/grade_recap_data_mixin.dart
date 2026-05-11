@@ -1,5 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
@@ -141,21 +142,38 @@ mixin GradeRecapDataMixin {
     }).toList();
   }
 
+  /// Filter chip set for the Kelas section. Pulled from the
+  /// pre-fetched roster (see filter_roster_provider.dart) so the
+  /// chips stay constant regardless of which class the user filters
+  /// to. Earlier this derived from `groupedData` (server-filtered)
+  /// and collapsed to one chip on Apply — see filter_sheet_reset.dart
+  /// for the brand rule.
   List<Map<String, String>> get availableClasses {
+    final roster = ref.read(filterRosterRiverpod);
+    final source = roster.classesForView(isHomeroomView: isHomeroomView);
     final seen = <String>{};
-    return groupedData
-        .where((g) {
-          final id = g['class_id']?.toString() ?? '';
-          if (seen.contains(id)) return false;
-          seen.add(id);
-          return true;
-        })
-        .map(
-          (g) => {
-            'id': g['class_id']?.toString() ?? '',
-            'name': g['class_name']?.toString() ?? '-',
-          },
-        )
-        .toList();
+    final out = <Map<String, String>>[];
+    for (final c in source) {
+      if (c is! Map) continue;
+      final id = c['id']?.toString() ?? '';
+      if (id.isEmpty || !seen.add(id)) continue;
+      out.add({
+        'id': id,
+        'name': (c['name'] ?? c['nama'] ?? '-').toString(),
+      });
+    }
+    // Cold-open fallback while the provider hydrates.
+    if (out.isEmpty) {
+      for (final g in groupedData) {
+        if (g is! Map) continue;
+        final id = g['class_id']?.toString() ?? '';
+        if (id.isEmpty || !seen.add(id)) continue;
+        out.add({
+          'id': id,
+          'name': g['class_name']?.toString() ?? '-',
+        });
+      }
+    }
+    return out;
   }
 }

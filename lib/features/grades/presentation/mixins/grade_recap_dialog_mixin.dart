@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/network/dio_client.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
@@ -60,14 +59,16 @@ mixin GradeRecapDialogMixin {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _GradeRecapFilterSheet(
+        ref: ref,
         availableClasses: classes,
+        hideClassSection: isHomeroomView,
+        isHomeroomView: isHomeroomView,
         initialClassId: filterClassId,
         initialClassName: filterClassName,
         initialSubjectId: filterSubjectId,
         initialSubjectName: filterSubjectName,
         primaryColor: primaryColor,
         languageProvider: lp,
-        teacherId: teacherData['id']?.toString() ?? '',
         onApply:
             ({
               String? classId,
@@ -101,6 +102,10 @@ mixin GradeRecapDialogMixin {
   late String? filterClassName;
   late String? filterSubjectId;
   late String? filterSubjectName;
+
+  /// Wali kelas vs mengajar — drives whether the Kelas section
+  /// renders in the filter sheet. Satisfied by `GradeRecapDataMixin`.
+  bool get isHomeroomView;
   // NOTE: this MUST be an abstract getter, not a `late` field. The real
   // implementation lives in `GradeRecapDataMixin` and computes the list
   // from `groupedData`. If we redeclare it as a field here, Dart's mixin
@@ -117,15 +122,32 @@ mixin GradeRecapDialogMixin {
 }
 
 /// Stateful filter sheet for the grade recap screen.
+///
+/// Sources its chip set from `filterRosterRiverpod` (the
+/// pre-fetched roster — see filter_sheet_reset.dart for the brand
+/// rule). The legacy `_fetchSubjects` per-tap network call is gone.
 class _GradeRecapFilterSheet extends StatefulWidget {
+  final WidgetRef ref;
+
+  /// Legacy: still passed for the wali-kelas fallback when the
+  /// roster provider hasn't hydrated yet (cold open). Once the
+  /// provider populates this is unused.
   final List<Map<String, String>> availableClasses;
+
+  /// True when the host page is in wali kelas mode. Hides the Kelas
+  /// section since the role toggle in the page header has already
+  /// locked the class.
+  final bool hideClassSection;
+
+  /// Drives `roster.classesForView(...)` / `classesForSubject(...)`.
+  final bool isHomeroomView;
+
   final String? initialClassId;
   final String? initialClassName;
   final String? initialSubjectId;
   final String? initialSubjectName;
   final Color primaryColor;
   final LanguageProvider languageProvider;
-  final String teacherId;
   final void Function({
     String? classId,
     String? className,
@@ -135,14 +157,16 @@ class _GradeRecapFilterSheet extends StatefulWidget {
   onApply;
 
   const _GradeRecapFilterSheet({
+    required this.ref,
     required this.availableClasses,
+    required this.hideClassSection,
+    required this.isHomeroomView,
     required this.initialClassId,
     required this.initialClassName,
     required this.initialSubjectId,
     required this.initialSubjectName,
     required this.primaryColor,
     required this.languageProvider,
-    required this.teacherId,
     required this.onApply,
   });
 
@@ -155,7 +179,6 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
   late String? _className;
   late String? _subjectId;
   late String? _subjectName;
-  late List<dynamic> _subjectList;
 
   @override
   void initState() {
@@ -164,38 +187,23 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
     _className = widget.initialClassName;
     _subjectId = widget.initialSubjectId;
     _subjectName = widget.initialSubjectName;
-    _subjectList = [];
-    // If a class is already selected, load its subjects
-    if (_classId != null) {
-      _fetchSubjects(_classId!);
-    }
   }
 
   LanguageProvider get _lp => widget.languageProvider;
 
-  /// Fetches only subjects the current teacher teaches for the given class.
-  /// `/teacher/:id/subjects?class_id=` merges assignments + teaching
-  /// schedule; see TeacherController@getSubjects.
-  Future<void> _fetchSubjects(String classId) async {
-    try {
-      final r = await dioClient.get(
-        '/teacher/${widget.teacherId}/subjects',
-        queryParameters: {'class_id': classId},
-      );
-      final raw = r.data;
-      final list = raw is List
-          ? raw
-          : (raw is Map && raw['data'] is List
-                ? raw['data'] as List
-                : <dynamic>[]);
-      if (mounted) {
-        setState(() => _subjectList = list);
-      }
-    } catch (_) {}
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Brand filter rule: source chips from the pre-fetched roster +
+    // cross-axis maps. No on-tap network round-trips.
+    final roster = widget.ref.watch(filterRosterRiverpod);
+    final rosterClasses = roster.classesForSubject(
+      _subjectId,
+      isHomeroomView: widget.isHomeroomView,
+    );
+    final rosterSubjects = roster.subjectsForClass(_classId);
+    // Cold-open fallback: provider hasn't hydrated yet.
+    final fallbackClasses =
+        rosterClasses.isNotEmpty ? rosterClasses : widget.availableClasses;
     return AppFilterBottomSheet(
       title: _lp.getTranslatedText({
         'en': 'Filter Recap',
@@ -223,44 +231,64 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
       ),
       content: TeacherFilterContent(
         sections: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FilterSectionHeader(
-                title: _lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
-                icon: Icons.class_outlined,
-                primaryColor: widget.primaryColor,
-              ),
-              FilterChipGrid<String>(
-                options: widget.availableClasses.map((c) {
-                  return FilterOption<String>(
-                    value: c['id']!,
-                    label: c['name']!,
-                  );
-                }).toList(),
-                selectedValue: _classId,
-                onSelected: (classId) async {
-                  final isDeselect = classId == _classId;
-                  final nextId = isDeselect ? null : classId;
-                  setState(() {
-                    _classId = nextId;
-                    _className = FilterSheetHelpers.labelForId(
-                      widget.availableClasses,
-                      nextId,
-                    );
-                    _subjectId = null;
-                    _subjectName = null;
-                    _subjectList = [];
-                  });
-                  if (!isDeselect && classId != null) {
-                    await _fetchSubjects(classId);
-                  }
-                },
-                selectedColor: widget.primaryColor,
-              ),
-            ],
-          ),
-          if (_classId != null && _subjectList.isNotEmpty)
+          // Kelas section hides in wali kelas mode — the role toggle
+          // in the page header has already locked the class.
+          if (!widget.hideClassSection)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FilterSectionHeader(
+                  title: _lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+                  icon: Icons.class_outlined,
+                  primaryColor: widget.primaryColor,
+                ),
+                FilterChipGrid<String>(
+                  options: fallbackClasses.map((c) {
+                    final id = (c is Map ? c['id'] : null)?.toString() ?? '';
+                    final name = c is Map
+                        ? ((c['name'] ?? c['nama'] ?? '-').toString())
+                        : '-';
+                    return FilterOption<String>(value: id, label: name);
+                  }).toList(),
+                  selectedValue: _classId,
+                  onSelected: (classId) {
+                    final isDeselect = classId == _classId;
+                    final nextId = isDeselect ? null : classId;
+                    setState(() {
+                      _classId = nextId;
+                      _className = FilterSheetHelpers.labelForId(
+                        fallbackClasses,
+                        nextId,
+                      );
+                      // Cross-axis: drop subject if the new class
+                      // doesn't teach it.
+                      if (_subjectId != null && nextId != null) {
+                        final allowed = roster
+                            .subjectsForClass(nextId)
+                            .map((s) => (s as Map)['id']?.toString());
+                        if (!allowed.contains(_subjectId)) {
+                          _subjectId = null;
+                          _subjectName = null;
+                        }
+                      }
+                      // Auto-select-on-single.
+                      if (nextId != null && _subjectId == null) {
+                        final only = roster.subjectsForClass(nextId);
+                        if (only.length == 1 && only.first is Map) {
+                          _subjectId =
+                              (only.first as Map)['id']?.toString();
+                          _subjectName = ((only.first as Map)['name'] ??
+                                  (only.first as Map)['nama'])
+                              ?.toString();
+                        }
+                      }
+                    });
+                  },
+                  selectedColor: widget.primaryColor,
+                ),
+              ],
+            ),
+          if (rosterSubjects.isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -273,39 +301,41 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
                   primaryColor: widget.primaryColor,
                 ),
                 FilterChipGrid<String>(
-                  options: _subjectList.map((s) {
-                    final sid = s['id']?.toString() ?? '';
-                    final sname = (s['name'] ?? s['nama'] ?? '-').toString();
+                  options: rosterSubjects.map((s) {
+                    final sid = (s is Map ? s['id'] : null)?.toString() ?? '';
+                    final sname = s is Map
+                        ? ((s['name'] ?? s['nama'] ?? '-').toString())
+                        : '-';
                     return FilterOption<String>(value: sid, label: sname);
                   }).toList(),
                   selectedValue: _subjectId,
                   onSelected: (subjectId) {
                     final isDeselect = subjectId == _subjectId;
-                    final sname = _subjectList.firstWhere(
-                      (s) => s['id']?.toString() == subjectId,
-                      orElse: () => {'name': null, 'nama': null},
-                    );
+                    final nextId = isDeselect ? null : subjectId;
                     setState(() {
-                      _subjectId = isDeselect ? null : subjectId;
-                      _subjectName = isDeselect
-                          ? null
-                          : (sname['name'] ?? sname['nama'])?.toString();
+                      _subjectId = nextId;
+                      _subjectName = FilterSheetHelpers.labelForId(
+                        rosterSubjects,
+                        nextId,
+                      );
+                      // Cross-axis inverse: auto-select sole class.
+                      if (nextId != null && _classId == null) {
+                        final only = roster.classesForSubject(
+                          nextId,
+                          isHomeroomView: widget.isHomeroomView,
+                        );
+                        if (only.length == 1 && only.first is Map) {
+                          _classId = (only.first as Map)['id']?.toString();
+                          _className = ((only.first as Map)['name'] ??
+                                  (only.first as Map)['nama'])
+                              ?.toString();
+                        }
+                      }
                     });
                   },
                   selectedColor: widget.primaryColor,
                 ),
               ],
-            ),
-          if (_classId != null && _subjectList.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: Text(
-                _lp.getTranslatedText({
-                  'en': 'Loading subjects...',
-                  'id': 'Memuat mapel...',
-                }),
-                style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
-              ),
             ),
         ],
       ),
