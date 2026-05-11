@@ -392,6 +392,45 @@ class ApiRecommendationService {
     return (response.data?['data'] as List?) ?? [];
   }
 
+  /// Per-child summary used by the parent multi-child hub (Frame A).
+  /// Returns `{ children: [...], totals: {...} }` — one card per child
+  /// with counts for total / unread / replied / completed / high
+  /// priority + the most recent send timestamp.
+  Future<Map<String, dynamic>> getParentSummary({
+    required String parentUserId,
+  }) async {
+    final response = await _aiDio.get(
+      '/recommendations/parent-summary',
+      queryParameters: {'parent_user_id': parentUserId},
+    );
+    final data = response.data?['data'];
+    if (data is Map<String, dynamic>) return data;
+    return <String, dynamic>{'children': const [], 'totals': const {}};
+  }
+
+  /// Parent confirmation that a shared rec was applied at home —
+  /// stamps `parent_completed_at` on the recipient row and (when
+  /// [notifyTeacher] is true) flips the rec's status to `completed`
+  /// so the wali kelas's hub also reflects it.
+  Future<Map<String, dynamic>> markRecommendationCompletedByParent({
+    required String recommendationId,
+    required String parentUserId,
+    String? note,
+    bool notifyTeacher = true,
+  }) async {
+    final response = await _aiDio.post(
+      '/recommendations/$recommendationId/share/mark-completed-by-parent',
+      data: {
+        'parent_user_id': parentUserId,
+        if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+        'notify_teacher': notifyTeacher,
+      },
+    );
+    final body = response.data;
+    if (body is Map<String, dynamic>) return body;
+    return <String, dynamic>{};
+  }
+
   // ==================== CLASS SUMMARY ====================
 
   /// Get class summary (aggregated recommendations by category/priority/status)
@@ -602,6 +641,19 @@ class _AiLoggingInterceptor extends Interceptor {
       'recommendation',
       'AI Error ${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: ${err.message}',
     );
+    // Dump the raw response body for 500-class errors. The AI service
+    // renders Throwable as JSON in APP_DEBUG=true (see
+    // edu_ai_api/bootstrap/app.php), and the body carries the exact
+    // exception class + file:line + trace — without this log line
+    // it's invisible because Dio throws on the status before the
+    // caller can read it.
+    final code = err.response?.statusCode ?? 0;
+    if (code >= 500 && err.response?.data != null) {
+      AppLogger.error(
+        'recommendation',
+        'AI 500 body: ${err.response!.data}',
+      );
+    }
     handler.next(err);
   }
 }

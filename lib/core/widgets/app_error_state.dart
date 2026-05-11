@@ -52,11 +52,18 @@ class AppErrorState extends StatelessWidget {
         ? ColorUtils.getRoleColor(role!)
         : ColorUtils.primaryColor;
 
+    // Wrap the column in a scroll view so verbose backend error
+    // messages (multi-paragraph DioException dumps, RFC links, etc.)
+    // don't overflow the constrained body region of small phone
+    // screens. The `mainAxisSize: min` keeps the layout vertically
+    // centered when the message is short — only kicks in when the
+    // content actually exceeds the viewport.
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 80,

@@ -1,235 +1,540 @@
+// Frame A / B from `_design/auth_login_school_role_redesign.html`.
+//
+// The mixin is consumed by [LoginScreen] and renders the login form
+// content that lives INSIDE the form-card. The outer brand-gradient
+// hero band + form-card overlap chrome live on the screen itself
+// (login_screen.dart), so this mixin owns just:
+//   • the `Selamat Datang Kembali` heading + subtitle
+//   • the email field (with leading icon)
+//   • the password field (with leading icon + visibility toggle)
+//   • a server-not-connected banner when applicable
+//   • the right-aligned `Lupa kata sandi?` link → ForgotPasswordSheet
+//   • the cobalt-gradient Masuk CTA
+//   • the OR divider
+//   • the Google CTA wired to `handleGoogleSignIn`
+//   • the "Bantuan masuk" help row → LoginHelpSheet
+//   • the "Hubungi admin" footer link → WhatsApp deep-link
+//
+// "Ingat saya" is intentionally removed — Sanctum tokens persist by
+// default; the checkbox added confusion without changing behaviour.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/widgets/app_alert_dialog.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:manajemensekolah/features/auth/presentation/screens/login_screen.dart';
+import 'package:manajemensekolah/features/auth/presentation/widgets/forgot_password_sheet.dart';
+import 'package:manajemensekolah/features/auth/presentation/widgets/login_help_sheet.dart';
+
+/// WhatsApp deep-link target for "Hubungi admin". Per CLAUDE.md the
+/// number is the school's main support line; we keep it as a const so
+/// it's easy to swap if the number ever changes.
+const String _kAdminWhatsAppUrl = 'https://wa.me/6285179819002';
 
 mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
-  // Helper method to build password text field
-  Widget _buildPasswordTextField(
-    TextEditingController controller,
-    bool isLoading,
-    VoidCallback? onSubmitted,
-  ) {
-    return _PasswordTextFieldWidget(
-      controller: controller,
-      isLoading: isLoading,
-      onSubmitted: onSubmitted,
-    );
-  }
-
+  /// Public entry point — composes the form card body. The hero band
+  /// + form-card overlap is set up by the screen itself; this method
+  /// just emits the fields and CTAs.
   Widget buildLoginForm(AuthState authState) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Image.asset('assets/icon/KamilEdu.png', height: 80),
-        AppSpacing.v20,
-        // Brand string standardized: "KamilEdu" (no space) on the login
-        // surface; in-app AppBars keep the "Manajemen Sekolah" feature label.
-        // See P0 #17 in UI_Redesign_Audit.md.
-        const Text(
-          'KamilEdu',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        Text(
+          'Selamat Datang Kembali',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w900,
+            color: ColorUtils.slate900,
+            letterSpacing: -0.3,
+          ),
         ),
-        if (!authState.isServerConnected) _buildServerWarning(),
-        const SizedBox(height: 30),
-        _buildLoginFormFields(authState),
-        _buildForgotPasswordLink(),
-        AppSpacing.v20,
-        _buildLoginButtons(authState),
+        const SizedBox(height: 4),
+        Text(
+          'Masuk untuk melanjutkan ke akun sekolah Anda.',
+          style: TextStyle(
+            fontSize: 12,
+            color: ColorUtils.slate500,
+            fontWeight: FontWeight.w600,
+            height: 1.5,
+          ),
+        ),
+        if (!authState.isServerConnected) ...[
+          const SizedBox(height: 12),
+          _buildServerWarning(),
+        ],
+        const SizedBox(height: 14),
+        _buildEmailField(authState),
+        const SizedBox(height: 12),
+        _buildPasswordField(authState),
+        _buildForgotPasswordRow(),
+        const SizedBox(height: 8),
+        _buildLoginButton(authState),
+        const SizedBox(height: 14),
+        _buildOrDivider(),
+        const SizedBox(height: 10),
+        _buildGoogleSignInButton(authState),
+        const SizedBox(height: 12),
+        _buildHelpRow(),
+        const SizedBox(height: 12),
+        _buildContactAdminFooter(),
       ],
     );
   }
 
-  /// Right-aligned "Lupa Kata Sandi?" link directly under the password
-  /// field. P0 #18: the form previously had no recovery path, forcing
-  /// password-reset to happen out-of-app. Until a backend reset endpoint
-  /// ships, the link opens an [AppAlertDialog] explaining that the school
-  /// admin handles password resets — which matches the actual flow today.
-  Widget _buildForgotPasswordLink() {
+  // ─── Email / Password ────────────────────────────────────────────
+
+  Widget _buildEmailField(AuthState authState) {
+    return _FieldShell(
+      labelText: 'Email',
+      required: true,
+      child: TextField(
+        key: const Key('email_field'),
+        controller: emailController,
+        keyboardType: TextInputType.emailAddress,
+        textInputAction: TextInputAction.next,
+        autofillHints: const [AutofillHints.email],
+        style: TextStyle(fontSize: 13, color: ColorUtils.slate900),
+        decoration: _inputDecoration(
+          hint: 'anda@sekolah.id',
+          prefixIcon: Icons.alternate_email_rounded,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField(AuthState authState) {
+    return _FieldShell(
+      labelText: 'Kata Sandi',
+      required: true,
+      child: _PasswordTextFieldWidget(
+        controller: passwordController,
+        isLoading: authState.isLoading,
+        onSubmitted: () {
+          if (emailController.text.trim().isNotEmpty &&
+              passwordController.text.isNotEmpty) {
+            handleLogin();
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildForgotPasswordRow() {
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.sm, right: 4),
+      padding: const EdgeInsets.only(top: 8),
       child: Align(
         alignment: Alignment.centerRight,
-        child: TextButton(
-          onPressed: _showForgotPasswordDialog,
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: 4,
-            ),
-            minimumSize: const Size(0, 32),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text(
-            AppLocalizations.forgotPassword.tr,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: ColorUtils.darkBlue,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showForgotPasswordDialog() {
-    final lp = ref.read(languageRiverpod);
-    AppAlertDialog.show(
-      context: context,
-      title: AppLocalizations.forgotPassword.tr,
-      message: lp.getTranslatedText({
-        'en':
-            'Password resets are handled by your school administrator. '
-                'Please contact them to reset your password. A self-service '
-                'reset flow is on the roadmap.',
-        'id':
-            'Reset kata sandi dilakukan oleh admin sekolah Anda. Silakan '
-                'hubungi admin untuk reset kata sandi. Fitur reset mandiri '
-                'sedang direncanakan.',
-      }),
-      icon: Icons.lock_reset_rounded,
-      confirmText: AppLocalizations.understand.tr,
-      showCancel: false,
-    );
-  }
-
-  Widget _buildServerWarning() {
-    return Column(
-      children: [
-        AppSpacing.v10,
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: Colors.red[50],
-            border: Border.all(color: Colors.red),
-            borderRadius: const BorderRadius.all(Radius.circular(5)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.warning, color: Colors.red),
-              AppSpacing.h8,
-              Expanded(
-                child: Text(
-                  AppLocalizations.serverNotConnected.tr,
-                  style: const TextStyle(color: Colors.red),
-                ),
+        child: GestureDetector(
+          onTap: _openForgotPassword,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+            child: Text(
+              '${AppLocalizations.forgotPassword.tr}?',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: ColorUtils.brandCobalt,
               ),
-            ],
+            ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildLoginFormFields(AuthState authState) {
-    return AutofillGroup(
-      child: Column(
-        children: [
-          TextField(
-            key: const Key('email_field'),
-            controller: emailController,
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.email),
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.next,
-            autofillHints: const [AutofillHints.email],
-          ),
-          const SizedBox(height: 15),
-          _buildPasswordTextField(passwordController, authState.isLoading, () {
-            if (emailController.text.trim().isNotEmpty &&
-                passwordController.text.isNotEmpty) {
-              handleLogin();
-            }
-          }),
-        ],
       ),
     );
   }
 
-  Widget _buildLoginButtons(AuthState authState) {
-    final enabled = authState.isServerConnected && !authState.isLoading;
-    return Column(
-      children: [
-        _buildLoginButton(authState, enabled),
-        const SizedBox(height: 15),
-        _buildGoogleSignInButton(authState, enabled),
-      ],
+  Future<void> _openForgotPassword() async {
+    await showForgotPasswordSheet(
+      context: context,
+      initialEmail: emailController.text.trim(),
     );
   }
 
-  Widget _buildLoginButton(AuthState authState, bool enabled) {
+  // ─── CTAs ────────────────────────────────────────────────────────
+
+  Widget _buildLoginButton(AuthState authState) {
+    final enabled = authState.isServerConnected && !authState.isLoading;
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
-        key: const Key('login_button'),
-        onPressed: enabled ? handleLogin : null,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          backgroundColor: ColorUtils.darkBlue,
-          disabledBackgroundColor: ColorUtils.darkBlue.withValues(alpha: 0.6),
-        ),
-        child: authState.isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: enabled
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [ColorUtils.brandDarkBlue, ColorUtils.brandCobalt],
+                )
+              : LinearGradient(
+                  colors: [ColorUtils.slate300, ColorUtils.slate300],
                 ),
-              )
-            : Text(
-                AppLocalizations.login.tr.toUpperCase(),
-                style: const TextStyle(color: Colors.white),
-              ),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: ColorUtils.brandDarkBlue.withValues(alpha: 0.30),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
+        ),
+        child: ElevatedButton(
+          key: const Key('login_button'),
+          onPressed: enabled ? handleLogin : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            disabledBackgroundColor: Colors.transparent,
+          ),
+          child: authState.isLoading
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.4,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'Memverifikasi...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppLocalizations.login.tr,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
 
-  Widget _buildGoogleSignInButton(AuthState authState, bool enabled) {
+  Widget _buildOrDivider() {
+    return Row(
+      children: [
+        Expanded(child: Container(height: 1, color: ColorUtils.slate200)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            'atau lanjutkan dengan',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate400,
+              letterSpacing: 1,
+            ),
+          ),
+        ),
+        Expanded(child: Container(height: 1, color: ColorUtils.slate200)),
+      ],
+    );
+  }
+
+  Widget _buildGoogleSignInButton(AuthState authState) {
+    final enabled = authState.isServerConnected && !authState.isLoading;
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: enabled ? handleGoogleSignIn : null,
         icon: Image.asset(
           'assets/icon/google_logo.png',
-          height: 24,
-          errorBuilder: (c, o, s) => const Icon(Icons.login),
+          height: 18,
+          width: 18,
+          errorBuilder: (c, o, s) =>
+              Icon(Icons.g_mobiledata_rounded, color: ColorUtils.slate800),
         ),
         label: Text(
           authState.isLoading
               ? AppLocalizations.pleaseWait.tr
-              : AppLocalizations.signInWithGoogle.tr,
+              : 'Masuk dengan Google',
           style: TextStyle(
-            color: authState.isLoading ? Colors.grey : ColorUtils.darkBlue,
+            color: enabled ? ColorUtils.slate800 : ColorUtils.slate400,
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
           ),
         ),
         style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 15),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          backgroundColor: Colors.white,
           side: BorderSide(
-            color: authState.isLoading ? Colors.grey : ColorUtils.darkBlue,
+            color: enabled ? ColorUtils.slate200 : ColorUtils.slate100,
+            width: 1.5,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
     );
   }
 
-  // Expose controllers and methods
+  // ─── Helpers row + footer ────────────────────────────────────────
+
+  Widget _buildHelpRow() {
+    return Center(
+      child: GestureDetector(
+        onTap: _openLoginHelp,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.help_outline_rounded,
+                size: 13,
+                color: ColorUtils.slate500,
+              ),
+              const SizedBox(width: 6),
+              Text.rich(
+                TextSpan(
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: ColorUtils.slate600,
+                  ),
+                  children: [
+                    const TextSpan(text: 'Butuh bantuan? '),
+                    TextSpan(
+                      text: 'Bantuan masuk',
+                      style: TextStyle(
+                        color: ColorUtils.brandCobalt,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openLoginHelp() async {
+    await showLoginHelpSheet(
+      context: context,
+      initialEmail: emailController.text.trim(),
+    );
+  }
+
+  Widget _buildContactAdminFooter() {
+    return Center(
+      child: GestureDetector(
+        onTap: _launchAdminWhatsApp,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Text.rich(
+            TextSpan(
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: ColorUtils.slate500,
+              ),
+              children: [
+                const TextSpan(text: 'Belum punya akun sekolah? '),
+                TextSpan(
+                  text: 'Hubungi admin',
+                  style: TextStyle(
+                    color: ColorUtils.brandCobalt,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Launch the school-admin WhatsApp number. We try the platform's
+  /// preferred handler first (which on iOS / Android opens the WA
+  /// app directly when installed), then fall back to in-app browser.
+  /// If neither succeeds we surface a polite snackbar so the user
+  /// knows what number to copy manually.
+  Future<void> _launchAdminWhatsApp() async {
+    final uri = Uri.parse(_kAdminWhatsAppUrl);
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        SnackBarUtils.showError(
+          context,
+          'Tidak dapat membuka WhatsApp. Hubungi admin di +62 851-7981-9002.',
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      SnackBarUtils.showError(
+        context,
+        'Tidak dapat membuka WhatsApp. Hubungi admin di +62 851-7981-9002.',
+      );
+    }
+  }
+
+  // ─── Server-status banner ────────────────────────────────────────
+
+  Widget _buildServerWarning() {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: ColorUtils.error600.withValues(alpha: 0.06),
+        border: Border.all(color: ColorUtils.error600.withValues(alpha: 0.18)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_rounded, size: 16, color: ColorUtils.error600),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              AppLocalizations.serverNotConnected.tr,
+              style: TextStyle(
+                color: ColorUtils.error600,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Decorations ────────────────────────────────────────────────
+
+  static InputDecoration _inputDecoration({
+    required String hint,
+    required IconData prefixIcon,
+    Widget? suffix,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(
+        fontSize: 13,
+        color: ColorUtils.slate400,
+        fontWeight: FontWeight.w500,
+      ),
+      prefixIcon: Icon(prefixIcon, size: 16, color: ColorUtils.slate500),
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: ColorUtils.slate50,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: ColorUtils.slate200, width: 1.5),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: ColorUtils.slate200, width: 1.5),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: ColorUtils.brandCobalt, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      isDense: true,
+    );
+  }
+
+  // Mixin contract — implemented by the screen.
   TextEditingController get emailController;
   TextEditingController get passwordController;
   Future<void> handleLogin();
   Future<void> handleGoogleSignIn();
 }
 
-/// Private password text field widget used by LoginFormBuilderMixin
+// ─── Internal helpers ────────────────────────────────────────────
+
+/// Wraps a labeled field in a column with the same uppercase 11px
+/// label + 6px gap pattern the rest of the auth surfaces use. Keeps
+/// the form tidy without copy-pasting the label widget every time.
+class _FieldShell extends StatelessWidget {
+  final String labelText;
+  final bool required;
+  final Widget child;
+
+  const _FieldShell({
+    required this.labelText,
+    required this.required,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: labelText.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: ColorUtils.slate700,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              if (required)
+                TextSpan(
+                  text: ' *',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.error600,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        child,
+      ],
+    );
+  }
+}
+
+/// Password text field with its own visibility toggle state. Lives in
+/// a separate widget so flipping the toggle doesn't rebuild the entire
+/// login form (the email field, the gradient header, the server-status
+/// banner, etc.).
 class _PasswordTextFieldWidget extends StatefulWidget {
   final TextEditingController controller;
   final bool isLoading;
@@ -254,19 +559,27 @@ class _PasswordTextFieldWidgetState extends State<_PasswordTextFieldWidget> {
     return TextField(
       key: const Key('password_field'),
       controller: widget.controller,
-      decoration: InputDecoration(
-        labelText: 'Password',
-        prefixIcon: const Icon(Icons.lock),
-        border: const OutlineInputBorder(),
-        suffixIcon: IconButton(
-          icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-          onPressed: () => setState(() => _obscure = !_obscure),
-        ),
-      ),
       obscureText: _obscure,
       textInputAction: TextInputAction.done,
       autofillHints: const [AutofillHints.password],
       onSubmitted: widget.isLoading ? null : (_) => widget.onSubmitted?.call(),
+      style: TextStyle(fontSize: 13, color: ColorUtils.slate900),
+      decoration: LoginFormBuilderMixin._inputDecoration(
+        hint: 'Masukkan kata sandi',
+        prefixIcon: Icons.lock_outline_rounded,
+        suffix: IconButton(
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+          icon: Icon(
+            _obscure
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            size: 18,
+            color: ColorUtils.slate500,
+          ),
+          onPressed: () => setState(() => _obscure = !_obscure),
+        ),
+      ),
     );
   }
 }

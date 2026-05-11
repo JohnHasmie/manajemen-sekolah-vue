@@ -15,16 +15,19 @@
 library;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/shell/shell_nav.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/academic_year_chip.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
@@ -45,6 +48,7 @@ import 'package:manajemensekolah/features/dashboard/presentation/widgets/academi
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/parent_dashboard_hero_widgets.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/screens/parent_recommendation_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/parent_report_card_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
 
@@ -726,16 +730,69 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     );
   }
 
+  /// "Modul lain → Rekomendasi" entry. The shared rec screen needs the
+  /// authenticated parent's user id (the kamiledu-ai backend scopes
+  /// every parent query by `parent_user_id` from the body — the bearer
+  /// token alone isn't enough because the parent role is shared by
+  /// many users at the same school).
+  ///
+  /// We read the id from the `'user'` blob `PreferencesService` caches
+  /// at login — same source `parent_attendance_screen.dart`,
+  /// `parent_grade_screen.dart`, and `fcm_notification_router.dart`
+  /// already use, so we don't introduce a new auth surface here.
+  void _openRecommendations() {
+    final raw = PreferencesService().getString('user');
+    String parentUserId = '';
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) {
+          parentUserId = decoded['id']?.toString() ?? '';
+        }
+      } catch (_) {
+        /* fall through to the empty-id branch below */
+      }
+    }
+
+    if (parentUserId.isEmpty) {
+      // Defensive — should never happen for a logged-in parent, but
+      // bail with a friendly message instead of pushing a screen that
+      // would 422 on every fetch.
+      SnackBarUtils.showError(
+        context,
+        'Sesi tidak ditemukan. Silakan masuk ulang.',
+      );
+      return;
+    }
+
+    AppNavigator.push(
+      context,
+      ParentRecommendationScreen(parentUserId: parentUserId),
+    );
+  }
+
   void _openAccount() {
     AppNavigator.push(context, const SettingsScreen());
   }
 
   Widget _buildModulLain() {
+    // Rekomendasi sits in the visible strip (slot 1) because wali-kelas
+    // recommendations are time-sensitive — parents need to see new
+    // suggestions at a glance, the same priority as Raport / Kegiatan
+    // / Kehadiran. We promote *down* (Kehadiran → overflow) rather
+    // than adding a 5th visible tile so the row stays at 4 slots
+    // (4 visible + the "+N Lainnya" overflow tile = 5 cells, the
+    // documented max for `ModulLainStrip`).
     return ModulLainStrip(
       title: 'Modul lain',
-      totalLabel: '7 modul',
+      totalLabel: '8 modul',
       accentColor: _parentBrandAzureDeep,
       visibleItems: [
+        ModulLainStripItem(
+          label: 'Rekomendasi',
+          icon: Icons.lightbulb_outline_rounded,
+          onTap: _openRecommendations,
+        ),
         ModulLainStripItem(
           label: 'Raport',
           icon: Icons.school_outlined,
@@ -746,13 +803,13 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
           icon: Icons.event_outlined,
           onTap: _openClassActivity,
         ),
+      ],
+      overflowItems: [
         ModulLainStripItem(
           label: 'Kehadiran',
           icon: Icons.check_circle_outline,
           onTap: _openAttendance,
         ),
-      ],
-      overflowItems: [
         ModulLainStripItem(
           label: 'Nilai',
           icon: Icons.grade_outlined,

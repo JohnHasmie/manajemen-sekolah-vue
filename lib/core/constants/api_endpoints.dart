@@ -19,6 +19,15 @@ class ApiEndpoints {
   static const userRoles = '/auth/roles';
   static const userSchools = '/auth/schools';
 
+  /// Public endpoints surfaced from the redesigned login screen
+  /// (Frame A footer affordances). `forgotPassword` triggers Laravel's
+  /// `Password::sendResetLink` broker; `helpRequest` posts a triage row
+  /// to the new `login_help_requests` audit table and emails the
+  /// configured support inbox. Both are throttled at the route level
+  /// so the public surface stays safe.
+  static const forgotPassword = '/auth/forgot-password';
+  static const helpRequest = '/auth/help-request';
+
   // ── User (non-auth context) ──
   static const userRolesList = '/user/roles';
   static const userSchoolsList = '/user/schools';

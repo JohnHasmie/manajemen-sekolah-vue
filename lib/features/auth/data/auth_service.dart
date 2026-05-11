@@ -212,6 +212,88 @@ class AuthService {
     }
   }
 
+  /// "Lupa kata sandi?" — POST /auth/forgot-password.
+  ///
+  /// Always resolves with `{success, message}` even when the email
+  /// doesn't match a known user (the backend collapses the response to
+  /// a neutral message to prevent email enumeration). Throttled at
+  /// 6/min on the server, plus an extra 429 path here in case the
+  /// broker rate-limit kicks in before the throttle.
+  static Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final response = await dioClient.post(
+        ApiEndpoints.forgotPassword,
+        data: {'email': email},
+      );
+      final body = response.data;
+      if (body is Map) return Map<String, dynamic>.from(body);
+      return {'success': true};
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      if (e.response?.statusCode == 429 && body is Map) {
+        // Surface throttle message instead of the generic Dio dump.
+        throw Exception(
+          body['message'] ?? 'Terlalu banyak permintaan. Coba lagi nanti.',
+        );
+      }
+      if (body is Map) {
+        throw Exception(
+          body['message'] ?? body['error'] ?? 'Gagal mengirim tautan reset.',
+        );
+      }
+      throw Exception('Gagal mengirim tautan reset. Periksa koneksi Anda.');
+    }
+  }
+
+  /// "Bantuan masuk" — POST /auth/help-request.
+  ///
+  /// Public endpoint, audit-logged on the server. Resolves with
+  /// `{success, message}`. Each user is throttled to 3 requests per
+  /// minute; if hit we surface the generic throttle message so the
+  /// UI can show it inline.
+  static Future<Map<String, dynamic>> helpRequest({
+    required String name,
+    required String email,
+    String? phone,
+    String? schoolName,
+    required String message,
+  }) async {
+    try {
+      final response = await dioClient.post(
+        ApiEndpoints.helpRequest,
+        data: {
+          'name': name,
+          'email': email,
+          if (phone != null && phone.isNotEmpty) 'phone': phone,
+          if (schoolName != null && schoolName.isNotEmpty)
+            'school_name': schoolName,
+          'message': message,
+        },
+      );
+      final body = response.data;
+      if (body is Map) return Map<String, dynamic>.from(body);
+      return {'success': true};
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      if (e.response?.statusCode == 429 && body is Map) {
+        throw Exception(
+          body['message'] ??
+              'Terlalu banyak permintaan. Coba lagi dalam beberapa menit.',
+        );
+      }
+      if (body is Map) {
+        throw Exception(
+          body['message'] ??
+              body['error'] ??
+              'Gagal mengirim permintaan bantuan.',
+        );
+      }
+      throw Exception(
+        'Gagal mengirim permintaan bantuan. Periksa koneksi Anda.',
+      );
+    }
+  }
+
   /// Normalizes Indonesian backend flags to the keys used by _handleLoginResponse.
   static Map<String, dynamic> _normalizeFlags(dynamic data) {
     final responseData = Map<String, dynamic>.from(data);

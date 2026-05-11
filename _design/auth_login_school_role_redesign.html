@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Auth · Login → Pilih Sekolah → Pilih Peran · Redesign</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+
+    /* Kamil Edu brand */
+    --brand-dark: #143068;
+    --brand-dark-deep: #0F2553;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --brand-azure-deep: #1A8FBE;
+
+    /* Role accents (only used on the role cards) */
+    --admin: #143068;
+    --teacher: #1B6FB8;
+    --parent: #21AFE6;
+
+    /* Semantic */
+    --green-50: #DCFCE7;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --indigo-600: #4F46E5;
+    --teal-600: #0D9488;
+    --violet-600: #7C3AED;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg); margin: 0; padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 24px;
+    max-width: 920px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px; align-items: start;
+  }
+  .frame {
+    background: var(--surface); border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 760;
+    position: relative; overflow: hidden;
+    background: white;
+    display: flex; flex-direction: column;
+  }
+
+  /* ───── Top brand band (all auth frames) ───── */
+  .brand-band {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 60%, var(--brand-azure) 110%);
+    padding: 28px 24px 36px;
+    color: white; flex: 0 0 auto;
+    border-radius: 0 0 32px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .brand-band::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 88% 18%, rgba(255,255,255,.10) 0, transparent 36%),
+      radial-gradient(circle at 12% 92%, rgba(255,255,255,.05) 0, transparent 32%);
+    pointer-events: none;
+    border-radius: 0 0 32px 32px;
+  }
+  .brand-band.compact { padding: 20px 20px 26px; }
+
+  .top-row {
+    display: flex; align-items: center; gap: 8px;
+    position: relative;
+  }
+  .top-row .h-back {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto;
+  }
+  .top-row .h-back svg {
+    width: 16px; height: 16px;
+    stroke-width: 2.4; fill: none; stroke: currentColor;
+  }
+  .top-row .h-lang {
+    margin-left: auto;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.18);
+    font-size: 11px; font-weight: 800;
+    color: white;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .top-row .h-lang svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  /* ───── Logo / wordmark — faithful to the brand SVG ─────
+     The icon is a stacked-chevron mortarboard sitting on top of a
+     flat brim; an azure bookmark tag tucks under the lower-left
+     corner. We render it in inline SVG so the gradient + bookmark
+     colour follow the brand tokens — the `currentColor` fill on the
+     chevrons reacts to the parent text colour, so the same SVG works
+     on both the white logo card AND in the dark (white-on-navy)
+     wordmark variant we use on the Pilih Sekolah / Pilih Peran bands.
+  */
+  .logo-block {
+    margin-top: 22px;
+    text-align: center;
+    position: relative;
+  }
+  .logo-mark {
+    width: 76px; height: 76px;
+    border-radius: 22px;
+    background: white;
+    margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 12px 32px rgba(15,23,42,.18), 0 2px 6px rgba(15,23,42,.10);
+    position: relative;
+  }
+  .logo-mark svg.cap {
+    width: 40px; height: 40px;
+    color: var(--brand-dark);
+  }
+  .logo-mark svg.cap .stroke { stroke: currentColor; stroke-width: 2.6; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+  .logo-mark svg.cap .bookmark { fill: var(--brand-azure); }
+
+  /* Wordmark + lockup variants */
+  .wordmark-lockup {
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .wordmark-lockup .lk-mark {
+    width: 26px; height: 26px;
+    color: white;
+  }
+  .wordmark-lockup .lk-mark svg { width: 100%; height: 100%; }
+  .wordmark-lockup .lk-mark svg .stroke { stroke: currentColor; stroke-width: 2.4; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+  .wordmark-lockup .lk-mark svg .bookmark { fill: var(--brand-azure); }
+
+  .wordmark {
+    font-size: 24px; font-weight: 900;
+    letter-spacing: -0.4px;
+    color: white;
+    line-height: 1.0;
+  }
+  .wordmark .accent {
+    color: rgba(255,255,255,.86);
+    font-weight: 500;
+  }
+  .tagline {
+    margin-top: 8px;
+    font-size: 11.5px; font-weight: 600;
+    color: rgba(255,255,255,.86);
+    letter-spacing: 0.2px;
+  }
+
+  /* ───── Form panel (overlap card) ───── */
+  .form-card {
+    background: white;
+    border-radius: 22px;
+    margin: -24px 18px 0;
+    padding: 22px 18px;
+    box-shadow: 0 12px 32px rgba(15,23,42,.10), 0 2px 6px rgba(15,23,42,.04);
+    position: relative; z-index: 1;
+  }
+  .form-card .ttl {
+    font-size: 17px; font-weight: 900;
+    color: var(--slate-900); letter-spacing: -0.3px;
+  }
+  .form-card .sub {
+    margin-top: 4px;
+    font-size: 12px; color: var(--slate-500);
+    font-weight: 600; line-height: 1.5;
+  }
+
+  .field {
+    margin-top: 14px;
+  }
+  .field-label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-700); letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .field-label .req { color: var(--red-600); }
+  .input {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    background: var(--slate-50);
+    border: 1.5px solid var(--slate-200);
+    border-radius: 12px;
+    transition: all .12s;
+  }
+  .input.focus {
+    border-color: var(--brand-cobalt);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(27,111,184,.10);
+  }
+  .input.error {
+    border-color: var(--red-600);
+    background: rgba(220,38,38,.04);
+  }
+  .input svg.ic {
+    width: 14px; height: 14px;
+    stroke: var(--slate-500); stroke-width: 2.4; fill: none;
+    flex: 0 0 auto;
+  }
+  .input.focus svg.ic { stroke: var(--brand-cobalt); }
+  .input.error svg.ic { stroke: var(--red-600); }
+  .input input {
+    flex: 1; min-width: 0;
+    border: none; outline: none; background: transparent;
+    font-size: 13px; font-weight: 600; color: var(--slate-900);
+  }
+  .input input::placeholder { color: var(--slate-400); font-weight: 500; }
+  .input .toggle {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--slate-500);
+  }
+  .input .toggle svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  .field-help {
+    margin-top: 6px;
+    font-size: 11px; font-weight: 600;
+    color: var(--slate-500);
+  }
+  .field-help.error {
+    color: var(--red-700);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .field-help.error svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+
+  .row-between {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 10px;
+  }
+  .checkbox-row { display: flex; align-items: center; gap: 7px; }
+  .checkbox {
+    width: 16px; height: 16px;
+    border-radius: 5px;
+    border: 1.5px solid var(--slate-300);
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .checkbox.checked {
+    background: var(--brand-cobalt);
+    border-color: var(--brand-cobalt);
+  }
+  .checkbox.checked svg {
+    width: 10px; height: 10px;
+    stroke: white; stroke-width: 3; fill: none;
+  }
+  .checkbox-row span {
+    font-size: 11.5px; font-weight: 700;
+    color: var(--slate-700);
+  }
+  .link {
+    font-size: 11.5px; font-weight: 800;
+    color: var(--brand-cobalt);
+  }
+
+  /* ───── Primary CTA ───── */
+  .btn-primary {
+    width: 100%;
+    margin-top: 16px;
+    padding: 13px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+    color: white;
+    font-size: 13.5px; font-weight: 900; letter-spacing: 0.2px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 8px 18px rgba(20,48,104,.30);
+  }
+  .btn-primary svg { width: 13px; height: 13px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+  .btn-primary.busy {
+    background: var(--slate-300);
+    box-shadow: none;
+    color: rgba(255,255,255,.85);
+  }
+  .btn-primary .spin {
+    width: 14px; height: 14px;
+    border: 2.4px solid rgba(255,255,255,.4);
+    border-top-color: white;
+    border-radius: 999px;
+    animation: spin .9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .btn-ghost {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    background: white;
+    border: 1.5px solid var(--slate-200);
+    color: var(--slate-700);
+    font-size: 13px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-ghost svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  /* Google sign-in — official "G" mark + light-grey hairline */
+  .btn-google {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    background: white;
+    border: 1.5px solid var(--slate-200);
+    color: var(--slate-800);
+    font-size: 13px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: all .12s;
+  }
+  .btn-google:hover {
+    border-color: var(--slate-300);
+    box-shadow: 0 4px 12px rgba(15,23,42,.06);
+  }
+  .btn-google .g-mark {
+    width: 18px; height: 18px;
+    flex: 0 0 auto;
+  }
+
+  /* Help link row — bantuan masuk */
+  .help-row {
+    margin-top: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px;
+  }
+  .help-row svg {
+    width: 12px; height: 12px;
+    stroke: var(--slate-500); stroke-width: 2.4; fill: none;
+  }
+  .help-row .lbl {
+    font-size: 11.5px; font-weight: 700;
+    color: var(--slate-600);
+  }
+  .help-row .lbl a {
+    color: var(--brand-cobalt); font-weight: 800;
+  }
+
+  /* ───── Divider with text ───── */
+  .or-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 14px 0 8px;
+  }
+  .or-divider .line {
+    flex: 1; height: 1px; background: var(--slate-200);
+  }
+  .or-divider .lbl {
+    font-size: 10px; font-weight: 800;
+    color: var(--slate-400); letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .footer-tip {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 11.5px; font-weight: 600;
+    color: var(--slate-500);
+  }
+  .footer-tip a { color: var(--brand-cobalt); font-weight: 800; }
+
+  /* ───── Choose School / Role list ───── */
+  .body {
+    flex: 1; overflow-y: auto;
+    padding: 8px 18px 18px;
+  }
+  .body.compact { padding-top: 14px; }
+
+  .search-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    margin-top: 12px;
+  }
+  .search-bar svg { width: 14px; height: 14px; stroke: var(--slate-400); stroke-width: 2.4; fill: none; }
+  .search-bar input {
+    flex: 1; min-width: 0;
+    border: none; outline: none; background: transparent;
+    font-size: 12.5px; color: var(--slate-900); font-weight: 600;
+  }
+  .search-bar input::placeholder { color: var(--slate-400); font-weight: 500; }
+
+  .sec-head {
+    margin: 16px 2px 8px;
+    font-size: 10px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* School card */
+  .school-card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .school-card.active {
+    border-color: var(--brand-cobalt);
+    box-shadow: 0 6px 18px rgba(27,111,184,.12);
+  }
+  .school-card .logo {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 14px; font-weight: 900;
+    letter-spacing: 0.2px;
+  }
+  .school-card .logo.cobalt {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+  }
+  .school-card .logo.teal {
+    background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+  }
+  .school-card .logo.amber {
+    background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+  }
+  .school-card .info { flex: 1; min-width: 0; }
+  .school-card .nm {
+    font-size: 13px; font-weight: 900;
+    color: var(--slate-900); letter-spacing: -0.2px;
+    line-height: 1.25;
+  }
+  .school-card .meta {
+    margin-top: 2px;
+    font-size: 10.5px; color: var(--slate-500); font-weight: 600;
+  }
+  .school-card .role-row {
+    display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap;
+  }
+  .role-pill {
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 9px; font-weight: 800;
+    letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .role-pill.admin { background: rgba(20,48,104,.10); color: var(--admin); }
+  .role-pill.teacher { background: rgba(27,111,184,.10); color: var(--teacher); }
+  .role-pill.parent { background: rgba(33,175,230,.10); color: var(--parent); }
+
+  .school-card .arr {
+    width: 28px; height: 28px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--slate-400);
+  }
+  .school-card.active .arr { color: var(--brand-cobalt); }
+  .school-card .arr svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+  .school-card .check {
+    width: 22px; height: 22px;
+    border-radius: 999px;
+    background: var(--brand-cobalt);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .school-card .check svg { width: 12px; height: 12px; stroke: white; stroke-width: 3; fill: none; }
+
+  /* Role card */
+  .role-card {
+    background: white;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .role-card.active {
+    border-color: var(--brand-cobalt);
+    box-shadow: 0 6px 18px rgba(27,111,184,.14);
+  }
+  .role-card .accent-bar {
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 4px;
+    border-radius: 16px 0 0 16px;
+  }
+  .role-card.admin .accent-bar { background: var(--admin); }
+  .role-card.teacher .accent-bar { background: var(--teacher); }
+  .role-card.parent .accent-bar { background: var(--parent); }
+
+  .role-card .top-row-r {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .role-card .role-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .role-card.admin .role-icon { background: rgba(20,48,104,.10); color: var(--admin); }
+  .role-card.teacher .role-icon { background: rgba(27,111,184,.10); color: var(--teacher); }
+  .role-card.parent .role-icon { background: rgba(33,175,230,.10); color: var(--parent); }
+  .role-card .role-icon svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+  .role-card .role-info { flex: 1; min-width: 0; }
+  .role-card .role-name {
+    font-size: 14px; font-weight: 900;
+    color: var(--slate-900); letter-spacing: -0.2px;
+  }
+  .role-card .role-desc {
+    margin-top: 2px;
+    font-size: 11px; color: var(--slate-500);
+    font-weight: 600; line-height: 1.45;
+  }
+
+  .role-card .role-stats {
+    display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .role-card .role-stat {
+    padding: 4px 9px;
+    border-radius: 8px;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    font-size: 10.5px; font-weight: 700;
+    color: var(--slate-700);
+  }
+  .role-card .role-stat strong {
+    color: var(--slate-900); font-weight: 900;
+  }
+
+  /* Sheet (forgot password) */
+  .scrim { flex: 1; background: rgba(15,23,42,.45); }
+  .sheet {
+    flex: 0 0 auto;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    padding: 12px 0 0;
+    box-shadow: 0 -8px 24px rgba(15,23,42,.10);
+  }
+  .grabber {
+    width: 36px; height: 4px; border-radius: 999px;
+    background: var(--slate-200);
+    margin: 0 auto 12px;
+  }
+  .sheet-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 18px 14px;
+  }
+  .sheet-head .ic {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: rgba(27,111,184,.10);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sheet-head .ic svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .sheet-head .tt { flex: 1; }
+  .sheet-head .t { font-size: 14px; font-weight: 900; color: var(--slate-900); letter-spacing: -0.2px; }
+  .sheet-head .s { font-size: 11px; color: var(--slate-500); font-weight: 600; margin-top: 1px; }
+  .sheet-body { padding: 4px 18px 14px; }
+  .sheet-footer {
+    display: flex; gap: 10px;
+    padding: 14px 18px 18px;
+    border-top: 1px solid var(--slate-100);
+  }
+  .sheet-footer .btn {
+    flex: 1; padding: 12px;
+    border-radius: 12px;
+    font-size: 13px; font-weight: 800;
+    text-align: center;
+  }
+  .sheet-footer .btn.outline {
+    background: var(--slate-100);
+    color: var(--slate-700);
+  }
+  .sheet-footer .btn.primary {
+    background: var(--brand-cobalt);
+    color: white;
+    box-shadow: 0 6px 14px rgba(27,111,184,.30);
+  }
+
+  /* Continue bar (footer of choose-school / choose-role frames) */
+  .continue-bar {
+    flex: 0 0 auto;
+    background: white;
+    border-top: 1px solid var(--slate-200);
+    padding: 12px 18px 16px;
+  }
+  .continue-bar .btn-primary { margin-top: 0; }
+
+  /* Welcome dot indicator */
+  .step-dots {
+    display: flex; justify-content: center; gap: 6px;
+    margin-top: 14px;
+  }
+  .step-dot {
+    width: 6px; height: 6px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.30);
+  }
+  .step-dot.active {
+    width: 18px;
+    background: white;
+  }
+
+  /* Tooltip / banner inside form-card */
+  .info-banner {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: rgba(33,175,230,.06);
+    border: 1px solid rgba(33,175,230,.18);
+    border-radius: 10px;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .info-banner svg { width: 13px; height: 13px; stroke: var(--brand-azure-deep); stroke-width: 2.4; fill: none; flex: 0 0 auto; margin-top: 1px; }
+  .info-banner .body-t {
+    font-size: 11.5px; color: var(--slate-700); font-weight: 600;
+    line-height: 1.55;
+  }
+  .info-banner .body-t strong { color: var(--brand-cobalt); font-weight: 800; }
+</style>
+</head>
+<body>
+<h1>Auth · Login → Pilih Sekolah → Pilih Peran</h1>
+<p class="subtitle">
+  A redesigned three-step pre-auth flow that mirrors the Kamil Edu brand identity
+  (deep blue → cobalt → azure gradient) and respects the role color tokens
+  (admin navy, teacher cobalt, parent azure) without imposing them on users who
+  haven't picked a role yet. Six frames: Login (empty + error/busy), Lupa Kata Sandi
+  sheet, Pilih Sekolah, Pilih Peran, single-school fast path. The login form drops
+  "Ingat saya" (sessions persist via Sanctum tokens by default), surfaces
+  <strong>Masuk dengan Google</strong> as a first-class secondary, and routes
+  <strong>Bantuan masuk</strong> to a new help-request endpoint that emails the
+  school admin. The KamilEdu mortarboard mark — chevrons under a flat brim with an
+  azure bookmark tag — is rendered in inline SVG so it re-tints between the white
+  hero card and the dark gradient bands.
+</p>
+
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- FRAME A · LOGIN — empty / focused                            -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">A</span>Login · empty<span class="desc">brand gradient · KamilEdu mark + wordmark · email + password · Lupa kata sandi (right-aligned) · Masuk · Google · Bantuan masuk</span></div>
+    <div class="phone">
+      <div class="brand-band">
+        <div class="top-row">
+          <div class="h-back"><svg viewBox="0 0 24 24" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-lang">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            ID
+          </div>
+        </div>
+        <div class="logo-block">
+          <div class="logo-mark">
+            <!-- KamilEdu mortarboard mark with the azure bookmark
+                 accent — based on the user's official logo. The cap
+                 is two stacked chevrons sitting on a flat brim, with
+                 a small azure bookmark/tassel slipped under the
+                 lower-left corner. `currentColor` lets us re-tint
+                 the strokes for the dark-band variant in Frames D/E. -->
+            <svg class="cap" viewBox="0 0 64 64" fill="none">
+              <!-- Outer cap silhouette: brim + roof apex -->
+              <path class="stroke" d="M6 28 L32 14 L58 28 L32 42 Z"/>
+              <!-- Upper chevron -->
+              <path class="stroke" d="M16 25 L32 17 L48 25"/>
+              <!-- Brim base -->
+              <path class="stroke" d="M11 32 V42 C11 50 53 50 53 42 V32"/>
+              <!-- Azure bookmark / tassel tag -->
+              <path class="bookmark" d="M11 38 L11 56 L18 50 L25 56 L25 38 Z"/>
+            </svg>
+          </div>
+          <div class="wordmark">Kamil<span class="accent">Edu</span></div>
+          <div class="tagline">Platform Manajemen Sekolah Terpadu</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="ttl">Selamat Datang Kembali</div>
+        <div class="sub">Masuk untuk melanjutkan ke akun sekolah Anda.</div>
+
+        <div class="field">
+          <div class="field-label">Email <span class="req">*</span></div>
+          <div class="input">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+            <input type="email" placeholder="anda@sekolah.id">
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Kata Sandi <span class="req">*</span></div>
+          <div class="input focus">
+            <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" placeholder="Masukkan kata sandi">
+            <div class="toggle">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lupa kata sandi sits on its own right-aligned row now
+             that "Ingat saya" is gone — keeps the password recovery
+             affordance discoverable without the persistence option
+             cluttering the form. -->
+        <div style="display:flex; justify-content:flex-end; margin-top:8px">
+          <div class="link">Lupa kata sandi?</div>
+        </div>
+
+        <div class="btn-primary">
+          Masuk
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+
+        <div class="or-divider">
+          <div class="line"></div>
+          <div class="lbl">atau lanjutkan dengan</div>
+          <div class="line"></div>
+        </div>
+
+        <!-- Google sign-in — official multicolor "G" mark.
+             Backed by POST /api/auth/google-login (existing endpoint
+             on AuthController). The mobile flow uses google_sign_in
+             plugin to obtain an id_token, then trades it for a
+             Sanctum token via this CTA. -->
+        <div class="btn-google">
+          <svg class="g-mark" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.61z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A8.997 8.997 0 0 0 9 18z"/>
+            <path fill="#FBBC05" d="M3.97 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.29-1.71V4.96H.96A8.997 8.997 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3.01-2.33z"/>
+            <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A8.997 8.997 0 0 0 .96 4.96l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
+          </svg>
+          Masuk dengan Google
+        </div>
+
+        <!-- Bantuan masuk — opens help-request sheet that POSTs to
+             /api/auth/help-request (new endpoint added in this pass)
+             which emails the school admin with the user's contact
+             details so they can reset access manually. -->
+        <div class="help-row">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
+          <div class="lbl">Butuh bantuan? <a>Bantuan masuk</a></div>
+        </div>
+
+        <div class="footer-tip">
+          Belum punya akun sekolah? <a>Hubungi admin</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME B · LOGIN — error + busy                                -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">B</span>Login · error + memuat<span class="desc">red error band on email · busy CTA spinner · keyboard-up form-card lifted</span></div>
+    <div class="phone">
+      <div class="brand-band compact">
+        <div class="top-row">
+          <div class="h-back"><svg viewBox="0 0 24 24" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-lang">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            ID
+          </div>
+        </div>
+        <div class="logo-block" style="margin-top:10px">
+          <div class="wordmark-lockup">
+            <div class="lk-mark">
+              <svg viewBox="0 0 64 64" fill="none">
+                <path class="stroke" d="M6 28 L32 14 L58 28 L32 42 Z"/>
+                <path class="stroke" d="M16 25 L32 17 L48 25"/>
+                <path class="stroke" d="M11 32 V42 C11 50 53 50 53 42 V32"/>
+                <path class="bookmark" d="M11 38 L11 56 L18 50 L25 56 L25 38 Z"/>
+              </svg>
+            </div>
+            <div class="wordmark" style="font-size:20px">Kamil<span class="accent">Edu</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="ttl">Selamat Datang Kembali</div>
+        <div class="sub">Masuk untuk melanjutkan ke akun sekolah Anda.</div>
+
+        <div class="field">
+          <div class="field-label">Email <span class="req">*</span></div>
+          <div class="input error">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+            <input type="email" value="yahya@kamiledu" style="color:var(--slate-900)">
+          </div>
+          <div class="field-help error">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16.01"/></svg>
+            Format email tidak valid.
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Kata Sandi <span class="req">*</span></div>
+          <div class="input">
+            <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" value="••••••••">
+            <div class="toggle">
+              <svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top:8px">
+          <div class="link">Lupa kata sandi?</div>
+        </div>
+
+        <div class="info-banner">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5"/></svg>
+          <div class="body-t">Pastikan email yang digunakan sama dengan yang terdaftar di sekolah. Jika lupa, hubungi <strong>admin sekolah</strong>.</div>
+        </div>
+
+        <div class="btn-primary busy">
+          <div class="spin"></div>
+          Memverifikasi...
+        </div>
+
+        <div class="help-row">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
+          <div class="lbl">Butuh bantuan? <a>Bantuan masuk</a></div>
+        </div>
+
+        <div class="footer-tip">
+          Belum punya akun sekolah? <a>Hubungi admin</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME C · FORGOT PASSWORD SHEET                              -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">C</span>Lupa kata sandi sheet<span class="desc">cobalt header · email input · kirim tautan reset · info banner</span></div>
+    <div class="phone">
+      <div class="scrim"></div>
+      <div class="sheet" style="max-height:74%">
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <div class="ic">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><path d="M16 16h.01"/></svg>
+          </div>
+          <div class="tt">
+            <div class="t">Lupa Kata Sandi</div>
+            <div class="s">Kami akan mengirim tautan reset ke email Anda.</div>
+          </div>
+        </div>
+        <div class="sheet-body">
+          <div class="field" style="margin-top:0">
+            <div class="field-label">Email Terdaftar <span class="req">*</span></div>
+            <div class="input focus">
+              <svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>
+              <input type="email" placeholder="yahya@kamiledu.id">
+            </div>
+            <div class="field-help">Tautan akan kedaluwarsa setelah 30 menit.</div>
+          </div>
+
+          <div class="info-banner" style="margin-top:14px">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5"/></svg>
+            <div class="body-t">Jika Anda tidak menerima email dalam <strong>5 menit</strong>, periksa folder spam atau hubungi admin sekolah.</div>
+          </div>
+        </div>
+
+        <div class="sheet-footer">
+          <div class="btn outline">Batal</div>
+          <div class="btn primary">Kirim Tautan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME D · CHOOSE SCHOOL                                      -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">D</span>Pilih Sekolah · multi-tenant<span class="desc">step dot 2/3 · search · school cards w/ logo + role pill row · primary card highlighted</span></div>
+    <div class="phone">
+      <div class="brand-band compact">
+        <div class="top-row">
+          <div class="h-back"><svg viewBox="0 0 24 24" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-lang">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            ID
+          </div>
+        </div>
+        <div style="margin-top:14px; text-align:center; position:relative">
+          <div style="display:flex; justify-content:center; margin-bottom:8px">
+            <div class="wordmark-lockup">
+              <div class="lk-mark" style="width:22px; height:22px">
+                <svg viewBox="0 0 64 64" fill="none">
+                  <path class="stroke" d="M6 28 L32 14 L58 28 L32 42 Z"/>
+                  <path class="stroke" d="M16 25 L32 17 L48 25"/>
+                  <path class="stroke" d="M11 32 V42 C11 50 53 50 53 42 V32"/>
+                  <path class="bookmark" d="M11 38 L11 56 L18 50 L25 56 L25 38 Z"/>
+                </svg>
+              </div>
+              <div class="wordmark" style="font-size:14px">Kamil<span class="accent">Edu</span></div>
+            </div>
+          </div>
+          <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,.78); letter-spacing:1.4px; text-transform:uppercase">Halo, Yahya Hasymi</div>
+          <div style="font-size:18px; font-weight:900; color:white; letter-spacing:-0.3px; margin-top:4px">Pilih Sekolah</div>
+          <div style="font-size:11.5px; font-weight:600; color:rgba(255,255,255,.86); margin-top:4px">Anda terdaftar di 3 sekolah · pilih untuk melanjutkan</div>
+          <div class="step-dots">
+            <div class="step-dot"></div>
+            <div class="step-dot active"></div>
+            <div class="step-dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/></svg>
+          <input placeholder="Cari nama sekolah...">
+        </div>
+
+        <div class="sec-head">UTAMA</div>
+        <div class="school-card active">
+          <div class="logo cobalt">KE</div>
+          <div class="info">
+            <div class="nm">SMP Kamil Edu A</div>
+            <div class="meta">Jakarta Selatan · TP 2025/2026</div>
+            <div class="role-row">
+              <span class="role-pill teacher">GURU</span>
+              <span class="role-pill parent">WALI</span>
+            </div>
+          </div>
+          <div class="check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+
+        <div class="sec-head">SEKOLAH LAIN</div>
+        <div class="school-card">
+          <div class="logo teal">SD</div>
+          <div class="info">
+            <div class="nm">SD Kamil Edu A</div>
+            <div class="meta">Jakarta Selatan · TP 2025/2026</div>
+            <div class="role-row">
+              <span class="role-pill parent">WALI</span>
+            </div>
+          </div>
+          <div class="arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+
+        <div class="school-card">
+          <div class="logo amber">SM</div>
+          <div class="info">
+            <div class="nm">SMA Kamil Edu B</div>
+            <div class="meta">Bandung · TP 2025/2026</div>
+            <div class="role-row">
+              <span class="role-pill admin">ADMIN</span>
+              <span class="role-pill teacher">GURU</span>
+            </div>
+          </div>
+          <div class="arr"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+
+        <div style="margin-top:14px; padding:12px; background:var(--slate-50); border:1px dashed var(--slate-200); border-radius:12px; display:flex; align-items:center; gap:10px">
+          <div style="width:32px; height:32px; border-radius:10px; background:white; border:1px solid var(--slate-200); display:flex; align-items:center; justify-content:center; color:var(--slate-500)">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;stroke-width:2.4;fill:none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div style="flex:1; font-size:11.5px; color:var(--slate-600); font-weight:600; line-height:1.5">Tidak menemukan sekolah Anda? <strong style="color:var(--brand-cobalt)">Hubungi admin</strong></div>
+        </div>
+      </div>
+
+      <div class="continue-bar">
+        <div class="btn-primary">
+          Lanjutkan ke SMP Kamil Edu A
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME E · CHOOSE ROLE                                        -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">E</span>Pilih Peran · multi-role<span class="desc">step dot 3/3 · school name kicker · role cards w/ accent bar (admin navy / guru cobalt / wali azure) · stats per role</span></div>
+    <div class="phone">
+      <div class="brand-band compact">
+        <div class="top-row">
+          <div class="h-back"><svg viewBox="0 0 24 24" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-lang">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            ID
+          </div>
+        </div>
+        <div style="margin-top:14px; text-align:center; position:relative">
+          <div style="display:flex; justify-content:center; margin-bottom:8px">
+            <div class="wordmark-lockup">
+              <div class="lk-mark" style="width:22px; height:22px">
+                <svg viewBox="0 0 64 64" fill="none">
+                  <path class="stroke" d="M6 28 L32 14 L58 28 L32 42 Z"/>
+                  <path class="stroke" d="M16 25 L32 17 L48 25"/>
+                  <path class="stroke" d="M11 32 V42 C11 50 53 50 53 42 V32"/>
+                  <path class="bookmark" d="M11 38 L11 56 L18 50 L25 56 L25 38 Z"/>
+                </svg>
+              </div>
+              <div class="wordmark" style="font-size:14px">Kamil<span class="accent">Edu</span></div>
+            </div>
+          </div>
+          <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,.78); letter-spacing:1.4px; text-transform:uppercase">SMP Kamil Edu A</div>
+          <div style="font-size:18px; font-weight:900; color:white; letter-spacing:-0.3px; margin-top:4px">Pilih Peran</div>
+          <div style="font-size:11.5px; font-weight:600; color:rgba(255,255,255,.86); margin-top:4px">Anda memiliki 2 peran di sekolah ini.</div>
+          <div class="step-dots">
+            <div class="step-dot"></div>
+            <div class="step-dot"></div>
+            <div class="step-dot active"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="body compact">
+        <div class="role-card teacher active">
+          <div class="accent-bar"></div>
+          <div class="top-row-r">
+            <div class="role-icon">
+              <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </div>
+            <div class="role-info">
+              <div class="role-name">Guru</div>
+              <div class="role-desc">Mengajar 4 kelas · pegang Matematika · wali kelas 7A</div>
+            </div>
+            <div class="check" style="background:var(--brand-cobalt); width:22px; height:22px; border-radius:999px; display:flex; align-items:center; justify-content:center; color:white">
+              <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:white;stroke-width:3;fill:none"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="role-stats">
+            <div class="role-stat"><strong>32</strong> jadwal/minggu</div>
+            <div class="role-stat"><strong>128</strong> siswa</div>
+            <div class="role-stat"><strong>5</strong> RPP aktif</div>
+          </div>
+        </div>
+
+        <div class="role-card parent">
+          <div class="accent-bar"></div>
+          <div class="top-row-r">
+            <div class="role-icon">
+              <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="role-info">
+              <div class="role-name">Wali / Orang Tua</div>
+              <div class="role-desc">2 anak terdaftar · Ahmad (7A) & Dini (5C)</div>
+            </div>
+            <div class="arr" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:var(--slate-400)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;stroke-width:2.6;fill:none"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+          <div class="role-stats">
+            <div class="role-stat"><strong>2</strong> anak</div>
+            <div class="role-stat"><strong>5</strong> rekomendasi baru</div>
+            <div class="role-stat"><strong>1</strong> tagihan</div>
+          </div>
+        </div>
+
+        <div style="margin-top:6px; padding:10px 12px; background:var(--slate-50); border:1px dashed var(--slate-200); border-radius:12px">
+          <div style="display:flex; align-items:center; gap:8px">
+            <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--slate-500);stroke-width:2.4;fill:none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5"/></svg>
+            <div style="font-size:11px; color:var(--slate-600); font-weight:600; line-height:1.5">Anda dapat berpindah peran kapan saja dari menu profil.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="continue-bar">
+        <div class="btn-primary">
+          Lanjut Sebagai Guru
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME F · SINGLE-SCHOOL FAST PATH                            -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">F</span>Pilih Peran · single school fast path<span class="desc">when user has 1 school we skip Frame D · same chrome but kicker shows school name + count</span></div>
+    <div class="phone">
+      <div class="brand-band compact">
+        <div class="top-row">
+          <div class="h-back"><svg viewBox="0 0 24 24" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-lang">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            ID
+          </div>
+        </div>
+        <div style="margin-top:14px; text-align:center; position:relative">
+          <div style="display:flex; justify-content:center; margin-bottom:8px">
+            <div class="wordmark-lockup">
+              <div class="lk-mark" style="width:22px; height:22px">
+                <svg viewBox="0 0 64 64" fill="none">
+                  <path class="stroke" d="M6 28 L32 14 L58 28 L32 42 Z"/>
+                  <path class="stroke" d="M16 25 L32 17 L48 25"/>
+                  <path class="stroke" d="M11 32 V42 C11 50 53 50 53 42 V32"/>
+                  <path class="bookmark" d="M11 38 L11 56 L18 50 L25 56 L25 38 Z"/>
+                </svg>
+              </div>
+              <div class="wordmark" style="font-size:14px">Kamil<span class="accent">Edu</span></div>
+            </div>
+          </div>
+          <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,.78); letter-spacing:1.4px; text-transform:uppercase">SD Kamil Edu A</div>
+          <div style="font-size:18px; font-weight:900; color:white; letter-spacing:-0.3px; margin-top:4px">Lanjutkan sebagai…</div>
+          <div style="font-size:11.5px; font-weight:600; color:rgba(255,255,255,.86); margin-top:4px">Pilih peran untuk masuk ke dasbor.</div>
+          <div class="step-dots">
+            <div class="step-dot"></div>
+            <div class="step-dot active"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="body compact">
+        <div class="role-card admin">
+          <div class="accent-bar"></div>
+          <div class="top-row-r">
+            <div class="role-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/><path d="M2 7l10 5 10-5"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
+            </div>
+            <div class="role-info">
+              <div class="role-name">Admin Sekolah</div>
+              <div class="role-desc">Kelola siswa, guru, jadwal, dan keuangan</div>
+            </div>
+            <div class="arr" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:var(--slate-400)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;stroke-width:2.6;fill:none"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="role-card teacher">
+          <div class="accent-bar"></div>
+          <div class="top-row-r">
+            <div class="role-icon">
+              <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </div>
+            <div class="role-info">
+              <div class="role-name">Guru</div>
+              <div class="role-desc">Mengajar, beri penilaian, tulis rekomendasi</div>
+            </div>
+            <div class="arr" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; color:var(--slate-400)"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;stroke-width:2.6;fill:none"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+
+        <div class="role-card parent active">
+          <div class="accent-bar"></div>
+          <div class="top-row-r">
+            <div class="role-icon">
+              <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="role-info">
+              <div class="role-name">Wali / Orang Tua</div>
+              <div class="role-desc">Pantau perkembangan anak Anda</div>
+            </div>
+            <div class="check" style="background:var(--parent); width:22px; height:22px; border-radius:999px; display:flex; align-items:center; justify-content:center; color:white">
+              <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:white;stroke-width:3;fill:none"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="role-stats">
+            <div class="role-stat"><strong>1</strong> anak · Dini</div>
+            <div class="role-stat"><strong>2</strong> rekomendasi</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="continue-bar">
+        <div class="btn-primary" style="background: linear-gradient(135deg, var(--brand-azure-deep) 0%, var(--brand-azure) 100%); box-shadow:0 8px 18px rgba(33,175,230,.30)">
+          Lanjut Sebagai Wali
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
