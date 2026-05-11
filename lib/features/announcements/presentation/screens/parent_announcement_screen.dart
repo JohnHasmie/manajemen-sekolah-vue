@@ -16,7 +16,6 @@ import 'package:manajemensekolah/features/announcements/presentation/mixins/file
 import 'package:manajemensekolah/features/announcements/presentation/mixins/formatting_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/header_search_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/read_tracking_mixin.dart';
-import 'package:manajemensekolah/features/announcements/presentation/mixins/tour_logic_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/ui_interaction_mixin.dart';
 
 /// School announcements list with automatic read tracking.
@@ -36,7 +35,6 @@ class ParentAnnouncementScreenState
         FileOperationsMixin,
         DataLoadingMixin,
         FormattingMixin,
-        TourLogicMixin,
         AnnouncementCardMixin,
         HeaderSearchMixin,
         ContentStateMixin,
@@ -86,9 +84,7 @@ class ParentAnnouncementScreenState
           header: buildHeader(languageProvider),
           role: 'wali',
           onRefresh: forceRefresh,
-          bodyChildren: [
-            buildContent(languageProvider),
-          ],
+          bodyChildren: [buildContent(languageProvider)],
         ),
       ),
     );

@@ -41,7 +41,7 @@ mixin FinanceFilterMixin on ConsumerState<FinanceScreen> {
     final List<ActiveFilter> filterChips = [];
 
     if (selectedStatusFilter != null) {
-      final statusText = selectedStatusFilter == 'aktif'
+      final statusText = selectedStatusFilter == 'active'
           ? languageProvider.getTranslatedText({'en': 'Active', 'id': 'Aktif'})
           : languageProvider.getTranslatedText({
               'en': 'Inactive',

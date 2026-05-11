@@ -91,12 +91,8 @@ class FinanceDataLoader {
         if (item is Map<String, dynamic>) {
           final newItem = Map<String, dynamic>.from(item);
 
-          // Normalise status → Indonesian
-          if (newItem['status'] == 'active') {
-            newItem['status'] = 'aktif';
-          } else if (newItem['status'] == 'inactive') {
-            newItem['status'] = 'non-aktif';
-          }
+          // Keep status as backend values ('active' / 'inactive').
+          // UI widgets handle display translation to 'Aktif' / 'Nonaktif'.
 
           // Normalise period → lowercase Indonesian
           final period = newItem['periode']?.toString().toUpperCase();

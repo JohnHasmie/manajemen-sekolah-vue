@@ -5,15 +5,9 @@
 //   1. DashboardAppBar   — school name, lang, bell, profile
 //   2. Teal gradient hero — SchoolPill.expanded + realtime indicator
 //   3. KPI row (2x2 grid) — 4 cards: Siswa diampu, Kelas, Sesi hari ini, RPP
-//   4. Perlu perhatian    — 4 inbox rows (RPP butuh revisi, draft pengumuman, etc.)
+//   4. Perlu perhatian    — server-ranked priority inbox (FF.* series)
 //   5. Aksi cepat         — 4 quick action tiles (Jadwal, Absensi, Aktivitas, Nilai)
 //   6. Modul lain strip   — horizontal with overflow sheet
-//
-// TODO (backend): Wire these stats['...'] keys:
-//   - pending_rpp_revisions: count of RPP where status='revision_requested'
-//   - draft_announcements: count of Announcement where status='draft'
-//   - pending_materials: count of GeneratedMaterial where status='pending_publication'
-//   - pending_class_activities: count of ClassActivity where status='pending'
 library;
 
 import 'dart:async';
@@ -36,6 +30,7 @@ import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/teacher_announcement_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
+import 'package:manajemensekolah/features/dashboard/domain/models/priority_inbox_item.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -46,6 +41,7 @@ import 'package:manajemensekolah/features/teachers/presentation/providers/teache
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_overview.dart';
+import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
 
@@ -168,22 +164,12 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     return (raw == null || raw.isEmpty) ? AppLocalizations.dbTeacher.tr : raw;
   }
 
-  // Removed greetingPart in favor of AppLocalizations.greeting
-
-  // Count helpers — read from the live stats map with 0 fallback
-  int get _studentCount => _asInt(widget.state.stats['student_count']);
-  int get _classCount => _asInt(widget.state.stats['class_count']);
-  int get _sessionsTodayCount => _asInt(widget.state.stats['sessions_today']);
-  int get _totalRppCount => _asInt(widget.state.stats['total_rpps']);
-
-  // Inbox counts
-  int get _pendingRppRevisions =>
-      _asInt(widget.state.stats['pending_rpp_revisions']);
-  int get _draftAnnouncements =>
-      _asInt(widget.state.stats['draft_announcements']);
-  int get _pendingMaterials => _asInt(widget.state.stats['pending_materials']);
-  int get _pendingActivities =>
-      _asInt(widget.state.stats['pending_class_activities']);
+  // Server-ranked Perlu Perhatian rows. Backend caps at 5 and ranks
+  // by severity × recency. Empty list ⇒ render "Semua aman" empty
+  // state; null (feature flag off) is treated as empty.
+  List<PriorityInboxItem> get _priorityInbox {
+    return PriorityInboxItem.parseList(widget.state.stats['priority_inbox']);
+  }
 
   // Derived counts used in the UI. Fallback to 0 if data is missing.
 
@@ -198,22 +184,24 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   void _openSchedule() =>
       AppNavigator.push(context, const TeachingScheduleScreen());
 
-  void _openMaterials() =>
-      AppNavigator.push(context, TeacherMaterialScreen(teacher: widget.state.userData));
+  void _openMaterials() => AppNavigator.push(
+    context,
+    TeacherMaterialScreen(teacher: widget.state.userData),
+  );
 
   void _openLessonPlans() {
     final tp = ref.read(teacherRiverpod);
-    final tId = tp.teacherId
-        ?? widget.state.userData['teacher_id']?.toString()
-        ?? '';
+    final tId =
+        tp.teacherId ?? widget.state.userData['teacher_id']?.toString() ?? '';
     if (tId.isEmpty) return;
     AppNavigator.push(
       context,
       LessonPlanScreen(
         teacherId: tId,
-        teacherName: tp.teacherName
-            ?? widget.state.userData['name']?.toString()
-            ?? 'Guru',
+        teacherName:
+            tp.teacherName ??
+            widget.state.userData['name']?.toString() ??
+            'Guru',
       ),
     );
   }
@@ -233,8 +221,10 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     );
   }
 
-  void _openAttendance() =>
-      AppNavigator.push(context, AttendancePage(teacher: widget.state.userData));
+  void _openAttendance() => AppNavigator.push(
+    context,
+    AttendancePage(teacher: widget.state.userData),
+  );
 
   void _openActivities() => AppNavigator.push(
     context,
@@ -295,8 +285,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
 
   /// Akun → settings screen (same destination as the app-bar avatar
   /// and the Lainnya hub's Akun row).
-  void _openAccount() =>
-      AppNavigator.push(context, const SettingsScreen());
+  void _openAccount() => AppNavigator.push(context, const SettingsScreen());
 
   void _openReportCards() {
     final tp = ref.read(teacherRiverpod);
@@ -306,9 +295,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         teacher: {
           'id': tp.teacherId ?? '',
           'nama': tp.teacherName ?? 'Guru',
-          'email':
-              widget.state.userData['email']?.toString()
-                  ?? '',
+          'email': widget.state.userData['email']?.toString() ?? '',
           'role': 'guru',
         },
       ),
@@ -357,133 +344,134 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   /// school pill, and KPI cards floating onto the bottom edge.
   Widget _buildHeroWithKpiOverlay(BuildContext context) {
     final statusBarHeight = MediaQuery.of(context).viewPadding.top;
-    final notifBadge = _asInt(widget.state.stats['unread_notifications']) +
+    final notifBadge =
+        _asInt(widget.state.stats['unread_notifications']) +
         _asInt(widget.state.stats['unread_announcements']);
     return ExcludeSemantics(
-     child: Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // 100dp bottom padding leaves an empty teal band where the
-        // KPI carousel floats. Bumped from 70dp (single-row) to match
-        // admin / parent (which use the same BrandKpiCarousel) — at
-        // 70dp the 134dp-tall carousel was overlapping the school
-        // pill instead of an empty band below it.
-        Padding(
-          padding: const EdgeInsets.only(bottom: 100),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [_teacherBrandDark, _teacherBrandAzure],
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(28),
-                bottomRight: Radius.circular(28),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _teacherBrandDark.withValues(alpha: 0.18),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // 100dp bottom padding leaves an empty teal band where the
+          // KPI carousel floats. Bumped from 70dp (single-row) to match
+          // admin / parent (which use the same BrandKpiCarousel) — at
+          // 70dp the 134dp-tall carousel was overlapping the school
+          // pill instead of an empty band below it.
+          Padding(
+            padding: const EdgeInsets.only(bottom: 100),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [_teacherBrandDark, _teacherBrandAzure],
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                statusBarHeight + AppSpacing.md,
-                AppSpacing.md,
-                // Extra space below the school pill so the floating KPI
-                // cards overlap an empty teal band rather than the pill.
-                48,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              AppLocalizations.greeting(DateTime.now().hour),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white.withValues(alpha: 0.72),
-                                letterSpacing: 0.1,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _userName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: 0.1,
-                                height: 1.2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      _HeroIconButton(
-                        icon: Icons.language_outlined,
-                        onTap: widget.onLanguageTap,
-                        gradientBg: _teacherBrandDark,
-                      ),
-                      const SizedBox(width: 6),
-                      _HeroIconButton(
-                        icon: Icons.notifications_outlined,
-                        onTap: widget.onNotificationTap,
-                        gradientBg: _teacherBrandDark,
-                        showDot: notifBadge > 0,
-                      ),
-                      const SizedBox(width: 6),
-                      _HeroIconButton(
-                        icon: Icons.person_outline,
-                        onTap: widget.onAccountTap,
-                        gradientBg: _teacherBrandDark,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
-                  const SizedBox(height: AppSpacing.md),
-                  SchoolPill.expanded(
-                    schoolName: _schoolName,
-                    subtitle: _greetingSubtitle,
-                    onTap: widget.onSchoolSwitchTap,
-                    accentColor: _teacherCobalt,
-                    actionLabel: 'Ganti',
-                    onDarkSurface: true,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: _teacherBrandDark.withValues(alpha: 0.18),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  statusBarHeight + AppSpacing.md,
+                  AppSpacing.md,
+                  // Extra space below the school pill so the floating KPI
+                  // cards overlap an empty teal band rather than the pill.
+                  48,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                AppLocalizations.greeting(DateTime.now().hour),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white.withValues(alpha: 0.72),
+                                  letterSpacing: 0.1,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _userName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  letterSpacing: 0.1,
+                                  height: 1.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        _HeroIconButton(
+                          icon: Icons.language_outlined,
+                          onTap: widget.onLanguageTap,
+                          gradientBg: _teacherBrandDark,
+                        ),
+                        const SizedBox(width: 6),
+                        _HeroIconButton(
+                          icon: Icons.notifications_outlined,
+                          onTap: widget.onNotificationTap,
+                          gradientBg: _teacherBrandDark,
+                          showDot: notifBadge > 0,
+                        ),
+                        const SizedBox(width: 6),
+                        _HeroIconButton(
+                          icon: Icons.person_outline,
+                          onTap: widget.onAccountTap,
+                          gradientBg: _teacherBrandDark,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
+                    const SizedBox(height: AppSpacing.md),
+                    SchoolPill.expanded(
+                      schoolName: _schoolName,
+                      subtitle: _greetingSubtitle,
+                      onTap: widget.onSchoolSwitchTap,
+                      accentColor: _teacherCobalt,
+                      actionLabel: 'Ganti',
+                      onDarkSurface: true,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-        // KPI strip floats at the bottom of the gradient. Edge-to-edge
-        // (left: 0, right: 0) — BrandKpiCarousel applies its own 16dp
-        // horizontal padding so we don't double-pad. Matches admin /
-        // parent positioning.
-        Positioned(
-          key: widget.statsSectionKey,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: _buildKpiCards(),
-        ),
-      ],
-    ),
+          // KPI strip floats at the bottom of the gradient. Edge-to-edge
+          // (left: 0, right: 0) — BrandKpiCarousel applies its own 16dp
+          // horizontal padding so we don't double-pad. Matches admin /
+          // parent positioning.
+          Positioned(
+            key: widget.statsSectionKey,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildKpiCards(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -526,7 +514,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     // Card 1 — Sesi Hari Ini (with done/total ratio)
     final sessionsCaption = slice.sessionsToday > 0
         ? '${slice.sessionsTodayDone} ${isEn ? 'done' : 'selesai'} · '
-            '${slice.sessionsToday - slice.sessionsTodayDone} ${isEn ? 'pending' : 'belum'}'
+              '${slice.sessionsToday - slice.sessionsTodayDone} ${isEn ? 'pending' : 'belum'}'
         : (isEn ? 'No sessions today' : 'Tidak ada sesi hari ini');
 
     // Card 2 — Kehadiran (with delta if non-zero)
@@ -546,7 +534,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         slice.lessonPlansPending + slice.lessonPlansRevision;
     final rppCaption = rppNeedsAttention > 0
         ? '${slice.lessonPlansPending} ${isEn ? 'waiting' : 'menunggu'} · '
-            '${slice.lessonPlansRevision} ${isEn ? 'revision' : 'revisi'}'
+              '${slice.lessonPlansRevision} ${isEn ? 'revision' : 'revisi'}'
         : '${slice.lessonPlansApproved} ${AppLocalizations.dbApproved.tr.toLowerCase()}';
 
     // Card 4 — Nilai Belum Input
@@ -621,7 +609,9 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         key: 'mengajar',
         label: 'Mengajar',
         isAggregate: true,
-        sessionsToday: _asInt(stats['classes_today'] ?? stats['sessions_today']),
+        sessionsToday: _asInt(
+          stats['classes_today'] ?? stats['sessions_today'],
+        ),
         sessionsTodayDone: 0,
         attendanceRateWindow: 0,
         attendanceDelta: 0,
@@ -645,56 +635,106 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   }
 
   Widget _buildInboxCard() {
+    final inbox = _priorityInbox;
+    // Title carries an active-item badge ("Perlu Perhatian · 3").
+    // When the list is empty, the card itself shows its empty
+    // state — we drop the badge to avoid "· 0".
+    final title = inbox.isEmpty
+        ? AppLocalizations.dbAttentionRequired.tr
+        : '${AppLocalizations.dbAttentionRequired.tr} · ${inbox.length}';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: PendingInboxCard(
-        title: AppLocalizations.dbAttentionRequired.tr,
-        onSeeAll: _openLessonPlans,
-        seeAllLabel: AppLocalizations.dbSeeAll.tr,
-        totalLabel: AppLocalizations.dbTotalWaiting.tr,
+      child: PendingInboxCard.priorityItems(
+        title: title,
+        items: inbox,
         accentColor: _teacherCobalt,
-        entries: [
-          PendingInboxEntry(
-            icon: Icons.description_outlined,
-            label: AppLocalizations.dbRppNeedsRevision.tr,
-            count: _pendingRppRevisions,
-            color: ColorUtils.warning600,
-            subtitle: _pendingRppRevisions > 0
-                ? AppLocalizations.dbRppNeedsFix.tr
-                : AppLocalizations.dbAllRppCompliant.tr,
-            onTap: _openLessonPlans,
-          ),
-          PendingInboxEntry(
-            icon: Icons.campaign_outlined,
-            label: AppLocalizations.dbAnnouncementDrafts.tr,
-            count: _draftAnnouncements,
-            color: ColorUtils.info600,
-            subtitle: _draftAnnouncements > 0
-                ? AppLocalizations.dbDraftNotPublished.tr
-                : AppLocalizations.dbNoDraftsSaved.tr,
-            onTap: _openAnnouncementDrafts,
-          ),
-          PendingInboxEntry(
-            icon: Icons.article_outlined,
-            label: AppLocalizations.dbMaterialsNotPublished.tr,
-            count: _pendingMaterials,
-            color: ColorUtils.corporateBlue600,
-            subtitle: _pendingMaterials > 0
-                ? AppLocalizations.dbMaterialsWaitingPublication.tr
-                : AppLocalizations.dbAllMaterialsPublished.tr,
-            onTap: _openMaterials,
-          ),
-          PendingInboxEntry(
-            icon: Icons.event_outlined,
-            label: AppLocalizations.dbPendingActivities.tr,
-            count: _pendingActivities,
-            color: ColorUtils.success600,
-            subtitle: _pendingActivities > 0
-                ? AppLocalizations.dbClassActivitiesWaiting.tr
-                : AppLocalizations.dbNoPendingActivities.tr,
-            onTap: _openActivities,
-          ),
-        ],
+        emptyStateTitle: 'Semua aman 🎉',
+        emptyStateSubtitle: 'Tidak ada yang perlu perhatian saat ini.',
+        onPriorityTap: _navigateToInboxTarget,
+      ),
+    );
+  }
+
+  /// Routes a priority-inbox tap to the right destination screen.
+  ///
+  /// The closed set of `target_route` values lives in
+  /// `docs/teacher_priority_inbox.md §6` on the backend. Unknown
+  /// values are silently no-op'd so an older client doesn't crash
+  /// when the backend adds a new signal type.
+  ///
+  /// For routes whose destination screens already accept filter
+  /// params (`teacher_attendance`, `report_card_class`), the
+  /// targetParams flow straight through and the screen opens
+  /// pre-scoped. For the remainder (`lesson_plan_detail`,
+  /// `grade_book`, `recommendation_detail`) the screen opens
+  /// unfiltered — see TODO(FF.12-followup) below for per-screen
+  /// arg additions.
+  void _navigateToInboxTarget(PriorityInboxItem item) {
+    final params = item.targetParams;
+    switch (item.targetRoute) {
+      case 'teacher_attendance':
+        _openAttendanceForInboxItem(params);
+        break;
+      case 'lesson_plan_detail':
+        // TODO(FF.12-followup): route to the format-specific RPP
+        // detail dispatcher using `lesson_plan_id`. Needs a fetch-
+        // by-id helper on the controller, since the dispatcher
+        // expects a hydrated LessonPlan rather than a bare id.
+        _openLessonPlans();
+        break;
+      case 'report_card_class':
+        _openReportCardClass(params);
+        break;
+      case 'grade_book':
+        // TODO(FF.12-followup): GradePage doesn't accept a
+        // `class_id`/`subject_id`/`column_id` deep-link yet. Open
+        // the per-class input screen once those args land.
+        _openGradeRecap();
+        break;
+      case 'recommendation_detail':
+        // TODO(FF.12-followup): rec detail is currently scoped by
+        // class. Need a "open by recommendation_id" path on the
+        // class screen, or a dedicated detail route.
+        _openRecommendation();
+        break;
+      default:
+        // Unknown route — older client, newer backend. No-op.
+        break;
+    }
+  }
+
+  void _openAttendanceForInboxItem(Map<String, dynamic> params) {
+    final classId = params['class_id']?.toString();
+    final subjectId = params['subject_id']?.toString();
+    final lessonHourId = params['lesson_hour_id']?.toString();
+    final dateStr = params['date']?.toString();
+    DateTime? initialDate;
+    if (dateStr != null && dateStr.isNotEmpty) {
+      initialDate = DateTime.tryParse(dateStr);
+    }
+
+    AppNavigator.push(
+      context,
+      AttendancePage(
+        teacher: widget.state.userData,
+        initialclassId: classId,
+        initialSubjectId: subjectId,
+        initialLessonHourId: lessonHourId,
+        initialDate: initialDate,
+      ),
+    );
+  }
+
+  void _openReportCardClass(Map<String, dynamic> params) {
+    final classId = params['class_id']?.toString();
+    AppNavigator.push(
+      context,
+      ReportCardScreen(
+        teacher: _teacherPayload().map(
+          (k, v) => MapEntry(k, v?.toString() ?? ''),
+        ),
+        initialClassId: classId,
       ),
     );
   }
