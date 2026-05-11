@@ -1,0 +1,1417 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Parent · Rekomendasi · Dedicated page redesign</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --green-50: #DCFCE7;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --indigo-600: #4F46E5;
+    --teal-600: #0D9488;
+    --violet-50: #EDE9FE;
+    --violet-100: #DDD6FE;
+    --violet-200: #C4B5FD;
+    --violet-500: #8B5CF6;
+    --violet-600: #7C3AED;
+    --violet-700: #6D28D9;
+    --violet-800: #5B21B6;
+    --rose-600: #E11D48;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg); margin: 0; padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--violet-800); letter-spacing: -0.4px; }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 24px;
+    max-width: 920px; line-height: 1.55;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px; align-items: start;
+  }
+  .frame {
+    background: var(--surface); border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--violet-600); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 760;
+    position: relative; overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+
+  /* ───── Brand header (parent violet) ───── */
+  .header {
+    background: linear-gradient(135deg, var(--violet-700) 0%, var(--violet-500) 100%);
+    padding: 14px 16px 50px;
+    color: white; flex: 0 0 auto;
+    border-radius: 0 0 28px 28px;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 78% 18%, rgba(255,255,255,.10) 0, transparent 32%),
+      radial-gradient(circle at 18% 88%, rgba(255,255,255,.06) 0, transparent 28%);
+    pointer-events: none;
+    border-radius: 0 0 28px 28px;
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; position: relative; }
+  .h-back, .h-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto;
+  }
+  .h-icon svg, .h-back svg {
+    width: 16px; height: 16px;
+    stroke-width: 2.4; fill: none; stroke: currentColor;
+  }
+  .h-title-block { flex: 1; min-width: 0; text-align: center; }
+  .h-kicker {
+    font-size: 9.5px; font-weight: 800;
+    color: rgba(255,255,255,.78);
+    letter-spacing: 1.2px; text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .h-title { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; }
+
+  /* ───── Child selector chip row inside header ───── */
+  .child-chip-row {
+    display: flex; gap: 6px; margin-top: 14px;
+    overflow-x: auto;
+    position: relative;
+  }
+  .child-chip-row::-webkit-scrollbar { display: none; }
+  .child-chip {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 10px 7px 7px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.18);
+    color: white;
+    flex: 0 0 auto;
+    transition: all .12s ease;
+  }
+  .child-chip.active {
+    background: white;
+    border-color: white;
+    color: var(--violet-700);
+  }
+  .child-chip .av {
+    width: 24px; height: 24px; border-radius: 999px;
+    background: rgba(255,255,255,.22);
+    color: white;
+    font-size: 9.5px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .child-chip.active .av {
+    background: rgba(124,58,237,.10);
+    color: var(--violet-700);
+  }
+  .child-chip .nm {
+    font-size: 11.5px; font-weight: 800; letter-spacing: -0.1px;
+  }
+  .child-chip .dot {
+    width: 16px; height: 16px;
+    border-radius: 999px;
+    background: var(--rose-600);
+    color: white;
+    font-size: 9px; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    margin-left: 2px;
+  }
+  .child-chip.active .dot {
+    background: var(--violet-600);
+  }
+
+  /* ───── KPI overlap strip ───── */
+  .kpi-strip {
+    margin: -36px 16px 0;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 6px 18px rgba(15,23,42,.06);
+    padding: 12px 6px;
+    display: flex; gap: 4px;
+    z-index: 1; position: relative;
+  }
+  .kpi-strip .kpi-cell { flex: 1; text-align: center; padding: 4px 2px; }
+  .kpi-strip .kpi-cell .v {
+    font-size: 18px; font-weight: 900;
+    line-height: 1.0; letter-spacing: -0.3px;
+  }
+  .kpi-strip .kpi-cell .l {
+    font-size: 9px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.4px;
+    text-transform: uppercase; margin-top: 4px;
+  }
+  .kpi-strip .kpi-cell.violet .v { color: var(--violet-600); }
+  .kpi-strip .kpi-cell.amber .v { color: var(--amber-700); }
+  .kpi-strip .kpi-cell.green .v { color: var(--green-700); }
+  .kpi-strip .kpi-cell.cobalt .v { color: var(--brand-cobalt); }
+  .kpi-strip .kpi-divider { width: 1px; background: var(--slate-100); align-self: stretch; }
+
+  /* ───── Hero card (child summary) ───── */
+  .hero-card {
+    background: white;
+    border-radius: 18px;
+    margin: -36px 16px 0;
+    padding: 14px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 6px 18px rgba(15,23,42,.06);
+    z-index: 1; position: relative;
+  }
+  .hero-row { display: flex; align-items: center; gap: 14px; }
+  .avatar-lg {
+    width: 56px; height: 56px;
+    border-radius: 999px;
+    background: rgba(124,58,237,.10);
+    color: var(--violet-700);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; letter-spacing: 0.3px;
+    flex: 0 0 auto;
+  }
+  .hero-text { flex: 1; min-width: 0; }
+  .hero-text .nm {
+    font-size: 16px; font-weight: 900;
+    color: var(--slate-900); letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+  .hero-text .meta {
+    font-size: 11px; color: var(--slate-500);
+    margin-top: 3px; font-weight: 600;
+  }
+  .hero-text .meta strong { color: var(--violet-700); font-weight: 800; }
+
+  .count-pill {
+    padding: 5px 10px; border-radius: 10px;
+    background: rgba(124,58,237,.08);
+    border: 1px solid rgba(124,58,237,.18);
+    text-align: center; flex: 0 0 auto;
+  }
+  .count-pill .v {
+    font-size: 16px; font-weight: 900;
+    color: var(--violet-700); line-height: 1.0;
+  }
+  .count-pill .l {
+    font-size: 8.5px; font-weight: 800;
+    color: var(--violet-700); letter-spacing: 0.4px;
+    text-transform: uppercase; margin-top: 2px;
+  }
+  .count-pill.amber { background: rgba(217,119,6,.08); border-color: rgba(217,119,6,.18); }
+  .count-pill.amber .v, .count-pill.amber .l { color: var(--amber-700); }
+  .count-pill.green { background: rgba(22,163,74,.08); border-color: rgba(22,163,74,.18); }
+  .count-pill.green .v, .count-pill.green .l { color: var(--green-700); }
+
+  .status-row { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .status-pill {
+    padding: 3px 8px; border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+  .status-pill.violet { background: rgba(124,58,237,.10); color: var(--violet-700); }
+  .status-pill.cobalt { background: rgba(27,111,184,.10); color: var(--brand-cobalt); }
+  .status-pill.green { background: rgba(22,163,74,.10); color: var(--green-700); }
+  .status-pill.amber { background: rgba(217,119,6,.10); color: var(--amber-700); }
+  .status-pill.red { background: rgba(220,38,38,.10); color: var(--red-700); }
+  .status-pill.slate { background: var(--slate-100); color: var(--slate-600); }
+  .status-pill.indigo { background: rgba(79,70,229,.10); color: var(--indigo-600); }
+  .status-pill.teal { background: rgba(13,148,136,.10); color: var(--teal-600); }
+  .status-pill.rose { background: rgba(225,29,72,.10); color: var(--rose-600); }
+
+  /* ───── Filter chip strip ───── */
+  .chip-strip {
+    margin: 14px 16px 0;
+    display: flex; gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .chip-strip::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex: 0 0 auto;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-700);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .filter-chip.active {
+    background: var(--violet-700);
+    border-color: var(--violet-700);
+    color: white;
+  }
+  .filter-chip .ct {
+    font-size: 9.5px; font-weight: 900;
+    padding: 1px 6px; border-radius: 999px;
+    background: var(--slate-100);
+    color: var(--slate-600);
+  }
+  .filter-chip.active .ct {
+    background: rgba(255,255,255,.22);
+    color: white;
+  }
+
+  /* ───── Section head ───── */
+  .sec-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 16px 8px;
+  }
+  .sec-head .label {
+    font-size: 10px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .sec-head .link {
+    font-size: 11px; font-weight: 800;
+    color: var(--violet-700);
+  }
+
+  /* ───── Body scroll ───── */
+  .body {
+    flex: 1; overflow-y: auto;
+    padding: 8px 16px 16px;
+  }
+
+  /* ───── Child summary card (hub frame) ───── */
+  .child-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    padding: 14px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .child-card.unread::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 0; width: 3px;
+    background: var(--violet-600);
+  }
+  .child-card .top {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .child-card .avatar {
+    width: 48px; height: 48px;
+    border-radius: 999px;
+    background: rgba(124,58,237,.10);
+    color: var(--violet-700);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .child-card .info { flex: 1; min-width: 0; }
+  .child-card .nm { font-size: 14px; font-weight: 900; color: var(--slate-900); letter-spacing: -0.2px; }
+  .child-card .sub { font-size: 11px; color: var(--slate-500); font-weight: 600; margin-top: 1px; }
+  .child-card .badge {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: var(--violet-600);
+    color: white;
+    font-size: 10px; font-weight: 900;
+    flex: 0 0 auto;
+    box-shadow: 0 3px 10px rgba(124,58,237,.30);
+  }
+  .child-card .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .child-card .stat {
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .child-card .stat .v {
+    font-size: 16px; font-weight: 900;
+    line-height: 1.0; letter-spacing: -0.3px;
+  }
+  .child-card .stat .l {
+    font-size: 8.5px; font-weight: 800;
+    letter-spacing: 0.4px; text-transform: uppercase;
+    margin-top: 4px;
+    color: var(--slate-500);
+  }
+  .child-card .stat.violet .v { color: var(--violet-700); }
+  .child-card .stat.amber .v { color: var(--amber-700); }
+  .child-card .stat.green .v { color: var(--green-700); }
+  .child-card .progress-row {
+    margin-top: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .child-card .progress-track {
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--slate-100);
+    overflow: hidden;
+  }
+  .child-card .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--violet-500) 0%, var(--violet-700) 100%);
+    border-radius: 999px;
+  }
+  .child-card .progress-pct {
+    font-size: 10.5px; font-weight: 900;
+    color: var(--violet-700); flex: 0 0 auto;
+  }
+  .child-card .cta-row {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+  .child-card .cta {
+    flex: 1; padding: 10px;
+    border-radius: 10px; text-align: center;
+    font-size: 11.5px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .child-card .cta.violet {
+    background: var(--violet-700);
+    color: white;
+    box-shadow: 0 3px 10px rgba(124,58,237,.30);
+  }
+  .child-card .cta.outline {
+    background: rgba(124,58,237,.06);
+    color: var(--violet-700);
+    border: 1px solid rgba(124,58,237,.20);
+  }
+  .child-card .cta svg {
+    width: 12px; height: 12px;
+    stroke: currentColor; stroke-width: 2.6;
+    fill: none;
+  }
+
+  /* ───── Rec card (per-rec) ───── */
+  .rec-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    padding: 14px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .rec-card.unread {
+    border-color: var(--violet-200);
+    box-shadow: 0 4px 14px rgba(124,58,237,.10);
+  }
+  .rec-card.unread .unread-dot {
+    position: absolute; top: 14px; right: 14px;
+    width: 8px; height: 8px;
+    border-radius: 999px;
+    background: var(--violet-600);
+  }
+  .rec-card .top {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .rec-card .avatar {
+    width: 36px; height: 36px;
+    border-radius: 999px;
+    background: rgba(124,58,237,.10);
+    color: var(--violet-700);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11.5px; font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .rec-card .avatar.cobalt {
+    background: rgba(27,111,184,.10);
+    color: var(--brand-cobalt);
+  }
+  .rec-card .avatar.teal {
+    background: rgba(13,148,136,.10);
+    color: var(--teal-600);
+  }
+  .rec-card .info { flex: 1; min-width: 0; }
+  .rec-card .info .nm { font-size: 12.5px; font-weight: 800; color: var(--slate-900); }
+  .rec-card .info .sub { font-size: 10.5px; color: var(--slate-500); font-weight: 700; margin-top: 1px; }
+  .rec-card .info .sub strong { color: var(--violet-700); font-weight: 800; }
+  .rec-card .from-badge {
+    flex: 0 0 auto;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: rgba(124,58,237,.10);
+    color: var(--violet-700);
+    font-size: 8.5px; font-weight: 900;
+    letter-spacing: 0.6px; text-transform: uppercase;
+    margin-right: 14px;
+  }
+
+  .rec-card .pill-strip {
+    display: flex; gap: 5px; flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+
+  .rec-card .title {
+    font-size: 14px; font-weight: 900;
+    color: var(--slate-900); letter-spacing: -0.2px;
+    margin-bottom: 5px; line-height: 1.3;
+  }
+  .rec-card .desc {
+    font-size: 12px; color: var(--slate-600);
+    font-weight: 500; line-height: 1.5;
+  }
+  .rec-card .due-strip {
+    margin-top: 10px;
+    padding: 7px 10px;
+    background: rgba(217,119,6,.06);
+    border: 1px solid rgba(217,119,6,.14);
+    border-radius: 10px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .rec-card .due-strip svg {
+    width: 12px; height: 12px;
+    stroke: var(--amber-700); stroke-width: 2.4; fill: none;
+    flex: 0 0 auto;
+  }
+  .rec-card .due-strip .lbl {
+    font-size: 11px; font-weight: 800; color: var(--amber-700);
+  }
+  .rec-card .actions {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+  .rec-card .act {
+    flex: 1; padding: 9px;
+    border-radius: 10px; text-align: center;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .rec-card .act svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+  .rec-card .act.primary {
+    background: var(--violet-700); color: white;
+    box-shadow: 0 3px 10px rgba(124,58,237,.30);
+  }
+  .rec-card .act.outline {
+    background: rgba(124,58,237,.08); color: var(--violet-700);
+  }
+  .rec-card .act.success-out {
+    background: rgba(22,163,74,.08); color: var(--green-700);
+  }
+  .rec-card.completed { opacity: 0.78; }
+  .rec-card.completed .title { text-decoration: line-through; color: var(--slate-500); }
+
+  /* ───── Hero detail card ───── */
+  .detail-hero {
+    background: linear-gradient(135deg, rgba(124,58,237,.06) 0%, rgba(139,92,246,.04) 100%);
+    border: 1px solid var(--violet-100);
+    border-radius: 18px;
+    margin: -36px 16px 0;
+    padding: 16px;
+    z-index: 1; position: relative;
+    box-shadow: 0 6px 18px rgba(124,58,237,.10);
+  }
+  .detail-hero .pill-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .detail-hero .h-title-lg {
+    font-size: 17px; font-weight: 900; color: var(--slate-900);
+    letter-spacing: -0.3px; line-height: 1.25;
+  }
+  .detail-hero .h-meta {
+    font-size: 11px; color: var(--slate-500); font-weight: 700;
+    margin-top: 6px;
+  }
+  .detail-hero .h-meta strong { color: var(--violet-700); font-weight: 800; }
+
+  /* ───── Sect card ───── */
+  .sect-card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .sect-card .sect-head {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .sect-card .sect-head .ic {
+    width: 28px; height: 28px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sect-card .sect-head .ic svg {
+    width: 14px; height: 14px;
+    stroke-width: 2.4; fill: none;
+  }
+  .sect-card .sect-head .ic.violet { background: rgba(124,58,237,.10); color: var(--violet-700); }
+  .sect-card .sect-head .ic.cobalt { background: rgba(27,111,184,.10); color: var(--brand-cobalt); }
+  .sect-card .sect-head .ic.indigo { background: rgba(79,70,229,.10); color: var(--indigo-600); }
+  .sect-card .sect-head .ic.amber { background: rgba(217,119,6,.10); color: var(--amber-700); }
+  .sect-card .sect-head .ic.green { background: rgba(22,163,74,.10); color: var(--green-700); }
+  .sect-card .sect-head .tt {
+    flex: 1; font-size: 13px; font-weight: 800;
+    color: var(--slate-900); letter-spacing: -0.1px;
+  }
+  .sect-card .sect-head .chip {
+    padding: 2px 7px; border-radius: 999px;
+    background: var(--slate-100);
+    color: var(--slate-600);
+    font-size: 9.5px; font-weight: 800;
+  }
+
+  /* ───── Teacher message card ───── */
+  .msg-card {
+    border-left: 3px solid var(--violet-600);
+    padding: 10px 12px;
+    background: linear-gradient(90deg, rgba(124,58,237,.04) 0%, transparent 100%);
+    border-radius: 0 10px 10px 0;
+  }
+  .msg-card .greet {
+    font-size: 12.5px; color: var(--slate-700); font-weight: 600;
+    line-height: 1.55;
+  }
+  .msg-card .greet strong { color: var(--violet-700); font-weight: 800; }
+
+  /* ───── Materi chip ───── */
+  .materi-row {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .materi-chip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid;
+    font-size: 11px; font-weight: 800;
+  }
+  .materi-chip.cobalt {
+    background: rgba(27,111,184,.08);
+    border-color: rgba(27,111,184,.20);
+    color: var(--brand-cobalt);
+  }
+  .materi-chip.green {
+    background: rgba(22,163,74,.08);
+    border-color: rgba(22,163,74,.20);
+    color: var(--green-700);
+  }
+  .materi-chip.amber {
+    background: rgba(217,119,6,.08);
+    border-color: rgba(217,119,6,.20);
+    color: var(--amber-700);
+  }
+  .materi-chip svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+
+  /* ───── AI reasoning collapsed ───── */
+  .ai-collapsed {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(124,58,237,.04);
+    border: 1px dashed rgba(124,58,237,.25);
+  }
+  .ai-collapsed svg {
+    width: 14px; height: 14px;
+    stroke: var(--violet-700); stroke-width: 2.4; fill: none;
+    flex: 0 0 auto;
+  }
+  .ai-collapsed .lbl { flex: 1; font-size: 11.5px; font-weight: 700; color: var(--violet-700); }
+  .ai-collapsed .arr {
+    font-size: 13px; color: var(--violet-700); font-weight: 900;
+  }
+
+  /* ───── Bottom action bar ───── */
+  .action-bar {
+    flex: 0 0 auto;
+    background: white;
+    border-top: 1px solid var(--slate-200);
+    padding: 12px 16px 16px;
+    display: flex; gap: 8px;
+  }
+  .action-bar .btn {
+    flex: 1; padding: 12px;
+    border-radius: 12px;
+    font-size: 12.5px; font-weight: 800;
+    text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .action-bar .btn svg { width: 13px; height: 13px; stroke: currentColor; stroke-width: 2.6; fill: none; }
+  .action-bar .btn.primary {
+    background: var(--violet-700); color: white;
+    box-shadow: 0 4px 12px rgba(124,58,237,.30);
+  }
+  .action-bar .btn.outline {
+    background: rgba(124,58,237,.08); color: var(--violet-700);
+  }
+  .action-bar .btn.success {
+    background: var(--green-700); color: white;
+    box-shadow: 0 4px 12px rgba(22,163,74,.25);
+  }
+
+  /* ───── Sheet ───── */
+  .sheet {
+    flex: 0 0 auto;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    padding: 12px 0 0;
+    box-shadow: 0 -8px 24px rgba(15,23,42,.10);
+  }
+  .grabber {
+    width: 36px; height: 4px; border-radius: 999px;
+    background: var(--slate-200);
+    margin: 0 auto 12px;
+  }
+  .sheet-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 16px 14px;
+  }
+  .sheet-head .ic {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sheet-head .ic svg { width: 16px; height: 16px; stroke-width: 2.4; fill: none; }
+  .sheet-head .ic.violet { background: rgba(124,58,237,.10); color: var(--violet-700); }
+  .sheet-head .ic.green { background: rgba(22,163,74,.10); color: var(--green-700); }
+  .sheet-head .tt { flex: 1; }
+  .sheet-head .t { font-size: 14px; font-weight: 900; color: var(--slate-900); letter-spacing: -0.2px; }
+  .sheet-head .s { font-size: 11px; color: var(--slate-500); font-weight: 600; margin-top: 1px; }
+  .sheet-body { padding: 4px 16px 14px; }
+
+  /* ───── Form input ───── */
+  .input-label {
+    font-size: 10.5px; font-weight: 800;
+    color: var(--slate-700); letter-spacing: 0.4px;
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .input-label .opt {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px;
+    margin-left: 4px;
+  }
+  .text-area {
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12.5px; color: var(--slate-900); font-weight: 600;
+    line-height: 1.5;
+    min-height: 88px;
+  }
+  .text-area .ph { color: var(--slate-400); font-weight: 500; }
+
+  /* ───── Quick reply chips ───── */
+  .quick-reply-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin: 10px 0 14px;
+  }
+  .quick-reply {
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid var(--violet-200);
+    color: var(--violet-700);
+    font-size: 11px; font-weight: 800;
+  }
+
+  /* ───── Filter sheet items ───── */
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .filter-grid .item {
+    padding: 9px 10px;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 10px;
+    background: white;
+    font-size: 11.5px; font-weight: 800;
+    color: var(--slate-700);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .filter-grid .item .dot {
+    width: 6px; height: 6px; border-radius: 999px;
+    background: var(--slate-300); flex: 0 0 auto;
+  }
+  .filter-grid .item.active {
+    background: rgba(124,58,237,.06);
+    border-color: var(--violet-700);
+    color: var(--violet-700);
+  }
+  .filter-grid .item.active .dot { background: var(--violet-700); }
+
+  /* ───── Empty state ───── */
+  .empty-wrap {
+    flex: 1; padding: 32px 20px 24px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+  }
+  .empty-wrap .illus {
+    width: 116px; height: 116px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(124,58,237,.10) 0%, rgba(139,92,246,.04) 100%);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    border: 2px dashed rgba(124,58,237,.30);
+  }
+  .empty-wrap .illus svg {
+    width: 48px; height: 48px;
+    stroke: var(--violet-700); stroke-width: 1.8; fill: none;
+  }
+  .empty-wrap h3 {
+    font-size: 17px; font-weight: 900;
+    color: var(--slate-900); margin: 0 0 8px;
+    letter-spacing: -0.3px;
+  }
+  .empty-wrap p {
+    font-size: 12.5px; color: var(--slate-500);
+    font-weight: 600; line-height: 1.55;
+    margin: 0 0 18px; max-width: 280px;
+  }
+  .empty-wrap .tips {
+    width: 100%; max-width: 320px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px 14px;
+    text-align: left;
+  }
+  .empty-wrap .tips .h {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 800;
+    color: var(--violet-700);
+    letter-spacing: 0.3px;
+    margin-bottom: 8px; text-transform: uppercase;
+  }
+  .empty-wrap .tips ul {
+    margin: 0; padding-left: 16px;
+    font-size: 11.5px; color: var(--slate-700); font-weight: 600;
+    line-height: 1.6;
+  }
+
+  /* ───── Helpers ───── */
+  .sec-divider {
+    height: 1px; background: var(--slate-100);
+    margin: 4px 0;
+  }
+  .scrim { flex: 1; background: rgba(15,23,42,.45); }
+</style>
+</head>
+<body>
+<h1>Parent · Rekomendasi · New Dedicated Page</h1>
+<p class="subtitle">
+  A standalone parent-side Rekomendasi screen — separate from the dashboard inbox.
+  Violet (parent role) header with a child-selector chip row, KPI overlap,
+  per-child summary cards, and a per-recommendation detail page that surfaces the
+  wali kelas's message, the materi (Bab/Sub-bab) chips, the AI reasoning, and clear
+  CTAs (Tandai Selesai · Balas · Bagikan ke Pasangan). Status filter · search ·
+  Reply sheet · Tandai Selesai sheet · Filter sheet · Empty state.
+</p>
+
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- FRAME A · MULTI-CHILD HUB                                     -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">A</span>Hub · multi-child overview<span class="desc">violet header · child chip row · 3-cell KPI overlap · per-child summary cards w/ stats grid + progress + dual CTA</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Wali · Anak Saya</div>
+            <div class="h-title">Rekomendasi Belajar</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/></svg></div>
+        </div>
+        <div class="child-chip-row">
+          <div class="child-chip active">
+            <div class="av">SE</div>
+            <div class="nm">Semua</div>
+            <div class="dot">5</div>
+          </div>
+          <div class="child-chip">
+            <div class="av">AH</div>
+            <div class="nm">Ahmad</div>
+            <div class="dot">3</div>
+          </div>
+          <div class="child-chip">
+            <div class="av">DI</div>
+            <div class="nm">Dini</div>
+            <div class="dot">2</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi-cell violet"><div class="v">5</div><div class="l">Belum Dibaca</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">3</div><div class="l">Aktif</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v">7</div><div class="l">Selesai</div></div>
+      </div>
+
+      <div class="body" style="padding-top: 14px">
+        <div class="sec-head" style="padding-left:0;padding-right:0">
+          <div class="label">ANAK SAYA · 2 anak</div>
+          <div class="link">Filter</div>
+        </div>
+
+        <!-- Child 1 — unread -->
+        <div class="child-card unread">
+          <div class="top">
+            <div class="avatar">AH</div>
+            <div class="info">
+              <div class="nm">Ahmad Pratama</div>
+              <div class="sub">7A · SMP Kamil Edu A</div>
+            </div>
+            <div class="badge">3 BARU</div>
+          </div>
+          <div class="stats">
+            <div class="stat violet"><div class="v">5</div><div class="l">Total</div></div>
+            <div class="stat amber"><div class="v">3</div><div class="l">Aktif</div></div>
+            <div class="stat green"><div class="v">2</div><div class="l">Selesai</div></div>
+          </div>
+          <div class="progress-row">
+            <div class="progress-track"><div class="progress-fill" style="width:40%"></div></div>
+            <div class="progress-pct">40%</div>
+          </div>
+          <div class="cta-row">
+            <div class="cta outline">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+              Riwayat
+            </div>
+            <div class="cta violet">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              Lihat Rekomendasi
+            </div>
+          </div>
+        </div>
+
+        <!-- Child 2 — partial -->
+        <div class="child-card">
+          <div class="top">
+            <div class="avatar">DI</div>
+            <div class="info">
+              <div class="nm">Dini Anggraini</div>
+              <div class="sub">5C · SD Kamil Edu A</div>
+            </div>
+            <div class="badge" style="background:var(--green-700); box-shadow:0 3px 10px rgba(22,163,74,.30)">2 SELESAI</div>
+          </div>
+          <div class="stats">
+            <div class="stat violet"><div class="v">7</div><div class="l">Total</div></div>
+            <div class="stat amber"><div class="v">2</div><div class="l">Aktif</div></div>
+            <div class="stat green"><div class="v">5</div><div class="l">Selesai</div></div>
+          </div>
+          <div class="progress-row">
+            <div class="progress-track"><div class="progress-fill" style="width:71%"></div></div>
+            <div class="progress-pct">71%</div>
+          </div>
+          <div class="cta-row">
+            <div class="cta outline">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+              Riwayat
+            </div>
+            <div class="cta violet">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              Lihat Rekomendasi
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME B · PER-CHILD REC LIST                                  -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">B</span>Per-child rec list<span class="desc">child hero w/ violet count pill + status row · status filter chips · rec cards w/ unread dot + due strip + Tandai Selesai CTA</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Anak · Ahmad</div>
+            <div class="h-title">Rekomendasi Belajar</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="hero-row">
+          <div class="avatar-lg">AH</div>
+          <div class="hero-text">
+            <div class="nm">Ahmad Pratama</div>
+            <div class="meta">7A · <strong>5 rekomendasi</strong> dari 4 wali kelas</div>
+          </div>
+          <div class="count-pill"><div class="v">3</div><div class="l">Baru</div></div>
+        </div>
+        <div class="status-row">
+          <span class="status-pill violet">3 BELUM DIBACA</span>
+          <span class="status-pill amber">2 PRIORITAS TINGGI</span>
+          <span class="status-pill green">2 SELESAI</span>
+        </div>
+      </div>
+
+      <div class="chip-strip">
+        <div class="filter-chip active">Semua <span class="ct">5</span></div>
+        <div class="filter-chip">Belum Dibaca <span class="ct">3</span></div>
+        <div class="filter-chip">Aktif <span class="ct">3</span></div>
+        <div class="filter-chip">Selesai <span class="ct">2</span></div>
+        <div class="filter-chip">Mendesak <span class="ct">2</span></div>
+      </div>
+
+      <div class="body" style="padding-top: 12px">
+
+        <!-- Unread rec card — Matematika -->
+        <div class="rec-card unread">
+          <div class="unread-dot"></div>
+          <div class="top">
+            <div class="avatar">BS</div>
+            <div class="info">
+              <div class="nm">Pak Bayu Saputra</div>
+              <div class="sub"><strong>Matematika</strong> · Wali Kelas 7A · 2j lalu</div>
+            </div>
+            <div class="from-badge">Wali Kelas</div>
+          </div>
+          <div class="pill-strip">
+            <span class="status-pill red">PRIORITAS TINGGI</span>
+            <span class="status-pill indigo">MATEMATIKA</span>
+          </div>
+          <div class="title">Latihan tambahan operasi pecahan campuran</div>
+          <div class="desc">Berikan 5 soal harian dengan tingkat kesulitan bertahap selama 2 minggu. Fokus pada konversi desimal ke pecahan.</div>
+          <div class="due-strip">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+            <div class="lbl">Tenggat 18 Mei · 8 hari lagi</div>
+          </div>
+          <div class="actions">
+            <div class="act outline">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/></svg>
+              Lihat Detail
+            </div>
+            <div class="act primary">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Balas
+            </div>
+          </div>
+        </div>
+
+        <!-- Read · Aktif · IPA -->
+        <div class="rec-card">
+          <div class="top">
+            <div class="avatar teal">DK</div>
+            <div class="info">
+              <div class="nm">Pak Doni Kurniawan</div>
+              <div class="sub"><strong>IPA</strong> · 1 hari lalu · Sudah dibaca</div>
+            </div>
+          </div>
+          <div class="pill-strip">
+            <span class="status-pill amber">PRIORITAS SEDANG</span>
+            <span class="status-pill teal">IPA</span>
+          </div>
+          <div class="title">Praktikum sederhana pengukuran panjang</div>
+          <div class="desc">Bantu anak mengukur 5 benda di rumah dengan penggaris dan catat hasilnya di buku.</div>
+          <div class="actions">
+            <div class="act outline">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/></svg>
+              Lihat Detail
+            </div>
+            <div class="act success-out">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Tandai Selesai
+            </div>
+          </div>
+        </div>
+
+        <!-- Completed rec -->
+        <div class="rec-card completed">
+          <div class="top">
+            <div class="avatar cobalt">SH</div>
+            <div class="info">
+              <div class="nm">Bu Sari Hidayati</div>
+              <div class="sub"><strong>B. Indonesia</strong> · 5 hari lalu · ✓ Selesai</div>
+            </div>
+          </div>
+          <div class="pill-strip">
+            <span class="status-pill green">SELESAI</span>
+            <span class="status-pill cobalt">B. INDONESIA</span>
+          </div>
+          <div class="title">Membaca cerita anak 15 menit tiap malam</div>
+          <div class="desc">Dampingi anak membaca cerita dengan suara jelas dan diskusikan isinya.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME C · PER-REC DETAIL PAGE                                 -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">C</span>Per-rec detail page<span class="desc">violet hero · pesan wali kelas card · materi chip strip · AI reasoning collapsed · sticky action bar (Tandai Selesai · Balas)</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Ahmad · Matematika</div>
+            <div class="h-title">Rincian Rekomendasi</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Hero detail -->
+      <div class="detail-hero">
+        <div class="pill-row">
+          <span class="status-pill red">PRIORITAS TINGGI</span>
+          <span class="status-pill indigo">MATEMATIKA</span>
+          <span class="status-pill violet">DARI WALI KELAS</span>
+        </div>
+        <div class="h-title-lg">Latihan tambahan operasi pecahan campuran</div>
+        <div class="h-meta">Untuk <strong>Ahmad Pratama</strong> · dibagikan <strong>2 jam lalu</strong> · Tenggat 18 Mei</div>
+      </div>
+
+      <div class="body" style="padding-top: 14px">
+        <!-- Pesan dari wali kelas -->
+        <div class="sect-card">
+          <div class="sect-head">
+            <div class="ic violet">
+              <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="tt">Pesan dari Wali Kelas</div>
+            <span class="chip">Pak Bayu</span>
+          </div>
+          <div class="msg-card">
+            <div class="greet">"Halo Ibu Siti, saya ingin berbagi rekomendasi belajar untuk <strong>Ahmad</strong>. Ia masih kesulitan dengan operasi pecahan campuran di kelas. Mohon bantuannya melatih di rumah agar percaya dirinya tumbuh."</div>
+          </div>
+        </div>
+
+        <!-- Deskripsi rekomendasi -->
+        <div class="sect-card">
+          <div class="sect-head">
+            <div class="ic indigo">
+              <svg viewBox="0 0 24 24" stroke="currentColor"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </div>
+            <div class="tt">Yang Perlu Dilakukan</div>
+          </div>
+          <div style="font-size:12.5px; color:var(--slate-700); font-weight:600; line-height:1.6">
+            Berikan <strong style="color:var(--slate-900)">5 soal harian</strong> dengan tingkat kesulitan bertahap selama <strong style="color:var(--slate-900)">2 minggu</strong>. Fokus pada:
+            <ul style="margin: 6px 0 0; padding-left: 18px">
+              <li>Konversi desimal ke pecahan</li>
+              <li>Penjumlahan & pengurangan pecahan</li>
+              <li>Soal cerita sederhana</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Materi terkait -->
+        <div class="sect-card">
+          <div class="sect-head">
+            <div class="ic cobalt">
+              <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <div class="tt">Materi Terkait</div>
+            <span class="chip">2 dipilih</span>
+          </div>
+          <div class="materi-row">
+            <div class="materi-chip green">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Bab 2 — Pecahan
+            </div>
+            <div class="materi-chip amber">
+              <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg>
+              Sub: Operasi Campuran
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Reasoning collapsed -->
+        <div class="ai-collapsed">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg>
+          <div class="lbl">Mengapa AI menyarankan ini? · Lihat alasan</div>
+          <div class="arr">›</div>
+        </div>
+      </div>
+
+      <!-- Sticky bottom action bar -->
+      <div class="action-bar">
+        <div class="btn outline">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Tandai Selesai
+        </div>
+        <div class="btn primary">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Balas Wali Kelas
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME D · REPLY SHEET                                         -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">D</span>Reply sheet<span class="desc">violet header · quick-reply chip strip · free-form message · sticky Kirim CTA</span></div>
+    <div class="phone">
+      <div class="scrim"></div>
+      <div class="sheet" style="max-height: 78%">
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <div class="ic violet">
+            <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="tt">
+            <div class="t">Balas Wali Kelas</div>
+            <div class="s">Pak Bayu Saputra · Matematika</div>
+          </div>
+        </div>
+        <div class="sheet-body">
+
+          <div class="input-label">Balasan cepat<span class="opt">· tap untuk pakai</span></div>
+          <div class="quick-reply-row">
+            <div class="quick-reply">🙏 Terima kasih</div>
+            <div class="quick-reply">✅ Akan saya coba</div>
+            <div class="quick-reply">❓ Butuh penjelasan lebih</div>
+            <div class="quick-reply">🗓️ Bisa kapan saja</div>
+            <div class="quick-reply">⏰ Mungkin minggu depan</div>
+          </div>
+
+          <div class="input-label">Pesan</div>
+          <div class="text-area">
+            Terima kasih Pak Bayu, saya akan damping Ahmad mulai malam ini. Apakah cukup 30 menit per hari atau perlu lebih?
+          </div>
+
+          <div style="height:14px"></div>
+          <div class="input-label">Lampirkan<span class="opt">· opsional</span></div>
+          <div style="display:flex; gap:8px">
+            <div style="flex:1; padding:10px; border:1px dashed var(--violet-200); border-radius:10px; background:rgba(124,58,237,.04); display:flex; align-items:center; justify-content:center; gap:6px; font-size:11.5px; font-weight:800; color:var(--violet-700)">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;stroke-width:2.4;fill:none"><circle cx="12" cy="13" r="3"/><path d="M23 19V8a2 2 0 0 0-2-2h-3.17l-1.84-2H8.01L6.17 6H3a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2z"/></svg>
+              Foto
+            </div>
+            <div style="flex:1; padding:10px; border:1px dashed var(--violet-200); border-radius:10px; background:rgba(124,58,237,.04); display:flex; align-items:center; justify-content:center; gap:6px; font-size:11.5px; font-weight:800; color:var(--violet-700)">
+              <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;stroke-width:2.4;fill:none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Dokumen
+            </div>
+          </div>
+        </div>
+
+        <div class="action-bar" style="border-top:1px solid var(--slate-100)">
+          <div class="btn outline" style="flex:0 0 100px">Batal</div>
+          <div class="btn primary">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Kirim Balasan
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME E · TANDAI SELESAI SHEET                                -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">E</span>Tandai Selesai sheet<span class="desc">green confirmation · catatan optional · kirim ke wali kelas toggle · success CTA</span></div>
+    <div class="phone">
+      <div class="scrim"></div>
+      <div class="sheet" style="max-height: 70%">
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <div class="ic green">
+            <svg viewBox="0 0 24 24" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="tt">
+            <div class="t">Tandai Selesai</div>
+            <div class="s">Latihan operasi pecahan · 8 hari lagi</div>
+          </div>
+        </div>
+        <div class="sheet-body">
+
+          <div style="padding:12px; background:rgba(22,163,74,.06); border:1px solid rgba(22,163,74,.18); border-radius:12px; margin-bottom:14px">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:var(--green-700);stroke-width:2.6;fill:none"><polyline points="20 6 9 17 4 12"/></svg>
+              <div style="font-size:12px; font-weight:900; color:var(--green-700); letter-spacing:0.2px">SUDAH SELESAI DIKERJAKAN</div>
+            </div>
+            <div style="font-size:11.5px; color:var(--slate-700); font-weight:600; line-height:1.55">
+              Wali kelas akan menerima notifikasi bahwa rekomendasi ini sudah diterapkan di rumah.
+            </div>
+          </div>
+
+          <div class="input-label">Catatan untuk wali kelas<span class="opt">· opsional</span></div>
+          <div class="text-area">
+            Ahmad sudah mengerjakan 5 soal harian selama 10 hari. Sudah lebih percaya diri dengan operasi pecahan.
+          </div>
+
+          <div style="height:14px"></div>
+          <div style="display:flex; align-items:center; gap:10px; padding:10px; border:1px solid var(--slate-200); border-radius:12px">
+            <div style="width:36px; height:20px; background:var(--green-700); border-radius:999px; position:relative">
+              <div style="position:absolute; top:2px; right:2px; width:16px; height:16px; background:white; border-radius:999px"></div>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:12px; font-weight:800; color:var(--slate-900)">Kirim notifikasi ke wali kelas</div>
+              <div style="font-size:10.5px; color:var(--slate-500); font-weight:600; margin-top:1px">Pak Bayu akan diberi tahu bahwa anak sudah selesai</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-bar" style="border-top:1px solid var(--slate-100)">
+          <div class="btn outline" style="flex:0 0 100px">Batal</div>
+          <div class="btn success">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Tandai Selesai
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME F · FILTER SHEET                                        -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">F</span>Filter sheet<span class="desc">FilterChipGrid · Status · Mata Pelajaran · Prioritas · Periode · Reset / Terapkan</span></div>
+    <div class="phone">
+      <div class="scrim"></div>
+      <div class="sheet" style="max-height: 84%">
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <div class="ic violet">
+            <svg viewBox="0 0 24 24" stroke="currentColor"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </div>
+          <div class="tt">
+            <div class="t">Filter Rekomendasi</div>
+            <div class="s">Untuk Ahmad · 3 dari 5 ditampilkan</div>
+          </div>
+          <div style="padding:5px 10px; background:var(--slate-100); border-radius:999px; font-size:10px; font-weight:800; color:var(--slate-600)">3 aktif</div>
+        </div>
+        <div class="sheet-body">
+
+          <div class="input-label">Status</div>
+          <div class="filter-grid">
+            <div class="item active"><div class="dot"></div>Belum Dibaca</div>
+            <div class="item"><div class="dot"></div>Sudah Dibaca</div>
+            <div class="item active"><div class="dot"></div>Aktif</div>
+            <div class="item"><div class="dot"></div>Selesai</div>
+          </div>
+
+          <div class="input-label">Mata Pelajaran</div>
+          <div class="filter-grid">
+            <div class="item active"><div class="dot" style="background:var(--indigo-600)"></div>Matematika</div>
+            <div class="item"><div class="dot" style="background:var(--teal-600)"></div>IPA</div>
+            <div class="item"><div class="dot" style="background:var(--brand-cobalt)"></div>B. Indonesia</div>
+            <div class="item"><div class="dot" style="background:var(--rose-600)"></div>B. Inggris</div>
+          </div>
+
+          <div class="input-label">Prioritas</div>
+          <div class="filter-grid" style="grid-template-columns: repeat(3, 1fr)">
+            <div class="item"><div class="dot" style="background:var(--red-600)"></div>Tinggi</div>
+            <div class="item"><div class="dot" style="background:var(--amber-600)"></div>Sedang</div>
+            <div class="item"><div class="dot" style="background:var(--slate-500)"></div>Rendah</div>
+          </div>
+
+          <div class="input-label">Periode</div>
+          <div class="filter-grid" style="grid-template-columns: repeat(3, 1fr)">
+            <div class="item active"><div class="dot"></div>7 Hari</div>
+            <div class="item"><div class="dot"></div>30 Hari</div>
+            <div class="item"><div class="dot"></div>Semua</div>
+          </div>
+        </div>
+
+        <div class="action-bar" style="border-top:1px solid var(--slate-100)">
+          <div class="btn outline" style="flex:0 0 100px">Reset</div>
+          <div class="btn primary">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Terapkan (3)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- FRAME G · EMPTY STATE                                         -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">G</span>Empty state<span class="desc">illustrated empty · tips card on what to expect · subtle nudge to dashboard</span></div>
+    <div class="phone">
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="h-title-block">
+            <div class="h-kicker">Anak · Dini</div>
+            <div class="h-title">Rekomendasi Belajar</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+        </div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi-cell violet"><div class="v">0</div><div class="l">Belum Dibaca</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell amber"><div class="v">0</div><div class="l">Aktif</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell green"><div class="v">0</div><div class="l">Selesai</div></div>
+      </div>
+
+      <div class="empty-wrap">
+        <div class="illus">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="14" x2="13" y2="14"/></svg>
+        </div>
+        <h3>Belum ada rekomendasi</h3>
+        <p>Wali kelas Dini belum mengirimkan rekomendasi belajar. Anda akan menerima notifikasi saat ada pesan baru.</p>
+
+        <div class="tips">
+          <div class="h">
+            <svg viewBox="0 0 24 24" style="width:13px; height:13px; stroke:currentColor; stroke-width:2.6; fill:none"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg>
+            APA YANG BISA DIHARAPKAN?
+          </div>
+          <ul>
+            <li>Saran latihan ringan untuk dikerjakan di rumah</li>
+            <li>Materi pendukung yang dipilih guru kelas</li>
+            <li>Tenggat waktu opsional jika ada kebutuhan khusus</li>
+            <li>Anda bisa membalas atau tandai selesai langsung</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

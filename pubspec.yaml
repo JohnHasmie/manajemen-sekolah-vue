@@ -72,6 +72,13 @@ dependencies:
   upgrader: ^12.5.0
   version: ^3.0.2
   flutter_sticky_header: ^0.8.0
+  # Direct dep so the redesigned login screen can launch the
+  # WhatsApp deep link (`https://wa.me/…`) for "Hubungi admin"
+  # without going through the FCM notification router (which is the
+  # only file that currently uses url_launcher elsewhere). Already in
+  # pubspec.lock as a transitive dep — promoting it to direct just
+  # makes the import legal under analyzer's strict_dependencies rule.
+  url_launcher: ^6.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
