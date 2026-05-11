@@ -119,21 +119,45 @@ class GradePageState extends ConsumerState<GradePage>
 
   @override
   List<Map<String, String>> getAvailableClasses() {
+    // Source the chip set from the teacher's full teaching roster
+    // (or homeroom roster when in wali-kelas view), NOT from
+    // `_groupedData`. `_groupedData` is server-filtered by
+    // `_filterClassId`, so once the user applies "Kelas = 8A" it
+    // shrinks to a single class and the filter sheet would offer
+    // no other classes to switch to — that's the "filter only
+    // shows the selected option" bug.
+    final teacherState = ref.read(teacherRiverpod);
+    final source = _isHomeroomView
+        ? teacherState.homeroomClasses
+        : teacherState.allClasses;
+
     final seen = <String>{};
-    return _groupedData
-        .where((g) {
-          final id = g['class_id']?.toString() ?? '';
-          if (seen.contains(id)) return false;
-          seen.add(id);
-          return true;
-        })
-        .map(
-          (g) => {
-            'id': g['class_id']?.toString() ?? '',
-            'name': g['class_name']?.toString() ?? '-',
-          },
-        )
-        .toList();
+    final out = <Map<String, String>>[];
+    for (final c in source) {
+      if (c is! Map) continue;
+      final id = c['id']?.toString() ?? '';
+      if (id.isEmpty || !seen.add(id)) continue;
+      out.add({
+        'id': id,
+        'name': (c['name'] ?? c['nama'] ?? '-').toString(),
+      });
+    }
+
+    // Fallback: provider hasn't hydrated yet — fall back to the
+    // already-loaded summary so the sheet renders something instead
+    // of an empty Kelas section on cold open.
+    if (out.isEmpty) {
+      for (final g in _groupedData) {
+        if (g is! Map) continue;
+        final id = g['class_id']?.toString() ?? '';
+        if (id.isEmpty || !seen.add(id)) continue;
+        out.add({
+          'id': id,
+          'name': g['class_name']?.toString() ?? '-',
+        });
+      }
+    }
+    return out;
   }
 
   void saveViewPreference() {
@@ -288,33 +312,35 @@ class GradePageState extends ConsumerState<GradePage>
     // Pushed as a Material page route (was a 95% modal bottom sheet)
     // so the BrandPageHeader gets its full SafeArea — no more clock /
     // back-button overlap, and ESC / system-back behaves predictably.
-    Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => GradeBookPage(
-          teacher: widget.teacher,
-          subject: {
-            'id': subj.id,
-            'nama': subj.name,
-            'name': subj.name,
-            'kode': subj.code,
-            'code': subj.code,
-          },
-          classData: {
-            'id': classData['class_id'],
-            'nama': classData['class_name'],
-            'name': classData['class_name'],
-            'grade_level': classData['grade_level'],
-          },
-        ),
-      ),
-    ).then((_) {
-      // Force a fresh fetch on return — the teacher may have edited /
-      // added / deleted grades, so the cached summary could be stale.
-      // useCache: false skips the 1-hour local-cache flash and pulls
-      // straight from the API (which itself has been invalidated
-      // server-side by any grade write).
-      return loadData(useCache: false);
-    });
+    Navigator.of(context)
+        .push<void>(
+          MaterialPageRoute(
+            builder: (_) => GradeBookPage(
+              teacher: widget.teacher,
+              subject: {
+                'id': subj.id,
+                'nama': subj.name,
+                'name': subj.name,
+                'kode': subj.code,
+                'code': subj.code,
+              },
+              classData: {
+                'id': classData['class_id'],
+                'nama': classData['class_name'],
+                'name': classData['class_name'],
+                'grade_level': classData['grade_level'],
+              },
+            ),
+          ),
+        )
+        .then((_) {
+          // Force a fresh fetch on return — the teacher may have edited /
+          // added / deleted grades, so the cached summary could be stale.
+          // useCache: false skips the 1-hour local-cache flash and pulls
+          // straight from the API (which itself has been invalidated
+          // server-side by any grade write).
+          return loadData(useCache: false);
+        });
   }
 
   @override
@@ -462,8 +488,8 @@ class GradePageState extends ConsumerState<GradePage>
               break;
             }
           }
-          final pickedName =
-              (picked?['name'] ?? picked?['nama'] ?? '').toString();
+          final pickedName = (picked?['name'] ?? picked?['nama'] ?? '')
+              .toString();
           if (_isHomeroomView && _filterClassId == classId) return;
           setState(() {
             _isHomeroomView = true;
@@ -522,28 +548,19 @@ class GradePageState extends ConsumerState<GradePage>
         child: Row(
           children: [
             _kpiCell(
-              label: lp.getTranslatedText({
-                'en': 'Complete',
-                'id': 'Lengkap',
-              }),
+              label: lp.getTranslatedText({'en': 'Complete', 'id': 'Lengkap'}),
               value: '${stats.complete}/${stats.totalGroups}',
               color: ColorUtils.success600,
             ),
             _kpiDivider(),
             _kpiCell(
-              label: lp.getTranslatedText({
-                'en': 'Pending',
-                'id': 'Belum',
-              }),
+              label: lp.getTranslatedText({'en': 'Pending', 'id': 'Belum'}),
               value: '${stats.pending}',
               color: ColorUtils.warning600,
             ),
             _kpiDivider(),
             _kpiCell(
-              label: lp.getTranslatedText({
-                'en': 'Average',
-                'id': 'Rerata',
-              }),
+              label: lp.getTranslatedText({'en': 'Average', 'id': 'Rerata'}),
               value: stats.avg == null ? '—' : stats.avg!.toStringAsFixed(0),
               color: ColorUtils.info600,
             ),
@@ -621,9 +638,7 @@ class GradePageState extends ConsumerState<GradePage>
         totalGroups++;
         final assessments = (s['assessments'] as List?) ?? const [];
         final filledCount = assessments
-            .where(
-              (a) => a is Map && a['avg'] is num,
-            )
+            .where((a) => a is Map && a['avg'] is num)
             .length;
         if (assessments.isNotEmpty && filledCount == assessments.length) {
           completeGroups++;
@@ -649,7 +664,6 @@ class GradePageState extends ConsumerState<GradePage>
       belowKkm: belowKkm,
     );
   }
-
 }
 
 /// Simple POD struct for the overview KPI overlap card.
