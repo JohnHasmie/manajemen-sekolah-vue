@@ -9,6 +9,7 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
+import 'package:manajemensekolah/core/widgets/filter_sheet_reset.dart';
 import 'package:manajemensekolah/core/widgets/role_toggle_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
@@ -480,9 +481,10 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
         Navigator.of(context).pop();
         setState(() => _statusFilter = tStatus);
       },
-      onReset: () {
-        setState(() => _statusFilter = null);
-      },
+      onReset: () => FilterSheetHelpers.reset(
+        context,
+        () => setState(() => _statusFilter = null),
+      ),
       content: StatefulBuilder(
         builder: (ctx, setSS) {
           return TeacherFilterContent(

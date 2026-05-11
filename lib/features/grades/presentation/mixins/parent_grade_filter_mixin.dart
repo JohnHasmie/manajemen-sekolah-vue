@@ -5,6 +5,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
+import 'package:manajemensekolah/core/widgets/filter_sheet_reset.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_data_loading_mixin.dart';
@@ -15,7 +16,6 @@ import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grad
 /// filter matches every other teacher/parent filter sheet.
 mixin ParentGradeFilterMixin
     on ConsumerState<ParentGradeScreen>, ParentGradeDataLoadingMixin {
-  
   bool hasActiveFilter = false;
   String? selectedGradeTypeFilter;
 
@@ -64,9 +64,7 @@ mixin ParentGradeFilterMixin
               resetPagination();
               loadGrades(useCache: false);
             },
-            onReset: () => setSS(() {
-              tempGradeTypeFilter = null;
-            }),
+            onReset: () => FilterSheetHelpers.reset(ctx, clearAllFilters),
             content: TeacherFilterContent(
               sections: [
                 Column(
@@ -92,7 +90,9 @@ mixin ParentGradeFilterMixin
                       }).toList(),
                       selectedValue: tempGradeTypeFilter,
                       onSelected: (val) => setSS(() {
-                        tempGradeTypeFilter = val == tempGradeTypeFilter ? null : val;
+                        tempGradeTypeFilter = val == tempGradeTypeFilter
+                            ? null
+                            : val;
                       }),
                       selectedColor: primaryColor,
                     ),

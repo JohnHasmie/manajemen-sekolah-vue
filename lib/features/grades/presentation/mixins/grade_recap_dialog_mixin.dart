@@ -6,6 +6,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
+import 'package:manajemensekolah/core/widgets/filter_sheet_reset.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_recap_screen.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
@@ -23,29 +24,31 @@ mixin GradeRecapDialogMixin {
     // grade flow (frozen-name col + chapter columns + sticky save
     // bar); a full-screen page gives it the room it deserves and keeps
     // the BrandPageLayout assertions about KPI-overlap heights happy.
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => GradeRecapPage(
-          teacher: teacherData,
-          initialClass: {
-            'id': classData['class_id'],
-            'nama': classData['class_name'],
-            'name': classData['class_name'],
-          },
-          initialSubject: {
-            'id': subj.id,
-            'nama': subj.name,
-            'name': subj.name,
-            'kode': subj.code,
-          },
-        ),
-      ),
-    ).then((_) {
-      // When the recap screen pops, bypass both the server cache and the
-      // on-device cache so any scores the teacher just saved show up in the
-      // overview's "$recapCount/$totalStudents siswa" counter immediately.
-      if (mounted) loadData(useCache: false);
-    });
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => GradeRecapPage(
+              teacher: teacherData,
+              initialClass: {
+                'id': classData['class_id'],
+                'nama': classData['class_name'],
+                'name': classData['class_name'],
+              },
+              initialSubject: {
+                'id': subj.id,
+                'nama': subj.name,
+                'name': subj.name,
+                'kode': subj.code,
+              },
+            ),
+          ),
+        )
+        .then((_) {
+          // When the recap screen pops, bypass both the server cache and the
+          // on-device cache so any scores the teacher just saved show up in the
+          // overview's "$recapCount/$totalStudents siswa" counter immediately.
+          if (mounted) loadData(useCache: false);
+        });
   }
 
   void showFilterDialog(LanguageProvider lp) {
@@ -209,21 +212,15 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
           subjectName: _subjectName,
         );
       },
-      // Reset = "remove all filters now". Pop and commit nulls so the
-      // outer screen reloads — pattern B, matching the grade-input
-      // sheet. Previously this only cleared the in-sheet chips, so a
-      // user who tapped Reset without then tapping Apply was left
-      // looking at the same filtered recap with the chips visually
-      // cleared.
-      onReset: () {
-        Navigator.pop(context);
-        widget.onApply(
+      onReset: () => FilterSheetHelpers.reset(
+        context,
+        () => widget.onApply(
           classId: null,
           className: null,
           subjectId: null,
           subjectName: null,
-        );
-      },
+        ),
+      ),
       content: TeacherFilterContent(
         sections: [
           Column(
@@ -244,14 +241,13 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
                 selectedValue: _classId,
                 onSelected: (classId) async {
                   final isDeselect = classId == _classId;
-                  final match = widget.availableClasses.where(
-                    (c) => c['id'] == classId,
-                  );
+                  final nextId = isDeselect ? null : classId;
                   setState(() {
-                    _classId = isDeselect ? null : classId;
-                    _className = isDeselect
-                        ? null
-                        : (match.isNotEmpty ? match.first['name'] : null);
+                    _classId = nextId;
+                    _className = FilterSheetHelpers.labelForId(
+                      widget.availableClasses,
+                      nextId,
+                    );
                     _subjectId = null;
                     _subjectName = null;
                     _subjectList = [];

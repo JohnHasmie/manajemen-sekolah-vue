@@ -5,6 +5,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
+import 'package:manajemensekolah/core/widgets/filter_sheet_reset.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 
 mixin TeacherActivityFilterDialogMixin {
@@ -148,12 +149,15 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
           subjectList: _subjectList,
         );
       },
-      onReset: () => setState(() {
-        _classId = null;
-        _subjectId = null;
-        _dateOption = null;
-        _subjectList = [];
-      }),
+      onReset: () => FilterSheetHelpers.reset(
+        context,
+        () => widget.onApply(
+          classId: null,
+          subjectId: null,
+          dateOption: null,
+          subjectList: const [],
+        ),
+      ),
       content: TeacherFilterContent(
         sections: [
           // Class section

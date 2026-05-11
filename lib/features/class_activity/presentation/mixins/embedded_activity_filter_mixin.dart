@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/filter_sheet_reset.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/embedded_activity_list_screen.dart';
@@ -104,7 +105,10 @@ class _ActivityDateFilterSheetState extends State<_ActivityDateFilterSheet> {
         Navigator.pop(context);
         widget.onApply(_tempDateFilter);
       },
-      onReset: () => setState(() => _tempDateFilter = null),
+      onReset: () => FilterSheetHelpers.reset(
+        context,
+        () => widget.onApply(null),
+      ),
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
