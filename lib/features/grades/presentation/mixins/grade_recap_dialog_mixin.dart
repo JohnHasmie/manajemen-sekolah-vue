@@ -209,13 +209,21 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
           subjectName: _subjectName,
         );
       },
-      onReset: () => setState(() {
-        _classId = null;
-        _className = null;
-        _subjectId = null;
-        _subjectName = null;
-        _subjectList = [];
-      }),
+      // Reset = "remove all filters now". Pop and commit nulls so the
+      // outer screen reloads — pattern B, matching the grade-input
+      // sheet. Previously this only cleared the in-sheet chips, so a
+      // user who tapped Reset without then tapping Apply was left
+      // looking at the same filtered recap with the chips visually
+      // cleared.
+      onReset: () {
+        Navigator.pop(context);
+        widget.onApply(
+          classId: null,
+          className: null,
+          subjectId: null,
+          subjectName: null,
+        );
+      },
       content: TeacherFilterContent(
         sections: [
           Column(
