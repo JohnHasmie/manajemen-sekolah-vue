@@ -629,7 +629,15 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
     final subjectName = (s['subject_name'] ?? '-').toString();
     final className = (s['class_name'] ?? '-').toString();
     final studentCount = ((s['student_count'] ?? 0) as num).toInt();
-    final recordedCount = ((s['recorded_count'] ?? 0) as num).toInt();
+    // Prefer `present_count` for the "X hadir" pill — it counts only
+    // students whose status is present/hadir/late. Falls back to
+    // `recorded_count` (any status) for older backend responses so
+    // pre-deploy clients still render something coherent. The label
+    // says "hadir"; the count must match the label.
+    final recordedCount = ((s['present_count'] ??
+            s['recorded_count'] ??
+            0) as num)
+        .toInt();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
