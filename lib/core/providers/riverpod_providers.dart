@@ -11,3 +11,5 @@ export 'package:manajemensekolah/features/dashboard/presentation/providers/acade
     show academicYearRiverpod;
 export 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart'
     show teacherRiverpod;
+export 'package:manajemensekolah/features/filter_roster/presentation/providers/filter_roster_provider.dart'
+    show filterRosterRiverpod, FilterRosterProvider;

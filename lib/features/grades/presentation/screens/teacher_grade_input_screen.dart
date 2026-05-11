@@ -107,8 +107,17 @@ class GradePageState extends ConsumerState<GradePage>
   @override
   TextEditingController get searchController => _searchController;
 
-  String get teacherId =>
-      (widget.teacher['teacher_id'] ?? widget.teacher['id'])?.toString() ?? '';
+  /// Resolve the teacher id with a riverpod fallback. The widget.teacher
+  /// map sometimes arrives without `teacher_id` (e.g. when the screen is
+  /// reached through a navigation that only had user data); falling
+  /// through to teacherRiverpod keeps the grade-summary call from
+  /// 500'ing with "teacher_id is required".
+  String get teacherId {
+    final fromWidget =
+        (widget.teacher['teacher_id'] ?? widget.teacher['id'])?.toString();
+    if (fromWidget != null && fromWidget.isNotEmpty) return fromWidget;
+    return ref.read(teacherRiverpod).teacherId ?? '';
+  }
 
   @override
   Color get primaryColor =>
@@ -117,48 +126,11 @@ class GradePageState extends ConsumerState<GradePage>
   int getActiveFilterCount() =>
       (_filterClassId != null ? 1 : 0) + (_filterSubjectId != null ? 1 : 0);
 
-  @override
-  List<Map<String, String>> getAvailableClasses() {
-    // Source the chip set from the teacher's full teaching roster
-    // (or homeroom roster when in wali-kelas view), NOT from
-    // `_groupedData`. `_groupedData` is server-filtered by
-    // `_filterClassId`, so once the user applies "Kelas = 8A" it
-    // shrinks to a single class and the filter sheet would offer
-    // no other classes to switch to — that's the "filter only
-    // shows the selected option" bug.
-    final teacherState = ref.read(teacherRiverpod);
-    final source = _isHomeroomView
-        ? teacherState.homeroomClasses
-        : teacherState.allClasses;
-
-    final seen = <String>{};
-    final out = <Map<String, String>>[];
-    for (final c in source) {
-      if (c is! Map) continue;
-      final id = c['id']?.toString() ?? '';
-      if (id.isEmpty || !seen.add(id)) continue;
-      out.add({
-        'id': id,
-        'name': (c['name'] ?? c['nama'] ?? '-').toString(),
-      });
-    }
-
-    // Fallback: provider hasn't hydrated yet — fall back to the
-    // already-loaded summary so the sheet renders something instead
-    // of an empty Kelas section on cold open.
-    if (out.isEmpty) {
-      for (final g in _groupedData) {
-        if (g is! Map) continue;
-        final id = g['class_id']?.toString() ?? '';
-        if (id.isEmpty || !seen.add(id)) continue;
-        out.add({
-          'id': id,
-          'name': g['class_name']?.toString() ?? '-',
-        });
-      }
-    }
-    return out;
-  }
+  // `getAvailableClasses()` is no longer overridden — the filter
+  // sheet now sources its chip set from `filterRosterRiverpod`
+  // (see grade_input_filter_dialog_mixin). This screen only needs
+  // to expose `isHomeroomView` (already done above) so the mixin
+  // picks the right partition.
 
   void saveViewPreference() {
     LocalCacheService.save('nilai_view_preference', {

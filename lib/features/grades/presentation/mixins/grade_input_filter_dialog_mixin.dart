@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
@@ -26,28 +26,11 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
 
   String get teacherId;
 
-  List<Map<String, String>> getAvailableClasses();
+  /// True when the screen is in wali kelas view. Drives whether the
+  /// Kelas chip set comes from `homeroomClasses` or `teachingClasses`.
+  bool get isHomeroomView;
 
   Future<void> loadData();
-
-  /// Fetches only the subjects the current teacher teaches for the given
-  /// class. Uses `/teacher/:id/subjects?class_id=` which merges pivot
-  /// assignments with teaching schedule (see TeacherController@getSubjects)
-  /// and returns `{success, data: [...]}`.
-  Future<List<dynamic>> _fetchTeacherSubjectsForClass(String classId) async {
-    try {
-      final r = await dioClient.get(
-        '/teacher/$teacherId/subjects',
-        queryParameters: {'class_id': classId},
-      );
-      final raw = r.data;
-      if (raw is List) return raw;
-      if (raw is Map && raw['data'] is List) return raw['data'] as List;
-      return [];
-    } catch (_) {
-      return [];
-    }
-  }
 
   Future<void> showFilterDialog(LanguageProvider lp) async {
     String? tClassId = filterClassId;
@@ -58,11 +41,6 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
     String? tClassName = filterClassName;
     String? tSubjectId = filterSubjectId;
     String? tSubjectName = filterSubjectName;
-    List<dynamic> tSubjectList = [];
-
-    // Once-flag for the in-builder prefetch below. Without this, the
-    // fetch would re-fire on every StatefulBuilder rebuild.
-    bool prefetchStarted = false;
 
     if (!mounted) return;
 
@@ -83,81 +61,97 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
       }),
       content: StatefulBuilder(
         builder: (ctx, setSS) {
-          // Run the subject prefetch on the first build only — the
-          // outer `if (tClassId != null) { fetch.then(...) }` was the
-          // original location, but at that point the StatefulBuilder
-          // wasn't built yet so there was no setSS to capture. Doing
-          // it here gives us a reliable setSS and the once-flag stops
-          // it firing on every rebuild.
-          if (!prefetchStarted && tClassId != null) {
-            prefetchStarted = true;
-            _fetchTeacherSubjectsForClass(tClassId!).then((list) {
-              setSS(() {
-                tSubjectList = list;
-              });
-            });
-          }
+          // Brand filter rule: source the chip set from the
+          // pre-fetched roster, never from the page's displayed
+          // list and never from per-tap network round-trips. The
+          // roster is hydrated at dashboard init by
+          // DashboardController. See filter_sheet_reset.dart for the
+          // contract.
+          final roster = ref.watch(filterRosterRiverpod);
+          // Cross-axis Kelas: narrow to classes teaching the picked
+          // subject when one is set.
+          final rosterClasses = roster.classesForSubject(
+            tSubjectId,
+            isHomeroomView: isHomeroomView,
+          );
+          // Cross-axis Mapel: narrow to subjects of the picked class
+          // when one is set; otherwise the global subjects roster.
+          final rosterSubjects = roster.subjectsForClass(tClassId);
 
-          final availableClasses = getAvailableClasses();
-          final classes = availableClasses
-              .map(
-                (c) => FilterOption<String>(value: c['id']!, label: c['name']!),
-              )
-              .toList();
+          final classes = rosterClasses.map((c) {
+            final id = (c is Map ? c['id'] : null)?.toString() ?? '';
+            final name = c is Map
+                ? ((c['name'] ?? c['nama'] ?? '-').toString())
+                : '-';
+            return FilterOption<String>(value: id, label: name);
+          }).toList();
 
-          final subjects = tSubjectList.isNotEmpty
-              ? tSubjectList
-                    .map(
-                      (s) => FilterOption<String>(
-                        value: s['id']?.toString() ?? '',
-                        label: s['name']?.toString() ?? '-',
-                      ),
-                    )
-                    .toList()
-              : <FilterOption<String>>[];
+          final subjects = rosterSubjects.map((s) {
+            final id = (s is Map ? s['id'] : null)?.toString() ?? '';
+            final name = s is Map
+                ? ((s['name'] ?? s['nama'] ?? '-').toString())
+                : '-';
+            return FilterOption<String>(value: id, label: name);
+          }).toList();
 
           return TeacherFilterContent(
             sections: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FilterSectionHeader(
-                    title: 'Kelas',
-                    icon: Icons.class_outlined,
-                    primaryColor: primaryColor,
-                  ),
-                  FilterChipGrid<String>(
-                    options: classes,
-                    selectedValue: tClassId,
-                    onSelected: (v) {
-                      // Resolve the class name in the same setSS so
-                      // Apply commits both classId AND className —
-                      // otherwise the header chip stays stuck on its
-                      // "+ Kelas" placeholder. See FilterSheetHelpers
-                      // for the contract.
-                      final pickedName = FilterSheetHelpers.labelForId(
-                        availableClasses,
-                        v,
-                      );
-                      setSS(() {
-                        tClassId = v;
-                        tClassName = pickedName;
-                        tSubjectList = [];
-                        tSubjectId = null;
-                        tSubjectName = null;
-                      });
-                      if (v != null) {
-                        _fetchTeacherSubjectsForClass(v).then((list) {
-                          setSS(() {
-                            tSubjectList = list;
-                          });
+              // Kelas section is hidden in wali kelas mode — the
+              // role toggle in the page header has already locked
+              // the class to the homeroom, so a Kelas chip set
+              // inside the sheet would just be a single non-actionable
+              // chip. In mengajar mode the section renders normally.
+              if (!isHomeroomView)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FilterSectionHeader(
+                      title: 'Kelas',
+                      icon: Icons.class_outlined,
+                      primaryColor: primaryColor,
+                    ),
+                    FilterChipGrid<String>(
+                      options: classes,
+                      selectedValue: tClassId,
+                      onSelected: (v) {
+                        final pickedName = FilterSheetHelpers.labelForId(
+                          rosterClasses,
+                          v,
+                        );
+                        setSS(() {
+                          tClassId = v;
+                          tClassName = pickedName;
+                          // Cross-axis: if the new class doesn't teach
+                          // the currently-picked subject, drop the
+                          // subject selection.
+                          if (tSubjectId != null && v != null) {
+                            final allowed =
+                                roster.subjectsForClass(v).map(
+                                  (s) => (s as Map)['id']?.toString(),
+                                );
+                            if (!allowed.contains(tSubjectId)) {
+                              tSubjectId = null;
+                              tSubjectName = null;
+                            }
+                          }
+                          // Auto-select-on-single — if there's exactly
+                          // one subject for this class, pick it.
+                          if (v != null && tSubjectId == null) {
+                            final only = roster.subjectsForClass(v);
+                            if (only.length == 1 && only.first is Map) {
+                              tSubjectId =
+                                  (only.first as Map)['id']?.toString();
+                              tSubjectName = ((only.first as Map)['name'] ??
+                                      (only.first as Map)['nama'])
+                                  ?.toString();
+                            }
+                          }
                         });
-                      }
-                    },
-                    selectedColor: primaryColor,
-                  ),
-                ],
-              ),
+                      },
+                      selectedColor: primaryColor,
+                    ),
+                  ],
+                ),
               if (subjects.isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,20 +165,28 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
                       options: subjects,
                       selectedValue: tSubjectId,
                       onSelected: (v) {
+                        final pickedName = FilterSheetHelpers.labelForId(
+                          rosterSubjects,
+                          v,
+                        );
                         setSS(() {
                           tSubjectId = v;
-                          if (v != null) {
-                            final sub = tSubjectList.firstWhere(
-                              (s) => s['id']?.toString() == v,
-                              orElse: () => <String, dynamic>{},
+                          tSubjectName = pickedName;
+                          // Cross-axis inverse: if there's exactly one
+                          // class teaching this subject, auto-select
+                          // it. The user explicitly asked for this UX.
+                          if (v != null && tClassId == null) {
+                            final only = roster.classesForSubject(
+                              v,
+                              isHomeroomView: isHomeroomView,
                             );
-                            if (sub is Map && sub.isNotEmpty) {
-                              tSubjectName = sub['name']?.toString();
-                            } else {
-                              tSubjectName = null;
+                            if (only.length == 1 && only.first is Map) {
+                              tClassId =
+                                  (only.first as Map)['id']?.toString();
+                              tClassName = ((only.first as Map)['name'] ??
+                                      (only.first as Map)['nama'])
+                                  ?.toString();
                             }
-                          } else {
-                            tSubjectName = null;
                           }
                         });
                       },

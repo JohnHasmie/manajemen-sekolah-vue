@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
@@ -40,24 +40,6 @@ mixin AttendanceDialogFilterMixin
   @override
   Future<void> forceRefresh();
 
-  /// Fetches only subjects the current teacher teaches for the given class.
-  /// `/teacher/:id/subjects?class_id=` merges assignments + teaching
-  /// schedule; see TeacherController@getSubjects.
-  Future<List<dynamic>> _fetchTeacherSubjectsForClass(String classId) async {
-    try {
-      final r = await dioClient.get(
-        '/teacher/$teacherId/subjects',
-        queryParameters: {'class_id': classId},
-      );
-      final raw = r.data;
-      if (raw is List) return raw;
-      if (raw is Map && raw['data'] is List) return raw['data'] as List;
-      return [];
-    } catch (_) {
-      return [];
-    }
-  }
-
   // ═══════════════════════════════════════════
   // FILTER DIALOG
   // ═══════════════════════════════════════════
@@ -66,11 +48,6 @@ mixin AttendanceDialogFilterMixin
     String? tClassId = filterClassId;
     String? tSubjectId = filterSubjectId;
     String? tDateOption = filterDateOption;
-    List<dynamic> tSubjectList = List.from(filterSubjectList);
-
-    if (tClassId != null) {
-      tSubjectList = await _fetchTeacherSubjectsForClass(tClassId);
-    }
 
     if (!mounted) return;
 
@@ -86,7 +63,6 @@ mixin AttendanceDialogFilterMixin
         tClassId,
         tSubjectId,
         tDateOption,
-        tSubjectList,
         lp,
       ),
       onReset: () => FilterSheetHelpers.reset(context, () {
@@ -100,7 +76,16 @@ mixin AttendanceDialogFilterMixin
       }),
       content: StatefulBuilder(
         builder: (ctx, setSS) {
-          final classes = classList
+          // Brand filter rule: source chips from the pre-fetched
+          // roster + cross-axis maps (see filter_roster_provider.dart).
+          // No on-tap network round-trips.
+          final roster = ref.watch(filterRosterRiverpod);
+          final rosterClasses = roster.classesForSubject(
+            tSubjectId,
+            isHomeroomView: isHomeroomView,
+          );
+          final rosterSubjects = roster.subjectsForClass(tClassId);
+          final classes = rosterClasses
               .map(
                 (c) => FilterOption<String>(
                   value: c['id']?.toString() ?? '',
@@ -108,20 +93,17 @@ mixin AttendanceDialogFilterMixin
                 ),
               )
               .toList();
-
-          final subjects = tSubjectList.isNotEmpty
-              ? tSubjectList
-                    .map(
-                      (s) => FilterOption<String>(
-                        value: s['id']?.toString() ?? '',
-                        label:
-                            s['name']?.toString() ??
-                            s['nama']?.toString() ??
-                            '-',
-                      ),
-                    )
-                    .toList()
-              : <FilterOption<String>>[];
+          final subjects = rosterSubjects
+              .map(
+                (s) => FilterOption<String>(
+                  value: s['id']?.toString() ?? '',
+                  label:
+                      s['name']?.toString() ??
+                      s['nama']?.toString() ??
+                      '-',
+                ),
+              )
+              .toList();
 
           final dateOptions = [
             FilterOption<String>(
@@ -146,35 +128,51 @@ mixin AttendanceDialogFilterMixin
 
           return TeacherFilterContent(
             sections: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FilterSectionHeader(
-                    title: lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
-                    icon: Icons.class_outlined,
-                    primaryColor: primaryColor,
-                  ),
-                  FilterChipGrid<String>(
-                    options: classes,
-                    selectedValue: tClassId,
-                    onSelected: (v) {
-                      setSS(() {
-                        tClassId = v;
-                        tSubjectList = [];
-                        tSubjectId = null;
-                      });
-                      if (v != null) {
-                        _fetchTeacherSubjectsForClass(v).then((list) {
-                          setSS(() {
-                            tSubjectList = list;
-                          });
+              // Kelas section hides in wali kelas mode — the role
+              // toggle in the page header already locked the class.
+              if (!isHomeroomView)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FilterSectionHeader(
+                      title: lp.getTranslatedText({
+                        'en': 'Class',
+                        'id': 'Kelas',
+                      }),
+                      icon: Icons.class_outlined,
+                      primaryColor: primaryColor,
+                    ),
+                    FilterChipGrid<String>(
+                      options: classes,
+                      selectedValue: tClassId,
+                      onSelected: (v) {
+                        setSS(() {
+                          tClassId = v;
+                          // Cross-axis: drop the subject if the new
+                          // class doesn't teach it.
+                          if (tSubjectId != null && v != null) {
+                            final allowed = roster
+                                .subjectsForClass(v)
+                                .map((s) => (s as Map)['id']?.toString());
+                            if (!allowed.contains(tSubjectId)) {
+                              tSubjectId = null;
+                            }
+                          }
+                          // Auto-select-on-single — if only one
+                          // subject for this class, pick it.
+                          if (v != null && tSubjectId == null) {
+                            final only = roster.subjectsForClass(v);
+                            if (only.length == 1 && only.first is Map) {
+                              tSubjectId =
+                                  (only.first as Map)['id']?.toString();
+                            }
+                          }
                         });
-                      }
-                    },
-                    selectedColor: primaryColor,
-                  ),
-                ],
-              ),
+                      },
+                      selectedColor: primaryColor,
+                    ),
+                  ],
+                ),
               if (subjects.isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,6 +191,19 @@ mixin AttendanceDialogFilterMixin
                       onSelected: (v) {
                         setSS(() {
                           tSubjectId = v;
+                          // Cross-axis inverse: auto-select the only
+                          // class teaching this subject when no class
+                          // is picked yet.
+                          if (v != null && tClassId == null) {
+                            final only = roster.classesForSubject(
+                              v,
+                              isHomeroomView: isHomeroomView,
+                            );
+                            if (only.length == 1 && only.first is Map) {
+                              tClassId =
+                                  (only.first as Map)['id']?.toString();
+                            }
+                          }
                         });
                       },
                       selectedColor: primaryColor,
@@ -234,7 +245,6 @@ mixin AttendanceDialogFilterMixin
     String? classId,
     String? subjectId,
     String? dateOption,
-    List<dynamic> subjectList,
     LanguageProvider lp,
   ) {
     Navigator.pop(ctx);
@@ -242,7 +252,12 @@ mixin AttendanceDialogFilterMixin
       filterClassId = classId;
       filterSubjectId = subjectId;
       filterDateOption = dateOption;
-      filterSubjectList = subjectList;
+      // `filterSubjectList` is legacy state — used to cache the
+      // per-class subject roster across renders. With the unified
+      // FilterRosterProvider it's redundant; we leave the setter
+      // empty so existing read sites that haven't migrated yet
+      // continue to compile.
+      filterSubjectList = const [];
     });
     forceRefresh();
   }

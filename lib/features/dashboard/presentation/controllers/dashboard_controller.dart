@@ -193,6 +193,23 @@ class DashboardNotifier extends AsyncNotifier<DashboardState> {
       state = AsyncValue.data(newState);
       _saveDataToCache(normalizedRole, academicYearId, stats, charts);
 
+      // Refresh the unified filter roster from `/filter-options`.
+      // Brand filter rule (see filter_sheet_reset.dart): every filter
+      // chip set in the app reads from this provider, never from a
+      // server-filtered list. We use `refresh` (skip cache) here
+      // because the dashboard is the "show me current data" surface:
+      // pull-to-refresh and academic-year change both route through
+      // this method, and the user would otherwise stare at a stale
+      // 6h cache. Inter-screen calls during the session still hit
+      // the SharedPreferences cache via FilterOptionsService.
+      // Fire non-blocking — the dashboard doesn't depend on it, and
+      // the provider's `isLoaded` flag gates filter-sheet renders so
+      // cold open is safe.
+      ref
+          .read(filterRosterRiverpod)
+          .refresh(role: normalizedRole, academicYearId: academicYearId)
+          .ignore();
+
       // Prefetch tours and schedule data in the background without waiting
       _dataFetcher.prefetchTours(normalizedRole).ignore();
       if (normalizedRole == 'guru') {

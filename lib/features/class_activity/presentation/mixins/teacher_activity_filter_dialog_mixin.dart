@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
@@ -12,20 +12,27 @@ mixin TeacherActivityFilterDialogMixin {
   void setState(VoidCallback fn);
   BuildContext get context;
 
+  /// The host's Riverpod ref. Satisfied automatically when the host
+  /// is a ConsumerState.
+  WidgetRef get ref;
+
+  /// Wali kelas vs mengajar — picks the right roster partition.
+  bool get isHomeroomView;
+
   void showFilterDialog(LanguageProvider lp) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _ActivityFilterSheet(
-        classList: classList,
+        ref: ref,
+        hideClassSection: isHomeroomView,
+        isHomeroomView: isHomeroomView,
         initialClassId: filterClassId,
         initialSubjectId: filterSubjectId,
         initialDateOption: filterDateOption,
-        initialSubjectList: filterSubjectList,
         primaryColor: primaryColor,
         languageProvider: lp,
-        onFetchSubjects: _fetchSubjectsForClass,
         onApply:
             ({
               String? classId,
@@ -43,23 +50,6 @@ mixin TeacherActivityFilterDialogMixin {
             },
       ),
     );
-  }
-
-  Future<List<dynamic>> _fetchSubjectsForClass(String classId) async {
-    try {
-      // Fetch only subjects THIS teacher teaches for the selected class.
-      // `/teacher/:id/subjects?class_id=` returns `{success, data: [...]}`.
-      final r = await getIt<Dio>().get(
-        '/teacher/$teacherId/subjects',
-        queryParameters: {'class_id': classId},
-      );
-      final raw = r.data;
-      if (raw is List) return raw;
-      if (raw is Map && raw['data'] is List) return raw['data'] as List;
-      return [];
-    } catch (_) {
-      return [];
-    }
   }
 
   List<dynamic> get classList;
@@ -81,15 +71,20 @@ mixin TeacherActivityFilterDialogMixin {
 }
 
 /// Stateful bottom sheet widget for the class activity filter.
+///
+/// Brand filter rule: sources chips from `filterRosterRiverpod`
+/// (provider hydrated at dashboard init). No per-tap network calls.
+/// Cross-axis narrowing + auto-select-on-single is wired into the
+/// chip `onSelected` handlers.
 class _ActivityFilterSheet extends StatefulWidget {
-  final List<dynamic> classList;
+  final WidgetRef ref;
+  final bool hideClassSection;
+  final bool isHomeroomView;
   final String? initialClassId;
   final String? initialSubjectId;
   final String? initialDateOption;
-  final List<dynamic> initialSubjectList;
   final Color primaryColor;
   final LanguageProvider languageProvider;
-  final Future<List<dynamic>> Function(String classId) onFetchSubjects;
   final void Function({
     String? classId,
     String? subjectId,
@@ -99,14 +94,14 @@ class _ActivityFilterSheet extends StatefulWidget {
   onApply;
 
   const _ActivityFilterSheet({
-    required this.classList,
+    required this.ref,
+    required this.hideClassSection,
+    required this.isHomeroomView,
     required this.initialClassId,
     required this.initialSubjectId,
     required this.initialDateOption,
-    required this.initialSubjectList,
     required this.primaryColor,
     required this.languageProvider,
-    required this.onFetchSubjects,
     required this.onApply,
   });
 
@@ -118,7 +113,6 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
   late String? _classId;
   late String? _subjectId;
   late String? _dateOption;
-  late List<dynamic> _subjectList;
 
   @override
   void initState() {
@@ -126,13 +120,19 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
     _classId = widget.initialClassId;
     _subjectId = widget.initialSubjectId;
     _dateOption = widget.initialDateOption;
-    _subjectList = List.from(widget.initialSubjectList);
   }
 
   LanguageProvider get _lp => widget.languageProvider;
 
   @override
   Widget build(BuildContext context) {
+    final roster = widget.ref.watch(filterRosterRiverpod);
+    final rosterClasses = roster.classesForSubject(
+      _subjectId,
+      isHomeroomView: widget.isHomeroomView,
+    );
+    final rosterSubjects = roster.subjectsForClass(_classId);
+
     return AppFilterBottomSheet(
       title: _lp.getTranslatedText({
         'en': 'Filter Activity',
@@ -146,7 +146,7 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
           classId: _classId,
           subjectId: _subjectId,
           dateOption: _dateOption,
-          subjectList: _subjectList,
+          subjectList: rosterSubjects,
         );
       },
       onReset: () => FilterSheetHelpers.reset(
@@ -160,43 +160,55 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
       ),
       content: TeacherFilterContent(
         sections: [
-          // Class section
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FilterSectionHeader(
-                title: _lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
-                icon: Icons.class_outlined,
-                primaryColor: widget.primaryColor,
-              ),
-              FilterChipGrid<String>(
-                options: widget.classList.map((c) {
-                  final id = c['id']?.toString() ?? '';
-                  final name = (c['name'] ?? c['nama'] ?? '-').toString();
-                  return FilterOption(value: id, label: name);
-                }).toList(),
-                selectedValue: _classId,
-                onSelected: (val) async {
-                  final newId = val == _classId ? null : val;
-                  setState(() {
-                    _classId = newId;
-                    _subjectId = null;
-                    _subjectList = [];
-                  });
-                  if (newId != null) {
-                    final subjects = await widget.onFetchSubjects(newId);
-                    if (mounted) {
-                      setState(() => _subjectList = subjects);
-                    }
-                  }
-                },
-                selectedColor: widget.primaryColor,
-              ),
-            ],
-          ),
+          // Kelas section hides in wali kelas mode — the role toggle
+          // in the page header has already locked the class.
+          if (!widget.hideClassSection)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FilterSectionHeader(
+                  title: _lp.getTranslatedText({'en': 'Class', 'id': 'Kelas'}),
+                  icon: Icons.class_outlined,
+                  primaryColor: widget.primaryColor,
+                ),
+                FilterChipGrid<String>(
+                  options: rosterClasses.map((c) {
+                    final id = c['id']?.toString() ?? '';
+                    final name = (c['name'] ?? c['nama'] ?? '-').toString();
+                    return FilterOption(value: id, label: name);
+                  }).toList(),
+                  selectedValue: _classId,
+                  onSelected: (val) {
+                    final newId = val == _classId ? null : val;
+                    setState(() {
+                      _classId = newId;
+                      // Cross-axis: drop subject if the new class
+                      // doesn't teach it.
+                      if (_subjectId != null && newId != null) {
+                        final allowed = roster
+                            .subjectsForClass(newId)
+                            .map((s) => (s as Map)['id']?.toString());
+                        if (!allowed.contains(_subjectId)) {
+                          _subjectId = null;
+                        }
+                      }
+                      // Auto-select-on-single.
+                      if (newId != null && _subjectId == null) {
+                        final only = roster.subjectsForClass(newId);
+                        if (only.length == 1 && only.first is Map) {
+                          _subjectId =
+                              (only.first as Map)['id']?.toString();
+                        }
+                      }
+                    });
+                  },
+                  selectedColor: widget.primaryColor,
+                ),
+              ],
+            ),
 
-          // Subject section (only when class is selected)
-          if (_classId != null && _subjectList.isNotEmpty)
+          // Subject section
+          if (rosterSubjects.isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -209,14 +221,29 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
                   primaryColor: widget.primaryColor,
                 ),
                 FilterChipGrid<String>(
-                  options: _subjectList.map((s) {
-                    final id =
-                        (s['id'] ?? s['mata_pelajaran_id'])?.toString() ?? '';
+                  options: rosterSubjects.map((s) {
+                    final id = (s['id'] ?? s['mata_pelajaran_id'])
+                            ?.toString() ??
+                        '';
                     final name = (s['nama'] ?? s['name'] ?? '-').toString();
                     return FilterOption(value: id, label: name);
                   }).toList(),
                   selectedValue: _subjectId,
-                  onSelected: (val) => setState(() => _subjectId = val),
+                  onSelected: (val) {
+                    setState(() {
+                      _subjectId = val;
+                      // Cross-axis inverse: auto-select sole class.
+                      if (val != null && _classId == null) {
+                        final only = roster.classesForSubject(
+                          val,
+                          isHomeroomView: widget.isHomeroomView,
+                        );
+                        if (only.length == 1 && only.first is Map) {
+                          _classId = (only.first as Map)['id']?.toString();
+                        }
+                      }
+                    });
+                  },
                   selectedColor: widget.primaryColor,
                 ),
               ],
@@ -261,9 +288,7 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
                 selectedValue: _dateOption,
                 // Tapping the already-selected chip deselects it so
                 // the user can drop a "this week" filter without
-                // having to hit Reset (which would also wipe their
-                // class + subject picks). Mirrors the class chip's
-                // own toggle-off above.
+                // having to hit Reset.
                 onSelected: (val) => setState(
                   () => _dateOption = val == _dateOption ? null : val,
                 ),
