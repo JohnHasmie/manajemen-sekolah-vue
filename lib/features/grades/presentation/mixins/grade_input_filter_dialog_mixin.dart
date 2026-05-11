@@ -5,6 +5,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
+import 'package:manajemensekolah/core/widgets/filter_sheet_reset.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
 
@@ -71,16 +72,7 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
       primaryColor: primaryColor,
       onApply: () =>
           _applyFilter(context, tClassId, tClassName, tSubjectId, tSubjectName),
-      // Reset = "remove all filters now". Pop the sheet, clear the
-      // outer screen state, and refetch — otherwise the in-flight
-      // local sheet vars (tClassId/tSubjectId) stay set and the next
-      // Apply tap restores the old filter, OR the user dismisses the
-      // sheet and the backend-filtered _groupedData never refreshes.
-      // Previously this just setState'd the outer fields, which left
-      // the user staring at the same filtered list with no obvious
-      // way to fully clear it without deselecting each chip.
-      onReset: () {
-        Navigator.pop(context);
+      onReset: () => FilterSheetHelpers.reset(context, () {
         setState(() {
           filterClassId = null;
           filterClassName = null;
@@ -88,7 +80,7 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
           filterSubjectName = null;
         });
         loadData();
-      },
+      }),
       content: StatefulBuilder(
         builder: (ctx, setSS) {
           // Run the subject prefetch on the first build only — the
@@ -138,21 +130,15 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
                     options: classes,
                     selectedValue: tClassId,
                     onSelected: (v) {
-                      // Resolve the human-readable class name from
-                      // the available-classes lookup so Apply commits
-                      // both classId AND className to the outer
-                      // state. Without this, the header chip falls
-                      // back to its "+ Kelas" placeholder even after
-                      // a successful Apply.
-                      String? pickedName;
-                      if (v != null) {
-                        for (final c in availableClasses) {
-                          if (c['id'] == v) {
-                            pickedName = c['name'];
-                            break;
-                          }
-                        }
-                      }
+                      // Resolve the class name in the same setSS so
+                      // Apply commits both classId AND className —
+                      // otherwise the header chip stays stuck on its
+                      // "+ Kelas" placeholder. See FilterSheetHelpers
+                      // for the contract.
+                      final pickedName = FilterSheetHelpers.labelForId(
+                        availableClasses,
+                        v,
+                      );
                       setSS(() {
                         tClassId = v;
                         tClassName = pickedName;

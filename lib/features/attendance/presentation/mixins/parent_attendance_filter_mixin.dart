@@ -4,6 +4,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
+import 'package:manajemensekolah/core/widgets/filter_sheet_reset.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_state_mixin.dart';
@@ -86,9 +87,9 @@ mixin ParentAttendanceFilterMixin
               // re-runs calculateMonthlySummary inside loadData).
               calculateMonthlySummary();
             },
-            onReset: () => setSS(() {
-              tempMonthFilter = DateTime.now().month.toString();
-              tempStatusFilter = null;
+            onReset: () => FilterSheetHelpers.reset(ctx, () {
+              clearAllFilters();
+              calculateMonthlySummary();
             }),
             content: TeacherFilterContent(
               sections: [

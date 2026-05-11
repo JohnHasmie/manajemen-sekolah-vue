@@ -9,6 +9,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
+import 'package:manajemensekolah/core/widgets/filter_sheet_reset.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 
@@ -62,14 +63,7 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
       primaryColor: primaryColor,
       onApply: () =>
           _applyFilter(context, tClassId, tClassName, tSubjectId, tSubjectList),
-      onReset: () => setState(() {
-        selectedClassId = null;
-        selectedClassName = null;
-        selectedSubject = null;
-        subjectList = [];
-        chapterMaterialList = [];
-        subChapterMaterialList = [];
-      }),
+      onReset: () => FilterSheetHelpers.reset(context, clearAllFilters),
       content: StatefulBuilder(
         builder: (ctx, setSS) {
           final classes = classList
@@ -106,23 +100,20 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
                     options: classes,
                     selectedValue: tClassId,
                     onSelected: (v) {
+                      // Keep tClassName in sync with tClassId via the
+                      // shared label-lookup helper, so Apply commits
+                      // both the id and the human-readable name to
+                      // the outer state.
                       setSS(() {
                         tClassId = v;
+                        tClassName = FilterSheetHelpers.labelForId(
+                          classList,
+                          v,
+                        );
                         tSubjectId = null;
                         tSubjectList = [];
                       });
                       if (v != null) {
-                        final sc = classList.firstWhere(
-                          (c) => c['id']?.toString() == v,
-                          orElse: () => <String, dynamic>{},
-                        );
-                        if ((sc as Map?)?.isNotEmpty ?? false) {
-                          final scMap = sc as Map<String, dynamic>;
-                          tClassName = (scMap['name'] ?? scMap['nama'])
-                              ?.toString();
-                        } else {
-                          tClassName = null;
-                        }
                         getSubjectsForClass(v).then((subjects) {
                           setSS(() {
                             tSubjectList = subjects;

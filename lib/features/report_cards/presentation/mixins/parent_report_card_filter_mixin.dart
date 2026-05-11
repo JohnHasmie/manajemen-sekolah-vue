@@ -5,6 +5,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
+import 'package:manajemensekolah/core/widgets/filter_sheet_reset.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/parent_report_card_screen.dart';
 
@@ -44,8 +45,13 @@ mixin ParentReportCardFilterMixin on ConsumerState<ParentReportCardScreen> {
                 loadData();
               }
             },
-            onReset: () => setSS(() {
-              tempTermId = '1';
+            onReset: () => FilterSheetHelpers.reset(ctx, () {
+              if (selectedTermId != '1') {
+                setState(() {
+                  selectedTermId = '1';
+                });
+                loadData();
+              }
             }),
             content: TeacherFilterContent(
               sections: [

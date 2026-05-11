@@ -5,6 +5,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
+import 'package:manajemensekolah/core/widgets/filter_sheet_reset.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/attendance_data_mixin.dart';
@@ -88,11 +89,14 @@ mixin AttendanceDialogFilterMixin
         tSubjectList,
         lp,
       ),
-      onReset: () => setState(() {
-        filterClassId = null;
-        filterSubjectId = null;
-        filterDateOption = null;
-        filterSubjectList = [];
+      onReset: () => FilterSheetHelpers.reset(context, () {
+        setState(() {
+          filterClassId = null;
+          filterSubjectId = null;
+          filterDateOption = null;
+          filterSubjectList = [];
+        });
+        forceRefresh();
       }),
       content: StatefulBuilder(
         builder: (ctx, setSS) {
