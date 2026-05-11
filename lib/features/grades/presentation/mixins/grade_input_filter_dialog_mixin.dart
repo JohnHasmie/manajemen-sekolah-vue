@@ -69,12 +69,24 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
       primaryColor: primaryColor,
       onApply: () =>
           _applyFilter(context, tClassId, tClassName, tSubjectId, tSubjectName),
-      onReset: () => setState(() {
-        filterClassId = null;
-        filterClassName = null;
-        filterSubjectId = null;
-        filterSubjectName = null;
-      }),
+      // Reset = "remove all filters now". Pop the sheet, clear the
+      // outer screen state, and refetch — otherwise the in-flight
+      // local sheet vars (tClassId/tSubjectId) stay set and the next
+      // Apply tap restores the old filter, OR the user dismisses the
+      // sheet and the backend-filtered _groupedData never refreshes.
+      // Previously this just setState'd the outer fields, which left
+      // the user staring at the same filtered list with no obvious
+      // way to fully clear it without deselecting each chip.
+      onReset: () {
+        Navigator.pop(context);
+        setState(() {
+          filterClassId = null;
+          filterClassName = null;
+          filterSubjectId = null;
+          filterSubjectName = null;
+        });
+        loadData();
+      },
       content: StatefulBuilder(
         builder: (ctx, setSS) {
           final classes = getAvailableClasses()
