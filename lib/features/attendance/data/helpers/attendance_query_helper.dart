@@ -12,6 +12,13 @@ class AttendanceQueryHelper {
   static const _kDateRangeEnd = 'tanggalEnd';
 
   /// Fetches attendance records with optional filters.
+  ///
+  /// The backend `/attendance` endpoint paginates with a default
+  /// `per_page=15`. Most callers want the FULL set for a narrow
+  /// query (e.g. one class on one date — bounded by class size, ~30),
+  /// not page 1. We pass an explicit large [limit] so the detail
+  /// screen doesn't silently fall back to 'absent' for any student
+  /// whose attendance row lands on page 2.
   Future<List<Attendance>> getAttendance({
     String? teacherId,
     String? date,
@@ -20,6 +27,7 @@ class AttendanceQueryHelper {
     String? classId,
     String? academicYearId,
     String? lessonHourId,
+    int limit = 500,
   }) async {
     final queryParams = _buildFilterParams(
       teacherId: teacherId,
@@ -30,6 +38,7 @@ class AttendanceQueryHelper {
       academicYearId: academicYearId,
       lessonHourId: lessonHourId,
     );
+    queryParams['per_page'] = limit.toString();
 
     AppLogger.debug(
       'api',
