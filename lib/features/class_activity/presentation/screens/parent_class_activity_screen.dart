@@ -35,7 +35,6 @@ import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/parent_activity_data_loading_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/parent_activity_list_builder_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/parent_activity_read_tracking_mixin.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/mixins/parent_activity_tour_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/parent_activity_ui_builder_mixin.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -58,7 +57,6 @@ class ParentClassActivityScreenState
     with
         ParentActivityDataLoadingMixin,
         ParentActivityReadTrackingMixin,
-        ParentActivityTourMixin,
         ParentActivityUIBuilderMixin,
         ParentActivityListBuilderMixin {
   // ---- State -----------------------------------------------------------
@@ -142,10 +140,7 @@ class ParentClassActivityScreenState
           if (mounted) setState(() => _lastSync = DateTime.now());
         },
         bodyChildren: [
-          KeyedSubtree(
-            key: activityListKey,
-            child: buildActivityList(),
-          ),
+          KeyedSubtree(key: activityListKey, child: buildActivityList()),
         ],
       ),
     );

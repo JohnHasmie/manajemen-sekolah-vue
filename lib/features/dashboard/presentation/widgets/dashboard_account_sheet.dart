@@ -40,7 +40,8 @@ class DashboardAccountSheet extends ConsumerStatefulWidget {
   final VoidCallback onLanguageTap;
 
   /// Called when the user taps "Switch Role".
-  final void Function(String schoolId, List<String> roleList) onShowRoleSelection;
+  final void Function(String schoolId, List<String> roleList)
+  onShowRoleSelection;
 
   const DashboardAccountSheet({
     super.key,
@@ -86,8 +87,7 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
               'Pengguna')
           .toString();
 
-  String get _userEmail =>
-      (widget.state.userData['email'] ?? '').toString();
+  String get _userEmail => (widget.state.userData['email'] ?? '').toString();
 
   String get _initial {
     final n = _userName.trim();
@@ -184,8 +184,9 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
                       iconColor: widget.primaryColor,
                       label: AppLocalizations.activeRole.tr,
                       value: roleDisplayName(widget.effectiveRole),
-                      action:
-                          hasMultiple ? AppLocalizations.switchAction.tr : '',
+                      action: hasMultiple
+                          ? AppLocalizations.switchAction.tr
+                          : '',
                       isActive: true,
                       accentColor: widget.primaryColor,
                       onTap: hasMultiple
@@ -193,8 +194,9 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
                               final sId =
                                   (widget.state.userData['school_id'] ?? '')
                                       .toString();
-                              final rList =
-                                  roles.map((e) => e.toString()).toList();
+                              final rList = roles
+                                  .map((e) => e.toString())
+                                  .toList();
                               Navigator.pop(context);
                               widget.onShowRoleSelection(sId, rList);
                             }
@@ -212,8 +214,9 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
                       iconColor: const Color(0xFF10B981),
                       label: AppLocalizations.activeSchool.tr,
                       value: _schoolName,
-                      action:
-                          hasMultiple ? AppLocalizations.switchAction.tr : '',
+                      action: hasMultiple
+                          ? AppLocalizations.switchAction.tr
+                          : '',
                       onTap: hasMultiple
                           ? () {
                               Navigator.pop(context);
@@ -233,7 +236,8 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
                     icon: Icons.language_outlined,
                     iconColor: const Color(0xFF6366F1),
                     label: AppLocalizations.language.tr,
-                    value: ref.watch(languageRiverpod).currentLanguage ==
+                    value:
+                        ref.watch(languageRiverpod).currentLanguage ==
                             LanguageProvider.english
                         ? 'English'
                         : 'Bahasa Indonesia',
@@ -284,8 +288,9 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
             // width, which left the right half of the row white.)
             Container(
               width: double.infinity,
-              decoration:
-                  BoxDecoration(gradient: ColorUtils.brandGradient('admin')),
+              decoration: BoxDecoration(
+                gradient: ColorUtils.brandGradient('admin'),
+              ),
               child: _ScopeChipsLoader(
                 onSelectSchool: (id) {
                   Navigator.pop(context);
@@ -324,8 +329,7 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
               child: const SizedBox(
                 width: 30,
                 height: 30,
-                child:
-                    Icon(Icons.close, size: 16, color: Colors.white),
+                child: Icon(Icons.close, size: 16, color: Colors.white),
               ),
             ),
           ),
@@ -374,10 +378,7 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
               const SizedBox(height: 2),
               Text(
                 _userEmail,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Color(0xFF64748B),
-                ),
+                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
               ),
               const SizedBox(height: 6),
               Container(
@@ -410,8 +411,7 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
             child: const SizedBox(
               width: 30,
               height: 30,
-              child:
-                  Icon(Icons.close, size: 16, color: Color(0xFF475569)),
+              child: Icon(Icons.close, size: 16, color: Color(0xFF475569)),
             ),
           ),
         ),
@@ -486,12 +486,8 @@ class _AccessRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = isActive
-        ? const Color(0xFFF0F9FF)
-        : Colors.white;
-    final border = isActive
-        ? const Color(0xFFBAE6FD)
-        : const Color(0xFFE2E8F0);
+    final bg = isActive ? const Color(0xFFF0F9FF) : Colors.white;
+    final border = isActive ? const Color(0xFFBAE6FD) : const Color(0xFFE2E8F0);
 
     return Material(
       color: bg,

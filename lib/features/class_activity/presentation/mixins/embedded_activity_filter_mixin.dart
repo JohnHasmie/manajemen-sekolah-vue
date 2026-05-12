@@ -105,10 +105,8 @@ class _ActivityDateFilterSheetState extends State<_ActivityDateFilterSheet> {
         Navigator.pop(context);
         widget.onApply(_tempDateFilter);
       },
-      onReset: () => FilterSheetHelpers.reset(
-        context,
-        () => widget.onApply(null),
-      ),
+      onReset: () =>
+          FilterSheetHelpers.reset(context, () => widget.onApply(null)),
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

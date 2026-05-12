@@ -73,8 +73,8 @@ class BrandHeroSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveSectionLabel = sectionLabel ??
-        (hero == null ? 'PILIH' : 'GANTI KE');
+    final effectiveSectionLabel =
+        sectionLabel ?? (hero == null ? 'PILIH' : 'GANTI KE');
 
     return Container(
       decoration: const BoxDecoration(
@@ -118,11 +118,7 @@ class BrandHeroSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(13),
                 ),
                 alignment: Alignment.center,
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: ColorUtils.brandAzureDeep,
-                ),
+                child: Icon(icon, size: 20, color: ColorUtils.brandAzureDeep),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -183,8 +179,7 @@ class BrandHeroSheet extends StatelessWidget {
                   children: [
                     for (var i = 0; i < tiles.length; i++) ...[
                       tiles[i],
-                      if (i != tiles.length - 1)
-                        const SizedBox(height: 8),
+                      if (i != tiles.length - 1) const SizedBox(height: 8),
                     ],
                   ],
                 ),
@@ -201,10 +196,7 @@ class BrandHeroSheet extends StatelessWidget {
               ),
               child: Text(
                 emptyMessage!,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: ColorUtils.slate500,
-                ),
+                style: TextStyle(fontSize: 11.5, color: ColorUtils.slate500),
               ),
             ),
           ],

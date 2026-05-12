@@ -335,7 +335,6 @@ class AdminTeacherController {
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
     }
-    await LocalCacheService.clearStartingWith('tour_teacher_admin_');
     await FilterOptionsService.invalidateCache();
   }
 

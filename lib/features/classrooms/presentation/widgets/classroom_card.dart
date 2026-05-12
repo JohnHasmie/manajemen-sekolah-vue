@@ -71,10 +71,7 @@ class ClassroomCard extends ConsumerWidget {
       status: status,
       trailingActionLabel: selected
           ? null
-          : lang.getTranslatedText(const {
-              'en': 'Detail',
-              'id': 'Detail',
-            }),
+          : lang.getTranslatedText(const {'en': 'Detail', 'id': 'Detail'}),
       trailingActionColor: accent,
       onTap: onTap,
       onLongPress: onLongPress ?? (isReadOnly ? null : onEdit),

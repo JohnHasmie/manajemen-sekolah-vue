@@ -28,7 +28,6 @@ import 'package:manajemensekolah/features/recommendations/data/recommendation_se
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_card.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_share_sheet.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_share_history_sheet.dart';
-import 'package:manajemensekolah/features/recommendations/presentation/mixins/result_tour_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/result_fetch_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/result_navigation_mixin.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
@@ -87,7 +86,7 @@ class LearningRecommendationResultScreen extends ConsumerStatefulWidget {
 
 class _LearningRecommendationResultScreenState
     extends ConsumerState<LearningRecommendationResultScreen>
-    with ResultTourMixin, ResultFetchMixin, ResultNavigationMixin {
+    with ResultFetchMixin, ResultNavigationMixin {
   bool _isLoading = true;
   List<dynamic> _recommendations = [];
   String _errorMessage = '';
@@ -155,12 +154,6 @@ class _LearningRecommendationResultScreenState
     }
 
     return filtered;
-  }
-
-  int _countByPriority(String priority) {
-    return _recommendations.where((rec) {
-      return (rec['priority']?.toString().toLowerCase() ?? 'low') == priority;
-    }).length;
   }
 
   int _countByStatus(String status) {

@@ -50,10 +50,7 @@ Future<IdentityEditResult?> showLessonPlanIdentityEditSheet({
     icon: Icons.tune_rounded,
     primaryColor: ColorUtils.getRoleColor('guru'),
     contentPadding: EdgeInsets.zero,
-    content: _IdentityEditContent(
-      lessonPlan: lessonPlan,
-      teacherId: teacherId,
-    ),
+    content: _IdentityEditContent(lessonPlan: lessonPlan, teacherId: teacherId),
   );
 }
 
@@ -105,19 +102,18 @@ class _IdentityEditContentState extends ConsumerState<_IdentityEditContent> {
     );
     _subjectId = (lp['subject_id'] ?? '').toString();
     _subjectId = (_subjectId?.isEmpty ?? true) ? null : _subjectId;
-    _subjectName = (lp['subject_name'] ??
-            lp['mata_pelajaran_nama'] ??
-            lp['subject']?['name'] ??
-            '')
-        .toString();
+    _subjectName =
+        (lp['subject_name'] ??
+                lp['mata_pelajaran_nama'] ??
+                lp['subject']?['name'] ??
+                '')
+            .toString();
     _subjectName = _subjectName!.isEmpty ? null : _subjectName;
     _classId = (lp['class_id'] ?? '').toString();
     _classId = (_classId?.isEmpty ?? true) ? null : _classId;
-    _className = (lp['class_name'] ??
-            lp['kelas_nama'] ??
-            lp['class']?['name'] ??
-            '')
-        .toString();
+    _className =
+        (lp['class_name'] ?? lp['kelas_nama'] ?? lp['class']?['name'] ?? '')
+            .toString();
     _className = _className!.isEmpty ? null : _className;
     _semester = (lp['semester']?.toString() ?? '').isEmpty
         ? 'Ganjil'
@@ -160,8 +156,9 @@ class _IdentityEditContentState extends ConsumerState<_IdentityEditContent> {
 
   Future<void> _loadSubjects() async {
     try {
-      final result = await ApiService()
-          .get('/guru/${widget.teacherId}/mata-pelajaran');
+      final result = await ApiService().get(
+        '/guru/${widget.teacherId}/mata-pelajaran',
+      );
       if (!mounted) return;
       setState(() {
         if (result is Map && result['data'] is List) {
@@ -177,8 +174,9 @@ class _IdentityEditContentState extends ConsumerState<_IdentityEditContent> {
 
   Future<void> _loadClassesForSubject(String subjectId) async {
     try {
-      final result = await ApiService()
-          .get('/class-by-mata-pelajaran?mata_pelajaran_id=$subjectId');
+      final result = await ApiService().get(
+        '/class-by-mata-pelajaran?mata_pelajaran_id=$subjectId',
+      );
       if (!mounted) return;
       setState(() {
         if (result is Map && result['data'] is List) {
@@ -221,10 +219,7 @@ class _IdentityEditContentState extends ConsumerState<_IdentityEditContent> {
       await LessonPlanService.updateLessonPlan(id, payload);
 
       if (!mounted) return;
-      AppNavigator.pop(
-        context,
-        IdentityEditResult(updatedFields: payload),
-      );
+      AppNavigator.pop(context, IdentityEditResult(updatedFields: payload));
     } catch (e) {
       AppLogger.error('rpp_identity', 'save failed: $e');
       if (mounted) {
@@ -269,9 +264,8 @@ class _IdentityEditContentState extends ConsumerState<_IdentityEditContent> {
                   FilterOption(value: '4 JP × 45 menit', label: '4 JP'),
                 ],
                 selectedValue: _timeAllocation,
-                onSelected: (v) => setState(
-                  () => _timeAllocation = v ?? _timeAllocation,
-                ),
+                onSelected: (v) =>
+                    setState(() => _timeAllocation = v ?? _timeAllocation),
                 selectedColor: _accent,
               ),
               _label('Semester'),
@@ -281,8 +275,7 @@ class _IdentityEditContentState extends ConsumerState<_IdentityEditContent> {
                   FilterOption(value: 'Genap', label: 'Genap'),
                 ],
                 selectedValue: _semester,
-                onSelected: (v) =>
-                    setState(() => _semester = v ?? _semester),
+                onSelected: (v) => setState(() => _semester = v ?? _semester),
                 selectedColor: _accent,
               ),
               _label('Tahun ajaran'),
@@ -384,18 +377,17 @@ class _IdentityEditContentState extends ConsumerState<_IdentityEditContent> {
       onTap: _subjectId == null
           ? null
           : () => _pickFromList(
-                title: 'Pilih kelas',
-                options: _classes,
-                labelOf: (c) =>
-                    (c['kelas_nama'] ?? c['name'] ?? '-').toString(),
-                idOf: (c) => (c['kelas_id'] ?? c['id']).toString(),
-                onPicked: (id, name) {
-                  setState(() {
-                    _classId = id;
-                    _className = name;
-                  });
-                },
-              ),
+              title: 'Pilih kelas',
+              options: _classes,
+              labelOf: (c) => (c['kelas_nama'] ?? c['name'] ?? '-').toString(),
+              idOf: (c) => (c['kelas_id'] ?? c['id']).toString(),
+              onPicked: (id, name) {
+                setState(() {
+                  _classId = id;
+                  _className = name;
+                });
+              },
+            ),
     );
   }
 
@@ -495,8 +487,7 @@ class _PickerField extends StatelessWidget {
                     color: placeholder
                         ? ColorUtils.slate400
                         : ColorUtils.slate900,
-                    fontWeight:
-                        placeholder ? FontWeight.w500 : FontWeight.w700,
+                    fontWeight: placeholder ? FontWeight.w500 : FontWeight.w700,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),

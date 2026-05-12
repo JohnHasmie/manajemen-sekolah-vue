@@ -192,8 +192,9 @@ class RecommendationCard extends StatelessWidget {
                           : ColorUtils.slate900,
                       letterSpacing: -0.3,
                       height: 1.3,
-                      decoration:
-                          isCompleted ? TextDecoration.lineThrough : null,
+                      decoration: isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
                       decorationColor: ColorUtils.slate400,
                     ),
                   ),

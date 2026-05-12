@@ -18,10 +18,6 @@ const _kSubjects = {'en': 'Subjects', 'id': 'Mata Pelajaran'};
 const _kOngoing = {'en': 'Ongoing', 'id': 'Sedang berlangsung'};
 const _kSubmitted = {'en': 'Submitted', 'id': 'Terkirim'};
 const _kPresenceReport = {'en': 'Presence Report', 'id': 'Laporan Presensi'};
-const _kPdSchoolSettings = {
-  'en': 'School Settings',
-  'id': 'Pengaturan Sekolah',
-};
 const _kLatestInfo = {'en': 'Latest Info', 'id': 'Info terbaru'};
 const _kChildrenData = {'en': 'Children Data', 'id': 'Data Anak'};
 const _kRegisteredChildren = {
@@ -29,33 +25,11 @@ const _kRegisteredChildren = {
   'id': 'Anak terdaftar',
 };
 const _kGrades = {'en': 'Grades', 'id': 'Nilai'};
-const _kPdNoChildrenLinked = {
-  'en': 'No student/child linked to this account',
-  'id': 'Tidak ada data siswa/anak yang terhubung dengan akun ini',
-};
-const _kPdSelectChild = {'en': 'Select Child:', 'id': 'Pilih Anak:'};
-const _kPdNameNotAvailable = {
-  'en': 'Name not available',
-  'id': 'Nama tidak tersedia',
-};
-const _kPdClassString = {'en': 'Class', 'id': 'Kelas'};
 const _kAssessmentDate = {'en': 'Assessment Date', 'id': 'Tanggal Penilaian'};
 const _kTeacherNotes = {'en': 'Teacher Notes', 'id': 'Catatan Guru'};
-const _kPdSelectChildToViewGrades = {
-  'en': 'Select child first to view grades',
-  'id': 'Pilih anak terlebih dahulu untuk melihat nilai',
-};
 const _kNoGradesData = {
   'en': 'No grades data for this child',
   'id': 'Belum ada data nilai untuk anak ini',
-};
-const _kPdChildAcademicGrades = {
-  'en': 'Child Academic Grades',
-  'id': 'Nilai Akademik Anak',
-};
-const _kPdMonitorChildGrades = {
-  'en': 'Monitor your child\\\'s grade progress',
-  'id': 'Pantau perkembangan nilai anak Anda',
 };
 const _kUnknown = {'en': 'Unknown', 'id': 'Tidak Diketahui'};
 const _kActivityTitle = {'en': 'Activity Title', 'id': 'Judul Kegiatan'};
@@ -105,35 +79,16 @@ const _kYearly = {'en': 'Yearly', 'id': 'Tahunan'};
 const _kFilter = {'en': 'Filter', 'id': 'Filter'};
 const _kApply = {'en': 'Apply', 'id': 'Terapkan'};
 const _kReset = {'en': 'Reset', 'id': 'Reset'};
-const _kPdChooseSource = {'en': 'Choose Source', 'id': 'Pilih Sumber'};
-const _kPdChooseImageSource = {
-  'en': 'Choose image source',
-  'id': 'Pilih sumber gambar',
-};
-const _kPdGallery = {'en': 'Gallery', 'id': 'Galeri'};
-const _kPdCamera = {'en': 'Camera', 'id': 'Kamera'};
 const _kUnsupportedFileFormat = {
   'en': 'Unsupported file format. Only JPG, JPEG, and PNG are allowed.',
   'id': 'Format file tidak didukung. Hanya JPG, JPEG, dan PNG yang diizinkan.',
 };
-const _kPdChooseFileType = {'en': 'Choose File Type', 'id': 'Pilih Jenis File'};
-const _kPdImageCameraGallery = {
-  'en': 'Image (Camera/Gallery)',
-  'id': 'Gambar (Kamera/Galeri)',
-};
-const _kPdUploadPaymentProof = {
-  'en': 'Upload Payment Proof',
-  'id': 'Upload Bukti Pembayaran',
-};
-const _kPdBillAmount = {'en': 'Bill Amount', 'id': 'Jumlah Tagihan'};
 const _kStudent = {'en': 'Student', 'id': 'Siswa'};
 const _kPayNow = {'en': 'Pay Now', 'id': 'Bayar Sekarang'};
 const _kChildPresence = {'en': 'Child Presence', 'id': 'Absensi Anak'};
 const _kStudentName = {'en': 'Student Name', 'id': 'Nama Siswa'};
 const _kMonthlyRecap = {'en': 'Monthly Recap', 'id': 'Rekap Bulanan'};
 const _kAttendanceRate = {'en': 'Attendance Rate', 'id': 'Tingkat Kehadiran'};
-const _kPdPresent = {'en': 'Present', 'id': 'Hadir'};
-const _kPdLate = {'en': 'Late', 'id': 'Terlambat'};
 const _kPdPermission = {'en': 'Permission', 'id': 'Izin'};
 const _kPdSick = {'en': 'Sick', 'id': 'Sakit'};
 const _kPdAlpha = {'en': 'Alpha', 'id': 'Alpha'};
@@ -151,40 +106,29 @@ const _kFinancialManagement = {
   'en': 'Financial Management',
   'id': 'Manajemen Keuangan',
 };
-const _kPdDashboard = {'en': 'Dashboard', 'id': 'Dashboard'};
-const _kPdPaymentTypes = {'en': 'Payment Types', 'id': 'Jenis Pembayaran'};
-const _kPdVerification = {'en': 'Verification', 'id': 'Verifikasi'};
 const _kMonthlyIncome = {'en': 'Monthly Income', 'id': 'Pendapatan Bulan Ini'};
 const _kPendingVerification = {
   'en': 'Pending Verification',
   'id': 'Menunggu Verifikasi',
 };
-const _kPdUnpaid = {'en': 'Unpaid', 'id': 'Belum Bayar'};
 const _kPdVerified = {'en': 'Verified', 'id': 'Terverifikasi'};
-const _kPdAddPaymentType = {
-  'en': 'Add Payment Type',
-  'id': 'Tambah Jenis Pembayaran',
-};
-const _kPdEditPaymentType = {
-  'en': 'Edit Payment Type',
-  'id': 'Edit Jenis Pembayaran',
-};
 const _kDeletePaymentType = {
   'en': 'Delete Payment Type',
   'id': 'Hapus Jenis Pembayaran',
 };
-const _kPdPaymentsPendingVerification = {
-  'en': 'Payments Pending Verification',
-  'id': 'Pembayaran Menunggu Verifikasi',
-};
-const _kPdClassReport = {'en': 'Class Report', 'id': 'Laporan Kelas'};
 const _kPdDue = {'en': 'due', 'id': 'jatuh tempo'};
 
 // Dashboard common strings
-const _kDbConnectedRealtime = {'en': 'Connected realtime · ', 'id': 'Terhubung realtime · '};
+const _kDbConnectedRealtime = {
+  'en': 'Connected realtime · ',
+  'id': 'Terhubung realtime · ',
+};
 const _kDbLastUpdated = {'en': 'Last updated', 'id': 'Terakhir diperbarui'};
 const _kDbMinsAgo = {'en': 'mins ago', 'id': 'menit lalu'};
-const _kDbConnecting = {'en': 'Connecting...', 'id': 'Mencoba menyambungkan ulang…'};
+const _kDbConnecting = {
+  'en': 'Connecting...',
+  'id': 'Mencoba menyambungkan ulang…',
+};
 const _kDbSchool = {'en': 'School', 'id': 'Sekolah'};
 const _kDbAdminSchool = {'en': 'School Admin', 'id': 'Admin Sekolah'};
 const _kDbTeacher = {'en': 'Teacher', 'id': 'Guru'};
@@ -194,31 +138,94 @@ const _kDbStudentsTaught = {'en': 'Students taught', 'id': 'Siswa diampu'};
 const _kDbSessionsToday = {'en': 'Sessions today', 'id': 'Sesi hari ini'};
 const _kDbTotalWaiting = {'en': 'total waiting', 'id': 'total menunggu'};
 const _kDbSeeAll = {'en': 'See all', 'id': 'Lihat semua'};
-const _kDbAttentionRequired = {'en': 'Attention required', 'id': 'Perlu perhatian'};
-const _kDbPaymentVerification = {'en': 'Payment verification', 'id': 'Verifikasi pembayaran'};
-const _kDbProofWaitingReview = {'en': 'Proof waiting review', 'id': 'Bukti transfer menunggu review'};
-const _kDbNoNewProof = {'en': 'No new proof', 'id': 'Tidak ada bukti transfer baru'};
-const _kDbRppWaitingReview = {'en': 'RPP waiting review', 'id': 'RPP menunggu review'};
-const _kDbRppTeacherWaitingApproval = {'en': 'Teacher RPP waiting approval', 'id': 'RPP guru menunggu persetujuan'};
-const _kDbAllRppReviewed = {'en': 'All RPP reviewed', 'id': 'Semua RPP sudah direview'};
-const _kDbAnnouncementDrafts = {'en': 'Announcement drafts', 'id': 'Pengumuman draft'};
-const _kDbDraftNotPublished = {'en': 'Draft not published', 'id': 'Draft belum dipublikasikan'};
-const _kDbNoDraftsSaved = {'en': 'No drafts saved', 'id': 'Tidak ada draft tersimpan'};
+const _kDbAttentionRequired = {
+  'en': 'Attention required',
+  'id': 'Perlu perhatian',
+};
+const _kDbPaymentVerification = {
+  'en': 'Payment verification',
+  'id': 'Verifikasi pembayaran',
+};
+const _kDbProofWaitingReview = {
+  'en': 'Proof waiting review',
+  'id': 'Bukti transfer menunggu review',
+};
+const _kDbNoNewProof = {
+  'en': 'No new proof',
+  'id': 'Tidak ada bukti transfer baru',
+};
+const _kDbRppWaitingReview = {
+  'en': 'RPP waiting review',
+  'id': 'RPP menunggu review',
+};
+const _kDbRppTeacherWaitingApproval = {
+  'en': 'Teacher RPP waiting approval',
+  'id': 'RPP guru menunggu persetujuan',
+};
+const _kDbAllRppReviewed = {
+  'en': 'All RPP reviewed',
+  'id': 'Semua RPP sudah direview',
+};
+const _kDbAnnouncementDrafts = {
+  'en': 'Announcement drafts',
+  'id': 'Pengumuman draft',
+};
+const _kDbDraftNotPublished = {
+  'en': 'Draft not published',
+  'id': 'Draft belum dipublikasikan',
+};
+const _kDbNoDraftsSaved = {
+  'en': 'No drafts saved',
+  'id': 'Tidak ada draft tersimpan',
+};
 const _kDbOverdueBills = {'en': 'Overdue bills', 'id': 'Tagihan menunggak'};
 const _kDbDuePassed = {'en': 'Due date passed', 'id': 'Jatuh tempo terlewat'};
-const _kDbNoActiveArrears = {'en': 'No active arrears', 'id': 'Tidak ada tunggakan aktif'};
-const _kDbRppNeedsRevision = {'en': 'RPP needs revision', 'id': 'RPP butuh revisi'};
-const _kDbRppNeedsFix = {'en': 'RPP requires fixing', 'id': 'RPP memerlukan perbaikan'};
-const _kDbAllRppCompliant = {'en': 'All RPP compliant', 'id': 'Semua RPP sudah sesuai'};
-const _kDbMaterialsNotPublished = {'en': 'Materials not published', 'id': 'Materi belum terbit'};
-const _kDbMaterialsWaitingPublication = {'en': 'Materials waiting publication', 'id': 'Materi menunggu publikasi'};
-const _kDbAllMaterialsPublished = {'en': 'All materials published', 'id': 'Semua materi sudah terbit'};
-const _kDbPendingActivities = {'en': 'Pending activities', 'id': 'Aktivitas tertunda'};
-const _kDbClassActivitiesWaiting = {'en': 'Class activities waiting', 'id': 'Kegiatan kelas menunggu'};
-const _kDbNoPendingActivities = {'en': 'No pending activities', 'id': 'Tidak ada kegiatan tertunda'};
+const _kDbNoActiveArrears = {
+  'en': 'No active arrears',
+  'id': 'Tidak ada tunggakan aktif',
+};
+const _kDbRppNeedsRevision = {
+  'en': 'RPP needs revision',
+  'id': 'RPP butuh revisi',
+};
+const _kDbRppNeedsFix = {
+  'en': 'RPP requires fixing',
+  'id': 'RPP memerlukan perbaikan',
+};
+const _kDbAllRppCompliant = {
+  'en': 'All RPP compliant',
+  'id': 'Semua RPP sudah sesuai',
+};
+const _kDbMaterialsNotPublished = {
+  'en': 'Materials not published',
+  'id': 'Materi belum terbit',
+};
+const _kDbMaterialsWaitingPublication = {
+  'en': 'Materials waiting publication',
+  'id': 'Materi menunggu publikasi',
+};
+const _kDbAllMaterialsPublished = {
+  'en': 'All materials published',
+  'id': 'Semua materi sudah terbit',
+};
+const _kDbPendingActivities = {
+  'en': 'Pending activities',
+  'id': 'Aktivitas tertunda',
+};
+const _kDbClassActivitiesWaiting = {
+  'en': 'Class activities waiting',
+  'id': 'Kegiatan kelas menunggu',
+};
+const _kDbNoPendingActivities = {
+  'en': 'No pending activities',
+  'id': 'Tidak ada kegiatan tertunda',
+};
 const _kDbDataManagement = {'en': 'Data management', 'id': 'Kelola data'};
 const _kDbTypesAndBills = {'en': 'Types & bills', 'id': 'Jenis & tagihan'};
-const _kDbGradesAndReportCards = {'en': 'Grades & report cards', 'id': 'Nilai & raport'};
+const _kDbGradesAndReportCards = {
+  'en': 'Grades & report cards',
+  'id': 'Nilai & raport',
+};
 const _kDbOtherModules = {'en': 'Other modules', 'id': 'Modul lain'};
 const _kDbSwitch = {'en': 'Switch', 'id': 'Ganti'};
 const _kDbGoodSore = {'en': 'Good Afternoon', 'id': 'Selamat Sore'};

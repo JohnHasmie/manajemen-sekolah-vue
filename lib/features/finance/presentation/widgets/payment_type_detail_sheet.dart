@@ -363,9 +363,7 @@ class _StatusToggleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = isActive ? ColorUtils.slate600 : navy;
-    final fillBg = isActive
-        ? Colors.white
-        : navy.withValues(alpha: 0.08);
+    final fillBg = isActive ? Colors.white : navy.withValues(alpha: 0.08);
     return Material(
       color: Colors.transparent,
       child: InkWell(

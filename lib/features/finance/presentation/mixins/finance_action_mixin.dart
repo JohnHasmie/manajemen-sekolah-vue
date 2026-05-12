@@ -120,9 +120,7 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
     } else {
       SnackBarUtils.showError(
         context,
-        active
-            ? 'Gagal mengaktifkan: $error'
-            : 'Gagal menonaktifkan: $error',
+        active ? 'Gagal mengaktifkan: $error' : 'Gagal menonaktifkan: $error',
       );
     }
   }

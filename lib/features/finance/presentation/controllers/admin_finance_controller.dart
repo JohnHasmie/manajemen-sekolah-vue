@@ -194,15 +194,14 @@ class AdminFinanceController {
     Map<String, dynamic> paymentType,
   ) async {
     try {
-      final res = await ApiService()
-          .delete('/payment-types/${paymentType['id']}');
+      final res = await ApiService().delete(
+        '/payment-types/${paymentType['id']}',
+      );
       final softDeleted = res is Map && res['soft_deleted'] == true;
       return DeletePaymentTypeResult.success(softDeleted: softDeleted);
     } catch (e) {
       AppLogger.error('finance', e);
-      return DeletePaymentTypeResult.failure(
-        ErrorUtils.getFriendlyMessage(e),
-      );
+      return DeletePaymentTypeResult.failure(ErrorUtils.getFriendlyMessage(e));
     }
   }
 
@@ -215,10 +214,9 @@ class AdminFinanceController {
     required bool active,
   }) async {
     try {
-      await ApiService().patch(
-        '/payment-types/$paymentTypeId/status',
-        {'status': active ? 'active' : 'inactive'},
-      );
+      await ApiService().patch('/payment-types/$paymentTypeId/status', {
+        'status': active ? 'active' : 'inactive',
+      });
       return null;
     } catch (e) {
       AppLogger.error('finance', e);

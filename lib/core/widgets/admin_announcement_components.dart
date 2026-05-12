@@ -61,8 +61,11 @@ class AudienceColumn {
   });
 
   static const all = AudienceColumn(label: 'Semua', value: 'all');
-  static const custom =
-      AudienceColumn(label: 'Custom', value: 'custom', isCustom: true);
+  static const custom = AudienceColumn(
+    label: 'Custom',
+    value: 'custom',
+    isCustom: true,
+  );
 
   static AudienceColumn tingkat(int t) =>
       AudienceColumn(label: t.toString(), value: t);
@@ -291,18 +294,17 @@ class _MatrixCell extends StatelessWidget {
             border: Border.all(color: border, width: active ? 1.4 : 1),
           ),
           child: active
-              ? const Icon(Icons.check_rounded,
-                  size: 16, color: Colors.white)
+              ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
               : (isCustom
-                  ? Text(
-                      '…',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: ColorUtils.slate500,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    )
-                  : const SizedBox.shrink()),
+                    ? Text(
+                        '…',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: ColorUtils.slate500,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      )
+                    : const SizedBox.shrink()),
         ),
       ),
     );
@@ -330,9 +332,7 @@ class AudienceSummaryStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final navy = ColorUtils.getRoleColor('admin');
-    final bg = hasAudience
-        ? const Color(0xFFEEF2FF)
-        : const Color(0xFFFEF2F2);
+    final bg = hasAudience ? const Color(0xFFEEF2FF) : const Color(0xFFFEF2F2);
     final fg = hasAudience ? navy : const Color(0xFF991B1B);
 
     return Container(
@@ -344,9 +344,7 @@ class AudienceSummaryStrip extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            hasAudience
-                ? Icons.groups_rounded
-                : Icons.error_outline_rounded,
+            hasAudience ? Icons.groups_rounded : Icons.error_outline_rounded,
             size: 16,
             color: fg,
           ),

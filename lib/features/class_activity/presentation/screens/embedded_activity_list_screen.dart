@@ -16,7 +16,6 @@ import 'package:manajemensekolah/features/class_activity/presentation/mixins/emb
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/embedded_activity_filter_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/embedded_activity_helpers_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/embedded_activity_scroll_mixin.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/mixins/embedded_activity_tour_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_list_view.dart';
 
 /// Lightweight activity list screen that only renders the activity list (step 2)
@@ -87,7 +86,6 @@ class EmbeddedActivityListScreenState
         EmbeddedActivityDialogMixin,
         EmbeddedActivityDeleteMixin,
         EmbeddedActivityFilterMixin,
-        EmbeddedActivityTourMixin,
         EmbeddedActivityHelpersMixin {
   // Activity data
   @override

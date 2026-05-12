@@ -32,7 +32,6 @@ mixin DataLoadingMixin on ConsumerState<ParentAnnouncementScreen> {
             isLoading = false;
             errorMessage = null;
           });
-          checkAndShowTour();
         }
         AppLogger.debug(
           'announcement',
@@ -95,11 +94,7 @@ mixin DataLoadingMixin on ConsumerState<ParentAnnouncementScreen> {
         });
       }
     } finally {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          checkAndShowTour();
-        }
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {});
     }
   }
 
@@ -107,6 +102,4 @@ mixin DataLoadingMixin on ConsumerState<ParentAnnouncementScreen> {
     await LocalCacheService.clearStartingWith('announcement_');
     await fetchFromApi();
   }
-
-  Future<void> checkAndShowTour() async {}
 }

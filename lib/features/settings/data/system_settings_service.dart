@@ -44,10 +44,7 @@ class SystemSettingsService {
 class LatestAuditLogResult {
   final AuditLogEntry? latest;
   final int countToday;
-  const LatestAuditLogResult({
-    required this.latest,
-    required this.countToday,
-  });
+  const LatestAuditLogResult({required this.latest, required this.countToday});
 }
 
 // =====================================================================
@@ -60,7 +57,8 @@ final systemSettingsServiceProvider = Provider<SystemSettingsService>((ref) {
 
 /// Loads the latest audit log entry for the active school. Used by the
 /// admin Sistem hub's [AuditLogPin].
-final latestAuditLogProvider =
-    FutureProvider.autoDispose<LatestAuditLogResult>((ref) async {
-  return ref.read(systemSettingsServiceProvider).fetchLatestAuditLog();
-});
+final latestAuditLogProvider = FutureProvider.autoDispose<LatestAuditLogResult>(
+  (ref) async {
+    return ref.read(systemSettingsServiceProvider).fetchLatestAuditLog();
+  },
+);

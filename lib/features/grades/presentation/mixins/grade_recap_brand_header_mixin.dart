@@ -92,8 +92,8 @@ mixin GradeRecapBrandHeaderMixin on ConsumerState<GradeRecapOverviewPage> {
               break;
             }
           }
-          final pickedName =
-              (picked?['name'] ?? picked?['nama'] ?? '').toString();
+          final pickedName = (picked?['name'] ?? picked?['nama'] ?? '')
+              .toString();
           if (isHomeroomView && filterClassId == classId) return;
           setState(() {
             isHomeroomView = true;

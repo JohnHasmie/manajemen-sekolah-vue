@@ -65,7 +65,6 @@ mixin FinanceDataMixin on ConsumerState<FinanceScreen> {
       await LocalCacheService.invalidate(cacheKey);
     }
     await LocalCacheService.clearStartingWith('finance_');
-    await LocalCacheService.clearStartingWith('tour_finance_');
     await loadData(useCache: false);
   }
 

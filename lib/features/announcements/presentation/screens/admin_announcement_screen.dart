@@ -17,13 +17,11 @@
 ///   AdminDataLoadingMixin     — fetch + cache + filterOptions load
 ///   AdminDialogMixin          — add/edit/detail/delete entry points
 ///   AdminFileOperationsMixin  — file download
-///   AdminTourMixin            — onboarding tour stub
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/mixins/pagination_mixin.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
@@ -32,7 +30,6 @@ import 'package:manajemensekolah/features/announcements/presentation/mixins/admi
 import 'package:manajemensekolah/features/announcements/presentation/mixins/admin_file_operations_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/admin_filter_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/admin_read_tracking_mixin.dart';
-import 'package:manajemensekolah/features/announcements/presentation/mixins/admin_tour_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/announcement_state_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/announcement_ui_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_grouped_list.dart';
@@ -63,8 +60,7 @@ class AdminAnnouncementScreenState
         AdminFilterMixin,
         AdminDataLoadingMixin,
         AdminDialogMixin,
-        AdminFileOperationsMixin,
-        AdminTourMixin {
+        AdminFileOperationsMixin {
   final GlobalKey _addKey = GlobalKey();
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _filterKey = GlobalKey();
@@ -116,10 +112,7 @@ class AdminAnnouncementScreenState
     if (selectedStatusFilter == null) return null;
     return lang.getTranslatedText(switch (selectedStatusFilter) {
       'draft' => const {'en': 'Draft', 'id': 'Draft'},
-      'published' || 'aktif' => const {
-        'en': 'Published',
-        'id': 'Terkirim'
-      },
+      'published' || 'aktif' => const {'en': 'Published', 'id': 'Terkirim'},
       'archived' => const {'en': 'Archived', 'id': 'Arsip'},
       'terjadwal' => const {'en': 'Scheduled', 'id': 'Terjadwal'},
       'kedaluwarsa' => const {'en': 'Expired', 'id': 'Kedaluwarsa'},
@@ -130,10 +123,7 @@ class AdminAnnouncementScreenState
   String? _priorityValueLabel(LanguageProvider lang) {
     if (selectedPriorityFilter == null) return null;
     return lang.getTranslatedText(switch (selectedPriorityFilter) {
-      'important' || 'penting' => const {
-        'en': 'Important',
-        'id': 'Penting'
-      },
+      'important' || 'penting' => const {'en': 'Important', 'id': 'Penting'},
       'normal' || 'biasa' => const {'en': 'Normal', 'id': 'Biasa'},
       _ => {'en': selectedPriorityFilter!, 'id': selectedPriorityFilter!},
     });
@@ -196,10 +186,7 @@ class AdminAnnouncementScreenState
         'id': 'KOMUNIKASI',
       }),
       counterLabel:
-          '${announcements.length} ${languageProvider.getTranslatedText(const {
-        'en': 'announcements',
-        'id': 'pengumuman',
-      })}',
+          '${announcements.length} ${languageProvider.getTranslatedText(const {'en': 'announcements', 'id': 'pengumuman'})}',
       primaryColor: primaryColor,
       searchController: searchController,
       searchHint: languageProvider.getTranslatedText(const {
@@ -266,8 +253,3 @@ class AdminAnnouncementScreenState
 // mixin contract — kept colocated with the screen so refactors of the
 // gradient stay obvious.
 // =====================================================================
-
-// ignore: unused_element
-void _ensureColorUtilsImport() {
-  ColorUtils.getRoleColor('admin');
-}

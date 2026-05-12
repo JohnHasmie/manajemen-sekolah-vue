@@ -302,8 +302,7 @@ class GradeBookController {
       'class_id': classData['id']?.toString() ?? '',
       'subject_id': Subject.fromJson(subject).id,
       'teacher_id': Teacher.fromJson(teacher).id,
-      if (academicYearId != null)
-        'academic_year_id': academicYearId.toString(),
+      if (academicYearId != null) 'academic_year_id': academicYearId.toString(),
     };
     final endpoint = Uri(
       path: '/grades/export',

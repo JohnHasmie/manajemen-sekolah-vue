@@ -24,7 +24,6 @@ import 'package:manajemensekolah/features/attendance/presentation/widgets/attend
 import 'package:manajemensekolah/features/attendance/presentation/widgets/attendance_table_view.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/teacher_selection_sheet.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/admin_report_header.dart';
-import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_report_tour_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_report_data_loading_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_report_filter_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/admin_report_actions_mixin.dart';
@@ -81,7 +80,6 @@ class AdminAttendanceReportScreen extends ConsumerStatefulWidget {
 class AdminAttendanceReportScreenState
     extends ConsumerState<AdminAttendanceReportScreen>
     with
-        AdminReportTourMixin,
         AdminReportDataLoadingMixin,
         AdminReportFilterMixin,
         AdminReportActionsMixin,

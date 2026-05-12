@@ -86,10 +86,7 @@ class AttendanceRingKpi extends StatelessWidget {
               SizedBox(
                 width: 116,
                 height: 116,
-                child: _DonutRing(
-                  rate: rate,
-                  brandColor: brandColor,
-                ),
+                child: _DonutRing(rate: rate, brandColor: brandColor),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -119,10 +116,7 @@ class AttendanceRingKpi extends StatelessWidget {
                       count: excusedDays,
                     ),
                     const SizedBox(height: 10),
-                    _LegendRow(
-                      status: AttendanceStatus.sick,
-                      count: sickDays,
-                    ),
+                    _LegendRow(status: AttendanceStatus.sick, count: sickDays),
                     const SizedBox(height: 10),
                     _LegendRow(
                       status: AttendanceStatus.alpha,
@@ -267,10 +261,7 @@ class _LegendRow extends StatelessWidget {
         Container(
           width: 10,
           height: 10,
-          decoration: BoxDecoration(
-            color: palette.dot,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: palette.dot, shape: BoxShape.circle),
         ),
         const SizedBox(width: 10),
         Text(
@@ -316,9 +307,7 @@ class _TrendChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isUp
-                ? Icons.trending_up_rounded
-                : Icons.trending_down_rounded,
+            isUp ? Icons.trending_up_rounded : Icons.trending_down_rounded,
             size: 12,
             color: fg,
           ),

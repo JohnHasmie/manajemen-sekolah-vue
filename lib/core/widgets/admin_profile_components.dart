@@ -74,10 +74,12 @@ class IdentityHero extends StatelessWidget {
             child: Text(
               avatarInitials.isEmpty
                   ? '?'
-                  : avatarInitials.substring(
-                      0,
-                      avatarInitials.length > 2 ? 2 : avatarInitials.length,
-                    ).toUpperCase(),
+                  : avatarInitials
+                        .substring(
+                          0,
+                          avatarInitials.length > 2 ? 2 : avatarInitials.length,
+                        )
+                        .toUpperCase(),
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
@@ -247,10 +249,7 @@ class RoleScopeChips extends StatelessWidget {
                   const SizedBox(width: 8),
                 ],
                 if (overflow > 0)
-                  _OverflowChip(
-                    count: overflow,
-                    onTap: onOverflowTap ?? () {},
-                  ),
+                  _OverflowChip(count: overflow, onTap: onOverflowTap ?? () {}),
               ],
             ),
           ),
@@ -463,10 +462,10 @@ class SecurityChecklistCard extends StatelessWidget {
                 _percentSecure >= 1
                     ? const Color(0xFF10B981)
                     : _percentSecure >= 0.66
-                        ? const Color(0xFF10B981)
-                        : _percentSecure >= 0.33
-                            ? const Color(0xFFF59E0B)
-                            : const Color(0xFFDC2626),
+                    ? const Color(0xFF10B981)
+                    : _percentSecure >= 0.33
+                    ? const Color(0xFFF59E0B)
+                    : const Color(0xFFDC2626),
               ),
             ),
           ),
@@ -527,18 +526,17 @@ class _SecurityDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final (bg, glyph) = switch (state) {
       SecurityState.ok => (const Color(0xFF10B981), Icons.check_rounded),
-      SecurityState.warn =>
-        (const Color(0xFFF59E0B), Icons.priority_high_rounded),
+      SecurityState.warn => (
+        const Color(0xFFF59E0B),
+        Icons.priority_high_rounded,
+      ),
       SecurityState.fail => (const Color(0xFFDC2626), Icons.close_rounded),
     };
     return Container(
       width: 14,
       height: 14,
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: bg,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
       child: Icon(glyph, size: 10, color: Colors.white),
     );
   }

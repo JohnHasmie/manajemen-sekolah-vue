@@ -161,12 +161,14 @@ Widget? _buildStepRows(String html, Color accent) {
       label = label.replaceAll(timeMatch.group(0)!, '').trim();
     }
 
-    rows.add(_StepRow(
-      number: letterMatch?.group(1) ?? String.fromCharCode(65 + i),
-      label: label,
-      timeBadge: badge,
-      body: _stripTags(body).trim(),
-    ));
+    rows.add(
+      _StepRow(
+        number: letterMatch?.group(1) ?? String.fromCharCode(65 + i),
+        label: label,
+        timeBadge: badge,
+        body: _stripTags(body).trim(),
+      ),
+    );
   }
   if (rows.isEmpty) return null;
   return _StepRowsList(rows: rows, accent: accent);
@@ -226,12 +228,14 @@ Widget? _buildPertemuanRows(String html) {
     if (jpMatch != null) {
       label = label.replaceAll(jpMatch.group(0)!, '').trim();
     }
-    rows.add(_StepRow(
-      number: 'P${pertemuanMatch?.group(1) ?? (i + 1)}',
-      label: label,
-      timeBadge: jpMatch?.group(1)?.toUpperCase(),
-      body: body,
-    ));
+    rows.add(
+      _StepRow(
+        number: 'P${pertemuanMatch?.group(1) ?? (i + 1)}',
+        label: label,
+        timeBadge: jpMatch?.group(1)?.toUpperCase(),
+        body: body,
+      ),
+    );
   }
   if (rows.isEmpty) return null;
   return _StepRowsList(rows: rows, accent: const Color(0xFF7C3AED));

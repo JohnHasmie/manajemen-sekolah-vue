@@ -43,7 +43,6 @@ mixin EmbeddedActivityDataMixin on ConsumerState<EmbeddedActivityListScreen> {
   set subChapterList(List<dynamic> value);
 
   // Abstract methods from other mixins
-  Future<void> checkAndShowTour();
   void showActivityTypeDialog();
 
   void resetAndLoadActivities() {
@@ -103,12 +102,6 @@ mixin EmbeddedActivityDataMixin on ConsumerState<EmbeddedActivityListScreen> {
         isLoading = false;
         isLoadingMore = false;
       });
-
-      if (currentPage == 1 && !widget.autoShowActivityDialog) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) checkAndShowTour();
-        });
-      }
 
       if (widget.autoShowActivityDialog && currentPage == 1) {
         Future.delayed(const Duration(milliseconds: 300), () {

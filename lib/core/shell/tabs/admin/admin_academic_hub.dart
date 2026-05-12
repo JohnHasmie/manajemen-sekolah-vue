@@ -86,10 +86,8 @@ class AdminAcademicHub extends StatelessWidget {
                   title: 'Raport Siswa',
                   icon: Icons.assignment_turned_in_outlined,
                   primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const AdminRaportHubScreen(),
-                  ),
+                  onTap: () =>
+                      AppNavigator.push(context, const AdminRaportHubScreen()),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 MenuItemCard(

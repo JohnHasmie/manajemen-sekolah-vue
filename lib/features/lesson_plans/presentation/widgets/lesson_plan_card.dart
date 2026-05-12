@@ -192,40 +192,45 @@ class LessonPlanCard extends StatelessWidget {
                               padding: EdgeInsets.zero,
                               splashRadius: 16,
                               shape: const RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(10)),
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
                               ),
                               itemBuilder: (_) => [
                                 PopupMenuItem(
                                   value: 'edit',
                                   height: 40,
-                                  child: Row(children: [
-                                    Icon(
-                                      Icons.edit_outlined,
-                                      size: 16,
-                                      color: ColorUtils.slate600,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    const Text('Edit'),
-                                  ]),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.edit_outlined,
+                                        size: 16,
+                                        color: ColorUtils.slate600,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Edit'),
+                                    ],
+                                  ),
                                 ),
                                 PopupMenuItem(
                                   value: 'delete',
                                   height: 40,
-                                  child: Row(children: [
-                                    Icon(
-                                      Icons.delete_outline_rounded,
-                                      size: 16,
-                                      color: ColorUtils.error600,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Hapus',
-                                      style: TextStyle(
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete_outline_rounded,
+                                        size: 16,
                                         color: ColorUtils.error600,
                                       ),
-                                    ),
-                                  ]),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Hapus',
+                                        style: TextStyle(
+                                          color: ColorUtils.error600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),

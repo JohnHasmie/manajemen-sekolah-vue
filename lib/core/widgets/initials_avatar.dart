@@ -91,8 +91,8 @@ class InitialsAvatar extends StatelessWidget {
     this.color,
     this.logoUrl,
     this.borderRadius,
-  })  : style = InitialsAvatarStyle.solid,
-        gradient = null;
+  }) : style = InitialsAvatarStyle.solid,
+       gradient = null;
 
   /// Gradient-filled variant. Pass [gradient] to get the brand
   /// LinearGradient on the disc.
@@ -103,8 +103,8 @@ class InitialsAvatar extends StatelessWidget {
     required this.gradient,
     this.logoUrl,
     this.borderRadius,
-  })  : style = InitialsAvatarStyle.gradient,
-        color = null;
+  }) : style = InitialsAvatarStyle.gradient,
+       color = null;
 
   /// Tinted variant — 12% fill in [color], accent text in [color].
   /// Use on white backgrounds where a solid fill would dominate.
@@ -115,8 +115,8 @@ class InitialsAvatar extends StatelessWidget {
     required Color this.color,
     this.logoUrl,
     this.borderRadius,
-  })  : style = InitialsAvatarStyle.tinted,
-        gradient = null;
+  }) : style = InitialsAvatarStyle.tinted,
+       gradient = null;
 
   /// On-dark variant — 18% white fill, white text. For use inside
   /// gradient hero cards where the disc inherits the card's tone.
@@ -126,9 +126,9 @@ class InitialsAvatar extends StatelessWidget {
     required this.size,
     this.logoUrl,
     this.borderRadius,
-  })  : style = InitialsAvatarStyle.onDark,
-        color = null,
-        gradient = null;
+  }) : style = InitialsAvatarStyle.onDark,
+       color = null,
+       gradient = null;
 
   @override
   Widget build(BuildContext context) {
@@ -221,9 +221,10 @@ class _LogoAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final clip = shape is CircleBorder
         ? const _CircleClip()
-        : _RoundedClip(borderRadius: (shape as RoundedRectangleBorder)
-            .borderRadius
-            .resolve(Directionality.of(context)));
+        : _RoundedClip(
+            borderRadius: (shape as RoundedRectangleBorder).borderRadius
+                .resolve(Directionality.of(context)),
+          );
     return SizedBox(
       width: size,
       height: size,

@@ -361,10 +361,7 @@ class _OverflowSheet extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border(
-            bottom: BorderSide(
-              color: const Color(0xFFF1F5F9),
-              width: 0.5,
-            ),
+            bottom: BorderSide(color: const Color(0xFFF1F5F9), width: 0.5),
           ),
         ),
         child: Row(
@@ -376,11 +373,7 @@ class _OverflowSheet extends StatelessWidget {
                 color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                item.icon,
-                size: 24,
-                color: const Color(0xFF334155),
-              ),
+              child: Icon(item.icon, size: 24, color: const Color(0xFF334155)),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -395,10 +388,7 @@ class _OverflowSheet extends StatelessWidget {
             ),
             if (item.badgeCount != null && item.badgeCount! > 0)
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEF4444),
                   borderRadius: BorderRadius.circular(6),
@@ -412,11 +402,7 @@ class _OverflowSheet extends StatelessWidget {
                   ),
                 ),
               ),
-            Icon(
-              Icons.chevron_right,
-              color: const Color(0xFF94A3B8),
-              size: 20,
-            ),
+            Icon(Icons.chevron_right, color: const Color(0xFF94A3B8), size: 20),
           ],
         ),
       ),

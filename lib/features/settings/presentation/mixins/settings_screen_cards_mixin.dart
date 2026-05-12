@@ -73,7 +73,10 @@ mixin SettingsScreenCardsMixin {
         ),
         const SizedBox(height: AppSpacing.md),
         buildInfoRow(
-          lang.getTranslatedText({'en': 'Active school', 'id': 'Sekolah aktif'}),
+          lang.getTranslatedText({
+            'en': 'Active school',
+            'id': 'Sekolah aktif',
+          }),
           profileData['school_name'] ?? '',
           Icons.school_rounded,
         ),
@@ -142,17 +145,10 @@ mixin SettingsScreenCardsMixin {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.logout_rounded,
-                size: 18,
-                color: Colors.red.shade600,
-              ),
+              Icon(Icons.logout_rounded, size: 18, color: Colors.red.shade600),
               const SizedBox(width: 8),
               Text(
-                lang.getTranslatedText({
-                  'en': 'Sign out',
-                  'id': 'Keluar Akun',
-                }),
+                lang.getTranslatedText({'en': 'Sign out', 'id': 'Keluar Akun'}),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,

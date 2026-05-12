@@ -201,8 +201,9 @@ class MaterialGenerateSheet extends StatelessWidget {
     // Sub-bab entries — only include those whose parent bab isn't
     // already in `checkedChapters` (otherwise the bab roll-up above
     // already covers them).
-    final coveredChapterIds =
-        checkedChapters.map((c) => c['id'].toString()).toSet();
+    final coveredChapterIds = checkedChapters
+        .map((c) => c['id'].toString())
+        .toSet();
     for (final s in checkedSubChapters) {
       final babId = s['bab_id']?.toString() ?? '';
       if (coveredChapterIds.contains(babId)) continue;
@@ -283,10 +284,7 @@ class MaterialGenerateSheet extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: _kpiCell(
-                value: '$count',
-                label: 'AKAN DIGENERATE',
-              ),
+              child: _kpiCell(value: '$count', label: 'AKAN DIGENERATE'),
             ),
             Container(
               width: 1,

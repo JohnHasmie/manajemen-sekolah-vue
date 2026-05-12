@@ -41,8 +41,7 @@ class GradeExportHelper {
       final data = e.response?.data;
       String msg;
       if (data is Map) {
-        msg = (data['error'] ?? data['message'] ?? e.message)
-            .toString();
+        msg = (data['error'] ?? data['message'] ?? e.message).toString();
       } else if (data is List<int>) {
         // Server returned error as bytes (ResponseType.bytes)
         msg = String.fromCharCodes(data);

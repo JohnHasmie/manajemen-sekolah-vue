@@ -327,10 +327,7 @@ class ReviewQueueColumn extends StatelessWidget {
           const SizedBox(height: 8),
           if (tiers[i].cards.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Text(
                 'Belum ada item',
                 style: TextStyle(
@@ -393,10 +390,7 @@ class _TierHeader extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             count.toString(),
-            style: TextStyle(
-              fontSize: 10.5,
-              color: ColorUtils.slate500,
-            ),
+            style: TextStyle(fontSize: 10.5, color: ColorUtils.slate500),
           ),
           if (collapsed && onSeeAll != null) ...[
             const Spacer(),

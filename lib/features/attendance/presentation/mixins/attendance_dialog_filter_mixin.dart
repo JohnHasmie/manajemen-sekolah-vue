@@ -58,13 +58,8 @@ mixin AttendanceDialogFilterMixin
         'id': 'Filter Presensi',
       }),
       primaryColor: primaryColor,
-      onApply: () => _applyFilter(
-        context,
-        tClassId,
-        tSubjectId,
-        tDateOption,
-        lp,
-      ),
+      onApply: () =>
+          _applyFilter(context, tClassId, tSubjectId, tDateOption, lp),
       onReset: () => FilterSheetHelpers.reset(context, () {
         setState(() {
           filterClassId = null;
@@ -97,10 +92,7 @@ mixin AttendanceDialogFilterMixin
               .map(
                 (s) => FilterOption<String>(
                   value: s['id']?.toString() ?? '',
-                  label:
-                      s['name']?.toString() ??
-                      s['nama']?.toString() ??
-                      '-',
+                  label: s['name']?.toString() ?? s['nama']?.toString() ?? '-',
                 ),
               )
               .toList();
@@ -163,8 +155,8 @@ mixin AttendanceDialogFilterMixin
                           if (v != null && tSubjectId == null) {
                             final only = roster.subjectsForClass(v);
                             if (only.length == 1 && only.first is Map) {
-                              tSubjectId =
-                                  (only.first as Map)['id']?.toString();
+                              tSubjectId = (only.first as Map)['id']
+                                  ?.toString();
                             }
                           }
                         });
@@ -200,8 +192,7 @@ mixin AttendanceDialogFilterMixin
                               isHomeroomView: isHomeroomView,
                             );
                             if (only.length == 1 && only.first is Map) {
-                              tClassId =
-                                  (only.first as Map)['id']?.toString();
+                              tClassId = (only.first as Map)['id']?.toString();
                             }
                           }
                         });

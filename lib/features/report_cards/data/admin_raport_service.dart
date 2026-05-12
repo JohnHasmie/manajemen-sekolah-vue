@@ -79,12 +79,14 @@ class AdminRaportService {
 
     final pipeline = (data['pipeline'] as List? ?? const [])
         .map((e) => Map<String, dynamic>.from(e as Map))
-        .map((m) => PipelineNode(
-              key: (m['key'] ?? '').toString(),
-              label: (m['label'] ?? '').toString(),
-              count: (m['count'] as num?)?.toInt() ?? 0,
-              active: (m['active'] as bool?) ?? false,
-            ))
+        .map(
+          (m) => PipelineNode(
+            key: (m['key'] ?? '').toString(),
+            label: (m['label'] ?? '').toString(),
+            count: (m['count'] as num?)?.toInt() ?? 0,
+            active: (m['active'] as bool?) ?? false,
+          ),
+        )
         .toList();
 
     final tingkats = (data['tingkats'] as List? ?? const [])
@@ -92,12 +94,14 @@ class AdminRaportService {
         .map((m) {
           final classes = (m['classes'] as List? ?? const [])
               .map((c) => Map<String, dynamic>.from(c as Map))
-              .map((c) => KelasMiniChipData(
-                    id: (c['id'] ?? '').toString(),
-                    label: (c['name'] ?? '').toString(),
-                    statusLabel: (c['status_label'] ?? '').toString(),
-                    tone: _parseTone((c['status_tone'] ?? 'warn').toString()),
-                  ))
+              .map(
+                (c) => KelasMiniChipData(
+                  id: (c['id'] ?? '').toString(),
+                  label: (c['name'] ?? '').toString(),
+                  statusLabel: (c['status_label'] ?? '').toString(),
+                  tone: _parseTone((c['status_tone'] ?? 'warn').toString()),
+                ),
+              )
               .toList();
 
           return TingkatGroup(
@@ -112,7 +116,8 @@ class AdminRaportService {
         .toList();
 
     final period = Map<String, dynamic>.from(
-        (data['period'] as Map?) ?? const {});
+      (data['period'] as Map?) ?? const {},
+    );
 
     final ayLabel = (period['academic_year_label'] ?? '').toString();
     final semLabel = (period['semester_label'] ?? '').toString();
@@ -175,7 +180,8 @@ final adminRaportServiceProvider = Provider<AdminRaportService>((ref) {
 ///
 /// Pull-to-refresh and the inline retry button still work via
 /// `ref.invalidate(adminRaportPipelineProvider)`.
-final adminRaportPipelineProvider =
-    FutureProvider<AdminRaportPipeline>((ref) async {
+final adminRaportPipelineProvider = FutureProvider<AdminRaportPipeline>((
+  ref,
+) async {
   return ref.read(adminRaportServiceProvider).fetch();
 });

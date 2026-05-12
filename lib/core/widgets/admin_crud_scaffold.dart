@@ -433,12 +433,14 @@ class AdminCrudScaffold extends StatelessWidget {
   Widget _buildBrandHeader() {
     final actions = <Widget>[];
     if (onFilterTap != null) {
-      actions.add(BrandHeaderIconButton(
-        icon: Icons.tune_rounded,
-        onTap: onFilterTap!,
-        badgeCount: hasActiveFilter ? _activeFilterCount() : null,
-        badgeBorderColor: primaryColor,
-      ));
+      actions.add(
+        BrandHeaderIconButton(
+          icon: Icons.tune_rounded,
+          onTap: onFilterTap!,
+          badgeCount: hasActiveFilter ? _activeFilterCount() : null,
+          badgeBorderColor: primaryColor,
+        ),
+      );
     }
     if (actionMenu != null) actions.add(actionMenu!);
 

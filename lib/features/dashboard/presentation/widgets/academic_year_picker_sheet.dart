@@ -49,29 +49,31 @@ Future<String?> showAcademicYearPickerSheet({
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (sheetCtx) => _AcademicYearPickerSheet(
-      currentSemesterLabel: currentSemesterLabel,
-    ),
+    builder: (sheetCtx) =>
+        _AcademicYearPickerSheet(currentSemesterLabel: currentSemesterLabel),
   );
 }
 
 class _AcademicYearPickerSheet extends ConsumerWidget {
   final String? currentSemesterLabel;
 
-  const _AcademicYearPickerSheet({
-    required this.currentSemesterLabel,
-  });
+  const _AcademicYearPickerSheet({required this.currentSemesterLabel});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final yearProvider = ref.watch(academicYearRiverpod);
     // Sort years ascending (e.g. 2023/2024 comes before 2024/2025).
     final years = List<dynamic>.from(yearProvider.academicYears);
-    years.sort((a, b) => (a['year'] ?? '').toString().compareTo((b['year'] ?? '').toString()));
-    
+    years.sort(
+      (a, b) =>
+          (a['year'] ?? '').toString().compareTo((b['year'] ?? '').toString()),
+    );
+
     final selected = yearProvider.selectedAcademicYear;
     final selectedId = selected?['id']?.toString();
-    final selectedIndex = years.indexWhere((y) => y['id']?.toString() == selectedId);
+    final selectedIndex = years.indexWhere(
+      (y) => y['id']?.toString() == selectedId,
+    );
 
     return Container(
       decoration: const BoxDecoration(
@@ -125,14 +127,13 @@ class _AcademicYearPickerSheet extends ConsumerWidget {
               shrinkWrap: true,
               padding: EdgeInsets.zero,
               itemCount: years.length,
-              separatorBuilder: (_, _) =>
-                  const SizedBox(height: AppSpacing.sm),
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
               itemBuilder: (_, i) {
                 final year = years[i] as Map<dynamic, dynamic>;
                 final id = year['id']?.toString() ?? '';
                 final yearLabel = (year['year'] ?? '').toString();
-                final isSelected = selected != null
-                    && selected['id']?.toString() == id;
+                final isSelected =
+                    selected != null && selected['id']?.toString() == id;
                 if (isSelected) {
                   return _ExpandedYearTile(
                     yearLabel: yearLabel,
@@ -298,9 +299,7 @@ class _SemesterChip extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: active
-              ? ColorUtils.brandAzure
-              : const Color(0xFFE2E8F0),
+          color: active ? ColorUtils.brandAzure : const Color(0xFFE2E8F0),
           width: active ? 1.5 : 0.75,
         ),
       ),
@@ -384,10 +383,7 @@ class _CollapsedYearTile extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: ColorUtils.slate500,
-                      ),
+                      style: TextStyle(fontSize: 9, color: ColorUtils.slate500),
                     ),
                     const SizedBox(height: 2),
                     Text(

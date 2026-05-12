@@ -29,7 +29,6 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/less
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_upload_sheet.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_brand_header_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_filter_mixin.dart';
-import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_tour_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_status_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_crud_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
@@ -42,10 +41,17 @@ class LessonPlanScreen extends ConsumerStatefulWidget {
   final String teacherId;
   final String teacherName;
 
+  /// Optional deep-link target. When set, the screen loads the list
+  /// normally then opens the detail sheet for this RPP via the
+  /// shared CRUD mixin. Used by the teacher dashboard priority-inbox
+  /// "RPP butuh revisi" row so a tap lands on the offending RPP.
+  final String? initialLessonPlanId;
+
   const LessonPlanScreen({
     super.key,
     required this.teacherId,
     required this.teacherName,
+    this.initialLessonPlanId,
   });
 
   @override
@@ -62,7 +68,6 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
         PaginationMixin<LessonPlanScreen>,
         LessonPlanFilterMixin,
         LessonPlanBrandHeaderMixin,
-        LessonPlanTourMixin,
         LessonPlanStatusMixin,
         LessonPlanCrudMixin {
   List<dynamic> _lessonPlanList = [];
@@ -139,6 +144,18 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
     super.initState();
     initPagination();
     loadLessonPlans();
+
+    // Deep-link from the teacher dashboard priority inbox.
+    // The detail sheet is a modal — schedule it for the first frame
+    // after build so the list is visible underneath when the sheet
+    // is dismissed.
+    final deepLinkId = widget.initialLessonPlanId;
+    if (deepLinkId != null && deepLinkId.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        viewLessonPlanDetail({'id': deepLinkId});
+      });
+    }
   }
 
   @override
@@ -239,7 +256,6 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
             _isLoading = false;
             _errorMessage = null;
           });
-          checkAndShowTour();
         }
         AppLogger.debug(
           'lesson_plan',
@@ -281,9 +297,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
       }
     } finally {
       endPaginationReset();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) checkAndShowTour();
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {});
     }
   }
 
@@ -417,8 +431,7 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
     }
 
     if (_lessonPlanList.isEmpty) {
-      final hasFilter =
-          _searchController.text.isNotEmpty || _hasActiveFilter;
+      final hasFilter = _searchController.text.isNotEmpty || _hasActiveFilter;
       // Wrap in a bounded SizedBox: BrandPageLayout's outer ListView
       // gives bodyChildren unbounded height, and EmptyState uses
       // `Center` + `MainAxisAlignment.center` which collapses to zero

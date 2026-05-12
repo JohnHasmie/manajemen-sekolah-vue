@@ -283,8 +283,7 @@ class _StudentAddEditSheetContentState
                             }),
                             children: [
                               Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.stretch,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   AdminFormFieldLabel(
@@ -374,17 +373,18 @@ class _StudentAddEditSheetContentState
                               if (_isEdit)
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: ColorUtils.warning600
-                                        .withValues(alpha: 0.06),
+                                    color: ColorUtils.warning600.withValues(
+                                      alpha: 0.06,
+                                    ),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: ColorUtils.warning600
-                                          .withValues(alpha: 0.25),
+                                      color: ColorUtils.warning600.withValues(
+                                        alpha: 0.25,
+                                      ),
                                     ),
                                   ),
                                   child: SwitchListTile(
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
+                                    contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 12,
                                     ),
                                     dense: true,

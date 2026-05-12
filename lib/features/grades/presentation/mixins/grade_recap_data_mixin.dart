@@ -90,10 +90,33 @@ mixin GradeRecapDataMixin {
         setState(() => isLoading = true);
       }
 
+      // ENSURE DEPENDENCIES ARE READY (Fix for race condition on cold start)
+      final ayProvider = ref.read(academicYearRiverpod);
+      if (ayProvider.selectedAcademicYear == null && ayProvider.isLoading) {
+        int retries = 0;
+        while (ref.read(academicYearRiverpod).selectedAcademicYear == null &&
+            ref.read(academicYearRiverpod).isLoading &&
+            mounted &&
+            retries < 20) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          retries++;
+        }
+      }
+
+      final teacherProvider = ref.read(teacherRiverpod);
+      if (teacherId.isEmpty || !teacherProvider.isLoaded) {
+        await teacherProvider.ensureLoaded();
+      }
+
       final ayId = ref
           .read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
+
+      if (teacherId.isEmpty) {
+        throw Exception('ID Guru tidak ditemukan. Silakan coba lagi.');
+      }
+
       final envelope = await GradeService.getTeacherRecapSummaryEnvelope(
         teacherId: teacherId,
         academicYearId: ayId,
@@ -157,10 +180,7 @@ mixin GradeRecapDataMixin {
       if (c is! Map) continue;
       final id = c['id']?.toString() ?? '';
       if (id.isEmpty || !seen.add(id)) continue;
-      out.add({
-        'id': id,
-        'name': (c['name'] ?? c['nama'] ?? '-').toString(),
-      });
+      out.add({'id': id, 'name': (c['name'] ?? c['nama'] ?? '-').toString()});
     }
     // Cold-open fallback while the provider hydrates.
     if (out.isEmpty) {
@@ -168,10 +188,7 @@ mixin GradeRecapDataMixin {
         if (g is! Map) continue;
         final id = g['class_id']?.toString() ?? '';
         if (id.isEmpty || !seen.add(id)) continue;
-        out.add({
-          'id': id,
-          'name': g['class_name']?.toString() ?? '-',
-        });
+        out.add({'id': id, 'name': g['class_name']?.toString() ?? '-'});
       }
     }
     return out;

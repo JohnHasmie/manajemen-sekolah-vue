@@ -372,11 +372,11 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     final email = model.email.isNotEmpty ? model.email : '-';
     final phone = (teacher['phone'] ?? teacher['user']?['phone'] ?? '-')
         .toString();
-    final employmentStatus =
-        (teacher['employment_status'] ?? '-').toString();
+    final employmentStatus = (teacher['employment_status'] ?? '-').toString();
     final isHomeroom = model.isHomeroomTeacher;
     final homeroomClass = model.homeroomClassName ?? '-';
-    final subjects = (teacher['subjects'] as List<dynamic>?)
+    final subjects =
+        (teacher['subjects'] as List<dynamic>?)
             ?.map((s) => (s is Map ? s['name'] : s).toString())
             .where((s) => s.isNotEmpty)
             .join(', ') ??
@@ -398,7 +398,10 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
             'id': 'Identitas',
           }),
           rows: [
-            EntityDetailRow(label: 'NIP / NUPTK', value: nip.isEmpty ? '-' : nip),
+            EntityDetailRow(
+              label: 'NIP / NUPTK',
+              value: nip.isEmpty ? '-' : nip,
+            ),
             EntityDetailRow(label: 'Email', value: email),
             EntityDetailRow(
               label: lang.getTranslatedText(const {
@@ -516,41 +519,32 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     String? _classNameForId(String? id) {
       if (id == null) return null;
       final match = _availableClass.cast<Map<String, dynamic>>().firstWhere(
-            (c) => c['id']?.toString() == id,
-            orElse: () => const {'name': '1 kelas'},
-          );
+        (c) => c['id']?.toString() == id,
+        orElse: () => const {'name': '1 kelas'},
+      );
       return match['name']?.toString();
     }
 
     final brandChips = <BrandFilterChip>[
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Role',
-          'id': 'Status',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Role', 'id': 'Status'}),
         value: _selectedHomeroomFilter == null
             ? null
             : lang.getTranslatedText(switch (_selectedHomeroomFilter) {
-                'wali_kelas' => const {
-                    'en': 'Homeroom',
-                    'id': 'Wali Kelas',
-                  },
+                'wali_kelas' => const {'en': 'Homeroom', 'id': 'Wali Kelas'},
                 'guru_mapel' => const {
-                    'en': 'Subject Teacher',
-                    'id': 'Guru Mapel',
-                  },
+                  'en': 'Subject Teacher',
+                  'id': 'Guru Mapel',
+                },
                 _ => {
-                    'en': _selectedHomeroomFilter!,
-                    'id': _selectedHomeroomFilter!,
-                  },
+                  'en': _selectedHomeroomFilter!,
+                  'id': _selectedHomeroomFilter!,
+                },
               }),
         onTap: _openFilterSheet,
       ),
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Class',
-          'id': 'Kelas',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Class', 'id': 'Kelas'}),
         value: _classNameForId(_selectedTeachingClassId),
         onTap: _openFilterSheet,
       ),
@@ -565,10 +559,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     ];
 
     return AdminCrudScaffold(
-      title: lang.getTranslatedText(const {
-        'en': 'Teachers',
-        'id': 'Guru',
-      }),
+      title: lang.getTranslatedText(const {'en': 'Teachers', 'id': 'Guru'}),
       subtitle: lang.getTranslatedText(const {
         'en': 'Manage and monitor teachers',
         'id': 'Kelola dan pantau guru',
@@ -588,10 +579,8 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
         'en': 'DATA MANAGEMENT',
         'id': 'MANAJEMEN DATA',
       }),
-      counterLabel: '${_teachers.length} ${lang.getTranslatedText(const {
-        'en': 'teachers',
-        'id': 'guru',
-      })}',
+      counterLabel:
+          '${_teachers.length} ${lang.getTranslatedText(const {'en': 'teachers', 'id': 'guru'})}',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,
@@ -651,10 +640,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
       bulkActions: [
         BulkAction(
           icon: Icons.delete_outline_rounded,
-          label: lang.getTranslatedText(const {
-            'en': 'Delete',
-            'id': 'Hapus',
-          }),
+          label: lang.getTranslatedText(const {'en': 'Delete', 'id': 'Hapus'}),
           onTap: _bulkDeleteSelected,
           isDestructive: true,
         ),

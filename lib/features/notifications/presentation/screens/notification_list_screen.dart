@@ -76,7 +76,6 @@ class _NotificationListScreenState extends ConsumerState<NotificationListScreen>
 
   @override
   Widget build(BuildContext context) {
-
     final notificationAsyncValue = ref.watch(notificationProvider);
 
     return Scaffold(

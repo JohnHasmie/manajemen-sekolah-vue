@@ -79,97 +79,100 @@ class AttendanceQuickActionsSheet extends StatelessWidget {
               _buildHandle(),
               const SizedBox(height: 8),
               _buildTitle(),
-            _buildSubtitle(),
-            const SizedBox(height: 4),
-            _SheetButton(
-              icon: Icons.check_rounded,
-              iconBg: const Color(0xFFDCFCE7),
-              iconFg: ColorUtils.success600,
-              title: _tr({
-                'en': 'Mark all Present',
-                'id': 'Tandai semua Hadir',
-              }),
-              desc: _tr({
-                'en': 'Override any current status',
-                'id': 'Override status manapun',
-              }),
-              onTap: () {
-                Navigator.pop(context);
-                onStatusSelected('hadir');
-              },
-            ),
-            if (onFillUnmarked != null)
+              _buildSubtitle(),
+              const SizedBox(height: 4),
               _SheetButton(
-                icon: Icons.close_rounded,
-                iconBg: const Color(0xFFFEE2E2),
-                iconFg: ColorUtils.error600,
-                title: _tr({'en': 'Remaining as Absent', 'id': 'Sisanya Alpa'}),
-                desc: _tr({
-                  'en': 'Only for students not yet marked',
-                  'id': 'Hanya untuk siswa belum dinilai',
-                }),
-                onTap: () {
-                  Navigator.pop(context);
-                  onFillUnmarked!('alpha');
-                },
-              ),
-            if (onCopyFromLastSession != null)
-              _SheetButton(
-                icon: Icons.content_copy_rounded,
-                iconBg: const Color(0xFFEFF6FF),
-                iconFg: ColorUtils.info600,
+                icon: Icons.check_rounded,
+                iconBg: const Color(0xFFDCFCE7),
+                iconFg: ColorUtils.success600,
                 title: _tr({
-                  'en': 'Copy from last session',
-                  'id': 'Salin dari sesi terakhir',
-                }),
-                desc:
-                    lastSessionLabel ??
-                    _tr({
-                      'en': 'No previous session found',
-                      'id': 'Belum ada sesi sebelumnya',
-                    }),
-                onTap: () {
-                  Navigator.pop(context);
-                  onCopyFromLastSession!();
-                },
-              ),
-            if (onResetAll != null)
-              _SheetButton(
-                icon: Icons.refresh_rounded,
-                iconBg: const Color(0xFFF5F3FF),
-                iconFg: ColorUtils.violet700,
-                title: _tr({
-                  'en': 'Reset all to empty',
-                  'id': 'Reset semua ke kosong',
+                  'en': 'Mark all Present',
+                  'id': 'Tandai semua Hadir',
                 }),
                 desc: _tr({
-                  'en': 'Clear every status — nothing saved',
-                  'id': 'Hapus semua status — tidak ada yang disimpan',
+                  'en': 'Override any current status',
+                  'id': 'Override status manapun',
                 }),
                 onTap: () {
                   Navigator.pop(context);
-                  onResetAll!();
+                  onStatusSelected('hadir');
                 },
               ),
-            if (onMoveDateOrSession != null)
-              _SheetButton(
-                icon: Icons.calendar_month_rounded,
-                iconBg: const Color(0xFFFEF3C7),
-                iconFg: const Color(0xFFB45309),
-                title: _tr({
-                  'en': 'Switch date / session',
-                  'id': 'Pindah tanggal / sesi',
-                }),
-                desc: _tr({
-                  'en': 'Change hour, subject, or class',
-                  'id': 'Ubah jam, mapel, atau kelas',
-                }),
-                onTap: () {
-                  Navigator.pop(context);
-                  onMoveDateOrSession!();
-                },
-              ),
-            const SizedBox(height: 8),
+              if (onFillUnmarked != null)
+                _SheetButton(
+                  icon: Icons.close_rounded,
+                  iconBg: const Color(0xFFFEE2E2),
+                  iconFg: ColorUtils.error600,
+                  title: _tr({
+                    'en': 'Remaining as Absent',
+                    'id': 'Sisanya Alpa',
+                  }),
+                  desc: _tr({
+                    'en': 'Only for students not yet marked',
+                    'id': 'Hanya untuk siswa belum dinilai',
+                  }),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onFillUnmarked!('alpha');
+                  },
+                ),
+              if (onCopyFromLastSession != null)
+                _SheetButton(
+                  icon: Icons.content_copy_rounded,
+                  iconBg: const Color(0xFFEFF6FF),
+                  iconFg: ColorUtils.info600,
+                  title: _tr({
+                    'en': 'Copy from last session',
+                    'id': 'Salin dari sesi terakhir',
+                  }),
+                  desc:
+                      lastSessionLabel ??
+                      _tr({
+                        'en': 'No previous session found',
+                        'id': 'Belum ada sesi sebelumnya',
+                      }),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onCopyFromLastSession!();
+                  },
+                ),
+              if (onResetAll != null)
+                _SheetButton(
+                  icon: Icons.refresh_rounded,
+                  iconBg: const Color(0xFFF5F3FF),
+                  iconFg: ColorUtils.violet700,
+                  title: _tr({
+                    'en': 'Reset all to empty',
+                    'id': 'Reset semua ke kosong',
+                  }),
+                  desc: _tr({
+                    'en': 'Clear every status — nothing saved',
+                    'id': 'Hapus semua status — tidak ada yang disimpan',
+                  }),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onResetAll!();
+                  },
+                ),
+              if (onMoveDateOrSession != null)
+                _SheetButton(
+                  icon: Icons.calendar_month_rounded,
+                  iconBg: const Color(0xFFFEF3C7),
+                  iconFg: const Color(0xFFB45309),
+                  title: _tr({
+                    'en': 'Switch date / session',
+                    'id': 'Pindah tanggal / sesi',
+                  }),
+                  desc: _tr({
+                    'en': 'Change hour, subject, or class',
+                    'id': 'Ubah jam, mapel, atau kelas',
+                  }),
+                  onTap: () {
+                    Navigator.pop(context);
+                    onMoveDateOrSession!();
+                  },
+                ),
+              const SizedBox(height: 8),
             ],
           ),
         ),

@@ -270,9 +270,5 @@ mixin MaterialChapterMixin
     return allSubs;
   }
 
-  void _postFrameTour() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) checkAndShowTour();
-    });
-  }
+  void _postFrameTour() {}
 }

@@ -196,8 +196,7 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
                       if (newId != null && _subjectId == null) {
                         final only = roster.subjectsForClass(newId);
                         if (only.length == 1 && only.first is Map) {
-                          _subjectId =
-                              (only.first as Map)['id']?.toString();
+                          _subjectId = (only.first as Map)['id']?.toString();
                         }
                       }
                     });
@@ -222,9 +221,8 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
                 ),
                 FilterChipGrid<String>(
                   options: rosterSubjects.map((s) {
-                    final id = (s['id'] ?? s['mata_pelajaran_id'])
-                            ?.toString() ??
-                        '';
+                    final id =
+                        (s['id'] ?? s['mata_pelajaran_id'])?.toString() ?? '';
                     final name = (s['nama'] ?? s['name'] ?? '-').toString();
                     return FilterOption(value: id, label: name);
                   }).toList(),

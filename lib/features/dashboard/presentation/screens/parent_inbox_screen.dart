@@ -485,10 +485,7 @@ class _InboxRow extends StatelessWidget {
                 children: [
                   Text(
                     item.timeAgo,
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      color: ColorUtils.slate400,
-                    ),
+                    style: TextStyle(fontSize: 9.5, color: ColorUtils.slate400),
                   ),
                   const SizedBox(height: 8),
                   if (!item.isRead)
@@ -554,9 +551,8 @@ class _InboxItem {
       type: json['type']?.toString() ?? '',
       category: json['category']?.toString() ?? 'lainnya',
       title: json['title']?.toString() ?? '',
-      subtitle: json['subtitle']?.toString()
-          ?? json['source']?.toString()
-          ?? '',
+      subtitle:
+          json['subtitle']?.toString() ?? json['source']?.toString() ?? '',
       extra: json['extra']?.toString() ?? '',
       timeAgo: json['time_ago']?.toString() ?? '',
       createdAt: created,

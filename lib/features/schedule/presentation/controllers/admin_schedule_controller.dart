@@ -98,10 +98,6 @@ class AdminScheduleController
   /// tree.
   @override
   final Ref ref;
-
-  // Service dependencies injected via GetIt (like
-  // Laravel service container).
-  final ApiSubjectService _apiSubjectService = getIt<ApiSubjectService>();
   @override
   final ApiTeacherService apiTeacherService = getIt<ApiTeacherService>();
   final ApiService _apiService = ApiService();

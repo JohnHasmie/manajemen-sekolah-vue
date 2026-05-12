@@ -140,10 +140,7 @@ class GradeBookContentWidget extends StatelessWidget {
                   'en': 'Search students...',
                   'id': 'Cari siswa...',
                 }),
-                hintStyle: TextStyle(
-                  color: ColorUtils.slate400,
-                  fontSize: 13,
-                ),
+                hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
                 prefixIcon: Icon(
                   Icons.search,
                   color: ColorUtils.slate400,

@@ -148,9 +148,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
           await _loadSiblings();
           if (mounted) setState(() => _lastSync = DateTime.now());
         },
-        bodyChildren: [
-          buildContentArea(filteredData: _filteredStudents),
-        ],
+        bodyChildren: [buildContentArea(filteredData: _filteredStudents)],
       ),
     );
   }

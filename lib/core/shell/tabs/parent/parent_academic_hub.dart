@@ -46,9 +46,7 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
 
   Future<List<Map<String, dynamic>>> _loadRecent() async {
     final yearId = _activeAcademicYearId(ref);
-    return DashboardService.getParentAcademicRecent(
-      academicYearId: yearId,
-    );
+    return DashboardService.getParentAcademicRecent(academicYearId: yearId);
   }
 
   Future<void> _refresh() async {
@@ -100,15 +98,10 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
               icon: Icons.campaign_outlined,
               title: 'Pengumuman',
               subtitle: 'Informasi resmi dari sekolah',
-              onTap: () => AppNavigator.push(
-                context,
-                const ParentAnnouncementScreen(),
-              ),
+              onTap: () =>
+                  AppNavigator.push(context, const ParentAnnouncementScreen()),
             ),
-            _RecentActivitySection(
-              future: _recentFuture,
-              onTapItem: _openItem,
-            ),
+            _RecentActivitySection(future: _recentFuture, onTapItem: _openItem),
             const SizedBox(height: AppSpacing.xxl),
           ],
         ),
@@ -136,12 +129,7 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
           ),
         ],
       ),
-      padding: EdgeInsets.fromLTRB(
-        20,
-        statusBarHeight + 16,
-        20,
-        18,
-      ),
+      padding: EdgeInsets.fromLTRB(20, statusBarHeight + 16, 20, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -323,10 +311,7 @@ class _RecentActivitySection extends StatelessWidget {
   final Future<List<Map<String, dynamic>>>? future;
   final void Function(Map<String, dynamic> item) onTapItem;
 
-  const _RecentActivitySection({
-    required this.future,
-    required this.onTapItem,
-  });
+  const _RecentActivitySection({required this.future, required this.onTapItem});
 
   @override
   Widget build(BuildContext context) {
@@ -356,10 +341,7 @@ class _RecentActivitySection extends StatelessWidget {
               ),
             ),
             for (final item in items.take(2))
-              _RecentActivityCard(
-                item: item,
-                onTap: () => onTapItem(item),
-              ),
+              _RecentActivityCard(item: item, onTap: () => onTapItem(item)),
           ],
         );
       },
@@ -374,10 +356,7 @@ class _RecentActivityCard extends StatelessWidget {
   final Map<String, dynamic> item;
   final VoidCallback onTap;
 
-  const _RecentActivityCard({
-    required this.item,
-    required this.onTap,
-  });
+  const _RecentActivityCard({required this.item, required this.onTap});
 
   ({Color bg, Color fg, IconData icon, String label}) _appearance() {
     final type = (item['type'] ?? '').toString();

@@ -155,15 +155,12 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                         color: selected ? primaryColor : Colors.white,
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: selected
-                              ? primaryColor
-                              : ColorUtils.slate200,
+                          color: selected ? primaryColor : ColorUtils.slate200,
                         ),
                         boxShadow: selected
                             ? [
                                 BoxShadow(
-                                  color:
-                                      primaryColor.withValues(alpha: 0.22),
+                                  color: primaryColor.withValues(alpha: 0.22),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -564,8 +561,10 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
   String _initialsFor(String name) {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return '?';
-    final parts =
-        trimmed.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    final parts = trimmed
+        .split(RegExp(r'\s+'))
+        .where((s) => s.isNotEmpty)
+        .toList();
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }

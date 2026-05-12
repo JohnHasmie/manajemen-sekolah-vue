@@ -72,9 +72,7 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
     final lessonHourNumber = widget.initialLessonHourNumber;
     final date = widget.initialDate ?? DateTime.now();
 
-    final initial = subjectName.isNotEmpty
-        ? subjectName[0].toUpperCase()
-        : '?';
+    final initial = subjectName.isNotEmpty ? subjectName[0].toUpperCase() : '?';
     final titleParts = <String>[
       if (subjectName.isNotEmpty) subjectName,
       if (className.isNotEmpty) className,

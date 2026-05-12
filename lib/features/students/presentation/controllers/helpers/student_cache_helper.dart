@@ -63,7 +63,6 @@ class StudentCacheHelper {
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
     }
-    await LocalCacheService.clearStartingWith('tour_student_management_');
     await LocalCacheService.invalidate(
       CacheKeyBuilder.custom('student', 'filter_options'),
     );

@@ -110,21 +110,10 @@ void main() {
     });
   });
 
-  group('CacheKeyBuilder - Tour keys', () {
-    test('tourStatus builds correct key', () {
-      expect(
-        CacheKeyBuilder.tourStatus('screen', 'admin'),
-        'tour_screen_admin',
-      );
-    });
-
-    test('tourStatus with different values', () {
-      expect(
-        CacheKeyBuilder.tourStatus('dashboard', 'guru'),
-        'tour_dashboard_guru',
-      );
-    });
-  });
+  // Tour-key tests retired together with the server-side Tour feature
+  // (see core API commit fd92840). Client-side persistence drives
+  // tutorial coach marks now, so the CacheKeyBuilder.tourStatus helper
+  // was removed.
 
   group('CacheKeyBuilder - Announcement keys', () {
     test('announcementFilters builds correct key', () {

@@ -491,47 +491,35 @@ class AdminSubjectManagementScreenState
     // v3 brand chips — sticky inside hero (parent Tagihan/Nilai pattern).
     final brandChips = <BrandFilterChip>[
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Status',
-          'id': 'Status',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Status', 'id': 'Status'}),
         value: _selectedStatusFilter == null
             ? null
             : lang.getTranslatedText(switch (_selectedStatusFilter) {
                 'active' => const {'en': 'Active', 'id': 'Aktif'},
                 'inactive' => const {'en': 'Inactive', 'id': 'Nonaktif'},
                 _ => {
-                    'en': _selectedStatusFilter!,
-                    'id': _selectedStatusFilter!,
-                  },
+                  'en': _selectedStatusFilter!,
+                  'id': _selectedStatusFilter!,
+                },
               }),
         onTap: _openFilterSheet,
       ),
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Grade',
-          'id': 'Tingkat',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Grade', 'id': 'Tingkat'}),
         value: _selectedGradeLevelFilter == null
             ? null
             : 'Tingkat $_selectedGradeLevelFilter',
         onTap: _openFilterSheet,
       ),
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Class',
-          'id': 'Kelas',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Class', 'id': 'Kelas'}),
         value: _selectedClassNameFilter,
         onTap: _openFilterSheet,
       ),
     ];
 
     return AdminCrudScaffold(
-      title: lang.getTranslatedText(const {
-        'en': 'Subjects',
-        'id': 'Mapel',
-      }),
+      title: lang.getTranslatedText(const {'en': 'Subjects', 'id': 'Mapel'}),
       subtitle: lang.getTranslatedText(const {
         'en': 'Manage and monitor subjects',
         'id': 'Kelola dan pantau mata pelajaran',
@@ -551,10 +539,8 @@ class AdminSubjectManagementScreenState
         'en': 'DATA MANAGEMENT',
         'id': 'MANAJEMEN DATA',
       }),
-      counterLabel: '${filteredSubjects.length} ${lang.getTranslatedText(const {
-        'en': 'subjects',
-        'id': 'mapel',
-      })}',
+      counterLabel:
+          '${filteredSubjects.length} ${lang.getTranslatedText(const {'en': 'subjects', 'id': 'mapel'})}',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,
@@ -616,10 +602,7 @@ class AdminSubjectManagementScreenState
       bulkActions: [
         BulkAction(
           icon: Icons.delete_outline_rounded,
-          label: lang.getTranslatedText(const {
-            'en': 'Delete',
-            'id': 'Hapus',
-          }),
+          label: lang.getTranslatedText(const {'en': 'Delete', 'id': 'Hapus'}),
           onTap: _bulkDeleteSelected,
           isDestructive: true,
         ),

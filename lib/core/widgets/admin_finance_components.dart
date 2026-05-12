@@ -61,52 +61,52 @@ class MoneyFlowStrip extends StatelessWidget {
     return Padding(
       padding: padding,
       child: IntrinsicHeight(
-       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _FlowTile(
-              kicker: 'MASUK',
-              amount: figures.incomingAmount,
-              delta: figures.incomingDelta,
-              deltaColor: const Color(0xFF86EFAC),
-              meta: '${figures.incomingCount} transaksi',
-              tone: _FlowTone.translucent,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _FlowTile(
-              kicker: 'TERUTANG',
-              amount: figures.outstandingAmount,
-              delta: '⏰ jatuh tempo',
-              deltaColor: const Color(0xFFFCD34D),
-              meta: '${figures.outstandingCount} tagihan',
-              tone: _FlowTone.translucent,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: onOverdueTap,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
               child: _FlowTile(
-                kicker: 'JATUH TEMPO',
-                amount: figures.overdueAmount,
-                delta: figures.overdueCount > 0
-                    ? '⚠ ${figures.overdueCount} wali murid'
-                    : null,
-                deltaColor: Colors.white,
-                meta: figures.overdueCount > 0
-                    ? 'tindakan diperlukan'
-                    : 'tidak ada',
-                tone: figures.overdueCount > 0
-                    ? _FlowTone.danger
-                    : _FlowTone.translucent,
+                kicker: 'MASUK',
+                amount: figures.incomingAmount,
+                delta: figures.incomingDelta,
+                deltaColor: const Color(0xFF86EFAC),
+                meta: '${figures.incomingCount} transaksi',
+                tone: _FlowTone.translucent,
               ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _FlowTile(
+                kicker: 'TERUTANG',
+                amount: figures.outstandingAmount,
+                delta: '⏰ jatuh tempo',
+                deltaColor: const Color(0xFFFCD34D),
+                meta: '${figures.outstandingCount} tagihan',
+                tone: _FlowTone.translucent,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: GestureDetector(
+                onTap: onOverdueTap,
+                child: _FlowTile(
+                  kicker: 'JATUH TEMPO',
+                  amount: figures.overdueAmount,
+                  delta: figures.overdueCount > 0
+                      ? '⚠ ${figures.overdueCount} wali murid'
+                      : null,
+                  deltaColor: Colors.white,
+                  meta: figures.overdueCount > 0
+                      ? 'tindakan diperlukan'
+                      : 'tidak ada',
+                  tone: figures.overdueCount > 0
+                      ? _FlowTone.danger
+                      : _FlowTone.translucent,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -363,31 +363,23 @@ class MoneyFlowSkeleton extends StatelessWidget {
           3,
           (i) => Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
               child: Container(
                 height: 92,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(
-                    alpha: 0.15,
-                  ),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       width: 50,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(
-                          alpha: 0.2,
-                        ),
-                        borderRadius:
-                            BorderRadius.circular(4),
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -395,11 +387,8 @@ class MoneyFlowSkeleton extends StatelessWidget {
                       width: 40,
                       height: 16,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(
-                          alpha: 0.2,
-                        ),
-                        borderRadius:
-                            BorderRadius.circular(4),
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -407,11 +396,8 @@ class MoneyFlowSkeleton extends StatelessWidget {
                       width: 60,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(
-                          alpha: 0.12,
-                        ),
-                        borderRadius:
-                            BorderRadius.circular(4),
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
                   ],
@@ -491,8 +477,7 @@ class FinanceSubFilterStrip extends StatelessWidget {
     required this.chips,
     required this.activeKey,
     required this.onSelect,
-    this.padding =
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
   });
 
   @override
@@ -587,14 +572,14 @@ class _SubFilterChip extends StatelessWidget {
 /// (rupiah, dates) so this widget stays a pure renderer.
 class InvoiceRowData {
   final String id;
-  final String title;          // "SPP November · 8B"
-  final String studentName;    // "Rania Putri"
-  final String invoiceNumber;  // "#INV-2025-1142"
-  final String amountLabel;    // "Rp 1.250.000"
+  final String title; // "SPP November · 8B"
+  final String studentName; // "Rania Putri"
+  final String invoiceNumber; // "#INV-2025-1142"
+  final String amountLabel; // "Rp 1.250.000"
   final InvoiceRowStatus status;
-  final int? overdueDays;      // shown as "Lewat N hari" when status == overdue
-  final int reminderCount;     // 0 = no pill, ≥1 = "Reminder ke-N" pill
-  final String? paidAtLabel;   // "Lunas · 5 Nov"
+  final int? overdueDays; // shown as "Lewat N hari" when status == overdue
+  final int reminderCount; // 0 = no pill, ≥1 = "Reminder ke-N" pill
+  final String? paidAtLabel; // "Lunas · 5 Nov"
   final String? paidMethodLabel; // "Transfer BCA · 14:32"
 
   const InvoiceRowData({
@@ -677,9 +662,7 @@ class InvoiceRow extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isOverdue
-                ? const Color(0xFFFEE2E2)
-                : ColorUtils.slate200,
+            color: isOverdue ? const Color(0xFFFEE2E2) : ColorUtils.slate200,
             width: isOverdue ? 1.5 : 1,
           ),
           boxShadow: [
@@ -729,10 +712,7 @@ class InvoiceRow extends StatelessWidget {
                           ),
                           if (showTagih) ...[
                             const SizedBox(width: 8),
-                            _InvoiceTagihButton(
-                              navy: navy,
-                              onTap: onTagihTap!,
-                            ),
+                            _InvoiceTagihButton(navy: navy, onTap: onTagihTap!),
                           ],
                         ],
                       ),
@@ -773,7 +753,9 @@ class InvoiceRow extends StatelessWidget {
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF0FDF4),
                                 borderRadius: BorderRadius.circular(6),
@@ -794,7 +776,9 @@ class InvoiceRow extends StatelessWidget {
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFEF2F2),
                             borderRadius: BorderRadius.circular(6),

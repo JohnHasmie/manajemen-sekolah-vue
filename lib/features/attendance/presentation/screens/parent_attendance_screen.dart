@@ -50,7 +50,6 @@ import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_filter_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_state_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_status_mixin.dart';
-import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_tour_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_visibility_mixin.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_calendar_screen.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
@@ -81,7 +80,6 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
         ParentAttendanceStateMixin,
         ParentAttendanceDataMixin,
         ParentAttendanceVisibilityMixin,
-        ParentAttendanceTourMixin,
         ParentAttendanceFilterMixin,
         ParentAttendanceStatusMixin {
   final GlobalKey _monthlySummaryKey = GlobalKey();

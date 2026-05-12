@@ -65,13 +65,12 @@ class RoleOption {
   });
 
   /// Canonical "Mengajar" entry — every teacher has it.
-  factory RoleOption.mengajar({String subLabel = ''}) =>
-      RoleOption(
-        id: 'mengajar',
-        shortName: 'Mengajar',
-        subLabel: subLabel,
-        avatarInitials: 'M',
-      );
+  factory RoleOption.mengajar({String subLabel = ''}) => RoleOption(
+    id: 'mengajar',
+    shortName: 'Mengajar',
+    subLabel: subLabel,
+    avatarInitials: 'M',
+  );
 
   /// Canonical "Wali Kelas" entry for one homeroom class.
   ///
@@ -82,17 +81,16 @@ class RoleOption {
     required String classId,
     required String className,
     String subLabel = '',
-  }) =>
-      RoleOption(
-        id: 'wali:$classId',
-        shortName: 'Wali $className',
-        subLabel: subLabel,
-        avatarInitials: className.isEmpty
-            ? 'W'
-            : className.length <= 2
-                ? className.toUpperCase()
-                : className.substring(0, 2).toUpperCase(),
-      );
+  }) => RoleOption(
+    id: 'wali:$classId',
+    shortName: 'Wali $className',
+    subLabel: subLabel,
+    avatarInitials: className.isEmpty
+        ? 'W'
+        : className.length <= 2
+        ? className.toUpperCase()
+        : className.substring(0, 2).toUpperCase(),
+  );
 
   String get _resolvedInitials {
     if (avatarInitials != null && avatarInitials!.isNotEmpty) {
@@ -193,10 +191,10 @@ class _RoleChip extends StatelessWidget {
     final pillColor = isActive
         ? Colors.white
         : const Color(0x38FFFFFF); // 22% white, solid
-    final borderColor =
-        isActive ? Colors.transparent : Colors.white;
-    final avatarColor =
-        isActive ? accentColor : const Color(0x66FFFFFF); // 40% white
+    final borderColor = isActive ? Colors.transparent : Colors.white;
+    final avatarColor = isActive
+        ? accentColor
+        : const Color(0x66FFFFFF); // 40% white
     const avatarTextColor = Colors.white;
     final nameColor = isActive ? const Color(0xFF0F172A) : Colors.white;
     final subColor = isActive ? const Color(0xFF475569) : Colors.white;

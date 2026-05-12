@@ -25,12 +25,7 @@ const Map<String, List<ShellTab>> kRoleTabs = {
     ShellTab.finance,
     ShellTab.system,
   ],
-  'guru': [
-    ShellTab.home,
-    ShellTab.teaching,
-    ShellTab.grades,
-    ShellTab.other,
-  ],
+  'guru': [ShellTab.home, ShellTab.teaching, ShellTab.grades, ShellTab.other],
   // Some legacy code paths use 'teacher' for guru — accept both so callers
   // don't have to translate first.
   'teacher': [

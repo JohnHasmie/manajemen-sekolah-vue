@@ -44,7 +44,6 @@ mixin MaterialDataLoadMixin on ConsumerState<TeacherMaterialScreen> {
 
   // Callback that the main state provides
   void loadContentProgress(String subjectId);
-  void checkAndShowTour();
   void autoSelectCurrentSchedule(List<dynamic> classes, List<dynamic> subjects);
   Future<void> loadChapterContent(
     String subjectId, {

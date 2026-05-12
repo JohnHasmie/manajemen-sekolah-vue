@@ -64,9 +64,7 @@ class _ReportCardOverviewPageState extends ConsumerState<ReportCardOverviewPage>
   @override
   set filterStatus(String? value) => _filterStatus = value;
 
-  @override
   TextEditingController get searchController => _searchController;
-  @override
   bool get isTableView => _isTableView;
 
   @override
@@ -127,6 +125,24 @@ class _ReportCardOverviewPageState extends ConsumerState<ReportCardOverviewPage>
 
       if (_classData.isEmpty && mounted) {
         setState(() => _isLoading = true);
+      }
+
+      // ENSURE DEPENDENCIES ARE READY (Fix for race condition on cold start)
+      final ayProvider = ref.read(academicYearRiverpod);
+      if (ayProvider.selectedAcademicYear == null && ayProvider.isLoading) {
+        int retries = 0;
+        while (ref.read(academicYearRiverpod).selectedAcademicYear == null &&
+            ref.read(academicYearRiverpod).isLoading &&
+            mounted &&
+            retries < 20) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          retries++;
+        }
+      }
+
+      final teacherProvider = ref.read(teacherRiverpod);
+      if (_teacherId.isEmpty || !teacherProvider.isLoaded) {
+        await teacherProvider.ensureLoaded();
       }
 
       final ayId = ref
@@ -363,7 +379,7 @@ class _ReportCardOverviewPageState extends ConsumerState<ReportCardOverviewPage>
     if (_errorMessage != null) {
       return AppErrorState(
         message: _errorMessage,
-        onRetry: () => _loadData(),
+        onRetry: _loadData,
         role: 'guru',
       );
     }

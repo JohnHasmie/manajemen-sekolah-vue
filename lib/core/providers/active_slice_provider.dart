@@ -136,11 +136,7 @@ class ActiveSliceNotifier extends Notifier<ActiveSliceState> {
     if (state.total <= 1) return;
     final clamped = index.clamp(0, state.total - 1);
     _cancelTimers();
-    state = state.copyWith(
-      activeIndex: clamped,
-      fillFraction: 0,
-      paused: true,
-    );
+    state = state.copyWith(activeIndex: clamped, fillFraction: 0, paused: true);
     _scheduleResume();
   }
 

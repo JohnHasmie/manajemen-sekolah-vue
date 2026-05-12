@@ -69,8 +69,7 @@ class AdminFormSheetHeader extends StatelessWidget {
     final isEdit = isEditMode;
     final iconBg = isEdit ? const Color(0xFFFEF3C7) : accent;
     final iconColor = isEdit ? const Color(0xFF92400E) : Colors.white;
-    final kickerColor =
-        isEdit ? const Color(0xFF92400E) : ColorUtils.slate500;
+    final kickerColor = isEdit ? const Color(0xFF92400E) : ColorUtils.slate500;
     final defaultKicker = isEdit ? 'EDIT DATA' : 'TAMBAH BARU';
 
     return Column(
@@ -157,10 +156,7 @@ class AdminFormSheetHeader extends StatelessWidget {
           ),
         ),
         if (isEdit && editingContext != null)
-          _EditingContextStrip(
-            ctx: editingContext!,
-            accent: accent,
-          ),
+          _EditingContextStrip(ctx: editingContext!, accent: accent),
       ],
     );
   }
@@ -252,7 +248,9 @@ class _EditingContextStrip extends StatelessWidget {
     if (src.isEmpty) return '?';
     final parts = src.trim().split(RegExp(r'\s+'));
     if (parts.length == 1) {
-      return parts.first.substring(0, parts.first.length.clamp(0, 2)).toUpperCase();
+      return parts.first
+          .substring(0, parts.first.length.clamp(0, 2))
+          .toUpperCase();
     }
     return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
   }

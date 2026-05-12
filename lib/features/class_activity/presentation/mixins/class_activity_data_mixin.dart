@@ -50,7 +50,6 @@ mixin ClassActivityDataMixin on ConsumerState<AdminClassActivityScreen> {
   TextEditingController get searchController;
 
   Future<void> forceRefresh() async {
-    await LocalCacheService.clearStartingWith('tour_class_activity_');
     if (showTeacherList) {
       final cacheKey = buildTeacherCacheKey();
       if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);
@@ -124,9 +123,6 @@ mixin ClassActivityDataMixin on ConsumerState<AdminClassActivityScreen> {
                 'class_activity',
                 'Class activity teachers loaded from cache',
               );
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) checkAndShowTour();
-              });
               // Don't return — continue fetching fresh data from API
             }
           }
@@ -158,11 +154,7 @@ mixin ClassActivityDataMixin on ConsumerState<AdminClassActivityScreen> {
       }
 
       // Trigger tour after teachers are loaded
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          checkAndShowTour();
-        }
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {});
     } catch (e) {
       if (mounted) {
         if (teacherList.isEmpty) {
@@ -380,6 +372,4 @@ mixin ClassActivityDataMixin on ConsumerState<AdminClassActivityScreen> {
   void showErrorSnackBar(String message) {
     SnackBarUtils.showError(context, message);
   }
-
-  Future<void> checkAndShowTour();
 }

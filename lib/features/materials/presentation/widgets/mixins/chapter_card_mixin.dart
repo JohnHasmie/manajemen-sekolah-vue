@@ -28,8 +28,7 @@ mixin ChapterCardMixin on HelpersMixin {
     final isChecked = isChapterChecked(chapterIdStr);
     final checkColor = getCheckboxColorFn()(chapterIdStr);
 
-    final isAllChecked =
-        subCount > 0 ? checkedCount == subCount : isChecked;
+    final isAllChecked = subCount > 0 ? checkedCount == subCount : isChecked;
     final isIndeterminate =
         subCount > 0 && checkedCount > 0 && checkedCount < subCount;
 

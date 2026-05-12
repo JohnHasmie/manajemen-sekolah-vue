@@ -149,8 +149,7 @@ class RaportPipelineCard extends StatelessWidget {
                         height: 36,
                         child: CustomPaint(
                           painter: _RaportConnectorPainter(
-                            active:
-                                nodes[i].active || nodes[i + 1].active,
+                            active: nodes[i].active || nodes[i + 1].active,
                           ),
                         ),
                       ),
@@ -239,9 +238,7 @@ class _RaportConnectorPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final navy = ColorUtils.getRoleColor('admin');
     final paint = Paint()
-      ..color = active
-          ? navy.withValues(alpha: 0.55)
-          : ColorUtils.slate300
+      ..color = active ? navy.withValues(alpha: 0.55) : ColorUtils.slate300
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
     final y = size.height / 2;
@@ -362,8 +359,8 @@ class _TingkatGroupCardState extends State<TingkatGroupCard> {
     final progressColor = widget.reviewedPct >= 80
         ? const Color(0xFF10B981)
         : widget.reviewedPct >= 30
-            ? const Color(0xFFF59E0B)
-            : const Color(0xFFDC2626);
+        ? const Color(0xFFF59E0B)
+        : const Color(0xFFDC2626);
 
     return Container(
       margin: widget.margin,
@@ -394,8 +391,7 @@ class _TingkatGroupCardState extends State<TingkatGroupCard> {
                 children: [
                   Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Tingkat ${widget.tingkat}',
@@ -409,13 +405,13 @@ class _TingkatGroupCardState extends State<TingkatGroupCard> {
                         Text(
                           widget.alert
                               ? '${widget.classCount} kelas '
-                                  '· ${widget.reviewedPct}% '
-                                  'diperiksa · butuh perhatian'
+                                    '· ${widget.reviewedPct}% '
+                                    'diperiksa · butuh perhatian'
                               : '${widget.classCount} kelas '
-                                  '· ${widget.studentCount} '
-                                  'siswa · '
-                                  '${widget.reviewedPct}% '
-                                  'diperiksa',
+                                    '· ${widget.studentCount} '
+                                    'siswa · '
+                                    '${widget.reviewedPct}% '
+                                    'diperiksa',
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: widget.alert
@@ -434,10 +430,7 @@ class _TingkatGroupCardState extends State<TingkatGroupCard> {
                     Container(
                       width: 8,
                       height: 8,
-                      margin: const EdgeInsets.only(
-                        right: 4,
-                        top: 2,
-                      ),
+                      margin: const EdgeInsets.only(right: 4, top: 2),
                       decoration: const BoxDecoration(
                         color: Color(0xFFDC2626),
                         shape: BoxShape.circle,
@@ -478,16 +471,13 @@ class _TingkatGroupCardState extends State<TingkatGroupCard> {
                     for (final c in widget.classes)
                       _KelasMiniChip(
                         data: c,
-                        selected: widget.selectedClassIds
-                            .contains(c.id),
+                        selected: widget.selectedClassIds.contains(c.id),
                         onTap: widget.onChipTap == null
                             ? null
                             : () => widget.onChipTap!(c.id),
-                        onLongPress:
-                            widget.onChipLongPress == null
-                                ? null
-                                : () => widget
-                                    .onChipLongPress!(c.id),
+                        onLongPress: widget.onChipLongPress == null
+                            ? null
+                            : () => widget.onChipLongPress!(c.id),
                       ),
                   ],
                 ),
@@ -525,16 +515,11 @@ class _KelasMiniChip extends StatelessWidget {
         onLongPress: onLongPress,
         child: Container(
           width: 78,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: data.tone.bg,
             borderRadius: BorderRadius.circular(10),
-            border: selected
-                ? Border.all(color: navy, width: 2)
-                : null,
+            border: selected ? Border.all(color: navy, width: 2) : null,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

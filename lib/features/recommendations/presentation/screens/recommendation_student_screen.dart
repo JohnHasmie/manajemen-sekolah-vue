@@ -31,7 +31,6 @@ import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/mixins/data_loading_mixin.dart';
-import 'package:manajemensekolah/features/recommendations/presentation/screens/mixins/tour_mixin.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_result_screen.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
@@ -79,7 +78,7 @@ class LearningRecommendationStudentScreen extends ConsumerStatefulWidget {
 
 class _LearningRecommendationStudentScreenState
     extends ConsumerState<LearningRecommendationStudentScreen>
-    with DataLoadingMixin, TourMixin {
+    with DataLoadingMixin {
   bool _isLoading = true;
   List<dynamic> _students = [];
   String _errorMessage = '';
@@ -185,7 +184,7 @@ class _LearningRecommendationStudentScreenState
   void didChangeDependencies() {
     super.didChangeDependencies();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && students.isNotEmpty) checkAndShowTour();
+      if (mounted && students.isNotEmpty) Future<void>.value();
     });
   }
 

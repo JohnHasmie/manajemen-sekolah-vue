@@ -61,8 +61,7 @@ mixin ScheduleCardModalMixin {
           final cId = classId;
           final sId = subjectId;
           if (cId != null && sId != null && teacherId.isNotEmpty) {
-            final date =
-                DateFormat('yyyy-MM-dd').format(computeScheduleDate());
+            final date = DateFormat('yyyy-MM-dd').format(computeScheduleDate());
             await getIt<ApiScheduleService>().recordMaterialView(
               teacherId: teacherId,
               classId: cId,

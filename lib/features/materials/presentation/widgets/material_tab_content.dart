@@ -43,7 +43,7 @@ class MaterialTabContent extends StatelessWidget {
   /// title, `currentValue` is the value to seed the editor with (for
   /// list-shaped sections, items joined with `\n`).
   final void Function(String fieldKey, String fieldLabel, String currentValue)?
-      onEditSection;
+  onEditSection;
 
   const MaterialTabContent({
     super.key,
@@ -82,10 +82,10 @@ class MaterialTabContent extends StatelessWidget {
               onEdit: onEditSection == null
                   ? null
                   : () => _editIfWired(
-                        'ringkasan',
-                        'Ringkasan Materi',
-                        parsedContent!['ringkasan']?.toString() ?? '',
-                      ),
+                      'ringkasan',
+                      'Ringkasan Materi',
+                      parsedContent!['ringkasan']?.toString() ?? '',
+                    ),
               child: Text(
                 parsedContent!['ringkasan']?.toString() ?? '',
                 style: TextStyle(
@@ -113,10 +113,10 @@ class MaterialTabContent extends StatelessWidget {
                   onEdit: onEditSection == null
                       ? null
                       : () => _editIfWired(
-                            'tujuan_pembelajaran',
-                            'Tujuan Pembelajaran',
-                            seedValue,
-                          ),
+                          'tujuan_pembelajaran',
+                          'Tujuan Pembelajaran',
+                          seedValue,
+                        ),
                   child: isList
                       ? _NumberedList(
                           items: List.from(tp),
@@ -145,10 +145,10 @@ class MaterialTabContent extends StatelessWidget {
               onEdit: onEditSection == null
                   ? null
                   : () => _editIfWired(
-                        'poin_utama',
-                        'Poin Utama',
-                        _listToText(parsedContent!['poin_utama'] as List),
-                      ),
+                      'poin_utama',
+                      'Poin Utama',
+                      _listToText(parsedContent!['poin_utama'] as List),
+                    ),
               child: _NumberedList(
                 items: List.from(parsedContent!['poin_utama'] as List),
                 accent: ColorUtils.amber500,
@@ -166,10 +166,10 @@ class MaterialTabContent extends StatelessWidget {
               onEdit: onEditSection == null
                   ? null
                   : () => _editIfWired(
-                        'cara_mengajar',
-                        'Cara Mengajar',
-                        parsedContent!['cara_mengajar']?.toString() ?? '',
-                      ),
+                      'cara_mengajar',
+                      'Cara Mengajar',
+                      parsedContent!['cara_mengajar']?.toString() ?? '',
+                    ),
               child: Text(
                 parsedContent!['cara_mengajar']?.toString() ?? '',
                 style: TextStyle(
@@ -189,12 +189,12 @@ class MaterialTabContent extends StatelessWidget {
             onEdit: onEditSection == null
                 ? null
                 : () => _editIfWired(
-                      'material_content',
-                      'Materi AI',
-                      stripHtml(
-                        aiGeneratedData!['material_content']?.toString() ?? '',
-                      ),
+                    'material_content',
+                    'Materi AI',
+                    stripHtml(
+                      aiGeneratedData!['material_content']?.toString() ?? '',
                     ),
+                  ),
             child: Text(
               stripHtml(aiGeneratedData!['material_content']?.toString() ?? ''),
               style: TextStyle(

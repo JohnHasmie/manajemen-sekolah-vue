@@ -433,40 +433,40 @@ class _ModernGradeEditorSheetState
             children: [
               _buildBrandHeader(lang, primary),
               Flexible(
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildStudentStrip(lang, primary),
-                      const SizedBox(height: AppSpacing.lg),
-                      ModernGradeEditorScoreHero(
-                        score: _currentScore,
-                        lang: lang,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildScoreFieldRow(lang, primary),
-                      const SizedBox(height: AppSpacing.sm),
-                      _buildStepperRow(primary),
-                      const SizedBox(height: AppSpacing.md),
-                      _buildDetailsToggle(lang, primary),
-                      if (_showDetails) ...[
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildStudentStrip(lang, primary),
+                        const SizedBox(height: AppSpacing.lg),
+                        ModernGradeEditorScoreHero(
+                          score: _currentScore,
+                          lang: lang,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        _buildScoreFieldRow(lang, primary),
+                        const SizedBox(height: AppSpacing.sm),
+                        _buildStepperRow(primary),
                         const SizedBox(height: AppSpacing.md),
-                        _buildTitleField(lang, primary),
-                        const SizedBox(height: AppSpacing.md),
-                        _buildDateField(lang, primary),
-                        const SizedBox(height: AppSpacing.md),
-                        _buildNotesField(lang, primary),
+                        _buildDetailsToggle(lang, primary),
+                        if (_showDetails) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          _buildTitleField(lang, primary),
+                          const SizedBox(height: AppSpacing.md),
+                          _buildDateField(lang, primary),
+                          const SizedBox(height: AppSpacing.md),
+                          _buildNotesField(lang, primary),
+                        ],
+                        const SizedBox(height: AppSpacing.lg),
                       ],
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
               ModernGradeEditorFooter(
                 lang: lang,
                 primary: primary,
@@ -576,63 +576,6 @@ class _ModernGradeEditorSheetState
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopBar(LanguageProvider lang, Color primary) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 12, 8),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.assignment_outlined, size: 13, color: primary),
-                const SizedBox(width: 6),
-                Text(
-                  _typeLabel(widget.gradeType, lang).toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: primary,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              _isEditing
-                  ? lang.getTranslatedText({
-                      'en': 'Edit Grade',
-                      'id': 'Ubah Nilai',
-                    })
-                  : lang.getTranslatedText({
-                      'en': 'Input Grade',
-                      'id': 'Input Nilai',
-                    }),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: ColorUtils.slate800,
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.close_rounded, color: ColorUtils.slate500),
-            onPressed: () => Navigator.of(context).pop(),
-            tooltip: lang.getTranslatedText({'en': 'Close', 'id': 'Tutup'}),
           ),
         ],
       ),
@@ -806,9 +749,7 @@ class _ModernGradeEditorSheetState
               padding: const EdgeInsets.symmetric(vertical: 12),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isPlus
-                    ? primary.withValues(alpha: 0.10)
-                    : Colors.white,
+                color: isPlus ? primary.withValues(alpha: 0.10) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isPlus
@@ -1067,8 +1008,10 @@ class _ModernGradeEditorSheetState
   String _twoLetterInitials(String name) {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return '?';
-    final parts =
-        trimmed.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    final parts = trimmed
+        .split(RegExp(r'\s+'))
+        .where((s) => s.isNotEmpty)
+        .toList();
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }

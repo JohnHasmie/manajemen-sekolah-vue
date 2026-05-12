@@ -118,11 +118,13 @@ class _RoleShellState extends ConsumerState<RoleShell> {
             // the window will return [allowExit].
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(const SnackBar(
-                content: Text('Tekan kembali sekali lagi untuk keluar'),
-                duration: Duration(seconds: 2),
-                behavior: SnackBarBehavior.floating,
-              ));
+              ..showSnackBar(
+                const SnackBar(
+                  content: Text('Tekan kembali sekali lagi untuk keluar'),
+                  duration: Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             break;
           case SystemBackResult.allowExit:
             // Second back press inside the window — actually exit.
@@ -196,10 +198,7 @@ class _TabBranch extends StatelessWidget {
         // Only the initial route is generated here; subsequent pushes
         // go through `Navigator.of(context).push(MaterialPageRoute(...))`
         // from inside the tab's screens.
-        return MaterialPageRoute(
-          settings: settings,
-          builder: rootBuilder,
-        );
+        return MaterialPageRoute(settings: settings, builder: rootBuilder);
       },
     );
   }

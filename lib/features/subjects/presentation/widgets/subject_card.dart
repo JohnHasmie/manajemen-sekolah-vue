@@ -51,10 +51,7 @@ class SubjectCard extends ConsumerWidget {
             lang.getTranslatedText(const {'en': 'Active', 'id': 'Aktif'}),
           )
         : BrandRowStatus.danger(
-            lang.getTranslatedText(const {
-              'en': 'Inactive',
-              'id': 'Nonaktif',
-            }),
+            lang.getTranslatedText(const {'en': 'Inactive', 'id': 'Nonaktif'}),
           );
 
     return BrandListRow(
@@ -69,10 +66,7 @@ class SubjectCard extends ConsumerWidget {
       status: status,
       trailingActionLabel: selected
           ? null
-          : lang.getTranslatedText(const {
-              'en': 'Detail',
-              'id': 'Detail',
-            }),
+          : lang.getTranslatedText(const {'en': 'Detail', 'id': 'Detail'}),
       trailingActionColor: accent,
       onTap: onTap,
       onLongPress: onLongPress ?? (isReadOnly ? null : onEdit),

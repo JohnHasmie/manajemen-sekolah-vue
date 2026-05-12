@@ -487,12 +487,7 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
     );
   }
 
-  ({
-    int totalChapters,
-    int totalSubChapters,
-    int checked,
-    int generated,
-  })
+  ({int totalChapters, int totalSubChapters, int checked, int generated})
   _computeKpiStats() {
     if (selectedSubject != null) {
       // In subject-detail mode, count from the loaded chapter list.

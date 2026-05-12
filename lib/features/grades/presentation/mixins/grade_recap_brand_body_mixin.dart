@@ -60,8 +60,7 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
                   'en': 'No Classes Found',
                   'id': 'Tidak Ada Kelas',
                 }),
-          subtitle:
-              searchController.text.isNotEmpty || activeFilterCount > 0
+          subtitle: searchController.text.isNotEmpty || activeFilterCount > 0
               ? lp.getTranslatedText({
                   'en': 'No classes match your filter',
                   'id': 'Tidak ada kelas sesuai filter',
@@ -112,10 +111,7 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
                     'id': 'Mengajar · semua kelas',
                   }),
             count: flat.length,
-            countLabel: lp.getTranslatedText({
-              'en': 'classes',
-              'id': 'kelas',
-            }),
+            countLabel: lp.getTranslatedText({'en': 'classes', 'id': 'kelas'}),
           ),
           const SizedBox(height: 4),
           for (final item in flat) _buildRow(item, lp),
@@ -162,9 +158,7 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
   /// Nilai · Rata-rata) → progress band (bar + % or "Mulai input" CTA
   /// when empty). Mirrors `_design/teacher_grade_recap_card_redesign.html`.
   Widget _buildRow(_FlatItem item, LanguageProvider lp) {
-    final sn = Subject.fromJson(
-      Map<String, dynamic>.from(item.subject),
-    ).name;
+    final sn = Subject.fromJson(Map<String, dynamic>.from(item.subject)).name;
     final initial = sn.isNotEmpty ? sn[0].toUpperCase() : '?';
     final spec = _subjectColor(sn);
 
@@ -184,8 +178,7 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
     // entry): a class with 22 students × 1 bab = 22 entries, but
     // 22 students × 8 bab = 176 entries. Drives the "Nilai" stat
     // and the bab-tuntas saturation check.
-    final entriesCount =
-        ((item.subject['entries_count'] ?? 0) as num).toInt();
+    final entriesCount = ((item.subject['entries_count'] ?? 0) as num).toInt();
     final teacherName = isHomeroomView
         ? _subjectTeacherName(item.subject)
         : null;
@@ -361,11 +354,7 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
   Widget _subRow(String teacherName) {
     return Row(
       children: [
-        Icon(
-          Icons.person_rounded,
-          size: 12,
-          color: ColorUtils.slate400,
-        ),
+        Icon(Icons.person_rounded, size: 12, color: ColorUtils.slate400),
         const SizedBox(width: 4),
         Flexible(
           child: Text(
@@ -408,7 +397,8 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
     final babFilled = (totalStudents > 0 && entriesCount > 0)
         ? entriesCount ~/ totalStudents
         : 0;
-    final babCleanFill = totalStudents > 0 &&
+    final babCleanFill =
+        totalStudents > 0 &&
         entriesCount > 0 &&
         entriesCount % totalStudents == 0 &&
         babFilled <= babCount &&
@@ -416,8 +406,8 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
     final babValue = babCleanFill ? '$babFilled/$babCount' : '$babCount';
     final babColor = babCleanFill
         ? (babFilled == babCount
-            ? ColorUtils.success600
-            : ColorUtils.warning600)
+              ? ColorUtils.success600
+              : ColorUtils.warning600)
         : ColorUtils.slate900;
 
     return Container(
@@ -442,10 +432,7 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
           _statDivider(),
           _statCell(
             value: avg == null ? '—' : avg.toStringAsFixed(0),
-            label: lp.getTranslatedText({
-              'en': 'Avg score',
-              'id': 'Rata-rata',
-            }),
+            label: lp.getTranslatedText({'en': 'Avg score', 'id': 'Rata-rata'}),
             color: avg == null ? ColorUtils.slate400 : progressTone.color,
           ),
         ],
@@ -577,9 +564,12 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
   /// Tone for a row — drives stats colors + progress fill. `empty` is
   /// slate (not red) so a fresh card doesn't look like an alarm.
   _ProgressTone _progressTone(double pct, bool hasData) {
-    if (!hasData) return _ProgressTone(_ProgressKind.empty, ColorUtils.slate400);
-    if (pct >= 80) return _ProgressTone(_ProgressKind.good, ColorUtils.success600);
-    if (pct >= 40) return _ProgressTone(_ProgressKind.warn, ColorUtils.warning600);
+    if (!hasData)
+      return _ProgressTone(_ProgressKind.empty, ColorUtils.slate400);
+    if (pct >= 80)
+      return _ProgressTone(_ProgressKind.good, ColorUtils.success600);
+    if (pct >= 40)
+      return _ProgressTone(_ProgressKind.warn, ColorUtils.warning600);
     return _ProgressTone(_ProgressKind.alert, ColorUtils.error600);
   }
 
@@ -627,7 +617,8 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
     // entries → "1 bab tuntas" (1 chapter is fully scored for all
     // students).
     final babFilled = totalStudents > 0 ? entriesCount ~/ totalStudents : 0;
-    final babCleanFill = totalStudents > 0 &&
+    final babCleanFill =
+        totalStudents > 0 &&
         entriesCount > 0 &&
         entriesCount % totalStudents == 0 &&
         babFilled > 0 &&
@@ -649,206 +640,6 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
       label: lp.getTranslatedText({'en': 'Partial', 'id': 'Sebagian'}),
       tint: ColorUtils.warning600.withValues(alpha: 0.12),
       fg: ColorUtils.warning600,
-    );
-  }
-
-  // Removed in the redesign — kept the signature stub-free, the
-  // identity band now owns the head line directly.
-  Widget _headLine(String name, String className, Color classPillTint) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: ColorUtils.slate900,
-              letterSpacing: -0.1,
-            ),
-          ),
-        ),
-        const SizedBox(width: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-          decoration: BoxDecoration(
-            color: classPillTint.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Text(
-            className,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: classPillTint,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _teacherLine(String teacherName) {
-    return Row(
-      children: [
-        Icon(
-          Icons.person_rounded,
-          size: 12,
-          color: ColorUtils.slate400,
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(
-            teacherName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              color: ColorUtils.slate500,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _progressLine(double pct, Color color) {
-    return Row(
-      children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: Container(
-              height: 5,
-              color: ColorUtils.slate100,
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: (pct / 100.0).clamp(0.0, 1.0),
-                child: Container(color: color),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          '${pct.round()}%',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _metaLine({
-    required int babCount,
-    required int recapCount,
-    required int totalStudents,
-    required double completionPct,
-    required LanguageProvider lp,
-  }) {
-    final pills = <Widget>[
-      if (babCount > 0)
-        _pill(
-          label: '${babCount} ${lp.getTranslatedText({"en": "ch", "id": "bab"})}',
-          tint: ColorUtils.slate100,
-          fg: ColorUtils.slate600,
-        ),
-      _pill(
-        label:
-            '$recapCount ${lp.getTranslatedText({"en": "grades", "id": "nilai"})}',
-        tint: completionPct >= 80
-            ? ColorUtils.success600.withValues(alpha: 0.12)
-            : (completionPct < 40
-                  ? ColorUtils.error600.withValues(alpha: 0.12)
-                  : ColorUtils.warning600.withValues(alpha: 0.12)),
-        fg: completionPct >= 80
-            ? ColorUtils.success600
-            : (completionPct < 40
-                  ? ColorUtils.error600
-                  : ColorUtils.warning600),
-      ),
-      _pill(
-        label:
-            '$totalStudents ${lp.getTranslatedText({"en": "students", "id": "siswa"})}',
-        tint: ColorUtils.slate100,
-        fg: ColorUtils.slate600,
-      ),
-      if (completionPct < 40)
-        _pill(
-          label: lp.getTranslatedText({
-            'en': 'Needs input',
-            'id': 'Perlu input',
-          }),
-          tint: ColorUtils.error600.withValues(alpha: 0.12),
-          fg: ColorUtils.error600,
-        ),
-    ];
-    return Wrap(spacing: 6, runSpacing: 4, children: pills);
-  }
-
-  Widget _pill({
-    required String label,
-    required Color tint,
-    required Color fg,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: tint,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 9.5,
-          fontWeight: FontWeight.w800,
-          color: fg,
-        ),
-      ),
-    );
-  }
-
-  Widget _scoreBadge(double score) {
-    final color = _scoreColor(score);
-    return Container(
-      width: 44,
-      height: 44,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            score.toStringAsFixed(0),
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
-              color: color,
-              height: 1,
-            ),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            'avg',
-            style: TextStyle(
-              fontSize: 7,
-              fontWeight: FontWeight.w700,
-              color: color.withValues(alpha: 0.78),
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -915,18 +706,6 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
     ];
     final h = name.codeUnits.fold<int>(0, (a, b) => a + b);
     return palette[h % palette.length];
-  }
-
-  Color _scoreColor(double s) {
-    if (s >= 80) return ColorUtils.success600;
-    if (s >= 60) return ColorUtils.warning600;
-    return ColorUtils.error600;
-  }
-
-  Color _progressColor(double pct) {
-    if (pct >= 80) return ColorUtils.success600;
-    if (pct >= 40) return ColorUtils.warning600;
-    return ColorUtils.error600;
   }
 
   String? _subjectTeacherName(dynamic subject) {

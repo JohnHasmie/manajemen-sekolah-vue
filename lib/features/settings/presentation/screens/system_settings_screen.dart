@@ -71,7 +71,9 @@ class SystemSettingsScreen extends ConsumerWidget {
           CategoryGridHero(tiles: _buildTiles(context, ref, navy)),
           const SizedBox(height: AppSpacing.md),
           _AuditLogPinConsumer(navy: navy),
-          SizedBox(height: AppSpacing.xl + MediaQuery.of(context).padding.bottom),
+          SizedBox(
+            height: AppSpacing.xl + MediaQuery.of(context).padding.bottom,
+          ),
         ],
       ),
     );
@@ -90,10 +92,8 @@ class SystemSettingsScreen extends ConsumerWidget {
         title: 'Tahun Ajaran',
         subline: 'Periode aktif & arsip',
         meta: 'Profil sekolah · jenjang',
-        onTap: () => AppNavigator.push(
-          context,
-          const SchoolLevelSettingsScreen(),
-        ),
+        onTap: () =>
+            AppNavigator.push(context, const SchoolLevelSettingsScreen()),
       ),
       CategoryTile(
         icon: Icons.access_time_rounded,
@@ -110,10 +110,8 @@ class SystemSettingsScreen extends ConsumerWidget {
         iconFg: const Color(0xFF166534),
         title: 'Manajemen Data',
         subline: 'Siswa, guru, kelas, mapel',
-        onTap: () => AppNavigator.push(
-          context,
-          const AdminDataManagementScreen(),
-        ),
+        onTap: () =>
+            AppNavigator.push(context, const AdminDataManagementScreen()),
       ),
       CategoryTile(
         icon: Icons.language_rounded,
@@ -182,8 +180,11 @@ class _Hero extends StatelessWidget {
               child: const SizedBox(
                 width: 36,
                 height: 36,
-                child: Icon(Icons.arrow_back_rounded,
-                    color: Colors.white, size: 20),
+                child: Icon(
+                  Icons.arrow_back_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
             ),
           ),

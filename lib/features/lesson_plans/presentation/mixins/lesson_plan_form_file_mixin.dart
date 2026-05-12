@@ -47,8 +47,9 @@ mixin LessonPlanFormFileMixin on ConsumerState<LessonPlanFormDialog> {
   /// Views the current attached file via the download proxy.
   Future<void> viewCurrentFile() async {
     final lpId = widget.lessonPlanData?['id']?.toString();
-    final fp = widget.lessonPlanData?['file_path']
-        ?? widget.lessonPlanData?['file_url'];
+    final fp =
+        widget.lessonPlanData?['file_path'] ??
+        widget.lessonPlanData?['file_url'];
     if (fp == null || lpId == null) return;
 
     try {
@@ -63,26 +64,18 @@ mixin LessonPlanFormFileMixin on ConsumerState<LessonPlanFormDialog> {
 
       // Use the backend download proxy — works with
       // both local storage and S3/Minio.
-      final bytes = await ApiService.downloadFile(
-        '/rpp/$lpId/download',
-      );
+      final bytes = await ApiService.downloadFile('/rpp/$lpId/download');
 
       final dir = await getTemporaryDirectory();
       final fileName = fp.toString().split('/').last;
       final file = File('${dir.path}/$fileName');
       await file.writeAsBytes(bytes, flush: true);
 
-      AppLogger.info(
-        'lesson_plan',
-        'File saved to: ${file.path}',
-      );
+      AppLogger.info('lesson_plan', 'File saved to: ${file.path}');
 
       await OpenFile.open(file.path);
     } catch (e) {
-      AppLogger.error(
-        'lesson_plan',
-        'Error opening file: $e',
-      );
+      AppLogger.error('lesson_plan', 'Error opening file: $e');
       if (context.mounted) {
         SnackBarUtils.showError(
           context,

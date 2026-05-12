@@ -45,8 +45,7 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
         'en':
             'Link this teacher to a different user account based on the '
             'email below.',
-        'id':
-            'Pindahkan guru ini ke akun lain berdasarkan email di bawah.',
+        'id': 'Pindahkan guru ini ke akun lain berdasarkan email di bawah.',
       }),
       value: isChangeUserMode,
       onChanged: (val) => setState(() => isChangeUserMode = val),
@@ -140,8 +139,10 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
               const SizedBox(width: 6),
               if (selectedSubjectIds.isNotEmpty)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: adminNavy.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(8),
@@ -162,12 +163,15 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
           spacing: 6,
           runSpacing: 6,
           children: models
-              .map((m) => _SubjectChip(
-                    label: m.name,
-                    selected: selectedSubjectIds.contains(m.id),
-                    accent: adminNavy,
-                    onTap: () => _toggleSubject(m, !selectedSubjectIds.contains(m.id)),
-                  ))
+              .map(
+                (m) => _SubjectChip(
+                  label: m.name,
+                  selected: selectedSubjectIds.contains(m.id),
+                  accent: adminNavy,
+                  onTap: () =>
+                      _toggleSubject(m, !selectedSubjectIds.contains(m.id)),
+                ),
+              )
               .toList(),
         ),
       ],
@@ -261,44 +265,13 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
                 label: name,
                 selected: isSelected,
                 accent: adminNavy,
-                onTap: () => setState(
-                  () => selectedWaliKelasId = isSelected ? '' : id,
-                ),
+                onTap: () =>
+                    setState(() => selectedWaliKelasId = isSelected ? '' : id),
               );
             }).toList(),
           ),
       ],
     );
-  }
-
-  // ignore: unused_element
-  List<DropdownMenuItem<String>> _legacyClassItems(
-    LanguageProvider languageProvider,
-  ) {
-    final noneItem = DropdownMenuItem<String>(
-      value: '',
-      child: Text(
-        languageProvider.getTranslatedText({'en': 'None', 'id': 'Tidak ada'}),
-      ),
-    );
-    return [noneItem, ..._getClassMenuItems()];
-  }
-
-  List<DropdownMenuItem<String>> _getClassMenuItems() {
-    return widget.classes
-        .where((c) => c['id'] != null && c['name'] != null)
-        .fold<Map<String, Map<String, dynamic>>>({}, (map, item) {
-          map[item['id'].toString()] = item;
-          return map;
-        })
-        .values
-        .map(
-          (item) => DropdownMenuItem<String>(
-            value: item['id'].toString(),
-            child: Text(item['name']?.toString() ?? 'Unknown Class'),
-          ),
-        )
-        .toList();
   }
 
   /// Employment-status chip selector. Three values + an implicit "none"

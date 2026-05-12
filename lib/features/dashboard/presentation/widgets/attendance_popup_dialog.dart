@@ -76,21 +76,6 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog>
   List<Map<String, dynamic>> get classesData => _classesData;
 
   @override
-  void _setIsWeekly(bool value) {
-    _isWeekly = value;
-  }
-
-  @override
-  void _setSelectedMonth(String value) {
-    _selectedMonth = value;
-  }
-
-  @override
-  void _setSelectedWeek(String value) {
-    _selectedWeek = value;
-  }
-
-  @override
   void initState() {
     super.initState();
     _initializeMonths();

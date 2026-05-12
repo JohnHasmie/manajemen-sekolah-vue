@@ -207,7 +207,8 @@ enum LessonPlanFormat {
     // branch only runs for in-flight rows during the transition.
     final filePath = map['file_path'];
     if (filePath is String && filePath.isNotEmpty) {
-      final hasContent = (map['learning_objective'] is String &&
+      final hasContent =
+          (map['learning_objective'] is String &&
               (map['learning_objective'] as String).isNotEmpty) ||
           (map['learning_activities'] is String &&
               (map['learning_activities'] as String).isNotEmpty);

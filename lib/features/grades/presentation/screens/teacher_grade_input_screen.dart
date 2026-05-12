@@ -18,11 +18,30 @@ import 'package:manajemensekolah/features/grades/presentation/mixins/grade_input
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_input_filter_dialog_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/grade_book_screen.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
-import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
+
 
 class GradePage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
-  const GradePage({super.key, required this.teacher});
+
+  /// Optional deep-link target — when both are set, the screen
+  /// auto-opens the grade book for that (class, subject) tuple
+  /// after the overview data loads. Used by the teacher dashboard
+  /// priority-inbox "Buku Nilai belum dilengkapi" row.
+  final String? initialClassId;
+  final String? initialSubjectId;
+
+  /// Optional column highlight. Not yet wired into GradeBookPage —
+  /// see TODO in this file's `_maybeOpenInitialGradeBook` helper.
+  final String? initialColumnId;
+
+  const GradePage({
+    super.key,
+    required this.teacher,
+    this.initialClassId,
+    this.initialSubjectId,
+    this.initialColumnId,
+  });
+
   @override
   GradePageState createState() => GradePageState();
 }
@@ -41,36 +60,13 @@ class GradePageState extends ConsumerState<GradePage>
   String? _filterSubjectName;
 
   @override
-  List<dynamic> get groupedData => _groupedData;
-
-  @override
-  set groupedData(List<dynamic> value) {
-    _groupedData = value;
-  }
-
-  @override
   bool get isLoading => _isLoading;
-
-  @override
-  set isLoading(bool value) {
-    _isLoading = value;
-  }
 
   @override
   bool get isHomeroomView => _isHomeroomView;
 
   @override
-  set isHomeroomView(bool value) {
-    _isHomeroomView = value;
-  }
-
-  @override
   bool get isTableView => _isTableView;
-
-  @override
-  set isTableView(bool value) {
-    _isTableView = value;
-  }
 
   @override
   String? get filterClassId => _filterClassId;
@@ -104,7 +100,6 @@ class GradePageState extends ConsumerState<GradePage>
     _filterSubjectName = value;
   }
 
-  @override
   TextEditingController get searchController => _searchController;
 
   /// Resolve the teacher id with a riverpod fallback. The widget.teacher
@@ -112,9 +107,10 @@ class GradePageState extends ConsumerState<GradePage>
   /// reached through a navigation that only had user data); falling
   /// through to teacherRiverpod keeps the grade-summary call from
   /// 500'ing with "teacher_id is required".
+  @override
   String get teacherId {
-    final fromWidget =
-        (widget.teacher['teacher_id'] ?? widget.teacher['id'])?.toString();
+    final fromWidget = (widget.teacher['teacher_id'] ?? widget.teacher['id'])
+        ?.toString();
     if (fromWidget != null && fromWidget.isNotEmpty) return fromWidget;
     return ref.read(teacherRiverpod).teacherId ?? '';
   }
@@ -182,7 +178,7 @@ class GradePageState extends ConsumerState<GradePage>
     return _GradeSummaryTableView(
       data: data,
       primaryColor: primaryColor,
-      onSubjectTap: (classData, subject) => openGradeBook(classData, subject),
+      onSubjectTap: openGradeBook,
     );
   }
 
@@ -227,10 +223,38 @@ class GradePageState extends ConsumerState<GradePage>
       // staring at an infinite skeleton that looks like a crash. With this
       // guard, a stuck request converts to a TimeoutException → caught below →
       // friendly "Koneksi terlalu lambat" error screen with a retry button.
+
+      // ENSURE DEPENDENCIES ARE READY (Fix for race condition on cold start)
+      // If the user navigates here immediately after app start (e.g. from
+      // bottom nav tab before dashboard fully resolves), the providers might
+      // still be empty or loading.
+      final ayProvider = ref.read(academicYearRiverpod);
+      if (ayProvider.selectedAcademicYear == null && ayProvider.isLoading) {
+        // Wait for academic year to finish loading if it's already in progress
+        int retries = 0;
+        while (ref.read(academicYearRiverpod).selectedAcademicYear == null &&
+            ref.read(academicYearRiverpod).isLoading &&
+            mounted &&
+            retries < 20) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          retries++;
+        }
+      }
+
+      final teacherProvider = ref.read(teacherRiverpod);
+      if (teacherId.isEmpty || !teacherProvider.isLoaded) {
+        await teacherProvider.ensureLoaded();
+      }
+
       final ayId = ref
           .read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
+
+      if (teacherId.isEmpty) {
+        throw Exception('ID Guru tidak ditemukan. Silakan coba lagi.');
+      }
+
       final data =
           await GradeService.getTeacherGradeSummary(
             teacherId: teacherId,
@@ -330,8 +354,41 @@ class GradePageState extends ConsumerState<GradePage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       loadViewPreference();
-      loadData();
+      loadData().then((_) {
+        if (!mounted) return;
+        _maybeOpenInitialGradeBook();
+      });
     });
+  }
+
+  /// Auto-opens the grade book for a `(class_id, subject_id)` tuple
+  /// supplied via constructor (deep-link from teacher dashboard
+  /// priority inbox). Walks the already-loaded `_groupedData` to
+  /// find the matching row, then reuses the same `openGradeBook`
+  /// pathway as the user-tap. No-op if either id is null or no
+  /// match is found.
+  ///
+  /// TODO(GG.5-followup): when [initialColumnId] is set, pass it
+  /// through to GradeBookPage so the screen scrolls / highlights
+  /// that column on open. Currently the column id is accepted but
+  /// not yet plumbed into GradeBookPage's constructor.
+  void _maybeOpenInitialGradeBook() {
+    final cId = widget.initialClassId;
+    final sId = widget.initialSubjectId;
+    if (cId == null || cId.isEmpty || sId == null || sId.isEmpty) return;
+
+    for (final group in _groupedData) {
+      if (group is! Map) continue;
+      if (group['class_id']?.toString() != cId) continue;
+      final subjects = group['subjects'];
+      if (subjects is! List) continue;
+      for (final subject in subjects) {
+        if (subject is! Map) continue;
+        if (subject['id']?.toString() != sId) continue;
+        openGradeBook(group, subject);
+        return;
+      }
+    }
   }
 
   @override

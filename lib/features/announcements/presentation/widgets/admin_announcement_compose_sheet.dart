@@ -52,8 +52,7 @@ class _AdminAnnouncementComposeSheetState
   final _contentController = TextEditingController();
   final _api = ApiService();
 
-  AudienceMatrixSelection _selection =
-      const AudienceMatrixSelection({});
+  AudienceMatrixSelection _selection = const AudienceMatrixSelection({});
   AudiencePreview _preview = const AudiencePreview(
     total: 0,
     caption: 'Pilih minimal 1 audiens',
@@ -71,10 +70,10 @@ class _AdminAnnouncementComposeSheetState
   void initState() {
     super.initState();
     if (_isEdit) {
-      _titleController.text =
-          (widget.announcementData!['title'] ?? '').toString();
-      _contentController.text =
-          (widget.announcementData!['content'] ?? '').toString();
+      _titleController.text = (widget.announcementData!['title'] ?? '')
+          .toString();
+      _contentController.text = (widget.announcementData!['content'] ?? '')
+          .toString();
       _pin = widget.announcementData!['is_pinned'] == true;
       // Future enhancement: rehydrate audience_matrix from edit data.
     }
@@ -128,17 +127,11 @@ class _AdminAnnouncementComposeSheetState
     final content = _contentController.text.trim();
 
     if (title.isEmpty || content.isEmpty) {
-      SnackBarUtils.showError(
-        context,
-        'Judul dan isi pengumuman wajib diisi.',
-      );
+      SnackBarUtils.showError(context, 'Judul dan isi pengumuman wajib diisi.');
       return;
     }
     if (_selection.isEmpty) {
-      SnackBarUtils.showError(
-        context,
-        'Pilih minimal 1 audiens.',
-      );
+      SnackBarUtils.showError(context, 'Pilih minimal 1 audiens.');
       return;
     }
 
@@ -167,15 +160,11 @@ class _AdminAnnouncementComposeSheetState
             .toUtc()
             .toIso8601String();
       } else {
-        body['sent_at'] =
-            DateTime.now().toUtc().toIso8601String();
+        body['sent_at'] = DateTime.now().toUtc().toIso8601String();
       }
 
       if (_isEdit) {
-        await _api.put(
-          '/announcement/${widget.announcementData!['id']}',
-          body,
-        );
+        await _api.put('/announcement/${widget.announcementData!['id']}', body);
       } else {
         await _api.post('/announcement', body);
       }
@@ -247,8 +236,7 @@ class _AdminAnnouncementComposeSheetState
                     TextField(
                       controller: _contentController,
                       maxLines: 5,
-                      decoration:
-                          _inputDecoration('Tulis isi pengumuman…'),
+                      decoration: _inputDecoration('Tulis isi pengumuman…'),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _SectionLabel(text: 'AUDIENS · matriks'),
@@ -294,8 +282,8 @@ class _AdminAnnouncementComposeSheetState
               primaryLabel: _isEdit
                   ? 'Simpan'
                   : (_preview.total > 0
-                      ? 'Kirim ke ${_preview.total} orang'
-                      : 'Kirim'),
+                        ? 'Kirim ke ${_preview.total} orang'
+                        : 'Kirim'),
               onPrimary: _preview.hasAudience ? _save : null,
               isSaving: _isSaving,
             ),
@@ -310,12 +298,8 @@ class _AdminAnnouncementComposeSheetState
       hintText: hint,
       filled: true,
       fillColor: Colors.white,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      hintStyle: TextStyle(
-        fontSize: 12,
-        color: ColorUtils.slate500,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      hintStyle: TextStyle(fontSize: 12, color: ColorUtils.slate500),
       border: OutlineInputBorder(
         borderSide: BorderSide(color: ColorUtils.slate200),
         borderRadius: BorderRadius.circular(12),

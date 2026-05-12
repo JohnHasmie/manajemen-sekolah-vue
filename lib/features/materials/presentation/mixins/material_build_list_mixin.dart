@@ -148,10 +148,7 @@ mixin MaterialBuildListMixin on ConsumerState<TeacherMaterialScreen> {
           style: TextStyle(fontSize: 13.5, color: ColorUtils.slate900),
           decoration: InputDecoration(
             hintText: 'Cari bab atau sub-bab...',
-            hintStyle: TextStyle(
-              color: ColorUtils.slate400,
-              fontSize: 13.5,
-            ),
+            hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13.5),
             prefixIcon: Icon(
               Icons.search,
               size: 18,

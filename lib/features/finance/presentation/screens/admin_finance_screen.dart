@@ -317,9 +317,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
     periodFilter: _selectedPeriodFilter,
   );
 
-  List<dynamic> _calculateBatchesFromBills(List<dynamic> bills) =>
-      _ctrl.calculateBatchesFromBills(bills);
-
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
@@ -438,8 +435,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
             pendingCount: _totalPendingPayments,
             overdueCount: overdueCount,
             primaryColor: getPrimaryColor(),
-            onTabSelected: (index) =>
-                setState(() => _currentTabIndex = index),
+            onTabSelected: (index) => setState(() => _currentTabIndex = index),
           ),
           Expanded(
             child: MediaQuery.removePadding(
@@ -454,38 +450,29 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
                 isReadOnly: isReadOnly,
                 formatCurrency: formatCurrency,
                 onRefresh: loadData,
-                filteredPaymentTypes:
-                    filteredPaymentTypes,
+                filteredPaymentTypes: filteredPaymentTypes,
                 searchController: _searchController,
                 hasActiveFilter: _hasActiveFilter,
                 onShowFilterSheet: showFilterSheet,
                 onClearAllFilters: clearAllFilters,
-                buildFilterChips: () =>
-                    buildFilterChips(languageProvider),
+                buildFilterChips: () => buildFilterChips(languageProvider),
                 getGoalDescription: getGoalDescription,
                 getTranslatedPeriod: getTranslatedPeriod,
                 onEdit: (index) =>
-                    showPaymentTypeDetail(
-                        filteredPaymentTypes[index]),
-                onDelete: (index) => deletePaymentType(
-                    filteredPaymentTypes[index]),
-                pendingScrollController:
-                    _pendingScrollController,
+                    showPaymentTypeDetail(filteredPaymentTypes[index]),
+                onDelete: (index) =>
+                    deletePaymentType(filteredPaymentTypes[index]),
+                pendingScrollController: _pendingScrollController,
                 hasMorePending: _hasMorePending,
                 onVerify: (index) =>
-                    showVerificationDialog(
-                        _pendingPaymentList[index]),
+                    showVerificationDialog(_pendingPaymentList[index]),
                 onShowProof: (index) =>
-                    showPaymentProof(
-                        _pendingPaymentList[index]),
+                    showPaymentProof(_pendingPaymentList[index]),
                 tagihanFilterKey: _tagihanFilterKey,
                 onTagihBill: _onTagihBill,
-                onClassReportTap:
-                    _openClassFinanceReport,
-                tagihanSelectedJenisIds:
-                    _tagihanSelectedJenisIds,
-                tagihanSelectedMonth:
-                    _tagihanSelectedMonth,
+                onClassReportTap: _openClassFinanceReport,
+                tagihanSelectedJenisIds: _tagihanSelectedJenisIds,
+                tagihanSelectedMonth: _tagihanSelectedMonth,
               ),
             ),
           ),

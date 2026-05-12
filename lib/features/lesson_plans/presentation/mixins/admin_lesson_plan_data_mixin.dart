@@ -67,7 +67,6 @@ mixin AdminLessonPlanDataMixin on ConsumerState<AdminLessonPlanScreen> {
 
   // Force refresh method
   Future<void> forceRefresh() async {
-    await LocalCacheService.clearStartingWith('tour_rpp_screen_');
     if (showTeacherList && widget.teacherId == null) {
       final cacheKey = buildTeacherCacheKey();
       if (cacheKey != null) await LocalCacheService.invalidate(cacheKey);

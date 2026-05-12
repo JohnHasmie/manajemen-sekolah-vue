@@ -37,7 +37,6 @@ mixin AdminReportCardDataMixin on ConsumerState<AdminReportCardScreen> {
   Future<void> forceRefresh() async {
     final classesKey = buildClassesCacheKey();
     if (classesKey != null) await LocalCacheService.invalidate(classesKey);
-    await LocalCacheService.clearStartingWith('tour_raport_screen_');
     if (selectedClass != null) {
       final studentsKey = buildStudentsCacheKey();
       if (studentsKey != null) {
@@ -126,11 +125,7 @@ mixin AdminReportCardDataMixin on ConsumerState<AdminReportCardScreen> {
               isLoadingStudents = false;
             });
             AppLogger.info('report_card', 'Students loaded from cache');
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted && students.isNotEmpty) {
-                checkAndShowTour();
-              }
-            });
+            WidgetsBinding.instance.addPostFrameCallback((_) {});
             return;
           }
         }
@@ -177,11 +172,7 @@ mixin AdminReportCardDataMixin on ConsumerState<AdminReportCardScreen> {
           LocalCacheService.save(cacheKey, {'data': studentsData});
         }
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && students.isNotEmpty) {
-            checkAndShowTour();
-          }
-        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {});
       }
     } catch (e) {
       if (mounted) {
@@ -215,8 +206,4 @@ mixin AdminReportCardDataMixin on ConsumerState<AdminReportCardScreen> {
 
   String get errorMessage;
   set errorMessage(String value);
-
-  Future<void> checkAndShowTour();
 }
-
-class _AdminReportCardDataState {}

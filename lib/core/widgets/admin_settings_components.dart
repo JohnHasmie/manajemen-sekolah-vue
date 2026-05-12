@@ -60,9 +60,7 @@ class CategoryGridHero extends StatelessWidget {
     super.key,
     required this.tiles,
     this.columns = 2,
-    this.padding = const EdgeInsets.symmetric(
-      horizontal: AppSpacing.lg,
-    ),
+    this.padding = const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
   });
 
   @override
@@ -164,10 +162,7 @@ class _CategoryTileView extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 tile.subline,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  color: ColorUtils.slate500,
-                ),
+                style: TextStyle(fontSize: 10.5, color: ColorUtils.slate500),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -175,10 +170,7 @@ class _CategoryTileView extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   tile.meta!,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: ColorUtils.slate300,
-                  ),
+                  style: TextStyle(fontSize: 10, color: ColorUtils.slate300),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -309,10 +301,7 @@ class AuditLogPin extends StatelessWidget {
               if (entry.timestamp != null) entry.timestamp!,
               if (entry.ipAddress != null) 'IP ${entry.ipAddress}',
             ].join(' · '),
-            style: TextStyle(
-              fontSize: 10,
-              color: ColorUtils.slate300,
-            ),
+            style: TextStyle(fontSize: 10, color: ColorUtils.slate300),
           ),
         ],
       ],
@@ -350,11 +339,7 @@ class HealthPill extends StatelessWidget {
   final HealthState state;
   final String label;
 
-  const HealthPill({
-    super.key,
-    required this.state,
-    required this.label,
-  });
+  const HealthPill({super.key, required this.state, required this.label});
 
   Color get _dotColor {
     switch (state) {
@@ -381,10 +366,7 @@ class HealthPill extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              color: _dotColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: _dotColor, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
           Text(

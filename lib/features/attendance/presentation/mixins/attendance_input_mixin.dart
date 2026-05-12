@@ -87,18 +87,20 @@ mixin AttendanceInputMixin on ConsumerState<AttendancePage> {
     // Build the payload from explicitly-marked students only. The
     // form starts with every student unmarked so a teacher who saves
     // without scrolling can't silently flag absent students as Hadir.
-    final marked = filteredStudentList.where(
-      (s) => (attendanceStatus[s.id] ?? '').isNotEmpty,
-    ).toList();
+    final marked = filteredStudentList
+        .where((s) => (attendanceStatus[s.id] ?? '').isNotEmpty)
+        .toList();
     final skipped = filteredStudentList.length - marked.length;
 
     if (marked.isEmpty) {
       SnackBarUtils.showError(
         context,
         lp.getTranslatedText({
-          'en': 'No students marked yet — tap a status for each '
+          'en':
+              'No students marked yet — tap a status for each '
               'student or use Quick actions.',
-          'id': 'Belum ada siswa ditandai — pilih status setiap '
+          'id':
+              'Belum ada siswa ditandai — pilih status setiap '
               'siswa atau pakai Aksi cepat.',
         }),
       );
@@ -113,32 +115,36 @@ mixin AttendanceInputMixin on ConsumerState<AttendancePage> {
       final proceed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: Text(lp.getTranslatedText({
-            'en': 'Some students not yet marked',
-            'id': 'Ada siswa belum ditandai',
-          })),
-          content: Text(lp.getTranslatedText({
-            'en': '$skipped of ${filteredStudentList.length} students '
-                "don't have a status yet. Save only the marked "
-                '${marked.length} and leave the rest empty?',
-            'id': '$skipped dari ${filteredStudentList.length} siswa '
-                'belum punya status. Simpan hanya ${marked.length} '
-                'yang sudah ditandai dan biarkan sisanya kosong?',
-          })),
+          title: Text(
+            lp.getTranslatedText({
+              'en': 'Some students not yet marked',
+              'id': 'Ada siswa belum ditandai',
+            }),
+          ),
+          content: Text(
+            lp.getTranslatedText({
+              'en':
+                  '$skipped of ${filteredStudentList.length} students '
+                  "don't have a status yet. Save only the marked "
+                  '${marked.length} and leave the rest empty?',
+              'id':
+                  '$skipped dari ${filteredStudentList.length} siswa '
+                  'belum punya status. Simpan hanya ${marked.length} '
+                  'yang sudah ditandai dan biarkan sisanya kosong?',
+            }),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(lp.getTranslatedText({
-                'en': 'Cancel',
-                'id': 'Batal',
-              })),
+              child: Text(
+                lp.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
+              ),
             ),
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(lp.getTranslatedText({
-                'en': 'Save partial',
-                'id': 'Lanjutkan',
-              })),
+              child: Text(
+                lp.getTranslatedText({'en': 'Save partial', 'id': 'Lanjutkan'}),
+              ),
             ),
           ],
         ),

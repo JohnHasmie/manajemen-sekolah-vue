@@ -347,7 +347,10 @@ class _SliceProgressStrip extends StatelessWidget {
   final KpiProgress progress;
   final Color accentColor;
 
-  const _SliceProgressStrip({required this.progress, required this.accentColor});
+  const _SliceProgressStrip({
+    required this.progress,
+    required this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -357,8 +360,7 @@ class _SliceProgressStrip extends StatelessWidget {
         builder: (context, constraints) {
           const gap = 4.0;
           final totalGaps = (progress.total - 1) * gap;
-          final segWidth =
-              (constraints.maxWidth - totalGaps) / progress.total;
+          final segWidth = (constraints.maxWidth - totalGaps) / progress.total;
 
           return Row(
             crossAxisAlignment: CrossAxisAlignment.center,

@@ -49,6 +49,7 @@ Future<GenerateConfig?> showRecommendationGenerateSheet({
   required int atRiskCount,
   required List<Map<String, String>> subjects,
   required String periodeLabel,
+
   /// Class roster — passed in so the inline `Pilih per siswa` picker
   /// can render without a second sheet. Each map needs at minimum
   /// `id` and `name`. When empty the per-student tile shows a hint
@@ -144,7 +145,8 @@ class _RecommendationGenerateSheetState
     final violet = ColorUtils.violet700;
     final hasEnoughStudents =
         _scope != 'per_student' || _selectedStudentIds.isNotEmpty;
-    final canGenerate = _selectedSubjectIds.isNotEmpty &&
+    final canGenerate =
+        _selectedSubjectIds.isNotEmpty &&
         hasEnoughStudents &&
         widget.dailyUsage < widget.dailyLimit;
 
@@ -193,8 +195,7 @@ class _RecommendationGenerateSheetState
                   trailing: _scope == 'per_student'
                       ? '${_selectedStudentIds.length} dipilih'
                       : null,
-                  trailingColor:
-                      _scope == 'per_student' ? violet : null,
+                  trailingColor: _scope == 'per_student' ? violet : null,
                   violet: violet,
                   onTap: () => setState(() => _scope = 'per_student'),
                 ),

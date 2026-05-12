@@ -48,7 +48,6 @@ class ClassroomCacheHelper {
     if (cacheKey != null) {
       await LocalCacheService.invalidate(cacheKey);
     }
-    await LocalCacheService.clearStartingWith('tour_class_management_');
     await LocalCacheService.invalidate('school_settings');
     await LocalCacheService.invalidate('teachers_all_list');
   }

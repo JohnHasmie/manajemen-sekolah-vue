@@ -119,10 +119,15 @@ class TeacherGradesHub extends ConsumerWidget {
     return {
       'id': id,
       'nama': tp.teacherName ?? 'Teacher',
-      'email': ref.read(dashboardProvider).asData?.value
-              .userData['email']?.toString() ?? '',
+      'email':
+          ref
+              .read(dashboardProvider)
+              .asData
+              ?.value
+              .userData['email']
+              ?.toString() ??
+          '',
       'role': 'guru',
     };
   }
 }
-

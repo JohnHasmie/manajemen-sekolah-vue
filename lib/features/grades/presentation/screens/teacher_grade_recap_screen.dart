@@ -21,7 +21,6 @@ import 'package:manajemensekolah/features/grades/presentation/widgets/grade_reca
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_kpi_skeleton.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_table_skeleton.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_table_view.dart';
-import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_tour_helper.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_unsaved_changes_dialog.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -108,17 +107,12 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
   final TextEditingController searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  final GlobalKey _exportKey = GlobalKey();
+  // Save-bar + Add-chapter FAB anchor keys. Previously also doubled as
+  // tour-target anchors; the tour wiring has been removed per
+  // [Tour Cleanup BB.4] but the keys themselves are still passed to
+  // GradeRecapSaveBar + FloatingActionButton so we keep them.
   final GlobalKey _saveKey = GlobalKey();
   final GlobalKey _addChapterKey = GlobalKey();
-
-  late final GradeRecapTourHelper _tourHelper = GradeRecapTourHelper(
-    addChapterKey: _addChapterKey,
-    saveKey: _saveKey,
-    exportKey: _exportKey,
-  );
-
-  void checkAndShowTour() => _tourHelper.checkAndShow(context);
 
   @override
   Map<String, dynamic> get teacherData => widget.teacher;
@@ -200,7 +194,6 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
       setState(() => isLoading = false);
 
       // Show tour after first load
-      WidgetsBinding.instance.addPostFrameCallback((_) => checkAndShowTour());
     } catch (e) {
       AppLogger.error('grade_recap', 'Error loading recap data: $e');
       if (mounted) setState(() => isLoading = false);
@@ -800,14 +793,14 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
   /// Tune icon top-right runs the export-to-Excel flow.
   Widget _buildBrandHeader(LanguageProvider lp) {
     final subjectName =
-        (widget.initialSubject?['nama'] ?? widget.initialSubject?['name'] ?? '-')
+        (widget.initialSubject?['nama'] ??
+                widget.initialSubject?['name'] ??
+                '-')
             .toString();
     final className =
         (widget.initialClass?['nama'] ?? widget.initialClass?['name'] ?? '-')
             .toString();
-    final initial = subjectName.isNotEmpty
-        ? subjectName[0].toUpperCase()
-        : '?';
+    final initial = subjectName.isNotEmpty ? subjectName[0].toUpperCase() : '?';
     final ay = ref.watch(academicYearRiverpod).selectedAcademicYear;
     final ayLabel = ay == null
         ? ''
@@ -948,8 +941,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
     double sumOfRowAvgs = 0;
     int rowsWithScores = 0;
     for (final row in tableData) {
-      final scId =
-          (row['student_class_id'] ?? row['id'] ?? '').toString();
+      final scId = (row['student_class_id'] ?? row['id'] ?? '').toString();
       final scores = <double>[];
 
       // 1. Live edits in score controllers.

@@ -79,7 +79,12 @@ class _ParentRecommendationDetailScreenState
   void initState() {
     super.initState();
     _row = Map<String, dynamic>.from(widget.inboxRow);
-    _maybeMarkRead();
+    // Fire-and-forget: read-receipts must not block the first frame.
+    // We schedule it after the build so the detail screen renders
+    // immediately even on slow networks.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeMarkRead();
+    });
   }
 
   Map<String, dynamic> get _rec {
@@ -131,6 +136,12 @@ class _ParentRecommendationDetailScreenState
         _row['reply_text'] = reply;
         _changed = true;
       });
+      // Invalidate the parent's cached inbox/summary so the list
+      // screen shows the freshly-replied row when we pop back.
+      await getIt<ApiRecommendationService>().invalidateParentInboxCache(
+        parentUserId: widget.parentUserId,
+      );
+      if (!mounted) return;
       SnackBarUtils.showSuccess(context, 'Balasan terkirim ke wali kelas.');
     } catch (e) {
       if (!mounted) return;
@@ -171,6 +182,12 @@ class _ParentRecommendationDetailScreenState
         _row['parent_completion_note'] = result.note;
         _changed = true;
       });
+      // Invalidate cache so the parent list shows the SELESAI badge
+      // when the user pops back.
+      await getIt<ApiRecommendationService>().invalidateParentInboxCache(
+        parentUserId: widget.parentUserId,
+      );
+      if (!mounted) return;
       SnackBarUtils.showSuccess(
         context,
         'Rekomendasi ditandai selesai. Terima kasih!',

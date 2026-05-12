@@ -243,10 +243,6 @@ mixin TeacherScheduleCacheMixin on ConsumerState<TeachingScheduleScreen> {
       if (!isHomeroomViewInternal) {
         loadDailySummary();
       }
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) checkAndShowTour();
-      });
     } else {
       setState(() {
         isLoadingInternal = false;
@@ -257,16 +253,6 @@ mixin TeacherScheduleCacheMixin on ConsumerState<TeachingScheduleScreen> {
       });
     }
   }
-
-  void _showErrorSnackBar(String message) {
-    if (mounted) {
-      SnackBarUtils.showError(context, message);
-    }
-  }
-
-  // Declared abstract — actual implementation is in ScheduleTourMixin.
-  // Do NOT provide a body here or it will shadow the tour mixin's version.
-  Future<void> checkAndShowTour();
 
   // ── Public getters/setters for cache-owned state ──
   // Shared-state getters (teacherId, selectedTerm, selectedAcademicYear,

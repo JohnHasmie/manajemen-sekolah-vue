@@ -78,8 +78,7 @@ class _LessonPlanFormatChooserContentState
             _FormatTile(
               format: LessonPlanFormat.rpp1Halaman,
               tagLabel: 'RINGKAS',
-              desc:
-                  'Versi ringkas Mendikbud — tujuan, kegiatan inti, asesmen.',
+              desc: 'Versi ringkas Mendikbud — tujuan, kegiatan inti, asesmen.',
               isSelected: _selected == LessonPlanFormat.rpp1Halaman,
               onTap: () =>
                   setState(() => _selected = LessonPlanFormat.rpp1Halaman),
@@ -150,9 +149,7 @@ class _FormatTile extends StatelessWidget {
             color: isSelected ? tint : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isSelected
-                  ? brand
-                  : const Color(0xFFE2E8F0), // slate-200
+              color: isSelected ? brand : const Color(0xFFE2E8F0), // slate-200
               width: isSelected ? 1.5 : 1,
             ),
             boxShadow: isSelected
@@ -212,10 +209,7 @@ class _FormatTile extends StatelessWidget {
               const SizedBox(height: 6),
               // Tag pill
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: tint,
                   borderRadius: BorderRadius.circular(6),

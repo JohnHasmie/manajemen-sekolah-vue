@@ -137,17 +137,12 @@ class ApiService {
             serverMsg = String.fromCharCodes(data);
           } catch (_) {}
         } else if (data is Map) {
-          serverMsg = (data['error'] ??
-                  data['message'] ??
-                  serverMsg)
+          serverMsg = (data['error'] ?? data['message'] ?? serverMsg)
               .toString();
         } else if (data is String) {
           serverMsg = data;
         }
-        AppLogger.error(
-          'api',
-          'Server response: $serverMsg',
-        );
+        AppLogger.error('api', 'Server response: $serverMsg');
         throw Exception(serverMsg);
       }
       if (e.error is Exception) {

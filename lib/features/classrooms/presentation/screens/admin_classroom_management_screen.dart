@@ -436,7 +436,8 @@ class AdminClassManagementScreenState
         .getGradeLevelText(classData['grade_level'], lang);
     final className = model.name.isNotEmpty ? model.name : 'Class';
     final hasHomeroom = (model.homeroomTeacherName ?? '').isNotEmpty;
-    final teacherName = model.homeroomTeacherName ??
+    final teacherName =
+        model.homeroomTeacherName ??
         lang.getTranslatedText(const {
           'en': 'Not Assigned',
           'id': 'Belum Ditugaskan',
@@ -499,10 +500,7 @@ class AdminClassManagementScreenState
           }),
           rows: [
             EntityDetailRow(
-              label: lang.getTranslatedText(const {
-                'en': 'Name',
-                'id': 'Nama',
-              }),
+              label: lang.getTranslatedText(const {'en': 'Name', 'id': 'Nama'}),
               value: teacherName,
             ),
           ],
@@ -549,10 +547,7 @@ class AdminClassManagementScreenState
     // v3 brand chips — sticky inside hero (parent Tagihan/Nilai pattern).
     final brandChips = <BrandFilterChip>[
       BrandFilterChip(
-        label: lang.getTranslatedText(const {
-          'en': 'Grade',
-          'id': 'Tingkat',
-        }),
+        label: lang.getTranslatedText(const {'en': 'Grade', 'id': 'Tingkat'}),
         value: _selectedGradeFilter == null
             ? null
             : 'Tingkat $_selectedGradeFilter',
@@ -567,27 +562,24 @@ class AdminClassManagementScreenState
             ? null
             : lang.getTranslatedText(switch (_selectedHomeroomFilter) {
                 'with_homeroom' => const {
-                    'en': 'Has homeroom',
-                    'id': 'Sudah ada',
-                  },
+                  'en': 'Has homeroom',
+                  'id': 'Sudah ada',
+                },
                 'without_homeroom' => const {
-                    'en': 'Missing homeroom',
-                    'id': 'Belum ada',
-                  },
+                  'en': 'Missing homeroom',
+                  'id': 'Belum ada',
+                },
                 _ => {
-                    'en': _selectedHomeroomFilter!,
-                    'id': _selectedHomeroomFilter!,
-                  },
+                  'en': _selectedHomeroomFilter!,
+                  'id': _selectedHomeroomFilter!,
+                },
               }),
         onTap: _openFilterSheet,
       ),
     ];
 
     return AdminCrudScaffold(
-      title: lang.getTranslatedText(const {
-        'en': 'Classes',
-        'id': 'Kelas',
-      }),
+      title: lang.getTranslatedText(const {'en': 'Classes', 'id': 'Kelas'}),
       subtitle: lang.getTranslatedText(const {
         'en': 'Manage and monitor classes',
         'id': 'Kelola dan pantau kelas',
@@ -607,10 +599,8 @@ class AdminClassManagementScreenState
         'en': 'DATA MANAGEMENT',
         'id': 'MANAJEMEN DATA',
       }),
-      counterLabel: '${_classes.length} ${lang.getTranslatedText(const {
-        'en': 'classes',
-        'id': 'kelas',
-      })}',
+      counterLabel:
+          '${_classes.length} ${lang.getTranslatedText(const {'en': 'classes', 'id': 'kelas'})}',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,
@@ -648,9 +638,8 @@ class AdminClassManagementScreenState
             gradeText: ref
                 .read(adminClassroomControllerProvider)
                 .getGradeLevelText(classItem['grade_level'], lang),
-            onTap: () => _bulkMode
-                ? _toggleSelection(id)
-                : _openClassDetail(classItem),
+            onTap: () =>
+                _bulkMode ? _toggleSelection(id) : _openClassDetail(classItem),
             onLongPress: () => _toggleSelection(id),
             selected: isSelected,
             onEdit: () => _openAddEditSheet(classData: classItem),
@@ -680,10 +669,7 @@ class AdminClassManagementScreenState
       bulkActions: [
         BulkAction(
           icon: Icons.delete_outline_rounded,
-          label: lang.getTranslatedText(const {
-            'en': 'Delete',
-            'id': 'Hapus',
-          }),
+          label: lang.getTranslatedText(const {'en': 'Delete', 'id': 'Hapus'}),
           onTap: _bulkDeleteSelected,
           isDestructive: true,
         ),

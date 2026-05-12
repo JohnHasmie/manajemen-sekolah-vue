@@ -100,9 +100,9 @@ mixin GradeInputContentMixin on ConsumerState<GradePage> {
         : int.tryParse('${classData['student_count'] ?? 0}') ?? 0;
     final subjectName = subject['name']?.toString() ?? '-';
     final assessments = (subject['assessments'] as List?) ?? const [];
-    final filledCount = assessments.where(
-      (a) => a is Map && a['avg'] is num,
-    ).length;
+    final filledCount = assessments
+        .where((a) => a is Map && a['avg'] is num)
+        .length;
     final totalNilai = subject['total_nilai'] is num
         ? (subject['total_nilai'] as num).toInt()
         : null;
@@ -224,19 +224,15 @@ mixin GradeInputContentMixin on ConsumerState<GradePage> {
                 // slate-50 mini box.
                 Row(
                   children: [
-                    Expanded(
-                      child: _metaCell(
-                        '$studentCount',
-                        'Siswa',
-                      ),
-                    ),
+                    Expanded(child: _metaCell('$studentCount', 'Siswa')),
                     const SizedBox(width: 6),
                     Expanded(
                       child: _metaCell(
                         '${assessments.length}',
                         'Asesmen',
-                        emphasize:
-                            assessments.isEmpty ? _MetaEmphasis.muted : null,
+                        emphasize: assessments.isEmpty
+                            ? _MetaEmphasis.muted
+                            : null,
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -249,8 +245,8 @@ mixin GradeInputContentMixin on ConsumerState<GradePage> {
                         emphasize: filledCount == 0
                             ? _MetaEmphasis.muted
                             : (filledCount < assessments.length
-                                ? _MetaEmphasis.warning
-                                : null),
+                                  ? _MetaEmphasis.warning
+                                  : null),
                       ),
                     ),
                   ],
@@ -261,10 +257,7 @@ mixin GradeInputContentMixin on ConsumerState<GradePage> {
                   padding: const EdgeInsets.only(top: 8),
                   decoration: BoxDecoration(
                     border: Border(
-                      top: BorderSide(
-                        color: ColorUtils.slate100,
-                        width: 1,
-                      ),
+                      top: BorderSide(color: ColorUtils.slate100, width: 1),
                     ),
                   ),
                   child: Row(
@@ -316,8 +309,7 @@ mixin GradeInputContentMixin on ConsumerState<GradePage> {
                         Expanded(
                           child: Container(
                             height: 4,
-                            margin:
-                                const EdgeInsets.symmetric(horizontal: 1.5),
+                            margin: const EdgeInsets.symmetric(horizontal: 1.5),
                             decoration: BoxDecoration(
                               color: ColorUtils.slate200,
                               borderRadius: BorderRadius.circular(999),
@@ -347,16 +339,12 @@ mixin GradeInputContentMixin on ConsumerState<GradePage> {
     );
   }
 
-  Widget _metaCell(
-    String value,
-    String label, {
-    _MetaEmphasis? emphasize,
-  }) {
+  Widget _metaCell(String value, String label, {_MetaEmphasis? emphasize}) {
     final v = emphasize == _MetaEmphasis.muted
         ? ColorUtils.slate400
         : (emphasize == _MetaEmphasis.warning
-            ? ColorUtils.warning600
-            : ColorUtils.slate900);
+              ? ColorUtils.warning600
+              : ColorUtils.slate900);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       decoration: BoxDecoration(
@@ -421,8 +409,7 @@ mixin GradeInputContentMixin on ConsumerState<GradePage> {
       groups[t] = (groups[t] ?? 0) + 1;
     }
     return [
-      for (final entry in groups.entries)
-        _typePill(entry.key, entry.value),
+      for (final entry in groups.entries) _typePill(entry.key, entry.value),
     ];
   }
 

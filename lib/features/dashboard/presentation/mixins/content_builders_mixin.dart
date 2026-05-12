@@ -154,5 +154,4 @@ mixin ContentBuildersMixin on ConsumerState<Dashboard> {
       ),
     );
   }
-
 }

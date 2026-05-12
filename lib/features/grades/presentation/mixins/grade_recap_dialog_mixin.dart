@@ -202,8 +202,9 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
     );
     final rosterSubjects = roster.subjectsForClass(_classId);
     // Cold-open fallback: provider hasn't hydrated yet.
-    final fallbackClasses =
-        rosterClasses.isNotEmpty ? rosterClasses : widget.availableClasses;
+    final fallbackClasses = rosterClasses.isNotEmpty
+        ? rosterClasses
+        : widget.availableClasses;
     return AppFilterBottomSheet(
       title: _lp.getTranslatedText({
         'en': 'Filter Recap',
@@ -275,11 +276,11 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
                       if (nextId != null && _subjectId == null) {
                         final only = roster.subjectsForClass(nextId);
                         if (only.length == 1 && only.first is Map) {
-                          _subjectId =
-                              (only.first as Map)['id']?.toString();
-                          _subjectName = ((only.first as Map)['name'] ??
-                                  (only.first as Map)['nama'])
-                              ?.toString();
+                          _subjectId = (only.first as Map)['id']?.toString();
+                          _subjectName =
+                              ((only.first as Map)['name'] ??
+                                      (only.first as Map)['nama'])
+                                  ?.toString();
                         }
                       }
                     });
@@ -326,9 +327,10 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
                         );
                         if (only.length == 1 && only.first is Map) {
                           _classId = (only.first as Map)['id']?.toString();
-                          _className = ((only.first as Map)['name'] ??
-                                  (only.first as Map)['nama'])
-                              ?.toString();
+                          _className =
+                              ((only.first as Map)['name'] ??
+                                      (only.first as Map)['nama'])
+                                  ?.toString();
                         }
                       }
                     });

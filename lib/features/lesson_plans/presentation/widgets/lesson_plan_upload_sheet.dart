@@ -135,12 +135,6 @@ class _LessonPlanUploadSheetState
     return (s == null || s.isEmpty) ? null : s;
   }
 
-  String? get _existingFilePath {
-    final raw = widget.existingPlan?['file_path'];
-    final s = raw?.toString().trim();
-    return (s == null || s.isEmpty) ? null : s;
-  }
-
   int? get _existingFileSize {
     final raw = widget.existingPlan?['file_size'];
     return raw is num ? raw.toInt() : null;
@@ -185,24 +179,26 @@ class _LessonPlanUploadSheetState
       return;
     }
 
-    _titleController.text =
-        (existing['title'] ?? existing['judul'] ?? '').toString();
+    _titleController.text = (existing['title'] ?? existing['judul'] ?? '')
+        .toString();
 
     final subjectId = (existing['subject_id'] ?? '').toString();
     final classId = (existing['class_id'] ?? '').toString();
     _subjectId = subjectId.isEmpty ? null : subjectId;
-    _subjectName = (existing['subject_name'] ??
-            existing['mata_pelajaran_nama'] ??
-            existing['subject']?['name'] ??
-            '')
-        .toString();
+    _subjectName =
+        (existing['subject_name'] ??
+                existing['mata_pelajaran_nama'] ??
+                existing['subject']?['name'] ??
+                '')
+            .toString();
     if (_subjectName!.isEmpty) _subjectName = null;
     _classId = classId.isEmpty ? null : classId;
-    _className = (existing['class_name'] ??
-            existing['kelas_nama'] ??
-            existing['class']?['name'] ??
-            '')
-        .toString();
+    _className =
+        (existing['class_name'] ??
+                existing['kelas_nama'] ??
+                existing['class']?['name'] ??
+                '')
+            .toString();
     if (_className!.isEmpty) _className = null;
 
     final semester = (existing['semester']?.toString() ?? '').trim();
@@ -229,8 +225,9 @@ class _LessonPlanUploadSheetState
 
   Future<void> _loadSubjects() async {
     try {
-      final result = await ApiService()
-          .get('/guru/${widget.teacherId}/mata-pelajaran');
+      final result = await ApiService().get(
+        '/guru/${widget.teacherId}/mata-pelajaran',
+      );
       if (!mounted) return;
       setState(() {
         if (result is Map && result['data'] is List) {
@@ -246,8 +243,9 @@ class _LessonPlanUploadSheetState
 
   Future<void> _loadClassesForSubject(String subjectId) async {
     try {
-      final result = await ApiService()
-          .get('/class-by-mata-pelajaran?mata_pelajaran_id=$subjectId');
+      final result = await ApiService().get(
+        '/class-by-mata-pelajaran?mata_pelajaran_id=$subjectId',
+      );
       if (!mounted) return;
       setState(() {
         if (result is Map && result['data'] is List) {
@@ -288,8 +286,9 @@ class _LessonPlanUploadSheetState
         _uploadResponse = null;
       });
 
-      final response =
-          await LessonPlanService.uploadLessonPlanFile(_pickedFile!);
+      final response = await LessonPlanService.uploadLessonPlanFile(
+        _pickedFile!,
+      );
       if (!mounted) return;
       setState(() {
         _uploadResponse = response;
@@ -504,8 +503,7 @@ class _LessonPlanUploadSheetState
                     FilterOption(value: 'Genap', label: 'Genap'),
                   ],
                   selectedValue: _semester,
-                  onSelected: (v) =>
-                      setState(() => _semester = v ?? _semester),
+                  onSelected: (v) => setState(() => _semester = v ?? _semester),
                   selectedColor: brand,
                 ),
 
@@ -539,18 +537,19 @@ class _LessonPlanUploadSheetState
             primaryLabel: _isUploading
                 ? 'Mengunggah file…'
                 : (_isSubmitting
-                    ? 'Menyimpan…'
-                    : (_isEditMode && _uploadResponse != null
-                        ? 'Simpan ganti file'
-                        : 'Simpan')),
+                      ? 'Menyimpan…'
+                      : (_isEditMode && _uploadResponse != null
+                            ? 'Simpan ganti file'
+                            : 'Simpan')),
             // Cobalt for both modes — keeps the button consistent
             // with the rest of the teacher chrome regardless of
             // whether we're creating or editing.
             primaryColor: ColorUtils.getRoleColor('guru'),
             primaryEnabled: _canSubmit,
             onPrimary: _submit,
-            onSecondary:
-                _isSubmitting ? () {} : () => AppNavigator.pop(context),
+            onSecondary: _isSubmitting
+                ? () {}
+                : () => AppNavigator.pop(context),
           ),
         ],
       ),
@@ -612,8 +611,9 @@ class _LessonPlanUploadSheetState
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF22C55E)
-                                    .withValues(alpha: 0.6),
+                                color: const Color(
+                                  0xFF22C55E,
+                                ).withValues(alpha: 0.6),
                                 blurRadius: 8,
                               ),
                             ],
@@ -636,10 +636,7 @@ class _LessonPlanUploadSheetState
                   ],
                 ),
               ),
-              const _HeaderIcon(
-                icon: Icons.upload_rounded,
-                onTap: null,
-              ),
+              const _HeaderIcon(icon: Icons.upload_rounded, onTap: null),
             ],
           ),
         ],
@@ -648,17 +645,17 @@ class _LessonPlanUploadSheetState
   }
 
   Widget _fieldLabel(String text) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 12, 4, 6),
-        child: Text(
-          text.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF334155),
-            letterSpacing: 0.5,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(4, 12, 4, 6),
+    child: Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w800,
+        color: Color(0xFF334155),
+        letterSpacing: 0.5,
+      ),
+    ),
+  );
 
   // ── Chip-grid field builders (matches setup sheet pattern) ──
   //
@@ -671,9 +668,7 @@ class _LessonPlanUploadSheetState
 
   Widget _buildSubjectChips(Color accent) {
     if (_subjects.isEmpty) {
-      return _ChipPlaceholder(
-        text: 'Belum ada mata pelajaran ditugaskan',
-      );
+      return _ChipPlaceholder(text: 'Belum ada mata pelajaran ditugaskan');
     }
     return FilterChipGrid<String>(
       options: [
@@ -732,8 +727,8 @@ class _LessonPlanUploadSheetState
         if (picked == null) return;
         setState(() {
           _classId = id;
-          _className =
-              (picked['kelas_nama'] ?? picked['name'] ?? '-').toString();
+          _className = (picked['kelas_nama'] ?? picked['name'] ?? '-')
+              .toString();
         });
       },
       selectedColor: accent,
@@ -828,11 +823,7 @@ class _UploadDropZone extends StatelessWidget {
               const SizedBox(height: 4),
               const Text(
                 'PDF, DOC, DOCX · Maks 10 MB',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: slate500,
-                  height: 1.4,
-                ),
+                style: TextStyle(fontSize: 11, color: slate500, height: 1.4),
               ),
               const SizedBox(height: 12),
               Container(
@@ -913,9 +904,7 @@ class _SelectedFileCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isReplacement
-            ? green50.withValues(alpha: 0.45)
-            : Colors.white,
+        color: isReplacement ? green50.withValues(alpha: 0.45) : Colors.white,
         border: Border.all(
           color: isReplacement ? green600 : slate200,
           width: isReplacement ? 1.5 : 1,
@@ -981,8 +970,8 @@ class _SelectedFileCard extends StatelessWidget {
                   isUploading
                       ? '$_humanSize · mengunggah…'
                       : (isReplacement
-                          ? '$_humanSize · siap diunggah'
-                          : _humanSize),
+                            ? '$_humanSize · siap diunggah'
+                            : _humanSize),
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w600,
@@ -1004,10 +993,7 @@ class _SelectedFileCard extends StatelessWidget {
               onPressed: onRemove,
               padding: EdgeInsets.zero,
               splashRadius: 18,
-              constraints: const BoxConstraints(
-                minWidth: 36,
-                minHeight: 36,
-              ),
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
               style: IconButton.styleFrom(
                 backgroundColor: slate100,
                 shape: const RoundedRectangleBorder(
@@ -1183,11 +1169,7 @@ class _ExistingFileCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: const [
-                    Icon(
-                      Icons.upload_rounded,
-                      size: 13,
-                      color: Colors.white,
-                    ),
+                    Icon(Icons.upload_rounded, size: 13, color: Colors.white),
                     SizedBox(width: 5),
                     Text(
                       'Ganti file',
@@ -1213,10 +1195,7 @@ class _ExistingFileCard extends StatelessWidget {
 /// dashed border, single line — purely informational so the teacher
 /// can confirm what's about to be removed.
 class _OldFileWarning extends StatelessWidget {
-  const _OldFileWarning({
-    required this.fileName,
-    required this.fileSize,
-  });
+  const _OldFileWarning({required this.fileName, required this.fileSize});
 
   final String fileName;
   final int fileSize;

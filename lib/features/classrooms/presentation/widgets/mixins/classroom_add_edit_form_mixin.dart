@@ -50,10 +50,12 @@ mixin ClassroomAddEditFormMixin {
         mainAxisSize: MainAxisSize.min,
         children: [
           AdminFormSection(
-            label: languageProvider.getTranslatedText({
-              'en': 'BASIC DATA',
-              'id': 'DATA POKOK',
-            }) as String,
+            label:
+                languageProvider.getTranslatedText({
+                      'en': 'BASIC DATA',
+                      'id': 'DATA POKOK',
+                    })
+                    as String,
             children: [
               ClassroomDialogTextField(
                 controller: nameController,
@@ -73,10 +75,12 @@ mixin ClassroomAddEditFormMixin {
             ],
           ),
           AdminFormSection(
-            label: languageProvider.getTranslatedText({
-              'en': 'HOMEROOM',
-              'id': 'WALI KELAS',
-            }) as String,
+            label:
+                languageProvider.getTranslatedText({
+                      'en': 'HOMEROOM',
+                      'id': 'WALI KELAS',
+                    })
+                    as String,
             bottomGap: 4,
             children: [
               ClassroomHomeroomTeacherDropdown(

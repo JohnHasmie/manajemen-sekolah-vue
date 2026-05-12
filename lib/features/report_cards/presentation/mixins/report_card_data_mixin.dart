@@ -147,11 +147,7 @@ mixin ReportCardDataMixin on ConsumerState<ReportCardDetailScreen> {
         });
       }
     } finally {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          checkAndShowTour();
-        }
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {});
     }
   }
 
@@ -176,7 +172,6 @@ mixin ReportCardDataMixin on ConsumerState<ReportCardDetailScreen> {
           isLoading = false;
           errorMessage = '';
         });
-        checkAndShowTour();
         AppLogger.debug(
           'report_card',
           'ReportCardDetailScreen: Data from cache',
@@ -195,5 +190,4 @@ mixin ReportCardDataMixin on ConsumerState<ReportCardDetailScreen> {
   void populateFromExisting(Map<String, dynamic> data);
   void populateFromInitial(Map<String, dynamic> data);
   void syncSubjectsWithRecap(List<dynamic> initialGrades);
-  Future<void> checkAndShowTour();
 }

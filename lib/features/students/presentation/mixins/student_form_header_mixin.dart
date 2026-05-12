@@ -23,7 +23,8 @@ mixin StudentFormHeaderMixin {
 
   /// Build the v3 header.
   Widget buildHeaderWidget() {
-    final ctx = (isEditMode &&
+    final ctx =
+        (isEditMode &&
             editingContextLabel != null &&
             editingContextLabel!.isNotEmpty)
         ? AdminFormContext(

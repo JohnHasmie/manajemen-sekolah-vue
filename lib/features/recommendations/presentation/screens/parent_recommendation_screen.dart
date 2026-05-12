@@ -22,6 +22,8 @@
 // glyph. Filter sheet (Frame F), Reply sheet (Frame D), and Tandai
 // Selesai sheet (Frame E) live in sibling files and are opened from
 // here / from the detail screen.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
@@ -104,6 +106,14 @@ class _ParentRecommendationScreenState
     }
     final svc = getIt<ApiRecommendationService>();
 
+    // Pull-to-refresh / post-mutation reloads invalidate the cache so
+    // the next request actually hits the network. Cached reads
+    // resolve in < 1 frame because everything's already in
+    // SharedPreferences.
+    if (!useCache) {
+      await svc.invalidateParentInboxCache(parentUserId: widget.parentUserId);
+    }
+
     // Each call is wrapped in its own try/catch so a transient failure
     // on EITHER endpoint never sinks the whole screen — if the inbox
     // 500s but the summary succeeds we still render the multi-child
@@ -117,6 +127,7 @@ class _ParentRecommendationScreenState
         // We don't pass studentId on the wire when the user is on the
         // hub — we want all rows so the hub can render every child.
         studentId: null,
+        useCache: useCache,
       );
       inbox = raw
           .whereType<Map>()
@@ -129,7 +140,10 @@ class _ParentRecommendationScreenState
     Map<String, dynamic> summary = const {'children': [], 'totals': {}};
     Object? summaryErr;
     try {
-      summary = await svc.getParentSummary(parentUserId: widget.parentUserId);
+      summary = await svc.getParentSummary(
+        parentUserId: widget.parentUserId,
+        useCache: useCache,
+      );
     } catch (e) {
       summaryErr = e;
     }
@@ -151,6 +165,9 @@ class _ParentRecommendationScreenState
       return;
     }
 
+    // Precompute everything that goes into the next setState BEFORE
+    // we call setState — frame jank otherwise when the inbox has 50+
+    // items (filter / group / count would block the rebuild).
     final children = (summary['children'] as List? ?? const [])
         .whereType<Map>()
         .map((m) => Map<String, dynamic>.from(m))
@@ -163,25 +180,26 @@ class _ParentRecommendationScreenState
         ? children
         : _deriveChildrenFromInbox(inbox);
 
+    // Resolve the candidate selection before setState so the build()
+    // phase doesn't have to re-check it.
+    String nextSelected = _selectedChildId;
+    if (nextSelected != _kAllChildren &&
+        !derivedChildren.any((c) => c['student_id'] == nextSelected)) {
+      nextSelected = _kAllChildren;
+    }
+    if (derivedChildren.length == 1) {
+      nextSelected =
+          derivedChildren.first['student_id']?.toString() ?? _kAllChildren;
+    }
+
     setState(() {
       _items = inbox;
       _children = derivedChildren;
+      _selectedChildId = nextSelected;
       _loading = false;
-      // If a deep-linked studentId was provided but it's not actually
-      // one of the parent's children, fall back to "Semua" so we
-      // don't show an empty list.
-      if (_selectedChildId != _kAllChildren &&
-          !derivedChildren.any((c) => c['student_id'] == _selectedChildId)) {
-        _selectedChildId = _kAllChildren;
-      }
-      // If the parent only has one child, lock onto it so they skip
-      // straight to Frame B without a meaningless chip row.
-      if (derivedChildren.length == 1) {
-        _selectedChildId =
-            derivedChildren.first['student_id']?.toString() ?? _kAllChildren;
-      }
     });
-    _autoMarkRead();
+    // Fire-and-forget — never await read-receipts during render flow.
+    unawaited(_autoMarkRead());
     _scrollToTarget();
   }
 

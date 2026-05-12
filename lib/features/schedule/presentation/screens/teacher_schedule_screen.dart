@@ -40,7 +40,6 @@ import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_schedule_card_view.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_schedule_table_view.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/teacher_today_banner.dart';
-import 'package:manajemensekolah/features/schedule/presentation/mixins/schedule_tour_mixin.dart';
 import 'package:manajemensekolah/features/schedule/presentation/mixins/teacher_schedule_data_loading_mixin.dart';
 import 'package:manajemensekolah/features/schedule/presentation/mixins/teacher_schedule_cache_mixin.dart';
 import 'package:manajemensekolah/features/schedule/presentation/mixins/teacher_schedule_filter_mixin.dart';
@@ -59,13 +58,14 @@ class TeachingScheduleScreen extends ConsumerStatefulWidget {
 /// Manages schedule display, filtering, view modes, and real-time sync.
 class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
     with
-        ScheduleTourMixin,
         TeacherScheduleDataLoadingMixin,
         TeacherScheduleCacheMixin,
         TeacherScheduleFilterMixin,
         TeacherSchedulePreferencesMixin,
         TeacherScheduleUiMixin {
-  // Tour properties (bridge for ScheduleTourMixin)
+  // Widget anchor keys — exposed via the getter bridge below to the
+  // header/card mixins. Originally targets for the onboarding tour;
+  // the tour was retired but the keys still anchor real widgets.
   final GlobalKey _toggleViewKey = GlobalKey();
   final GlobalKey _searchFilterKey = GlobalKey();
   final GlobalKey _firstScheduleKey = GlobalKey();

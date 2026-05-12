@@ -186,11 +186,7 @@ class _SubCheckbox extends StatelessWidget {
           ),
         ),
         child: isChecked
-            ? const Icon(
-                Icons.check_rounded,
-                size: 12,
-                color: Colors.white,
-              )
+            ? const Icon(Icons.check_rounded, size: 12, color: Colors.white)
             : null,
       ),
     );
@@ -205,16 +201,8 @@ class _AiPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg, label) = isGenerated
-        ? (
-            const Color(0xFFEDE9FE),
-            const Color(0xFF7C3AED),
-            'AI',
-          )
-        : (
-            ColorUtils.slate100,
-            ColorUtils.slate500,
-            'Belum AI',
-          );
+        ? (const Color(0xFFEDE9FE), const Color(0xFF7C3AED), 'AI')
+        : (ColorUtils.slate100, ColorUtils.slate500, 'Belum AI');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(

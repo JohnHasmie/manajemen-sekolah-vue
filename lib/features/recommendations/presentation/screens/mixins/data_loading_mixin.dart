@@ -30,7 +30,6 @@ mixin DataLoadingMixin {
 
   Future<void> forceRefresh() async {
     await LocalCacheService.invalidate(buildStudentsCacheKey());
-    await LocalCacheService.clearStartingWith('tour_recommendation_student_');
     loadStudents(useCache: false);
   }
 

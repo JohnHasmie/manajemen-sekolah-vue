@@ -32,10 +32,9 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           AdminFormSection(
-            label: lang.getTranslatedText({
-              'en': 'BASIC DATA',
-              'id': 'DATA POKOK',
-            }) as String,
+            label:
+                lang.getTranslatedText({'en': 'BASIC DATA', 'id': 'DATA POKOK'})
+                    as String,
             children: [
               _buildCodeField(lang),
               _buildMasterSubjectAutocomplete(lang),
@@ -44,10 +43,9 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
             ],
           ),
           AdminFormSection(
-            label: lang.getTranslatedText({
-              'en': 'STATUS',
-              'id': 'STATUS',
-            }) as String,
+            label:
+                lang.getTranslatedText({'en': 'STATUS', 'id': 'STATUS'})
+                    as String,
             bottomGap: 4,
             children: [
               Column(
@@ -55,10 +53,12 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AdminFormFieldLabel(
-                    text: lang.getTranslatedText({
-                      'en': 'Active status',
-                      'id': 'Status aktif',
-                    }) as String,
+                    text:
+                        lang.getTranslatedText({
+                              'en': 'Active status',
+                              'id': 'Status aktif',
+                            })
+                            as String,
                   ),
                   AdminFormChoiceChips<bool>(
                     value: isActive,
@@ -66,18 +66,22 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
                     choices: [
                       AdminFormChoice(
                         value: true,
-                        label: lang.getTranslatedText({
-                          'en': 'Active',
-                          'id': 'Aktif',
-                        }) as String,
+                        label:
+                            lang.getTranslatedText({
+                                  'en': 'Active',
+                                  'id': 'Aktif',
+                                })
+                                as String,
                         icon: Icons.check_circle_rounded,
                       ),
                       AdminFormChoice(
                         value: false,
-                        label: lang.getTranslatedText({
-                          'en': 'Inactive',
-                          'id': 'Nonaktif',
-                        }) as String,
+                        label:
+                            lang.getTranslatedText({
+                                  'en': 'Inactive',
+                                  'id': 'Nonaktif',
+                                })
+                                as String,
                         icon: Icons.cancel_outlined,
                       ),
                     ],
@@ -256,35 +260,6 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
       label: lang.getTranslatedText({'en': 'Description', 'id': 'Deskripsi'}),
       icon: Icons.description,
       maxLines: 3,
-    );
-  }
-
-  /// Active status toggle
-  Widget _buildActiveStatusToggle(dynamic lang) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        border: Border.all(color: ColorUtils.slate200),
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-      ),
-      child: SwitchListTile(
-        title: Text(
-          lang.getTranslatedText({'en': 'Active Status', 'id': 'Status Aktif'}),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: ColorUtils.slate700,
-          ),
-        ),
-        value: isActive,
-        activeThumbColor: ColorUtils.corporateBlue600,
-        activeTrackColor: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
-        onChanged: (v) => setState(() => isActive = v),
-        secondary: Icon(
-          Icons.check_circle_outline,
-          color: isActive ? ColorUtils.corporateBlue600 : ColorUtils.slate400,
-        ),
-      ),
     );
   }
 }

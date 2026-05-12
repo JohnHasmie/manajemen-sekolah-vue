@@ -176,9 +176,7 @@ class _BrandKpiCarouselState extends ConsumerState<BrandKpiCarousel> {
     if (cards.isEmpty) return const SizedBox.shrink();
 
     // Inject progress into each card.
-    final wrappedCards = [
-      for (final card in cards) _wrapCard(card, slice),
-    ];
+    final wrappedCards = [for (final card in cards) _wrapCard(card, slice)];
 
     // Chunk cards into pages of perPage (default 2).
     final pages = <List<HeroStatsCard>>[];
@@ -208,8 +206,7 @@ class _BrandKpiCarouselState extends ConsumerState<BrandKpiCarousel> {
                 ? _PageRow(cards: pages.first)
                 : PageView.builder(
                     controller: _pageCtrl,
-                    onPageChanged: (i) =>
-                        setState(() => _currentPage = i),
+                    onPageChanged: (i) => setState(() => _currentPage = i),
                     itemCount: pages.length,
                     itemBuilder: (_, pageIndex) =>
                         _PageRow(cards: pages[pageIndex]),

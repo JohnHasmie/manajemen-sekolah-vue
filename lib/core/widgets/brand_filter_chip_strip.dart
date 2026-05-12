@@ -206,9 +206,7 @@ class _ChipView extends StatelessWidget {
       decoration: BoxDecoration(
         // Hard colors only. Applied chip = 25%-fill solid white;
         // placeholder = 18%-fill with a 1px hairline white border.
-        color: isApplied
-            ? const Color(0x40FFFFFF)
-            : const Color(0x2EFFFFFF),
+        color: isApplied ? const Color(0x40FFFFFF) : const Color(0x2EFFFFFF),
         borderRadius: const BorderRadius.all(Radius.circular(10)),
         border: isApplied
             ? null

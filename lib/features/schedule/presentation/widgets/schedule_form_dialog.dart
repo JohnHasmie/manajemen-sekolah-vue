@@ -394,10 +394,7 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog>
                         AppSpacing.lg,
                         AppSpacing.lg,
                       ),
-                      child: Form(
-                        key: _formKey,
-                        child: _buildFormFields(lang),
-                      ),
+                      child: Form(key: _formKey, child: _buildFormFields(lang)),
                     ),
                   ),
                   ScheduleFormFooter(

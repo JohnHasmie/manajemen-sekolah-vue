@@ -66,13 +66,7 @@ class GradeRecapKpiSkeleton extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
         child: Row(
-          children: [
-            _cell(),
-            _divider(),
-            _cell(),
-            _divider(),
-            _cell(),
-          ],
+          children: [_cell(), _divider(), _cell(), _divider(), _cell()],
         ),
       ),
     );

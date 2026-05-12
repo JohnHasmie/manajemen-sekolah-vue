@@ -177,11 +177,7 @@ mixin ParentGradeDataLoadingMixin
         resetPagination();
         endPaginationReset();
         hasMoreData = false;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && studentList.isNotEmpty) {
-            checkAndShowTour();
-          }
-        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {});
         hadCacheHit = true;
         // Don't return — continue fetching fresh data from API
       }
@@ -209,11 +205,7 @@ mixin ParentGradeDataLoadingMixin
       }
     } finally {
       endPaginationReset();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && studentList.isNotEmpty) {
-          checkAndShowTour();
-        }
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {});
     }
   }
 
@@ -224,7 +216,8 @@ mixin ParentGradeDataLoadingMixin
       final result = await GradeService.getGradesPaginated(
         studentId: selectedStudentId,
         academicYearId: academicYearId,
-        gradeType: (this as dynamic).selectedGradeTypeFilter, // From ParentGradeFilterMixin
+        gradeType: (this as dynamic)
+            .selectedGradeTypeFilter, // From ParentGradeFilterMixin
         page: page,
       );
       final newItems = List<dynamic>.from(result['data'] ?? []);
@@ -247,10 +240,6 @@ mixin ParentGradeDataLoadingMixin
   /// Force refresh: clear cache and reload.
   Future<void> forceRefresh() async {
     await LocalCacheService.clearStartingWith('parent_grade_');
-    await LocalCacheService.clearStartingWith('tour_parent_grade_');
     await loadUserData(useCache: false);
   }
-
-  /// Callback hook — to be overridden by tour mixin.
-  Future<void> checkAndShowTour() async {}
 }
