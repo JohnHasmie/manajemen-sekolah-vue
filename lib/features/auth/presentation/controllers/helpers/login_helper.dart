@@ -79,6 +79,20 @@ class LoginHelper {
   Future<AuthResponse> signInWithGoogle(AuthState currentState) async {
     updateState(currentState.copyWith(isLoading: true, lastResponse: null));
     try {
+      // Force the multi-account chooser on every attempt. Without
+      // this, GoogleSignIn caches the last-used account on Android
+      // and re-emits it silently — users with multiple Google
+      // accounts can't pick a different one because the picker
+      // never appears. `signOut()` clears the *cached* sign-in only;
+      // it doesn't revoke the OAuth grant, so a returning user
+      // doesn't have to re-consent.
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {
+        // First-time users have nothing to sign out from — swallow
+        // the no-op platform exception.
+      }
+
       final account = await _googleSignIn.signIn();
       if (account == null) {
         updateState(currentState.copyWith(isLoading: false));
