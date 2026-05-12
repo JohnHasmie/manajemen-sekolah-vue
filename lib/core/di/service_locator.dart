@@ -24,6 +24,7 @@ import 'package:manajemensekolah/features/students/data/student_service.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/class_activity/data/class_activity_service.dart';
+import 'package:manajemensekolah/features/dashboard/data/priority_inbox_snooze_store.dart';
 import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 
 /// Global service locator instance. Like Laravel's `app()` helper.
@@ -62,4 +63,10 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<ApiRecommendationService>(
     ApiRecommendationService.new,
   );
+
+  // GG.9 — eagerly hydrate the priority-inbox snooze map from
+  // SharedPreferences. Doing it here means the teacher dashboard's
+  // `_priorityInbox` getter can run synchronously off a populated
+  // in-memory cache. Failures are swallowed (defaults to empty map).
+  await PriorityInboxSnoozeStore.instance.load();
 }

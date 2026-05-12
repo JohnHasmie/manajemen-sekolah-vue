@@ -30,9 +30,12 @@ import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/teacher_announcement_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
+import 'package:manajemensekolah/features/dashboard/data/priority_inbox_snooze_store.dart';
 import 'package:manajemensekolah/features/dashboard/domain/models/priority_inbox_item.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/screens/teacher_inbox_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/priority_inbox_snooze_sheet.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_recap_overview.dart';
@@ -40,8 +43,10 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teac
 import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
+import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_result_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_overview.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
@@ -169,8 +174,19 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   // Server-ranked Perlu Perhatian rows. Backend caps at 5 and ranks
   // by severity × recency. Empty list ⇒ render "Semua aman" empty
   // state; null (feature flag off) is treated as empty.
+  //
+  // GG.9 — locally-snoozed items are filtered out before render.
+  // The snooze store is in-memory (hydrated on app bootstrap via
+  // service_locator), so this is a cheap O(n) check.
   List<PriorityInboxItem> get _priorityInbox {
-    return PriorityInboxItem.parseList(widget.state.stats['priority_inbox']);
+    final raw = PriorityInboxItem.parseList(
+      widget.state.stats['priority_inbox'],
+    );
+    final store = PriorityInboxSnoozeStore.instance;
+    final now = DateTime.now();
+    return raw
+        .where((item) => !store.isSnoozed(item.id, now: now))
+        .toList(growable: false);
   }
 
   // Derived counts used in the UI. Fallback to 0 if data is missing.
@@ -654,8 +670,43 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         emptyStateTitle: 'Semua aman 🎉',
         emptyStateSubtitle: 'Tidak ada yang perlu perhatian saat ini.',
         onPriorityTap: _navigateToInboxTarget,
+        // GG.9 — long-press surfaces the local snooze sheet.
+        onPriorityLongPress: _snoozeInboxItem,
+        // GG.7 — "Lihat semua" pushes the full-screen inbox.
+        // The inbox screen owns its own (uncapped) fetch but
+        // hands tap navigation back to us via [onItemTap] so we
+        // don't duplicate getIt/ref.read/teacherPayload lookups.
+        onSeeAll: _openFullInbox,
       ),
     );
+  }
+
+  /// Push the GG.7 full-screen inbox. Hands the currently-known
+  /// (capped) items in as `initialItems` so the screen renders
+  /// instantly while the uncapped fetch runs in the background.
+  void _openFullInbox() {
+    AppNavigator.push(
+      context,
+      TeacherInboxScreen(
+        initialItems: _priorityInbox,
+        onItemTap: _navigateToInboxTarget,
+      ),
+    );
+  }
+
+  /// GG.9 — long-press handler. Opens the snooze sheet; on confirm
+  /// the store hides the row and we [setState] to re-run the
+  /// [_priorityInbox] filter (the source data on
+  /// `widget.state.stats` doesn't change — we just drop the row
+  /// from the rendered list until the snooze expires).
+  Future<void> _snoozeInboxItem(PriorityInboxItem item) async {
+    final didSnooze = await showPriorityInboxSnoozeSheet(
+      context: context,
+      item: item,
+    );
+    if (didSnooze == true && mounted) {
+      setState(() {});
+    }
   }
 
   /// Routes a priority-inbox tap to the right destination screen.
@@ -679,44 +730,104 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         _openAttendanceForInboxItem(params);
         break;
       case 'lesson_plan_detail':
-        // TODO(FF.12-followup): route to the format-specific RPP
-        // detail dispatcher using `lesson_plan_id`. Needs a fetch-
-        // by-id helper on the controller, since the dispatcher
-        // expects a hydrated LessonPlan rather than a bare id.
-        _openLessonPlans();
+        _openLessonPlansForInboxItem(params);
         break;
       case 'report_card_class':
         _openReportCardClass(params);
         break;
       case 'grade_book':
-        // TODO(FF.12-followup): GradePage doesn't accept a
-        // `class_id`/`subject_id`/`column_id` deep-link yet. Open
-        // the per-class input screen once those args land.
-        _openGradeRecap();
+        _openGradeBookForInboxItem(params);
         break;
       case 'recommendation_detail':
-        // Mark-as-seen fires at TAP, not at screen open. Tapping
-        // the inbox row IS the "I acknowledge this" signal — even
-        // if the teacher doesn't drill into the rec, the dashboard
-        // should drop the row on the next refresh.
-        // Fire-and-forget; failures swallowed by the service.
+        // Mark-as-seen fires at TAP — see GG.2. Independent of
+        // whether the detail-fetch below succeeds, the inbox row
+        // clears on next refresh.
         final recId = params['recommendation_id']?.toString();
         if (recId != null && recId.isNotEmpty) {
           unawaited(
             getIt<ApiRecommendationService>()
-                .markRecommendationSharesSeenByTeacher(
-                  recommendationId: recId,
-                ),
+                .markRecommendationSharesSeenByTeacher(recommendationId: recId),
           );
         }
-        // TODO(FF.12-followup): route to a rec-detail surface using
-        // `recommendation_id` (GG.6). For now we open the class hub.
-        _openRecommendation();
+        _openRecommendationDetailById(recId);
         break;
       default:
         // Unknown route — older client, newer backend. No-op.
         break;
     }
+  }
+
+  /// Resolves a `recommendation_id` (from priority-inbox target
+  /// params) into the full `(student, classData)` shape required
+  /// by [LearningRecommendationResultScreen.show], then pushes
+  /// the screen. On any failure (network blip, missing rec, etc.)
+  /// we degrade to the class hub so the teacher still ends up in
+  /// a useful place.
+  Future<void> _openRecommendationDetailById(String? recId) async {
+    if (recId == null || recId.isEmpty) {
+      _openRecommendation();
+      return;
+    }
+    try {
+      final rec = await getIt<ApiRecommendationService>().getRecommendationById(
+        recId,
+      );
+
+      final student = rec['student'];
+      final klass = rec['class_'] ?? rec['class'];
+      if (student is! Map || klass is! Map) {
+        _openRecommendation();
+        return;
+      }
+      if (!mounted) return;
+
+      await LearningRecommendationResultScreen.show(
+        context: context,
+        teacher: _teacherPayload().map(
+          (k, v) => MapEntry(k, v?.toString() ?? ''),
+        ),
+        student: Map<String, dynamic>.from(student),
+        classData: Map<String, dynamic>.from(klass),
+      );
+    } catch (e) {
+      AppLogger.error('priority_inbox', 'rec deep-link fetch failed: $e');
+      if (mounted) _openRecommendation();
+    }
+  }
+
+  void _openGradeBookForInboxItem(Map<String, dynamic> params) {
+    final classId = params['class_id']?.toString();
+    final subjectId = params['subject_id']?.toString();
+    final columnId = params['column_id']?.toString();
+
+    AppNavigator.push(
+      context,
+      GradePage(
+        teacher: _teacherPayload(),
+        initialClassId: classId,
+        initialSubjectId: subjectId,
+        initialColumnId: columnId,
+      ),
+    );
+  }
+
+  void _openLessonPlansForInboxItem(Map<String, dynamic> params) {
+    final tp = ref.read(teacherRiverpod);
+    final tId =
+        tp.teacherId ?? widget.state.userData['teacher_id']?.toString() ?? '';
+    if (tId.isEmpty) return;
+    final lessonPlanId = params['lesson_plan_id']?.toString();
+    AppNavigator.push(
+      context,
+      LessonPlanScreen(
+        teacherId: tId,
+        teacherName:
+            tp.teacherName ??
+            widget.state.userData['name']?.toString() ??
+            'Guru',
+        initialLessonPlanId: lessonPlanId,
+      ),
+    );
   }
 
   void _openAttendanceForInboxItem(Map<String, dynamic> params) {

@@ -41,10 +41,17 @@ class LessonPlanScreen extends ConsumerStatefulWidget {
   final String teacherId;
   final String teacherName;
 
+  /// Optional deep-link target. When set, the screen loads the list
+  /// normally then opens the detail sheet for this RPP via the
+  /// shared CRUD mixin. Used by the teacher dashboard priority-inbox
+  /// "RPP butuh revisi" row so a tap lands on the offending RPP.
+  final String? initialLessonPlanId;
+
   const LessonPlanScreen({
     super.key,
     required this.teacherId,
     required this.teacherName,
+    this.initialLessonPlanId,
   });
 
   @override
@@ -137,6 +144,18 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
     super.initState();
     initPagination();
     loadLessonPlans();
+
+    // Deep-link from the teacher dashboard priority inbox.
+    // The detail sheet is a modal — schedule it for the first frame
+    // after build so the list is visible underneath when the sheet
+    // is dismissed.
+    final deepLinkId = widget.initialLessonPlanId;
+    if (deepLinkId != null && deepLinkId.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        viewLessonPlanDetail({'id': deepLinkId});
+      });
+    }
   }
 
   @override

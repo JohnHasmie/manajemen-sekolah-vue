@@ -22,7 +22,26 @@ import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 
 class GradePage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
-  const GradePage({super.key, required this.teacher});
+
+  /// Optional deep-link target — when both are set, the screen
+  /// auto-opens the grade book for that (class, subject) tuple
+  /// after the overview data loads. Used by the teacher dashboard
+  /// priority-inbox "Buku Nilai belum dilengkapi" row.
+  final String? initialClassId;
+  final String? initialSubjectId;
+
+  /// Optional column highlight. Not yet wired into GradeBookPage —
+  /// see TODO in this file's `_maybeOpenInitialGradeBook` helper.
+  final String? initialColumnId;
+
+  const GradePage({
+    super.key,
+    required this.teacher,
+    this.initialClassId,
+    this.initialSubjectId,
+    this.initialColumnId,
+  });
+
   @override
   GradePageState createState() => GradePageState();
 }
@@ -335,8 +354,41 @@ class GradePageState extends ConsumerState<GradePage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       loadViewPreference();
-      loadData();
+      loadData().then((_) {
+        if (!mounted) return;
+        _maybeOpenInitialGradeBook();
+      });
     });
+  }
+
+  /// Auto-opens the grade book for a `(class_id, subject_id)` tuple
+  /// supplied via constructor (deep-link from teacher dashboard
+  /// priority inbox). Walks the already-loaded `_groupedData` to
+  /// find the matching row, then reuses the same `openGradeBook`
+  /// pathway as the user-tap. No-op if either id is null or no
+  /// match is found.
+  ///
+  /// TODO(GG.5-followup): when [initialColumnId] is set, pass it
+  /// through to GradeBookPage so the screen scrolls / highlights
+  /// that column on open. Currently the column id is accepted but
+  /// not yet plumbed into GradeBookPage's constructor.
+  void _maybeOpenInitialGradeBook() {
+    final cId = widget.initialClassId;
+    final sId = widget.initialSubjectId;
+    if (cId == null || cId.isEmpty || sId == null || sId.isEmpty) return;
+
+    for (final group in _groupedData) {
+      if (group is! Map) continue;
+      if (group['class_id']?.toString() != cId) continue;
+      final subjects = group['subjects'];
+      if (subjects is! List) continue;
+      for (final subject in subjects) {
+        if (subject is! Map) continue;
+        if (subject['id']?.toString() != sId) continue;
+        openGradeBook(group, subject);
+        return;
+      }
+    }
   }
 
   @override

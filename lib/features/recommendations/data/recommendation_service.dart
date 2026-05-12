@@ -363,6 +363,23 @@ class ApiRecommendationService {
     );
   }
 
+  /// Fetch one recommendation by id. Returns the hydrated JSON map
+  /// (with `student`, `class_`, `subject`, etc. eager-loaded by the
+  /// backend repository). Throws on non-2xx — callers handle UX.
+  ///
+  /// Used by the teacher dashboard priority inbox to resolve a bare
+  /// `recommendation_id` from `target_params` into the full
+  /// `(student, classData)` shape that `LearningRecommendationResultScreen`
+  /// requires.
+  Future<Map<String, dynamic>> getRecommendationById(String id) async {
+    final response = await _aiDio.get('/recommendations/$id');
+    final body = response.data;
+    if (body is Map<String, dynamic> && body['data'] is Map) {
+      return Map<String, dynamic>.from(body['data'] as Map);
+    }
+    throw Exception('Unexpected response shape for /recommendations/$id');
+  }
+
   /// Teacher app: flip `teacher_seen_at` on every share recipient of
   /// the rec the wali kelas just opened. Drives Signal E (parent
   /// reply unread) on the priority inbox — once seen, the dashboard

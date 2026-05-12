@@ -103,6 +103,12 @@ class PendingInboxCard extends StatelessWidget {
   /// to a concrete screen push. Ignored when [priorityItems] is null.
   final void Function(PriorityInboxItem item)? onPriorityTap;
 
+  /// Long-press handler invoked when a priority row is held. Used
+  /// by GG.9 to surface the local snooze sheet. Optional — when
+  /// null the row just has no long-press feedback. Ignored when
+  /// [priorityItems] is null.
+  final void Function(PriorityInboxItem item)? onPriorityLongPress;
+
   /// "Now" reference used to compute the relative-time chip. Defaults
   /// to `DateTime.now()` if omitted. Override in tests to pin time.
   final DateTime? nowOverride;
@@ -140,6 +146,7 @@ class PendingInboxCard extends StatelessWidget {
     this.accentColor = const Color(0xFF0F172A),
   }) : priorityItems = null,
        onPriorityTap = null,
+       onPriorityLongPress = null,
        nowOverride = null;
 
   /// Server-driven variant — renders [PriorityInboxItem]s directly
@@ -151,6 +158,7 @@ class PendingInboxCard extends StatelessWidget {
     required this.title,
     required List<PriorityInboxItem> items,
     required this.onPriorityTap,
+    this.onPriorityLongPress,
     this.onSeeAll,
     this.seeAllLabel = 'Lihat semua',
     this.totalLabel = '',
@@ -244,6 +252,9 @@ class PendingInboxCard extends StatelessWidget {
           item: item,
           now: now,
           onTap: onPriorityTap == null ? null : () => onPriorityTap!(item),
+          onLongPress: onPriorityLongPress == null
+              ? null
+              : () => onPriorityLongPress!(item),
         ),
       );
       if (i < items.length - 1) {
@@ -465,11 +476,13 @@ class _PriorityInboxRow extends StatelessWidget {
   final PriorityInboxItem item;
   final DateTime now;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   const _PriorityInboxRow({
     required this.item,
     required this.now,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -479,6 +492,7 @@ class _PriorityInboxRow extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,

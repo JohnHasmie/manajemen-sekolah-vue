@@ -101,6 +101,47 @@ class DashboardService {
     }
   }
 
+  /// Full Perlu Perhatian feed for the teacher's "Lihat semua"
+  /// inbox screen (GG.7). Calls the uncapped variant of the
+  /// priority inbox composer — same five aggregators as the
+  /// dashboard card but no top-5 cap.
+  ///
+  /// Returns the raw row list. Parsing into `PriorityInboxItem`
+  /// happens at the call site so the model stays single-source
+  /// (used by both this surface and the dashboard transformer).
+  ///
+  /// Returns an empty list on any error — matches the backend's
+  /// graceful-degrade strategy (it also returns `data: []` on
+  /// aggregator failure).
+  static Future<List<Map<String, dynamic>>> getTeacherPriorityInbox({
+    String? academicYearId,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (academicYearId != null && academicYearId.isNotEmpty) {
+        queryParams['academic_year_id'] = academicYearId;
+      }
+      final response = await dioClient.get(
+        ApiEndpoints.teacherPriorityInbox,
+        queryParameters: queryParams.isEmpty ? null : queryParams,
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic> && result['success'] == true) {
+        final raw = result['data'];
+        if (raw is List) {
+          return raw
+              .whereType<Map>()
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList(growable: false);
+        }
+      }
+      return const [];
+    } catch (e) {
+      AppLogger.error('api', 'Error fetching teacher priority inbox: $e');
+      return const [];
+    }
+  }
+
   static Future<List<Map<String, dynamic>>> getParentAcademicRecent({
     String? academicYearId,
     int limit = 5,
