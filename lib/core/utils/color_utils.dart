@@ -174,6 +174,10 @@ class ColorUtils {
   static Color get amber500 => const Color(0xFFF59E0B);
   static Color get red500 => const Color(0xFFEF4444);
   static Color get indigo500 => const Color(0xFF6366F1);
+  // Slightly lighter green for "realtime fresh" pulsing-dot
+  // affordances — sits between emerald500 and white so it still
+  // reads as alive against a tinted scrim.
+  static Color get green400 => const Color(0xFF4ADE80);
   static Color get blue600 => const Color(0xFF4361EE);
   static Color get darkBlue => const Color(0xFF0D47A1);
   static Color get cyan500 => const Color(0xFF06B6D4);

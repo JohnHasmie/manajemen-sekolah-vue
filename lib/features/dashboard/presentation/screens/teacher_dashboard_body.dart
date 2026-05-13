@@ -24,6 +24,7 @@ import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
 import 'package:manajemensekolah/core/widgets/pending_inbox_card.dart';
 import 'package:manajemensekolah/core/widgets/quick_action_grid.dart';
+import 'package:manajemensekolah/core/widgets/role_dashboard_hero.dart';
 import 'package:manajemensekolah/core/widgets/school_pill.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 
@@ -361,7 +362,6 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   /// bottom corners; greeting + name + icon row at top, then realtime,
   /// school pill, and KPI cards floating onto the bottom edge.
   Widget _buildHeroWithKpiOverlay(BuildContext context) {
-    final statusBarHeight = MediaQuery.of(context).viewPadding.top;
     final notifBadge =
         _asInt(widget.state.stats['unread_notifications']) +
         _asInt(widget.state.stats['unread_announcements']);
@@ -369,112 +369,82 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // 100dp bottom padding leaves an empty teal band where the
-          // KPI carousel floats. Bumped from 70dp (single-row) to match
-          // admin / parent (which use the same BrandKpiCarousel) — at
-          // 70dp the 134dp-tall carousel was overlapping the school
-          // pill instead of an empty band below it.
-          Padding(
-            padding: const EdgeInsets.only(bottom: 100),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [_teacherBrandDark, _teacherBrandAzure],
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _teacherBrandDark.withValues(alpha: 0.18),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  statusBarHeight + AppSpacing.md,
-                  AppSpacing.md,
-                  // Extra space below the school pill so the floating KPI
-                  // cards overlap an empty teal band rather than the pill.
-                  48,
-                ),
-                child: Column(
+          // Shared dashboard hero shell (HH.7) — gradient + radius +
+          // shadow + status-bar-aware padding live in
+          // [RoleDashboardHero]. The 100dp bottomOverlap leaves an
+          // empty teal band where the KPI carousel floats; matches
+          // admin / parent so the carousel lands at the same anchor.
+          RoleDashboardHero(
+            role: 'guru',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                AppLocalizations.greeting(DateTime.now().hour),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withValues(alpha: 0.72),
-                                  letterSpacing: 0.1,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _userName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  letterSpacing: 0.1,
-                                  height: 1.2,
-                                ),
-                              ),
-                            ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            AppLocalizations.greeting(DateTime.now().hour),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.72),
+                              letterSpacing: 0.1,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        _HeroIconButton(
-                          icon: Icons.language_outlined,
-                          onTap: widget.onLanguageTap,
-                          gradientBg: _teacherBrandDark,
-                        ),
-                        const SizedBox(width: 6),
-                        _HeroIconButton(
-                          icon: Icons.notifications_outlined,
-                          onTap: widget.onNotificationTap,
-                          gradientBg: _teacherBrandDark,
-                          showDot: notifBadge > 0,
-                        ),
-                        const SizedBox(width: 6),
-                        _HeroIconButton(
-                          icon: Icons.person_outline,
-                          onTap: widget.onAccountTap,
-                          gradientBg: _teacherBrandDark,
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            _userName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: 0.1,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
-                    const SizedBox(height: AppSpacing.md),
-                    SchoolPill.expanded(
-                      schoolName: _schoolName,
-                      subtitle: _greetingSubtitle,
-                      onTap: widget.onSchoolSwitchTap,
-                      accentColor: _teacherCobalt,
-                      actionLabel: 'Ganti',
-                      onDarkSurface: true,
+                    const SizedBox(width: AppSpacing.sm),
+                    _HeroIconButton(
+                      icon: Icons.language_outlined,
+                      onTap: widget.onLanguageTap,
+                      gradientBg: _teacherBrandDark,
+                    ),
+                    const SizedBox(width: 6),
+                    _HeroIconButton(
+                      icon: Icons.notifications_outlined,
+                      onTap: widget.onNotificationTap,
+                      gradientBg: _teacherBrandDark,
+                      showDot: notifBadge > 0,
+                    ),
+                    const SizedBox(width: 6),
+                    _HeroIconButton(
+                      icon: Icons.person_outline,
+                      onTap: widget.onAccountTap,
+                      gradientBg: _teacherBrandDark,
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: AppSpacing.md),
+                _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
+                const SizedBox(height: AppSpacing.md),
+                SchoolPill.expanded(
+                  schoolName: _schoolName,
+                  subtitle: _greetingSubtitle,
+                  onTap: widget.onSchoolSwitchTap,
+                  accentColor: _teacherCobalt,
+                  actionLabel: 'Ganti',
+                  onDarkSurface: true,
+                ),
+              ],
             ),
           ),
           // KPI strip floats at the bottom of the gradient. Edge-to-edge
@@ -601,7 +571,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         value: _formatNumber(slice.gradesPendingSessions),
         icon: Icons.edit_note_outlined,
         accentColor: slice.gradesPendingSessions > 0
-            ? const Color(0xFF6366F1)
+            ? ColorUtils.indigo500
             : ColorUtils.success600,
         caption: gradesCaption,
         onTap: _openGrades,
@@ -957,7 +927,7 @@ class _RealtimePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dotColor = isFresh ? const Color(0xFF4ADE80) : Colors.grey.shade400;
+    final dotColor = isFresh ? ColorUtils.green400 : Colors.grey.shade400;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1064,7 +1034,7 @@ class _HeroIconButton extends StatelessWidget {
               width: 9,
               height: 9,
               decoration: BoxDecoration(
-                color: const Color(0xFFEF4444),
+                color: ColorUtils.red500,
                 shape: BoxShape.circle,
                 border: Border.all(color: gradientBg, width: 1.5),
               ),

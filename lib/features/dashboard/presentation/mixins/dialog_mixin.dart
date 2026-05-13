@@ -5,6 +5,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_alert_dialog.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/language_picker_sheet.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
@@ -17,48 +18,64 @@ import 'package:manajemensekolah/features/students/domain/models/student.dart';
 /// Handles language selection, account details, school switching,
 /// role picking, student selection, and error messages.
 mixin DialogMixin on ConsumerState<Dashboard> {
-  /// Shows academic year selection dialog.
-  /// Allows user to switch between available academic years and
-  /// reloads dashboard for the selected year.
+  /// Picker sheet for switching the active academic year.
+  ///
+  /// Tap-to-select dismisses immediately, so no footer — the row's
+  /// own `InkWell` is the commit. Brand-color follows the dashboard
+  /// role (admin / teacher / parent) via `ColorUtils.getRoleColor`.
+  ///
+  /// Migrated from `showDialog(SimpleDialog(...))` in the HH brand
+  /// sweep: list-pickers belong in sheets, not centered modals.
   void showAcademicYearDialog(BuildContext context) {
     final provider = ref.read(academicYearRiverpod);
     final years = provider.academicYears;
+    final primary = ColorUtils.getRoleColor(widget.role);
 
-    showDialog(
+    AppBottomSheet.show<void>(
       context: context,
-      builder: (context) => SimpleDialog(
-        title: Text(AppLocalizations.selectAcademicYear.tr),
+      title: AppLocalizations.selectAcademicYear.tr,
+      icon: Icons.event_rounded,
+      primaryColor: primary,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
         children: years.map((year) {
           final isSelected = provider.selectedAcademicYear?['id'] == year['id'];
-          return SimpleDialogOption(
-            onPressed: () {
-              provider.setSelectedYear(year['id'].toString());
-              ref.read(dashboardProvider.notifier).reloadForYearChange();
-              AppNavigator.pop(context);
-            },
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  year['year'] ?? '-',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                    color: isSelected
-                        ? ColorUtils.corporateBlue600
-                        : ColorUtils.slate900,
-                  ),
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                provider.setSelectedYear(year['id'].toString());
+                ref.read(dashboardProvider.notifier).reloadForYearChange();
+                AppNavigator.pop(context);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.md,
+                  horizontal: AppSpacing.md,
                 ),
-                if (isSelected)
-                  Icon(
-                    Icons.check,
-                    color: ColorUtils.corporateBlue600,
-                    size: 20,
-                  ),
-              ],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      year['year'] ?? '-',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: isSelected ? primary : ColorUtils.slate900,
+                      ),
+                    ),
+                    if (isSelected)
+                      Icon(Icons.check_rounded, color: primary, size: 20),
+                  ],
+                ),
+              ),
             ),
           );
         }).toList(),
@@ -142,72 +159,71 @@ mixin DialogMixin on ConsumerState<Dashboard> {
     );
   }
 
-  /// Shows student selection dialog for parent users to view
-  /// individual child attendance records.
+  /// Picker sheet for parent users to choose which child's
+  /// attendance to inspect.
+  ///
+  /// Migrated from `showDialog(AlertDialog(ListView.builder))` in
+  /// the HH brand sweep — a per-child list is a sheet-shape
+  /// interaction. Brand-color uses the parent (`wali`) role token,
+  /// since this picker is only invoked from parent surfaces.
   Future<void> showStudentSelectionDialog(
     BuildContext context,
     Map<String, dynamic> parent,
     List<dynamic> studentData, {
     String? academicYearId,
   }) async {
-    await showDialog(
+    final primary = ColorUtils.getRoleColor('wali');
+
+    await AppBottomSheet.show<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
-        ),
-        title: Text(
-          AppLocalizations.selectChild.tr,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: studentData.length,
-            itemBuilder: (context, index) {
-              final student = studentData[index];
-              final model = Student.fromJson(student as Map<String, dynamic>);
-              return Material(
-                color: Colors.transparent,
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.blue.shade50,
-                    child: Text(
-                      model.initials,
-                      style: TextStyle(
-                        color: Colors.blue.shade700,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    model.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    model.className.isNotEmpty
-                        ? model.className
-                        : AppLocalizations.classNotAvailable.tr,
-                  ),
-                  onTap: () async {
-                    AppNavigator.pop(context);
-                    await AppNavigator.push(
-                      context,
-                      ParentAttendanceScreen(
-                        parent: parent,
-                        studentId: model.id,
-                        academicYearId: academicYearId,
-                      ),
-                    );
-                    ref.read(dashboardProvider.notifier).refreshStats();
-                  },
+      title: AppLocalizations.selectChild.tr,
+      icon: Icons.family_restroom_rounded,
+      primaryColor: primary,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: studentData.map((student) {
+          final model = Student.fromJson(student as Map<String, dynamic>);
+          return Material(
+            color: Colors.transparent,
+            child: ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              leading: CircleAvatar(
+                backgroundColor: primary.withValues(alpha: 0.12),
+                child: Text(
+                  model.initials,
+                  style: TextStyle(color: primary, fontWeight: FontWeight.bold),
                 ),
-              );
-            },
-          ),
-        ),
+              ),
+              title: Text(
+                model.name,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                model.className.isNotEmpty
+                    ? model.className
+                    : AppLocalizations.classNotAvailable.tr,
+              ),
+              onTap: () async {
+                AppNavigator.pop(context);
+                await AppNavigator.push(
+                  context,
+                  ParentAttendanceScreen(
+                    parent: parent,
+                    studentId: model.id,
+                    academicYearId: academicYearId,
+                  ),
+                );
+                ref.read(dashboardProvider.notifier).refreshStats();
+              },
+            ),
+          );
+        }).toList(),
       ),
     );
   }

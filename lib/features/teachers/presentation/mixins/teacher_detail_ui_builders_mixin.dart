@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 
 /// Mixin for high-level UI builder methods in TeacherDetailScreen.
@@ -15,95 +15,27 @@ mixin TeacherDetailUIBuildersMixin {
   /// Current error message.
   String? get errorMessage;
 
-  /// Builds the top gradient header with title and action buttons.
+  /// Top page header — uses the shared [BrandPageHeader] so the
+  /// teacher-detail surface matches every other teacher hub
+  /// (Presensi / Kegiatan / RPP / etc.).
+  ///
+  /// Layout:
+  ///   - kicker subtitle "Detail Guru"
+  ///   - title is the teacher's full name
+  ///   - back button is auto-wired by BrandPageHeader (via
+  ///     AppNavigator)
+  ///   - one action icon: refresh (re-fetches the detail payload)
   Widget buildGradientHeader(BuildContext context, String nameStr) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ColorUtils.corporateBlue600,
-            ColorUtils.corporateBlue600.withValues(alpha: 0.8),
-          ],
+    return BrandPageHeader(
+      role: 'guru',
+      title: nameStr.isNotEmpty ? nameStr : 'Detail Guru',
+      subtitle: nameStr.isNotEmpty ? 'Detail Guru' : null,
+      actionIcons: [
+        BrandHeaderIconButton(
+          icon: Icons.refresh_rounded,
+          onTap: loadTeacherDetail,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => AppNavigator.pop(context),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: const Icon(
-                Icons.arrow_back_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Detail Guru',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  nameStr.isNotEmpty ? nameStr : 'Informasi lengkap guru',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: loadTeacherDetail,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: const Icon(
-                Icons.refresh_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 

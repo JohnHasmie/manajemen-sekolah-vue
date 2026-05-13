@@ -57,6 +57,7 @@ import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 import 'package:manajemensekolah/core/widgets/pending_inbox_card.dart';
 import 'package:manajemensekolah/core/widgets/quick_action_grid.dart';
+import 'package:manajemensekolah/core/widgets/role_dashboard_hero.dart';
 import 'package:manajemensekolah/core/widgets/school_pill.dart';
 
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
@@ -368,7 +369,6 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   /// The KPI row is `Positioned(bottom: 0)` of an outer 92dp padding zone —
   /// cards float onto the gradient's lower edge, then extend onto the page bg.
   Widget _buildHeroWithKpiOverlay(BuildContext context) {
-    final statusBarHeight = MediaQuery.of(context).viewPadding.top;
     final notifBadge =
         _asInt(widget.state.stats['unread_notifications']) +
         _asInt(widget.state.stats['unread_announcements']);
@@ -376,119 +376,87 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Gradient hero — full width, edge-to-edge, rounded bottom corners.
-          // 100dp bottom padding leaves an empty navy band where the KPI
-          // strip floats. Matches parent_dashboard_body.dart so admin and
-          // parent dashboards land the cards at the same vertical anchor.
-          Padding(
-            padding: const EdgeInsets.only(bottom: 100),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [_adminNavy, _adminNavyFade],
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _adminNavy.withValues(alpha: 0.18),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  statusBarHeight + AppSpacing.md,
-                  AppSpacing.md,
-                  // Extra space below the school pill so the floating KPI
-                  // cards overlap an empty navy band rather than the pill
-                  // itself — matches the Phase 3 mockup where the gradient
-                  // extends 24dp past the pill (line 200 → 248).
-                  48,
-                ),
-                child: Column(
+          // Shared dashboard hero shell (HH.7) — gradient + radius +
+          // shadow + status-bar-aware padding live in
+          // [RoleDashboardHero]. 100dp bottomOverlap reserves the
+          // empty navy band where the KPI strip floats.
+          RoleDashboardHero(
+            role: 'admin',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row: greeting + name on left, icon buttons on right
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top row: greeting + name on left, icon buttons on right
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                AppLocalizations.greeting(DateTime.now().hour),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withValues(alpha: 0.72),
-                                  letterSpacing: 0.1,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _userName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  letterSpacing: 0.1,
-                                  height: 1.2,
-                                ),
-                              ),
-                            ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            AppLocalizations.greeting(DateTime.now().hour),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.72),
+                              letterSpacing: 0.1,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        AdminDashboardHeroIconButton(
-                          icon: Icons.language_outlined,
-                          onTap: widget.onLanguageTap,
-                          gradientBg: _adminNavy,
-                        ),
-                        const SizedBox(width: 6),
-                        AdminDashboardHeroIconButton(
-                          icon: Icons.notifications_outlined,
-                          onTap: widget.onNotificationTap,
-                          gradientBg: _adminNavy,
-                          showDot: notifBadge > 0,
-                        ),
-                        const SizedBox(width: 6),
-                        AdminDashboardHeroIconButton(
-                          icon: Icons.person_outline,
-                          onTap: widget.onAccountTap,
-                          gradientBg: _adminNavy,
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            _userName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: 0.1,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    // Realtime indicator (mockup line 27-28): green/grey dot
-                    // + faint white label, sits between greeting and school pill.
-                    AdminDashboardRealtimePill(
-                      isFresh: _isFresh,
-                      lastSync: _lastSync,
+                    const SizedBox(width: AppSpacing.sm),
+                    AdminDashboardHeroIconButton(
+                      icon: Icons.language_outlined,
+                      onTap: widget.onLanguageTap,
+                      gradientBg: _adminNavy,
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    SchoolPill.expanded(
-                      schoolName: _schoolName,
-                      subtitle: _greetingSubtitle,
-                      onTap: widget.onSchoolSwitchTap,
-                      accentColor: _adminNavy,
-                      actionLabel: AppLocalizations.dbSwitch.tr,
-                      onDarkSurface: true,
+                    const SizedBox(width: 6),
+                    AdminDashboardHeroIconButton(
+                      icon: Icons.notifications_outlined,
+                      onTap: widget.onNotificationTap,
+                      gradientBg: _adminNavy,
+                      showDot: notifBadge > 0,
+                    ),
+                    const SizedBox(width: 6),
+                    AdminDashboardHeroIconButton(
+                      icon: Icons.person_outline,
+                      onTap: widget.onAccountTap,
+                      gradientBg: _adminNavy,
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: AppSpacing.md),
+                // Realtime indicator (mockup line 27-28): green/grey dot
+                // + faint white label, sits between greeting and school pill.
+                AdminDashboardRealtimePill(
+                  isFresh: _isFresh,
+                  lastSync: _lastSync,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                SchoolPill.expanded(
+                  schoolName: _schoolName,
+                  subtitle: _greetingSubtitle,
+                  onTap: widget.onSchoolSwitchTap,
+                  accentColor: _adminNavy,
+                  actionLabel: AppLocalizations.dbSwitch.tr,
+                  onDarkSurface: true,
+                ),
+              ],
             ),
           ),
           // KPI strip floating at the bottom of the gradient. Positioned
