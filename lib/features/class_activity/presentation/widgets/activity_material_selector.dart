@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
 /// Widget for selecting material source (manual or from chapters)
 class ActivityMaterialSelector extends StatelessWidget {
@@ -215,7 +217,15 @@ class ActivitySubChapterSelector extends StatelessWidget {
   }
 }
 
-/// Dialog for multi-selecting sub chapters
+/// Picker sheet for multi-selecting sub-chapters of a class
+/// activity's material reference.
+///
+/// Switched from `AlertDialog` (centered) to `AppBottomSheet`
+/// (sheet from bottom) in the GG/HH brand-consistency sweep:
+/// a multi-select list is a sheet-shape interaction, not a
+/// modal-dialog one. The internal `StatefulBuilder` is kept so
+/// the checkbox state ticks immediately on tap without bouncing
+/// through the host widget's setState.
 void showMultiSelectSubBabDialog({
   required BuildContext context,
   required LanguageProvider languageProvider,
@@ -224,51 +234,48 @@ void showMultiSelectSubBabDialog({
   required String Function(dynamic) getSubChapterName,
   required Function(String, bool) onSubChapterToggled,
 }) {
-  showDialog(
+  AppBottomSheet.show<void>(
     context: context,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setDialogState) {
-          return AlertDialog(
-            title: Text(
-              languageProvider.getTranslatedText({
-                'en': 'Select Sub Chapters',
-                'id': 'Pilih Sub Bab',
-              }),
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView(
-                shrinkWrap: true,
-                children: subChapters.map((subChapter) {
-                  final subId = subChapter['id'].toString();
-                  final isSelected = selectedSubChapterIds.contains(subId);
-                  return CheckboxListTile(
-                    title: Text(getSubChapterName(subChapter)),
-                    value: isSelected,
-                    onChanged: (bool? value) {
-                      setDialogState(() {
-                        onSubChapterToggled(subId, value == true);
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => AppNavigator.pop(context),
-                child: Text(
-                  languageProvider.getTranslatedText({
-                    'en': 'Done',
-                    'id': 'Selesai',
-                  }),
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    },
+    title: languageProvider.getTranslatedText({
+      'en': 'Select Sub Chapters',
+      'id': 'Pilih Sub Bab',
+    }),
+    icon: Icons.checklist_rounded,
+    primaryColor: ColorUtils.brandCobalt,
+    content: StatefulBuilder(
+      builder: (context, setSheetState) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: subChapters.map((subChapter) {
+            final subId = subChapter['id'].toString();
+            final isSelected = selectedSubChapterIds.contains(subId);
+            return CheckboxListTile(
+              title: Text(getSubChapterName(subChapter)),
+              value: isSelected,
+              activeColor: ColorUtils.brandCobalt,
+              controlAffinity: ListTileControlAffinity.leading,
+              onChanged: (bool? value) {
+                setSheetState(() {
+                  onSubChapterToggled(subId, value == true);
+                });
+              },
+            );
+          }).toList(),
+        );
+      },
+    ),
+    footer: BottomSheetFooter(
+      primaryLabel: languageProvider.getTranslatedText({
+        'en': 'Done',
+        'id': 'Selesai',
+      }),
+      secondaryLabel: languageProvider.getTranslatedText({
+        'en': 'Cancel',
+        'id': 'Batal',
+      }),
+      primaryColor: ColorUtils.brandCobalt,
+      onPrimary: () => AppNavigator.pop(context),
+      onSecondary: () => AppNavigator.pop(context),
+    ),
   );
 }

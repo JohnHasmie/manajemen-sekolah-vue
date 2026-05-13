@@ -41,18 +41,21 @@ mixin HeaderBuilderMixin on State<LessonPlanAdminDetailPage> {
   }
 
   BoxDecoration buildHeaderDecoration() {
+    // Brand-aligned gradient + shadow (HH.11). The previous alpha-faded
+    // single-color gradient was replaced with `ColorUtils.brandGradient`
+    // so the admin detail sheet uses the same two-stop navy as the rest
+    // of the brand surfaces (matches `RoleDashboardHero` admin variant).
+    // Shadow values match the brand spec: α=0.18 / blur 18 / y-offset 6.
+    // Top-only corner radius is kept — this is a bottom-sheet header,
+    // not a page header.
     return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [getPrimaryColor(), getPrimaryColor().withValues(alpha: 0.85)],
-      ),
+      gradient: ColorUtils.brandGradient('admin'),
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       boxShadow: [
         BoxShadow(
-          color: getPrimaryColor().withValues(alpha: 0.2),
-          blurRadius: 10,
-          offset: const Offset(0, 4),
+          color: getPrimaryColor().withValues(alpha: 0.18),
+          blurRadius: 18,
+          offset: const Offset(0, 6),
         ),
       ],
     );

@@ -34,6 +34,7 @@ import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
 import 'package:manajemensekolah/core/widgets/pending_inbox_card.dart';
 import 'package:manajemensekolah/core/widgets/quick_action_grid.dart';
+import 'package:manajemensekolah/core/widgets/role_dashboard_hero.dart';
 import 'package:manajemensekolah/core/widgets/school_pill.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
 
@@ -281,7 +282,6 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   /// bottom corners; greeting + name + icon row at top, then realtime,
   /// school pill, and KPI cards floating onto the bottom edge.
   Widget _buildHeroWithKpiOverlay(BuildContext context) {
-    final statusBarHeight = MediaQuery.of(context).viewPadding.top;
     final notifBadge =
         _asInt(widget.state.userData['unread_notifications_count']) +
         _asInt(widget.state.stats['unread_announcements']);
@@ -289,150 +289,121 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 100),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [_parentBrandAzure, _parentBrandAzureDeep],
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _parentBrandAzure.withValues(alpha: 0.18),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  statusBarHeight + AppSpacing.md,
-                  AppSpacing.md,
-                  // Extra space below the school pill so the floating KPI
-                  // cards overlap an empty violet band rather than the pill.
-                  48,
-                ),
-                child: Column(
+          // Shared dashboard hero shell (HH.7) — gradient + radius +
+          // shadow + status-bar-aware padding live in
+          // [RoleDashboardHero]. 100dp bottomOverlap reserves the
+          // empty violet band where the KPI carousel floats.
+          RoleDashboardHero(
+            role: 'wali',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                AppLocalizations.greeting(DateTime.now().hour),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withValues(alpha: 0.72),
-                                  letterSpacing: 0.1,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _userName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  letterSpacing: 0.1,
-                                  height: 1.2,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        ParentDashboardHeroIconButton(
-                          icon: Icons.language_outlined,
-                          onTap: widget.onLanguageTap,
-                          gradientBg: _parentBrandAzure,
-                        ),
-                        const SizedBox(width: 6),
-                        ParentDashboardHeroIconButton(
-                          icon: Icons.notifications_outlined,
-                          onTap: widget.onNotificationTap,
-                          gradientBg: _parentBrandAzure,
-                          showDot: notifBadge > 0,
-                        ),
-                        const SizedBox(width: 6),
-                        ParentDashboardHeroIconButton(
-                          icon: Icons.person_outline,
-                          onTap: widget.onAccountTap,
-                          gradientBg: _parentBrandAzure,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    ParentDashboardRealtimePill(
-                      isFresh: _isFresh,
-                      lastSync: _lastSync,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    // School pill + tahun-ajaran chip side-by-side. The
-                    // school pill takes the available space and the chip
-                    // is a fixed-width sidekick. On narrow screens the
-                    // pill ellipsises; the chip stays legible.
-                    //
-                    // No `crossAxisAlignment: stretch` — that would ask
-                    // Flutter to bound the Row's height to the children
-                    // but neither parent (the hero Column) nor the chip
-                    // give a height constraint upward, so layout asserts.
-                    // Both children carry their own intrinsic height; the
-                    // default `start` alignment is correct here.
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Expanded(
-                            flex: 3,
-                            child: SchoolPill.expanded(
-                              schoolName: _schoolName,
-                              subtitle: _greetingSubtitle,
-                              onTap: widget.onSchoolSwitchTap,
-                              accentColor: _parentBrandAzure,
-                              actionLabel: AppLocalizations.dbSwitch.tr,
-                              onDarkSurface: true,
+                          Text(
+                            AppLocalizations.greeting(DateTime.now().hour),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.72),
+                              letterSpacing: 0.1,
                             ),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            flex: 2,
-                            child: AcademicYearChip(
-                              yearLabel: _academicYearLabel,
-                              semesterLabel: widget.state.currentSemesterLabel
-                                  ?.replaceAll(
-                                    RegExp(r'\s*[-\u2013\u2014·].*'),
-                                    '',
-                                  )
-                                  .trim(),
-                              onTap: () => showAcademicYearPickerSheet(
-                                context: context,
-                                ref: ref,
-                                currentSemesterLabel:
-                                    widget.state.currentSemesterLabel,
-                              ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _userName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: 0.1,
+                              height: 1.2,
                             ),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: AppSpacing.sm),
+                    ParentDashboardHeroIconButton(
+                      icon: Icons.language_outlined,
+                      onTap: widget.onLanguageTap,
+                      gradientBg: _parentBrandAzure,
+                    ),
+                    const SizedBox(width: 6),
+                    ParentDashboardHeroIconButton(
+                      icon: Icons.notifications_outlined,
+                      onTap: widget.onNotificationTap,
+                      gradientBg: _parentBrandAzure,
+                      showDot: notifBadge > 0,
+                    ),
+                    const SizedBox(width: 6),
+                    ParentDashboardHeroIconButton(
+                      icon: Icons.person_outline,
+                      onTap: widget.onAccountTap,
+                      gradientBg: _parentBrandAzure,
+                    ),
                   ],
                 ),
-              ),
+                const SizedBox(height: AppSpacing.md),
+                ParentDashboardRealtimePill(
+                  isFresh: _isFresh,
+                  lastSync: _lastSync,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                // School pill + tahun-ajaran chip side-by-side. The
+                // school pill takes the available space and the chip
+                // is a fixed-width sidekick. On narrow screens the
+                // pill ellipsises; the chip stays legible.
+                //
+                // No `crossAxisAlignment: stretch` — that would ask
+                // Flutter to bound the Row's height to the children
+                // but neither parent (the hero Column) nor the chip
+                // give a height constraint upward, so layout asserts.
+                // Both children carry their own intrinsic height; the
+                // default `start` alignment is correct here.
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: SchoolPill.expanded(
+                          schoolName: _schoolName,
+                          subtitle: _greetingSubtitle,
+                          onTap: widget.onSchoolSwitchTap,
+                          accentColor: _parentBrandAzure,
+                          actionLabel: AppLocalizations.dbSwitch.tr,
+                          onDarkSurface: true,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        flex: 2,
+                        child: AcademicYearChip(
+                          yearLabel: _academicYearLabel,
+                          semesterLabel: widget.state.currentSemesterLabel
+                              ?.replaceAll(RegExp(r'\s*[-\u2013\u2014·].*'), '')
+                              .trim(),
+                          onTap: () => showAcademicYearPickerSheet(
+                            context: context,
+                            ref: ref,
+                            currentSemesterLabel:
+                                widget.state.currentSemesterLabel,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
           Positioned(

@@ -95,13 +95,12 @@ mixin SettingsScreenAppBarMixin {
     String avatarLetter,
   ) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primaryColor, primaryColor.withValues(alpha: 0.75)],
-        ),
-      ),
+      // HH.12 — replaced the legacy single-color alpha-fade gradient
+      // with the proper brand two-stop gradient via
+      // [ColorUtils.brandGradient]. The visual result is now
+      // role-aware (admin navy / teacher cobalt / parent azure) and
+      // matches every other migrated hero in the app.
+      decoration: BoxDecoration(gradient: ColorUtils.brandGradient(role)),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 56, 20, 20),
