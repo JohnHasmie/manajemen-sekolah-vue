@@ -159,11 +159,17 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
     required String className,
     required String subjectId,
     required String subjectName,
+    String? lessonHourId,
+    String? lessonHourName,
   }) {
     // Push as a full-screen route instead of a draggable sheet so the
     // input form gets the same brand layout (centered title, KPI
     // overlay, scroll behavior) as the main Presensi page. Refresh the
     // listing on pop so newly-saved sessions appear right away.
+    //
+    // [lessonHourId] is forwarded so the save persists attendance with
+    // the right slot — see the Ambil Presensi sheet's comment for why
+    // a NULL persist breaks the "Belum diabsen" → "Sudah" reload.
     AppNavigator.push(
       context,
       AttendancePage(
@@ -173,6 +179,7 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
         initialSubjectName: subjectName,
         initialclassId: classId,
         initialClassName: className,
+        initialLessonHourId: lessonHourId,
         initialTabIndex: 1,
         embedded: true,
       ),
@@ -239,12 +246,16 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
           );
           if (!mounted) return;
           if (res?.session != null) {
-            // Re-open Ambil Presensi with the picked session.
+            // Re-open Ambil Presensi with the picked session. Forward
+            // lesson_hour_id so the save persists under the right slot
+            // (avoids the NULL-persist bug fixed in the picker flow).
             openInputSheet(
               classId: (res!.session!['class_id'] ?? '').toString(),
               className: (res.session!['class_name'] ?? '').toString(),
               subjectId: (res.session!['subject_id'] ?? '').toString(),
               subjectName: (res.session!['subject_name'] ?? '').toString(),
+              lessonHourId: res.session!['lesson_hour_id']?.toString(),
+              lessonHourName: res.session!['lesson_hour_name']?.toString(),
             );
           }
         },

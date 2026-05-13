@@ -23,6 +23,8 @@ mixin AttendanceDialogAddMixin
     required String className,
     required String subjectId,
     required String subjectName,
+    String? lessonHourId,
+    String? lessonHourName,
   });
 
   // ═══════════════════════════════════════════
@@ -49,11 +51,22 @@ mixin AttendanceDialogAddMixin
       academicYearId: ayId,
     );
     if (pick == null || !mounted) return;
+    // Forward the picked session's lesson_hour_id so the input
+    // form saves attendance under the right slot. Without this the
+    // form persists lesson_hour_id = NULL and the teacher-calendar
+    // GET later groups by (class, subject, lesson_hour_id) and
+    // can't match the saved rows against the session card — the
+    // "Belum diabsen" pill stays even after a successful save, and
+    // overlapping JAM-KE-N sessions for different classes (e.g.
+    // 8A and 8B at the same lesson hour) collapse into the same
+    // NULL group.
     openInputSheet(
       classId: pick.classId,
       className: pick.className,
       subjectId: pick.subjectId,
       subjectName: pick.subjectName,
+      lessonHourId: pick.lessonHourId,
+      lessonHourName: pick.lessonHourName,
     );
   }
 }
