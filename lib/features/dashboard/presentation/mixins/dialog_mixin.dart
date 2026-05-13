@@ -11,7 +11,6 @@ import 'package:manajemensekolah/features/attendance/presentation/screens/parent
 import 'package:manajemensekolah/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_account_sheet.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_school_selection_dialog.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/language_option_tile.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Provides dialog and modal methods for Dashboard.
