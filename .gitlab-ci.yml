@@ -36,6 +36,7 @@ variables:
 # ---------------------------------------------------------------------------
 .flutter_setup: &flutter_setup
   before_script:
+    - unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
     - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$PATH"
     # Clear stale git locks and upgrade Flutter (bumps bundled Dart SDK)
     - rm -f "$HOME/MobileProjects/flutter/.git/index.lock"
@@ -52,6 +53,7 @@ variables:
 
 .shorebird_setup: &shorebird_setup
   before_script:
+    - unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
     - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$HOME/.shorebird/bin:$PATH"
     # Clear stale git locks and upgrade Flutter
     - rm -f "$HOME/MobileProjects/flutter/.git/index.lock"
