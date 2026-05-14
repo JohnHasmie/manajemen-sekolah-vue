@@ -405,8 +405,13 @@ class _PeriodChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final options = const [
-      _PeriodOption('sekali bayar', 'Sekali', Icons.looks_one_rounded),
+    // Value strings must match CreatePaymentTypeRequest's `in:` rule
+    // exactly. The legacy `'sekali bayar'` string (with a space) was
+    // rejected by validation, surfacing as a generic "Gagal memproses"
+    // toast. Use the same lowercase pattern as the other three so the
+    // backend accepts it.
+    const options = [
+      _PeriodOption('sekali', 'Sekali', Icons.looks_one_rounded),
       _PeriodOption('bulanan', 'Bulanan', Icons.calendar_view_month_rounded),
       _PeriodOption('semester', 'Semester', Icons.date_range_rounded),
       _PeriodOption('tahunan', 'Tahunan', Icons.calendar_today_rounded),

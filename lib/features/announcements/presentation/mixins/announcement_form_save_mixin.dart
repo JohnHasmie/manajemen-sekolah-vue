@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/announcements/data/announcement_service.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_form_sheet.dart';
 
@@ -34,16 +34,12 @@ mixin AnnouncementFormSaveMixin on State<AnnouncementFormSheet> {
     final content = contentController.text.trim();
 
     if (title.isEmpty || content.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            lang.getTranslatedText({
-              'en': 'Title and content must be filled',
-              'id': 'Judul dan konten harus diisi',
-            }),
-          ),
-          backgroundColor: Colors.orange,
-        ),
+      SnackBarUtils.showWarning(
+        context,
+        lang.getTranslatedText({
+          'en': 'Title and content must be filled',
+          'id': 'Judul dan konten harus diisi',
+        }),
       );
       return false;
     }
@@ -96,21 +92,17 @@ mixin AnnouncementFormSaveMixin on State<AnnouncementFormSheet> {
   void _showSuccessAndClose(LanguageProvider lang) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isEdit
-              ? lang.getTranslatedText({
-                  'en': 'Announcement successfully updated',
-                  'id': 'Pengumuman berhasil diperbarui',
-                })
-              : lang.getTranslatedText({
-                  'en': 'Announcement successfully added',
-                  'id': 'Pengumuman berhasil ditambahkan',
-                }),
-        ),
-        backgroundColor: ColorUtils.success600,
-      ),
+    SnackBarUtils.showSuccess(
+      context,
+      _isEdit
+          ? lang.getTranslatedText({
+              'en': 'Announcement successfully updated',
+              'id': 'Pengumuman berhasil diperbarui',
+            })
+          : lang.getTranslatedText({
+              'en': 'Announcement successfully added',
+              'id': 'Pengumuman berhasil ditambahkan',
+            }),
     );
     AppNavigator.pop(context);
   }
@@ -119,16 +111,12 @@ mixin AnnouncementFormSaveMixin on State<AnnouncementFormSheet> {
   void _showError(String error, LanguageProvider lang) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          lang.getTranslatedText({
-            'en': 'Failed to save announcement: $error',
-            'id': 'Gagal menyimpan pengumuman: $error',
-          }),
-        ),
-        backgroundColor: ColorUtils.error600,
-      ),
+    SnackBarUtils.showError(
+      context,
+      lang.getTranslatedText({
+        'en': 'Failed to save announcement: $error',
+        'id': 'Gagal menyimpan pengumuman: $error',
+      }),
     );
   }
 

@@ -24,22 +24,22 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
     return (letter: '—', color: ColorUtils.slate300, label: 'Masukkan nilai');
   }
   if (score >= 90) {
+    // Tailwind green-600 — semantic predikat grade A; no ColorUtils
+    // success-equivalent yet (success600 is #059669, different shade).
     return (letter: 'A', color: const Color(0xFF16A34A), label: 'Sangat Baik');
   }
   if (score >= 80) {
-    return (letter: 'B', color: const Color(0xFF2563EB), label: 'Baik');
+    return (letter: 'B', color: ColorUtils.corporateBlue600, label: 'Baik');
   }
   if (score >= 70) {
+    // Tailwind yellow-600 — predikat grade C; no ColorUtils equivalent.
     return (letter: 'C', color: const Color(0xFFCA8A04), label: 'Cukup');
   }
   if (score >= 60) {
+    // Tailwind orange-600 — predikat grade D; no ColorUtils equivalent.
     return (letter: 'D', color: const Color(0xFFEA580C), label: 'Kurang');
   }
-  return (
-    letter: 'E',
-    color: const Color(0xFFDC2626),
-    label: 'Perlu Bimbingan',
-  );
+  return (letter: 'E', color: ColorUtils.error600, label: 'Perlu Bimbingan');
 }
 
 /// Big score "hero" tile shown at the top of the grade editor sheet.
@@ -286,12 +286,12 @@ class ModernGradeEditorFooter extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: isBusy ? null : onDelete,
               icon: isDeleting
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 14,
                       height: 14,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Color(0xFFDC2626),
+                        color: ColorUtils.error600,
                       ),
                     )
                   : const Icon(Icons.delete_outline_rounded, size: 18),
@@ -299,7 +299,9 @@ class ModernGradeEditorFooter extends StatelessWidget {
                 lang.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}),
               ),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFDC2626),
+                foregroundColor: ColorUtils.error600,
+                // Tailwind red-300 outline — no ColorUtils light-error
+                // outline token at this exact shade yet.
                 side: const BorderSide(color: Color(0xFFFCA5A5)),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,

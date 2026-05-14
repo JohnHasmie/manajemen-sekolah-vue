@@ -122,12 +122,12 @@ class AdminFormFieldLabel extends StatelessWidget {
           ),
           if (required) ...[
             const SizedBox(width: 4),
-            const Text(
+            Text(
               '*',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFFDC2626),
+                color: ColorUtils.error600,
               ),
             ),
           ],

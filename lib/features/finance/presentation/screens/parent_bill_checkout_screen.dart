@@ -308,11 +308,11 @@ class _ParentBillCheckoutScreenState
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [ColorUtils.brandAzure, ColorUtils.brandAzureDeep],
-        ),
+        // Use the canonical wali gradient helper so this recap card stays
+        // in lockstep with every other parent hero/recap surface. The
+        // explicit two-stop `[brandAzure, brandAzureDeep]` it replaced is
+        // literally what `brandGradient('wali')` returns.
+        gradient: ColorUtils.brandGradient('wali'),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

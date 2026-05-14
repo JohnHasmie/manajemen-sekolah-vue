@@ -47,7 +47,14 @@ class ReportCardHeader extends StatelessWidget {
               : 'ISI RAPORT',
           title: studentName,
           onBackPressed: onBack,
-          kpiOverlayHeight: 38,
+          // SS2 fix — bumped from 38 to 96 so the title row clears the
+          // overlapping hero card below. The card is ~120dp tall and
+          // overlaps 96dp into the gradient (card height minus the
+          // 24dp translate); the previous 38dp overlay reserve was
+          // smaller than the card's intrusion, so the title got covered
+          // by the white card. 96dp matches the actual overlap and
+          // leaves the gradient title clear.
+          kpiOverlayHeight: 96,
           actionIcons: [
             if (isFinal)
               BrandHeaderIconButton(

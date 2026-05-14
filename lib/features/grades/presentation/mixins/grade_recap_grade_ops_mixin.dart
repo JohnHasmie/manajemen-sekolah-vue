@@ -196,12 +196,10 @@ mixin GradeRecapGradeOpsMixin on ConsumerState<GradeRecapPage> {
 
   void deleteChapter(int chapterIndex);
 
-  /// Renames the chapter at [chapterIndex] in place — opens an
-  /// in-screen rename dialog and writes the new name back into
-  /// `chapters[i]['judul_bab']`. Single-bab tables still need this
-  /// (delete is hidden in that case but the user must still be
-  /// able to rename the single bab they have).
-  void editChapter(int chapterIndex);
+  // SS3-HH — `editChapter` (rename-only dialog) was retired. The
+  // long-press affordance now opens the full `showBulkDialog` flow
+  // which already includes the bab name field, so two near-identical
+  // entry points are no longer needed.
 
   // ── Row recalculation (delegated to mixin) ─────
 

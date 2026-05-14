@@ -135,19 +135,23 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
     bool isImportant,
   ) {
     if (isImportant) {
-      return (bg: const Color(0xFFFEE2E2), fg: const Color(0xFFDC2626));
+      return (bg: ColorUtils.errorLight, fg: ColorUtils.error600);
     }
     final hasClass = (data['class_id'] ?? '').toString().isNotEmpty;
     final roleTarget = (data['role_target'] ?? '').toString().toLowerCase();
 
     if (hasClass) {
+      // Tailwind green-100 / green-700 — feature-local category tone for
+      // class-targeted announcements; no direct ColorUtils token yet.
       return (bg: const Color(0xFFDCFCE7), fg: const Color(0xFF15803D));
     }
     if (roleTarget == 'all' ||
         roleTarget == 'wali' ||
         roleTarget == 'orang_tua') {
-      return (bg: const Color(0xFFDBEAFE), fg: const Color(0xFF1D4ED8));
+      return (bg: ColorUtils.corporateBlue100, fg: ColorUtils.corporateBlue700);
     }
+    // Tailwind violet-100 / violet-700 — feature-local default tone for
+    // generic announcements; no direct ColorUtils token yet.
     return (bg: const Color(0xFFEDE9FE), fg: const Color(0xFF6D28D9));
   }
 
@@ -242,7 +246,7 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEE2E2),
+        color: ColorUtils.errorLight,
         borderRadius: const BorderRadius.all(Radius.circular(11)),
       ),
       child: Row(
@@ -251,8 +255,8 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(
-              color: Color(0xFFDC2626),
+            decoration: BoxDecoration(
+              color: ColorUtils.error600,
               shape: BoxShape.circle,
             ),
           ),
@@ -262,7 +266,7 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF991B1B),
+              color: ColorUtils.errorDark,
               letterSpacing: 0.2,
             ),
           ),

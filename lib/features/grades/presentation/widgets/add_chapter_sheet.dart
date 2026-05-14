@@ -37,6 +37,8 @@ Future<AddChapterResult?> showAddChapterSheet({
   required int nextChapterIndex,
   required List<String> availableMaterials,
   required List<Map<String, dynamic>> availableAssessments,
+  String? initialName,
+  bool isEdit = false,
 }) {
   return showModalBottomSheet<AddChapterResult>(
     context: context,
@@ -49,6 +51,8 @@ Future<AddChapterResult?> showAddChapterSheet({
         nextChapterIndex: nextChapterIndex,
         availableMaterials: availableMaterials,
         availableAssessments: availableAssessments,
+        initialName: initialName,
+        isEdit: isEdit,
       );
     },
   );
@@ -60,11 +64,23 @@ class _AddChapterSheet extends StatefulWidget {
   final List<String> availableMaterials;
   final List<Map<String, dynamic>> availableAssessments;
 
+  /// Pre-filled name on open. Used by the long-press edit flow so the
+  /// teacher sees the bab's current name in the text field instead of
+  /// the default "Bab N" placeholder.
+  final String? initialName;
+
+  /// True when the sheet was opened to EDIT an existing bab (vs adding
+  /// a new one). Drives label text — "Simpan" vs "Tambah" — and the
+  /// initial-name handling.
+  final bool isEdit;
+
   const _AddChapterSheet({
     required this.primaryColor,
     required this.nextChapterIndex,
     required this.availableMaterials,
     required this.availableAssessments,
+    this.initialName,
+    this.isEdit = false,
   });
 
   @override
@@ -78,6 +94,14 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
   String? _selectedMaterial;
   bool _customMode = false;
 
+  // Attached to whichever tile is currently selected (a material row,
+  // or the "Nama Custom" toggle). After the first build, we walk the
+  // tile's BuildContext through Scrollable.ensureVisible so the
+  // teacher's current choice is in view — without this, opening edit
+  // mode with a long materi list lands the scroll at the top and the
+  // teacher has to hunt for what's selected.
+  final GlobalKey _selectedTileKey = GlobalKey();
+
   // ── Step 2 state ────────────────────────────────────────
   /// Selected assessment to pull scores from. `null` means manual.
   Map<String, dynamic>? _selectedAssessment;
@@ -89,17 +113,53 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
   void initState() {
     super.initState();
     final defaultName = 'Bab ${widget.nextChapterIndex + 1}';
-    _nameController = TextEditingController(text: defaultName);
+    final initial = widget.initialName?.trim();
+    _nameController = TextEditingController(
+      text: initial != null && initial.isNotEmpty ? initial : defaultName,
+    );
     _nameFocus = FocusNode();
 
-    // Auto-select the first material if available; otherwise drop into
-    // custom-input mode so the text field is front-and-center.
-    if (widget.availableMaterials.isNotEmpty) {
+    // When opening in edit mode with a prefilled name, try to match the
+    // name back to one of the materials so the chip selection stays in
+    // sync. Falls through to custom-input when there's no match.
+    if (initial != null && initial.isNotEmpty) {
+      final match = widget.availableMaterials.firstWhere(
+        (m) => m == initial,
+        orElse: () => '',
+      );
+      if (match.isNotEmpty) {
+        _selectedMaterial = match;
+        _customMode = false;
+      } else {
+        _customMode = true;
+      }
+    } else if (widget.availableMaterials.isNotEmpty) {
       _selectedMaterial = widget.availableMaterials.first;
       _nameController.text = _selectedMaterial!;
     } else {
       _customMode = true;
     }
+
+    // After the first frame paints (and the sheet's slide-in animation
+    // settles), bring the currently-selected tile into view. The
+    // bottom-sheet open animation takes ~250ms; waiting one frame +
+    // a short delay gives the scroll view its final extent before we
+    // animate. No-op if the key never attached (e.g. when the layout
+    // renders the custom-input field first instead of the list).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Future.delayed(const Duration(milliseconds: 280), () {
+        if (!mounted) return;
+        final ctx = _selectedTileKey.currentContext;
+        if (ctx == null) return;
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+          alignment: 0.5, // center the selected tile in the viewport
+        );
+      });
+    });
   }
 
   @override
@@ -197,7 +257,9 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
                       children: [
                         Text(
                           _step == 0
-                              ? 'Tambah Materi / Bab'
+                              ? (widget.isEdit
+                                    ? 'Edit Materi / Bab'
+                                    : 'Tambah Materi / Bab')
                               : 'Cara Mengisi Nilai',
                           style: TextStyle(
                             fontSize: 16,
@@ -332,6 +394,7 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
   Widget _buildMaterialTile(String name) {
     final selected = !_customMode && _selectedMaterial == name;
     return Padding(
+      key: selected ? _selectedTileKey : null,
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: selected
@@ -404,6 +467,7 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
   Widget _buildCustomToggleTile() {
     final selected = _customMode;
     return Material(
+      key: selected ? _selectedTileKey : null,
       color: selected
           ? widget.primaryColor.withValues(alpha: 0.08)
           : Colors.white,
@@ -741,9 +805,9 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
             child: ElevatedButton.icon(
               onPressed: _submit,
               icon: const Icon(Icons.check_rounded, size: 18),
-              label: const Text(
-                'Tambah Kolom',
-                style: TextStyle(
+              label: Text(
+                widget.isEdit ? 'Simpan' : 'Tambah Kolom',
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.2,

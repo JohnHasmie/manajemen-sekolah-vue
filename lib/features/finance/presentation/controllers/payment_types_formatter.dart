@@ -25,13 +25,10 @@ class PaymentTypesFormatter {
   }
 
   /// Returns the card gradient for admin finance UI elements.
+  /// Centralized via [ColorUtils.headerFadeGradient] so this matches the
+  /// rest of the brand fade-gradient sites.
   LinearGradient getCardGradient() {
-    final color = getPrimaryColor();
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [color, color.withValues(alpha: 0.85)],
-    );
+    return ColorUtils.headerFadeGradient(getPrimaryColor());
   }
 
   // ─── Currency formatting ────────────────────────────────────────────────

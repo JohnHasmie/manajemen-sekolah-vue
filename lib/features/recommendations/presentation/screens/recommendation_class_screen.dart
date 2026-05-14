@@ -12,6 +12,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/data_loading_mixin.dart';
@@ -230,10 +231,9 @@ class _LearningRecommendationClassScreenState
     final subjects = getSubjectsForClass(classId);
     if (subjects.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tidak ada mata pelajaran ditemukan untuk kelas ini'),
-          ),
+        SnackBarUtils.showInfo(
+          context,
+          'Tidak ada mata pelajaran ditemukan untuk kelas ini',
         );
       }
       return;
@@ -379,15 +379,14 @@ class _LearningRecommendationClassScreenState
       if (mounted) {
         final ok = attempts - failures;
         final unit = perStudent ? 'siswa-mapel' : 'mapel';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              failures == 0
-                  ? 'Rekomendasi berhasil dibuat untuk $ok $unit.'
-                  : '$ok berhasil, $failures gagal.',
-            ),
-          ),
-        );
+        final msg = failures == 0
+            ? 'Rekomendasi berhasil dibuat untuk $ok $unit.'
+            : '$ok berhasil, $failures gagal.';
+        if (failures == 0) {
+          SnackBarUtils.showSuccess(context, msg);
+        } else {
+          SnackBarUtils.showWarning(context, msg);
+        }
       }
 
       // Invalidate cache and refresh data

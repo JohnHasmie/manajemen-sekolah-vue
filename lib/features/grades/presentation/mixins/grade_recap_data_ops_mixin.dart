@@ -228,9 +228,7 @@ mixin GradeRecapDataOpsMixin {
 
   void deleteChapter(int chapterIndex) {
     if (chapters.length <= 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Minimal harus ada 1 materi')),
-      );
+      SnackBarUtils.showWarning(context, 'Minimal harus ada 1 materi');
       return;
     }
 

@@ -14,7 +14,6 @@ import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_data_ops_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_ui_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/add_chapter_sheet.dart';
-import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_chapter_rename_dialog.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_save_bar.dart';
@@ -317,7 +316,89 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
 
   @override
   void showBulkDialog(String type, [int? chapterIndex]) {
-    // TODO: Implement bulk grade selection dialog
+    // SS3-HH — long-press "Edit bab" lands here. Re-uses the same
+    // `showAddChapterSheet` the "+" add flow uses, but in edit mode
+    // (initialName prefilled, label flipped to "Simpan").
+    //
+    // For non-bab types this stays a no-op — the bulk-grade picker for
+    // tugas / uh columns hasn't been built yet (separate TODO).
+    if (type != 'bab' || chapterIndex == null) return;
+    if (chapterIndex < 0 || chapterIndex >= chapters.length) return;
+
+    final ch = chapters[chapterIndex] as Map;
+    final currentName =
+        (ch['judul_bab'] ??
+                ch['judul'] ??
+                ch['title'] ??
+                'Bab ${chapterIndex + 1}')
+            .toString();
+
+    final assessments = GradeRecapTableBuilder.deriveAvailableAssessments(
+      rawGrades,
+    );
+
+    showAddChapterSheet(
+      context: context,
+      primaryColor: getPrimaryColor(),
+      nextChapterIndex: chapterIndex,
+      availableMaterials: availableMaterials,
+      availableAssessments: assessments,
+      initialName: currentName,
+      isEdit: true,
+    ).then((result) {
+      if (result == null || result.name.isEmpty || !mounted) return;
+      setState(() {
+        final updated = Map<String, dynamic>.from(ch);
+        updated['judul_bab'] = result.name;
+        updated['judul'] = result.name;
+        updated['title'] = result.name;
+        chapters = List.from(chapters)..[chapterIndex] = updated;
+
+        // If the teacher picked an assessment to re-pull scores from
+        // (instead of "Input Manual"), refill this column's scores for
+        // every row. Mirrors the same pull logic `addChapter` does for
+        // a newly-created column.
+        if (result.assessment != null) {
+          final pickTitle = (result.assessment!['title'] ?? '').toString();
+          final pickType = (result.assessment!['type'] ?? '').toString();
+          final pickDate = (result.assessment!['date'] ?? '').toString();
+          final Map<String, double> perStudentScore = {};
+          for (final g in rawGrades) {
+            if (g is! Map) continue;
+            final title = (g['title'] ?? g['judul'] ?? '').toString();
+            final gType = (g['type'] ?? g['grade_type'] ?? '')
+                .toString()
+                .toLowerCase();
+            final date = (g['date'] ?? g['tanggal'] ?? '').toString();
+            if (title != pickTitle || gType != pickType || date != pickDate) {
+              continue;
+            }
+            final scId = (g['student_class_id'] ?? '').toString();
+            final score = g['score'] ?? g['nilai'];
+            if (scId.isEmpty || score == null) continue;
+            final parsed = score is num
+                ? score.toDouble()
+                : double.tryParse(score.toString());
+            if (parsed != null) perStudentScore[scId] = parsed;
+          }
+          for (final row in tableData) {
+            final scId = row['student_class_id'].toString();
+            final pulled = perStudentScore[scId];
+            final babList = row['bab_scores'] as List;
+            if (chapterIndex < babList.length) {
+              babList[chapterIndex] = pulled;
+            }
+            final key = '$scId|bab|$chapterIndex';
+            scoreControllers[key]?.text = pulled != null
+                ? pulled.toStringAsFixed(0)
+                : '';
+            recalculateRowInternal(row);
+          }
+        }
+
+        hasUnsavedChanges = true;
+      });
+    });
   }
 
   @override
@@ -484,34 +565,10 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
     });
   }
 
-  @override
-  void editChapter(int chapterIndex) async {
-    if (chapterIndex < 0 || chapterIndex >= chapters.length) return;
-    final ch = chapters[chapterIndex] as Map;
-    final currentName =
-        (ch['judul_bab'] ??
-                ch['judul'] ??
-                ch['title'] ??
-                'Bab ${chapterIndex + 1}')
-            .toString();
-    final newName = await showGradeRecapChapterRenameDialog(
-      context: context,
-      currentName: currentName,
-    );
-    if (newName == null || !mounted) return;
-    setState(() {
-      // Mutate in place so any other key the source data carries
-      // (judul / title fallback) stays — we just override the
-      // canonical `judul_bab` and clean up the legacy aliases so
-      // re-reading via the same fallback chain returns the new name.
-      final updated = Map<String, dynamic>.from(ch);
-      updated['judul_bab'] = newName;
-      updated['judul'] = newName;
-      updated['title'] = newName;
-      chapters = List.from(chapters)..[chapterIndex] = updated;
-      hasUnsavedChanges = true;
-    });
-  }
+  // SS3-HH — the rename-only `editChapter` method was removed. The
+  // long-press path now opens the full bulk editor (`showBulkDialog`)
+  // which already lets the teacher edit the bab name plus the per-row
+  // scores. Two affordances for the same column collapsed into one.
 
   @override
   void deleteChapter(int chapterIndex) async {
@@ -720,31 +777,21 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
         kpiCard: _buildBrandKpiCard(lp),
         bodyChildren: [_buildBrandBody(lp)],
       ),
+      // SS4-HH — the previous floating FAB for "+ tambah bab" covered
+      // the right edge of the matrix table. The action moved into the
+      // bottom Save bar (see `GradeRecapSaveBar.onAddChapter`); no
+      // more `floatingActionButton` on this scaffold.
       bottomNavigationBar: (_currentStep == 2 && tableData.isNotEmpty)
           ? GradeRecapSaveBar(
               saveKey: _saveKey,
+              addChapterKey: _addChapterKey,
               isSaving: isSaving,
               hasUnsavedChanges: hasUnsavedChanges,
               onSave: _onSavePressed,
+              onAddChapter: addChapter,
               lp: lp,
             )
           : null,
-      floatingActionButton: (_currentStep == 2 && tableData.isNotEmpty)
-          ? FloatingActionButton(
-              key: _addChapterKey,
-              heroTag: 'grade_recap_add_chapter_fab',
-              onPressed: addChapter,
-              backgroundColor: getPrimaryColor(),
-              foregroundColor: Colors.white,
-              elevation: 4,
-              tooltip: 'Tambah kolom / bab',
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.add_rounded, size: 28),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -760,31 +807,20 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
           Expanded(child: _buildBody(lp)),
         ],
       ),
+      // SS4-HH — same FAB→bottom-bar relocation as the brand scaffold
+      // above. Kept in lockstep so the wizard entry point doesn't drift
+      // from the modal entry point.
       bottomNavigationBar: (_currentStep == 2 && tableData.isNotEmpty)
           ? GradeRecapSaveBar(
               saveKey: _saveKey,
+              addChapterKey: _addChapterKey,
               isSaving: isSaving,
               hasUnsavedChanges: hasUnsavedChanges,
               onSave: _onSavePressed,
+              onAddChapter: addChapter,
               lp: lp,
             )
           : null,
-      floatingActionButton: (_currentStep == 2 && tableData.isNotEmpty)
-          ? FloatingActionButton(
-              key: _addChapterKey,
-              heroTag: 'grade_recap_add_chapter_fab',
-              onPressed: addChapter,
-              backgroundColor: getPrimaryColor(),
-              foregroundColor: Colors.white,
-              elevation: 4,
-              tooltip: 'Tambah kolom / bab',
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.add_rounded, size: 28),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -1103,7 +1139,6 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
         onBulkSelect: (type, chapterIndex) =>
             showBulkDialog(type, chapterIndex),
         onDeleteChapter: deleteChapter,
-        onEditChapter: editChapter,
         onDeskripsiTap: showEditDeskripsi,
       ),
     );
@@ -1160,7 +1195,6 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
         onBulkSelect: (type, chapterIndex) =>
             showBulkDialog(type, chapterIndex),
         onDeleteChapter: deleteChapter,
-        onEditChapter: editChapter,
         onDeskripsiTap: showEditDeskripsi,
       ),
     );

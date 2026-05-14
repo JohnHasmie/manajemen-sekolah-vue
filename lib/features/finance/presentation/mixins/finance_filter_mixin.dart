@@ -93,21 +93,17 @@ mixin FinanceFilterMixin on ConsumerState<FinanceScreen> {
   }
 
   void showFilterSheet() {
-    showModalBottomSheet(
+    FinanceFilterSheet.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FinanceFilterSheet(
-        currentStatus: selectedStatusFilter,
-        currentPeriod: selectedPeriodFilter,
-        languageProvider: ref.read(languageRiverpod),
-        primaryColor: getPrimaryColor(),
-        onApply: (status, period) {
-          updateStatusFilter(status);
-          updatePeriodFilter(period);
-          checkActiveFilter();
-        },
-      ),
+      currentStatus: selectedStatusFilter,
+      currentPeriod: selectedPeriodFilter,
+      languageProvider: ref.read(languageRiverpod),
+      primaryColor: getPrimaryColor(),
+      onApply: (status, period) {
+        updateStatusFilter(status);
+        updatePeriodFilter(period);
+        checkActiveFilter();
+      },
     );
   }
 }

@@ -24,20 +24,19 @@ mixin LessonPlanCrudMixin on ConsumerState<LessonPlanScreen> {
   String get teacherId => widget.teacherId;
 
   /// Shows the lesson plan form dialog for manual upload.
+  ///
+  /// QQ.H2 — dropped the outer `Padding(bottom: viewInsets.bottom)`
+  /// wrapper. [LessonPlanFormDialog] already lifts itself above the
+  /// keyboard internally (see its build method); the wrapper was
+  /// double-padding and added stray whitespace when the keyboard
+  /// appeared.
   void showLessonPlanFormDialog() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: LessonPlanFormDialog(
-          teacherId: teacherId,
-          onSaved: loadLessonPlans,
-        ),
-      ),
+      builder: (_) =>
+          LessonPlanFormDialog(teacherId: teacherId, onSaved: loadLessonPlans),
     );
   }
 
@@ -54,21 +53,18 @@ mixin LessonPlanCrudMixin on ConsumerState<LessonPlanScreen> {
     );
   }
 
-  /// Opens the edit dialog for a lesson plan.
+  /// Opens the edit dialog for a lesson plan. Same QQ.H2 cleanup — the
+  /// inner form dialog handles the keyboard inset itself, so no outer
+  /// `Padding` wrapper is needed.
   void editLessonPlan(Map<String, dynamic> lessonPlan) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: LessonPlanFormDialog(
-          teacherId: teacherId,
-          onSaved: loadLessonPlans,
-          lessonPlanData: lessonPlan,
-        ),
+      builder: (_) => LessonPlanFormDialog(
+        teacherId: teacherId,
+        onSaved: loadLessonPlans,
+        lessonPlanData: lessonPlan,
       ),
     );
   }

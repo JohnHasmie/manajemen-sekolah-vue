@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 
 /// Mixin for dialog management (show and handle save).
@@ -100,19 +100,11 @@ mixin SchoolLevelDialogMixin {
   }) async {
     final name = nameController.text.trim();
     if (name.length < 3) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Nama sekolah minimal harus 3 karakter'),
-          backgroundColor: ColorUtils.error600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      SnackBarUtils.showError(context, 'Nama sekolah minimal harus 3 karakter');
       return;
     }
 
     onSaving(true);
-    final messenger = ScaffoldMessenger.of(context);
 
     try {
       await onSaveSettings(name, addressController.text.trim(), tempJenjang);
@@ -121,25 +113,13 @@ mixin SchoolLevelDialogMixin {
       AppNavigator.pop(context);
       onLoadSettings();
 
-      messenger.showSnackBar(
-        SnackBar(
-          content: const Text('Pengaturan berhasil disimpan'),
-          backgroundColor: ColorUtils.success600,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      SnackBarUtils.showSuccess(context, 'Pengaturan berhasil disimpan');
     } catch (e) {
       AppLogger.error('settings', e);
       if (context.mounted) {
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal menyimpan: '
-              '${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: ColorUtils.error600,
-            behavior: SnackBarBehavior.floating,
-          ),
+        SnackBarUtils.showError(
+          context,
+          'Gagal menyimpan: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {

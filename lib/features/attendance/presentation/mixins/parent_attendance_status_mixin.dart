@@ -42,7 +42,9 @@ mixin ParentAttendanceStatusMixin
       case 'alpha':
         return ColorUtils.error600;
       case 'terlambat':
-        return ColorUtils.corporateBlue600;
+        // Wali brand azure — keeps the "terlambat" pill inside the parent
+        // palette instead of borrowing the legacy corporate-blue swatch.
+        return ColorUtils.brandAzure;
       default:
         return ColorUtils.success600;
     }
@@ -90,12 +92,8 @@ mixin ParentAttendanceStatusMixin
     return ColorUtils.getRoleColor('wali');
   }
 
-  LinearGradient getCardGradient() {
-    final primaryColor = getPrimaryColor();
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
-    );
-  }
+  /// Card gradient — returns the canonical wali brand gradient so any
+  /// consumer wired in later gets the brand-aligned two-stop azure rather
+  /// than the previous single-color alpha fade.
+  LinearGradient getCardGradient() => ColorUtils.brandGradient('wali');
 }

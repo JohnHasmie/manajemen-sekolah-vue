@@ -202,11 +202,7 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
     final p = widget.primaryColor;
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [p, p.withValues(alpha: 0.85)],
-        ),
+        gradient: ColorUtils.headerFadeGradient(p),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(

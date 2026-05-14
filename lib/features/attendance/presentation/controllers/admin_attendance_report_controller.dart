@@ -349,13 +349,10 @@ class AdminAttendanceReportController {
   }
 
   /// Returns the card gradient for the admin role header.
+  /// Centralized in [ColorUtils.headerFadeGradient] so every role uses the
+  /// same fade pattern.
   LinearGradient getCardGradient() {
-    final primary = getPrimaryColor();
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [primary, primary.withValues(alpha: 0.85)],
-    );
+    return ColorUtils.headerFadeGradient(getPrimaryColor());
   }
 }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +9,7 @@ import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/attendance/data/attendance_service.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
@@ -182,6 +185,10 @@ mixin AttendanceInputMixin on ConsumerState<AttendancePage> {
       final fail = result['failed'] ?? 0;
 
       if (fail == 0) {
+        // Refresh dashboard so "Belum input absensi" priority-inbox
+        // rows drop out of "Perlu perhatian" the moment a session is
+        // submitted — no manual pull-to-refresh needed.
+        unawaited(ref.read(dashboardProvider.notifier).refreshStats());
         final msg = skipped == 0
             ? lp.getTranslatedText({
                 'en': 'Attendance saved for $ok students',

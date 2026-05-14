@@ -16,6 +16,8 @@
 // Reads the rec + recipient row from the caller; on Tandai Selesai or
 // Balas it makes the corresponding service call and pops `true` so
 // the parent list can refresh counters.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
@@ -24,6 +26,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/parent_recommendation_complete_sheet.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/parent_recommendation_reply_sheet.dart';
@@ -142,6 +145,9 @@ class _ParentRecommendationDetailScreenState
         parentUserId: widget.parentUserId,
       );
       if (!mounted) return;
+      // Refresh parent dashboard so "Rekomendasi belum dibalas"
+      // priority-inbox rows drop out of "Perlu perhatian" right away.
+      unawaited(ref.read(dashboardProvider.notifier).refreshStats());
       SnackBarUtils.showSuccess(context, 'Balasan terkirim ke wali kelas.');
     } catch (e) {
       if (!mounted) return;
@@ -188,6 +194,7 @@ class _ParentRecommendationDetailScreenState
         parentUserId: widget.parentUserId,
       );
       if (!mounted) return;
+      unawaited(ref.read(dashboardProvider.notifier).refreshStats());
       SnackBarUtils.showSuccess(
         context,
         'Rekomendasi ditandai selesai. Terima kasih!',

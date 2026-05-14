@@ -11,6 +11,8 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
 /// A dialog that lets an admin choose one or more months to export.
 ///
@@ -22,7 +24,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 ///                        so the parent can call its `_processExport` method
 ///
 /// Call [AttendanceExportDialog.show] from the parent instead of constructing
-/// this widget directly -- it wraps [showDialog] for you.
+/// this widget directly -- it wraps [showModalBottomSheet] (via the brand
+/// [AppBottomSheet] shell) for you.
 class AttendanceExportDialog extends ConsumerStatefulWidget {
   const AttendanceExportDialog({
     super.key,
@@ -37,7 +40,7 @@ class AttendanceExportDialog extends ConsumerStatefulWidget {
   /// Called with the user's selected months (already sorted) when they tap Export.
   final void Function(List<DateTime> months) onExport;
 
-  /// Convenience factory: presents this dialog via [showDialog].
+  /// Convenience factory: presents this widget as an [AppBottomSheet].
   ///
   /// Reads the academic-year data from Riverpod internally so the call-site
   /// only needs the [onExport] callback -- like `this.$emit('export', months)`
@@ -55,8 +58,10 @@ class AttendanceExportDialog extends ConsumerStatefulWidget {
         academicYearProvider.selectedAcademicYear?['year']?.toString() ??
         '${DateTime.now().year}/${DateTime.now().year + 1}';
 
-    showDialog(
+    showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => AttendanceExportDialog(
         activeYearName: activeYearName,
         activeYearString: activeYearString,
@@ -93,89 +98,72 @@ class _AttendanceExportDialogState
   Widget build(BuildContext context) {
     final languageProvider = ref.read(languageRiverpod);
 
-    return AlertDialog(
-      title: Text(
-        languageProvider.getTranslatedText({
-          'en': 'Export Attendance',
-          'id': 'Export Absensi',
-        }),
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        height: 300,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Academic year label -- like a read-only Vue prop displayed in the template.
-            Text(
-              'Tahun Ajaran ${widget.activeYearName}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              languageProvider.getTranslatedText({
-                'en': 'Select month(s) to export:',
-                'id': 'Pilih bulan yang akan diexport:',
-              }),
-              style: TextStyle(fontSize: 12, color: ColorUtils.slate400),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // Month checklist -- like a v-for with v-model on each checkbox.
-            Expanded(
-              child: ListView.builder(
-                itemCount: _months.length,
-                itemBuilder: (context, index) {
-                  final date = _months[index];
-                  final label = DateFormat(
-                    'MMMM yyyy',
-                    languageProvider.currentLanguage,
-                  ).format(date);
-                  final isSelected = _selectedMonths.contains(date);
-
-                  return CheckboxListTile(
-                    title: Text(label),
-                    value: isSelected,
-                    onChanged: (val) {
-                      // setState here is scoped to this widget only --
-                      // like mutating a local data() property in Vue.
-                      setState(() {
-                        if (val == true) {
-                          _selectedMonths.add(date);
-                        } else {
-                          _selectedMonths.remove(date);
-                        }
-                      });
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => AppNavigator.pop(context),
-          child: Text(
-            languageProvider.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
+    return AppBottomSheet(
+      title: languageProvider.getTranslatedText({
+        'en': 'Export Attendance',
+        'id': 'Export Absensi',
+      }),
+      subtitle: 'Tahun Ajaran ${widget.activeYearName}',
+      icon: Icons.file_download_outlined,
+      primaryColor: ColorUtils.getRoleColor('admin'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            languageProvider.getTranslatedText({
+              'en': 'Select month(s) to export:',
+              'id': 'Pilih bulan yang akan diexport:',
+            }),
+            style: TextStyle(fontSize: 12, color: ColorUtils.slate400),
           ),
-        ),
-        ElevatedButton(
-          // Disable the button until at least one month is selected --
-          // like `:disabled="selectedMonths.length === 0"` in Vue.
-          onPressed: _selectedMonths.isEmpty
-              ? null
-              : () {
-                  AppNavigator.pop(context);
-                  // Sort before emitting so the parent always gets an
-                  // ordered list regardless of the tap order.
-                  final sorted = List<DateTime>.from(_selectedMonths)..sort();
-                  widget.onExport(sorted);
-                },
-          child: const Text('Export'),
-        ),
-      ],
+          const SizedBox(height: AppSpacing.sm),
+          // Month checklist -- 12 fixed entries, render as a Column so the
+          // outer SingleChildScrollView (provided by AppBottomSheet) owns
+          // the scrolling instead of a nested ListView.
+          for (final date in _months)
+            _buildMonthTile(date, languageProvider.currentLanguage),
+        ],
+      ),
+      footer: BottomSheetFooter(
+        primaryLabel: 'Export',
+        secondaryLabel: languageProvider.getTranslatedText({
+          'en': 'Cancel',
+          'id': 'Batal',
+        }),
+        primaryColor: ColorUtils.getRoleColor('admin'),
+        primaryEnabled: _selectedMonths.isNotEmpty,
+        onPrimary: () {
+          AppNavigator.pop(context);
+          // Sort before emitting so the parent always gets an
+          // ordered list regardless of the tap order.
+          final sorted = List<DateTime>.from(_selectedMonths)..sort();
+          widget.onExport(sorted);
+        },
+        onSecondary: () => AppNavigator.pop(context),
+      ),
+    );
+  }
+
+  Widget _buildMonthTile(DateTime date, String locale) {
+    final label = DateFormat('MMMM yyyy', locale).format(date);
+    final isSelected = _selectedMonths.contains(date);
+    return CheckboxListTile(
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      title: Text(label),
+      value: isSelected,
+      onChanged: (val) {
+        // setState here is scoped to this widget only --
+        // like mutating a local data() property in Vue.
+        setState(() {
+          if (val == true) {
+            _selectedMonths.add(date);
+          } else {
+            _selectedMonths.remove(date);
+          }
+        });
+      },
     );
   }
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
 import 'package:manajemensekolah/features/students/presentation/mixins/student_form_validation_mixin.dart';
 
@@ -135,35 +135,13 @@ mixin StudentFormSaveMixin on StudentFormValidationMixin {
     AppNavigator.pop(buildContext);
   }
 
-  /// Display error dialog.
+  /// Display error message — migrated from a hand-rolled `showDialog(AlertDialog)`
+  /// to the shared [SnackBarUtils.showError] so the error surface stays
+  /// consistent across the app.
   void _showErrorDialog(dynamic error) {
-    showDialog(
-      context: buildContext,
-      builder: (ctx) => AlertDialog(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.error_outline, color: ColorUtils.error600),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              t({'en': 'Error', 'id': 'Gagal'}),
-              style: TextStyle(color: ColorUtils.error600),
-            ),
-          ],
-        ),
-        content: Text(
-          '${t({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
-          style: const TextStyle(fontSize: 16),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => AppNavigator.pop(ctx),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+    SnackBarUtils.showError(
+      buildContext,
+      '${t({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
     );
   }
 }

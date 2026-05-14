@@ -13,6 +13,7 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/dialo
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/card_builders_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/header_builder_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/content_card_builder_mixin.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_action_bar.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 
 class LessonPlanAdminDetailPage extends StatefulWidget {
@@ -63,9 +64,20 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = getStatusColor(LessonPlan.fromJson(lessonPlan).status);
+    final model = LessonPlan.fromJson(lessonPlan);
+    final statusColor = getStatusColor(model.status);
     final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
     final mediaHeight = MediaQuery.of(context).size.height;
+
+    // Setujui / Tolak action bar at the foot of the sheet. Hidden for
+    // Draft rows (teacher hasn't submitted yet) so the bar doesn't show
+    // up before there's anything for the admin to act on.
+    final actionBar = LessonPlanAdminActionBar.maybeBuild(
+      lessonPlanId: model.id,
+      status: model.status,
+      currentNote: model.adminNotes,
+      onStatusChanged: _onStatusChanged,
+    );
 
     return Padding(
       padding: EdgeInsets.only(bottom: keyboardInset),
@@ -84,12 +96,27 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
               children: [
                 buildHeader(context, statusColor),
                 Expanded(child: buildScrollableBody()),
+                if (actionBar != null) actionBar,
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  /// Flip status + note locally after a successful PATCH so the KPI
+  /// badge updates and the buttons re-evaluate which side of the bar
+  /// is visible — no list refetch needed.
+  void _onStatusChanged(String newStatus, String? newNote) {
+    setState(() {
+      lessonPlan['status'] = newStatus;
+      if (newNote != null) {
+        lessonPlan['note_admin'] = newNote;
+        lessonPlan['catatan_admin'] = newNote;
+        lessonPlan['admin_notes'] = newNote;
+      }
+    });
   }
 
   Widget buildScrollableBody() {

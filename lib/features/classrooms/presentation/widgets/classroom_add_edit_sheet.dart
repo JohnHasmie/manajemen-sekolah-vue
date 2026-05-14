@@ -4,6 +4,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/widgets/mixins/classroom_add_edit_footer_mixin.dart';
@@ -77,16 +78,12 @@ class ClassroomAddEditSheetState extends ConsumerState<ClassroomAddEditSheet>
     final name = _nameController.text.trim();
 
     if (name.isEmpty || _selectedGradeLevel == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
-              'en': 'Class name and grade level must be filled',
-              'id': 'Nama kelas dan grade level harus diisi',
-            }),
-          ),
-          backgroundColor: Colors.orange,
-        ),
+      SnackBarUtils.showWarning(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Class name and grade level must be filled',
+          'id': 'Nama kelas dan grade level harus diisi',
+        }),
       );
       return;
     }
@@ -118,22 +115,18 @@ class ClassroomAddEditSheetState extends ConsumerState<ClassroomAddEditSheet>
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText(
-              isEdit
-                  ? {
-                      'en': 'Class successfully updated',
-                      'id': 'Kelas berhasil diperbarui',
-                    }
-                  : {
-                      'en': 'Class successfully added',
-                      'id': 'Kelas berhasil ditambahkan',
-                    },
-            ),
-          ),
-          backgroundColor: Colors.green,
+      SnackBarUtils.showSuccess(
+        context,
+        languageProvider.getTranslatedText(
+          isEdit
+              ? {
+                  'en': 'Class successfully updated',
+                  'id': 'Kelas berhasil diperbarui',
+                }
+              : {
+                  'en': 'Class successfully added',
+                  'id': 'Kelas berhasil ditambahkan',
+                },
         ),
       );
 
@@ -141,14 +134,9 @@ class ClassroomAddEditSheetState extends ConsumerState<ClassroomAddEditSheet>
       widget.onSaved();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Gagal menyimpan: '
-              '${ErrorUtils.getFriendlyMessage(e)}',
-            ),
-            backgroundColor: Colors.red,
-          ),
+        SnackBarUtils.showError(
+          context,
+          'Gagal menyimpan: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {

@@ -41,6 +41,7 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/screens/ai/a
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_content_formatter.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_pdf_builder.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_regen_sheet.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_status_action_bar.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 
 /// AI-RPP detail bottom sheet. Use [show] from outside instead of
@@ -69,11 +70,10 @@ class AiRppDetailScreen extends StatefulWidget {
     //     barrier-tap or ESC press)
     //   • it feels like the file detail page (ManualRppDetailScreen)
     //     instead of a half-height sheet.
-    return Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) =>
-            AiRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew),
-      ),
+    // Routed through AppNavigator (QQ.F1) for app-level observability.
+    return AppNavigator.push<void>(
+      context,
+      AiRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew),
     );
   }
 
@@ -238,6 +238,7 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
     // section cards. The legacy "Detail RPP / Rencana Pelaksanaan…"
     // double-title block + the "Regenerasi Semua Field" hero are
     // gone — title lives in the brand header, regen lives per-section.
+    final status = (_lessonPlanData['status'] ?? '').toString();
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       resizeToAvoidBottomInset: true,
@@ -245,9 +246,27 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
         role: 'guru',
         header: _buildBrandHeader(),
         kpiCard: _buildBrandKpi(),
-        bodyChildren: [_body()],
+        bodyChildren: [
+          LessonPlanRevisionNoteBanner(
+            status: status,
+            adminNote: LessonPlan.fromJson(_lessonPlanData).adminNotes,
+          ),
+          _body(),
+        ],
+      ),
+      // Sticky CTA appears only for Draft + Ditolak — Menunggu /
+      // Disetujui rows return null so the screen has no bottom bar.
+      bottomNavigationBar: LessonPlanStatusActionBar.maybeBuild(
+        lessonPlanId: _lessonPlanId,
+        status: status,
+        primaryColor: _primary,
+        onStatusChanged: _onStatusChanged,
       ),
     );
+  }
+
+  void _onStatusChanged(String newStatus) {
+    setState(() => _lessonPlanData['status'] = newStatus);
   }
 
   // ── Brand chrome (Frame D) ──

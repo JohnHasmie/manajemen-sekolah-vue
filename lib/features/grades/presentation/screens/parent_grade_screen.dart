@@ -61,9 +61,11 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
   final GlobalKey _studentSelectorKey = GlobalKey();
   final GlobalKey _gradeListKey = GlobalKey();
 
-  // Grade type color map
+  // Grade type color map. `tugas` uses the brand azure so the parent
+  // grade chip stays inside the wali palette rather than borrowing the
+  // legacy corporate-blue swatch.
   final Map<String, Color> _gradeTypeColorMap = {
-    'tugas': ColorUtils.corporateBlue600,
+    'tugas': ColorUtils.brandAzure,
     'uh': ColorUtils.success600,
     'uts': ColorUtils.warning600,
     'uas': ColorUtils.error600,
