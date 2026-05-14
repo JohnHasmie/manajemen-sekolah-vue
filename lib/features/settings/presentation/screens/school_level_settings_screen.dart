@@ -98,13 +98,9 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen>
         bottom: 16,
       ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ColorUtils.corporateBlue600,
-            ColorUtils.corporateBlue600.withValues(alpha: 0.8),
-          ],
+        gradient: ColorUtils.headerFadeGradient(
+          ColorUtils.brandAzure,
+          endOpacity: 0.8,
         ),
         boxShadow: [
           BoxShadow(

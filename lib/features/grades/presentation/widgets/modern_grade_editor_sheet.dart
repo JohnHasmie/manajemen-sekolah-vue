@@ -597,10 +597,9 @@ class _ModernGradeEditorSheetState
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [primary, primary.withValues(alpha: 0.75)],
+              gradient: ColorUtils.headerFadeGradient(
+                primary,
+                endOpacity: 0.75,
               ),
               shape: BoxShape.circle,
             ),

@@ -1,17 +1,24 @@
-// Dialog widget that shows read-only statistics for one assessment column.
-// Like a Vue <AssessmentDetailModal> — shows type, date, title, graded count, average.
-// All data is pre-computed by the parent and passed in as plain values.
+// Bottom sheet that shows read-only statistics for one assessment column.
+// Like a Vue <AssessmentDetailModal> — shows type, date, title, graded count,
+// average. All data is pre-computed by the parent and passed in as plain
+// values.
+//
+// Migrated from `showDialog(Dialog(...))` with a hand-rolled gradient header
+// to the shared [AppBottomSheet] + [BottomSheetFooter] chrome so this surface
+// participates in the brand design system (drag handle → gradient header →
+// scrollable detail rows → Samsung-safe OK footer).
 
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
-/// A read-only dialog displaying summary statistics for a single assessment column.
+/// A read-only bottom sheet displaying summary statistics for a single
+/// assessment column.
 ///
-/// Equivalent to what `_showAssessmentDetail` used to build inline.
-/// Think of it as a Vue `<AssessmentDetailModal>` component: data comes in via
-/// props, nothing is emitted back (no mutations, just "OK" to close).
+/// Think of it as a Vue `<AssessmentDetailModal>` component: data comes in
+/// via props, nothing is emitted back (no mutations, just "OK" to close).
 ///
 /// The parent screen pre-computes all stats (total students, graded count,
 /// average score) and passes them as plain `String` values so this widget
@@ -91,98 +98,36 @@ class GradeAssessmentDetailDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(20)),
-      ),
-      child: Column(
+    return AppBottomSheet(
+      title: labelTitle,
+      icon: Icons.assessment_outlined,
+      primaryColor: primaryColor,
+      content: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Gradient header ────────────────────────────────────────────────
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.assessment_outlined,
-                  color: Colors.white,
-                  size: 22,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Text(
-                  labelTitle,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Detail rows ────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _row(labelType, gradeTypeLabel),
-                _row(labelDate, formattedDate),
-                if (assessmentTitle != null && assessmentTitle!.isNotEmpty)
-                  _row(labelAssessmentTitle, assessmentTitle!),
-                Divider(color: ColorUtils.slate200),
-                _row(labelTotalStudents, totalStudents.toString()),
-                _row(labelGraded, '$gradedCount / $totalStudents'),
-                _row(labelAverage, averageScore),
-              ],
-            ),
-          ),
-
-          // ── OK button ──────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => AppNavigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                ),
-                child: const Text(
-                  'OK',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          _row(labelType, gradeTypeLabel),
+          _row(labelDate, formattedDate),
+          if (assessmentTitle != null && assessmentTitle!.isNotEmpty)
+            _row(labelAssessmentTitle, assessmentTitle!),
+          Divider(color: ColorUtils.slate200),
+          _row(labelTotalStudents, totalStudents.toString()),
+          _row(labelGraded, '$gradedCount / $totalStudents'),
+          _row(labelAverage, averageScore),
         ],
+      ),
+      footer: BottomSheetFooter(
+        primaryLabel: 'OK',
+        secondaryLabel: 'Tutup',
+        primaryColor: primaryColor,
+        onPrimary: () => AppNavigator.pop(context),
+        onSecondary: () => AppNavigator.pop(context),
       ),
     );
   }
 }
 
-/// Opens [GradeAssessmentDetailDialog] as a standard dialog.
+/// Opens [GradeAssessmentDetailDialog] as an [AppBottomSheet].
 ///
 /// The screen calls this instead of building the dialog inline.
 void showGradeAssessmentDetailDialog({
@@ -202,8 +147,10 @@ void showGradeAssessmentDetailDialog({
   required int gradedCount,
   required String averageScore,
 }) {
-  showDialog(
+  showModalBottomSheet<void>(
     context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
     builder: (_) => GradeAssessmentDetailDialog(
       primaryColor: primaryColor,
       labelTitle: labelTitle,

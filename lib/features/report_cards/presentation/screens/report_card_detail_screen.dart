@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
+import 'package:manajemensekolah/core/widgets/action_confirm_sheet.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_grade_tab.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_extras_tab.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_info_tab.dart';
@@ -294,32 +294,19 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
     );
   }
 
-  void _showFinalizeDialog() {
-    showDialog(
+  Future<void> _showFinalizeDialog() async {
+    final confirmed = await ActionConfirmSheet.show(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Finalisasi Rapor'),
-        content: const Text(
+      title: 'Finalisasi Rapor',
+      message:
           'Apakah Anda yakin ingin menyelesaikan rapor ini? Rapor yang telah difinalisasi tidak dapat diubah.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.cancel.tr),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              saveReportCard(status: 'final');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: ColorUtils.getRoleColor('guru'),
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Ya, Finalisasi'),
-          ),
-        ],
-      ),
+      confirmText: 'Ya, Finalisasi',
+      cancelText: 'Batal',
+      icon: Icons.task_alt_rounded,
+      confirmColor: ColorUtils.getRoleColor('guru'),
     );
+    if (confirmed == true && mounted) {
+      await saveReportCard(status: 'final');
+    }
   }
 }

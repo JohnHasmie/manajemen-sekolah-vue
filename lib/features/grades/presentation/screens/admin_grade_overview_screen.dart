@@ -281,10 +281,9 @@ class _AdminGradeOverviewScreenState
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_adminColor, _adminColor.withValues(alpha: 0.82)],
+        gradient: ColorUtils.headerFadeGradient(
+          _adminColor,
+          endOpacity: 0.82,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [

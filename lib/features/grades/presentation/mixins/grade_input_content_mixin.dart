@@ -17,7 +17,14 @@ mixin GradeInputContentMixin on ConsumerState<GradePage> {
 
   Map<String, dynamic> safeMap(dynamic raw);
 
-  void openGradeBook(dynamic classData, dynamic subject);
+  /// Open the grade book for a `(classData, subject)` tuple.
+  ///
+  /// [columnId] is an optional assessment-column deep link forwarded to
+  /// [GradeBookPage.initialColumnId]. When non-null, the grade book opens
+  /// directly in edit mode for that column — used by the teacher
+  /// dashboard's "Buku Nilai belum dilengkapi" inbox row so each row
+  /// lands the teacher on the specific column they tapped.
+  void openGradeBook(dynamic classData, dynamic subject, {String? columnId});
 
   Color get primaryColor;
 

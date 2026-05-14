@@ -13,6 +13,7 @@
 //   • Wiring the caller's cell builders (editable score cells) per column
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/frozen_column_table.dart';
 
 class GradeRecapTableView extends StatelessWidget {
@@ -35,13 +36,6 @@ class GradeRecapTableView extends StatelessWidget {
   /// Fires when a chapter delete (×) is tapped.
   final ValueChanged<int> onDeleteChapter;
 
-  /// Fires when a chapter header is tapped — opens a rename dialog
-  /// for that bab. Always available, including when the table only
-  /// has a single chapter (in which case [onDeleteChapter] is hidden
-  /// because deleting the last column would leave nothing to grade
-  /// against).
-  final ValueChanged<int> onEditChapter;
-
   /// Fires when a student's description cell is tapped.
   final void Function(String studentClassId, String studentName) onDeskripsiTap;
 
@@ -57,7 +51,6 @@ class GradeRecapTableView extends StatelessWidget {
     required this.cellBuilder,
     required this.onBulkSelect,
     required this.onDeleteChapter,
-    required this.onEditChapter,
     required this.onDeskripsiTap,
   });
 
@@ -299,78 +292,64 @@ class GradeRecapTableView extends StatelessWidget {
     );
   }
 
-  /// Opens the action menu for chapter [i]. `Ubah nama bab` is
-  /// always present; `Hapus bab` only when there's more than one
-  /// chapter, since deleting the only column would leave the table
-  /// with no grade slots.
+  /// Opens the action menu for chapter [i]. "Edit bab" is always
+  /// present; "Hapus bab" only when there's more than one chapter,
+  /// since deleting the only column would leave the table with no
+  /// grade slots.
+  ///
+  /// Uses the shared [AppBottomSheet] shell so the surface matches the
+  /// brand pattern every other action sheet in the app uses (cobalt
+  /// gradient header + icon + title + subtitle + close X). The body
+  /// renders two large tap targets — a primary "Edit bab" card with
+  /// cobalt accent and a destructive "Hapus bab" card with error
+  /// accent — instead of two plain `ListTile`s, so the affordances
+  /// read as primary actions rather than menu items.
   void _showChapterActionSheet(BuildContext context, int i) {
     final canDelete = chapters.length > 1;
+    final cobalt = ColorUtils.brandCobalt;
 
-    showModalBottomSheet<void>(
+    AppBottomSheet.show(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetCtx) {
-        return SafeArea(
-          top: false,
-          child: Column(
+      title: 'Aksi Bab',
+      subtitle: _chapterTitle(i),
+      icon: Icons.view_column_rounded,
+      primaryColor: cobalt,
+      contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      content: Builder(
+        builder: (sheetCtx) {
+          return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: ColorUtils.slate200,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _chapterTitle(i),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: ColorUtils.slate900,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: Icon(Icons.edit_outlined, color: ColorUtils.slate700),
-                title: const Text('Ubah nama bab'),
+              _ChapterActionCard(
+                icon: Icons.edit_rounded,
+                label: 'Edit bab',
+                description: 'Ubah nama, materi, dan nilai per siswa',
+                accent: cobalt,
                 onTap: () {
+                  // SS3-HH — long-press surfaces the SAME full editor
+                  // the "+" add button uses (showBulkDialog).
                   Navigator.of(sheetCtx).pop();
-                  onEditChapter(i);
+                  onBulkSelect('bab', i);
                 },
               ),
-              if (canDelete)
-                ListTile(
-                  leading: Icon(
-                    Icons.delete_outline_rounded,
-                    color: ColorUtils.error600,
-                  ),
-                  title: Text(
-                    'Hapus bab',
-                    style: TextStyle(color: ColorUtils.error600),
-                  ),
+              if (canDelete) ...[
+                const SizedBox(height: 10),
+                _ChapterActionCard(
+                  icon: Icons.delete_outline_rounded,
+                  label: 'Hapus bab',
+                  description: 'Hapus kolom ini beserta semua nilainya',
+                  accent: ColorUtils.error600,
+                  destructive: true,
                   onTap: () {
                     Navigator.of(sheetCtx).pop();
                     onDeleteChapter(i);
                   },
                 ),
-              const SizedBox(height: 8),
+              ],
             ],
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -467,6 +446,102 @@ class GradeRecapTableView extends StatelessWidget {
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Action card rendered inside the bab long-press sheet. Replaces the
+/// plain `ListTile` rows so each affordance reads as a primary action
+/// with a tinted icon badge, a short description, and a chevron — the
+/// same shape `activity_quick_actions_sheet.dart` and the parent
+/// rekomendasi sheets use.
+class _ChapterActionCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String description;
+  final Color accent;
+  final bool destructive;
+  final VoidCallback onTap;
+
+  const _ChapterActionCard({
+    required this.icon,
+    required this.label,
+    required this.description,
+    required this.accent,
+    required this.onTap,
+    this.destructive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = destructive ? ColorUtils.error600 : ColorUtils.slate900;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: destructive
+                ? ColorUtils.error600.withValues(alpha: 0.04)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: destructive
+                  ? ColorUtils.error600.withValues(alpha: 0.20)
+                  : ColorUtils.slate200,
+              width: 1.2,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: accent, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: fg,
+                        letterSpacing: -0.1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: destructive
+                            ? ColorUtils.error600.withValues(alpha: 0.75)
+                            : ColorUtils.slate500,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: accent, size: 22),
+            ],
           ),
         ),
       ),

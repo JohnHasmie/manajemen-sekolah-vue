@@ -14,14 +14,7 @@ mixin SchoolLevelDialogBuilderMixin {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ColorUtils.corporateBlue600,
-            ColorUtils.corporateBlue600.withValues(alpha: 0.85),
-          ],
-        ),
+        gradient: ColorUtils.headerFadeGradient(ColorUtils.brandAzure),
       ),
       child: Row(
         children: [

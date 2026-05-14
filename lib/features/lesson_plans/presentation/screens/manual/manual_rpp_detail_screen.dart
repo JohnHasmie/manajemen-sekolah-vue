@@ -43,6 +43,7 @@ import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_content_formatter.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_pdf_builder.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_status_action_bar.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_upload_sheet.dart';
 
 class ManualRppDetailScreen extends StatefulWidget {
@@ -62,12 +63,12 @@ class ManualRppDetailScreen extends StatefulWidget {
   }) {
     // Pushed as a full-page route (was modal bottom sheet) so the
     // BrandPageHeader gets full safe-area padding and the title row
-    // isn't clipped by the sheet's rounded-top chrome.
-    return Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) =>
-            ManualRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew),
-      ),
+    // isn't clipped by the sheet's rounded-top chrome. Routed through
+    // AppNavigator (QQ.F1) so navigation stays observable from the
+    // app-level router instead of bypassing it via raw Navigator.
+    return AppNavigator.push<void>(
+      context,
+      ManualRppDetailScreen(lessonPlanData: lessonPlanData, isNew: isNew),
     );
   }
 
@@ -130,6 +131,7 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
     // BrandPageHeader claim the system status bar area for its
     // gradient and back-button row, matching every other teacher
     // detail screen.
+    final status = (_lessonPlanData['status'] ?? '').toString();
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       resizeToAvoidBottomInset: true,
@@ -137,9 +139,25 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
         role: 'guru',
         header: _buildSlateHeader(),
         kpiCard: _buildKpiCard(),
-        bodyChildren: [_buildBody()],
+        bodyChildren: [
+          LessonPlanRevisionNoteBanner(
+            status: status,
+            adminNote: LessonPlan.fromJson(_lessonPlanData).adminNotes,
+          ),
+          _buildBody(),
+        ],
+      ),
+      bottomNavigationBar: LessonPlanStatusActionBar.maybeBuild(
+        lessonPlanId: _lessonPlanId,
+        status: status,
+        primaryColor: _primary,
+        onStatusChanged: _onStatusChanged,
       ),
     );
+  }
+
+  void _onStatusChanged(String newStatus) {
+    setState(() => _lessonPlanData['status'] = newStatus);
   }
 
   // ── Header — uses the shared BrandPageHeader so the file detail

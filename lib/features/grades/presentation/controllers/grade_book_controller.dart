@@ -3,8 +3,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
+
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/grades/data/grade_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
@@ -202,6 +205,10 @@ class GradeBookController {
           await GradeService.createGrade(data);
         }
       }
+      // Refresh the dashboard so the "Buku Nilai belum dilengkapi"
+      // priority-inbox row drops out of "Perlu perhatian" as soon as
+      // the teacher finishes filling the missing scores.
+      unawaited(_ref.read(dashboardProvider.notifier).refreshStats());
       return null;
     } catch (e) {
       AppLogger.error('grades', e);

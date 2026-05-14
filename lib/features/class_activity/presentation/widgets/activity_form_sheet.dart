@@ -404,11 +404,12 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
   ({Color bg, Color fg}) _typeTint(String key) {
     switch (key) {
       case 'tugas':
-        return (bg: const Color(0xFFDBEAFE), fg: ColorUtils.info600);
+        return (bg: ColorUtils.corporateBlue100, fg: ColorUtils.info600);
       case 'aktivitas':
+        // Tailwind violet-100 — no ColorUtils tint token at this shade yet.
         return (bg: const Color(0xFFEDE9FE), fg: ColorUtils.violet700);
       case 'ujian':
-        return (bg: const Color(0xFFFEF3C7), fg: ColorUtils.warning600);
+        return (bg: ColorUtils.warningLight, fg: ColorUtils.warning600);
       case 'catatan':
       default:
         return (bg: ColorUtils.slate100, fg: ColorUtils.slate600);

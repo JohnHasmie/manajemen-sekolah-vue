@@ -118,11 +118,11 @@ class _ParentInboxScreenState extends ConsumerState<ParentInboxScreen> {
     final statusBar = MediaQuery.of(context).viewPadding.top;
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [ColorUtils.brandAzure, ColorUtils.brandAzureDeep],
-        ),
+        // Canonical wali hero gradient — `[brandAzure, brandAzureDeep]` is
+        // literally what `brandGradient('wali')` returns. Pulling the
+        // helper keeps this hero in lockstep with every other parent
+        // surface (parent_dashboard_body, parent_bill_checkout, etc.).
+        gradient: ColorUtils.brandGradient('wali'),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(28),
           bottomRight: Radius.circular(28),

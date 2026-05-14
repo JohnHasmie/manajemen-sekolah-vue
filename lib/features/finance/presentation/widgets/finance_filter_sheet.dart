@@ -39,6 +39,31 @@ class FinanceFilterSheet extends StatefulWidget {
     required this.onApply,
   });
 
+  /// Canonical entry point — wraps [showModalBottomSheet] so callers don't
+  /// re-derive `isScrollControlled` / transparent background / barrier
+  /// behaviour every time. Mirrors the `App*BottomSheet.show()` pattern.
+  static Future<void> show({
+    required BuildContext context,
+    String? currentStatus,
+    String? currentPeriod,
+    required LanguageProvider languageProvider,
+    Color? primaryColor,
+    required void Function(String? status, String? period) onApply,
+  }) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => FinanceFilterSheet(
+        currentStatus: currentStatus,
+        currentPeriod: currentPeriod,
+        languageProvider: languageProvider,
+        primaryColor: primaryColor,
+        onApply: onApply,
+      ),
+    );
+  }
+
   @override
   State<FinanceFilterSheet> createState() => _FinanceFilterSheetState();
 }

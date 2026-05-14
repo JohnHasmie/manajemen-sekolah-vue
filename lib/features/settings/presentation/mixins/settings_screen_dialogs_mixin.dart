@@ -4,10 +4,12 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 import 'package:manajemensekolah/features/settings/presentation/widgets/change_password_dialog.dart';
 
@@ -29,7 +31,9 @@ mixin SettingsScreenDialogsMixin {
     TextInputType keyboardType,
   });
 
-  /// Shows edit profile dialog.
+  /// Shows edit profile bottom sheet — uses brand [AppBottomSheet] chrome
+  /// (gradient header + drag handle + Samsung-safe footer) so the profile
+  /// edit flow stays consistent with the rest of the settings screen.
   Future<void> showEditProfileDialog() async {
     final nameController = TextEditingController(text: profileData['name']);
     final phoneController = TextEditingController(
@@ -38,227 +42,82 @@ mixin SettingsScreenDialogsMixin {
     final addressController = TextEditingController(
       text: profileData['address'],
     );
+    final lang = ref.read(languageRiverpod);
 
-    await showDialog(
+    await AppBottomSheet.show<void>(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+      title: lang.getTranslatedText({
+        'en': 'Edit Profile',
+        'id': 'Edit Profil',
+      }),
+      subtitle: 'Perbarui informasi profil Anda',
+      icon: Icons.person_rounded,
+      primaryColor: primaryColor,
+      content: _buildProfileFormFields(
+        nameController,
+        phoneController,
+        addressController,
+      ),
+      footer: BottomSheetFooter(
+        primaryLabel: lang.getTranslatedText({
+          'en': 'Save',
+          'id': 'Simpan',
+        }),
+        secondaryLabel: lang.getTranslatedText({
+          'en': 'Cancel',
+          'id': 'Batal',
+        }),
+        primaryColor: primaryColor,
+        onPrimary: () => _handleProfileUpdate(
+          nameController,
+          phoneController,
+          addressController,
         ),
-        clipBehavior: Clip.antiAlias,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDialogHeader(),
-              _buildDialogFormFields(
-                nameController,
-                phoneController,
-                addressController,
-              ),
-              _buildDialogFooter(
-                nameController,
-                phoneController,
-                addressController,
-              ),
-            ],
-          ),
-        ),
+        onSecondary: () => AppNavigator.pop(context),
       ),
     );
   }
 
-  /// Builds dialog header.
-  Widget _buildDialogHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
-        ),
-      ),
-      child: Row(
-        children: [
-          _buildHeaderIcon(),
-          const SizedBox(width: 14),
-          Expanded(child: _buildHeaderText()),
-        ],
-      ),
-    );
-  }
-
-  /// Builds header icon container.
-  Widget _buildHeaderIcon() {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-      ),
-      child: const Icon(Icons.person_rounded, color: Colors.white, size: 22),
-    );
-  }
-
-  /// Builds header text content.
-  Widget _buildHeaderText() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          ref.read(languageRiverpod).getTranslatedText({
-            'en': 'Edit Profile',
-            'id': 'Edit Profil',
-          }),
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          'Perbarui informasi profil Anda',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.85),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Builds dialog form fields.
-  Widget _buildDialogFormFields(
+  /// Builds profile form fields for the edit-profile sheet.
+  Widget _buildProfileFormFields(
     TextEditingController nameController,
     TextEditingController phoneController,
     TextEditingController addressController,
   ) {
     final lang = ref.read(languageRiverpod);
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        children: [
-          buildDialogTextField(
-            controller: nameController,
-            label: lang.getTranslatedText({
-              'en': 'Full Name',
-              'id': 'Nama Lengkap',
-            }),
-            icon: Icons.person_outline_rounded,
-            maxLines: 1,
-            keyboardType: TextInputType.text,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          buildDialogTextField(
-            controller: phoneController,
-            label: lang.getTranslatedText({
-              'en': 'Phone Number',
-              'id': 'Nomor Telepon',
-            }),
-            icon: Icons.phone_outlined,
-            maxLines: 1,
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          buildDialogTextField(
-            controller: addressController,
-            label: lang.getTranslatedText({'en': 'Address', 'id': 'Alamat'}),
-            icon: Icons.location_on_outlined,
-            maxLines: 2,
-            keyboardType: TextInputType.text,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Builds dialog footer.
-  Widget _buildDialogFooter(
-    TextEditingController nameController,
-    TextEditingController phoneController,
-    TextEditingController addressController,
-  ) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: ColorUtils.slate100)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 16),
-        child: Row(
-          children: [
-            Expanded(child: _buildCancelButton()),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildSaveButton(
-                nameController,
-                phoneController,
-                addressController,
-              ),
-            ),
-          ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        buildDialogTextField(
+          controller: nameController,
+          label: lang.getTranslatedText({
+            'en': 'Full Name',
+            'id': 'Nama Lengkap',
+          }),
+          icon: Icons.person_outline_rounded,
+          maxLines: 1,
+          keyboardType: TextInputType.text,
         ),
-      ),
-    );
-  }
-
-  /// Builds cancel button.
-  Widget _buildCancelButton() {
-    return OutlinedButton(
-      onPressed: () => AppNavigator.pop(context),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        side: BorderSide(color: ColorUtils.slate300),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+        const SizedBox(height: AppSpacing.md),
+        buildDialogTextField(
+          controller: phoneController,
+          label: lang.getTranslatedText({
+            'en': 'Phone Number',
+            'id': 'Nomor Telepon',
+          }),
+          icon: Icons.phone_outlined,
+          maxLines: 1,
+          keyboardType: TextInputType.phone,
         ),
-      ),
-      child: Text(
-        ref.read(languageRiverpod).getTranslatedText({
-          'en': 'Cancel',
-          'id': 'Batal',
-        }),
-        style: TextStyle(color: ColorUtils.slate600),
-      ),
-    );
-  }
-
-  /// Builds save button.
-  Widget _buildSaveButton(
-    TextEditingController nameController,
-    TextEditingController phoneController,
-    TextEditingController addressController,
-  ) {
-    return ElevatedButton(
-      onPressed: () => _handleProfileUpdate(
-        nameController,
-        phoneController,
-        addressController,
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+        const SizedBox(height: AppSpacing.md),
+        buildDialogTextField(
+          controller: addressController,
+          label: lang.getTranslatedText({'en': 'Address', 'id': 'Alamat'}),
+          icon: Icons.location_on_outlined,
+          maxLines: 2,
+          keyboardType: TextInputType.text,
         ),
-        elevation: 0,
-      ),
-      child: Text(
-        ref.read(languageRiverpod).getTranslatedText({
-          'en': 'Save',
-          'id': 'Simpan',
-        }),
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      ],
     );
   }
 
@@ -290,16 +149,12 @@ mixin SettingsScreenDialogsMixin {
   /// Shows success snackbar.
   void _showSuccessSnackBar() {
     final lang = ref.read(languageRiverpod);
-    final msg = lang.getTranslatedText({
-      'en': 'Profile updated successfully',
-      'id': 'Profil berhasil diperbarui',
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: ColorUtils.success600,
-        behavior: SnackBarBehavior.floating,
-      ),
+    SnackBarUtils.showSuccess(
+      context,
+      lang.getTranslatedText({
+        'en': 'Profile updated successfully',
+        'id': 'Profil berhasil diperbarui',
+      }),
     );
   }
 
@@ -310,20 +165,20 @@ mixin SettingsScreenDialogsMixin {
       'en': 'Failed to update profile',
       'id': 'Gagal memperbarui profil',
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$msg: ${ErrorUtils.getFriendlyMessage(error)}'),
-        backgroundColor: ColorUtils.error600,
-        behavior: SnackBarBehavior.floating,
-      ),
+    SnackBarUtils.showError(
+      context,
+      '$msg: ${ErrorUtils.getFriendlyMessage(error)}',
     );
   }
 
-  /// Shows change password dialog.
+  /// Shows change password bottom sheet — see [ChangePasswordDialog] which
+  /// renders an [AppBottomSheet] with the brand gradient header.
   void showChangePasswordDialog() {
-    showDialog(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => ChangePasswordDialog(primaryColor: primaryColor),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ChangePasswordDialog(primaryColor: primaryColor),
     );
   }
 }

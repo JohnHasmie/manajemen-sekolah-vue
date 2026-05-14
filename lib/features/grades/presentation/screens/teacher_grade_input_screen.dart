@@ -19,7 +19,6 @@ import 'package:manajemensekolah/features/grades/presentation/mixins/grade_input
 import 'package:manajemensekolah/features/grades/presentation/screens/grade_book_screen.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 
-
 class GradePage extends ConsumerStatefulWidget {
   final Map<String, dynamic> teacher;
 
@@ -30,8 +29,11 @@ class GradePage extends ConsumerStatefulWidget {
   final String? initialClassId;
   final String? initialSubjectId;
 
-  /// Optional column highlight. Not yet wired into GradeBookPage —
-  /// see TODO in this file's `_maybeOpenInitialGradeBook` helper.
+  /// Optional assessment-column deep link. Forwarded through
+  /// `openGradeBook` → [GradeBookPage.initialColumnId] so the grade
+  /// book auto-enters edit mode for the targeted column. Wired up by
+  /// the teacher dashboard's "Buku Nilai belum dilengkapi" priority
+  /// inbox row.
   final String? initialColumnId;
 
   const GradePage({
@@ -303,7 +305,7 @@ class GradePageState extends ConsumerState<GradePage>
   Future<void> refresh() async => loadData(useCache: false);
 
   @override
-  void openGradeBook(dynamic classData, dynamic subject) {
+  void openGradeBook(dynamic classData, dynamic subject, {String? columnId}) {
     final subj = Subject.fromJson(subject as Map<String, dynamic>);
     // Pushed as a Material page route (was a 95% modal bottom sheet)
     // so the BrandPageHeader gets its full SafeArea — no more clock /
@@ -326,6 +328,10 @@ class GradePageState extends ConsumerState<GradePage>
                 'name': classData['class_name'],
                 'grade_level': classData['grade_level'],
               },
+              // Forward the optional assessment-column deep link so the
+              // grade book lands the teacher in edit mode for the exact
+              // column the priority-inbox row pointed at.
+              initialColumnId: columnId,
             ),
           ),
         )
@@ -368,10 +374,12 @@ class GradePageState extends ConsumerState<GradePage>
   /// pathway as the user-tap. No-op if either id is null or no
   /// match is found.
   ///
-  /// TODO(GG.5-followup): when [initialColumnId] is set, pass it
-  /// through to GradeBookPage so the screen scrolls / highlights
-  /// that column on open. Currently the column id is accepted but
-  /// not yet plumbed into GradeBookPage's constructor.
+  /// When [initialColumnId] is non-null, it's forwarded to
+  /// [GradeBookPage.initialColumnId] so the grade book opens in edit
+  /// mode for that specific assessment column — previously column_id
+  /// was accepted on this screen but silently dropped here, which is
+  /// why two "Buku Nilai belum dilengkapi" rows for the same
+  /// (class, subject) tuple navigated to the same page.
   void _maybeOpenInitialGradeBook() {
     final cId = widget.initialClassId;
     final sId = widget.initialSubjectId;
@@ -385,7 +393,7 @@ class GradePageState extends ConsumerState<GradePage>
       for (final subject in subjects) {
         if (subject is! Map) continue;
         if (subject['id']?.toString() != sId) continue;
-        openGradeBook(group, subject);
+        openGradeBook(group, subject, columnId: widget.initialColumnId);
         return;
       }
     }

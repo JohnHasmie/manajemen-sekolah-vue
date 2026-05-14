@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_input_dialog.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
@@ -85,21 +85,11 @@ mixin GradeInputFormMixin on State<GradeInputDialog> {
       if (mounted) {
         Navigator.pop(context);
         widget.onSaved();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$saved nilai berhasil disimpan'),
-            backgroundColor: ColorUtils.success600,
-          ),
-        );
+        SnackBarUtils.showSuccess(context, '$saved nilai berhasil disimpan');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ErrorUtils.getFriendlyMessage(e)),
-            backgroundColor: ColorUtils.error600,
-          ),
-        );
+        SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {
       if (mounted) setIsSaving(false);

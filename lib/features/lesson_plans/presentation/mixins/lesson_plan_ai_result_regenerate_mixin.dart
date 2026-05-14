@@ -5,6 +5,8 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_ai_result_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_dialog_field.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/lesson_plan_ai_result_data_mixin.dart';
@@ -25,33 +27,27 @@ mixin LessonPlanAiResultRegenerateMixin
 
   void showRegenerateDialog() {
     _promptController.clear();
-    showDialog(
+    AppBottomSheet.show<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-        title: _buildRegenerateDialogTitle(),
-        content: SingleChildScrollView(child: _buildRegenerateDialogContent()),
-        actions: _buildRegenerateDialogActions(),
+      title: 'Generate Ulang AI',
+      subtitle: 'Susun ulang konten RPP dengan instruksi tambahan',
+      icon: Icons.auto_awesome,
+      primaryColor: ColorUtils.primary,
+      content: _buildRegenerateBody(),
+      footer: BottomSheetFooter(
+        primaryLabel: 'Generate',
+        secondaryLabel: AppLocalizations.cancel.tr,
+        primaryColor: ColorUtils.primary,
+        onPrimary: () {
+          AppNavigator.pop(context);
+          _regenerateLessonPlan(prompt: _promptController.text);
+        },
+        onSecondary: () => AppNavigator.pop(context),
       ),
     );
   }
 
-  Widget _buildRegenerateDialogTitle() {
-    return Row(
-      children: [
-        Icon(Icons.auto_awesome, color: ColorUtils.primary),
-        const SizedBox(width: AppSpacing.sm),
-        const Text(
-          'Generate Ulang AI',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRegenerateDialogContent() {
+  Widget _buildRegenerateBody() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,32 +101,6 @@ mixin LessonPlanAiResultRegenerateMixin
         ),
       ),
     );
-  }
-
-  List<Widget> _buildRegenerateDialogActions() {
-    return [
-      TextButton(
-        onPressed: () => AppNavigator.pop(context),
-        child: Text(
-          AppLocalizations.cancel.tr,
-          style: TextStyle(color: ColorUtils.slate500),
-        ),
-      ),
-      ElevatedButton(
-        onPressed: () {
-          AppNavigator.pop(context);
-          _regenerateLessonPlan(prompt: _promptController.text);
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: ColorUtils.primary,
-          foregroundColor: Colors.white,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
-          ),
-        ),
-        child: const Text('Generate'),
-      ),
-    ];
   }
 
   Future<void> _regenerateLessonPlan({String prompt = ''}) async {
@@ -196,12 +166,9 @@ mixin LessonPlanAiResultRegenerateMixin
   void _handleRegenerationError(dynamic e) {
     AppLogger.error('lesson_plan', e);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${AppLocalizations.failedToRegenerateLessonPlan.tr}: $e',
-          ),
-        ),
+      SnackBarUtils.showError(
+        context,
+        '${AppLocalizations.failedToRegenerateLessonPlan.tr}: $e',
       );
     }
   }

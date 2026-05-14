@@ -162,6 +162,33 @@ class ColorUtils {
     );
   }
 
+  /// Canonical sheet/header fade gradient. Pairs [base] with the same colour
+  /// faded to [endOpacity] (default ~85 %) along the topLeft → bottomRight
+  /// diagonal.
+  ///
+  /// Use this instead of inlining
+  /// `LinearGradient(colors: [c, c.withValues(alpha: 0.85)])` for sheet
+  /// headers, dialog headers, KPI hero cards, and any other surface that
+  /// wants the standard role-tinted fade.
+  ///
+  /// Some legacy sites tune [endOpacity] for slightly punchier surfaces
+  /// (0.75–0.82) — pass that through rather than reverting to inline
+  /// construction.
+  ///
+  /// Prefer [brandGradient] when the gradient should pair two distinct brand
+  /// tokens (admin / teacher / parent) rather than a fade of one runtime
+  /// colour.
+  static LinearGradient headerFadeGradient(
+    Color base, {
+    double endOpacity = 0.85,
+  }) {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [base, base.withValues(alpha: endOpacity)],
+    );
+  }
+
   /// Semantic dashboard colors at the 600 weight for consistent contrast.
   static Color get success600 => const Color(0xFF059669);
   static Color get warning600 => const Color(0xFFD97706);

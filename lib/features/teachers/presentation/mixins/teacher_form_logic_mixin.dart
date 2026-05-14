@@ -33,16 +33,12 @@ mixin TeacherFormLogicMixin on ConsumerState<TeacherFormDialog> {
     final email = emailController.text.trim();
 
     if (name.isEmpty || email.isEmpty || selectedGender == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider.getTranslatedText({
-              'en': 'Name, email, and gender are required',
-              'id': 'Nama, email, dan jenis kelamin wajib diisi',
-            }),
-          ),
-          backgroundColor: Colors.orange,
-        ),
+      SnackBarUtils.showWarning(
+        context,
+        languageProvider.getTranslatedText({
+          'en': 'Name, email, and gender are required',
+          'id': 'Nama, email, dan jenis kelamin wajib diisi',
+        }),
       );
       return;
     }

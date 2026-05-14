@@ -90,7 +90,11 @@ class AiRppPreviewView extends StatelessWidget {
             isRegeneratingThis: false,
             primaryColor: primaryColor,
             onRegenTap: () => onFieldRegenTap(fieldKey, fieldLabel),
-            onEditTap: onFieldEditTap == null
+            // Identitas is edited via the BrandPageHeader pencil
+            // (LessonPlanIdentityEditSheet) — suppress the per-section
+            // pencil here so the section card doesn't duplicate the
+            // same affordance.
+            onEditTap: (onFieldEditTap == null || fieldKey == 'identitas')
                 ? null
                 : () => onFieldEditTap!(fieldKey, fieldLabel),
             stripHtml: stripHtml,

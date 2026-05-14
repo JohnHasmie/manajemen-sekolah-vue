@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_header.dart';
@@ -108,12 +109,11 @@ mixin ParentGradeUiMixin on State<ParentGradeScreen> {
     );
   }
 
-  /// Build card gradient based on primary color.
-  LinearGradient buildCardGradient(Color primaryColor) {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
-    );
-  }
+  /// Build a card gradient. Returns the canonical wali gradient so card
+  /// surfaces stay in lockstep with [BrandPageHeader] and other parent
+  /// hero surfaces. The `primaryColor` argument is preserved for callers
+  /// that pass it in for compatibility; the gradient itself no longer
+  /// derives from it (the previous hand-rolled `[primaryColor, alpha 0.85]`
+  /// single-color fade is replaced with the brand two-stop azure).
+  LinearGradient buildCardGradient(Color _) => ColorUtils.brandGradient('wali');
 }

@@ -83,11 +83,7 @@ mixin AttendanceDialogSharedMixin on ConsumerState<AttendancePage> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 10, 16, 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
-        ),
+        gradient: ColorUtils.headerFadeGradient(primaryColor),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(

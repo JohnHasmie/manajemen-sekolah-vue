@@ -143,8 +143,7 @@ class ParentGradeListView extends StatelessWidget {
         }
         final grade = gradeList[index];
         final type = grade['type']?.toString().toLowerCase() ?? 'tugas';
-        final typeColor =
-            gradeTypeColorMap[type] ?? ColorUtils.corporateBlue600;
+        final typeColor = gradeTypeColorMap[type] ?? ColorUtils.brandAzure;
         final score = double.tryParse(grade['score']?.toString() ?? '0') ?? 0;
         final assessmentTitle = grade['title']?.toString();
         final isRead =

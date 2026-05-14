@@ -28,12 +28,22 @@ class GradeBookPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> classData;
   final VoidCallback? onBack;
 
+  /// Optional assessment-column deep link — when set, the screen
+  /// auto-enters edit mode for the matching column after `loadData`
+  /// finishes. Wired up so the teacher dashboard's "Buku Nilai belum
+  /// dilengkapi" priority-inbox row lands the teacher directly on the
+  /// column they need to fill in (rather than the generic grade-book
+  /// hub, which would route two distinct-column rows to the same
+  /// screen — a real bug reported by Mas Yahya).
+  final String? initialColumnId;
+
   const GradeBookPage({
     super.key,
     required this.teacher,
     required this.subject,
     required this.classData,
     this.onBack,
+    this.initialColumnId,
   });
 
   @override
@@ -234,9 +244,36 @@ class GradeBookPageState extends ConsumerState<GradeBookPage>
       teacher: widget.teacher,
       subject: widget.subject,
       classData: widget.classData,
-    );
+    ).then((_) {
+      if (!mounted) return;
+      _maybeEnterInitialColumnEdit();
+    });
     updateFilteredGradeTypes();
     _searchController.addListener(filterStudents);
+  }
+
+  /// When the screen was opened via the priority-inbox "Buku Nilai belum
+  /// dilengkapi" deep-link, [GradeBookPage.initialColumnId] points at the
+  /// specific assessment column the teacher tapped. After [loadData]
+  /// resolves and `_assessmentHeaders` is populated, find the matching
+  /// `(type, header)` pair and enter edit mode for it — that way two
+  /// inbox rows for the same `(class, subject)` but different columns
+  /// land the teacher on different, actionable views instead of the same
+  /// generic grade-book page.
+  ///
+  /// No-op when no deep-link column id was passed, or when the column
+  /// can't be found (e.g. assessment deleted, AY switched).
+  void _maybeEnterInitialColumnEdit() {
+    final targetId = widget.initialColumnId;
+    if (targetId == null || targetId.isEmpty) return;
+    for (final entry in _assessmentHeaders.entries) {
+      for (final header in entry.value) {
+        if (header['id']?.toString() == targetId) {
+          enterEditMode(entry.key, header);
+          return;
+        }
+      }
+    }
   }
 
   @override

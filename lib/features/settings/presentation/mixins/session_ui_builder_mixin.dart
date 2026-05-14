@@ -36,13 +36,9 @@ mixin SessionUIBuilderMixin on State<DaySessionManagementSheet> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 10, 12, 18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ColorUtils.corporateBlue600,
-            ColorUtils.corporateBlue600.withValues(alpha: 0.8),
-          ],
+        gradient: ColorUtils.headerFadeGradient(
+          ColorUtils.brandAzure,
+          endOpacity: 0.8,
         ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),

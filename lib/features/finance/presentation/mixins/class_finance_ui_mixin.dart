@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_report_screen.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/class_finance_report_filter_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_report_models.dart';
@@ -77,28 +78,27 @@ mixin ClassFinanceUIMixin on State<ClassFinanceReportScreen> {
     );
   }
 
-  /// Shows bill detail dialog.
+  /// Shows bill detail bottom sheet.
   void showDetailDialog(dynamic bill) {
     if (bill == null) return;
 
-    showDialog(
+    AppBottomSheet.show<void>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Detail Tagihan'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: buildDetailRows(bill),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => AppNavigator.pop(context),
-              child: Text(AppLocalizations.close.tr),
-            ),
-          ],
-        );
-      },
+      title: 'Detail Tagihan',
+      icon: Icons.receipt_long_outlined,
+      primaryColor: getPrimaryColor(),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: buildDetailRows(bill),
+      ),
+      footer: BottomSheetFooter(
+        primaryLabel: 'Tutup',
+        secondaryLabel: 'Batal',
+        primaryColor: getPrimaryColor(),
+        onPrimary: () => AppNavigator.pop(context),
+        onSecondary: () => AppNavigator.pop(context),
+      ),
     );
   }
 

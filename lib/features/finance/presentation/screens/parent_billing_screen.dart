@@ -44,21 +44,20 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
     final state = ref.read(parentFinanceProvider).value;
     if (state == null) return;
 
-    showModalBottomSheet(
+    // Route through the canonical `FinanceFilterSheet.show()` static helper
+    // — mirrors the `App*BottomSheet.show()` pattern so callers don't
+    // re-derive `isScrollControlled` / barrier behaviour every time.
+    FinanceFilterSheet.show(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FinanceFilterSheet(
-        currentStatus: state.statusFilter,
-        currentPeriod: state.periodFilter,
-        languageProvider: lp,
-        primaryColor: ColorUtils.brandAzureDeep,
-        onApply: (status, period) {
-          ref
-              .read(parentFinanceProvider.notifier)
-              .updateFilters(status: status, period: period);
-        },
-      ),
+      currentStatus: state.statusFilter,
+      currentPeriod: state.periodFilter,
+      languageProvider: lp,
+      primaryColor: ColorUtils.brandAzureDeep,
+      onApply: (status, period) {
+        ref
+            .read(parentFinanceProvider.notifier)
+            .updateFilters(status: status, period: period);
+      },
     );
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -5,6 +7,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/report_cards/data/report_card_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/report_card_detail_screen.dart';
@@ -48,6 +51,10 @@ mixin ReportCardSaveMixin on ConsumerState<ReportCardDetailScreen> {
           setState(() {
             hasUnsavedChanges = false;
           });
+          // Refresh dashboard so "Raport belum tuntas" priority-inbox
+          // rows drop out of "Perlu perhatian" as soon as the wali
+          // kelas saves a draft or finalizes the raport.
+          unawaited(ref.read(dashboardProvider.notifier).refreshStats());
           SnackBarUtils.showInfo(
             context,
             status == 'final' ? 'Raport diselesaikan!' : 'Draft disimpan!',

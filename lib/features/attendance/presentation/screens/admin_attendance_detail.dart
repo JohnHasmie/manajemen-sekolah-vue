@@ -113,11 +113,7 @@ class _AdminAttendanceDetailPageState
 
   @override
   LinearGradient getCardGradient() {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [getPrimaryColor(), getPrimaryColor().withValues(alpha: 0.85)],
-    );
+    return ColorUtils.headerFadeGradient(getPrimaryColor());
   }
 
   @override
