@@ -75,6 +75,13 @@ class DashboardStateTransformer {
       // Null means the feature flag is off; renderer shows empty state.
       ..['priority_inbox'] = data['priority_inbox'] is List
           ? data['priority_inbox']
+          : null
+      // Uncapped total — drives the "N of total" badge on the
+      // dashboard card when the inbox has more rows than the
+      // hard cap (config dashboard.priority_inbox.max_items) shows.
+      // Null when priority_inbox itself is null.
+      ..['priority_inbox_total'] = data['priority_inbox_total'] != null
+          ? toInt(data['priority_inbox_total'])
           : null;
   }
 

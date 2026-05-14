@@ -627,9 +627,20 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     // Title carries an active-item badge ("Perlu Perhatian · 3").
     // When the list is empty, the card itself shows its empty
     // state — we drop the badge to avoid "· 0".
+    //
+    // When the uncapped total (set by the backend) exceeds what the
+    // card shows, render "N/total" so the user knows "Lihat semua"
+    // pulls in more rows than the visible top-N.
+    final totalRaw = widget.state.stats['priority_inbox_total'];
+    final total = totalRaw is int
+        ? totalRaw
+        : (totalRaw is num ? totalRaw.toInt() : inbox.length);
+    final countLabel = total > inbox.length
+        ? '${inbox.length}/$total'
+        : '${inbox.length}';
     final title = inbox.isEmpty
         ? AppLocalizations.dbAttentionRequired.tr
-        : '${AppLocalizations.dbAttentionRequired.tr} · ${inbox.length}';
+        : '${AppLocalizations.dbAttentionRequired.tr} · $countLabel';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
