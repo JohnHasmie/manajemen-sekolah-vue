@@ -35,6 +35,7 @@ import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/features/dashboard/data/dashboard_service.dart';
 import 'package:manajemensekolah/features/dashboard/data/priority_inbox_snooze_store.dart';
 import 'package:manajemensekolah/features/dashboard/domain/models/priority_inbox_item.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/priority_inbox_snooze_sheet.dart';
 
 /// Filter buckets the screen exposes. Maps 1:1 onto
@@ -156,6 +157,18 @@ class _TeacherInboxScreenState extends ConsumerState<TeacherInboxScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The dashboard card and this screen share a single source of truth:
+    // any save handler that fires dashboardProvider.refreshStats() (see
+    // lesson_plan_status_action_bar._submit, attendance_input_mixin, etc.)
+    // signals that the uncapped feed may also be stale. Re-load when the
+    // dashboard state transitions to a new value.
+    ref.listen<AsyncValue<DashboardState>>(dashboardProvider, (prev, next) {
+      if (!next.hasValue || _isLoading) return;
+      if (prev?.value != next.value) {
+        _load();
+      }
+    });
+
     final store = PriorityInboxSnoozeStore.instance;
     final now = DateTime.now();
     final visible = _items
