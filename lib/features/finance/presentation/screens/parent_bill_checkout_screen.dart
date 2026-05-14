@@ -22,7 +22,11 @@
 // service layer carries a TODO so the swap to real gateway only
 // touches one file.
 
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -101,6 +105,17 @@ class _ParentBillCheckoutScreenState
   /// page always has something to render, then overwritten by the
   /// backend response when [_loadSession] resolves.
   late _CheckoutSession _session;
+
+  /// True while a payment-proof upload is in flight — drives the
+  /// upload CTA loading state and prevents double-submits.
+  bool _isUploading = false;
+
+  /// Whether the "Cara bayar" accordion body is currently expanded.
+  /// Defaults closed; the user opens it on demand. Resets implicitly
+  /// when the method tab changes since the body content depends on
+  /// `_method` and the user expects the accordion to feel fresh per
+  /// tab.
+  bool _howToExpanded = false;
 
   @override
   void initState() {
@@ -273,20 +288,24 @@ class _ParentBillCheckoutScreenState
               ),
             ),
           ),
-          // Help button — opens the cara-bayar bottom sheet for
-          // method-specific instructions. Stub for now.
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.help_outline_rounded,
-              size: 18,
-              color: ColorUtils.slate600,
+          // Help button — opens a bottom sheet with method-specific
+          // payment instructions and a fallback contact line.
+          InkWell(
+            onTap: _showHelpSheet,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.help_outline_rounded,
+                size: 18,
+                color: ColorUtils.slate600,
+              ),
             ),
           ),
         ],
@@ -390,19 +409,28 @@ class _ParentBillCheckoutScreenState
             label: 'QRIS',
             caption: '⚡ Tercepat',
             active: _method == _PayMethod.qris,
-            onTap: () => setState(() => _method = _PayMethod.qris),
+            onTap: () => setState(() {
+              _method = _PayMethod.qris;
+              _howToExpanded = false;
+            }),
           ),
           ParentCheckoutMethodTab(
             label: 'Virtual Acc.',
             caption: 'BCA / Mandiri',
             active: _method == _PayMethod.va,
-            onTap: () => setState(() => _method = _PayMethod.va),
+            onTap: () => setState(() {
+              _method = _PayMethod.va;
+              _howToExpanded = false;
+            }),
           ),
           ParentCheckoutMethodTab(
             label: 'Manual',
             caption: 'Upload bukti',
             active: _method == _PayMethod.manual,
-            onTap: () => setState(() => _method = _PayMethod.manual),
+            onTap: () => setState(() {
+              _method = _PayMethod.manual;
+              _howToExpanded = false;
+            }),
           ),
         ],
       ),
@@ -434,12 +462,22 @@ class _ParentBillCheckoutScreenState
             children: [
               ParentCheckoutCountdownChip(expires: _session.expiresAt),
               const Spacer(),
-              Text(
-                'Simpan QR ↓',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: ColorUtils.brandAzureDeep,
+              InkWell(
+                onTap: _onCopyQrString,
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    'Salin kode QR',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: ColorUtils.brandAzureDeep,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -614,33 +652,55 @@ class _ParentBillCheckoutScreenState
             const SizedBox(height: 8),
           ],
           const SizedBox(height: 8),
-          // Upload bukti CTA
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F9FF),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFBAE6FD)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.upload_file_rounded,
-                  size: 16,
-                  color: ColorUtils.brandAzureDeep,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Sudah transfer? Upload bukti',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: ColorUtils.brandAzureDeep,
+          // Upload bukti CTA — taps fire `_pickAndUploadProof`, which
+          // pushes through ApiService.uploadFile → backend
+          // POST /bill/{id}/payment-proof (parent-owned bills only,
+          // status forced to 'pending'). Shows a spinner while in
+          // flight so the user can't double-submit.
+          InkWell(
+            onTap: _isUploading ? null : _pickAndUploadProof,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0F9FF),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFBAE6FD)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isUploading)
+                    SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          ColorUtils.brandAzureDeep,
+                        ),
+                      ),
+                    )
+                  else
+                    Icon(
+                      Icons.upload_file_rounded,
+                      size: 16,
+                      color: ColorUtils.brandAzureDeep,
+                    ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _isUploading
+                        ? 'Mengunggah bukti…'
+                        : 'Sudah transfer? Upload bukti',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: ColorUtils.brandAzureDeep,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -659,46 +719,151 @@ class _ParentBillCheckoutScreenState
       _PayMethod.va => 'Cara bayar via Virtual Account',
       _PayMethod.manual => 'Cara bayar transfer manual',
     };
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    final steps = _howToStepsFor(_method);
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () => setState(() => _howToExpanded = !_howToExpanded),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.75),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: ColorUtils.slate900,
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE2E8F0), width: 0.75),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: ColorUtils.slate900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          tip,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            color: ColorUtils.slate500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  tip,
-                  style: TextStyle(fontSize: 9.5, color: ColorUtils.slate500),
-                ),
-              ],
-            ),
+                  AnimatedRotation(
+                    turns: _howToExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 180),
+                    child: Text(
+                      '▾',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: ColorUtils.brandAzureDeep,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                child: _howToExpanded
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                          for (var i = 0; i < steps.length; i++) ...[
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  margin: const EdgeInsets.only(top: 1),
+                                  decoration: BoxDecoration(
+                                    color: ColorUtils.brandAzureDeep
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    '${i + 1}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: ColorUtils.brandAzureDeep,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    steps[i],
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      height: 1.4,
+                                      color: ColorUtils.slate700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (i < steps.length - 1)
+                              const SizedBox(height: 8),
+                          ],
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
           ),
-          Text(
-            '▾',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: ColorUtils.brandAzureDeep,
-            ),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  /// Step-by-step instructions per payment method. Kept here (and not
+  /// in a separate widget file) because the accordion is the only
+  /// surface that needs them and inlining keeps the strings near the
+  /// UI they belong to.
+  List<String> _howToStepsFor(_PayMethod method) {
+    switch (method) {
+      case _PayMethod.qris:
+        return const [
+          'Buka aplikasi pembayaran (GoPay, OVO, Dana, ShopeePay, atau m-banking).',
+          'Pilih menu "Scan QRIS".',
+          'Arahkan kamera ke QR di layar ini.',
+          'Periksa nominal, lalu konfirmasi pembayaran.',
+          'Status tagihan akan terupdate otomatis dalam kurang dari 1 menit.',
+        ];
+      case _PayMethod.va:
+        return const [
+          'Buka aplikasi m-banking bank Anda.',
+          'Pilih menu "Transfer" → "Virtual Account / BI-Fast".',
+          'Masukkan nomor Virtual Account yang tertera di layar.',
+          'Pastikan nama tujuan adalah Yayasan Sekolah.',
+          'Konfirmasi nominal dan selesaikan transfer.',
+          'Status tagihan akan terupdate otomatis dalam kurang dari 1 menit.',
+        ];
+      case _PayMethod.manual:
+        return const [
+          'Transfer ke salah satu rekening sekolah yang tertera di atas.',
+          'Pastikan nominal transfer sesuai dengan total tagihan.',
+          'Simpan struk atau screenshot bukti transfer Anda.',
+          'Tap tombol "Sudah transfer? Upload bukti" lalu pilih foto bukti.',
+          'Admin akan memverifikasi pembayaran dalam 1–24 jam.',
+        ];
+    }
   }
 
   Widget _buildStatusHint() {
@@ -775,6 +940,257 @@ class _ParentBillCheckoutScreenState
   }
 
   // ───────────── helpers ─────────────
+
+  /// Open the native file picker and upload the chosen receipt to the
+  /// backend. Backend route is the parent-only
+  /// POST /bill/{billId}/payment-proof, which checks ownership and
+  /// forces the payment row to `status='pending'` — the parent can
+  /// never self-verify here.
+  ///
+  /// Errors are surfaced via [SnackBarUtils] without leaving the
+  /// screen; the user can retry. Success pops back with `true` so the
+  /// bills list refreshes and shows the new "pending" status row.
+  Future<void> _pickAndUploadProof() async {
+    if (_isUploading) return;
+
+    final billId = widget.bill['id']?.toString();
+    if (billId == null || billId.isEmpty) {
+      SnackBarUtils.showError(context, 'ID tagihan tidak valid.');
+      return;
+    }
+
+    FilePickerResult? picked;
+    try {
+      picked = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const [
+          'jpg', 'jpeg', 'png', 'pdf', 'heic', 'heif', 'webp',
+        ],
+        allowMultiple: false,
+        withData: false,
+      );
+    } catch (e) {
+      AppLogger.error('parent-bill-pick', e);
+      if (!mounted) return;
+      SnackBarUtils.showError(context, 'Gagal membuka pemilih file.');
+      return;
+    }
+
+    if (picked == null || picked.files.isEmpty) return; // user cancelled
+
+    final filePath = picked.files.first.path;
+    if (filePath == null || filePath.isEmpty) {
+      if (!mounted) return;
+      SnackBarUtils.showError(context, 'File tidak dapat dibaca.');
+      return;
+    }
+
+    final file = File(filePath);
+    final sizeMb = (await file.length()) / (1024 * 1024);
+    if (sizeMb > 5) {
+      if (!mounted) return;
+      SnackBarUtils.showError(
+        context,
+        'Ukuran file ${sizeMb.toStringAsFixed(1)}MB melebihi batas 5MB. Mohon kompres atau pilih file lain.',
+      );
+      return;
+    }
+
+    setState(() => _isUploading = true);
+    try {
+      await ApiService().uploadFile(
+        '/bill/$billId/payment-proof',
+        file,
+        fileField: 'payment_receipt',
+        data: const {'payment_method': 'manual_transfer'},
+      );
+
+      // Bill state has changed (unpaid → pending) — drop the cached
+      // checkout session so a re-open hits the API and reflects the
+      // new status instead of replaying the pre-upload snapshot.
+      _sessionCache.remove(_cacheKey(billId));
+
+      if (!mounted) return;
+      SnackBarUtils.showSuccess(
+        context,
+        'Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.',
+      );
+      AppNavigator.pop(context, true);
+    } catch (e) {
+      AppLogger.error('parent-bill-upload', e);
+      if (!mounted) return;
+      setState(() => _isUploading = false);
+      SnackBarUtils.showError(
+        context,
+        'Gagal mengunggah bukti. Mohon coba lagi.',
+      );
+    }
+  }
+
+  /// Bottom sheet shown when the user taps the top-right help icon.
+  /// Lists the three payment methods with short guidance and a
+  /// fallback contact line. Kept lightweight on purpose — the full
+  /// step-by-step lives in the in-page accordion.
+  void _showHelpSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        Widget bullet(IconData icon, String label, String body) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: ColorUtils.brandAzureDeep.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      icon,
+                      size: 14,
+                      color: ColorUtils.brandAzureDeep,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: ColorUtils.slate900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          body,
+                          style: TextStyle(
+                            fontSize: 11,
+                            height: 1.4,
+                            color: ColorUtils.slate600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.lg,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Text(
+                  'Bantuan Pembayaran',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.slate900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Pilih metode yang paling nyaman untuk Anda.',
+                  style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
+                ),
+                const SizedBox(height: 12),
+                bullet(
+                  Icons.qr_code_scanner_rounded,
+                  'QRIS',
+                  'Pembayaran tercepat. Status tagihan terupdate otomatis < 1 menit.',
+                ),
+                bullet(
+                  Icons.account_balance_rounded,
+                  'Virtual Account',
+                  'Transfer via m-banking ke nomor VA unik. Status terupdate otomatis.',
+                ),
+                bullet(
+                  Icons.upload_file_rounded,
+                  'Transfer Manual',
+                  'Transfer ke rekening sekolah lalu unggah bukti. Verifikasi admin 1–24 jam.',
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.support_agent_rounded,
+                        size: 16,
+                        color: Color(0xFF92400E),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Ada kendala? Hubungi admin sekolah untuk bantuan.',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF92400E),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Copy the QRIS code string to the clipboard. The string is what a
+  /// payment app would have scanned, so power users can paste it into
+  /// the bank app's "Paste QRIS" flow when scanning doesn't work
+  /// (e.g., poor lighting, single-device flow).
+  Future<void> _onCopyQrString() async {
+    final qr = _session.qrString;
+    if (qr.isEmpty) {
+      if (!mounted) return;
+      SnackBarUtils.showError(context, 'Kode QR belum tersedia.');
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: qr));
+    if (!mounted) return;
+    _toastCopied('Kode QR');
+  }
 
   Future<void> _onCheckStatus() async {
     // Stub: pretend the gateway confirmed payment. Real
