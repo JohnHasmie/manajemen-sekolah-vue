@@ -1,18 +1,13 @@
 // Dialog for viewing a student's uploaded payment proof.
 //
-// Extracted from `_showPaymentProof` in admin_finance_screen.dart.
-// Like a Vue `<PaymentProofDialog :payment="p" />` modal that displays
-// the receipt with a gradient header and a brief payment info footer.
-//
-// Resolves the file URL in this order:
-//   1. `payment['payment_proof_url']` — the absolute URL the backend
-//      sets on bills/payments (see `FinanceController::getParentBills`
-//      line 159). Preferred path; matches the canonical storage layout.
-//   2. Fallback: build `{base}/storage/payments/{filename}` from the
-//      raw `payment_receipt` / `payment_proof` filename. The legacy
-//      `/uploads/bukti-pembayaran/...` path this dialog used to build
-//      404s against the current backend, which manifested as the
-//      "Gagal Memuat Gambar" error every admin saw.
+// Reads the absolute proof URL from `payment['payment_proof_url']` —
+// the backend's Payment model exposes this as an accessor that goes
+// through `Storage::disk('public')->url()`, so the URL is correct
+// whether the file lives on the local public disk OR on MinIO/S3
+// when `FILESYSTEM_DISK=s3`. The frontend never reconstructs the
+// URL — earlier versions that did broke on MinIO deployments
+// (the "Gagal Memuat Gambar" + wrong `/uploads/bukti-pembayaran/`
+// path admins were seeing).
 //
 // PDFs (`.pdf` files) can't be rendered with `Image.network`. For
 // those we show a centered "Buka PDF" CTA that launches the file in
@@ -21,7 +16,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -50,24 +44,16 @@ class PaymentProofDialog extends StatelessWidget {
     required this.cardGradient,
   });
 
-  /// Resolve the proof URL. Prefers the backend-supplied
-  /// `payment_proof_url` (already an absolute URL). Falls back to
-  /// building one from the raw filename against the storage symlink
-  /// path the backend actually uses.
+  /// Read the absolute proof URL the backend resolved through
+  /// `Storage::disk('public')->url()`. We deliberately don't
+  /// reconstruct the URL on the client — that worked for the local
+  /// `/storage/...` path but always 404'd against MinIO/S3 because
+  /// the bucket URL is different. If the backend didn't send a URL
+  /// the proof isn't viewable; show an empty state.
   String? _resolveProofUrl() {
     final preBuilt = payment['payment_proof_url']?.toString();
     if (preBuilt != null && preBuilt.isNotEmpty) return preBuilt;
-
-    final filename = (payment['payment_proof'] ?? payment['payment_receipt'])
-        ?.toString();
-    if (filename == null || filename.isEmpty) return null;
-
-    // If the field already contains a slash (relative path like
-    // "payments/xxx.pdf"), don't prefix again. Otherwise prefix the
-    // canonical "payments/" directory the backend writes to.
-    final relative = filename.contains('/') ? filename : 'payments/$filename';
-    final base = ApiService.baseUrl.replaceFirst('/api', '');
-    return '$base/storage/$relative';
+    return null;
   }
 
   bool _isPdf(String url) => url.toLowerCase().endsWith('.pdf');
