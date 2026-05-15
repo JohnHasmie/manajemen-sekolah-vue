@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Admin Jadwal — Density Layout (21+ classes per slot)</title>
+<style>
+  :root {
+    --navy:#0F2A5C; --cobalt:#1B6FB8; --azure:#21AFE6;
+    --slate-50:#F8FAFC; --slate-100:#F1F5F9; --slate-200:#E2E8F0;
+    --slate-300:#CBD5E1; --slate-400:#94A3B8; --slate-500:#64748B;
+    --slate-600:#475569; --slate-700:#334155; --slate-900:#0F172A;
+    --error:#DC2626; --error-bg:#FEF2F2; --error-border:#FECACA;
+    --amber:#F59E0B; --amber-bg:#FEF3C7;
+    --green:#16A34A; --green-bg:#F0FDF4;
+    --violet:#7C3AED;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: #E5E7EB; margin: 0; padding: 28px 16px; color: var(--slate-900); }
+  h1 { font-size: 18px; font-weight: 800; color: var(--navy); margin: 0 0 4px; }
+  h1 + p { font-size: 13px; color: var(--slate-600); margin: 0 0 24px; max-width: 800px; line-height: 1.5; }
+  .row { display: flex; gap: 20px; flex-wrap: wrap; }
+  .frame { background: white; border-radius: 28px; padding: 12px 0 0; width: 360px; box-shadow: 0 8px 24px rgba(15,23,42,0.10); overflow: hidden; }
+  .frame-label { padding: 0 16px 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: var(--navy); text-transform: uppercase; }
+  .frame-sub { padding: 0 16px 12px; font-size: 11px; color: var(--slate-500); line-height: 1.4; }
+
+  /* iPhone-ish frame */
+  .phone { background: white; height: 720px; overflow: hidden; position: relative; }
+  .status-bar { font-size: 10px; padding: 8px 16px 0; color: var(--slate-900); font-weight: 700; }
+
+  /* Header */
+  .header { background: linear-gradient(180deg, var(--navy), #163773); padding: 12px 16px 36px; color: white; position: relative; }
+  .header .crumb { font-size: 9px; letter-spacing: 1.4px; color: rgba(255,255,255,0.7); font-weight: 700; text-align: center; }
+  .header .title { font-size: 17px; font-weight: 800; text-align: center; margin-top: 2px; }
+  .header .title .dot { display: inline-block; width: 6px; height: 6px; background: #4ADE80; border-radius: 50%; margin-left: 6px; vertical-align: middle; }
+  .header .chips { display: flex; gap: 6px; margin-top: 12px; overflow-x: auto; }
+  .chip { font-size: 10px; padding: 6px 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); border-radius: 999px; color: white; font-weight: 700; white-space: nowrap; }
+  .chip.solid { background: rgba(255,255,255,0.22); }
+
+  /* KPI strip overlap */
+  .kpi { background: white; margin: -22px 16px 0; border-radius: 14px; padding: 12px 16px; display: flex; box-shadow: 0 6px 16px rgba(15,23,42,0.08); position: relative; z-index: 2; }
+  .kpi > div { flex: 1; text-align: center; }
+  .kpi small { font-size: 9px; color: var(--slate-500); font-weight: 700; }
+  .kpi b { display: block; font-size: 18px; color: var(--navy); margin-top: 2px; }
+  .kpi b.danger { color: var(--error); }
+  .kpi > div + div { border-left: 1px solid var(--slate-200); }
+
+  /* Toggle */
+  .toggle { display: flex; padding: 3px; margin: 12px 16px 0; background: var(--slate-100); border-radius: 10px; }
+  .toggle > div { flex: 1; text-align: center; padding: 6px; font-size: 11px; font-weight: 700; color: var(--slate-500); border-radius: 8px; }
+  .toggle .active { background: white; color: var(--navy); box-shadow: 0 1px 4px rgba(15,23,42,0.06); }
+
+  /* Grid */
+  .grid-wrap { margin: 12px 8px 0; border: 1px solid var(--slate-200); border-radius: 14px; overflow: hidden; background: white; }
+  .grid-head { display: grid; grid-template-columns: 30px repeat(6, 1fr); background: var(--slate-50); border-bottom: 1px solid var(--slate-200); }
+  .grid-head > div { padding: 6px 0; font-size: 10px; font-weight: 800; letter-spacing: 0.4px; color: var(--slate-500); text-align: center; }
+  .grid-head .today { background: var(--navy); color: white; }
+  .grid-body { display: grid; grid-template-columns: 30px repeat(6, 1fr); }
+  .hour-label { padding: 8px 4px 0 0; font-size: 9px; font-weight: 800; color: var(--slate-500); text-align: right; background: var(--slate-50); border-right: 1px solid var(--slate-200); }
+  .day-cell { height: 50px; border-right: 1px solid var(--slate-100); border-bottom: 1px solid var(--slate-100); position: relative; padding: 2px; }
+  .day-cell:nth-last-child(-n+6) { border-bottom: none; }
+
+  /* Session blocks — base */
+  .blk { position: absolute; left: 2px; right: 2px; top: 2px; bottom: 2px; border-radius: 5px; padding: 3px 4px; font-size: 9px; font-weight: 800; line-height: 1.1; overflow: hidden; }
+  .blk small { display: block; font-weight: 600; font-size: 8px; margin-top: 1px; opacity: 0.85; }
+
+  /* Tinted palettes */
+  .pal-cobalt { background: rgba(27,111,184,0.12); border-left: 3px solid var(--cobalt); color: var(--cobalt); }
+  .pal-amber { background: rgba(245,158,11,0.12); border-left: 3px solid var(--amber); color: #B45309; }
+  .pal-green { background: rgba(22,163,74,0.12); border-left: 3px solid var(--green); color: #15803D; }
+  .pal-violet { background: rgba(124,58,237,0.12); border-left: 3px solid var(--violet); color: var(--violet); }
+  .pal-conflict { background: rgba(220,38,38,0.08); border-left: 3px solid var(--error); color: #B91C1C; }
+
+  /* Lane variants */
+  .lane-2 { width: calc(50% - 1px); right: auto; }
+  .lane-2.b { left: calc(50% + 1px); width: calc(50% - 3px); }
+  .lane-3 { width: calc(33% - 1px); right: auto; }
+  .lane-3.b { left: calc(33% + 1px); }
+  .lane-3.c { left: calc(66% + 1px); width: calc(34% - 3px); }
+
+  /* Cluster aggregator — Frame A "high density" cell */
+  .cluster {
+    position: absolute; left: 2px; right: 2px; top: 2px; bottom: 2px;
+    border-radius: 6px; padding: 3px; font-size: 9px; font-weight: 800;
+    background: linear-gradient(180deg, rgba(220,38,38,0.10), rgba(27,111,184,0.14));
+    border: 1px solid var(--cobalt); color: var(--navy); cursor: pointer;
+    display: flex; flex-direction: column; align-items: stretch; justify-content: space-between;
+  }
+  .cluster .count {
+    background: var(--navy); color: white; padding: 1px 5px; border-radius: 4px;
+    font-size: 9px; font-weight: 800; align-self: flex-start; line-height: 1.2;
+  }
+  .cluster .count.danger { background: var(--error); }
+  .cluster .preview { font-size: 8px; font-weight: 700; color: var(--slate-700); line-height: 1.1; }
+  .cluster .preview .row1 { color: var(--cobalt); }
+  .cluster .expand { font-size: 8px; color: var(--slate-500); font-weight: 700; text-align: right; }
+
+  /* Frame B — Expansion sheet */
+  .sheet-scrim { position: absolute; inset: 0; background: rgba(15,23,42,0.4); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: white; border-radius: 22px 22px 0 0; overflow: hidden; max-height: 92%; }
+  .sheet-handle { width: 36px; height: 4px; background: var(--slate-300); border-radius: 4px; margin: 6px auto 4px; }
+  .sheet-header { background: linear-gradient(180deg, var(--navy), #163773); color: white; padding: 12px 16px 14px; display: flex; align-items: center; gap: 10px; }
+  .sheet-header .icon { width: 36px; height: 36px; background: rgba(255,255,255,0.18); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .sheet-header .meta { flex: 1; }
+  .sheet-header .meta b { display: block; font-size: 14px; font-weight: 800; }
+  .sheet-header .meta small { font-size: 10px; opacity: 0.85; display: block; margin-top: 2px; }
+  .sheet-search { padding: 10px 16px 6px; }
+  .sheet-search input {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--slate-200);
+    border-radius: 10px; font-size: 12px; background: var(--slate-50);
+  }
+  .sheet-tabs { display: flex; gap: 4px; padding: 0 16px 6px; overflow-x: auto; }
+  .sheet-tab {
+    padding: 4px 10px; font-size: 10px; font-weight: 800; color: var(--slate-600);
+    border-radius: 999px; background: white; border: 1px solid var(--slate-200);
+    white-space: nowrap; cursor: pointer;
+  }
+  .sheet-tab.active { background: var(--navy); color: white; border-color: var(--navy); }
+  .sheet-list { padding: 4px 16px 0; max-height: 360px; overflow-y: auto; }
+  .sheet-row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    border: 1px solid var(--slate-200); border-radius: 10px; margin-bottom: 6px;
+    background: white;
+  }
+  .sheet-row.conflict { border-color: var(--error-border); background: var(--error-bg); }
+  .sheet-row .avatar {
+    width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; color: white;
+  }
+  .sheet-row .body { flex: 1; min-width: 0; }
+  .sheet-row .body b { display: block; font-size: 12px; font-weight: 800; color: var(--slate-900); }
+  .sheet-row .body small { font-size: 10px; color: var(--slate-600); display: block; margin-top: 1px; }
+  .sheet-row .icon-btn {
+    width: 28px; height: 28px; border-radius: 8px; background: var(--slate-100); display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--slate-600);
+  }
+  .sheet-footer { padding: 8px 16px 12px; border-top: 1px solid var(--slate-100); }
+  .sheet-cta {
+    display: flex; gap: 8px;
+  }
+  .sheet-cta .secondary, .sheet-cta .primary {
+    flex: 1; padding: 10px; border-radius: 10px; font-weight: 800; font-size: 12px; text-align: center;
+  }
+  .sheet-cta .secondary { background: white; border: 1px solid var(--slate-200); color: var(--cobalt); }
+  .sheet-cta .primary { background: var(--cobalt); color: white; }
+
+  /* Bulk action bar */
+  .bulk-bar {
+    position: absolute; left: 12px; right: 12px; bottom: 16px;
+    background: white; border-radius: 14px; padding: 8px 10px;
+    border: 1px solid var(--slate-200); box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .bulk-bar .pill {
+    background: rgba(15,42,92,0.1); color: var(--navy);
+    padding: 4px 10px 4px 4px; border-radius: 999px; display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700;
+  }
+  .bulk-bar .pill .num { background: var(--navy); color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+  .bulk-bar .spacer { flex: 1; }
+  .bulk-bar .act {
+    display: flex; flex-direction: column; align-items: center; padding: 4px 6px;
+    font-size: 9px; font-weight: 700; color: var(--navy);
+  }
+  .bulk-bar .act.danger { color: var(--error); }
+  .bulk-bar .act svg, .bulk-bar .act .ico { width: 16px; height: 16px; display: inline-block; font-size: 14px; line-height: 1; margin-bottom: 2px; }
+
+  /* Spotlight */
+  .spotlight {
+    position: absolute; pointer-events: none; border: 2px dashed var(--azure);
+    border-radius: 6px;
+  }
+  .callout {
+    position: absolute; background: var(--navy); color: white; font-size: 11px;
+    padding: 6px 10px; border-radius: 8px; max-width: 220px; line-height: 1.4; font-weight: 600;
+    box-shadow: 0 6px 14px rgba(15,42,92,0.4);
+  }
+  .callout::before {
+    content: ""; position: absolute; width: 10px; height: 10px; background: var(--navy);
+  }
+
+  /* Bottom nav placeholder */
+  .botnav { position: absolute; bottom: 0; left: 0; right: 0; height: 48px; background: white; border-top: 1px solid var(--slate-100); display: flex; }
+  .botnav > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: var(--slate-400); }
+  .botnav > div.active { color: var(--cobalt); }
+</style>
+</head>
+<body>
+  <h1>Admin Jadwal — Density Layout for High-Conflict Slots</h1>
+  <p>
+    When a school has 20+ classes scheduled at the same lesson_hour (the bentrok screenshot showed up to 21 sessions at one slot), side-by-side lanes break down — each block would be ~7px wide. This mockup proposes an adaptive density layout: lanes for low-density (1–3), compact stack for medium (4–5), and an aggregator <em>cluster card</em> for high-density (6+). Tapping the cluster opens a sheet with the full list, scoped filters, and inline actions. Long-pressing it puts every session at that slot into bulk-select mode.
+  </p>
+
+  <div class="row">
+
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <!-- FRAME A: Density adaptive cells -->
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <div class="frame">
+      <div class="frame-label">Frame A — Adaptive Density</div>
+      <div class="frame-sub">
+        1 session: full card · 2–3: split lanes (current) · 4–5: compact stack with abbreviated labels · 6+: aggregator card with count badge + preview.
+      </div>
+      <div class="phone">
+        <div class="status-bar">14.30</div>
+        <div class="header">
+          <div class="crumb">MANAJEMEN DATA</div>
+          <div class="title">Jadwal <span class="dot"></span></div>
+          <div class="chips">
+            <div class="chip solid">3 · Sem. 2 ⌄</div>
+            <div class="chip">+ Hari</div>
+            <div class="chip">+ Kelas</div>
+            <div class="chip">+ Jam</div>
+          </div>
+        </div>
+        <div class="kpi">
+          <div><small>Total Sesi</small><b>248</b></div>
+          <div><small>Hari Ini</small><b>42</b></div>
+          <div><small>Bentrok</small><b class="danger">21</b></div>
+        </div>
+        <div class="toggle">
+          <div class="active">⊞ Grid</div>
+          <div>≡ List</div>
+          <div>⊟ Matrix</div>
+        </div>
+        <div class="grid-wrap">
+          <div class="grid-head">
+            <div></div>
+            <div>SEN</div>
+            <div>SEL</div>
+            <div>RAB</div>
+            <div>KAM</div>
+            <div class="today">JUM</div>
+            <div>SAB</div>
+          </div>
+          <div class="grid-body">
+            <!-- 07:00 row — 1 session each (full card) -->
+            <div class="hour-label">07</div>
+            <div class="day-cell"><div class="blk pal-cobalt">B. Arab<small>8B · Yahya</small></div></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"><div class="blk pal-green">IPA<small>7A · Laily</small></div></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+
+            <!-- 08:00 row — 2-3 lanes (current) -->
+            <div class="hour-label">08</div>
+            <div class="day-cell">
+              <div class="blk pal-cobalt lane-2">B. Indo<small>7B · Flashy</small></div>
+              <div class="blk pal-amber lane-2 b">PKn<small>9A · Sri</small></div>
+            </div>
+            <div class="day-cell">
+              <div class="blk pal-cobalt lane-3">Mat<small>7A</small></div>
+              <div class="blk pal-violet lane-3 b">B. Ing<small>8A</small></div>
+              <div class="blk pal-green lane-3 c">IPS<small>9B</small></div>
+            </div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"><div class="blk pal-amber">Seni<small>7A</small></div></div>
+            <div class="day-cell"></div>
+
+            <!-- 09:00 row — 4-5 compact stack -->
+            <div class="hour-label">09</div>
+            <div class="day-cell">
+              <div class="blk pal-cobalt" style="bottom: auto; height: 12px; padding: 1px 3px; font-size: 7.5px;">Mat 7A</div>
+              <div class="blk pal-amber" style="top: 14px; bottom: auto; height: 12px; padding: 1px 3px; font-size: 7.5px;">B.Ing 8A</div>
+              <div class="blk pal-violet" style="top: 26px; bottom: auto; height: 12px; padding: 1px 3px; font-size: 7.5px;">PKn 9A</div>
+              <div class="blk pal-green" style="top: 38px; bottom: 2px; padding: 1px 3px; font-size: 7.5px;">+ 1 lagi</div>
+            </div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+
+            <!-- 10:00 row — HIGH DENSITY (21 sessions) -->
+            <div class="hour-label">10</div>
+            <div class="day-cell">
+              <div class="cluster" id="hot-cluster" style="border-color: var(--error); background: linear-gradient(180deg, rgba(220,38,38,0.16), rgba(220,38,38,0.06));">
+                <div class="count danger">21 sesi</div>
+                <div class="preview">
+                  <div class="row1">Mat · IPA · PKn</div>
+                  <div>4 mapel · 21 kelas</div>
+                </div>
+                <div class="expand">▾ ketuk untuk lihat</div>
+              </div>
+            </div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+
+            <!-- 11:00 row — empty -->
+            <div class="hour-label">11</div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+          </div>
+        </div>
+
+        <!-- Annotations -->
+        <div class="callout" style="top: 392px; left: 90px; width: 180px;">
+          <b style="display:block; font-size: 10px;">4–5 sesi: compact stack</b>
+          Mini-cards (12px tall) with class + mapel abbreviated. "+ N lagi" pill links to the expansion sheet.
+        </div>
+        <div class="callout" style="top: 470px; left: 90px; width: 180px; background: #B91C1C;">
+          <b style="display:block; font-size: 10px;">6+ sesi: cluster card</b>
+          Tap → expansion sheet (Frame B).<br>Long-press → bulk-select (Frame C).
+        </div>
+
+        <div class="botnav">
+          <div class="active">⌂<br>Beranda</div>
+          <div>👥<br>Orang</div>
+          <div>📖<br>Akademik</div>
+          <div>💳<br>Keuangan</div>
+          <div>⚙<br>Sistem</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <!-- FRAME B: Expansion sheet -->
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <div class="frame">
+      <div class="frame-label">Frame B — Cluster expansion sheet</div>
+      <div class="frame-sub">
+        Tap a 6+ cluster → bottom sheet listing every session at that slot. Search + tab filters (Semua / Bentrok / per-mapel) scope quickly. Each row has inline icon actions (edit, ganti guru, hapus). "Tambah di slot ini" CTA seeds the add form with day + lesson_hour pre-filled.
+      </div>
+      <div class="phone">
+        <div class="sheet-scrim"></div>
+        <div class="sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-header">
+            <div class="icon">📅</div>
+            <div class="meta">
+              <b>Senin · 10:00 – 10:45</b>
+              <small>21 sesi di slot ini · 3 bentrok</small>
+            </div>
+          </div>
+          <div class="sheet-search">
+            <input type="text" placeholder="Cari mapel / kelas / guru..." />
+          </div>
+          <div class="sheet-tabs">
+            <div class="sheet-tab active">Semua · 21</div>
+            <div class="sheet-tab" style="color: var(--error); border-color: var(--error-border); background: var(--error-bg);">Bentrok · 3</div>
+            <div class="sheet-tab">Matematika · 7</div>
+            <div class="sheet-tab">IPA · 5</div>
+            <div class="sheet-tab">PKn · 5</div>
+          </div>
+          <div class="sheet-list">
+            <div class="sheet-row conflict">
+              <div class="avatar" style="background: var(--error);">8B</div>
+              <div class="body">
+                <b>Matematika ⚠</b>
+                <small style="color: var(--error);">Pak Yahya · Bentrok dengan 2 sesi lain</small>
+              </div>
+              <div class="icon-btn">✎</div>
+              <div class="icon-btn">⇄</div>
+            </div>
+            <div class="sheet-row">
+              <div class="avatar" style="background: var(--cobalt);">7A</div>
+              <div class="body">
+                <b>Matematika</b>
+                <small>Bu Tati · R-101</small>
+              </div>
+              <div class="icon-btn">✎</div>
+              <div class="icon-btn">⇄</div>
+            </div>
+            <div class="sheet-row">
+              <div class="avatar" style="background: var(--amber);">7B</div>
+              <div class="body">
+                <b>Matematika</b>
+                <small>Bu Tati · R-102</small>
+              </div>
+              <div class="icon-btn">✎</div>
+              <div class="icon-btn">⇄</div>
+            </div>
+            <div class="sheet-row">
+              <div class="avatar" style="background: var(--violet);">8A</div>
+              <div class="body">
+                <b>IPA</b>
+                <small>Bu Laily · Lab IPA</small>
+              </div>
+              <div class="icon-btn">✎</div>
+              <div class="icon-btn">⇄</div>
+            </div>
+            <div class="sheet-row">
+              <div class="avatar" style="background: var(--green);">8B</div>
+              <div class="body">
+                <b>IPA</b>
+                <small>Bu Laily · Lab IPA</small>
+              </div>
+              <div class="icon-btn">✎</div>
+              <div class="icon-btn">⇄</div>
+            </div>
+            <div class="sheet-row">
+              <div class="avatar" style="background: var(--cobalt);">9A</div>
+              <div class="body">
+                <b>PKn</b>
+                <small>Bu Sri · R-201</small>
+              </div>
+              <div class="icon-btn">✎</div>
+              <div class="icon-btn">⇄</div>
+            </div>
+            <div class="sheet-row">
+              <div class="avatar" style="background: var(--amber);">9B</div>
+              <div class="body">
+                <b>PKn</b>
+                <small>Bu Sri · R-202</small>
+              </div>
+              <div class="icon-btn">✎</div>
+              <div class="icon-btn">⇄</div>
+            </div>
+            <div class="sheet-row">
+              <div class="avatar" style="background: var(--violet);">9C</div>
+              <div class="body">
+                <b>PKn</b>
+                <small>Bu Sri · R-203</small>
+              </div>
+              <div class="icon-btn">✎</div>
+              <div class="icon-btn">⇄</div>
+            </div>
+          </div>
+          <div class="sheet-footer">
+            <div class="sheet-cta">
+              <div class="secondary">Pilih semua</div>
+              <div class="primary">+ Tambah di slot ini</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <!-- FRAME C: Bulk-select from cluster -->
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <div class="frame">
+      <div class="frame-label">Frame C — Long-press cluster → bulk select</div>
+      <div class="frame-sub">
+        Long-pressing the cluster card flips the hub into bulk-select mode with every session at that slot pre-selected. The standard BulkActionBar appears with Pindah Hari · Ganti Guru · Hapus — admin can now move all 21 sessions to another day in one go.
+      </div>
+      <div class="phone">
+        <div class="status-bar">14.30</div>
+        <div class="header">
+          <div class="crumb">MANAJEMEN DATA</div>
+          <div class="title">Jadwal <span class="dot"></span></div>
+          <div class="chips">
+            <div class="chip solid">3 · Sem. 2 ⌄</div>
+            <div class="chip">+ Hari</div>
+            <div class="chip">+ Kelas</div>
+            <div class="chip">+ Jam</div>
+          </div>
+        </div>
+        <div class="kpi">
+          <div><small>Total Sesi</small><b>248</b></div>
+          <div><small>Hari Ini</small><b>42</b></div>
+          <div><small>Bentrok</small><b class="danger">21</b></div>
+        </div>
+        <div class="toggle">
+          <div class="active">⊞ Grid</div>
+          <div>≡ List</div>
+          <div>⊟ Matrix</div>
+        </div>
+        <div class="grid-wrap">
+          <div class="grid-head">
+            <div></div>
+            <div>SEN</div>
+            <div>SEL</div>
+            <div>RAB</div>
+            <div>KAM</div>
+            <div class="today">JUM</div>
+            <div>SAB</div>
+          </div>
+          <div class="grid-body">
+            <div class="hour-label">07</div>
+            <div class="day-cell" style="opacity:.35"><div class="blk pal-cobalt">B. Arab<small>8B</small></div></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell" style="opacity:.35"><div class="blk pal-green">IPA<small>7A</small></div></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+
+            <div class="hour-label">08</div>
+            <div class="day-cell" style="opacity:.35">
+              <div class="blk pal-cobalt lane-2">B. Indo</div>
+              <div class="blk pal-amber lane-2 b">PKn</div>
+            </div>
+            <div class="day-cell" style="opacity:.35">
+              <div class="blk pal-cobalt lane-3">Mat</div>
+              <div class="blk pal-violet lane-3 b">B.Ing</div>
+              <div class="blk pal-green lane-3 c">IPS</div>
+            </div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell" style="opacity:.35"><div class="blk pal-amber">Seni</div></div>
+            <div class="day-cell"></div>
+
+            <div class="hour-label">09</div>
+            <div class="day-cell" style="opacity:.35"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+
+            <!-- Selected high-density cluster -->
+            <div class="hour-label">10</div>
+            <div class="day-cell">
+              <div class="cluster" style="border-color: var(--cobalt); border-width: 3px; background: linear-gradient(180deg, rgba(27,111,184,0.20), rgba(27,111,184,0.08));">
+                <div class="count" style="background: var(--cobalt);">✓ 21 dipilih</div>
+                <div class="preview">
+                  <div class="row1" style="color: var(--cobalt);">Mat · IPA · PKn</div>
+                  <div>siap dipindah</div>
+                </div>
+                <div class="expand" style="color: var(--cobalt);">▾</div>
+              </div>
+            </div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+
+            <div class="hour-label">11</div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+            <div class="day-cell"></div>
+          </div>
+        </div>
+
+        <!-- Spotlight on the selected cluster -->
+        <div class="spotlight" style="top: 522px; left: 36px; width: 53px; height: 50px;"></div>
+        <div class="callout" style="top: 538px; left: 100px; width: 200px; background: var(--cobalt);">
+          <b style="display:block; font-size: 10px;">Long-press → semua sesi terpilih</b>
+          21 sesi diaktifkan sekaligus. Bulk bar muncul di bawah.
+        </div>
+
+        <!-- Bulk action bar -->
+        <div class="bulk-bar">
+          <div class="pill"><div class="num">21</div>sesi terpilih</div>
+          <div class="icon-btn" style="background: var(--slate-100); width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--slate-500);">✕</div>
+          <div class="spacer"></div>
+          <div class="act"><span class="ico">⇄</span>Pindah</div>
+          <div class="act"><span class="ico">👤</span>Ganti Guru</div>
+          <div class="act danger"><span class="ico">🗑</span>Hapus</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <!-- Design rationale block -->
+  <!-- ─────────────────────────────────────────────────────────── -->
+  <div style="background: white; border-radius: 16px; margin-top: 32px; padding: 20px 24px; max-width: 1140px; box-shadow: 0 6px 20px rgba(15,23,42,0.06); line-height: 1.6; font-size: 13px; color: var(--slate-700);">
+    <h2 style="font-size: 14px; font-weight: 800; color: var(--navy); margin: 0 0 12px;">Why this layout</h2>
+    <ul style="margin: 0 0 12px; padding-left: 18px;">
+      <li><b>Density buckets, not infinite lanes.</b> &lt;= 3 sessions per slot: side-by-side lanes (existing). 4–5: compact 12px mini-cards stacked vertically with "+N lagi" tail. 6+: single aggregator card. This prevents the column from ever rendering blocks narrower than ~24px (the minimum readable width for "Mat 7A").</li>
+      <li><b>Cluster card carries the most-actionable signal first.</b> The count badge ("21 sesi") and conflict status (red/cobalt) read at glance. Two preview lines hint at <em>what's there</em> — top mapel + tally — without trying to cram all 21 labels in.</li>
+      <li><b>Two interaction paths, no ambiguity.</b> Tap → exploration (expansion sheet with search, filter tabs, inline actions). Long-press → bulk action (every session at that slot becomes a selection unit, then bulk-move / bulk-teacher / bulk-delete kicks in). Both are flows admins already learned in the existing redesign.</li>
+      <li><b>The expansion sheet is the actual table.</b> Inside the sheet, density doesn't matter — it's a vertical scrollable list. Filter chips at the top (Semua / Bentrok / per-mapel) make the 21-row list searchable in two taps. Each row gets two icon-actions (✎ edit, ⇄ pindah) plus tap-to-open detail.</li>
+      <li><b>"+ Tambah di slot ini" closes the loop.</b> If an admin opens a slot's expansion sheet and decides to add another session there, the day + lesson_hour are pre-filled. Saves 4 picker taps.</li>
+    </ul>
+    <h2 style="font-size: 14px; font-weight: 800; color: var(--navy); margin: 0 0 8px;">Implementation notes (for when we apply this)</h2>
+    <ul style="margin: 0; padding-left: 18px;">
+      <li><b>Density bucket is computed per-cluster, not per-day.</b> Reuses the sweep-line cluster detection already in <code>_computeLanes</code>. Add a <code>renderMode</code> field (<code>lanes</code> / <code>stack</code> / <code>cluster</code>) chosen by cluster size.</li>
+      <li><b>Cluster card is a single Positioned, full cell.</b> Replaces all the per-block Positioneds for that cluster. Cheaper to render than 21 narrow rectangles.</li>
+      <li><b>Expansion sheet reuses <code>AppBottomSheet</code> + <code>FilterChipGrid</code>.</b> No new shared widgets needed. The list rows are a thin variant of <code>AdminScheduleRowCard</code> (no time column — time is in the header).</li>
+      <li><b>Long-press → bulk select.</b> Existing <code>_toggleSelection</code> already supports this; we just need to seed <code>_selectedIds</code> with every id in the cluster on long-press.</li>
+      <li><b>Drag-and-drop drops onto a cluster.</b> Treat the cluster as a single drop target. Drop adds the dragged session to that cluster (and either succeeds or surfaces a 409 conflict toast — same as today).</li>
+    </ul>
+  </div>
+</body>
+</html>

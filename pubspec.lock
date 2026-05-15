@@ -1253,13 +1253,13 @@ packages:
     source: hosted
     version: "2.2.0"
   package_info_plus:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: package_info_plus
-      sha256: f69da0d3189a4b4ceaeb1a3defb0f329b3b352517f52bed4290f83d4f06bc08d
+      sha256: "468c26b4254ab01979fa5e4a98cb343ea3631b9acee6f21028997419a80e1a20"
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.0"
+    version: "9.0.1"
   package_info_plus_platform_interface:
     dependency: transitive
     description:
@@ -1516,6 +1516,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.2"
+  restart_app:
+    dependency: "direct main"
+    description:
+      name: restart_app
+      sha256: "400dd401b77b599e2defef55fd4c22af3ff80af48616a82f01c2a07070e3e368"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.8.3"
   riverpod:
     dependency: transitive
     description:
@@ -1628,6 +1636,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  shorebird_code_push:
+    dependency: "direct main"
+    description:
+      name: shorebird_code_push
+      sha256: "55d5eea098a4293199d22dfd263ce1d6c10820ceb42c2acb950f971a8bcee0ce"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.6"
   sky_engine:
     dependency: transitive
     description: flutter

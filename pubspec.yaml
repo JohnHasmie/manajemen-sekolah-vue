@@ -78,6 +78,9 @@ dependencies:
   # pubspec.lock as a transitive dep — promoting it to direct just
   # makes the import legal under analyzer's strict_dependencies rule.
   url_launcher: ^6.3.0
+  shorebird_code_push: ^2.0.6
+  package_info_plus: ^9.0.1
+  restart_app: ^1.8.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

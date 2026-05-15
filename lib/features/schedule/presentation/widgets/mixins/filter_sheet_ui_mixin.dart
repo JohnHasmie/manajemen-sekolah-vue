@@ -17,10 +17,30 @@ mixin FilterSheetUiMixin {
   Widget buildTermChips() => const SizedBox.shrink();
   Widget buildLessonHourChips() => const SizedBox.shrink();
 
-  /// Scrollable content with day, class, semester, and lesson chips.
+  /// Scrollable content with period, day, class, and lesson chips.
+  ///
+  /// Order matches the hub's brand chip strip — Periode (Semester) ·
+  /// Hari · Kelas · Jam — so the admin sees the same dimensions in the
+  /// same sequence as the entry surface. Academic year sits in the
+  /// global app shell picker (not here) — the header subtitle on the
+  /// sheet surfaces the active year for context.
   Widget buildFilterContent(dynamic languageProvider, Color primaryColor) {
     return TeacherFilterContent(
       sections: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FilterSectionHeader(
+              title: languageProvider.getTranslatedText({
+                'en': 'Period (Semester)',
+                'id': 'Periode (Semester)',
+              }),
+              icon: Icons.event_note_rounded,
+              primaryColor: primaryColor,
+            ),
+            buildTermChips(),
+          ],
+        ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -47,20 +67,6 @@ mixin FilterSheetUiMixin {
               primaryColor: primaryColor,
             ),
             buildClassChips(),
-          ],
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            FilterSectionHeader(
-              title: languageProvider.getTranslatedText({
-                'en': 'Semester',
-                'id': 'Semester',
-              }),
-              icon: Icons.event_note_rounded,
-              primaryColor: primaryColor,
-            ),
-            buildTermChips(),
           ],
         ),
         Column(
