@@ -17,6 +17,7 @@ import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_day_multi_select.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_academic_year_dropdown.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_term_dropdown.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/live_conflict_preview_card.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_teaching_hour_dropdown.dart';
 
 /// A bottom sheet form for creating or editing a schedule entry.
@@ -74,6 +75,13 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog>
   late List<dynamic> _occupiedSlots;
   late bool _isLoadingSubjects;
   late bool _isLoadingLessonHour;
+
+  /// Count of conflicting sessions returned by the live probe inside
+  /// [LiveConflictPreviewCard]. Drives the Simpan footer's enabled
+  /// state — admin can still tap once to confirm via the existing
+  /// post-save ConflictResolutionDialog flow, so this is informational
+  /// rather than a hard block.
+  int _liveConflictCount = 0;
 
   @override
   void initState() {
@@ -303,6 +311,31 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog>
           languageProvider: lang,
           primaryColor: color,
           isLoading: _isLoadingLessonHour,
+        ),
+        // ── Live conflict preview (Frame D) ─────────────────────────
+        //
+        // Re-probes /teaching-schedule/conflicts whenever the form's
+        // teacher / class / day / lesson_hour state settles, and
+        // renders a red preview block when the picked slot collides.
+        // Stays SizedBox.shrink until all six required fields are set.
+        LiveConflictPreviewCard(
+          teacherId: _selectedTeacher,
+          classId: _selectedClass,
+          semesterId: _selectedTerm,
+          academicYearId: _selectedAcademicYear,
+          daysIds: _selectedDayIds,
+          lessonHourId: _selectedLessonHour,
+          excludeScheduleId: widget.schedule?['id']?.toString(),
+          onConflictCountChanged: (n) {
+            // Cache the count so [_saveSchedule] / footer can read it
+            // before allowing submit. The setState is cheap — no
+            // rebuild churn because we only flip a bool.
+            if ((_liveConflictCount > 0) != (n > 0)) {
+              setState(() => _liveConflictCount = n);
+            } else {
+              _liveConflictCount = n;
+            }
+          },
         ),
       ],
     );

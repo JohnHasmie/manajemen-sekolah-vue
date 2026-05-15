@@ -12,6 +12,9 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
+import 'package:manajemensekolah/core/services/shorebird_service.dart';
+import 'package:manajemensekolah/core/services/app_version_service.dart';
+import 'package:manajemensekolah/core/services/log_service.dart';
 import 'package:manajemensekolah/features/grades/data/grade_recap_service.dart';
 import 'package:manajemensekolah/features/report_cards/data/report_card_service.dart';
 import 'package:manajemensekolah/features/notifications/data/notification_service.dart';
@@ -36,9 +39,12 @@ final GetIt getIt = GetIt.instance;
 /// Like Laravel's `AppServiceProvider::register()`.
 Future<void> setupServiceLocator() async {
   // Core services
+  getIt.registerLazySingleton<LogService>(LogService.new);
   getIt.registerLazySingleton<PreferencesService>(PreferencesService.new);
   getIt.registerLazySingleton<SecureStorageService>(SecureStorageService.new);
   getIt.registerLazySingleton<TokenService>(TokenService.new);
+  getIt.registerLazySingleton<ShorebirdService>(ShorebirdService.new);
+  getIt.registerLazySingleton<AppVersionService>(AppVersionService.new);
   getIt.registerLazySingleton<Dio>(() => dioClient);
 
   // Feature services

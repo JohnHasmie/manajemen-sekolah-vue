@@ -248,7 +248,7 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
 
                   // Divider
                   const Divider(color: Color(0xFFF1F5F9), height: 1),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
 
                   // Logout
                   buildLogoutButton(context),

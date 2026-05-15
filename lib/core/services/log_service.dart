@@ -39,19 +39,30 @@ class LogService {
   }
 
   /// Sends an error log to the remote logging service. Fire-and-forget.
-  /// [error] - The error/exception to log.
-  /// [stackTrace] - Optional stack trace for debugging.
-  ///
-  /// Automatically includes user context (ID, email) from SharedPreferences,
-  /// platform info (Android/iOS/web), and a timestamp.
-  /// Like calling `Log::error($message, ['user' => auth()->user()])` in Laravel.
-  ///
-  /// Side effects: HTTP POST to logging service. Silently fails on error
-  /// (5-second timeout) to avoid breaking the app.
   static Future<void> sendError(dynamic error, StackTrace? stackTrace) async {
-    try {
-      AppLogger.info('log', 'Sending error log to backend: $error');
+    await _log('error', error.toString(), trace: stackTrace?.toString());
+  }
 
+  /// Logs information.
+  void info(String message) {
+    AppLogger.info('app', message);
+    _log('info', message);
+  }
+
+  /// Logs a warning.
+  void warning(String message) {
+    AppLogger.warning('app', message);
+    _log('warning', message);
+  }
+
+  /// Logs an error.
+  void error(String message, [dynamic error, StackTrace? stackTrace]) {
+    AppLogger.error('app', '$message: $error');
+    _log('error', '$message: ${error?.toString() ?? ""}', trace: stackTrace?.toString());
+  }
+
+  static Future<void> _log(String level, String message, {String? trace}) async {
+    try {
       final prefs = PreferencesService();
       final userJson = prefs.getString('user');
       String? userId;
@@ -69,9 +80,9 @@ class LogService {
         'source': kIsWeb
             ? 'frontend_web'
             : (Platform.isAndroid ? 'frontend_android' : 'frontend_ios'),
-        'level': 'error',
-        'message': error.toString(),
-        'trace': stackTrace?.toString(),
+        'level': level,
+        'message': message,
+        'trace': trace,
         'user_id': userId,
         'user_email': userEmail,
         'meta': {
@@ -82,8 +93,6 @@ class LogService {
 
       final token = prefs.getString('token');
 
-      // Use a standalone Dio instance (not dioClient) because this targets
-      // a different microservice on port 5009 with its own base URL.
       final logDio = Dio(
         BaseOptions(
           connectTimeout: const Duration(seconds: 5),
@@ -97,14 +106,10 @@ class LogService {
 
       await logDio.post(_logApiUrl, data: body);
     } catch (e) {
-      // Suppress connection errors in debug to avoid flooding the
-      // console when the logging microservice (port 5009) is down.
       final msg = e.toString();
-      if (msg.contains('Connection refused') ||
-          msg.contains('SocketException')) {
+      if (msg.contains('Connection refused') || msg.contains('SocketException')) {
         return;
       }
-      AppLogger.error('log', 'Failed to send error log: $e');
     }
   }
 }
