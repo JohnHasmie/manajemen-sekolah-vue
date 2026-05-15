@@ -46,6 +46,38 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
   /// to download or share yet.
   final String? paymentProofUrl;
 
+  // ─── Receipt-mode fields (used only when isManualPending=false) ─
+  //
+  // When the bill is verified/paid, the screen renders a printable
+  // receipt card (KUITANSI PEMBAYARAN — school header, line-item
+  // table, signature note) using these fields. They're optional so
+  // the pending mode (which doesn't need them) can keep its current
+  // hero+timeline layout untouched.
+
+  /// School name printed at the top of the kuitansi.
+  final String? schoolName;
+
+  /// Class label (e.g., "7A") — line item on the kuitansi.
+  final String? className;
+
+  /// Bill period (e.g., "Mei 2026"). Only meaningful for recurring
+  /// bills like SPP; null for one-time bills.
+  final String? period;
+
+  /// When the payment was made (or the parent's upload time for
+  /// manual flow). Falls back to "now" when not provided.
+  final DateTime? paidAt;
+
+  /// When the admin verified the payment. Null until verified.
+  final DateTime? verifiedAt;
+
+  /// Admin who verified the payment. Falls back to "Admin Sekolah".
+  final String? verifierName;
+
+  /// Bill id — used to derive the receipt number when one isn't
+  /// supplied. Format: `KW-{YYYYMMDD}-{first 6 of billId, upper}`.
+  final String? billId;
+
   const ParentPaymentSuccessScreen({
     super.key,
     required this.billName,
@@ -55,6 +87,13 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
     required this.adminFee,
     this.isManualPending = false,
     this.paymentProofUrl,
+    this.schoolName,
+    this.className,
+    this.period,
+    this.paidAt,
+    this.verifiedAt,
+    this.verifierName,
+    this.billId,
   });
 
   @override
@@ -71,9 +110,17 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(
                   children: [
-                    _buildAmountCard(),
-                    AppSpacing.v16,
-                    _buildTimelineCard(),
+                    // Pending → amount + timeline (existing flow);
+                    // Paid → kuitansi receipt card (school header,
+                    // line items, verifikasi info). The two states
+                    // intentionally diverge: pending is "tracking
+                    // your upload", paid is "here's your receipt".
+                    if (isManualPending) ...[
+                      _buildAmountCard(),
+                      AppSpacing.v16,
+                      _buildTimelineCard(),
+                    ] else
+                      _buildReceiptCard(),
                     AppSpacing.v16,
                     _buildActionsRow(context),
                     AppSpacing.v8,
@@ -212,6 +259,248 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Printable kuitansi card for verified payments. Mirrors the
+  /// shape of a paper receipt: school header → receipt number → line
+  /// items → total → verifikasi footer. Designed to look right when
+  /// the parent screenshots the screen and forwards it.
+  Widget _buildReceiptCard() {
+    final total = amount + adminFee;
+    final receiptNo = _resolveReceiptNumber();
+    final dateLabel = _formatDate(paidAt ?? DateTime.now());
+    final verifiedLabel = verifiedAt != null
+        ? '${_formatDate(verifiedAt!)} • ${verifierName ?? 'Admin Sekolah'}'
+        : (verifierName ?? 'Admin Sekolah');
+
+    Widget row(String label, String value, {bool emphasized = false}) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 90,
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: ColorUtils.slate500,
+                ),
+              ),
+            ),
+            Text(
+              ':  ',
+              style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
+            ),
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: emphasized ? 13 : 11.5,
+                  fontWeight: emphasized ? FontWeight.w800 : FontWeight.w600,
+                  color: ColorUtils.slate900,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.75),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header — kuitansi label + receipt number ────────────
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: ColorUtils.success600.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  'KUITANSI PEMBAYARAN',
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.success600,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                receiptNo,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: ColorUtils.slate500,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          if ((schoolName ?? '').isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              schoolName!,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: ColorUtils.slate900,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          const _DottedDivider(),
+          const SizedBox(height: AppSpacing.md),
+
+          // ── Line items ─────────────────────────────────────────
+          row('Siswa', studentName),
+          if ((className ?? '').isNotEmpty) row('Kelas', className!),
+          row('Jenis', billName),
+          if ((period ?? '').isNotEmpty) row('Periode', period!),
+          row('Tanggal', dateLabel),
+          row('Metode', methodLabel),
+          row('Diverifikasi', verifiedLabel),
+
+          const SizedBox(height: AppSpacing.md),
+          const _DottedDivider(),
+          const SizedBox(height: AppSpacing.md),
+
+          // ── Total line — emphasized, like a restaurant receipt ──
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'TOTAL DIBAYAR',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: ColorUtils.slate500,
+                  letterSpacing: 0.6,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                _formatRupiah(total),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: ColorUtils.success600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          if (adminFee > 0) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  'Termasuk admin ${_formatRupiah(adminFee)}',
+                  style: TextStyle(fontSize: 9.5, color: ColorUtils.slate500),
+                ),
+              ],
+            ),
+          ],
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // ── Verified stamp — gives the screenshot some authority ─
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            decoration: BoxDecoration(
+              color: ColorUtils.success600.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: ColorUtils.success600.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.verified_rounded,
+                  size: 18,
+                  color: ColorUtils.success600,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'LUNAS DAN TERVERIFIKASI',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: ColorUtils.success600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Diterbitkan secara elektronik oleh KamilEdu.',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: ColorUtils.slate500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build receipt number from billId + paid date, or fall back to a
+  /// date-only format. The format reads like a real receipt code
+  /// (KW-YYYYMMDD-XXXXXX) so screenshots feel official.
+  String _resolveReceiptNumber() {
+    final date = paidAt ?? DateTime.now();
+    final ymd = '${date.year}'
+        '${date.month.toString().padLeft(2, '0')}'
+        '${date.day.toString().padLeft(2, '0')}';
+    final tail = (billId == null || billId!.length < 6)
+        ? date.millisecondsSinceEpoch.toString().substring(0, 6)
+        : billId!.replaceAll('-', '').substring(0, 6).toUpperCase();
+    return 'KW-$ymd-$tail';
+  }
+
+  String _formatDate(DateTime dt) {
+    const months = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    ];
+    return '${dt.day} ${months[dt.month]} ${dt.year}';
   }
 
   Widget _buildTimelineCard() {
@@ -381,6 +670,38 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Dotted horizontal divider — the receipt-paper aesthetic between
+/// the header, line items, and total. Paints a row of small dots
+/// across the available width.
+class _DottedDivider extends StatelessWidget {
+  const _DottedDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const dotSize = 2.0;
+        const gap = 4.0;
+        final count = (constraints.maxWidth / (dotSize + gap)).floor();
+        return Row(
+          children: List.generate(
+            count,
+            (_) => Container(
+              width: dotSize,
+              height: dotSize,
+              margin: const EdgeInsets.symmetric(horizontal: gap / 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFFCBD5E1),
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

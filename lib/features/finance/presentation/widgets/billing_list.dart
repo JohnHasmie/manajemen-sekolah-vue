@@ -365,6 +365,38 @@ double _toBillingDouble(dynamic v) {
   return double.tryParse(v.toString().replaceAll(',', '.')) ?? 0;
 }
 
+/// Parse a date OR datetime string into [DateTime]. Tolerant of the
+/// mixed shapes Laravel sends (Y-m-d for due_date, ISO-8601 for
+/// timestamps). Returns null on anything unparseable.
+DateTime? _parseDateTime(dynamic v) {
+  if (v == null) return null;
+  final s = v.toString();
+  if (s.isEmpty || s == 'null') return null;
+  try {
+    return DateTime.parse(s);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Turn a "YYYY-MM" month tag (the format Bill.month uses) into a
+/// human label like "Mei 2026". Leaves unrecognized shapes alone so
+/// the caller can fall through to the raw value.
+String _humanMonth(String yyyymm) {
+  final parts = yyyymm.split('-');
+  if (parts.length != 2) return yyyymm;
+  final year = int.tryParse(parts[0]);
+  final month = int.tryParse(parts[1]);
+  if (year == null || month == null || month < 1 || month > 12) {
+    return yyyymm;
+  }
+  const months = [
+    '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+  return '${months[month]} $year';
+}
+
 DateTime? _parseBillingDate(dynamic v) {
   if (v == null) return null;
   final s = v.toString();
@@ -699,20 +731,59 @@ class _BillingRow extends ConsumerWidget {
     if (isPaid || isPending) {
       // Receipt / pending review — go straight to success screen
       // through AppNavigator so app-level routing observers fire.
+      // For paid bills the screen renders a printable kuitansi card;
+      // pull every available field from the bill payload so the
+      // receipt has school + class + period + verifikasi info filled
+      // in. Missing fields gracefully degrade to "—" in the UI.
+      final latestPayment = data['latest_payment_relation'] is Map
+          ? Map<String, dynamic>.from(data['latest_payment_relation'] as Map)
+          : <String, dynamic>{};
+      final paymentType = data['payment_type'] is Map
+          ? Map<String, dynamic>.from(data['payment_type'] as Map)
+          : <String, dynamic>{};
+      final billName = (paymentType['name']
+              ?? data['name']
+              ?? data['title']
+              ?? data['type']
+              ?? 'Tagihan')
+          .toString();
+      final method = (latestPayment['payment_method']
+              ?? data['payment_method']
+              ?? data['method']
+              ?? '-')
+          .toString();
+      final classes = data['student']?['classes'];
+      final className = classes is List && classes.isNotEmpty
+          ? (classes.first is Map ? classes.first['name']?.toString() : null)
+          : null;
+      final periodStr = data['month']?.toString();
+      final paidAt = _parseDateTime(
+        latestPayment['payment_date'] ?? latestPayment['created_at'],
+      );
+      final verifiedAt = _parseDateTime(latestPayment['verified_at']);
+      final verifierName = latestPayment['verifier'] is Map
+          ? latestPayment['verifier']['name']?.toString()
+          : null;
+
       await AppNavigator.push<void>(
         context,
         ParentPaymentSuccessScreen(
-          billName: (data['name'] ?? data['title'] ?? data['type'] ?? 'Tagihan')
-              .toString(),
+          billName: billName,
           studentName:
               (data['student_name'] ?? data['student']?['name'] ?? 'Anak')
                   .toString(),
-          methodLabel: (data['payment_method'] ?? data['method'] ?? '-')
-              .toString(),
+          methodLabel: method,
           amount: double.tryParse((data['amount'] ?? '0').toString()) ?? 0,
           adminFee: double.tryParse((data['admin_fee'] ?? '0').toString()) ?? 0,
           isManualPending: isPending,
           paymentProofUrl: data['payment_proof_url']?.toString(),
+          schoolName: data['school']?['school_name']?.toString(),
+          className: className,
+          period: periodStr != null ? _humanMonth(periodStr) : null,
+          paidAt: paidAt,
+          verifiedAt: verifiedAt,
+          verifierName: verifierName,
+          billId: data['id']?.toString(),
         ),
       );
       return;

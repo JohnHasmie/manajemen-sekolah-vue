@@ -1234,6 +1234,16 @@ class _ParentBillCheckoutScreenState
         widget.bill['student_name']?.toString() ??
         widget.bill['student']?['name']?.toString() ??
         'Anak';
+    // For QRIS / VA the bill is already paid by the time we land
+    // here (stub gateway), so the success screen renders in receipt
+    // mode — pass through whatever bill fields we have so the
+    // kuitansi line items aren't all "—".
+    final classes = widget.bill['student']?['classes'];
+    final className = classes is List && classes.isNotEmpty
+        ? (classes.first is Map ? classes.first['name']?.toString() : null)
+        : null;
+    final periodStr = widget.bill['month']?.toString();
+
     final result = await AppNavigator.push<bool>(
       context,
       ParentPaymentSuccessScreen(
@@ -1248,6 +1258,14 @@ class _ParentBillCheckoutScreenState
         // success screen's Unduh / Bagikan actions stay live even
         // when the parent re-enters the checkout from the list.
         paymentProofUrl: widget.bill['payment_proof_url']?.toString(),
+        schoolName: widget.bill['school']?['school_name']?.toString(),
+        className: className,
+        period: periodStr != null && periodStr.isNotEmpty
+            ? _humanMonthFromBill(periodStr)
+            : null,
+        paidAt: DateTime.now(), // gateway just confirmed
+        verifiedAt: DateTime.now(), // gateway-paid = instantly verified
+        billId: widget.bill['id']?.toString(),
       ),
     );
     if (result == true && mounted) {
@@ -1354,6 +1372,24 @@ class _CheckoutSession {
   }
 
   double totalFor(_PayMethod method) => amount + adminFeeFor(method);
+}
+
+/// Turn a "YYYY-MM" bill period (Bill.month format) into a human
+/// label like "Mei 2026". Returns the raw value when the shape is
+/// unrecognized so the caller can fall through.
+String _humanMonthFromBill(String yyyymm) {
+  final parts = yyyymm.split('-');
+  if (parts.length != 2) return yyyymm;
+  final year = int.tryParse(parts[0]);
+  final month = int.tryParse(parts[1]);
+  if (year == null || month == null || month < 1 || month > 12) {
+    return yyyymm;
+  }
+  const months = [
+    '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+  return '${months[month]} $year';
 }
 
 String _formatRupiah(double amount) {
