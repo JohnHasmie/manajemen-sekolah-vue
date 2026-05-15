@@ -169,14 +169,22 @@ class _BillingBody extends StatelessWidget {
   });
 
   /// Bucket every item:
+  ///   - pending: status == 'pending' — parent has uploaded payment
+  ///     proof, waiting for admin verification. These leave the
+  ///     "Perlu perhatian" pool because the parent has nothing left
+  ///     to act on; they get their own "Menunggu verifikasi" section
+  ///     so the parent has visible confirmation that the upload
+  ///     landed (the original UX gap that prompted this change).
   ///   - overdue: status == 'unpaid' AND due_date < today
   ///   - byMonth: keyed by 'YYYY-MM' of due_date (or created_at fallback)
   ({
+    List<Map<String, dynamic>> pending,
     List<Map<String, dynamic>> overdue,
     Map<String, List<Map<String, dynamic>>> byMonth,
     List<String> monthsOrdered,
   })
   _bucketize() {
+    final pending = <Map<String, dynamic>>[];
     final overdue = <Map<String, dynamic>>[];
     final byMonth = <String, List<Map<String, dynamic>>>{};
     final monthsOrdered = <String>[];
@@ -189,11 +197,17 @@ class _BillingBody extends StatelessWidget {
         m['due_date'] ?? m['jatuh_tempo'] ?? m['created_at'],
       );
       final status = (m['status'] ?? '').toString().toLowerCase();
+
+      // Pending bills go to their own bucket regardless of due date.
+      // The parent's bukti is in the admin queue — surfacing it as
+      // overdue/Telat would mis-signal that another action is needed.
+      if (status == 'pending') {
+        pending.add(m);
+        continue;
+      }
+
       final isUnpaid =
-          status == 'unpaid' ||
-          status == 'belum_lunas' ||
-          status == '' ||
-          status == 'pending';
+          status == 'unpaid' || status == 'belum_lunas' || status == '';
       if (due != null && isUnpaid && due.isBefore(today)) {
         overdue.add(m);
         continue;
@@ -209,7 +223,12 @@ class _BillingBody extends StatelessWidget {
     }
     // Newest month first.
     monthsOrdered.sort((a, b) => b.compareTo(a));
-    return (overdue: overdue, byMonth: byMonth, monthsOrdered: monthsOrdered);
+    return (
+      pending: pending,
+      overdue: overdue,
+      byMonth: byMonth,
+      monthsOrdered: monthsOrdered,
+    );
   }
 
   DateTime? _parseDate(dynamic v) {
@@ -277,6 +296,27 @@ class _BillingBody extends StatelessWidget {
         // the screen level inside the hero Stack so its top edge can
         // tuck into the gradient (overlap effect).
 
+        // Menunggu verifikasi — bills where the parent has already
+        // uploaded payment proof. Surfaces at the top so the parent
+        // sees confirmation of their action.
+        if (buckets.pending.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          _SectionHeader(
+            label: lang.getTranslatedText({
+              'en': 'AWAITING VERIFICATION',
+              'id': 'MENUNGGU VERIFIKASI',
+            }),
+            tone: _SectionHeaderTone.warning,
+          ),
+          for (final m in buckets.pending)
+            _BillingRow(
+              data: m,
+              lang: lang,
+              isOverdue: false,
+              formatRupiah: _formatRupiah,
+            ),
+        ],
+
         // Perlu perhatian (overdue) section
         if (buckets.overdue.isNotEmpty) ...[
           const SizedBox(height: 20),
@@ -323,6 +363,38 @@ double _toBillingDouble(dynamic v) {
   if (v == null) return 0;
   if (v is num) return v.toDouble();
   return double.tryParse(v.toString().replaceAll(',', '.')) ?? 0;
+}
+
+/// Parse a date OR datetime string into [DateTime]. Tolerant of the
+/// mixed shapes Laravel sends (Y-m-d for due_date, ISO-8601 for
+/// timestamps). Returns null on anything unparseable.
+DateTime? _parseDateTime(dynamic v) {
+  if (v == null) return null;
+  final s = v.toString();
+  if (s.isEmpty || s == 'null') return null;
+  try {
+    return DateTime.parse(s);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Turn a "YYYY-MM" month tag (the format Bill.month uses) into a
+/// human label like "Mei 2026". Leaves unrecognized shapes alone so
+/// the caller can fall through to the raw value.
+String _humanMonth(String yyyymm) {
+  final parts = yyyymm.split('-');
+  if (parts.length != 2) return yyyymm;
+  final year = int.tryParse(parts[0]);
+  final month = int.tryParse(parts[1]);
+  if (year == null || month == null || month < 1 || month > 12) {
+    return yyyymm;
+  }
+  const months = [
+    '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+  return '${months[month]} $year';
 }
 
 DateTime? _parseBillingDate(dynamic v) {
@@ -592,13 +664,26 @@ class _Chip extends StatelessWidget {
 // Section header — uppercased slate caption above each group.
 // ---------------------------------------------------------------------------
 
+/// Visual tone for [_SectionHeader]. `normal` keeps the slate caption;
+/// `warning` paints the label in amber so the "Menunggu verifikasi"
+/// group reads as informational (not urgent) and distinct from
+/// "Perlu perhatian" red.
+enum _SectionHeaderTone { normal, warning }
+
 class _SectionHeader extends StatelessWidget {
   final String label;
+  final _SectionHeaderTone tone;
 
-  const _SectionHeader({required this.label});
+  const _SectionHeader({
+    required this.label,
+    this.tone = _SectionHeaderTone.normal,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final color = tone == _SectionHeaderTone.warning
+        ? const Color(0xFFB45309) // amber-700
+        : ColorUtils.slate600;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
       child: Text(
@@ -606,7 +691,7 @@ class _SectionHeader extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: ColorUtils.slate600,
+          color: color,
           letterSpacing: 0.4,
         ),
       ),
@@ -646,19 +731,59 @@ class _BillingRow extends ConsumerWidget {
     if (isPaid || isPending) {
       // Receipt / pending review — go straight to success screen
       // through AppNavigator so app-level routing observers fire.
+      // For paid bills the screen renders a printable kuitansi card;
+      // pull every available field from the bill payload so the
+      // receipt has school + class + period + verifikasi info filled
+      // in. Missing fields gracefully degrade to "—" in the UI.
+      final latestPayment = data['latest_payment_relation'] is Map
+          ? Map<String, dynamic>.from(data['latest_payment_relation'] as Map)
+          : <String, dynamic>{};
+      final paymentType = data['payment_type'] is Map
+          ? Map<String, dynamic>.from(data['payment_type'] as Map)
+          : <String, dynamic>{};
+      final billName = (paymentType['name']
+              ?? data['name']
+              ?? data['title']
+              ?? data['type']
+              ?? 'Tagihan')
+          .toString();
+      final method = (latestPayment['payment_method']
+              ?? data['payment_method']
+              ?? data['method']
+              ?? '-')
+          .toString();
+      final classes = data['student']?['classes'];
+      final className = classes is List && classes.isNotEmpty
+          ? (classes.first is Map ? classes.first['name']?.toString() : null)
+          : null;
+      final periodStr = data['month']?.toString();
+      final paidAt = _parseDateTime(
+        latestPayment['payment_date'] ?? latestPayment['created_at'],
+      );
+      final verifiedAt = _parseDateTime(latestPayment['verified_at']);
+      final verifierName = latestPayment['verifier'] is Map
+          ? latestPayment['verifier']['name']?.toString()
+          : null;
+
       await AppNavigator.push<void>(
         context,
         ParentPaymentSuccessScreen(
-          billName: (data['name'] ?? data['title'] ?? data['type'] ?? 'Tagihan')
-              .toString(),
+          billName: billName,
           studentName:
               (data['student_name'] ?? data['student']?['name'] ?? 'Anak')
                   .toString(),
-          methodLabel: (data['payment_method'] ?? data['method'] ?? '-')
-              .toString(),
+          methodLabel: method,
           amount: double.tryParse((data['amount'] ?? '0').toString()) ?? 0,
           adminFee: double.tryParse((data['admin_fee'] ?? '0').toString()) ?? 0,
           isManualPending: isPending,
+          paymentProofUrl: data['payment_proof_url']?.toString(),
+          schoolName: data['school']?['school_name']?.toString(),
+          className: className,
+          period: periodStr != null ? _humanMonth(periodStr) : null,
+          paidAt: paidAt,
+          verifiedAt: verifiedAt,
+          verifierName: verifierName,
+          billId: data['id']?.toString(),
         ),
       );
       return;
@@ -676,6 +801,20 @@ class _BillingRow extends ConsumerWidget {
 
   ({Color bg, Color fg, IconData icon, String label}) _appearance() {
     final status = (data['status'] ?? '').toString().toLowerCase();
+
+    // Pending takes precedence over isOverdue — parent has uploaded
+    // bukti, so we never paint the red "Telat" treatment on top.
+    if (status == 'pending') {
+      return (
+        bg: const Color(0xFFFEF3C7),
+        fg: const Color(0xFFB45309),
+        icon: Icons.hourglass_top_rounded,
+        label: lang.getTranslatedText({
+          'en': 'Awaiting verification',
+          'id': 'Menunggu verifikasi',
+        }),
+      );
+    }
     if (isOverdue) {
       return (
         bg: const Color(0xFFFEE2E2),
@@ -693,13 +832,6 @@ class _BillingRow extends ConsumerWidget {
           fg: const Color(0xFF15803D),
           icon: Icons.check_rounded,
           label: lang.getTranslatedText({'en': 'Paid', 'id': 'Lunas'}),
-        );
-      case 'pending':
-        return (
-          bg: const Color(0xFFFEF3C7),
-          fg: const Color(0xFFB45309),
-          icon: Icons.access_time_rounded,
-          label: lang.getTranslatedText({'en': 'Pending', 'id': 'Menunggu'}),
         );
       default:
         return (
@@ -752,6 +884,7 @@ class _BillingRow extends ConsumerWidget {
     final status = (data['status'] ?? '').toString().toLowerCase();
     final isPaid =
         status == 'verified' || status == 'lunas' || status == 'paid';
+    final isPending = status == 'pending';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -874,7 +1007,16 @@ class _BillingRow extends ConsumerWidget {
                             ),
                           ),
                           const Spacer(),
-                          if (!isPaid)
+                          if (isPending)
+                            Text(
+                              '${lang.getTranslatedText({'en': 'View proof', 'id': 'Lihat bukti'})} →',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFB45309),
+                              ),
+                            )
+                          else if (!isPaid)
                             Text(
                               '${lang.getTranslatedText({'en': 'Pay', 'id': 'Bayar'})} →',
                               style: TextStyle(

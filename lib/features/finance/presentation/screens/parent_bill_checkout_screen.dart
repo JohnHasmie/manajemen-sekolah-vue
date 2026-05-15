@@ -998,7 +998,7 @@ class _ParentBillCheckoutScreenState
 
     setState(() => _isUploading = true);
     try {
-      await ApiService().uploadFile(
+      final response = await ApiService().uploadFile(
         '/bill/$billId/payment-proof',
         file,
         fileField: 'payment_receipt',
@@ -1011,10 +1011,43 @@ class _ParentBillCheckoutScreenState
       _sessionCache.remove(_cacheKey(billId));
 
       if (!mounted) return;
-      SnackBarUtils.showSuccess(
+
+      // Extract the just-stored proof URL from the upload response
+      // so the success screen can wire its "Unduh Bukti" / "Bagikan"
+      // actions to it without an extra network round-trip.
+      String? proofUrl;
+      if (response is Map) {
+        final data = response['data'];
+        if (data is Map) {
+          proofUrl = data['payment_proof_url']?.toString();
+        }
+      }
+
+      final billName = widget.bill['type']?.toString()
+          ?? widget.bill['name']?.toString()
+          ?? 'Tagihan';
+      final studentName = widget.bill['student_name']?.toString()
+          ?? widget.bill['student']?['name']?.toString()
+          ?? 'Anak';
+
+      // Push the success screen so the parent gets immediate visible
+      // confirmation (timeline + bukti actions). Once they tap
+      // Selesai (or back out), we pop the checkout with `true` so
+      // the billing list refreshes and shows the new pending row.
+      await AppNavigator.push<bool>(
         context,
-        'Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.',
+        ParentPaymentSuccessScreen(
+          billName: billName,
+          studentName: studentName,
+          methodLabel: 'Transfer manual',
+          amount: _session.amount,
+          adminFee: _session.adminFeeFor(_method),
+          isManualPending: true,
+          paymentProofUrl: proofUrl,
+        ),
       );
+
+      if (!mounted) return;
       AppNavigator.pop(context, true);
     } catch (e) {
       AppLogger.error('parent-bill-upload', e);
@@ -1201,6 +1234,16 @@ class _ParentBillCheckoutScreenState
         widget.bill['student_name']?.toString() ??
         widget.bill['student']?['name']?.toString() ??
         'Anak';
+    // For QRIS / VA the bill is already paid by the time we land
+    // here (stub gateway), so the success screen renders in receipt
+    // mode — pass through whatever bill fields we have so the
+    // kuitansi line items aren't all "—".
+    final classes = widget.bill['student']?['classes'];
+    final className = classes is List && classes.isNotEmpty
+        ? (classes.first is Map ? classes.first['name']?.toString() : null)
+        : null;
+    final periodStr = widget.bill['month']?.toString();
+
     final result = await AppNavigator.push<bool>(
       context,
       ParentPaymentSuccessScreen(
@@ -1210,6 +1253,19 @@ class _ParentBillCheckoutScreenState
         amount: _session.amount,
         adminFee: _session.adminFeeFor(_method),
         isManualPending: _method == _PayMethod.manual,
+        // Bill payload already carries `payment_proof_url` when a
+        // previous upload exists for this bill — surface it so the
+        // success screen's Unduh / Bagikan actions stay live even
+        // when the parent re-enters the checkout from the list.
+        paymentProofUrl: widget.bill['payment_proof_url']?.toString(),
+        schoolName: widget.bill['school']?['school_name']?.toString(),
+        className: className,
+        period: periodStr != null && periodStr.isNotEmpty
+            ? _humanMonthFromBill(periodStr)
+            : null,
+        paidAt: DateTime.now(), // gateway just confirmed
+        verifiedAt: DateTime.now(), // gateway-paid = instantly verified
+        billId: widget.bill['id']?.toString(),
       ),
     );
     if (result == true && mounted) {
@@ -1316,6 +1372,24 @@ class _CheckoutSession {
   }
 
   double totalFor(_PayMethod method) => amount + adminFeeFor(method);
+}
+
+/// Turn a "YYYY-MM" bill period (Bill.month format) into a human
+/// label like "Mei 2026". Returns the raw value when the shape is
+/// unrecognized so the caller can fall through.
+String _humanMonthFromBill(String yyyymm) {
+  final parts = yyyymm.split('-');
+  if (parts.length != 2) return yyyymm;
+  final year = int.tryParse(parts[0]);
+  final month = int.tryParse(parts[1]);
+  if (year == null || month == null || month < 1 || month > 12) {
+    return yyyymm;
+  }
+  const months = [
+    '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+  return '${months[month]} $year';
 }
 
 String _formatRupiah(double amount) {
