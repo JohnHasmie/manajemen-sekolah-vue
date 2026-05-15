@@ -10,12 +10,14 @@ library;
 
 import 'dart:io';
 
+import 'package:manajemensekolah/features/schedule/data/schedule_admin_actions_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_base_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_conflict_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_filter_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_import_export_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_mutation_service.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_teacher_service.dart';
+import 'package:manajemensekolah/features/schedule/domain/models/schedule_kpi_summary.dart';
 
 /// Main service for teaching schedules with delegated operations.
 /// Acts as a facade that delegates to specialized sub-services while
@@ -31,6 +33,8 @@ class ApiScheduleService {
       ScheduleImportExportService();
   late final ScheduleMutationService _mutationService =
       ScheduleMutationService();
+  late final ScheduleAdminActionsService _adminActions =
+      ScheduleAdminActionsService();
 
   // ============= Base Service Delegation =============
 
@@ -240,4 +244,58 @@ class ApiScheduleService {
     semesterId: semesterId,
     academicYearId: academicYearId,
   );
+
+  // ============= Admin Actions Service Delegation =============
+  //
+  // Backs the admin Jadwal redesign — KPI strip (Total/Hari Ini/Bentrok),
+  // Frame E drag-to-reschedule, and Frame F bulk-select mode.
+
+  /// Fetches the KPI summary used by the redesigned admin Jadwal hub.
+  Future<ScheduleKpiSummary> fetchKpiSummary({
+    String? semesterId,
+    String? academicYearId,
+  }) => _adminActions.fetchKpiSummary(
+    semesterId: semesterId,
+    academicYearId: academicYearId,
+  );
+
+  /// Moves a single schedule to a new lesson_hour slot (drag-to-reschedule).
+  /// Throws on 409 with conflict payload; pass `force: true` to override.
+  Future<Map<String, dynamic>> rescheduleSession({
+    required String scheduleId,
+    required String lessonHourDaysId,
+    bool force = false,
+  }) => _adminActions.rescheduleSession(
+    scheduleId: scheduleId,
+    lessonHourDaysId: lessonHourDaysId,
+    force: force,
+  );
+
+  /// Bulk-moves N sessions to [targetDayId], preserving each session's
+  /// hour_number (e.g. moves "Senin jam 1" to "Selasa jam 1").
+  Future<Map<String, dynamic>> bulkMoveSessions({
+    required List<String> ids,
+    required String targetDayId,
+    bool force = false,
+  }) => _adminActions.bulkMoveSessions(
+    ids: ids,
+    targetDayId: targetDayId,
+    force: force,
+  );
+
+  /// Bulk-reassigns N sessions to [teacherId]. Skips rows where the new
+  /// teacher already has a conflicting slot unless force=true.
+  Future<Map<String, dynamic>> bulkChangeTeacher({
+    required List<String> ids,
+    required String teacherId,
+    bool force = false,
+  }) => _adminActions.bulkChangeTeacher(
+    ids: ids,
+    teacherId: teacherId,
+    force: force,
+  );
+
+  /// Bulk-soft-deletes N sessions. Returns the number actually deleted.
+  Future<int> bulkDeleteSessions(List<String> ids) =>
+      _adminActions.bulkDeleteSessions(ids);
 }

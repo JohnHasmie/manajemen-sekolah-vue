@@ -1,0 +1,1581 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Admin · Jadwal Mengajar · Interactive redesign</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-dark-deep: #1F4A8F;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --brand-azure-deep: #1885B2;
+    --green-50: #DCFCE7;
+    --green-100: #BBF7D0;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-100: #FDE68A;
+    --amber-500: #F59E0B;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-100: #FECACA;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-100: #BFDBFE;
+    --blue-600: #1D4ED8;
+    --indigo-50: #E0E7FF;
+    --indigo-600: #4F46E5;
+    --violet-50: #EDE9FE;
+    --violet-100: #DDD6FE;
+    --violet-600: #7C3AED;
+    --teal-50: #CCFBF1;
+    --teal-600: #0D9488;
+    --rose-50: #FFE4E6;
+    --rose-600: #E11D48;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 24px;
+    max-width: 980px; line-height: 1.55;
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin: 0 0 28px; padding: 14px 18px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; color: var(--slate-700); font-weight: 600;
+    max-width: 980px;
+  }
+  .legend .swatch {
+    width: 14px; height: 14px; border-radius: 4px;
+    display: inline-block; vertical-align: -2px; margin-right: 6px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 14px 16px 12px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100);
+    background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+    display: block; margin-top: 4px; font-size: 11px;
+  }
+  .phone {
+    width: 100%;
+    aspect-ratio: 380 / 800;
+    position: relative;
+    overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+  .status-bar {
+    height: 24px;
+    background: var(--brand-dark);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+  }
+
+  /* ── Brand page header (navy admin gradient) ───────────────────── */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-dark-deep));
+    padding: 12px 14px 28px;
+    color: white;
+    position: relative;
+  }
+  .header.compact { padding: 12px 14px 18px; }
+  .header-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .icon-back, .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 16px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .header-title { flex: 1; font-weight: 700; font-size: 17px; letter-spacing: -0.2px; }
+  .header-sub { font-weight: 500; font-size: 11px; color: rgba(255,255,255,.7); margin-top: 2px; }
+  .header-pill {
+    background: rgba(255,255,255,.18);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .school-pill {
+    margin-top: 12px;
+    background: rgba(255,255,255,.12);
+    padding: 6px 10px 6px 8px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px; font-weight: 600;
+  }
+  .school-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ADE80; }
+
+  /* ── KPI overlap card ─────────────────────────────────────────── */
+  .kpi-strip {
+    margin: -14px 12px 0;
+    background: white;
+    border-radius: 16px;
+    padding: 12px 8px;
+    box-shadow: 0 4px 16px rgba(15,23,42,.10), 0 1px 2px rgba(15,23,42,.04);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+    position: relative;
+    z-index: 2;
+  }
+  .kpi-cell {
+    text-align: center;
+    border-right: 1px solid var(--slate-100);
+    padding: 2px 4px;
+  }
+  .kpi-cell:last-child { border-right: none; }
+  .kpi-value { font-size: 18px; font-weight: 800; color: var(--brand-dark); letter-spacing: -0.3px; }
+  .kpi-value .unit { font-size: 11px; font-weight: 600; color: var(--slate-500); margin-left: 2px; }
+  .kpi-label { font-size: 10px; color: var(--slate-500); font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  /* ── Body container ───────────────────────────────────────────── */
+  .body {
+    flex: 1;
+    overflow: auto;
+    padding: 16px 12px 12px;
+  }
+  .body.no-pad { padding: 0; }
+
+  /* ── View toggle bar (Grid / List / Matrix) ───────────────────── */
+  .view-toggle {
+    display: flex;
+    background: var(--slate-100);
+    padding: 3px;
+    border-radius: 10px;
+    margin: 12px 12px 6px;
+    font-size: 11px; font-weight: 700;
+  }
+  .view-toggle .tab {
+    flex: 1;
+    text-align: center;
+    padding: 7px 6px;
+    color: var(--slate-600);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .view-toggle .tab.active {
+    background: white;
+    color: var(--brand-dark);
+    box-shadow: 0 1px 2px rgba(15,23,42,.08);
+  }
+  .view-toggle .tab svg { width: 11px; height: 11px; }
+
+  /* ── Filter chip strip ────────────────────────────────────────── */
+  .chip-strip {
+    display: flex; gap: 8px; padding: 8px 12px 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chip-strip::-webkit-scrollbar { display: none; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--slate-100);
+    color: var(--slate-700);
+    font-size: 11px; font-weight: 600;
+    border: 1px solid var(--slate-200);
+    flex-shrink: 0;
+  }
+  .chip.active {
+    background: var(--brand-dark);
+    color: white;
+    border-color: var(--brand-dark);
+  }
+  .chip.filter {
+    background: white;
+    color: var(--brand-cobalt);
+    border-color: var(--brand-cobalt);
+  }
+  .chip.filter .count {
+    background: var(--brand-cobalt);
+    color: white;
+    border-radius: 999px;
+    padding: 0 6px;
+    font-size: 9px;
+    margin-left: 2px;
+  }
+
+  /* ── Week calendar grid (Frame A) ─────────────────────────────── */
+  .calendar {
+    margin: 4px 8px 0;
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    overflow: hidden;
+  }
+  .cal-week-header {
+    display: grid;
+    grid-template-columns: 32px repeat(6, 1fr);
+    background: var(--slate-50);
+    border-bottom: 1px solid var(--slate-200);
+  }
+  .cal-week-header .day-head {
+    font-size: 9px; font-weight: 800; color: var(--slate-600);
+    text-align: center; padding: 6px 2px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+    border-right: 1px solid var(--slate-100);
+  }
+  .cal-week-header .day-head.today {
+    background: var(--brand-dark); color: white;
+  }
+  .cal-week-header .day-head:last-child { border-right: none; }
+  .cal-week-header .time-corner { background: var(--slate-100); border-right: 1px solid var(--slate-200); }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: 32px repeat(6, 1fr);
+    position: relative;
+  }
+  .cal-grid .time-col {
+    border-right: 1px solid var(--slate-200);
+    background: var(--slate-50);
+  }
+  .cal-grid .time-slot {
+    height: 32px;
+    font-size: 8px; color: var(--slate-500); font-weight: 700;
+    padding: 2px 3px;
+    border-bottom: 1px solid var(--slate-100);
+    text-align: right;
+  }
+  .cal-grid .day-col {
+    border-right: 1px solid var(--slate-100);
+    position: relative;
+    min-height: 256px;
+  }
+  .cal-grid .day-col:last-child { border-right: none; }
+  .cal-grid .hr-grid {
+    height: 32px;
+    border-bottom: 1px solid var(--slate-100);
+  }
+  .cal-grid .day-col.today { background: rgba(20,48,104,.03); }
+  .cal-block {
+    position: absolute;
+    left: 2px; right: 2px;
+    padding: 3px 4px;
+    border-radius: 5px;
+    font-size: 9px; font-weight: 700;
+    line-height: 1.15;
+    overflow: hidden;
+    border-left: 3px solid;
+    box-shadow: 0 1px 2px rgba(15,23,42,.08);
+    cursor: pointer;
+  }
+  .cal-block .b-title { font-weight: 800; }
+  .cal-block .b-meta { font-size: 8px; opacity: .85; font-weight: 600; margin-top: 1px; }
+  .cal-block.cobalt { background: rgba(27,111,184,.12); color: var(--brand-cobalt); border-color: var(--brand-cobalt); }
+  .cal-block.azure  { background: rgba(33,175,230,.13); color: var(--brand-azure-deep); border-color: var(--brand-azure); }
+  .cal-block.green  { background: rgba(22,163,74,.13); color: var(--green-700); border-color: var(--green-600); }
+  .cal-block.amber  { background: rgba(217,119,6,.13); color: var(--amber-700); border-color: var(--amber-500); }
+  .cal-block.violet { background: rgba(124,58,237,.13); color: var(--violet-600); border-color: var(--violet-600); }
+  .cal-block.rose   { background: rgba(225,29,72,.13); color: var(--rose-600); border-color: var(--rose-600); }
+
+  /* now line */
+  .now-line {
+    position: absolute;
+    left: 32px; right: 0;
+    height: 1px;
+    background: var(--red-600);
+    z-index: 3;
+  }
+  .now-line::before {
+    content: ''; position: absolute; left: -3px; top: -3px;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--red-600);
+  }
+
+  /* ── Day tab bar (Frame B) ────────────────────────────────────── */
+  .day-tabs {
+    display: flex; gap: 6px; padding: 10px 12px 8px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .day-tabs::-webkit-scrollbar { display: none; }
+  .day-tab {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    font-size: 11px; font-weight: 700;
+    color: var(--slate-700);
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px; min-width: 50px;
+  }
+  .day-tab .small { font-size: 9px; font-weight: 600; color: var(--slate-500); }
+  .day-tab.active {
+    background: var(--brand-dark);
+    color: white; border-color: var(--brand-dark);
+  }
+  .day-tab.active .small { color: rgba(255,255,255,.75); }
+  .day-tab .badge {
+    background: var(--brand-cobalt);
+    color: white;
+    font-size: 9px; font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 999px;
+    margin-top: 2px;
+  }
+  .day-tab.active .badge { background: white; color: var(--brand-dark); }
+
+  /* ── Schedule row card (Frame B) ──────────────────────────────── */
+  .day-section { padding: 4px 12px 0; }
+  .day-label {
+    font-size: 10px; font-weight: 800; color: var(--slate-500);
+    letter-spacing: 0.5px; text-transform: uppercase;
+    margin: 12px 4px 6px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .day-label .count {
+    background: var(--slate-100); color: var(--slate-600);
+    padding: 1px 8px; border-radius: 999px; font-size: 9px;
+  }
+
+  .row-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--slate-200);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex; align-items: stretch; gap: 10px;
+    box-shadow: 0 1px 2px rgba(15,23,42,.03);
+    position: relative;
+  }
+  .row-card.selected { border-color: var(--brand-cobalt); background: rgba(27,111,184,.04); }
+  .row-card.conflict { border-color: var(--red-600); background: rgba(220,38,38,.04); }
+  .row-time {
+    width: 56px;
+    border-right: 1px solid var(--slate-200);
+    padding-right: 10px;
+    display: flex; flex-direction: column; justify-content: center;
+    flex-shrink: 0;
+  }
+  .row-time .hr {
+    font-size: 14px; font-weight: 800; color: var(--brand-dark); line-height: 1.1;
+  }
+  .row-time .ampm { font-size: 9px; color: var(--slate-500); font-weight: 700; }
+  .row-time .sep { color: var(--slate-300); font-weight: 500; margin: 0 2px; }
+  .row-time .duration { font-size: 9px; color: var(--slate-500); font-weight: 600; margin-top: 2px; }
+  .row-body { flex: 1; min-width: 0; }
+  .row-title {
+    font-size: 13px; font-weight: 700; color: var(--slate-900); line-height: 1.2;
+    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .row-meta {
+    font-size: 11px; color: var(--slate-600); font-weight: 500;
+    margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .row-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--slate-300); }
+  .row-meta .teacher { color: var(--brand-cobalt); font-weight: 600; }
+  .row-actions {
+    display: flex; align-items: center; gap: 4px;
+    flex-shrink: 0;
+  }
+  .row-actions .chevron {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--slate-100);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--slate-600); font-size: 12px;
+  }
+  .row-actions .checkbox {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 2px solid var(--slate-300);
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .row-actions .checkbox.checked {
+    background: var(--brand-cobalt); border-color: var(--brand-cobalt); color: white;
+    font-size: 11px; font-weight: 800;
+  }
+  .row-tag {
+    position: absolute;
+    top: 0; right: 12px;
+    transform: translateY(-50%);
+    background: var(--red-600);
+    color: white;
+    font-size: 9px; font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .row-tag.warn { background: var(--amber-500); }
+  .row-tag.ok { background: var(--green-600); }
+
+  /* ── FAB ──────────────────────────────────────────────────────── */
+  .fab {
+    position: absolute;
+    bottom: 16px; right: 16px;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--brand-cobalt);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 300;
+    box-shadow: 0 6px 14px rgba(27,111,184,.4), 0 2px 4px rgba(15,23,42,.1);
+  }
+  .fab.import {
+    bottom: 80px; width: 44px; height: 44px;
+    background: white; color: var(--brand-cobalt);
+    font-size: 15px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 4px 10px rgba(15,23,42,.08);
+  }
+
+  /* ── Bulk action bottom bar (Frame F) ─────────────────────────── */
+  .bulk-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-top: 1px solid var(--slate-200);
+    box-shadow: 0 -4px 14px rgba(15,23,42,.08);
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .bulk-bar .count-pill {
+    background: var(--brand-dark);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; gap: 6px;
+    flex-shrink: 0;
+  }
+  .bulk-bar .actions {
+    flex: 1;
+    display: flex; gap: 6px; justify-content: flex-end;
+  }
+  .bulk-bar .act {
+    background: var(--slate-100);
+    border: 1px solid var(--slate-200);
+    color: var(--slate-700);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .bulk-bar .act.danger {
+    color: var(--red-600); border-color: var(--red-100);
+    background: var(--red-50);
+  }
+  .bulk-bar .act.primary {
+    color: white; background: var(--brand-cobalt); border-color: var(--brand-cobalt);
+  }
+
+  /* ── Bottom sheets (Frames C/D/G) ─────────────────────────────── */
+  .sheet {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -8px 24px rgba(15,23,42,.16);
+    max-height: 88%;
+    display: flex; flex-direction: column;
+  }
+  .sheet .drag { width: 36px; height: 4px; background: var(--slate-300); border-radius: 999px; margin: 8px auto 4px; }
+  .sheet-header {
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-dark-deep));
+    color: white;
+    padding: 14px 16px 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sheet-header .icon {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,.2);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .sheet-header .title { font-size: 15px; font-weight: 700; }
+  .sheet-header .sub { font-size: 11px; color: rgba(255,255,255,.75); margin-top: 2px; }
+  .sheet-header .close {
+    margin-left: auto;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .sheet-body { padding: 14px 16px 12px; overflow: auto; }
+  .sheet-footer {
+    border-top: 1px solid var(--slate-100);
+    padding: 12px 14px;
+    display: flex; gap: 10px;
+  }
+  .btn {
+    flex: 1; padding: 11px 12px;
+    border-radius: 12px;
+    font-size: 13px; font-weight: 700;
+    text-align: center;
+    border: 1px solid transparent;
+  }
+  .btn.secondary { background: white; color: var(--slate-700); border-color: var(--slate-300); }
+  .btn.primary { background: var(--brand-cobalt); color: white; }
+  .btn.danger { background: var(--red-50); color: var(--red-600); border-color: var(--red-100); }
+
+  /* ── Detail sheet content (Frame C) ───────────────────────────── */
+  .meta-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin: 10px 0 14px;
+  }
+  .meta-tile {
+    background: var(--slate-50); border-radius: 10px; padding: 8px 10px;
+  }
+  .meta-tile .lbl { font-size: 9px; color: var(--slate-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+  .meta-tile .val { font-size: 13px; font-weight: 700; color: var(--slate-900); margin-top: 2px; }
+  .meta-tile .val .accent { color: var(--brand-cobalt); }
+  .meta-tile.full { grid-column: 1 / -1; }
+  .section-head {
+    font-size: 10px; font-weight: 800; color: var(--slate-500);
+    text-transform: uppercase; letter-spacing: 0.6px;
+    margin: 14px 0 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-head::before { content: ''; width: 3px; height: 11px; background: var(--brand-cobalt); border-radius: 2px; }
+  .action-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .action-tile {
+    background: var(--slate-50); border-radius: 10px;
+    padding: 12px 10px; text-align: center;
+    border: 1px solid var(--slate-100);
+  }
+  .action-tile .ic { font-size: 16px; margin-bottom: 4px; color: var(--brand-cobalt); }
+  .action-tile .t { font-size: 11px; font-weight: 700; color: var(--slate-800); }
+  .action-tile.danger .ic { color: var(--red-600); }
+  .action-tile.danger .t { color: var(--red-600); }
+
+  /* ── Add form (Frame D) ───────────────────────────────────────── */
+  .field-row {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-bottom: 14px;
+  }
+  .field-row .lbl {
+    font-size: 11px; color: var(--slate-600); font-weight: 700;
+  }
+  .input {
+    border: 1px solid var(--slate-200); border-radius: 10px;
+    background: white;
+    padding: 10px 12px;
+    font-size: 13px; color: var(--slate-900); font-weight: 500;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .input .placeholder { color: var(--slate-400); }
+  .input .selected { color: var(--brand-cobalt); font-weight: 700; }
+  .input .chevron { color: var(--slate-400); font-size: 14px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .chip-grid {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .chip-grid .c {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--slate-200);
+    background: var(--slate-50);
+    font-size: 11px; font-weight: 600;
+    color: var(--slate-700);
+  }
+  .chip-grid .c.active {
+    background: var(--brand-cobalt); color: white; border-color: var(--brand-cobalt);
+  }
+
+  /* ── Drag overlay (Frame E) ───────────────────────────────────── */
+  .drag-overlay {
+    position: absolute;
+    left: 40%; top: 35%;
+    width: 130px;
+    transform: rotate(-3deg);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(15,23,42,.24);
+    border: 2px solid var(--brand-cobalt);
+    padding: 8px 10px;
+    z-index: 5;
+    cursor: grabbing;
+  }
+  .drag-overlay .t { font-size: 11px; font-weight: 800; color: var(--brand-cobalt); }
+  .drag-overlay .m { font-size: 10px; color: var(--slate-600); margin-top: 2px; }
+  .ghost-slot {
+    position: absolute;
+    top: 35%; left: 50%; width: 25%; height: 28%;
+    border: 2px dashed var(--brand-cobalt);
+    background: rgba(27,111,184,.08);
+    border-radius: 6px;
+    z-index: 4;
+  }
+  .conflict-toast {
+    position: absolute;
+    bottom: 16px; left: 14px; right: 14px;
+    background: var(--red-600);
+    color: white;
+    padding: 12px 14px;
+    border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(220,38,38,.4);
+    display: flex; align-items: center; gap: 10px;
+    z-index: 6;
+    font-size: 12px; font-weight: 600;
+  }
+  .conflict-toast .ic {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,255,255,.22);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .conflict-toast .title { font-weight: 800; font-size: 13px; }
+  .conflict-toast .body { font-size: 11px; opacity: .9; margin-top: 1px; }
+  .conflict-toast .undo {
+    background: rgba(255,255,255,.22); border: none; color: white;
+    padding: 5px 10px; border-radius: 8px;
+    font-size: 11px; font-weight: 800;
+    flex-shrink: 0; margin-left: auto;
+  }
+
+  /* ── Empty state (Frame H) ────────────────────────────────────── */
+  .empty-card {
+    margin: 30px 14px;
+    background: white;
+    border-radius: 18px;
+    border: 1px solid var(--slate-200);
+    padding: 24px 18px;
+    text-align: center;
+  }
+  .empty-illu {
+    width: 64px; height: 64px;
+    margin: 0 auto 14px;
+    border-radius: 18px;
+    background: var(--slate-50);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    color: var(--brand-cobalt);
+  }
+  .empty-title { font-size: 15px; font-weight: 800; color: var(--brand-dark); margin-bottom: 4px; }
+  .empty-text { font-size: 12px; color: var(--slate-600); line-height: 1.5; }
+  .empty-cta-row { display: flex; gap: 8px; margin-top: 16px; }
+  .empty-cta {
+    flex: 1; padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .empty-cta.primary { background: var(--brand-cobalt); color: white; }
+  .empty-cta.secondary { background: var(--slate-100); color: var(--slate-700); border: 1px solid var(--slate-200); }
+
+  /* ── Compare strip (current vs new) ───────────────────────────── */
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    max-width: 980px; margin: 32px 0 14px;
+  }
+  .compare h3 { font-size: 12px; font-weight: 800; color: var(--slate-500); margin: 0 0 8px; letter-spacing: 0.4px; text-transform: uppercase; }
+  .compare-card {
+    background: white;
+    border-radius: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; color: var(--slate-700); line-height: 1.6;
+  }
+  .compare-card .pro::before { content: '✓ '; color: var(--green-600); font-weight: 800; }
+  .compare-card .con::before { content: '✕ '; color: var(--red-600); font-weight: 800; }
+  .compare-card .neu::before { content: '• '; color: var(--slate-400); font-weight: 800; }
+
+  /* small svg icons */
+  .ic-svg { width: 14px; height: 14px; display: inline-block; vertical-align: -2px; }
+
+  .note {
+    font-size: 11px; color: var(--slate-500);
+    padding: 10px 14px; line-height: 1.5;
+    border-top: 1px dashed var(--slate-200);
+    background: var(--slate-50);
+  }
+  .note strong { color: var(--slate-700); }
+</style>
+</head>
+<body>
+
+<h1>Admin · Jadwal Mengajar — Interactive redesign</h1>
+<p class="subtitle">
+  Today the admin Jadwal page is a flat list of cards with a hidden matrix toggle —
+  no overview of when the school is busy, no visual sense of clashes, no quick way to
+  shift one class's session to a different slot. This mockup proposes a 3-view
+  interactive scaffold (Grid · List · Matrix) on a brand-consistent navy header,
+  with drag-to-reschedule, click-to-edit sheet, bulk-select mode, and conflict
+  detection baked into the calendar grid itself.
+</p>
+
+<div class="legend">
+  <span><span class="swatch" style="background:#143068"></span>Admin navy header / KPI value</span>
+  <span><span class="swatch" style="background:#1B6FB8"></span>Cobalt CTA / accent</span>
+  <span><span class="swatch" style="background:#21AFE6"></span>Azure secondary block</span>
+  <span><span class="swatch" style="background:#16A34A"></span>Confirmed / OK</span>
+  <span><span class="swatch" style="background:#D97706"></span>Pending</span>
+  <span><span class="swatch" style="background:#DC2626"></span>Conflict / destructive</span>
+  <span><span class="swatch" style="background:#f1f5f9;border:1px solid #cbd5e1"></span>Slate neutrals</span>
+</div>
+
+<div class="grid">
+
+  <!-- ════════ FRAME A — Hub / Week grid ════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">A</span>Hub · Week calendar grid
+      <span class="desc">Default landing. BrandPageHeader (navy) + KPI overlap + Grid · List · Matrix toggle + week grid w/ color-coded session blocks.</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 88%</span></div>
+
+      <div class="header">
+        <div class="header-row">
+          <div class="icon-back">‹</div>
+          <div style="flex:1">
+            <div class="header-title">Jadwal Mengajar</div>
+            <div class="header-sub">Senin · 14 Mei 2026 · Minggu ini</div>
+          </div>
+          <div class="icon-btn">⇄</div>
+          <div class="icon-btn">≡</div>
+        </div>
+        <div class="school-pill"><span class="dot"></span>SMA Negeri 1 Bandung</div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi-cell"><div class="kpi-value">124</div><div class="kpi-label">Total Sesi</div></div>
+        <div class="kpi-cell"><div class="kpi-value">18</div><div class="kpi-label">Hari Ini</div></div>
+        <div class="kpi-cell"><div class="kpi-value" style="color:var(--red-600)">3</div><div class="kpi-label">Bentrok</div></div>
+      </div>
+
+      <div class="view-toggle">
+        <div class="tab active">▦ Grid</div>
+        <div class="tab">☰ List</div>
+        <div class="tab">⊞ Matrix</div>
+      </div>
+
+      <div class="chip-strip">
+        <div class="chip filter">Filter <span class="count">2</span></div>
+        <div class="chip active">Kelas X-IPA-1</div>
+        <div class="chip active">Pak Yahya</div>
+        <div class="chip">Semua mapel</div>
+      </div>
+
+      <div class="calendar">
+        <div class="cal-week-header">
+          <div class="day-head time-corner"></div>
+          <div class="day-head today">SEN<br><span style="font-size:11px">14</span></div>
+          <div class="day-head">SEL<br><span style="font-size:11px">15</span></div>
+          <div class="day-head">RAB<br><span style="font-size:11px">16</span></div>
+          <div class="day-head">KAM<br><span style="font-size:11px">17</span></div>
+          <div class="day-head">JUM<br><span style="font-size:11px">18</span></div>
+          <div class="day-head">SAB<br><span style="font-size:11px">19</span></div>
+        </div>
+        <div class="cal-grid">
+          <div class="time-col">
+            <div class="time-slot">07</div>
+            <div class="time-slot">08</div>
+            <div class="time-slot">09</div>
+            <div class="time-slot">10</div>
+            <div class="time-slot">11</div>
+            <div class="time-slot">12</div>
+            <div class="time-slot">13</div>
+            <div class="time-slot">14</div>
+          </div>
+          <!-- Senin (today) -->
+          <div class="day-col today">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="cal-block cobalt" style="top:8px; height:50px">
+              <div class="b-title">Matematika</div><div class="b-meta">X-IPA-1 · YH</div>
+            </div>
+            <div class="cal-block azure" style="top:64px; height:34px">
+              <div class="b-title">Biologi</div><div class="b-meta">X-IPA-2</div>
+            </div>
+            <div class="cal-block green" style="top:128px; height:48px">
+              <div class="b-title">Bhs Inggris</div><div class="b-meta">X-IPA-1</div>
+            </div>
+            <div class="cal-block violet" style="top:200px; height:34px">
+              <div class="b-title">Sejarah</div>
+            </div>
+          </div>
+          <!-- Selasa -->
+          <div class="day-col">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="cal-block azure" style="top:8px; height:60px">
+              <div class="b-title">Fisika</div><div class="b-meta">XI-IPA-1</div>
+            </div>
+            <div class="cal-block cobalt" style="top:74px; height:34px">
+              <div class="b-title">Mat.</div>
+            </div>
+            <div class="cal-block amber" style="top:160px; height:44px; left:2px; right:30%; border-color:var(--red-600); background:rgba(220,38,38,.13); color:var(--red-700)">
+              <div class="b-title">⚠ Kimia</div><div class="b-meta">Bentrok</div>
+            </div>
+            <div class="cal-block amber" style="top:160px; height:44px; left:30%; right:2px; border-color:var(--red-600); background:rgba(220,38,38,.13); color:var(--red-700)">
+              <div class="b-title">⚠ B.Ind</div><div class="b-meta">Bentrok</div>
+            </div>
+          </div>
+          <!-- Rabu -->
+          <div class="day-col">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="cal-block green" style="top:8px; height:48px">
+              <div class="b-title">Bhs Ing</div>
+            </div>
+            <div class="cal-block cobalt" style="top:88px; height:48px">
+              <div class="b-title">Mat.</div>
+            </div>
+            <div class="cal-block rose" style="top:168px; height:60px">
+              <div class="b-title">PKn</div>
+            </div>
+          </div>
+          <!-- Kamis -->
+          <div class="day-col">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="cal-block violet" style="top:24px; height:48px">
+              <div class="b-title">Sejarah</div>
+            </div>
+            <div class="cal-block azure" style="top:104px; height:44px">
+              <div class="b-title">Biologi</div>
+            </div>
+            <div class="cal-block green" style="top:184px; height:34px">
+              <div class="b-title">Inggris</div>
+            </div>
+          </div>
+          <!-- Jumat -->
+          <div class="day-col">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="cal-block cobalt" style="top:14px; height:60px">
+              <div class="b-title">Mat.</div>
+            </div>
+            <div class="cal-block rose" style="top:110px; height:34px">
+              <div class="b-title">PKn</div>
+            </div>
+            <div class="cal-block green" style="top:150px; height:34px">
+              <div class="b-title">Inggris</div>
+            </div>
+          </div>
+          <!-- Sabtu -->
+          <div class="day-col">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="cal-block amber" style="top:36px; height:36px; background:var(--slate-100); border-color:var(--slate-400); color:var(--slate-600)">
+              <div class="b-title">Ekskul</div>
+            </div>
+          </div>
+          <!-- now line at 11:30 -->
+          <div class="now-line" style="top:144px"></div>
+        </div>
+      </div>
+
+      <div class="fab">+</div>
+    </div>
+    <div class="note">
+      <strong>Why this beats today's list:</strong> at a glance you see when the school is busy, when conflicts cluster, and where free slots are.
+      Tap any block → Frame C detail sheet. Long-press → drag-to-reschedule (Frame E). + FAB → Frame D add flow.
+      Filter chip strip filters the grid in place (no full-screen modal hop).
+    </div>
+  </div>
+
+  <!-- ════════ FRAME B — Day-tab List view ════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">B</span>List view · Day tabs + tap-to-edit rows
+      <span class="desc">Same data as Grid, but as a vertical day-grouped list. Pill day tabs scroll horizontally; each row is full session w/ time, mapel, class, teacher. Tap row → Frame C.</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 88%</span></div>
+
+      <div class="header compact">
+        <div class="header-row">
+          <div class="icon-back">‹</div>
+          <div style="flex:1">
+            <div class="header-title">Jadwal Mengajar</div>
+            <div class="header-sub">Tahun Ajaran 2025/2026 · Genap</div>
+          </div>
+          <div class="icon-btn">⌕</div>
+          <div class="icon-btn">⇅</div>
+        </div>
+      </div>
+
+      <div class="view-toggle">
+        <div class="tab">▦ Grid</div>
+        <div class="tab active">☰ List</div>
+        <div class="tab">⊞ Matrix</div>
+      </div>
+
+      <div class="day-tabs">
+        <div class="day-tab"><span>SEN</span><span class="small">14 Mei</span></div>
+        <div class="day-tab active"><span>SEL</span><span class="small">15 Mei</span><span class="badge">5</span></div>
+        <div class="day-tab"><span>RAB</span><span class="small">16 Mei</span></div>
+        <div class="day-tab"><span>KAM</span><span class="small">17 Mei</span></div>
+        <div class="day-tab"><span>JUM</span><span class="small">18 Mei</span></div>
+        <div class="day-tab"><span>SAB</span><span class="small">19 Mei</span></div>
+      </div>
+
+      <div class="day-section">
+        <div class="day-label">Pagi <span class="count">2 sesi</span></div>
+
+        <div class="row-card">
+          <div class="row-time">
+            <div class="hr">07<span class="sep">.</span>00</div>
+            <div class="ampm">— 08:30</div>
+            <div class="duration">90 mnt</div>
+          </div>
+          <div class="row-body">
+            <div class="row-title">Fisika · Hukum Newton</div>
+            <div class="row-meta">
+              <span>XI-IPA-1</span><span class="dot"></span>
+              <span class="teacher">Pak Bambang</span><span class="dot"></span>
+              <span>Lab 2</span>
+            </div>
+          </div>
+          <div class="row-actions"><div class="chevron">›</div></div>
+        </div>
+
+        <div class="row-card">
+          <div class="row-time">
+            <div class="hr">08<span class="sep">.</span>40</div>
+            <div class="ampm">— 09:30</div>
+            <div class="duration">50 mnt</div>
+          </div>
+          <div class="row-body">
+            <div class="row-title">Matematika</div>
+            <div class="row-meta">
+              <span>X-IPA-1</span><span class="dot"></span>
+              <span class="teacher">Pak Yahya</span><span class="dot"></span>
+              <span>R-101</span>
+            </div>
+          </div>
+          <div class="row-actions"><div class="chevron">›</div></div>
+        </div>
+
+        <div class="day-label">Siang <span class="count">3 sesi</span></div>
+
+        <div class="row-card conflict">
+          <div class="row-tag">BENTROK</div>
+          <div class="row-time">
+            <div class="hr">10<span class="sep">.</span>20</div>
+            <div class="ampm">— 11:50</div>
+            <div class="duration">90 mnt</div>
+          </div>
+          <div class="row-body">
+            <div class="row-title">Kimia · Stoikiometri</div>
+            <div class="row-meta">
+              <span>XI-IPA-2</span><span class="dot"></span>
+              <span class="teacher">Bu Sari</span><span class="dot"></span>
+              <span style="color:var(--red-600);font-weight:700">⚠ Bentrok dengan B.Indo</span>
+            </div>
+          </div>
+          <div class="row-actions"><div class="chevron">›</div></div>
+        </div>
+
+        <div class="row-card">
+          <div class="row-time">
+            <div class="hr">12<span class="sep">.</span>30</div>
+            <div class="ampm">— 14:00</div>
+            <div class="duration">90 mnt</div>
+          </div>
+          <div class="row-body">
+            <div class="row-title">Bahasa Inggris · Reading</div>
+            <div class="row-meta">
+              <span>X-IPA-2</span><span class="dot"></span>
+              <span class="teacher">Bu Linda</span><span class="dot"></span>
+              <span>R-204</span>
+            </div>
+          </div>
+          <div class="row-actions"><div class="chevron">›</div></div>
+        </div>
+
+        <div class="row-card">
+          <div class="row-time">
+            <div class="hr">14<span class="sep">.</span>10</div>
+            <div class="ampm">— 15:00</div>
+            <div class="duration">50 mnt</div>
+          </div>
+          <div class="row-body">
+            <div class="row-title">Sejarah Indonesia</div>
+            <div class="row-meta">
+              <span>X-IPS-1</span><span class="dot"></span>
+              <span class="teacher">Pak Andre</span>
+            </div>
+          </div>
+          <div class="row-actions"><div class="chevron">›</div></div>
+        </div>
+      </div>
+
+      <div class="fab">+</div>
+    </div>
+    <div class="note">
+      <strong>Why this works:</strong> the list view keeps the dense info admins want (Pagi/Siang sectioning, teacher, room) but with consistent brand chrome. The conflict row inherits an inline red pill + "Bentrok dengan…" subtitle so admins can fix without leaving the list.
+    </div>
+  </div>
+
+  <!-- ════════ FRAME C — Session detail / quick edit sheet ════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">C</span>Quick detail / edit sheet
+      <span class="desc">Tap any session block or row → bottom sheet with full context (class, teacher, room, jam ke-, status) + per-field pencil edits + delete + reschedule shortcut.</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 88%</span></div>
+
+      <!-- dimmed background showing context -->
+      <div style="flex:1;background:rgba(15,23,42,.45);position:relative">
+        <div style="position:absolute;top:0;left:0;right:0;height:60%;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,0))"></div>
+      </div>
+
+      <div class="sheet">
+        <div class="drag"></div>
+        <div class="sheet-header">
+          <div class="icon">📚</div>
+          <div>
+            <div class="title">Detail Sesi Kelas</div>
+            <div class="sub">Senin · 14 Mei · 07:00 — 08:30</div>
+          </div>
+          <div class="close">×</div>
+        </div>
+        <div class="sheet-body">
+          <div class="meta-grid">
+            <div class="meta-tile">
+              <div class="lbl">Mata Pelajaran</div>
+              <div class="val">Matematika</div>
+            </div>
+            <div class="meta-tile">
+              <div class="lbl">Kelas</div>
+              <div class="val"><span class="accent">X-IPA-1</span></div>
+            </div>
+            <div class="meta-tile">
+              <div class="lbl">Guru Pengampu</div>
+              <div class="val">Pak Yahya H.</div>
+            </div>
+            <div class="meta-tile">
+              <div class="lbl">Ruangan</div>
+              <div class="val">R-101</div>
+            </div>
+            <div class="meta-tile">
+              <div class="lbl">Jam Ke-</div>
+              <div class="val">1 — 2</div>
+            </div>
+            <div class="meta-tile">
+              <div class="lbl">Durasi</div>
+              <div class="val">90 menit</div>
+            </div>
+            <div class="meta-tile full">
+              <div class="lbl">Catatan</div>
+              <div class="val" style="font-size:12px;font-weight:500;color:var(--slate-700)">Lab praktikum di minggu pertama tiap bulan.</div>
+            </div>
+          </div>
+
+          <div class="section-head">Aksi Cepat</div>
+          <div class="action-row">
+            <div class="action-tile">
+              <div class="ic">✎</div><div class="t">Edit Lengkap</div>
+            </div>
+            <div class="action-tile">
+              <div class="ic">⇄</div><div class="t">Pindah Slot</div>
+            </div>
+            <div class="action-tile">
+              <div class="ic">⎘</div><div class="t">Duplikat</div>
+            </div>
+            <div class="action-tile danger">
+              <div class="ic">🗑</div><div class="t">Hapus</div>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-footer">
+          <div class="btn secondary">Tutup</div>
+          <div class="btn primary">Edit ▸</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>Editable inline:</strong> every pencil icon on a meta tile (not shown for space) opens an inline picker — class picker, teacher picker, jam ke- picker — and saves immediately. "Pindah Slot" launches Frame E drag mode pre-selecting this session.
+    </div>
+  </div>
+
+  <!-- ════════ FRAME D — Add new schedule ════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">D</span>Add new session sheet
+      <span class="desc">Chip-style mapel + class + teacher selectors, day-pill picker, time stepper. Conflict pre-check runs as the user picks — green badge if free, red preview if would clash.</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 88%</span></div>
+      <div style="flex:1;background:rgba(15,23,42,.5);position:relative"></div>
+
+      <div class="sheet" style="max-height:88%">
+        <div class="drag"></div>
+        <div class="sheet-header">
+          <div class="icon">+</div>
+          <div>
+            <div class="title">Tambah Sesi Baru</div>
+            <div class="sub">3 langkah · pratinjau bentrok otomatis</div>
+          </div>
+          <div class="close">×</div>
+        </div>
+        <div class="sheet-body">
+          <div class="field-row">
+            <div class="lbl">Mata Pelajaran</div>
+            <div class="input"><span class="selected">Matematika</span><span class="chevron">›</span></div>
+          </div>
+          <div class="pair">
+            <div class="field-row">
+              <div class="lbl">Kelas</div>
+              <div class="input"><span class="selected">X-IPA-1</span><span class="chevron">›</span></div>
+            </div>
+            <div class="field-row">
+              <div class="lbl">Guru</div>
+              <div class="input"><span class="selected">Yahya H.</span><span class="chevron">›</span></div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="lbl">Hari</div>
+            <div class="chip-grid">
+              <div class="c">Sen</div><div class="c active">Sel</div><div class="c">Rab</div>
+              <div class="c">Kam</div><div class="c">Jum</div><div class="c">Sab</div>
+            </div>
+          </div>
+          <div class="pair">
+            <div class="field-row">
+              <div class="lbl">Jam Mulai</div>
+              <div class="input"><span class="selected">10:20</span><span class="chevron">⌃⌄</span></div>
+            </div>
+            <div class="field-row">
+              <div class="lbl">Jam Selesai</div>
+              <div class="input"><span class="selected">11:50</span><span class="chevron">⌃⌄</span></div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="lbl">Ruangan (opsional)</div>
+            <div class="input"><span class="placeholder">Pilih ruangan…</span><span class="chevron">›</span></div>
+          </div>
+
+          <div style="background:var(--red-50);border:1px solid var(--red-100);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;margin-top:6px">
+            <div style="color:var(--red-600);font-size:18px;line-height:1">⚠</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:800;color:var(--red-700)">Pratinjau bentrok</div>
+              <div style="font-size:11px;color:var(--red-700);margin-top:2px;line-height:1.4">
+                Slot Sel · 10:20—11:50 sudah dipakai <b>Kimia · XI-IPA-2</b> (Bu Sari).
+                Geser ke <b>11:00</b> atau pilih hari lain untuk lanjut.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-footer">
+          <div class="btn secondary">Batal</div>
+          <div class="btn primary" style="opacity:.5">Simpan</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>Conflict preview before save:</strong> the bottom of the sheet shows a live red box whenever the picked slot collides with an existing session. The Simpan button stays disabled until the conflict is resolved (or the admin taps "ya, paksa simpan" — not shown).
+    </div>
+  </div>
+
+  <!-- ════════ FRAME E — Drag-to-reschedule + conflict toast ════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">E</span>Drag &amp; drop reschedule
+      <span class="desc">Long-press a session block in the grid → it lifts (tilted card). Drag to any empty slot → ghost outline shows target. Drop onto a busy slot → red conflict toast with Undo.</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 88%</span></div>
+      <div class="header compact">
+        <div class="header-row">
+          <div class="icon-back">‹</div>
+          <div style="flex:1">
+            <div class="header-title">Jadwal Mengajar</div>
+            <div class="header-sub">Mode geser sesi · ketuk lagi untuk batal</div>
+          </div>
+          <div class="icon-btn">⇄</div>
+        </div>
+      </div>
+
+      <div class="calendar" style="margin-top:14px">
+        <div class="cal-week-header">
+          <div class="day-head time-corner"></div>
+          <div class="day-head today">SEN</div>
+          <div class="day-head">SEL</div>
+          <div class="day-head">RAB</div>
+          <div class="day-head">KAM</div>
+          <div class="day-head">JUM</div>
+          <div class="day-head">SAB</div>
+        </div>
+        <div class="cal-grid">
+          <div class="time-col">
+            <div class="time-slot">07</div>
+            <div class="time-slot">08</div>
+            <div class="time-slot">09</div>
+            <div class="time-slot">10</div>
+            <div class="time-slot">11</div>
+            <div class="time-slot">12</div>
+            <div class="time-slot">13</div>
+            <div class="time-slot">14</div>
+          </div>
+          <div class="day-col today">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="cal-block cobalt" style="top:8px; height:50px; opacity:.35; border-style:dashed">
+              <div class="b-title">Mat.</div><div class="b-meta">slot asal</div>
+            </div>
+          </div>
+          <div class="day-col">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+          </div>
+          <div class="day-col">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+          </div>
+          <div class="day-col">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="cal-block green" style="top:14px; height:48px">
+              <div class="b-title">Inggris</div>
+            </div>
+          </div>
+          <div class="day-col">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="cal-block cobalt" style="top:36px; height:60px">
+              <div class="b-title">Mat.</div>
+            </div>
+          </div>
+          <div class="day-col">
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div><div class="hr-grid"></div>
+            <div class="hr-grid"></div><div class="hr-grid"></div>
+          </div>
+          <div class="ghost-slot"></div>
+        </div>
+      </div>
+
+      <div class="drag-overlay">
+        <div class="t">Matematika · 90 mnt</div>
+        <div class="m">X-IPA-1 · Pak Yahya</div>
+        <div style="font-size:9px;color:var(--slate-500);margin-top:3px">↓ lepas di slot kosong</div>
+      </div>
+
+      <div class="conflict-toast">
+        <div class="ic">⚠</div>
+        <div style="flex:1">
+          <div class="title">Slot bentrok</div>
+          <div class="body">Rab · 10:20 sudah dipakai Kimia · XI-IPA-2.</div>
+        </div>
+        <button class="undo">Undo</button>
+      </div>
+    </div>
+    <div class="note">
+      <strong>Affordances:</strong> dashed outline at origin shows "where it was", solid dashed box shows "where it'll land", overlay card travels with the finger. Drop on conflict → red toast with Undo (auto-dismiss after 5s). Drop on free slot → success snack + immediate save.
+    </div>
+  </div>
+
+  <!-- ════════ FRAME F — Bulk-select mode ════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">F</span>Bulk-select mode
+      <span class="desc">Long-press any row → multi-select toggles on. Bottom bar shows count + Pindah hari · Ganti guru · Hapus. Checkbox replaces chevron during selection.</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 88%</span></div>
+
+      <!-- header in select mode -->
+      <div class="header compact" style="background:linear-gradient(135deg,#0c2150,#143068)">
+        <div class="header-row">
+          <div class="icon-back">×</div>
+          <div style="flex:1">
+            <div class="header-title">3 sesi terpilih</div>
+            <div class="header-sub">Selasa · 15 Mei</div>
+          </div>
+          <div class="icon-btn">✓</div>
+        </div>
+      </div>
+
+      <div class="day-section" style="padding-top:12px">
+        <div class="row-card selected">
+          <div class="row-time">
+            <div class="hr">07<span class="sep">.</span>00</div>
+            <div class="ampm">— 08:30</div>
+          </div>
+          <div class="row-body">
+            <div class="row-title">Fisika</div>
+            <div class="row-meta"><span>XI-IPA-1</span><span class="dot"></span><span class="teacher">Pak Bambang</span></div>
+          </div>
+          <div class="row-actions"><div class="checkbox checked">✓</div></div>
+        </div>
+
+        <div class="row-card selected">
+          <div class="row-time">
+            <div class="hr">08<span class="sep">.</span>40</div>
+            <div class="ampm">— 09:30</div>
+          </div>
+          <div class="row-body">
+            <div class="row-title">Matematika</div>
+            <div class="row-meta"><span>X-IPA-1</span><span class="dot"></span><span class="teacher">Pak Yahya</span></div>
+          </div>
+          <div class="row-actions"><div class="checkbox checked">✓</div></div>
+        </div>
+
+        <div class="row-card">
+          <div class="row-time">
+            <div class="hr">10<span class="sep">.</span>20</div>
+            <div class="ampm">— 11:50</div>
+          </div>
+          <div class="row-body">
+            <div class="row-title">Kimia</div>
+            <div class="row-meta"><span>XI-IPA-2</span><span class="dot"></span><span class="teacher">Bu Sari</span></div>
+          </div>
+          <div class="row-actions"><div class="checkbox">&nbsp;</div></div>
+        </div>
+
+        <div class="row-card selected">
+          <div class="row-time">
+            <div class="hr">12<span class="sep">.</span>30</div>
+            <div class="ampm">— 14:00</div>
+          </div>
+          <div class="row-body">
+            <div class="row-title">Bahasa Inggris</div>
+            <div class="row-meta"><span>X-IPA-2</span><span class="dot"></span><span class="teacher">Bu Linda</span></div>
+          </div>
+          <div class="row-actions"><div class="checkbox checked">✓</div></div>
+        </div>
+
+        <div class="row-card">
+          <div class="row-time">
+            <div class="hr">14<span class="sep">.</span>10</div>
+            <div class="ampm">— 15:00</div>
+          </div>
+          <div class="row-body">
+            <div class="row-title">Sejarah</div>
+            <div class="row-meta"><span>X-IPS-1</span><span class="dot"></span><span class="teacher">Pak Andre</span></div>
+          </div>
+          <div class="row-actions"><div class="checkbox">&nbsp;</div></div>
+        </div>
+      </div>
+
+      <div class="bulk-bar">
+        <div class="count-pill">3 ✓</div>
+        <div class="actions">
+          <div class="act">⇄ Pindah</div>
+          <div class="act">👤 Ganti Guru</div>
+          <div class="act danger">🗑 Hapus</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>Bulk ops:</strong> "Pindah" opens a date+time picker that shifts all selected sessions to the new day, preserving relative times. "Ganti Guru" opens a teacher picker. "Hapus" calls ActionConfirmSheet (destructive). Header X exits select mode; ✓ selects all visible.
+    </div>
+  </div>
+
+  <!-- ════════ FRAME G — Filter sheet ════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">G</span>Filter sheet
+      <span class="desc">Reuses AppFilterBottomSheet brand chrome. Class / teacher / subject / day chip grids + period selector. Active filters appear as chips at the top of the hub (Frame A).</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 88%</span></div>
+      <div style="flex:1;background:rgba(15,23,42,.45)"></div>
+
+      <div class="sheet">
+        <div class="drag"></div>
+        <div class="sheet-header">
+          <div class="icon">⇅</div>
+          <div>
+            <div class="title">Filter Jadwal</div>
+            <div class="sub">Saring berdasarkan kelas, guru, mapel, atau hari</div>
+          </div>
+          <div class="close">×</div>
+        </div>
+        <div class="sheet-body">
+          <div class="section-head">Tahun ajaran</div>
+          <div class="chip-grid">
+            <div class="c">2024/2025</div>
+            <div class="c active">2025/2026</div>
+          </div>
+
+          <div class="section-head" style="margin-top:14px">Semester</div>
+          <div class="chip-grid">
+            <div class="c">Ganjil</div>
+            <div class="c active">Genap</div>
+          </div>
+
+          <div class="section-head" style="margin-top:14px">Hari</div>
+          <div class="chip-grid">
+            <div class="c active">Sen</div><div class="c active">Sel</div><div class="c active">Rab</div>
+            <div class="c active">Kam</div><div class="c active">Jum</div><div class="c">Sab</div>
+          </div>
+
+          <div class="section-head" style="margin-top:14px">Kelas</div>
+          <div class="chip-grid">
+            <div class="c active">X-IPA-1</div>
+            <div class="c">X-IPA-2</div>
+            <div class="c">XI-IPA-1</div>
+            <div class="c">XI-IPA-2</div>
+            <div class="c">XII-IPA</div>
+            <div class="c">X-IPS</div>
+          </div>
+
+          <div class="section-head" style="margin-top:14px">Guru pengampu</div>
+          <div class="chip-grid">
+            <div class="c active">Pak Yahya</div>
+            <div class="c">Pak Bambang</div>
+            <div class="c">Bu Sari</div>
+            <div class="c">Bu Linda</div>
+          </div>
+
+          <div class="section-head" style="margin-top:14px">Mata pelajaran</div>
+          <div class="chip-grid">
+            <div class="c">Matematika</div>
+            <div class="c">Fisika</div>
+            <div class="c">Biologi</div>
+            <div class="c">Kimia</div>
+            <div class="c">B. Inggris</div>
+          </div>
+        </div>
+        <div class="sheet-footer">
+          <div class="btn secondary">Reset</div>
+          <div class="btn primary">Terapkan (2)</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>Active state:</strong> 2 filters applied → "Terapkan (2)" badge; selected chips render in cobalt. When closed, those chips re-appear in the chip strip above the grid (Frame A) so they're always visible.
+    </div>
+  </div>
+
+  <!-- ════════ FRAME H — Empty / Onboarding state ════════ -->
+  <div class="frame">
+    <div class="frame-label"><span class="num">H</span>Empty state · onboarding
+      <span class="desc">First-time use or after harsh filter. Empty illustration + dual CTA: "Tambah manual" or "Import dari Excel" (existing schedule_import_export_service.dart flow).</span>
+    </div>
+    <div class="phone">
+      <div class="status-bar"><span>9:41</span><span>●●● 88%</span></div>
+
+      <div class="header">
+        <div class="header-row">
+          <div class="icon-back">‹</div>
+          <div style="flex:1">
+            <div class="header-title">Jadwal Mengajar</div>
+            <div class="header-sub">Belum ada jadwal aktif</div>
+          </div>
+          <div class="icon-btn">≡</div>
+        </div>
+        <div class="school-pill"><span class="dot"></span>SMA Negeri 1 Bandung</div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi-cell"><div class="kpi-value">0</div><div class="kpi-label">Total Sesi</div></div>
+        <div class="kpi-cell"><div class="kpi-value">—</div><div class="kpi-label">Hari Ini</div></div>
+        <div class="kpi-cell"><div class="kpi-value">—</div><div class="kpi-label">Bentrok</div></div>
+      </div>
+
+      <div class="empty-card">
+        <div class="empty-illu">📅</div>
+        <div class="empty-title">Belum ada sesi terjadwal</div>
+        <div class="empty-text">
+          Mulai dengan menambahkan sesi satu per satu, atau import dari file Excel
+          jadwal lama untuk hemat waktu.
+        </div>
+        <div class="empty-cta-row">
+          <div class="empty-cta secondary">⤓ Import Excel</div>
+          <div class="empty-cta primary">+ Tambah Manual</div>
+        </div>
+      </div>
+
+      <div style="padding:0 14px;font-size:11px;color:var(--slate-500);line-height:1.5">
+        <b style="color:var(--slate-700)">Template Excel</b> tersedia di tombol ≡ kanan atas.
+        Format: 1 baris = 1 sesi · kolom hari, jam mulai, jam selesai, kelas, mapel, guru.
+      </div>
+    </div>
+    <div class="note">
+      <strong>Discoverability:</strong> the import path is currently buried in an admin data menu. Surfacing it as a co-equal CTA on the empty state cuts onboarding setup from ~15 minutes (one-by-one) to ~3 minutes (upload + verify).
+    </div>
+  </div>
+
+</div>
+
+<div class="compare">
+  <div>
+    <h3>Today (live)</h3>
+    <div class="compare-card">
+      <div class="con">Single flat list of cards (one row per session) — no calendar overview.</div>
+      <div class="con">Matrix toggle exists but matrix is dense, read-only, hard to read on phone.</div>
+      <div class="con">No visual indication of conflicts. Admin must mentally scan for them.</div>
+      <div class="con">Add/edit dialog is a full-screen form with no conflict pre-check.</div>
+      <div class="con">No bulk operations — can't reschedule a week's worth of sessions when a teacher swaps shifts.</div>
+      <div class="con">Drag-to-reschedule is not possible; admin must delete + recreate.</div>
+      <div class="neu">Filter sheet exists and works — keeping it (Frame G).</div>
+      <div class="neu">Excel import/export exists — keeping it, just surfacing better (Frame H).</div>
+    </div>
+  </div>
+  <div>
+    <h3>After redesign</h3>
+    <div class="compare-card">
+      <div class="pro">3-view toggle (Grid · List · Matrix) — Grid is new and shared with most calendar apps.</div>
+      <div class="pro">KPI strip shows Total Sesi · Hari Ini · <b>Bentrok</b> count at a glance.</div>
+      <div class="pro">Conflict blocks render in red right on the grid; rows in List view get red "Bentrok" pills.</div>
+      <div class="pro">Add flow runs live conflict pre-check; disables Simpan when slot is busy.</div>
+      <div class="pro">Long-press → bulk-select; reschedule / change teacher / delete N rows at once.</div>
+      <div class="pro">Drag-and-drop reschedule with ghost slot + Undo toast.</div>
+      <div class="pro">Tap-to-edit quick sheet for fast inline changes (no full page hop).</div>
+      <div class="neu">Backend impact: needs a /schedules/conflicts endpoint that takes (day, start, end, exclude_id) and returns clashes. Other endpoints stay identical.</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
