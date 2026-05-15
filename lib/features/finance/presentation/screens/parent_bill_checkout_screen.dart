@@ -998,7 +998,7 @@ class _ParentBillCheckoutScreenState
 
     setState(() => _isUploading = true);
     try {
-      await ApiService().uploadFile(
+      final response = await ApiService().uploadFile(
         '/bill/$billId/payment-proof',
         file,
         fileField: 'payment_receipt',
@@ -1011,10 +1011,43 @@ class _ParentBillCheckoutScreenState
       _sessionCache.remove(_cacheKey(billId));
 
       if (!mounted) return;
-      SnackBarUtils.showSuccess(
+
+      // Extract the just-stored proof URL from the upload response
+      // so the success screen can wire its "Unduh Bukti" / "Bagikan"
+      // actions to it without an extra network round-trip.
+      String? proofUrl;
+      if (response is Map) {
+        final data = response['data'];
+        if (data is Map) {
+          proofUrl = data['payment_proof_url']?.toString();
+        }
+      }
+
+      final billName = widget.bill['type']?.toString()
+          ?? widget.bill['name']?.toString()
+          ?? 'Tagihan';
+      final studentName = widget.bill['student_name']?.toString()
+          ?? widget.bill['student']?['name']?.toString()
+          ?? 'Anak';
+
+      // Push the success screen so the parent gets immediate visible
+      // confirmation (timeline + bukti actions). Once they tap
+      // Selesai (or back out), we pop the checkout with `true` so
+      // the billing list refreshes and shows the new pending row.
+      await AppNavigator.push<bool>(
         context,
-        'Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.',
+        ParentPaymentSuccessScreen(
+          billName: billName,
+          studentName: studentName,
+          methodLabel: 'Transfer manual',
+          amount: _session.amount,
+          adminFee: _session.adminFeeFor(_method),
+          isManualPending: true,
+          paymentProofUrl: proofUrl,
+        ),
       );
+
+      if (!mounted) return;
       AppNavigator.pop(context, true);
     } catch (e) {
       AppLogger.error('parent-bill-upload', e);
@@ -1210,6 +1243,11 @@ class _ParentBillCheckoutScreenState
         amount: _session.amount,
         adminFee: _session.adminFeeFor(_method),
         isManualPending: _method == _PayMethod.manual,
+        // Bill payload already carries `payment_proof_url` when a
+        // previous upload exists for this bill — surface it so the
+        // success screen's Unduh / Bagikan actions stay live even
+        // when the parent re-enters the checkout from the list.
+        paymentProofUrl: widget.bill['payment_proof_url']?.toString(),
       ),
     );
     if (result == true && mounted) {

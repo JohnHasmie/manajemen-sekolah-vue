@@ -19,10 +19,13 @@
 // flag.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ParentPaymentSuccessScreen extends StatelessWidget {
   final String billName;
@@ -36,6 +39,13 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
   /// 2-of-3 state.
   final bool isManualPending;
 
+  /// URL of the payment proof file on the server (the bukti the
+  /// parent just uploaded, or the receipt picked up from a paid
+  /// bill). When non-null the "Unduh Bukti" / "Bagikan" actions are
+  /// wired up; when null the row is hidden because there's nothing
+  /// to download or share yet.
+  final String? paymentProofUrl;
+
   const ParentPaymentSuccessScreen({
     super.key,
     required this.billName,
@@ -44,6 +54,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
     required this.amount,
     required this.adminFee,
     this.isManualPending = false,
+    this.paymentProofUrl,
   });
 
   @override
@@ -256,15 +267,21 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
     );
   }
 
+  /// Build the Unduh / Bagikan action row. Returns an empty
+  /// `SizedBox.shrink()` when there's no proof URL to act on — for
+  /// gateway-confirmed payments without a generated PDF receipt yet
+  /// the row would just be two non-functional buttons, which is what
+  /// confused the user originally.
   Widget _buildActionsRow(BuildContext context) {
+    final hasProof = paymentProofUrl != null && paymentProofUrl!.isNotEmpty;
+    if (!hasProof) return const SizedBox.shrink();
     return Row(
       children: [
         Expanded(
           child: _SecondaryButton(
             icon: Icons.download_rounded,
-            label: 'Unduh PDF',
-            onTap: () =>
-                SnackBarUtils.showInfo(context, 'Fitur unduh PDF segera hadir'),
+            label: 'Unduh Bukti',
+            onTap: () => _onDownloadProof(context),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -272,13 +289,73 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
           child: _SecondaryButton(
             icon: Icons.share_rounded,
             label: 'Bagikan',
-            onTap: () => SnackBarUtils.showInfo(
-              context,
-              'Fitur bagikan kuitansi segera hadir',
-            ),
+            onTap: () => _onShareProof(context),
           ),
         ),
       ],
+    );
+  }
+
+  /// Open the uploaded bukti in the OS's external handler (browser
+  /// for images / PDF viewer for PDFs). url_launcher with
+  /// `LaunchMode.externalApplication` is the lightest path that
+  /// doesn't require a download-manager package; the browser handles
+  /// the save-to-device gesture from there.
+  Future<void> _onDownloadProof(BuildContext context) async {
+    final raw = paymentProofUrl;
+    if (raw == null || raw.isEmpty) {
+      SnackBarUtils.showInfo(context, 'Bukti belum tersedia.');
+      return;
+    }
+    final uri = Uri.tryParse(raw);
+    if (uri == null) {
+      SnackBarUtils.showError(context, 'URL bukti tidak valid.');
+      return;
+    }
+    try {
+      final ok = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!ok && context.mounted) {
+        SnackBarUtils.showError(context, 'Tidak dapat membuka bukti.');
+      }
+    } catch (e) {
+      AppLogger.error('parent-success-download', e);
+      if (context.mounted) {
+        SnackBarUtils.showError(context, 'Gagal membuka bukti.');
+      }
+    }
+  }
+
+  /// Copy a share-friendly summary (label, nominal, status, bukti
+  /// URL) to the clipboard so the parent can paste it into WhatsApp /
+  /// email. A native share-sheet would be nicer but requires the
+  /// share_plus package — clipboard is good enough for now and
+  /// doesn't add a dependency.
+  Future<void> _onShareProof(BuildContext context) async {
+    final url = paymentProofUrl;
+    if (url == null || url.isEmpty) {
+      SnackBarUtils.showInfo(context, 'Belum ada bukti untuk dibagikan.');
+      return;
+    }
+    final total = amount + adminFee;
+    final statusLine = isManualPending
+        ? 'Status: Menunggu verifikasi admin'
+        : 'Status: Lunas';
+    final summary = [
+      '$billName · $studentName',
+      'Nominal: ${_formatRupiah(total)}',
+      'Metode: $methodLabel',
+      'Tanggal: ${_formatTodayShort()}',
+      statusLine,
+      'Bukti: $url',
+    ].join('\n');
+    await Clipboard.setData(ClipboardData(text: summary));
+    if (!context.mounted) return;
+    SnackBarUtils.showSuccess(
+      context,
+      'Detail tersalin — paste ke WhatsApp / email.',
     );
   }
 

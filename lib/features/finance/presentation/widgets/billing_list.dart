@@ -712,6 +712,7 @@ class _BillingRow extends ConsumerWidget {
           amount: double.tryParse((data['amount'] ?? '0').toString()) ?? 0,
           adminFee: double.tryParse((data['admin_fee'] ?? '0').toString()) ?? 0,
           isManualPending: isPending,
+          paymentProofUrl: data['payment_proof_url']?.toString(),
         ),
       );
       return;
