@@ -56,7 +56,6 @@ import 'package:flutter/services.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:version/version.dart';
 import 'package:manajemensekolah/core/widgets/update_prompt.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 
 /// Global navigator key that enables navigation from anywhere without a BuildContext.
