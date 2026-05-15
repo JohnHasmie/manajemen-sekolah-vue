@@ -274,7 +274,13 @@ class AdminScheduleWeekGridView extends StatelessWidget {
   Widget build(BuildContext context) {
     final (startMin, endMin) = _computeBounds();
     final totalMinutes = (endMin - startMin).clamp(60, 24 * 60);
-    final gridHeight = totalMinutes * pxPerMinute;
+    // Focused mode gets a taller vertical scale so each session card
+    // has room for the subject + class/teacher meta line on the wider
+    // single-day column. Week mode keeps the compact scale so all 6
+    // days fit on a 360dp phone.
+    final isFocused = focusedDayId != null;
+    final effectivePx = isFocused ? pxPerMinute * 1.3 : pxPerMinute;
+    final gridHeight = totalMinutes * effectivePx;
     final days = _visibleDays();
     final todayId = _todayDayId(days);
 

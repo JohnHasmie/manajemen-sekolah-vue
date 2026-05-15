@@ -2263,11 +2263,13 @@ class TeachingScheduleManagementScreenState
 
 }
 
-/// 3-tab view toggle strip — Grid · List · Matrix.
+/// 2-tab view toggle strip — Grid · List.
 ///
-/// Lives below the search bar in the redesigned admin Jadwal hub. The
-/// active tab gets a white background + navy text + soft shadow; the
-/// inactive tabs stay slate-tinted.
+/// The legacy "Matrix" tab was dropped: it rendered a row=time × col=day
+/// table (`AdminScheduleMatrixView`) which the new Grid view supersedes
+/// on every dimension (color coding, drag-drop, now-line, density
+/// layout, zoom-in day view). The matrix widget file stays on disk for
+/// now but is no longer reachable from the UI.
 class _ScheduleViewToggleStrip extends StatelessWidget {
   const _ScheduleViewToggleStrip({required this.mode, required this.onChanged});
 
@@ -2295,12 +2297,6 @@ class _ScheduleViewToggleStrip extends StatelessWidget {
             icon: Icons.view_agenda_outlined,
             active: mode == ScheduleViewMode.list,
             onTap: () => onChanged(ScheduleViewMode.list),
-          ),
-          _tab(
-            label: 'Matrix',
-            icon: Icons.table_chart_outlined,
-            active: mode == ScheduleViewMode.matrix,
-            onTap: () => onChanged(ScheduleViewMode.matrix),
           ),
         ],
       ),
