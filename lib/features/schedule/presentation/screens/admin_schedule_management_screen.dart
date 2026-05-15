@@ -927,6 +927,12 @@ class TeachingScheduleManagementScreenState
         context,
         '${lang.getTranslatedText(const {'en': 'Failed to reschedule: ', 'id': 'Gagal memindahkan: '})}${serverMsg ?? ErrorUtils.getFriendlyMessage(e)}',
       );
+      // The backend has been observed to 500 *after* committing the
+      // update (e.g. notify-step failure). Force a refresh so the UI
+      // re-syncs with whatever actually landed in the DB instead of
+      // showing stale data after a misleading error toast.
+      await _loadSchedules(resetPage: true, useCache: false);
+      if (mounted) unawaited(_loadKpiSummary());
     } catch (e) {
       AppLogger.error('schedule', e);
       if (!mounted) return;
@@ -934,6 +940,8 @@ class TeachingScheduleManagementScreenState
         context,
         '${lang.getTranslatedText(const {'en': 'Failed to reschedule: ', 'id': 'Gagal memindahkan: '})}${ErrorUtils.getFriendlyMessage(e)}',
       );
+      await _loadSchedules(resetPage: true, useCache: false);
+      if (mounted) unawaited(_loadKpiSummary());
     }
   }
 
