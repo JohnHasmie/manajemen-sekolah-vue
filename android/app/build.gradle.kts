@@ -43,6 +43,19 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Pack native debug symbols (.so symbol tables for the Flutter
+        // engine + plugin native libs) into the AAB so Play Console can
+        // deobfuscate native crashes/ANRs automatically. Without this
+        // every release surfaces the "This App Bundle contains native
+        // code, and you've not uploaded debug symbols" warning.
+        //   FULL          — full DWARF, ~+200 MB AAB → biggest, debug-friendliest
+        //   SYMBOL_TABLE  — function names only, ~+20 MB AAB → recommended balance
+        // SYMBOL_TABLE is enough for stack traces to deobfuscate; FULL
+        // adds line numbers if a deeper investigation needs them.
+        ndk {
+            debugSymbolLevel = "SYMBOL_TABLE"
+        }
     }
 
     signingConfigs {

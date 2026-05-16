@@ -164,6 +164,16 @@ release:
   <<: *shorebird_setup
   stage: deploy
   needs: ["detect_changes"]
+  # Pick the Play Console track when triggering the job from the GitLab
+  # UI ("Run pipeline" → set DEPLOY_TRACK to one of):
+  #   internal — Internal testing (fastest, trusted testers only)
+  #   alpha    — Closed testing  (default; what alpha/beta channels used to be)
+  #   beta     — Open testing    (any user with the opt-in link)
+  #   production — Production rollout (don't pick this from CI)
+  # Defaults to alpha so existing flows are unchanged; override per-run
+  # to publish straight to open testing without a manual promotion step.
+  variables:
+    DEPLOY_TRACK: alpha
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
     - |
@@ -190,7 +200,7 @@ release:
         --release_status completed \
         --json_key play-store-key.json \
         --package_name com.kamillabs.kamiledu \
-        --track alpha \
+        --track "${DEPLOY_TRACK}" \
         --skip_upload_metadata \
         --skip_upload_images \
         --skip_upload_screenshots
@@ -199,7 +209,7 @@ release:
       echo ""
       echo "✅ Released ${VERSION_NAME}+${BUILD_NUMBER}"
       echo "   Shorebird: registered for OTA patches"
-      echo "   Play Store: uploaded to alpha track"
+      echo "   Play Store: uploaded to ${DEPLOY_TRACK} track"
   artifacts:
     paths:
       - build/app/outputs/bundle/release/app-release.aab
@@ -243,3 +253,69 @@ patch:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
       allow_failure: true
+
+# ---------------------------------------------------------------------------
+# Promote (manual) — move an existing AAB between Play Store tracks
+#
+# Use when an AAB is already live on a track (e.g. alpha / closed
+# testing) and you want to push the same build up to a wider audience
+# (e.g. beta / open testing, or production) without rebuilding.
+#
+# How to run:
+#   GitLab → CI/CD → Pipelines → Run pipeline → set variables:
+#     PROMOTE_FROM_TRACK = alpha       (source — what's currently live)
+#     PROMOTE_TO_TRACK   = beta        (destination — open testing)
+#   Then click the manual ▶ on the promote_to_beta job.
+#
+# No flutter / shorebird / keystore needed — promotion only talks to
+# the Play API, so the before_script is intentionally minimal (just
+# install fastlane). The Shorebird release-tracking row on the source
+# track is unaffected; OTA patches continue to work for users on the
+# promoted version because it's the same AAB.
+# ---------------------------------------------------------------------------
+promote_to_beta:
+  stage: deploy
+  needs: []
+  variables:
+    PROMOTE_FROM_TRACK: alpha
+    PROMOTE_TO_TRACK: beta
+  before_script:
+    - unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
+    - command -v fastlane &>/dev/null || gem install fastlane --no-document
+  script:
+    - echo "${PLAY_STORE_JSON_BASE64}" | base64 -d > play-store-key.json
+    - |
+      echo "═══════════════════════════════════════════"
+      echo "  Promoting Play release"
+      echo "  From: ${PROMOTE_FROM_TRACK}"
+      echo "  To:   ${PROMOTE_TO_TRACK}"
+      echo "═══════════════════════════════════════════"
+    - |
+      # `--track_promote_to` moves the current active release on
+      # `--track` to the destination track. Skip the AAB upload flags
+      # so fastlane doesn't try to re-upload a binary — promotion is
+      # purely a metadata move on Play's side.
+      # `--release_status completed` rolls out the promoted release
+      # fully; without it the promotion lands as a draft on the new
+      # track and you'd have to publish it manually in Play Console.
+      fastlane supply \
+        --json_key play-store-key.json \
+        --package_name com.kamillabs.kamiledu \
+        --track "${PROMOTE_FROM_TRACK}" \
+        --track_promote_to "${PROMOTE_TO_TRACK}" \
+        --release_status completed \
+        --skip_upload_aab true \
+        --skip_upload_apk true \
+        --skip_upload_metadata true \
+        --skip_upload_images true \
+        --skip_upload_screenshots true \
+        --skip_upload_changelogs true
+    - rm -f play-store-key.json
+    - |
+      echo ""
+      echo "✅ Promoted ${PROMOTE_FROM_TRACK} → ${PROMOTE_TO_TRACK}"
+      echo "   No rebuild, no review-cycle restart — same AAB."
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: false
