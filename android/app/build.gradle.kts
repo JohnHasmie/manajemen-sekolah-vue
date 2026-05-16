@@ -59,8 +59,19 @@ android {
     buildTypes {
         getByName("release") {
             signingConfig = if (keystorePropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // R8 + resource shrinking on the release track:
+            //   • Smaller AAB (Play Console used to warn about this on every upload).
+            //   • Produces build/app/outputs/mapping/release/mapping.txt so
+            //     crashes/ANRs deobfuscate properly in Play vitals.
+            // proguard-android-optimize.txt is the AGP default ruleset;
+            // proguard-rules.pro carries our project-specific `-keep`
+            // entries (Flutter embedding, Shorebird, package plugins).
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
