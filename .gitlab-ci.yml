@@ -176,8 +176,18 @@ release:
     - command -v fastlane &>/dev/null || gem install fastlane --no-document
     - echo "${PLAY_STORE_JSON_BASE64}" | base64 -d > play-store-key.json
     - |
+      # `release_status completed` forces fastlane to fully roll out the
+      # AAB on the alpha track instead of leaving it as a draft. This is
+      # what prevents the "completely shadowed by higher version code"
+      # Play Console error from re-occurring — if a prior run left a
+      # draft, a new `completed` upload replaces it cleanly. The
+      # mapping.txt path is what makes obfuscated stack traces in Play
+      # vitals deobfuscate automatically; matches the R8 output we now
+      # produce because `isMinifyEnabled = true` in build.gradle.kts.
       fastlane supply \
         --aab build/app/outputs/bundle/release/app-release.aab \
+        --mapping build/app/outputs/mapping/release/mapping.txt \
+        --release_status completed \
         --json_key play-store-key.json \
         --package_name com.kamillabs.kamiledu \
         --track alpha \
