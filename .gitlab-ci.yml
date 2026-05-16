@@ -164,6 +164,16 @@ release:
   <<: *shorebird_setup
   stage: deploy
   needs: ["detect_changes"]
+  # Pick the Play Console track when triggering the job from the GitLab
+  # UI ("Run pipeline" → set DEPLOY_TRACK to one of):
+  #   internal — Internal testing (fastest, trusted testers only)
+  #   alpha    — Closed testing  (default; what alpha/beta channels used to be)
+  #   beta     — Open testing    (any user with the opt-in link)
+  #   production — Production rollout (don't pick this from CI)
+  # Defaults to alpha so existing flows are unchanged; override per-run
+  # to publish straight to open testing without a manual promotion step.
+  variables:
+    DEPLOY_TRACK: alpha
   script:
     - export PATH="$HOME/.shorebird/bin:$PATH"
     - |
@@ -190,7 +200,7 @@ release:
         --release_status completed \
         --json_key play-store-key.json \
         --package_name com.kamillabs.kamiledu \
-        --track alpha \
+        --track "${DEPLOY_TRACK}" \
         --skip_upload_metadata \
         --skip_upload_images \
         --skip_upload_screenshots
@@ -199,7 +209,7 @@ release:
       echo ""
       echo "✅ Released ${VERSION_NAME}+${BUILD_NUMBER}"
       echo "   Shorebird: registered for OTA patches"
-      echo "   Play Store: uploaded to alpha track"
+      echo "   Play Store: uploaded to ${DEPLOY_TRACK} track"
   artifacts:
     paths:
       - build/app/outputs/bundle/release/app-release.aab
