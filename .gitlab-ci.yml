@@ -319,3 +319,77 @@ promote_to_beta:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
       allow_failure: false
+
+# ---------------------------------------------------------------------------
+# Promote to Production (manual) — graduate a Play Store release
+#
+# Promotes the current active release on PROMOTE_FROM_TRACK (default
+# beta / open testing) up to production with a STAGED rollout. The
+# defaults give you a safe 10% first wave so you can watch Vitals
+# before opening the floodgates; bump ROLLOUT_FRACTION to 1.0 once
+# you're confident.
+#
+# How to run:
+#   GitLab → CI/CD → Pipelines → Run pipeline → set variables:
+#     PROMOTE_FROM_TRACK = beta        (or alpha — whatever's live)
+#     ROLLOUT_FRACTION   = 0.1         (10% staged rollout)
+#   Then click the manual ▶ on the promote_to_prod job.
+#
+# To go to 100% later: re-run with ROLLOUT_FRACTION=1.0 (Play accepts
+# raising a halted/staged rollout to a higher fraction without touching
+# the AAB). To halt a bad rollout: do it from Play Console — fastlane
+# doesn't expose a `halt` verb cleanly.
+#
+# Same minimal before_script as promote_to_beta — no build needed.
+# ---------------------------------------------------------------------------
+promote_to_prod:
+  stage: deploy
+  needs: []
+  variables:
+    PROMOTE_FROM_TRACK: beta
+    # Staged rollout fraction (0.0–1.0). Default 0.1 = 10% of users get
+    # the new release; the rest stay on the previous prod version. Keep
+    # this low for the first push; raise to 1.0 once Vitals look clean.
+    ROLLOUT_FRACTION: "0.1"
+  before_script:
+    - unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
+    - command -v fastlane &>/dev/null || gem install fastlane --no-document
+  script:
+    - echo "${PLAY_STORE_JSON_BASE64}" | base64 -d > play-store-key.json
+    - |
+      echo "═══════════════════════════════════════════"
+      echo "  Promoting to PRODUCTION"
+      echo "  From:           ${PROMOTE_FROM_TRACK}"
+      echo "  Rollout:        ${ROLLOUT_FRACTION} (= $(awk "BEGIN{print ${ROLLOUT_FRACTION}*100}")% of users)"
+      echo "═══════════════════════════════════════════"
+    - |
+      # `--release_status inProgress` is what makes fastlane treat the
+      # rollout as staged instead of a full 100% release. Combined with
+      # `--rollout`, Play serves the new AAB to that fraction of users
+      # and keeps the previous release for the rest until you raise the
+      # number. Skipping every upload flag keeps this a pure metadata
+      # promotion — same AAB, no review-cycle restart, no changelog
+      # overwrite.
+      fastlane supply \
+        --json_key play-store-key.json \
+        --package_name com.kamillabs.kamiledu \
+        --track "${PROMOTE_FROM_TRACK}" \
+        --track_promote_to production \
+        --release_status inProgress \
+        --rollout "${ROLLOUT_FRACTION}" \
+        --skip_upload_aab true \
+        --skip_upload_apk true \
+        --skip_upload_metadata true \
+        --skip_upload_images true \
+        --skip_upload_screenshots true \
+        --skip_upload_changelogs true
+    - rm -f play-store-key.json
+    - |
+      echo ""
+      echo "✅ Promoted ${PROMOTE_FROM_TRACK} → production (${ROLLOUT_FRACTION})"
+      echo "   Same AAB binary, staged rollout active."
+      echo "   Watch Play Console → Statistics → Vitals before raising %."
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: false
