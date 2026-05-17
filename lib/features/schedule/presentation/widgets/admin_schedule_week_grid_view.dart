@@ -81,7 +81,8 @@ class AdminScheduleWeekGridView extends StatelessWidget {
     required String newLessonHourDaysId,
     required String newDayId,
     required String newStartTime,
-  })? onReschedule;
+  })?
+  onReschedule;
 
   /// Optional currently-selected day_id to subtly highlight that column.
   final String? highlightDayId;
@@ -116,7 +117,7 @@ class AdminScheduleWeekGridView extends StatelessWidget {
   /// in the cluster pre-selected. Fast path for "move every 10:00 to
   /// Tuesday" without touching each row.
   final void Function(List<Map<String, dynamic>> sessions)?
-      onSlotClusterLongPress;
+  onSlotClusterLongPress;
 
   /// Vertical scale — pixels per minute. 0.7 makes a 45-minute slot
   /// render ~31dp tall (enough for the subject title + a meta line)
@@ -202,14 +203,46 @@ class AdminScheduleWeekGridView extends StatelessWidget {
   /// Cobalt + azure lead because they pair with the admin navy chrome;
   /// the other slots cover the rest of the spectrum without clashing.
   static const List<_BlockPalette> _palettes = [
-    _BlockPalette(border: Color(0xFF1B6FB8), bg: Color(0x1F1B6FB8), fg: Color(0xFF1B6FB8)), // cobalt
-    _BlockPalette(border: Color(0xFF21AFE6), bg: Color(0x1F21AFE6), fg: Color(0xFF1885B2)), // azure
-    _BlockPalette(border: Color(0xFF16A34A), bg: Color(0x1F16A34A), fg: Color(0xFF15803D)), // green
-    _BlockPalette(border: Color(0xFFF59E0B), bg: Color(0x1FF59E0B), fg: Color(0xFFB45309)), // amber
-    _BlockPalette(border: Color(0xFF7C3AED), bg: Color(0x1F7C3AED), fg: Color(0xFF7C3AED)), // violet
-    _BlockPalette(border: Color(0xFFE11D48), bg: Color(0x1FE11D48), fg: Color(0xFFE11D48)), // rose
-    _BlockPalette(border: Color(0xFF0D9488), bg: Color(0x1F0D9488), fg: Color(0xFF0D9488)), // teal
-    _BlockPalette(border: Color(0xFFEA580C), bg: Color(0x1FEA580C), fg: Color(0xFFEA580C)), // orange
+    _BlockPalette(
+      border: Color(0xFF1B6FB8),
+      bg: Color(0x1F1B6FB8),
+      fg: Color(0xFF1B6FB8),
+    ), // cobalt
+    _BlockPalette(
+      border: Color(0xFF21AFE6),
+      bg: Color(0x1F21AFE6),
+      fg: Color(0xFF1885B2),
+    ), // azure
+    _BlockPalette(
+      border: Color(0xFF16A34A),
+      bg: Color(0x1F16A34A),
+      fg: Color(0xFF15803D),
+    ), // green
+    _BlockPalette(
+      border: Color(0xFFF59E0B),
+      bg: Color(0x1FF59E0B),
+      fg: Color(0xFFB45309),
+    ), // amber
+    _BlockPalette(
+      border: Color(0xFF7C3AED),
+      bg: Color(0x1F7C3AED),
+      fg: Color(0xFF7C3AED),
+    ), // violet
+    _BlockPalette(
+      border: Color(0xFFE11D48),
+      bg: Color(0x1FE11D48),
+      fg: Color(0xFFE11D48),
+    ), // rose
+    _BlockPalette(
+      border: Color(0xFF0D9488),
+      bg: Color(0x1F0D9488),
+      fg: Color(0xFF0D9488),
+    ), // teal
+    _BlockPalette(
+      border: Color(0xFFEA580C),
+      bg: Color(0x1FEA580C),
+      fg: Color(0xFFEA580C),
+    ), // orange
   ];
 
   static const _BlockPalette _conflictPalette = _BlockPalette(
@@ -222,9 +255,8 @@ class AdminScheduleWeekGridView extends StatelessWidget {
     if (schedule.hasScheduleConflict) {
       return _conflictPalette;
     }
-    final key =
-        (schedule['subject_id'] ?? schedule['mata_pelajaran_id'] ?? '')
-            .toString();
+    final key = (schedule['subject_id'] ?? schedule['mata_pelajaran_id'] ?? '')
+        .toString();
     if (key.isEmpty) return _palettes[0];
     final idx = key.hashCode.abs() % _palettes.length;
     return _palettes[idx];
@@ -311,22 +343,26 @@ class AdminScheduleWeekGridView extends StatelessWidget {
       final duration = (endMin != null && endMin > startMin)
           ? endMin - startMin
           : 45;
-      hoursByDay.putIfAbsent(dayId, () => []).add(
-        _SlotEntry(
-          lessonHourId: id,
-          startMinutes: startMin,
-          startTime: lh['start_time']?.toString() ?? '',
-          durationMinutes: duration,
-        ),
-      );
+      hoursByDay
+          .putIfAbsent(dayId, () => [])
+          .add(
+            _SlotEntry(
+              lessonHourId: id,
+              startMinutes: startMin,
+              startTime: lh['start_time']?.toString() ?? '',
+              durationMinutes: duration,
+            ),
+          );
     }
 
-    // Now-line offset (only when today is visible).
+    // Now-line offset (only when today is visible). Uses the effective
+    // scale so the dot lands in the right spot whether we're in the
+    // compact week grid or the zoomed focused-day view.
     final now = DateTime.now();
     final nowMinutes = now.hour * 60 + now.minute;
     final showNowLine =
         todayId != null && nowMinutes >= startMin && nowMinutes <= endMin;
-    final nowTopOffset = (nowMinutes - startMin) * pxPerMinute;
+    final nowTopOffset = (nowMinutes - startMin) * effectivePx;
 
     // Focused-mode branch: render a single full-width day column with
     // a pill-tab strip above for swipe / tap navigation between days.
@@ -370,11 +406,9 @@ class AdminScheduleWeekGridView extends StatelessWidget {
                   );
                   if (idx < 0) return;
                   if (v < 0 && idx < days.length - 1) {
-                    onFocusedDayChanged
-                        ?.call(days[idx + 1]['id']?.toString());
+                    onFocusedDayChanged?.call(days[idx + 1]['id']?.toString());
                   } else if (v > 0 && idx > 0) {
-                    onFocusedDayChanged
-                        ?.call(days[idx - 1]['id']?.toString());
+                    onFocusedDayChanged?.call(days[idx - 1]['id']?.toString());
                   }
                 },
                 child: Stack(
@@ -385,7 +419,7 @@ class AdminScheduleWeekGridView extends StatelessWidget {
                         _TimeColumn(
                           startMinutes: startMin,
                           endMinutes: endMin,
-                          pxPerMinute: pxPerMinute,
+                          pxPerMinute: effectivePx,
                           width: timeColumnWidth,
                         ),
                         Expanded(
@@ -395,10 +429,10 @@ class AdminScheduleWeekGridView extends StatelessWidget {
                             isHighlighted: focusedId == highlightDayId,
                             startMinutes: startMin,
                             endMinutes: endMin,
-                            pxPerMinute: pxPerMinute,
+                            pxPerMinute: effectivePx,
+                            isFocused: true,
                             schedules: byDay[focusedId] ?? const [],
-                            slotsOnThisDay:
-                                hoursByDay[focusedId] ?? const [],
+                            slotsOnThisDay: hoursByDay[focusedId] ?? const [],
                             paletteFor: _paletteFor,
                             onTap: onScheduleTap,
                             onLongPress: onScheduleLongPress,
@@ -465,11 +499,11 @@ class AdminScheduleWeekGridView extends StatelessWidget {
                         child: _DayColumn(
                           dayId: d['id']?.toString() ?? '',
                           isToday: d['id']?.toString() == todayId,
-                          isHighlighted:
-                              d['id']?.toString() == highlightDayId,
+                          isHighlighted: d['id']?.toString() == highlightDayId,
                           startMinutes: startMin,
                           endMinutes: endMin,
                           pxPerMinute: pxPerMinute,
+                          isFocused: false,
                           schedules: byDay[d['id']?.toString()] ?? const [],
                           slotsOnThisDay:
                               hoursByDay[d['id']?.toString()] ?? const [],
@@ -531,9 +565,7 @@ class _DayHeaderRow extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 color: ColorUtils.slate100,
-                border: Border(
-                  right: BorderSide(color: ColorUtils.slate200),
-                ),
+                border: Border(right: BorderSide(color: ColorUtils.slate200)),
               ),
               height: 32,
             ),
@@ -559,11 +591,7 @@ class _DayHeaderCell extends StatelessWidget {
   final bool isToday;
   final VoidCallback? onTap;
 
-  const _DayHeaderCell({
-    required this.day,
-    required this.isToday,
-    this.onTap,
-  });
+  const _DayHeaderCell({required this.day, required this.isToday, this.onTap});
 
   String _abbreviation(String name) {
     // Indonesian day names — first 3 letters uppercase.
@@ -666,6 +694,14 @@ class _DayColumn extends StatefulWidget {
   final int startMinutes;
   final int endMinutes;
   final double pxPerMinute;
+
+  /// True when this column is rendering inside the single-day "focused"
+  /// view (one day fills the full screen width). The extra horizontal
+  /// real-estate lets each lane stay readable even when 4-6 sessions
+  /// share a slot, so [_DayColumnState._computeSlotGroups] keeps lanes
+  /// mode active up to 6 sessions instead of collapsing to a cluster
+  /// card at 4 like it does in the cramped week grid.
+  final bool isFocused;
   final List<Map<String, dynamic>> schedules;
   final List<_SlotEntry> slotsOnThisDay;
   final _BlockPalette Function(Map<String, dynamic>) paletteFor;
@@ -676,10 +712,11 @@ class _DayColumn extends StatefulWidget {
     required String newLessonHourDaysId,
     required String newDayId,
     required String newStartTime,
-  })? onReschedule;
+  })?
+  onReschedule;
   final void Function(List<Map<String, dynamic>> sessions)? onSlotClusterTap;
   final void Function(List<Map<String, dynamic>> sessions)?
-      onSlotClusterLongPress;
+  onSlotClusterLongPress;
 
   const _DayColumn({
     required this.dayId,
@@ -688,6 +725,7 @@ class _DayColumn extends StatefulWidget {
     required this.startMinutes,
     required this.endMinutes,
     required this.pxPerMinute,
+    required this.isFocused,
     required this.schedules,
     required this.slotsOnThisDay,
     required this.paletteFor,
@@ -742,8 +780,10 @@ class _DayColumnState extends State<_DayColumn> {
 
   @override
   Widget build(BuildContext context) {
-    final hourCount =
-        ((widget.endMinutes - widget.startMinutes) ~/ 60).clamp(1, 24);
+    final hourCount = ((widget.endMinutes - widget.startMinutes) ~/ 60).clamp(
+      1,
+      24,
+    );
     final dropEnabled =
         widget.onReschedule != null && widget.slotsOnThisDay.isNotEmpty;
     // Local aliases for fields read directly inside `build()`. Anything
@@ -774,7 +814,8 @@ class _DayColumnState extends State<_DayColumn> {
         break;
       }
     }
-    final hoveredIsHighDensity = hoveredGroupMode == _RenderMode.stack ||
+    final hoveredIsHighDensity =
+        hoveredGroupMode == _RenderMode.stack ||
         hoveredGroupMode == _RenderMode.cluster;
 
     final columnBody = LayoutBuilder(
@@ -818,8 +859,8 @@ class _DayColumnState extends State<_DayColumn> {
         color: isToday
             ? ColorUtils.brandDarkBlue.withValues(alpha: 0.03)
             : (isHighlighted
-                ? ColorUtils.brandCobalt.withValues(alpha: 0.04)
-                : Colors.white),
+                  ? ColorUtils.brandCobalt.withValues(alpha: 0.04)
+                  : Colors.white),
         border: Border(right: BorderSide(color: ColorUtils.slate100)),
       ),
       child: columnBody,
@@ -861,8 +902,8 @@ class _DayColumnState extends State<_DayColumn> {
         }
         if (slot == null) return;
         // No-op when the drop lands on the source slot.
-        final currentLessonHourId =
-            (details.data['lesson_hour_days_id'] ?? '').toString();
+        final currentLessonHourId = (details.data['lesson_hour_days_id'] ?? '')
+            .toString();
         if (currentLessonHourId == slot.lessonHourId) return;
         await onReschedule!.call(
           schedule: details.data,
@@ -890,8 +931,10 @@ class _DayColumnState extends State<_DayColumn> {
         // see where exactly the snap is going.
         final ghostTop =
             (_hoveredSlot!.startMinutes - startMinutes) * pxPerMinute;
-        final ghostHeight = (_hoveredSlot!.durationMinutes * pxPerMinute)
-            .clamp(20.0, double.infinity);
+        final ghostHeight = (_hoveredSlot!.durationMinutes * pxPerMinute).clamp(
+          20.0,
+          double.infinity,
+        );
         return Stack(
           children: [
             styled,
@@ -904,10 +947,7 @@ class _DayColumnState extends State<_DayColumn> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: ColorUtils.brandCobalt.withValues(alpha: 0.12),
-                    border: Border.all(
-                      color: ColorUtils.brandCobalt,
-                      width: 2,
-                    ),
+                    border: Border.all(color: ColorUtils.brandCobalt, width: 2),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   alignment: Alignment.center,
@@ -948,8 +988,7 @@ class _DayColumnState extends State<_DayColumn> {
     if (items.isEmpty) return const [];
     final byStart = <int, List<Map<String, dynamic>>>{};
     for (final s in items) {
-      final startMin =
-          AdminScheduleWeekGridView._parseMinutes(s['start_time']);
+      final startMin = AdminScheduleWeekGridView._parseMinutes(s['start_time']);
       if (startMin == null) continue;
       byStart.putIfAbsent(startMin, () => []).add(s);
     }
@@ -971,29 +1010,37 @@ class _DayColumnState extends State<_DayColumn> {
       var maxEnd = start;
       var anyConflict = false;
       for (final s in sessions) {
-        final endMin =
-            AdminScheduleWeekGridView._parseMinutes(s['end_time']);
+        final endMin = AdminScheduleWeekGridView._parseMinutes(s['end_time']);
         if (endMin != null && endMin > maxEnd) maxEnd = endMin;
         if (s.hasScheduleConflict) anyConflict = true;
       }
       final dur = (maxEnd - start).clamp(20, 240);
 
-      // Two density buckets: lanes (≤3) and cluster (≥4). The stack
-      // bucket previously sat between them (4–5) but rendered text
-      // unreadably small on a 50px column, so we collapse it into
-      // cluster mode — the cluster card's count badge + tap-to-expand
-      // is more useful than half-readable mini-cards.
-      final mode = sessions.length <= 3
+      // Two density buckets: lanes vs cluster. The stack bucket
+      // previously sat between them (4–5) but rendered text unreadably
+      // small on a 50px-wide column, so we collapse it into cluster
+      // mode — the cluster card's count badge + tap-to-expand is more
+      // useful than half-readable mini-cards.
+      //
+      // The lane-mode threshold is wider in focused mode (≤6) because
+      // the single-day view spans the full screen width — 6 lanes
+      // across ~340dp leaves each card ~52dp wide, which is still
+      // legible. In the cramped week grid each day column is only
+      // ~50dp wide, so we collapse to cluster mode at 4+ sessions.
+      final laneThreshold = widget.isFocused ? 6 : 3;
+      final mode = sessions.length <= laneThreshold
           ? _RenderMode.lanes
           : _RenderMode.cluster;
 
-      groups.add(_SlotGroup(
-        startMinutes: start,
-        durationMinutes: dur,
-        sessions: sessions,
-        hasConflict: anyConflict,
-        renderMode: mode,
-      ));
+      groups.add(
+        _SlotGroup(
+          startMinutes: start,
+          durationMinutes: dur,
+          sessions: sessions,
+          hasConflict: anyConflict,
+          renderMode: mode,
+        ),
+      );
     }
 
     groups.sort((a, b) => a.startMinutes.compareTo(b.startMinutes));
@@ -1016,13 +1063,15 @@ class _DayColumnState extends State<_DayColumn> {
       case _RenderMode.lanes:
         final widgets = <Widget>[];
         for (var i = 0; i < group.sessions.length; i++) {
-          widgets.addAll(_buildBlock(
-            group.sessions[i],
-            hourCount,
-            i,
-            group.sessions.length,
-            colWidth,
-          ));
+          widgets.addAll(
+            _buildBlock(
+              group.sessions[i],
+              hourCount,
+              i,
+              group.sessions.length,
+              colWidth,
+            ),
+          );
         }
         return widgets;
       case _RenderMode.stack:
@@ -1061,12 +1110,10 @@ class _DayColumnState extends State<_DayColumn> {
         : (availableWidth - laneGap * (totalLanes - 1)) / totalLanes;
     final leftPos = sideInset + lane * (laneWidth + laneGap);
     final palette = widget.paletteFor(s);
-    final subjectName =
-        (s['subject_name'] ?? s['mata_pelajaran_nama'] ?? '—').toString();
-    final className =
-        (s['class_name'] ?? s['kelas_nama'] ?? '').toString();
-    final teacherName =
-        (s['teacher_name'] ?? s['guru_nama'] ?? '').toString();
+    final subjectName = (s['subject_name'] ?? s['mata_pelajaran_nama'] ?? '—')
+        .toString();
+    final className = (s['class_name'] ?? s['kelas_nama'] ?? '').toString();
+    final teacherName = (s['teacher_name'] ?? s['guru_nama'] ?? '').toString();
     final isConflict = s.hasScheduleConflict;
 
     // Inner card content — reused for the in-grid block AND the
@@ -1077,9 +1124,7 @@ class _DayColumnState extends State<_DayColumn> {
       decoration: BoxDecoration(
         color: palette.bg,
         borderRadius: BorderRadius.circular(5),
-        border: Border(
-          left: BorderSide(color: palette.border, width: 3),
-        ),
+        border: Border(left: BorderSide(color: palette.border, width: 3)),
         boxShadow: [
           BoxShadow(
             color: ColorUtils.slate900.withValues(alpha: 0.04),
@@ -1094,11 +1139,7 @@ class _DayColumnState extends State<_DayColumn> {
           Row(
             children: [
               if (isConflict) ...[
-                Icon(
-                  Icons.warning_amber_rounded,
-                  size: 9,
-                  color: palette.fg,
-                ),
+                Icon(Icons.warning_amber_rounded, size: 9, color: palette.fg),
                 const SizedBox(width: 2),
               ],
               Expanded(
@@ -1120,9 +1161,10 @@ class _DayColumnState extends State<_DayColumn> {
             Padding(
               padding: const EdgeInsets.only(top: 1),
               child: Text(
-                [className, if (teacherName.isNotEmpty) teacherName]
-                    .where((e) => e.isNotEmpty)
-                    .join(' · '),
+                [
+                  className,
+                  if (teacherName.isNotEmpty) teacherName,
+                ].where((e) => e.isNotEmpty).join(' · '),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -1140,8 +1182,9 @@ class _DayColumnState extends State<_DayColumn> {
     final blockHeight = height.clamp(18.0, double.infinity);
     final blockGesture = GestureDetector(
       onTap: widget.onTap == null ? null : () => widget.onTap!(s),
-      onLongPress:
-          widget.onLongPress == null ? null : () => widget.onLongPress!(s),
+      onLongPress: widget.onLongPress == null
+          ? null
+          : () => widget.onLongPress!(s),
       child: cardContent,
     );
 
@@ -1164,9 +1207,7 @@ class _DayColumnState extends State<_DayColumn> {
             ),
             childWhenDragging: Opacity(
               opacity: 0.35,
-              child: DottedOutline(
-                child: cardContent,
-              ),
+              child: DottedOutline(child: cardContent),
             ),
             child: blockGesture,
           );
@@ -1211,13 +1252,13 @@ class _DayColumnState extends State<_DayColumn> {
     final borderColor = isHovered
         ? ColorUtils.brandCobalt
         : (group.hasConflict
-            ? ColorUtils.error600.withValues(alpha: 0.30)
-            : ColorUtils.slate200);
+              ? ColorUtils.error600.withValues(alpha: 0.30)
+              : ColorUtils.slate200);
     final bgColor = isHovered
         ? ColorUtils.brandCobalt.withValues(alpha: 0.08)
         : (group.hasConflict
-            ? ColorUtils.error600.withValues(alpha: 0.04)
-            : Colors.white);
+              ? ColorUtils.error600.withValues(alpha: 0.04)
+              : Colors.white);
 
     return Positioned(
       top: top,
@@ -1234,11 +1275,13 @@ class _DayColumnState extends State<_DayColumn> {
         child: Column(
           children: [
             for (final s in visible)
-              Expanded(child: _StackMiniCard(
-                schedule: s,
-                palette: widget.paletteFor(s),
-                onTap: widget.onTap == null ? null : () => widget.onTap!(s),
-              )),
+              Expanded(
+                child: _StackMiniCard(
+                  schedule: s,
+                  palette: widget.paletteFor(s),
+                  onTap: widget.onTap == null ? null : () => widget.onTap!(s),
+                ),
+              ),
             if (overflow > 0)
               Expanded(child: _StackOverflowPill(count: overflow)),
           ],
@@ -1271,8 +1314,7 @@ class _DayColumnState extends State<_DayColumn> {
       if (cls.isNotEmpty) classes.add(cls);
     }
     final topSubjects = subjects.take(3).join(' · ');
-    final tally =
-        '${subjects.length} mapel · ${classes.length} kelas';
+    final tally = '${subjects.length} mapel · ${classes.length} kelas';
 
     // Hover styling: thicker border + brighter gradient so a dragged
     // session lands on visible feedback. We override the conflict-red
@@ -1280,9 +1322,7 @@ class _DayColumnState extends State<_DayColumn> {
     // accepted (not that there's a new conflict to fix).
     final borderColor = isHovered
         ? ColorUtils.brandCobalt
-        : (group.hasConflict
-            ? ColorUtils.error600
-            : ColorUtils.brandCobalt);
+        : (group.hasConflict ? ColorUtils.error600 : ColorUtils.brandCobalt);
     final borderWidth = isHovered ? 2.5 : 1.5;
     final gradientColors = isHovered
         ? [
@@ -1290,14 +1330,14 @@ class _DayColumnState extends State<_DayColumn> {
             ColorUtils.brandCobalt.withValues(alpha: 0.14),
           ]
         : (group.hasConflict
-            ? [
-                ColorUtils.error600.withValues(alpha: 0.16),
-                ColorUtils.brandCobalt.withValues(alpha: 0.10),
-              ]
-            : [
-                ColorUtils.brandCobalt.withValues(alpha: 0.14),
-                ColorUtils.brandCobalt.withValues(alpha: 0.06),
-              ]);
+              ? [
+                  ColorUtils.error600.withValues(alpha: 0.16),
+                  ColorUtils.brandCobalt.withValues(alpha: 0.10),
+                ]
+              : [
+                  ColorUtils.brandCobalt.withValues(alpha: 0.14),
+                  ColorUtils.brandCobalt.withValues(alpha: 0.06),
+                ]);
 
     return Positioned(
       top: top,
@@ -1323,82 +1363,110 @@ class _DayColumnState extends State<_DayColumn> {
             borderRadius: BorderRadius.circular(6),
             border: Border.all(color: borderColor, width: borderWidth),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Count badge — red on conflict, navy otherwise.
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: group.hasConflict
-                        ? ColorUtils.error600
-                        : ColorUtils.brandDarkBlue,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    '${group.sessions.length} sesi',
-                    style: const TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      height: 1.2,
+          // Progressive disclosure: at very short heights (≤30dp inner
+          // space) the card shows just the count badge; with a bit more
+          // room the subject preview + hint stack in. LayoutBuilder is
+          // the right tool here — `height` (slot duration) doesn't
+          // account for padding / border chrome, so a `height > 36`
+          // threshold would still overflow on 45-min slots in
+          // compact-week mode (45 * 0.7 = 31.5px raw, ~22px inside the
+          // chrome). Cluster content is purely informational and
+          // tappable — clipping it instead of letting RenderFlex throw
+          // is the right trade-off.
+          child: ClipRect(
+            child: LayoutBuilder(
+              builder: (ctx, c) {
+                final inner = c.maxHeight;
+                // Tier thresholds — measured against actual inner
+                // height (padding + border already subtracted out).
+                //   ≥48 → badge + 2-line preview + hint
+                //   ≥34 → badge + 1-line preview
+                //   <34 → badge only
+                final showPreview = inner >= 34;
+                final showTally = inner >= 48;
+                final showHint = inner >= 48;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    // Count badge — red on conflict, navy otherwise.
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: group.hasConflict
+                              ? ColorUtils.error600
+                              : ColorUtils.brandDarkBlue,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${group.sessions.length} sesi',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            height: 1.2,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              // Subject preview + tally (hidden when slot is short).
-              if (height > 36)
-                Padding(
-                  padding: const EdgeInsets.only(top: 1),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    if (showPreview)
+                      Flexible(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 1),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                topSubjects,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w800,
+                                  color: ColorUtils.brandCobalt,
+                                  height: 1.1,
+                                ),
+                              ),
+                              if (showTally)
+                                Text(
+                                  tally,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 7.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: ColorUtils.slate700,
+                                    height: 1.1,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (showHint)
                       Text(
-                        topSubjects,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        isHovered ? '↓ Lepas di sini' : '▾ ketuk',
+                        textAlign: TextAlign.right,
                         style: TextStyle(
-                          fontSize: 8,
+                          fontSize: 7,
                           fontWeight: FontWeight.w800,
-                          color: ColorUtils.brandCobalt,
+                          color: isHovered
+                              ? ColorUtils.brandCobalt
+                              : ColorUtils.slate500,
                           height: 1.1,
                         ),
                       ),
-                      Text(
-                        tally,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 7.5,
-                          fontWeight: FontWeight.w600,
-                          color: ColorUtils.slate700,
-                          height: 1.1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              // Hint: "▾ ketuk" by default, "↓ Lepas di sini" while
-              // a session is being dragged over this cluster so the
-              // admin sees the drop will land in this slot.
-              if (height > 36)
-                Text(
-                  isHovered ? '↓ Lepas di sini' : '▾ ketuk',
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontSize: 7,
-                    fontWeight: FontWeight.w800,
-                    color: isHovered
-                        ? ColorUtils.brandCobalt
-                        : ColorUtils.slate500,
-                    height: 1.1,
-                  ),
-                ),
-            ],
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -1458,8 +1526,8 @@ class _StackMiniCard extends StatelessWidget {
     final subject =
         (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'] ?? '—')
             .toString();
-    final className =
-        (schedule['class_name'] ?? schedule['kelas_nama'] ?? '').toString();
+    final className = (schedule['class_name'] ?? schedule['kelas_nama'] ?? '')
+        .toString();
     final isConflict = schedule.hasScheduleConflict;
     return GestureDetector(
       onTap: onTap,
@@ -1470,18 +1538,12 @@ class _StackMiniCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: palette.bg,
           borderRadius: BorderRadius.circular(3),
-          border: Border(
-            left: BorderSide(color: palette.border, width: 2),
-          ),
+          border: Border(left: BorderSide(color: palette.border, width: 2)),
         ),
         child: Row(
           children: [
             if (isConflict) ...[
-              Icon(
-                Icons.warning_amber_rounded,
-                size: 8,
-                color: palette.fg,
-              ),
+              Icon(Icons.warning_amber_rounded, size: 8, color: palette.fg),
               const SizedBox(width: 2),
             ],
             Expanded(
@@ -1590,9 +1652,10 @@ class _DragFeedbackCard extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    [className, if (teacherName.isNotEmpty) teacherName]
-                        .where((e) => e.isNotEmpty)
-                        .join(' · '),
+                    [
+                      className,
+                      if (teacherName.isNotEmpty) teacherName,
+                    ].where((e) => e.isNotEmpty).join(' · '),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -1658,10 +1721,7 @@ class _NowLine extends StatelessWidget {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            Container(
-              height: 1,
-              color: ColorUtils.error600,
-            ),
+            Container(height: 1, color: ColorUtils.error600),
             Positioned(
               left: -3,
               top: -3,
@@ -1776,8 +1836,7 @@ class _FocusedDayHeaderStrip extends StatelessWidget {
                       label: _abbr((days[i]['name'] ?? '').toString()),
                       active: days[i]['id']?.toString() == focusedDayId,
                       isToday: days[i]['id']?.toString() == todayDayId,
-                      onTap: () =>
-                          onPicked(days[i]['id']?.toString() ?? ''),
+                      onTap: () => onPicked(days[i]['id']?.toString() ?? ''),
                     ),
                     if (i < days.length - 1) const SizedBox(width: 4),
                   ],
