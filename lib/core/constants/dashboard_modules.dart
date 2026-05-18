@@ -194,4 +194,47 @@ abstract final class DashboardModules {
     color: ColorUtils.slate600,
     defaultLabel: 'Akun',
   );
+
+  // ── Admin Sistem sub-modules ───────────────────────────────────
+  /// Tahun Ajaran — indigo calendar.
+  static final DashboardModule tahunAjaran = DashboardModule(
+    icon: Icons.calendar_today_outlined,
+    color: ColorUtils.indigo600,
+    defaultLabel: 'Tahun Ajaran',
+  );
+
+  /// Waktu Pembelajaran — amber clock.
+  static final DashboardModule waktuPembelajaran = DashboardModule(
+    icon: Icons.access_time_rounded,
+    color: ColorUtils.warning600,
+    defaultLabel: 'Waktu Pembelajaran',
+  );
+
+  /// Manajemen Data — green dataset.
+  static final DashboardModule manajemenData = DashboardModule(
+    icon: Icons.dataset_outlined,
+    color: ColorUtils.success600,
+    defaultLabel: 'Manajemen Data',
+  );
+
+  /// Bahasa — violet language.
+  static final DashboardModule bahasa = DashboardModule(
+    icon: Icons.language_rounded,
+    color: ColorUtils.violet700,
+    defaultLabel: 'Bahasa',
+  );
+
+  /// Notifikasi — red bell.
+  static final DashboardModule notifikasi = DashboardModule(
+    icon: Icons.notifications_outlined,
+    color: ColorUtils.error600,
+    defaultLabel: 'Notifikasi',
+  );
+
+  /// Backup & Audit — indigo cloud-upload.
+  static final DashboardModule backupAudit = DashboardModule(
+    icon: Icons.backup_outlined,
+    color: ColorUtils.indigo500,
+    defaultLabel: 'Backup & Audit',
+  );
 }
