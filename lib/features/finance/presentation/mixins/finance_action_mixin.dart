@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/widgets/action_confirm_sheet.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/features/finance/presentation/widgets/activate_month_picker_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/payment_type_detail_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/payment_type_form_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/target_selection_modal.dart';
@@ -101,28 +102,108 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
   /// backend's PATCH /payment-types/{id}/status endpoint. Used by the
   /// detail sheet's quick "Aktifkan / Nonaktifkan" action so the
   /// admin doesn't have to reopen the full Edit form.
+  ///
+  /// For Bulanan Jenis being activated, opens a month-picker sheet
+  /// first so the admin can choose which period to resume from. This
+  /// matches Luay's request: "seumpama di nonaktifkan terus ameh
+  /// diaktifkan iku pilih bulan". For other periodes the sheet is
+  /// skipped because the backend derives the period from start_date.
   Future<void> togglePaymentTypeStatus(
     Map<String, dynamic> paymentType, {
     required bool active,
   }) async {
     final id = paymentType['id']?.toString();
     if (id == null || id.isEmpty) return;
-    final error = await controller.setPaymentTypeStatus(id, active: active);
-    if (!mounted) return;
-    if (error == null) {
-      SnackBarUtils.showSuccess(
-        context,
-        active
-            ? 'Jenis pembayaran diaktifkan.'
-            : 'Jenis pembayaran dinonaktifkan.',
+
+    // Month picker — only for activating a Bulanan jenis.
+    String? selectedMonth;
+    final periode = (paymentType['periode'] ?? '').toString().toLowerCase();
+    if (active && periode == 'bulanan') {
+      final name = (paymentType['name'] ?? 'Jenis pembayaran').toString();
+      selectedMonth = await showActivateMonthPickerSheet(
+        context: context,
+        primaryColor: getPrimaryColor(),
+        jenisName: name,
       );
+      if (!mounted) return;
+      // Admin tapped Batal — abort the whole transition.
+      if (selectedMonth == null) return;
+    }
+
+    final result = await controller.setPaymentTypeStatus(
+      id,
+      active: active,
+      month: selectedMonth,
+    );
+    if (!mounted) return;
+
+    if (result.isSuccess) {
+      // Compose a precise toast: count of bills + which month, when
+      // applicable. Falls back to the bland "diaktifkan" string when
+      // nothing was generated (e.g. deactivation, or every bill
+      // already existed for the chosen month).
+      final toast = _composeStatusToast(
+        active: active,
+        billsGenerated: result.billsGenerated,
+        monthApplied: result.monthApplied,
+      );
+      SnackBarUtils.showSuccess(context, toast);
       await loadDataAfterAction();
     } else {
       SnackBarUtils.showError(
         context,
-        active ? 'Gagal mengaktifkan: $error' : 'Gagal menonaktifkan: $error',
+        active
+            ? 'Gagal mengaktifkan: ${result.error}'
+            : 'Gagal menonaktifkan: ${result.error}',
       );
     }
+  }
+
+  /// Builds the success toast message based on what happened.
+  ///   * deactivate          → "Jenis pembayaran dinonaktifkan."
+  ///   * activate + 0 bills  → "Jenis diaktifkan." (e.g. bills already
+  ///                            existed for the chosen period)
+  ///   * activate + N bills  → "Jenis diaktifkan, N tagihan baru
+  ///                            untuk September 2026."
+  String _composeStatusToast({
+    required bool active,
+    required int billsGenerated,
+    required String? monthApplied,
+  }) {
+    if (!active) return 'Jenis pembayaran dinonaktifkan.';
+    if (billsGenerated <= 0) return 'Jenis pembayaran diaktifkan.';
+    final monthLabel = monthApplied != null
+        ? ' untuk ${_humanMonthLabel(monthApplied)}'
+        : '';
+    return 'Jenis diaktifkan, $billsGenerated tagihan baru$monthLabel.';
+  }
+
+  /// Converts a `YYYY-MM` string into a human-readable
+  /// "Bulan Tahun" Indonesian label. Defensive against bad input —
+  /// just returns the raw string if parsing fails.
+  String _humanMonthLabel(String yearMonth) {
+    final parts = yearMonth.split('-');
+    if (parts.length != 2) return yearMonth;
+    final year = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    if (year == null || month == null || month < 1 || month > 12) {
+      return yearMonth;
+    }
+    const names = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    return '${names[month - 1]} $year';
   }
 
   /// Tap on a Jenis row → opens the read-only detail sheet, which

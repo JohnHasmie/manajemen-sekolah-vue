@@ -86,3 +86,32 @@ class LoadClassDataResult {
       billsByStudent = const {},
       error = message;
 }
+
+/// Result returned by `AdminFinanceController.setPaymentTypeStatus`.
+///
+/// Carries the side-effect count (how many Bill rows the server
+/// generated as a consequence of flipping to active) so the UI can show
+/// a more useful toast than just "diaktifkan". Also surfaces the actual
+/// backend error message so the admin sees the real problem instead of
+/// the generic "Gagal memproses permintaan" fallback.
+class SetStatusResult {
+  /// Null on success, friendly Indonesian error string on failure.
+  final String? error;
+
+  /// Number of Bill rows the backend created during this transition.
+  /// Zero when (a) the call failed, (b) the admin set status=inactive,
+  /// or (c) every student already had a bill for the chosen month.
+  final int billsGenerated;
+
+  /// The `YYYY-MM` the activation applied to, when the caller specified
+  /// one. Null when the backend used today's month as the default.
+  final String? monthApplied;
+
+  const SetStatusResult({
+    required this.error,
+    required this.billsGenerated,
+    required this.monthApplied,
+  });
+
+  bool get isSuccess => error == null;
+}

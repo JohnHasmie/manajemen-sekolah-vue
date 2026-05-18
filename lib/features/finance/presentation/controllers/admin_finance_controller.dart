@@ -10,6 +10,7 @@
 // Usage in screen:
 //   final ctrl = ref.read(adminFinanceControllerProvider);
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -31,7 +32,8 @@ export 'package:manajemensekolah/features/finance/presentation/controllers/'
         LoadBillsResult,
         LoadPendingPaymentsResult,
         LoadDashboardResult,
-        LoadClassDataResult;
+        LoadClassDataResult,
+        SetStatusResult;
 
 /// Riverpod provider for [AdminFinanceController].
 /// Use `ref.read(adminFinanceControllerProvider)` from the screen.
@@ -208,19 +210,80 @@ class AdminFinanceController {
   /// Flips the `status` of a payment type between `active` and
   /// `inactive`. Lets the admin reactivate a soft-deactivated jenis
   /// from the detail sheet's quick toggle, without rewalking the
-  /// full Edit form. Returns `null` on success, or an error message.
-  Future<String?> setPaymentTypeStatus(
+  /// full Edit form.
+  ///
+  /// When activating a `bulanan` Jenis the caller can pass [month]
+  /// (`YYYY-MM`) to tell the backend which period to resume from. The
+  /// backend's `GenerateBillsForTypeAction` then fans out bills for
+  /// that specific month — Luay's "kalau dinonaktifkan terus mau
+  /// diaktifkan iku pilih bulan" flow.
+  ///
+  /// Returns a result carrying:
+  ///   * `error` — null on success, friendly message on failure.
+  ///   * `billsGenerated` — count of new Bills the backend created on
+  ///     this transition (zero when not activating, or when every
+  ///     student already had a bill for the chosen month).
+  ///   * `monthLabel` — the human-readable month string the activation
+  ///     applied to, so the UI toast can read "Diaktifkan untuk
+  ///     September 2026 (24 tagihan baru)".
+  Future<SetStatusResult> setPaymentTypeStatus(
     String paymentTypeId, {
     required bool active,
+    String? month,
   }) async {
     try {
-      await ApiService().patch('/payment-types/$paymentTypeId/status', {
-        'status': active ? 'active' : 'inactive',
-      });
-      return null;
+      final res = await ApiService()
+          .patch('/payment-types/$paymentTypeId/status', {
+            'status': active ? 'active' : 'inactive',
+            if (month != null && month.isNotEmpty) 'month': month,
+          });
+      final billsGenerated = (res is Map && res['bills_generated'] is int)
+          ? res['bills_generated'] as int
+          : 0;
+      return SetStatusResult(
+        error: null,
+        billsGenerated: billsGenerated,
+        monthApplied: month,
+      );
+    } on DioException catch (e) {
+      AppLogger.error(
+        'finance',
+        'setStatus failed: ${e.response?.statusCode} ${e.message} '
+            'body=${e.response?.data}',
+      );
+      // Mirror the extraction pattern used in payment_form_handlers so
+      // the admin sees the actual Laravel message (e.g. "No active
+      // school" or a validation failure on `month`) instead of the
+      // generic fallback.
+      String? serverMsg;
+      final body = e.response?.data;
+      if (body is Map) {
+        final errors = body['errors'];
+        if (errors is Map && errors.isNotEmpty) {
+          final first = errors.values.first;
+          if (first is List && first.isNotEmpty && first.first is String) {
+            serverMsg = first.first as String;
+          } else if (first is String) {
+            serverMsg = first;
+          }
+        }
+        serverMsg ??= body['error'] is String ? body['error'] as String : null;
+        serverMsg ??= body['message'] is String
+            ? body['message'] as String
+            : null;
+      }
+      return SetStatusResult(
+        error: serverMsg ?? ErrorUtils.getFriendlyMessage(e),
+        billsGenerated: 0,
+        monthApplied: month,
+      );
     } catch (e) {
       AppLogger.error('finance', e);
-      return ErrorUtils.getFriendlyMessage(e);
+      return SetStatusResult(
+        error: ErrorUtils.getFriendlyMessage(e),
+        billsGenerated: 0,
+        monthApplied: month,
+      );
     }
   }
 
