@@ -71,14 +71,25 @@ class UpdatePromptWrapper extends ConsumerWidget {
         primaryLabel: 'Segarkan Sekarang',
         secondaryLabel: 'Nanti Saja',
         primaryColor: const Color(0xFF143068),
-        onPrimary: () {
-          AppLogger.info('update', 'User triggered app restart for Shorebird patch.');
-          ref.read(updateProvider.notifier).reset();
+        onPrimary: () async {
+          AppLogger.info(
+            'update',
+            'User triggered app restart for Shorebird patch.',
+          );
+          // Persist the patch number *before* restart so the next
+          // cold-launch poll knows the user has already seen this
+          // pop-up — protects against `restart_app` not actually
+          // booting the Flutter engine on some devices (the original
+          // bug where the dialog re-fired on every refresh).
+          await ref.read(updateProvider.notifier).acknowledgeCurrentPatch();
           Restart.restartApp();
         },
-        onSecondary: () {
-          ref.read(updateProvider.notifier).reset();
-          Navigator.pop(context);
+        onSecondary: () async {
+          // "Nanti Saja" is an explicit opt-out for *this specific*
+          // patch number. The user gets the dialog again when a
+          // newer patch ships, not on the next 15-min poll.
+          await ref.read(updateProvider.notifier).acknowledgeCurrentPatch();
+          if (context.mounted) Navigator.pop(context);
         },
       ),
     );

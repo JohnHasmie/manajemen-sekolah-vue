@@ -388,6 +388,17 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
                 oniOS: appcastStore,
               ),
               languageCode: isIndonesian ? 'id' : 'en',
+              // Once the user taps "Later" on the major-update dialog,
+              // don't re-prompt for the SAME store version. The 365-day
+              // floor effectively makes the dismissal permanent —
+              // upgrader still re-fires automatically when the appcast
+              // advertises a newer store version (it tracks the
+              // dismissal per-version), so a real new release isn't
+              // silenced. This mirrors the Shorebird patch behaviour
+              // (see UpdateNotifier.acknowledgeCurrentPatch) so minor
+              // and major updates feel symmetric — explicit dismissal
+              // sticks until something genuinely newer ships.
+              durationUntilAlertAgain: const Duration(days: 365),
             ),
             child: child ?? const SizedBox.shrink(),
           ),
