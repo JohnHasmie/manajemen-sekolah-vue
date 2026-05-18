@@ -234,7 +234,7 @@ class _RingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
     final radius = math.min(size.width, size.height) / 2 - 7;
-    final stroke = 14.0;
+    const stroke = 14.0;
 
     final track = Paint()
       ..color = Colors.white.withValues(alpha: 0.18)
@@ -251,7 +251,7 @@ class _RingPainter extends CustomPainter {
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round;
 
-    final start = -math.pi / 2;
+    const start = -math.pi / 2;
     final sweep = pct * math.pi * 2;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -418,7 +418,7 @@ class _SparkPainter extends CustomPainter {
     // drop on a 92% row).
     const minPct = 70.0;
     const maxPct = 100.0;
-    final span = maxPct - minPct;
+    const span = maxPct - minPct;
 
     final dx = points.length > 1 ? size.width / (points.length - 1) : 0;
     final path = Path();

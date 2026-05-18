@@ -411,7 +411,7 @@ DateTime? _parseBillingDate(dynamic v) {
 String _formatRupiahShort(double v) {
   if (v >= 1000000) {
     final m = v / 1000000;
-    return 'Rp ${(m % 1 == 0 ? m.toStringAsFixed(0) : m.toStringAsFixed(1).replaceAll('.', ','))}jt';
+    return 'Rp ${m % 1 == 0 ? m.toStringAsFixed(0) : m.toStringAsFixed(1).replaceAll('.', ',')}jt';
   }
   if (v >= 1000) {
     final k = v / 1000;
@@ -474,190 +474,6 @@ _aggregateBilling(List<dynamic> items) {
     unpaid: unpaid,
     overdueCount: overdueCount,
   );
-}
-
-// ---------------------------------------------------------------------------
-// KPI strip card
-// ---------------------------------------------------------------------------
-
-class _KpiStripCard extends StatelessWidget {
-  final double totalThisMonth;
-  final int countThisMonth;
-  final double paid;
-  final int paidCount;
-  final double unpaid;
-  final int overdueCount;
-  final String Function(double) formatRupiah;
-  final LanguageProvider lang;
-
-  const _KpiStripCard({
-    required this.totalThisMonth,
-    required this.countThisMonth,
-    required this.paid,
-    required this.paidCount,
-    required this.unpaid,
-    required this.overdueCount,
-    required this.formatRupiah,
-    required this.lang,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        border: Border.all(color: ColorUtils.slate200, width: 0.75),
-      ),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: _kpiColumn(
-              label: lang.getTranslatedText({
-                'en': 'This month',
-                'id': 'Total bulan ini',
-              }),
-              value: formatRupiah(totalThisMonth),
-              caption:
-                  '$countThisMonth ${lang.getTranslatedText({'en': 'bills', 'id': 'tagihan'})}',
-              valueColor: ColorUtils.slate900,
-            ),
-          ),
-          Container(width: 1, height: 56, color: const Color(0xFFF1F5F9)),
-          Expanded(
-            child: _kpiColumn(
-              label: lang.getTranslatedText({
-                'en': 'Paid',
-                'id': 'Sudah lunas',
-              }),
-              value: formatRupiah(paid),
-              valueColor: ColorUtils.slate900,
-              chip: paidCount > 0
-                  ? _Chip(
-                      icon: Icons.check_rounded,
-                      bg: const Color(0xFFDCFCE7),
-                      fg: const Color(0xFF15803D),
-                      label:
-                          '$paidCount ${lang.getTranslatedText({'en': 'bills', 'id': 'tagihan'})}',
-                    )
-                  : null,
-            ),
-          ),
-          Container(width: 1, height: 56, color: const Color(0xFFF1F5F9)),
-          Expanded(
-            child: _kpiColumn(
-              label: lang.getTranslatedText({
-                'en': 'Unpaid',
-                'id': 'Belum lunas',
-              }),
-              value: formatRupiah(unpaid),
-              valueColor: unpaid > 0
-                  ? const Color(0xFFDC2626)
-                  : ColorUtils.slate900,
-              chip: overdueCount > 0
-                  ? _Chip(
-                      icon: Icons.priority_high_rounded,
-                      bg: const Color(0xFFFEE2E2),
-                      fg: const Color(0xFF991B1B),
-                      label:
-                          '$overdueCount ${lang.getTranslatedText({'en': 'late', 'id': 'telat'})}',
-                    )
-                  : null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _kpiColumn({
-    required String label,
-    required String value,
-    required Color valueColor,
-    String? caption,
-    _Chip? chip,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: ColorUtils.slate600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w800,
-            color: valueColor,
-            height: 1.0,
-          ),
-        ),
-        const SizedBox(height: 6),
-        if (chip != null)
-          chip
-        else if (caption != null)
-          Text(
-            caption,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: ColorUtils.slate500,
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  final IconData icon;
-  final Color bg;
-  final Color fg;
-  final String label;
-
-  const _Chip({
-    required this.icon,
-    required this.bg,
-    required this.fg,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: const BorderRadius.all(Radius.circular(9)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10, color: fg),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: fg,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1010,10 +826,10 @@ class _BillingRow extends ConsumerWidget {
                           if (isPending)
                             Text(
                               '${lang.getTranslatedText({'en': 'View proof', 'id': 'Lihat bukti'})} →',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFFB45309),
+                                color: Color(0xFFB45309),
                               ),
                             )
                           else if (!isPaid)

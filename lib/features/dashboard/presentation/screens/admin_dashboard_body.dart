@@ -47,11 +47,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
+import 'package:manajemensekolah/core/widgets/academic_year_chip.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
 import 'package:manajemensekolah/core/widgets/modul_lain_strip.dart';
@@ -61,18 +63,20 @@ import 'package:manajemensekolah/core/widgets/role_dashboard_hero.dart';
 import 'package:manajemensekolah/core/widgets/school_pill.dart';
 
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
-import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_report_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_dashboard_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/admin_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/admin_dashboard_hero_widgets.dart';
+import 'package:manajemensekolah/features/dashboard/data/dashboard_service.dart';
+import 'package:manajemensekolah/features/dashboard/domain/models/priority_inbox_item.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/screens/admin_inbox_screen.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/academic_year_picker_sheet.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/admin_finance_screen.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_list_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_overview_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_rpp_review_hub_screen.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_raport_hub_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/admin_schedule_management_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
@@ -83,10 +87,6 @@ import 'package:manajemensekolah/features/settings/presentation/screens/system_s
 /// updates one place.
 final Color _adminNavy = ColorUtils.brandDarkBlue;
 
-/// Second stop of the admin header gradient — same hue lightened ~16%
-/// in HSL space so the gradient reads as "depth" without stepping outside
-/// the brand. See `ColorUtils.brandDarkBlueDeep`.
-final Color _adminNavyFade = ColorUtils.brandDarkBlueDeep;
 
 /// Polling cadence for the realtime indicator. Not configurable yet — Phase
 /// 3 keeps it fixed at 60 s; Phase 4 may expose it if analytics shows the
@@ -154,10 +154,21 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   /// to turn grey and the copy to switch to "Terakhir diperbarui N menit".
   bool _isFresh = true;
 
+  // Server-driven Perlu Perhatian (Inbox B.4). When the fetch returns
+  // items, the inbox card switches from the legacy static-counts mode
+  // (entries:) to the ranked priorityItems mode — same widget, richer
+  // payload. Empty list (no signals OR backend not yet deployed)
+  // falls back to the entries-mode counts so the card always renders.
+  List<PriorityInboxItem> _priorityInbox = const [];
+  int _priorityInboxTotal = 0;
+
   @override
   void initState() {
     super.initState();
     _startPolling();
+    // Fire the first inbox fetch right away; subsequent refreshes
+    // ride the 60s poll cycle via _pollStats.
+    _loadPriorityInbox();
   }
 
   @override
@@ -188,6 +199,21 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
       if (!mounted) return;
       setState(() => _isFresh = false);
     }
+    // Refresh inbox in the same cycle — failures are absorbed by the
+    // service method, so this never throws or affects _isFresh.
+    await _loadPriorityInbox();
+  }
+
+  /// Pulls the latest Perlu Perhatian items from the admin endpoint.
+  /// Falls back to an empty list on any error (the inbox card's
+  /// entries: mode handles the empty case with the legacy counts).
+  Future<void> _loadPriorityInbox() async {
+    final result = await DashboardService.getAdminPriorityInbox();
+    if (!mounted) return;
+    setState(() {
+      _priorityInbox = PriorityInboxItem.parseList(result.items);
+      _priorityInboxTotal = result.total;
+    });
   }
 
   /// Manual pull-to-refresh entry point. Running a full [pullToRefresh]
@@ -236,19 +262,25 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
         : raw;
   }
 
+  /// Display label for the academic-year chip in the hero. Watches
+  /// `academicYearRiverpod` so the chip updates when the user picks a
+  /// different year via [showAcademicYearPickerSheet].
+  String get _academicYearLabel {
+    final year = ref.watch(academicYearRiverpod).selectedAcademicYear;
+    return year?['year']?.toString() ?? '—';
+  }
+
   /// "pagi" / "siang" / "sore" / "malam" by local hour. Used for the
   /// Phase 3 hero greeting line "Selamat ${greetingPart()}".
   // Removed greetingPart in favor of AppLocalizations.greeting
 
-  /// Count helpers — read from the live stats map with 0 fallback so if the
-  /// backend later adds these fields (see Phase 4 backlog) the UI picks
-  /// them up automatically without another mobile release.
+  /// Verification count is still surfaced as a badge on the Keuangan
+  /// quick-action tile, so this one survives the B.5 inbox cleanup.
+  /// The other three (RPP / draft / overdue) used to feed the legacy
+  /// entries-mode inbox card; they were dropped along with the
+  /// `_buildLegacyInboxCard` method when the priority endpoint
+  /// became the single rendering path.
   int get _pendingVerifyCount => widget.state.unverifiedPaymentCount;
-  int get _pendingRppCount =>
-      _asInt(widget.state.stats['pending_lesson_plans']);
-  int get _draftAnnouncementCount =>
-      _asInt(widget.state.stats['draft_announcements']);
-  int get _overdueBillCount => _asInt(widget.state.stats['overdue_bills']);
 
   static int _asInt(Object? v) {
     if (v == null) return 0;
@@ -448,13 +480,43 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
                   lastSync: _lastSync,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                SchoolPill.expanded(
-                  schoolName: _schoolName,
-                  subtitle: _greetingSubtitle,
-                  onTap: widget.onSchoolSwitchTap,
-                  accentColor: _adminNavy,
-                  actionLabel: AppLocalizations.dbSwitch.tr,
-                  onDarkSurface: true,
+                // School pill (flex 3) + tahun-ajaran chip (flex 2)
+                // side-by-side, mirroring the parent + teacher
+                // dashboards. Single source of truth for academic
+                // year context across roles.
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: SchoolPill.expanded(
+                          schoolName: _schoolName,
+                          subtitle: _greetingSubtitle,
+                          onTap: widget.onSchoolSwitchTap,
+                          accentColor: _adminNavy,
+                          actionLabel: AppLocalizations.dbSwitch.tr,
+                          onDarkSurface: true,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        flex: 2,
+                        child: AcademicYearChip(
+                          yearLabel: _academicYearLabel,
+                          semesterLabel: widget.state.currentSemesterLabel
+                              ?.replaceAll(RegExp(r'\s*[-–—·].*'), '')
+                              .trim(),
+                          onTap: () => showAcademicYearPickerSheet(
+                            context: context,
+                            ref: ref,
+                            currentSemesterLabel:
+                                widget.state.currentSemesterLabel,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -625,98 +687,134 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     return buf.toString();
   }
 
-  // ── Inbox — 4 filter-scoped worklist rows ────
+  // ── Inbox — server-ranked Perlu Perhatian (Inbox B.4 / B.5) ────
+  //
+  // Single rendering path: `PendingInboxCard.priorityItems` reads from
+  // the server-ranked admin priority endpoint. When the endpoint
+  // returns no items (quiet day, or aggregators silenced), the card
+  // surfaces its own "Semua aman 🎉" empty state.
+  //
+  // The legacy `entries:` mode that pulled from local stats (verify,
+  // RPP, draft, overdue counts) was removed in the B.5 cleanup — it
+  // duplicated what the new endpoint surfaces and risked the UI
+  // silently regressing to the old card layout the moment the new
+  // endpoint returned an empty list. Single source of truth.
 
   Widget _buildInboxCard() {
+    final count = _priorityInbox.length;
+    final total = _priorityInboxTotal;
+    final countLabel = total > count ? '$count/$total' : '$count';
+    final title = count == 0
+        ? AppLocalizations.dbAttentionRequired.tr
+        : '${AppLocalizations.dbAttentionRequired.tr} · $countLabel';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: PendingInboxCard(
-        title: AppLocalizations.dbAttentionRequired.tr,
-        onSeeAll: _openFinanceVerification,
-        seeAllLabel: AppLocalizations.dbSeeAll.tr,
-        totalLabel: AppLocalizations.dbTotalWaiting.tr,
+      child: PendingInboxCard.priorityItems(
+        title: title,
+        items: _priorityInbox,
         accentColor: _adminNavy,
-        entries: [
-          PendingInboxEntry(
-            icon: Icons.receipt_long_outlined,
-            label: AppLocalizations.dbPaymentVerification.tr,
-            count: _pendingVerifyCount,
-            color: ColorUtils.warning600,
-            subtitle: _pendingVerifyCount > 0
-                ? AppLocalizations.dbProofWaitingReview.tr
-                : AppLocalizations.dbNoNewProof.tr,
-            onTap: _openFinanceVerification,
-          ),
-          PendingInboxEntry(
-            icon: Icons.description_outlined,
-            label: AppLocalizations.dbRppWaitingReview.tr,
-            count: _pendingRppCount,
-            color: ColorUtils.corporateBlue600,
-            subtitle: _pendingRppCount > 0
-                ? AppLocalizations.dbRppTeacherWaitingApproval.tr
-                : AppLocalizations.dbAllRppReviewed.tr,
-            onTap: _openLessonPlanReview,
-          ),
-          PendingInboxEntry(
-            icon: Icons.campaign_outlined,
-            label: AppLocalizations.dbAnnouncementDrafts.tr,
-            count: _draftAnnouncementCount,
-            color: ColorUtils.info600,
-            subtitle: _draftAnnouncementCount > 0
-                ? AppLocalizations.dbDraftNotPublished.tr
-                : AppLocalizations.dbNoDraftsSaved.tr,
-            onTap: _openAnnouncementDrafts,
-          ),
-          PendingInboxEntry(
-            icon: Icons.warning_amber_outlined,
-            label: AppLocalizations.dbOverdueBills.tr,
-            count: _overdueBillCount,
-            color: ColorUtils.error600,
-            subtitle: _overdueBillCount > 0
-                ? AppLocalizations.dbDuePassed.tr
-                : AppLocalizations.dbNoActiveArrears.tr,
-            onTap: _openFinanceClassReport,
-          ),
-        ],
+        emptyStateTitle: 'Semua aman 🎉',
+        emptyStateSubtitle: 'Tidak ada yang perlu perhatian saat ini.',
+        onPriorityTap: _navigateToAdminInboxTarget,
+        // B.5 — full-screen Lihat semua surface.
+        onSeeAll: _openFullAdminInbox,
       ),
     );
+  }
+
+  /// Pushes the admin Lihat semua inbox. Hands the currently-known
+  /// (capped) items in as `initialItems` so the screen paints
+  /// instantly while the uncapped fetch runs in the background, and
+  /// reuses the deep-link dispatch via `_navigateToAdminInboxTarget`.
+  void _openFullAdminInbox() {
+    AppNavigator.push(
+      context,
+      AdminInboxScreen(
+        initialItems: _priorityInbox,
+        onItemTap: _navigateToAdminInboxTarget,
+      ),
+    );
+  }
+
+  /// Routes a priority-inbox tap to the right destination screen.
+  /// Closed set lives in the admin aggregators' `target_route`
+  /// strings; unknown values are silently no-op'd so a newer backend
+  /// doesn't crash an older client.
+  void _navigateToAdminInboxTarget(PriorityInboxItem item) {
+    switch (item.targetRoute) {
+      case 'admin_payment_verification':
+        _openFinanceVerification();
+        break;
+      case 'admin_overdue_bills':
+        _openFinanceClassReport();
+        break;
+      case 'admin_rpp_review':
+        _openLessonPlanReview();
+        break;
+      case 'admin_schedule_conflict':
+      case 'admin_schedule_conflicts':
+      case 'admin_schedule_management':
+        AppNavigator.push(context, const TeachingScheduleManagementScreen());
+        break;
+      case 'admin_raport_hub':
+        _openLaporanRaport();
+        break;
+      case 'admin_announcement_drafts':
+        _openAnnouncementDrafts();
+        break;
+      case 'admin_class_management':
+        // Class management lives under Data Management for admin
+        // — same screen as the Siswa quick action target.
+        _openSiswa();
+        break;
+      case 'admin_academic_year_settings':
+        _openPengaturan();
+        break;
+      default:
+        // Unknown target — swallow rather than crash a newer-backend
+        // build on an older app.
+        break;
+    }
   }
 
   // ── Quick actions — 4 tiles ──────────────────
 
   Widget _buildQuickActions() {
+    // Icons + colors come from the shared `DashboardModules` catalog
+    // so admin's Keuangan / Rapor / Pengaturan share visual identity
+    // with the matching parent + teacher entries.
     return QuickActionGrid(
       columnsPerRow: 4,
       actions: [
         QuickAction(
-          icon: Icons.people_alt_outlined,
+          icon: DashboardModules.siswa.icon,
           label: AppLocalizations.students.tr,
-          color: ColorUtils.corporateBlue600,
+          color: DashboardModules.siswa.color,
           caption: AppLocalizations.dbDataManagement.tr,
           onTap: _openSiswa,
         ),
         QuickAction(
-          icon: Icons.account_balance_wallet_outlined,
+          icon: DashboardModules.keuangan.icon,
           label: AppLocalizations.finance.tr,
-          color: ColorUtils.success600,
+          color: DashboardModules.keuangan.color,
           caption: AppLocalizations.dbTypesAndBills.tr,
           showBadge: _pendingVerifyCount > 0,
           onTap: _openKeuangan,
         ),
         QuickAction(
-          icon: Icons.assignment_turned_in_outlined,
+          icon: DashboardModules.raport.icon,
           label: AppLocalizations.reports.tr,
-          color: ColorUtils.warning600,
+          color: DashboardModules.raport.color,
           caption: AppLocalizations.dbGradesAndReportCards.tr,
           onTap: _openLaporanRaport,
         ),
         QuickAction(
-          icon: Icons.settings_outlined,
+          icon: DashboardModules.pengaturan.icon,
           // Shortened from "Pengaturan" → "Setelan" so the label fits the
           // 4-column tile width on Samsung portrait without wrapping to
           // two lines ("Pengatura\nn").
           label: AppLocalizations.settings.tr,
-          color: ColorUtils.slate700,
+          color: DashboardModules.pengaturan.color,
           caption: AppLocalizations.dbSchool.tr,
           onTap: _openPengaturan,
         ),
@@ -751,40 +849,40 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
       visibleItems: [
         ModulLainStripItem(
           label: AppLocalizations.dbSchedule.tr,
-          icon: Icons.schedule_outlined,
+          icon: DashboardModules.jadwal.icon,
           onTap: _openJadwal,
         ),
         ModulLainStripItem(
-          label: 'Nilai',
-          icon: Icons.edit_note_outlined,
+          label: DashboardModules.nilai.defaultLabel,
+          icon: DashboardModules.nilai.icon,
           onTap: _openNilai,
         ),
         ModulLainStripItem(
           label: 'Presensi',
-          icon: Icons.check_circle_outline,
+          icon: DashboardModules.kehadiran.icon,
           onTap: _openPresensi,
         ),
         ModulLainStripItem(
           label: 'Rapor',
-          icon: Icons.assignment_turned_in_outlined,
+          icon: DashboardModules.raport.icon,
           onTap: _openLaporanRaport,
         ),
       ],
       overflowItems: [
         ModulLainStripItem(
-          label: 'Pengumuman',
-          icon: Icons.announcement_outlined,
+          label: DashboardModules.pengumuman.defaultLabel,
+          icon: DashboardModules.pengumuman.icon,
           onTap: () =>
               AppNavigator.push(context, const AdminAnnouncementScreen()),
         ),
         ModulLainStripItem(
-          label: 'Kegiatan Kelas',
-          icon: Icons.local_activity_outlined,
+          label: DashboardModules.kegiatanKelas.defaultLabel,
+          icon: DashboardModules.kegiatanKelas.icon,
           onTap: _openAktivitasKelas,
         ),
         ModulLainStripItem(
-          label: 'RPP',
-          icon: Icons.description_outlined,
+          label: DashboardModules.rpp.defaultLabel,
+          icon: DashboardModules.rpp.icon,
           // Mockup #09 v3 — review queue with 3-tier hero counts
           // and inline approve. Old AdminLessonPlanScreen still
           // reachable from inbox deep-links (initialStatusFilter).
@@ -792,8 +890,8 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
               AppNavigator.push(context, const AdminRppReviewHubScreen()),
         ),
         ModulLainStripItem(
-          label: 'Akun',
-          icon: Icons.person_outline,
+          label: DashboardModules.akun.defaultLabel,
+          icon: DashboardModules.akun.icon,
           onTap: widget.onAccountTap,
         ),
       ],

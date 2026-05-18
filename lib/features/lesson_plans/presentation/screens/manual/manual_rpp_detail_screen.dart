@@ -24,10 +24,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -39,7 +37,6 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
-import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_content_formatter.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_pdf_builder.dart';
@@ -797,33 +794,13 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
     setState(() {
       // The upload sheet returns the merged (existing + patched) map,
       // so we can use it as the new local source of truth without a
-      // re-fetch. If you prefer a fresh server pull, call
-      // _refreshFromApi() instead.
+      // re-fetch.
       _lessonPlanData = Map<String, dynamic>.from(result.lessonPlan);
     });
     SnackBarUtils.showInfo(context, 'RPP file tersimpan');
   }
 
-  Future<void> _refreshFromApi() async {
-    final id = _lessonPlanId;
-    if (id == null) return;
-    try {
-      final fresh = await LessonPlanService.getLessonPlanById(id);
-      if (!mounted) return;
-      if (fresh.isEmpty) {
-        // No payload returned — fall back to closing the detail so
-        // the list re-fetch surfaces whatever the server now has.
-        AppNavigator.pop(context);
-        return;
-      }
-      setState(() {
-        _lessonPlanData = Map<String, dynamic>.from(fresh);
-      });
-    } catch (e) {
-      AppLogger.error('lesson_plan', 'refresh after edit failed: $e');
-      if (mounted) AppNavigator.pop(context);
-    }
-  }
+
 
   // ── Export menu (PDF / text) ──────────────────────────────────
 

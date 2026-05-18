@@ -316,7 +316,7 @@ class _TeacherInboxScreenState extends ConsumerState<TeacherInboxScreen> {
   }
 
   Widget _buildFilterChips(Map<_InboxFilter, int> counts) {
-    final entries = _InboxFilter.values;
+    const entries = _InboxFilter.values;
     return SizedBox(
       height: 56,
       child: ListView.separated(

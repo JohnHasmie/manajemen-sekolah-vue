@@ -58,9 +58,7 @@ class UpdateNotifier extends Notifier<UpdateState> {
     });
 
     // Initial check after a short delay to let the app settle
-    Future.delayed(const Duration(seconds: 5), () {
-      checkUpdates();
-    });
+    Future.delayed(const Duration(seconds: 5), checkUpdates);
 
     // Periodic check for Shorebird patches (every 15 minutes)
     _checkTimer = Timer.periodic(const Duration(minutes: 15), (_) {

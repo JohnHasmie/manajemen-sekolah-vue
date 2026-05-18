@@ -36,6 +36,7 @@ mixin AttendanceUIBuilderMixin
 
   @override
   Color get primaryColor;
+  @override
   bool get isHomeroomView;
   set isHomeroomView(bool v);
   @override
@@ -672,8 +673,4 @@ mixin AttendanceUIBuilderMixin
   Widget buildEmbeddedKpiStrip(LanguageProvider lp);
   @override
   Widget buildEmbeddedSectionHead(LanguageProvider lp);
-  @override
-  Widget buildInputMode();
-  @override
-  Widget buildBody(LanguageProvider lp);
 }

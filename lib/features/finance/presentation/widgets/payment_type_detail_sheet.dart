@@ -144,7 +144,7 @@ class PaymentTypeDetailSheet extends StatelessWidget {
           const SizedBox(height: 14),
 
           // Detail rows
-          _SectionHeader(label: 'INFORMASI'),
+          const _SectionHeader(label: 'INFORMASI'),
           const SizedBox(height: 10),
           _DetailRow(
             icon: Icons.schedule_rounded,

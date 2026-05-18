@@ -6,7 +6,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/mixins/pagination_mixin.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -18,7 +17,6 @@ import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
 import 'package:manajemensekolah/core/widgets/teacher_page_header.dart';
 import 'package:manajemensekolah/core/widgets/view_toggle_button.dart';
 import 'package:manajemensekolah/features/announcements/data/announcement_service.dart';
-import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/teacher_announcement_card.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/teacher_announcement_filter_sheet.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_summary_view.dart';
@@ -112,7 +110,7 @@ class TeacherAnnouncementScreenState
   }
 
   Future<void> _loadAnnouncements({bool useCache = true}) async {
-    final cacheKey = 'announcement_teacher_list';
+    const cacheKey = 'announcement_teacher_list';
 
     bool showedCached = false;
     if (useCache && _searchController.text.isEmpty) {
@@ -369,7 +367,7 @@ class TeacherAnnouncementScreenState
       isLoading: _isLoading,
       errorMessage: _errorMessage,
       isEmpty: _announcements.isEmpty,
-      onRefresh: () => _forceRefresh(),
+      onRefresh: _forceRefresh,
       role: 'guru',
       emptyTitle: languageProvider.getTranslatedText({
         'en': 'No Announcements',
@@ -397,7 +395,7 @@ class TeacherAnnouncementScreenState
             }
           : null,
       childBuilder: () => AppRefreshIndicator(
-        onRefresh: () => _forceRefresh(),
+        onRefresh: _forceRefresh,
         role: 'guru',
         child: _isSummaryView ? _buildSummaryView() : _buildListView(),
       ),

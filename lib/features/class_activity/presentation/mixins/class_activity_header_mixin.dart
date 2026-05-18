@@ -49,9 +49,9 @@ mixin ClassActivityHeaderMixin on ConsumerState<AdminClassActivityScreen> {
     return Container(
       key: searchKey,
       height: 36,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(

@@ -10,13 +10,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_dashboard_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/admin_class_activity_screen.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_overview_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_rpp_review_hub_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_raport_hub_screen.dart';
@@ -38,85 +39,115 @@ class AdminAcademicHub extends StatelessWidget {
             subtitle: 'Mata pelajaran, jadwal, nilai, dan komunikasi',
             accentColor: accent,
           ),
+          // Shared `DashboardListTile` — same card design as parent
+          // Akademik hub. Icons + colors from the catalog so cross-
+          // role identity stays consistent.
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
               children: [
-                MenuItemCard(
-                  title: 'Mata Pelajaran',
-                  icon: Icons.book_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const AdminSubjectManagementScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Mata Pelajaran',
+                    subtitle: 'Daftar mapel & beban jam',
+                    icon: DashboardModules.mataPelajaran.icon,
+                    color: DashboardModules.mataPelajaran.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const AdminSubjectManagementScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Jadwal Mengajar',
-                  icon: Icons.schedule_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const TeachingScheduleManagementScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Jadwal Mengajar',
+                    subtitle: 'Atur jadwal per kelas & guru',
+                    icon: DashboardModules.jadwal.icon,
+                    color: DashboardModules.jadwal.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const TeachingScheduleManagementScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Rekap Nilai',
-                  icon: Icons.assessment_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const AdminGradeOverviewScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Rekap Nilai',
+                    subtitle: 'Ringkasan nilai per kelas & mapel',
+                    icon: DashboardModules.rekapNilai.icon,
+                    color: DashboardModules.rekapNilai.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const AdminGradeOverviewScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Kelola RPP',
-                  icon: Icons.description_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const AdminRppReviewHubScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Kelola RPP',
+                    subtitle: 'Antrian review & persetujuan RPP',
+                    icon: DashboardModules.rpp.icon,
+                    color: DashboardModules.rpp.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const AdminRppReviewHubScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Raport Siswa',
-                  icon: Icons.assignment_turned_in_outlined,
-                  primaryColor: accent,
-                  onTap: () =>
-                      AppNavigator.push(context, const AdminRaportHubScreen()),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Pengumuman',
-                  icon: Icons.announcement_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const AdminAnnouncementScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Raport Siswa',
+                    subtitle: 'Pipeline raport tiap kelas',
+                    icon: DashboardModules.raport.icon,
+                    color: DashboardModules.raport.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const AdminRaportHubScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Kegiatan Kelas',
-                  icon: Icons.local_activity_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const AdminClassActivityScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Pengumuman',
+                    subtitle: 'Pengumuman resmi sekolah',
+                    icon: DashboardModules.pengumuman.icon,
+                    color: DashboardModules.pengumuman.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const AdminAnnouncementScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Laporan Presensi',
-                  icon: Icons.check_circle_outline,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const AdminAttendanceDashboardScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Kegiatan Kelas',
+                    subtitle: 'Tugas & aktivitas dari guru',
+                    icon: DashboardModules.kegiatanKelas.icon,
+                    color: DashboardModules.kegiatanKelas.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const AdminClassActivityScreen(),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Laporan Presensi',
+                    subtitle: 'Rekap kehadiran siswa sekolah',
+                    icon: DashboardModules.kehadiran.icon,
+                    color: DashboardModules.kehadiran.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const AdminAttendanceDashboardScreen(),
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xxl),

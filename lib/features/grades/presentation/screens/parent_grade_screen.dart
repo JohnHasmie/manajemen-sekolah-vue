@@ -25,10 +25,7 @@ import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grad
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_read_tracking_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/parent_grade_ui_mixin.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/shell/shell_controller.dart';
-import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 /// Parent's read-only view of student grades.
 ///
@@ -596,7 +593,7 @@ class _GradeCardRowState extends State<_GradeCardRow> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        title.isEmpty ? '${_typeLabel(type)}' : title,
+                        title.isEmpty ? _typeLabel(type) : title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

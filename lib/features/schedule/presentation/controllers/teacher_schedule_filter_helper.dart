@@ -145,7 +145,7 @@ class TeacherScheduleFilterHelper {
       final teacherName = (model.teacherName ?? '').toLowerCase();
       final startTime = (model.startTime ?? '').toLowerCase();
       final endTime = (model.endTime ?? '').toLowerCase();
-      final lessonHour = (model.lessonHour?.toString() ?? '');
+      final lessonHour = model.lessonHour?.toString() ?? '';
       final daysIds = extractDayIds(schedule);
 
       final dayNamesStr = daysIds

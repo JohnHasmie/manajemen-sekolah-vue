@@ -130,8 +130,8 @@ mixin GradeRecapGradeOpsMixin on ConsumerState<GradeRecapPage> {
     return GradeRecapEditableCell(
       controller: controller,
       focusNode: focusNode,
-      onMoveDown: downNode == null ? null : () => downNode.requestFocus(),
-      onMoveUp: upNode == null ? null : () => upNode.requestFocus(),
+      onMoveDown: downNode?.requestFocus,
+      onMoveUp: upNode?.requestFocus,
       onHistoryTap: () =>
           showGradeSelectionForCell(studentClassId, type, chapterIndex),
       onChanged: (v) =>

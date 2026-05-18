@@ -627,7 +627,7 @@ class TeachingScheduleManagementScreenState
     if (id == null || id.isEmpty) return;
     final teachers = _availableTeachers
         .whereType<Map>()
-        .map((t) => Map<String, dynamic>.from(t as Map))
+        .map(Map<String, dynamic>.from)
         .toList();
     final teacherId = await showBulkTeacherPickerSheet(
       context: context,
@@ -1272,7 +1272,7 @@ class TeachingScheduleManagementScreenState
     if (_selectedIds.isEmpty) return;
     final teachers = _availableTeachers
         .whereType<Map>()
-        .map((t) => Map<String, dynamic>.from(t as Map))
+        .map(Map<String, dynamic>.from)
         .toList();
     final ids = _selectedIds.toList(growable: false);
     final total = ids.length;
@@ -1445,7 +1445,7 @@ class TeachingScheduleManagementScreenState
 
     // v3 brand chips — sticky inside hero. Period chip leads, then Day,
     // Class, Lesson hour. Tapping any opens the full filter sheet.
-    String? _dayName(String? id) {
+    String? dayName(String? id) {
       if (id == null) return null;
       final m = _availableDays.cast<Map<String, dynamic>>().firstWhere(
         (d) => d['id']?.toString() == id,
@@ -1454,7 +1454,7 @@ class TeachingScheduleManagementScreenState
       return m['name']?.toString();
     }
 
-    String? _className(String? id) {
+    String? className(String? id) {
       if (id == null) return null;
       final m = _availableClasses.cast<Map<String, dynamic>>().firstWhere(
         (c) => c['id']?.toString() == id,
@@ -1487,12 +1487,12 @@ class TeachingScheduleManagementScreenState
       ),
       BrandFilterChip(
         label: lang.getTranslatedText(const {'en': 'Day', 'id': 'Hari'}),
-        value: _dayName(_selectedDayId),
+        value: dayName(_selectedDayId),
         onTap: _openFilterSheet,
       ),
       BrandFilterChip(
         label: lang.getTranslatedText(const {'en': 'Class', 'id': 'Kelas'}),
-        value: _className(_selectedClassId),
+        value: className(_selectedClassId),
         onTap: _openFilterSheet,
       ),
       BrandFilterChip(
@@ -1663,7 +1663,7 @@ class TeachingScheduleManagementScreenState
               backgroundColor: ColorUtils.brandCobalt,
               foregroundColor: Colors.white,
               elevation: 4,
-              onPressed: () => _openAddEditSheet(),
+              onPressed: _openAddEditSheet,
               child: const Icon(Icons.add_rounded, size: 28),
             ),
     );
@@ -2111,7 +2111,7 @@ class TeachingScheduleManagementScreenState
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _openAddEditSheet(),
+                      onPressed: _openAddEditSheet,
                       icon: const Icon(Icons.add_rounded, size: 18),
                       label: Text(
                         lang.getTranslatedText(const {
@@ -2214,7 +2214,7 @@ class TeachingScheduleManagementScreenState
     final source = _dayList.isNotEmpty ? _dayList : _availableDays;
     final mapped = source
         .whereType<Map>()
-        .map((d) => Map<String, dynamic>.from(d as Map))
+        .map(Map<String, dynamic>.from)
         .toList();
     mapped.removeWhere((d) {
       final order = d['order_number'];

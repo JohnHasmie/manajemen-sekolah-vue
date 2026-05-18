@@ -7,7 +7,6 @@
 // Consumes: GET /grades/admin-overview?academic_year_id=...
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
@@ -247,7 +246,7 @@ class _AdminGradeOverviewScreenState
           const SizedBox(height: 18),
           _buildSectionHeader(lp, filtered.length),
           const SizedBox(height: 10),
-          ...filtered.map((t) => _buildTeacherCard(t)),
+          ...filtered.map(_buildTeacherCard),
         ],
       ),
     );

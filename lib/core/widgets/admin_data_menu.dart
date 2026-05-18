@@ -29,7 +29,6 @@
 // ```
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Overflow "kebab" menu for admin CRUD screens.
@@ -178,7 +177,7 @@ class _MenuRow extends StatelessWidget {
   final Color? iconColor;
   final String label;
 
-  const _MenuRow({required this.icon, required this.label, this.iconColor});
+  const _MenuRow({required this.icon, this.iconColor, required this.label});
 
   @override
   Widget build(BuildContext context) {

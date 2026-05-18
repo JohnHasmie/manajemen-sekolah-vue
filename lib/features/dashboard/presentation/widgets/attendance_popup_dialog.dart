@@ -34,7 +34,7 @@ class _AttendancePopupDialogState extends State<AttendancePopupDialog>
     with DropdownBuilderMixin, ChartContentBuilderMixin {
   final PageController _pageController = PageController();
 
-  bool _isWeekly = true;
+  final bool _isWeekly = true;
   late String _selectedMonth;
   String _selectedWeek = 'Pekan 1';
 

@@ -11,14 +11,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/teacher_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
@@ -38,42 +39,57 @@ class TeacherTeachingHub extends ConsumerWidget {
             subtitle: 'Jadwal, materi, RPP, dan kegiatan kelas',
             accentColor: accent,
           ),
+          // Shared `DashboardListTile` — same card design as parent
+          // Akademik hub. Icons + colors from the catalog.
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
               children: [
-                MenuItemCard(
-                  title: 'Jadwal Mengajar',
-                  icon: Icons.schedule_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const TeachingScheduleScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Jadwal Mengajar',
+                    subtitle: 'Jadwal kelas yang Anda ampu',
+                    icon: DashboardModules.jadwal.icon,
+                    color: DashboardModules.jadwal.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const TeachingScheduleScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Kegiatan Kelas',
-                  icon: Icons.local_activity_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const TeacherClassActivityScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Kegiatan Kelas',
+                    subtitle: 'Tugas & aktivitas untuk siswa',
+                    icon: DashboardModules.kegiatanKelas.icon,
+                    color: DashboardModules.kegiatanKelas.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const TeacherClassActivityScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Materi Pembelajaran',
-                  icon: Icons.book_outlined,
-                  primaryColor: accent,
-                  onTap: () => _openMaterials(context, ref),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Materi Pembelajaran',
+                    subtitle: 'Bab, sub-bab & sumber belajar',
+                    icon: DashboardModules.materi.icon,
+                    color: DashboardModules.materi.color,
+                    onTap: () => _openMaterials(context, ref),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'RPP Saya',
-                  icon: Icons.description_outlined,
-                  primaryColor: accent,
-                  onTap: () => _openLessonPlans(context, ref),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'RPP Saya',
+                    subtitle: 'Rencana pembelajaran per pertemuan',
+                    icon: DashboardModules.rpp.icon,
+                    color: DashboardModules.rpp.color,
+                    onTap: () => _openLessonPlans(context, ref),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xxl),
               ],

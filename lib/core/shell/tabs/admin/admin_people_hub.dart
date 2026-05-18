@@ -11,11 +11,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/screens/admin_classroom_management_screen.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/features/students/presentation/screens/admin_student_management_screen.dart';
 import 'package:manajemensekolah/features/teachers/presentation/screens/admin_teacher_management_screen.dart';
 
@@ -25,6 +26,9 @@ class AdminPeopleHub extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = ColorUtils.getRoleColor('admin');
+    // Per-row icon colors come from `DashboardModules` so each list
+    // tile gets its module-specific tint (blue Siswa, violet Guru,
+    // amber Kelas) — same pattern as the parent Akademik hub.
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: Column(
@@ -34,35 +38,49 @@ class AdminPeopleHub extends StatelessWidget {
             subtitle: 'Kelola data siswa, guru, dan kelas',
             accentColor: accent,
           ),
+          // Shared `DashboardListTile` — same card design as parent
+          // Akademik hub. Icons + colors from the catalog so cross-
+          // role identity stays consistent (blue Siswa, violet Guru,
+          // amber Kelas).
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
               children: [
-                MenuItemCard(
-                  title: 'Kelola Siswa',
-                  icon: Icons.people_alt_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const StudentManagementScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Kelola Siswa',
+                    subtitle: 'Data siswa per kelas & tingkat',
+                    icon: DashboardModules.siswa.icon,
+                    color: DashboardModules.siswa.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const StudentManagementScreen(),
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Kelola Guru',
-                  icon: Icons.person_outline,
-                  primaryColor: accent,
-                  onTap: () =>
-                      AppNavigator.push(context, const TeacherAdminScreen()),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Kelola Guru',
+                    subtitle: 'Data guru & wali kelas',
+                    icon: DashboardModules.guru.icon,
+                    color: DashboardModules.guru.color,
+                    onTap: () =>
+                        AppNavigator.push(context, const TeacherAdminScreen()),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Kelola Kelas',
-                  icon: Icons.class_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const AdminClassManagementScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Kelola Kelas',
+                    subtitle: 'Rombongan belajar & wali kelas',
+                    icon: DashboardModules.kelas.icon,
+                    color: DashboardModules.kelas.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const AdminClassManagementScreen(),
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xxl),

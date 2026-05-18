@@ -668,7 +668,7 @@ class _LessonPlanUploadSheetState
 
   Widget _buildSubjectChips(Color accent) {
     if (_subjects.isEmpty) {
-      return _ChipPlaceholder(text: 'Belum ada mata pelajaran ditugaskan');
+      return const _ChipPlaceholder(text: 'Belum ada mata pelajaran ditugaskan');
     }
     return FilterChipGrid<String>(
       options: [
@@ -704,10 +704,10 @@ class _LessonPlanUploadSheetState
 
   Widget _buildClassChips(Color accent) {
     if (_subjectId == null) {
-      return _ChipPlaceholder(text: 'Pilih mata pelajaran dulu');
+      return const _ChipPlaceholder(text: 'Pilih mata pelajaran dulu');
     }
     if (_classes.isEmpty) {
-      return _ChipPlaceholder(text: 'Belum ada kelas untuk mapel ini');
+      return const _ChipPlaceholder(text: 'Belum ada kelas untuk mapel ini');
     }
     return FilterChipGrid<String>(
       options: [
@@ -1161,14 +1161,14 @@ class _ExistingFileCard extends StatelessWidget {
             child: InkWell(
               onTap: onReplace,
               borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
+              child: const Padding(
+                padding: EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(Icons.upload_rounded, size: 13, color: Colors.white),
                     SizedBox(width: 5),
                     Text(
@@ -1224,10 +1224,10 @@ class _OldFileWarning extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.delete_outline_rounded,
             size: 13,
-            color: const Color(0xFF94A3B8),
+            color: Color(0xFF94A3B8),
           ),
           const SizedBox(width: 8),
           Expanded(

@@ -129,9 +129,7 @@ mixin ParentGradeDataLoadingMixin
       if (studentList.isNotEmpty) {
         // Always auto-pick the first child if nothing is selected;
         // the chip selector handles in-place switching.
-        if (selectedStudentId == null) {
-          selectedStudentId = studentList[0]['id'];
-        }
+        selectedStudentId ??= studentList[0]['id'];
         if (!hadCacheHit) {
           await loadGrades(useCache: useCache);
         } else {

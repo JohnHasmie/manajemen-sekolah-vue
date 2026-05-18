@@ -186,7 +186,7 @@ mixin LessonPlanAiResultPollingMixin
     dynamic response,
     Map<String, dynamic> metadata,
   ) {
-    final widget = this.widget as LessonPlanAiResultScreen;
+    final widget = this.widget;
     return {
       'id': response['id'],
       'teacher_id': widget.teacherId,

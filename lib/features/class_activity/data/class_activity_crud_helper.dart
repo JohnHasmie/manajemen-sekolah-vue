@@ -82,7 +82,7 @@ class CrudHelper {
       if (data is Map && data['data'] is List) {
         return (data['data'] as List)
             .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
+            .map(Map<String, dynamic>.from)
             .toList();
       }
       return <Map<String, dynamic>>[];

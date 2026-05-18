@@ -22,14 +22,7 @@ mixin LessonPlanAiResultDataMixin
   late TextEditingController classSemesterController;
   late TextEditingController timeAllocationController;
 
-  // Getters for backward compatibility with current code
-  quill.QuillController get _objectivesController => objectivesController;
-  quill.QuillController get _coreActivityController => coreActivityController;
-  quill.QuillController get _assessmentController => assessmentController;
-  quill.QuillController get _coreCompetencyController =>
-      coreCompetencyController;
-  quill.QuillController get _basicCompetencyController =>
-      basicCompetencyController;
+
 
   void initControllers(Map<String, dynamic> data) {
     _initTextControllers(data);

@@ -152,7 +152,7 @@ class _TagihanFilterSheetState extends State<TagihanFilterSheet> {
           ),
           const SizedBox(height: 10),
           if (widget.jenisOptions.isEmpty)
-            _PlaceholderTile(
+            const _PlaceholderTile(
               icon: Icons.payments_outlined,
               label: 'Belum ada jenis pembayaran terdata.',
             )
@@ -214,17 +214,17 @@ class _TagihanFilterSheetState extends State<TagihanFilterSheet> {
                 _jenisIds.clear();
                 _month = null;
               }),
-              icon: Icon(
+              icon: const Icon(
                 Icons.cleaning_services_rounded,
                 size: 14,
-                color: const Color(0xFFDC2626),
+                color: Color(0xFFDC2626),
               ),
-              label: Text(
+              label: const Text(
                 'Hapus semua filter',
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFFDC2626),
+                  color: Color(0xFFDC2626),
                 ),
               ),
               style: TextButton.styleFrom(

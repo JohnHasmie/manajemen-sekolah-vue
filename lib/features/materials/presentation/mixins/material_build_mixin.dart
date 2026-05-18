@@ -6,20 +6,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
-import 'package:manajemensekolah/core/widgets/role_toggle_chip_row.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
-import 'package:manajemensekolah/core/widgets/teacher_role_options.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/material_generate_sheet.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/material_overview_view.dart';
-import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
 
 /// Mixin providing build methods for [TeacherMaterialScreenState].
 mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {

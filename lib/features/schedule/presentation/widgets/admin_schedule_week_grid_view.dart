@@ -162,12 +162,7 @@ class AdminScheduleWeekGridView extends StatelessWidget {
     return h * 60 + m;
   }
 
-  /// Formats a minutes-from-midnight value back to "HH:MM".
-  static String _formatMinutes(int totalMinutes) {
-    final h = (totalMinutes ~/ 60).clamp(0, 23);
-    final m = (totalMinutes % 60).clamp(0, 59);
-    return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
-  }
+
 
   /// Returns (earliest, latest) minutes-from-midnight across all
   /// lesson_hour slots, with a small padding on each side. Falls back
@@ -270,7 +265,7 @@ class AdminScheduleWeekGridView extends StatelessWidget {
   List<Map<String, dynamic>> _visibleDays() {
     final mapped = dayList
         .whereType<Map>()
-        .map((d) => Map<String, dynamic>.from(d as Map))
+        .map(Map<String, dynamic>.from)
         .toList();
     mapped.removeWhere((d) {
       final order = d['order_number'];

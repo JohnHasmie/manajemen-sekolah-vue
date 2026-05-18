@@ -564,12 +564,15 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
   /// Tone for a row — drives stats colors + progress fill. `empty` is
   /// slate (not red) so a fresh card doesn't look like an alarm.
   _ProgressTone _progressTone(double pct, bool hasData) {
-    if (!hasData)
+    if (!hasData) {
       return _ProgressTone(_ProgressKind.empty, ColorUtils.slate400);
-    if (pct >= 80)
+    }
+    if (pct >= 80) {
       return _ProgressTone(_ProgressKind.good, ColorUtils.success600);
-    if (pct >= 40)
+    }
+    if (pct >= 40) {
       return _ProgressTone(_ProgressKind.warn, ColorUtils.warning600);
+    }
     return _ProgressTone(_ProgressKind.alert, ColorUtils.error600);
   }
 
@@ -683,17 +686,17 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
     if (lower.contains('seni') ||
         lower.contains('musik') ||
         lower.contains('art')) {
-      return _SubjectColor(
-        tint: const Color(0xFFFFE4E6),
-        fg: const Color(0xFFBE185D),
+      return const _SubjectColor(
+        tint: Color(0xFFFFE4E6),
+        fg: Color(0xFFBE185D),
       );
     }
     if (lower.contains('pkn') ||
         lower.contains('agama') ||
         lower.contains('ppkn')) {
-      return _SubjectColor(
-        tint: const Color(0xFFE0E7FF),
-        fg: const Color(0xFF4338CA),
+      return const _SubjectColor(
+        tint: Color(0xFFE0E7FF),
+        fg: Color(0xFF4338CA),
       );
     }
     // Hash-based fallback so unrecognised names still get a stable color.
@@ -702,7 +705,7 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
       _SubjectColor(tint: const Color(0xFFEDE9FE), fg: ColorUtils.violet700),
       _SubjectColor(tint: const Color(0xFFDCFCE7), fg: ColorUtils.success600),
       _SubjectColor(tint: const Color(0xFFFEF3C7), fg: ColorUtils.warning600),
-      _SubjectColor(tint: const Color(0xFFE0E7FF), fg: const Color(0xFF4338CA)),
+      const _SubjectColor(tint: Color(0xFFE0E7FF), fg: Color(0xFF4338CA)),
     ];
     final h = name.codeUnits.fold<int>(0, (a, b) => a + b);
     return palette[h % palette.length];

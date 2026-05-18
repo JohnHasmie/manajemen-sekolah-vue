@@ -73,7 +73,7 @@ class DashboardService {
             ? raw
                   .whereType<Map>()
                   .map<Map<String, dynamic>>(
-                    (e) => Map<String, dynamic>.from(e),
+                    Map<String, dynamic>.from,
                   )
                   .toList(growable: false)
             : <Map<String, dynamic>>[];
@@ -131,13 +131,157 @@ class DashboardService {
         if (raw is List) {
           return raw
               .whereType<Map>()
-              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .map<Map<String, dynamic>>(Map<String, dynamic>.from)
               .toList(growable: false);
         }
       }
       return const [];
     } catch (e) {
       AppLogger.error('api', 'Error fetching teacher priority inbox: $e');
+      return const [];
+    }
+  }
+
+  /// Capped (top-N) admin Perlu Perhatian list. Backs the
+  /// admin_dashboard_body inbox card. Same shape as the teacher
+  /// endpoint — list of inbox-item maps that the call site parses
+  /// into `PriorityInboxItem` via `PriorityInboxItem.parseList`.
+  ///
+  /// Backend response also carries `total` (full unfiltered count)
+  /// when items exist; we surface both as a tuple-ish return so the
+  /// card can render "Perlu Perhatian · 5/12" when the list is
+  /// capped. Returns `(items: [], total: 0)` on any error.
+  static Future<({List<Map<String, dynamic>> items, int total})>
+  getAdminPriorityInbox({String? academicYearId}) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (academicYearId != null && academicYearId.isNotEmpty) {
+        queryParams['academic_year_id'] = academicYearId;
+      }
+      final response = await dioClient.get(
+        ApiEndpoints.adminPriorityInbox,
+        queryParameters: queryParams.isEmpty ? null : queryParams,
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic> && result['success'] == true) {
+        final raw = result['data'];
+        final total = result['total'];
+        if (raw is List) {
+          final items = raw
+              .whereType<Map>()
+              .map<Map<String, dynamic>>(Map<String, dynamic>.from)
+              .toList(growable: false);
+          return (items: items, total: total is int ? total : items.length);
+        }
+      }
+      return (items: const <Map<String, dynamic>>[], total: 0);
+    } catch (e) {
+      AppLogger.error('api', 'Error fetching admin priority inbox: $e');
+      return (items: const <Map<String, dynamic>>[], total: 0);
+    }
+  }
+
+  /// Full Perlu Perhatian feed for the admin's "Lihat semua" inbox
+  /// screen. Uncapped variant of the admin composer.
+  static Future<List<Map<String, dynamic>>> getAdminPriorityInboxAll({
+    String? academicYearId,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (academicYearId != null && academicYearId.isNotEmpty) {
+        queryParams['academic_year_id'] = academicYearId;
+      }
+      final response = await dioClient.get(
+        ApiEndpoints.adminPriorityInboxAll,
+        queryParameters: queryParams.isEmpty ? null : queryParams,
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic> && result['success'] == true) {
+        final raw = result['data'];
+        if (raw is List) {
+          return raw
+              .whereType<Map>()
+              .map<Map<String, dynamic>>(Map<String, dynamic>.from)
+              .toList(growable: false);
+        }
+      }
+      return const [];
+    } catch (e) {
+      AppLogger.error('api', 'Error fetching admin priority inbox all: $e');
+      return const [];
+    }
+  }
+
+  /// Capped (top-N) parent Perlu Perhatian list — fans out across
+  /// every child the parent is wali of unless [studentId] narrows
+  /// the scope. Same return shape as the admin variant so the
+  /// dashboard card stays one rendering path.
+  ///
+  /// Returns `(items: [], total: 0)` on any error.
+  static Future<({List<Map<String, dynamic>> items, int total})>
+  getParentPriorityInbox({String? studentId, String? academicYearId}) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (studentId != null && studentId.isNotEmpty) {
+        queryParams['student_id'] = studentId;
+      }
+      if (academicYearId != null && academicYearId.isNotEmpty) {
+        queryParams['academic_year_id'] = academicYearId;
+      }
+      final response = await dioClient.get(
+        ApiEndpoints.parentPriorityInbox,
+        queryParameters: queryParams.isEmpty ? null : queryParams,
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic> && result['success'] == true) {
+        final raw = result['data'];
+        final total = result['total'];
+        if (raw is List) {
+          final items = raw
+              .whereType<Map>()
+              .map<Map<String, dynamic>>(Map<String, dynamic>.from)
+              .toList(growable: false);
+          return (items: items, total: total is int ? total : items.length);
+        }
+      }
+      return (items: const <Map<String, dynamic>>[], total: 0);
+    } catch (e) {
+      AppLogger.error('api', 'Error fetching parent priority inbox: $e');
+      return (items: const <Map<String, dynamic>>[], total: 0);
+    }
+  }
+
+  /// Uncapped variant of the parent priority inbox — backs the
+  /// parent "Lihat semua" inbox screen.
+  static Future<List<Map<String, dynamic>>> getParentPriorityInboxAll({
+    String? studentId,
+    String? academicYearId,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (studentId != null && studentId.isNotEmpty) {
+        queryParams['student_id'] = studentId;
+      }
+      if (academicYearId != null && academicYearId.isNotEmpty) {
+        queryParams['academic_year_id'] = academicYearId;
+      }
+      final response = await dioClient.get(
+        ApiEndpoints.parentPriorityInboxAll,
+        queryParameters: queryParams.isEmpty ? null : queryParams,
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic> && result['success'] == true) {
+        final raw = result['data'];
+        if (raw is List) {
+          return raw
+              .whereType<Map>()
+              .map<Map<String, dynamic>>(Map<String, dynamic>.from)
+              .toList(growable: false);
+        }
+      }
+      return const [];
+    } catch (e) {
+      AppLogger.error('api', 'Error fetching parent priority inbox all: $e');
       return const [];
     }
   }
@@ -161,7 +305,7 @@ class DashboardService {
         if (raw is List) {
           return raw
               .whereType<Map>()
-              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .map<Map<String, dynamic>>(Map<String, dynamic>.from)
               .toList(growable: false);
         }
       }

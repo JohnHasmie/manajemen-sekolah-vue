@@ -131,7 +131,7 @@ class _CompleteSheetBodyState extends State<_CompleteSheetBody> {
             ),
           ),
           const SizedBox(height: 16),
-          _Label('Catatan untuk wali kelas', trailing: '· opsional'),
+          const _Label('Catatan untuk wali kelas', trailing: '· opsional'),
           const SizedBox(height: 8),
           TextField(
             controller: _noteCtrl,

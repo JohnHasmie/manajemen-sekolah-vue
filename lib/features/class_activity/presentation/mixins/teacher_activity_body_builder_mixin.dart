@@ -184,7 +184,7 @@ mixin TeacherActivityBodyBuilderMixin
       // merged — so the edit form pre-fills from fresh data instead
       // of the stale list snapshot, and any future-returning callback
       // lets the detail screen re-load after it resolves.
-      onEdit: (current) => _openEditSheet(current),
+      onEdit: _openEditSheet,
       onDelete: () => _confirmDelete(a),
       onMoreActions: () => _openQuickActions(a),
     ).then((_) {
@@ -200,11 +200,11 @@ mixin TeacherActivityBodyBuilderMixin
     // sheet will show "Pilih mapel" as the locked label.
     final subjects = filterSubjectList
         .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
+        .map(Map<String, dynamic>.from)
         .toList();
     final classes = classList
         .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
+        .map(Map<String, dynamic>.from)
         .toList();
 
     final svc = getIt<ApiClassActivityService>();

@@ -164,7 +164,7 @@ class _RecommendationGenerateSheetState
               controller: widget.scrollController,
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
               children: [
-                _FieldLabel('Cakupan Siswa'),
+                const _FieldLabel('Cakupan Siswa'),
                 const SizedBox(height: 6),
                 _ScopeTile(
                   selected: _scope == 'at_risk',
@@ -204,11 +204,11 @@ class _RecommendationGenerateSheetState
                   _buildStudentPicker(violet),
                 ],
                 const SizedBox(height: 14),
-                _FieldLabel('Mata Pelajaran', trailing: '· multi-select'),
+                const _FieldLabel('Mata Pelajaran', trailing: '· multi-select'),
                 const SizedBox(height: 6),
                 _buildSubjectGrid(violet),
                 const SizedBox(height: 14),
-                _FieldLabel('Periode'),
+                const _FieldLabel('Periode'),
                 const SizedBox(height: 6),
                 _buildPeriodChip(),
                 const SizedBox(height: 14),
@@ -540,7 +540,7 @@ class _RecommendationGenerateSheetState
                     ),
                     TextSpan(
                       text:
-                          ' · ${_selectedSubjectIds.length} mapel × ${_scopeStudentCount} siswa. '
+                          ' · ${_selectedSubjectIds.length} mapel × $_scopeStudentCount siswa. '
                           'Anda telah pakai ${widget.dailyUsage}/${widget.dailyLimit} hari ini.',
                     ),
                   ],

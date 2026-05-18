@@ -46,7 +46,7 @@ class TeacherTodayBanner extends StatelessWidget {
     final todayName = _indoDayName(today.weekday);
     final todaySchedules = allSchedules.where((s) {
       if (s is! Map) return false;
-      final m = Schedule.fromJson(Map<String, dynamic>.from(s as Map));
+      final m = Schedule.fromJson(Map<String, dynamic>.from(s));
       final raw = (m.dayName ?? '').trim();
       return _matchesIndoDay(raw, todayName);
     }).toList()..sort((a, b) => _startMinutes(a).compareTo(_startMinutes(b)));
@@ -80,7 +80,7 @@ class TeacherTodayBanner extends StatelessWidget {
       final end = _endMinutes(s);
       if (start <= nowMin && nowMin < end) {
         liveCount++;
-        liveSchedule ??= Map<String, dynamic>.from(s as Map);
+        liveSchedule ??= Map<String, dynamic>.from(s);
         break;
       }
     }
@@ -90,7 +90,7 @@ class TeacherTodayBanner extends StatelessWidget {
     for (final s in todaySchedules) {
       if (s is! Map) continue;
       if (_startMinutes(s) > nowMin) {
-        nextSchedule = Map<String, dynamic>.from(s as Map);
+        nextSchedule = Map<String, dynamic>.from(s);
         break;
       }
     }
@@ -272,13 +272,13 @@ class TeacherTodayBanner extends StatelessWidget {
 
   static int _startMinutes(dynamic s) {
     if (s is! Map) return 0;
-    final m = Schedule.fromJson(Map<String, dynamic>.from(s as Map));
+    final m = Schedule.fromJson(Map<String, dynamic>.from(s));
     return _parseTime(m.startTime);
   }
 
   static int _endMinutes(dynamic s) {
     if (s is! Map) return 0;
-    final m = Schedule.fromJson(Map<String, dynamic>.from(s as Map));
+    final m = Schedule.fromJson(Map<String, dynamic>.from(s));
     return _parseTime(m.endTime);
   }
 

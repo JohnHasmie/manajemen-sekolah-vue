@@ -13,7 +13,7 @@ mixin FilterDialogMixin on ConsumerState<ReportCardOverviewPage> {
   Color get primaryColor => ColorUtils.getRoleColor('guru');
 
   void showFilterDialog(LanguageProvider lp) {
-    String? tempStatus = filterStatus;
+    final String? tempStatus = filterStatus;
 
     showModalBottomSheet(
       context: context,

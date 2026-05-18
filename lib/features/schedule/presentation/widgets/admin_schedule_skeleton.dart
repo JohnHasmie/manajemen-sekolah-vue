@@ -40,13 +40,13 @@ class ScheduleGridSkeleton extends StatelessWidget {
             ),
             child: Row(
               children: [
-                _SkeletonBar(width: 32, height: 32, radius: 0),
+                const _SkeletonBar(width: 32, height: 32, radius: 0),
                 for (var i = 0; i < 6; i++)
                   Expanded(
                     child: Container(
                       height: 32,
                       alignment: Alignment.center,
-                      child: _SkeletonBar(width: 22, height: 9),
+                      child: const _SkeletonBar(width: 22, height: 9),
                     ),
                   ),
               ],
@@ -72,7 +72,7 @@ class ScheduleGridSkeleton extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         for (var i = 0; i < 7; i++)
-                          _SkeletonBar(width: 16, height: 8),
+                          const _SkeletonBar(width: 16, height: 8),
                       ],
                     ),
                   ),
@@ -106,15 +106,15 @@ class ScheduleListSkeleton extends StatelessWidget {
           child: Row(
             children: [
               for (var i = 0; i < 6; i++) ...[
-                _SkeletonBar(width: 54, height: 28, radius: 999),
+                const _SkeletonBar(width: 54, height: 28, radius: 999),
                 if (i < 5) const SizedBox(width: 6),
               ],
             ],
           ),
         ),
         // Day-header kicker.
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 8, 20, 4),
           child: Row(
             children: [
               _SkeletonBar(width: 70, height: 11),
@@ -122,12 +122,12 @@ class ScheduleListSkeleton extends StatelessWidget {
           ),
         ),
         // Pagi/Siang section head.
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 8, 20, 4),
           child: Row(
             children: [
               _SkeletonBar(width: 36, height: 10),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               _SkeletonBar(width: 50, height: 14, radius: 999),
             ],
           ),
@@ -183,7 +183,7 @@ class _GhostDayColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     // Block layout patterns — picked by seed % 4 so each column has
     // a slightly different rhythm without random per-rebuild jitter.
-    final patterns = const [
+    const patterns = [
       [(0.05, 0.10), (0.50, 0.10), (0.75, 0.10)],
       [(0.15, 0.10), (0.60, 0.10)],
       [(0.05, 0.10), (0.30, 0.10), (0.70, 0.10)],
@@ -239,7 +239,7 @@ class _GhostRowCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: ColorUtils.slate200),
       ),
-      child: Row(
+      child: const Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Time column placeholder.
@@ -249,24 +249,24 @@ class _GhostRowCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _SkeletonBar(width: 40, height: 14),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 _SkeletonBar(width: 30, height: 8),
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           // Body placeholder.
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _SkeletonBar(width: double.infinity, height: 12),
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: AppSpacing.xs),
                 _SkeletonBar(width: 120, height: 10),
               ],
             ),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           // Right rail.
           _SkeletonBar(width: 28, height: 28, radius: 8),
         ],

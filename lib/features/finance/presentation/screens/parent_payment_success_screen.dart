@@ -530,7 +530,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
             sub: '${_formatTimeShort()} · $methodLabel',
             done: true,
           ),
-          _TimelineConnector(done: true),
+          const _TimelineConnector(done: true),
           _TimelineStep(
             label: isManualPending
                 ? 'Bukti pembayaran diunggah'

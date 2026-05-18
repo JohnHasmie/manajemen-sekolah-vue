@@ -10,14 +10,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/teacher_announcement_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
 
@@ -40,35 +41,46 @@ class TeacherOtherHub extends ConsumerWidget {
             subtitle: 'Pengumuman, rekomendasi belajar, dan akun',
             accentColor: accent,
           ),
+          // Shared `DashboardListTile` — same card design as parent
+          // Akademik hub. Icons + colors from the catalog.
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
               children: [
-                MenuItemCard(
-                  title: 'Pengumuman',
-                  icon: Icons.announcement_outlined,
-                  primaryColor: accent,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const TeacherAnnouncementScreen(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Pengumuman',
+                    subtitle: 'Pengumuman resmi sekolah',
+                    icon: DashboardModules.pengumuman.icon,
+                    color: DashboardModules.pengumuman.color,
+                    onTap: () => AppNavigator.push(
+                      context,
+                      const TeacherAnnouncementScreen(),
+                    ),
                   ),
                 ),
-                if (isHomeroomTeacher) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  MenuItemCard(
-                    title: 'Rekomendasi Belajar',
-                    icon: Icons.auto_awesome_outlined,
-                    primaryColor: accent,
-                    onTap: () => _openRecommendation(context, ref),
+                if (isHomeroomTeacher)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: DashboardListTile(
+                      title: 'Rekomendasi Belajar',
+                      subtitle: 'Saran belajar AI untuk wali murid',
+                      icon: DashboardModules.rekomendasi.icon,
+                      color: DashboardModules.rekomendasi.color,
+                      onTap: () => _openRecommendation(context, ref),
+                    ),
                   ),
-                ],
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Akun',
-                  icon: Icons.person_outline,
-                  primaryColor: accent,
-                  onTap: () =>
-                      AppNavigator.push(context, const SettingsScreen()),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Akun',
+                    subtitle: 'Profil & pengaturan',
+                    icon: DashboardModules.akun.icon,
+                    color: DashboardModules.akun.color,
+                    onTap: () =>
+                        AppNavigator.push(context, const SettingsScreen()),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xxl),
               ],

@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/shell/shell_nav.dart';
@@ -42,11 +43,12 @@ import 'package:manajemensekolah/features/announcements/presentation/screens/par
 import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/parent_billing_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
+import 'package:manajemensekolah/features/dashboard/data/dashboard_service.dart';
+import 'package:manajemensekolah/features/dashboard/domain/models/priority_inbox_item.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/screens/parent_inbox_screen.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/screens/parent_priority_inbox_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/academic_year_picker_sheet.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/parent_dashboard_hero_widgets.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/parent_grade_screen.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/parent_recommendation_screen.dart';
@@ -100,10 +102,19 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   DateTime _lastSync = DateTime.now();
   bool _isFresh = true;
 
+  // Server-driven Perlu Perhatian (Inbox C.4). When the parent endpoint
+  // returns items, the inbox card switches from the legacy static-counts
+  // mode to the priority-ranked items mode — same widget, richer payload.
+  List<PriorityInboxItem> _priorityInbox = const [];
+  int _priorityInboxTotal = 0;
+
   @override
   void initState() {
     super.initState();
     _startPolling();
+    // Fire the first inbox fetch right away; subsequent refreshes ride
+    // the 60s poll cycle via _pollStats.
+    _loadPriorityInbox();
   }
 
   @override
@@ -130,6 +141,23 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
       if (!mounted) return;
       setState(() => _isFresh = false);
     }
+    // Refresh inbox in the same cycle — failures are absorbed by the
+    // service method, so this never throws or affects _isFresh.
+    await _loadPriorityInbox();
+  }
+
+  /// Pulls the latest Perlu Perhatian items from the parent endpoint.
+  /// Falls back to an empty list on any error — the inbox card
+  /// surfaces its own "Semua aman" empty state in that case.
+  Future<void> _loadPriorityInbox() async {
+    final result = await DashboardService.getParentPriorityInbox(
+      academicYearId: _academicYearId,
+    );
+    if (!mounted) return;
+    setState(() {
+      _priorityInbox = PriorityInboxItem.parseList(result.items);
+      _priorityInboxTotal = result.total;
+    });
   }
 
   Future<void> _manualRefresh() async {
@@ -235,10 +263,53 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     AppNavigator.push(context, const ParentBillingScreen(showBackButton: true));
   }
 
-  /// Phase-5 surface B — full Perlu Perhatian inbox screen reached
-  /// from the "Lihat semua" link in the dashboard inbox card.
+  /// Full Perlu Perhatian inbox screen reached from the "Lihat semua"
+  /// link in the dashboard inbox card. Routes to the priority-ranked
+  /// surface (Inbox C.5) — same brand and layout as admin / teacher.
   void _openInbox() {
-    AppNavigator.push(context, const ParentInboxScreen());
+    AppNavigator.push(
+      context,
+      ParentPriorityInboxScreen(
+        initialItems: _priorityInbox,
+        onItemTap: _navigateToParentInboxTarget,
+        academicYearId: _academicYearId,
+      ),
+    );
+  }
+
+  /// Routes a priority-inbox tap to the right destination screen.
+  /// Closed set lives in the parent aggregators' `target_route`
+  /// strings; unknown values are silently no-op'd so a newer backend
+  /// doesn't crash an older client.
+  void _navigateToParentInboxTarget(PriorityInboxItem item) {
+    switch (item.targetRoute) {
+      case 'parent_billing':
+        _openBilling();
+        break;
+      case 'parent_grades':
+        _openGrades();
+        break;
+      case 'parent_attendance':
+        _openAttendance();
+        break;
+      case 'parent_announcements':
+        _openAnnouncements();
+        break;
+      case 'parent_class_activity':
+        _openClassActivity();
+        break;
+      case 'parent_report_card':
+        _openReportCard();
+        break;
+      case 'parent_recommendation_detail':
+      case 'parent_recommendations':
+        _openRecommendations();
+        break;
+      default:
+        // Unknown target — swallow rather than crash a newer-backend
+        // build on an older app.
+        break;
+    }
   }
 
   @override
@@ -581,97 +652,76 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     return buf.toString();
   }
 
+  // ── Inbox — server-ranked Perlu Perhatian (Inbox C.4 / C.5) ────
+  //
+  // Single rendering path: `PendingInboxCard.priorityItems` reads from
+  // the server-ranked parent priority endpoint, which fans the 10
+  // parent aggregators out across every child the wali manages. When
+  // the endpoint returns no items (quiet day, or aggregators silenced),
+  // the card surfaces its own "Semua aman 🎉" empty state.
+  //
+  // The legacy `entries:` mode that pulled from local stats (overdue
+  // bills count, unread grades, etc.) was retired in this migration —
+  // the new endpoint produces a strictly richer payload, and keeping
+  // both modes risked silent regression to the old counts the moment
+  // the backend returned an empty list.
+
   Widget _buildInboxCard() {
+    final count = _priorityInbox.length;
+    final total = _priorityInboxTotal;
+    final countLabel = total > count ? '$count/$total' : '$count';
+    final title = count == 0
+        ? 'Perlu perhatian'
+        : 'Perlu perhatian · $countLabel';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: PendingInboxCard(
-        title: 'Perlu perhatian',
-        // Phase-5 surface B — "Lihat semua" opens the full inbox
-        // screen instead of jumping to the billing tab. The billing
-        // category remains reachable from there via the Tagihan
-        // filter chip.
-        onSeeAll: _openInbox,
-        seeAllLabel: 'Lihat semua',
-        totalLabel: 'total menunggu',
+      child: PendingInboxCard.priorityItems(
+        title: title,
+        items: _priorityInbox,
         accentColor: _parentBrandAzure,
-        entries: [
-          PendingInboxEntry(
-            icon: Icons.warning_amber_outlined,
-            label: 'Tagihan jatuh tempo',
-            count: _overdueBills,
-            color: ColorUtils.error600,
-            subtitle: _overdueBills > 0
-                ? 'Beberapa tagihan belum dibayar'
-                : 'Tidak ada tunggakan aktif',
-            onTap: _openBilling,
-          ),
-          PendingInboxEntry(
-            icon: Icons.grade_outlined,
-            label: AppLocalizations.dbGradesAndReportCards.tr,
-            count: _newGrades,
-            color: ColorUtils.success600,
-            subtitle: _newGrades > 0
-                ? 'Ada nilai terbaru untuk dilihat'
-                : 'Belum ada nilai terbaru',
-            onTap: _openGrades,
-          ),
-          PendingInboxEntry(
-            icon: Icons.announcement_outlined,
-            label: AppLocalizations.announcements.tr,
-            count: _newAnnouncements,
-            color: ColorUtils.info600,
-            subtitle: _newAnnouncements > 0
-                ? 'Informasi terbaru dari sekolah'
-                : 'Tidak ada pengumuman baru',
-            onTap: _openAnnouncements,
-          ),
-          PendingInboxEntry(
-            icon: Icons.check_circle_outline,
-            label: AppLocalizations.pdPresence.tr,
-            count: _attendanceAlpha,
-            color: ColorUtils.warning600,
-            subtitle: _attendanceAlpha > 0
-                ? 'Data kehadiran terbaru tersedia'
-                : 'Kehadiran anak terdokumentasi',
-            onTap: _openAttendance,
-          ),
-        ],
+        emptyStateTitle: 'Semua aman 🎉',
+        emptyStateSubtitle: 'Tidak ada hal yang perlu perhatian saat ini.',
+        onPriorityTap: _navigateToParentInboxTarget,
+        onSeeAll: _openInbox,
       ),
     );
   }
 
   Widget _buildQuickActions() {
+    // Icons + colors come from the shared `DashboardModules` catalog
+    // so every role's quick-action grid uses the same identity per
+    // module (Pengumuman → cyan campaign, Tagihan → red wallet, etc.).
     return QuickActionGrid(
       columnsPerRow: 4,
       actions: [
         QuickAction(
-          icon: Icons.announcement_outlined,
+          icon: DashboardModules.pengumuman.icon,
           label: AppLocalizations.announcements.tr,
-          color: widget.primaryColor,
+          color: DashboardModules.pengumuman.color,
           caption: AppLocalizations.information.tr,
           showBadge: _newAnnouncements > 0,
           onTap: _openAnnouncements,
         ),
         QuickAction(
-          icon: Icons.account_balance_wallet_outlined,
+          icon: DashboardModules.tagihan.icon,
           label: AppLocalizations.billing.tr,
-          color: ColorUtils.error600,
+          color: DashboardModules.tagihan.color,
           caption: AppLocalizations.pdPayment.tr,
           showBadge: _overdueBills > 0,
           onTap: _openBilling,
         ),
         QuickAction(
-          icon: Icons.grade_outlined,
+          icon: DashboardModules.nilai.icon,
           label: AppLocalizations.grades.tr,
-          color: ColorUtils.success600,
+          color: DashboardModules.nilai.color,
           caption: AppLocalizations.pdAcademic.tr,
           showBadge: _newGrades > 0,
           onTap: _openGrades,
         ),
         QuickAction(
-          icon: Icons.check_circle_outline,
+          icon: DashboardModules.kehadiran.icon,
           label: AppLocalizations.pdPresence.tr,
-          color: ColorUtils.warning600,
+          color: DashboardModules.kehadiran.color,
           caption: AppLocalizations.presence.tr,
           showBadge: _attendanceAlpha > 0,
           onTap: _openAttendance,
@@ -740,58 +790,57 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   }
 
   Widget _buildModulLain() {
-    // Rekomendasi sits in the visible strip (slot 1) because wali-kelas
-    // recommendations are time-sensitive — parents need to see new
-    // suggestions at a glance, the same priority as Raport / Kegiatan
-    // / Kehadiran. We promote *down* (Kehadiran → overflow) rather
-    // than adding a 5th visible tile so the row stays at 4 slots
-    // (4 visible + the "+N Lainnya" overflow tile = 5 cells, the
-    // documented max for `ModulLainStrip`).
+    // Four visible tiles — matches the teacher + admin dashboards
+    // (4-visible + 1 overflow = 5 cells, the documented max for
+    // `ModulLainStrip`). Icons + accents come from the shared
+    // `DashboardModules` catalog so cross-role module identity stays
+    // consistent. Kehadiran is promoted into the visible strip
+    // because parents reach for it as often as Raport / Kegiatan.
     return ModulLainStrip(
       title: 'Modul lain',
       totalLabel: '8 modul',
       accentColor: _parentBrandAzureDeep,
       visibleItems: [
         ModulLainStripItem(
-          label: 'Rekomendasi',
-          icon: Icons.lightbulb_outline_rounded,
+          label: DashboardModules.rekomendasi.defaultLabel,
+          icon: DashboardModules.rekomendasi.icon,
           onTap: _openRecommendations,
         ),
         ModulLainStripItem(
-          label: 'Raport',
-          icon: Icons.school_outlined,
+          label: DashboardModules.raport.defaultLabel,
+          icon: DashboardModules.raport.icon,
           onTap: _openReportCard,
         ),
         ModulLainStripItem(
           label: 'Kegiatan\nKelas',
-          icon: Icons.event_outlined,
+          icon: DashboardModules.kegiatanKelas.icon,
           onTap: _openClassActivity,
+        ),
+        ModulLainStripItem(
+          label: DashboardModules.kehadiran.defaultLabel,
+          icon: DashboardModules.kehadiran.icon,
+          onTap: _openAttendance,
         ),
       ],
       overflowItems: [
         ModulLainStripItem(
-          label: 'Kehadiran',
-          icon: Icons.check_circle_outline,
-          onTap: _openAttendance,
-        ),
-        ModulLainStripItem(
-          label: 'Nilai',
-          icon: Icons.grade_outlined,
+          label: DashboardModules.nilai.defaultLabel,
+          icon: DashboardModules.nilai.icon,
           onTap: _openGrades,
         ),
         ModulLainStripItem(
-          label: 'Pengumuman',
-          icon: Icons.announcement_outlined,
+          label: DashboardModules.pengumuman.defaultLabel,
+          icon: DashboardModules.pengumuman.icon,
           onTap: _openAnnouncements,
         ),
         ModulLainStripItem(
-          label: 'Tagihan',
-          icon: Icons.account_balance_wallet_outlined,
+          label: DashboardModules.tagihan.defaultLabel,
+          icon: DashboardModules.tagihan.icon,
           onTap: _openBilling,
         ),
         ModulLainStripItem(
-          label: 'Akun',
-          icon: Icons.account_circle_outlined,
+          label: DashboardModules.akun.defaultLabel,
+          icon: DashboardModules.akun.icon,
           onTap: _openAccount,
         ),
       ],

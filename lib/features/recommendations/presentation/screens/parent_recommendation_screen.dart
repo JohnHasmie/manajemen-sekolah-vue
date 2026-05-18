@@ -131,7 +131,7 @@ class _ParentRecommendationScreenState
       );
       inbox = raw
           .whereType<Map>()
-          .map((m) => Map<String, dynamic>.from(m))
+          .map(Map<String, dynamic>.from)
           .toList();
     } catch (e) {
       inboxErr = e;
@@ -170,7 +170,7 @@ class _ParentRecommendationScreenState
     // items (filter / group / count would block the rebuild).
     final children = (summary['children'] as List? ?? const [])
         .whereType<Map>()
-        .map((m) => Map<String, dynamic>.from(m))
+        .map(Map<String, dynamic>.from)
         .toList();
 
     // Fallback: derive children from inbox when the summary endpoint
@@ -310,7 +310,7 @@ class _ParentRecommendationScreenState
       // subjects filter
       if (_filter.subjects.isNotEmpty) {
         final s =
-            (rec['subject_school'] ?? rec['subjectSchool'] ?? rec['subject']);
+            rec['subject_school'] ?? rec['subjectSchool'] ?? rec['subject'];
         final name =
             (s is Map ? s['name']?.toString() : null) ??
             rec['subject_name']?.toString();

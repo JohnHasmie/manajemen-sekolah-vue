@@ -138,7 +138,7 @@ class _TeacherActivityDetailScreenState
           final xi = order.indexOf((x['status'] ?? 'pending').toString());
           final yi = order.indexOf((y['status'] ?? 'pending').toString());
           if (xi != yi) return xi.compareTo(yi);
-          return ((x['student_name'] ?? '').toString()).compareTo(
+          return (x['student_name'] ?? '').toString().compareTo(
             (y['student_name'] ?? '').toString(),
           );
         });

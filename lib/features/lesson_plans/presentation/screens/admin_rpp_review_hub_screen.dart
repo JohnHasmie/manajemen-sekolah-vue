@@ -335,12 +335,12 @@ class _AdminRppReviewHubScreenState
               ),
             if (_statusFilter != null)
               ListTile(
-                title: Text(
+                title: const Text(
                   'Hapus filter',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFFDC2626),
+                    color: Color(0xFFDC2626),
                   ),
                 ),
                 onTap: () {

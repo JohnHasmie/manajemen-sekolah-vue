@@ -64,7 +64,7 @@ mixin ParentActivityListBuilderMixin
         secondaryAction: BrandEmptyStateAction(
           label: 'Muat ulang',
           icon: Icons.refresh_rounded,
-          onTap: () => state.forceRefresh(),
+          onTap: state.forceRefresh,
         ),
       );
     }

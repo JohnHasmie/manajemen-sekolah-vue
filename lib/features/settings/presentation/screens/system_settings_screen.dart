@@ -1,35 +1,36 @@
-// Admin Pengaturan hub — Mockup #14 applied.
+// Admin Pengaturan ("Sistem") hub.
 //
-// Visual contract (matches Admin_Mockups_Phase_Final.html, mockup 14):
-//   1. Compact navy gradient hero (200px) with back button + title
-//      ("Sistem") + subtitle "Konfigurasi" + HealthPill ("Sinkron ·
-//      konfigurasi sehat").
-//   2. CategoryGridHero — 2-column 170×120 tile grid below the hero.
-//      Each tile has a pastel-tinted icon square + title + subline +
-//      optional meta line.
-//   3. AuditLogPin — pinned card at the bottom showing the latest
-//      audit log entry. Tap drills to the full audit list (placeholder
-//      snackbar until that screen lands).
+// Visual contract — matches the parent Akademik hub / admin People +
+// Academic hubs so every dashboard list-menu surface reads as the same
+// brand:
 //
-// Routing for tiles is preserved from the prior implementation so
-// nothing breaks for admins mid-flight; tiles that don't yet have a
-// destination show a "Segera hadir" snackbar exactly like before.
+//   1. Navy `ShellTabHeader` — title "Sistem" + descriptive subtitle,
+//      no back button (shell handles back via PopScope).
+//   2. Vertical list of `DashboardListTile` cards — one per settings
+//      sub-module (Tahun Ajaran, Waktu Pembelajaran, Manajemen Data,
+//      Bahasa, Notifikasi, Backup & Audit). Icons + accents come from
+//      the shared `DashboardModules` catalog so identity stays
+//      consistent if the same module surfaces elsewhere.
+//   3. `AuditLogPin` — pinned card at the bottom with the latest audit
+//      log entry. Unchanged from the prior implementation.
 //
-// Satu-implementasi-tiga-role
-// ---------------------------
-// Hub is admin-only by construction (targeted from the admin
-// dashboard's Sistem tile). All shared components used here
-// (CategoryGridHero, AuditLogPin, HealthPill) live under
-// `lib/core/widgets/` so future role-specific settings screens can
-// adopt the same idiom.
+// `schoolName`, `schoolLogoUrl`, and `subtitle` constructor params are
+// retained for backward compatibility with the dashboard's
+// `_openPengaturan` call site, but the new header no longer surfaces
+// them — the tab-header pattern intentionally keeps the strip tight.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/widgets/admin_settings_components.dart';
+import 'package:manajemensekolah/core/widgets/admin_settings_components.dart'
+    show AuditLogPin;
+import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/settings/data/system_settings_service.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/school_level_settings_screen.dart';
@@ -37,18 +38,16 @@ import 'package:manajemensekolah/features/settings/presentation/screens/settings
 import 'package:manajemensekolah/features/settings/presentation/screens/time_settings_screen.dart';
 
 class SystemSettingsScreen extends ConsumerWidget {
-  /// Active-school display name. Dashboard passes
-  /// `state.userData['nama_sekolah']`. A null/empty value falls back
-  /// to 'Sekolah' so the hero never renders blank.
+  /// Active-school display name. Retained for backwards compatibility
+  /// with the dashboard's _openPengaturan call site; the new header
+  /// doesn't render it.
   final String? schoolName;
 
-  /// Optional logo URL — currently not surfaced in the new mockup
-  /// (the hero is now compact + chip-driven instead of avatar-led).
-  /// Kept on the constructor for backwards compatibility with
-  /// callers that still pass it from earlier phases.
+  /// Optional logo URL — see `schoolName`.
   final String? schoolLogoUrl;
 
-  /// Subtitle under the hero — usually the academic year.
+  /// Subtitle previously surfaced under the school name. The
+  /// `ShellTabHeader`'s subtitle now describes the section instead.
   final String subtitle;
 
   const SystemSettingsScreen({
@@ -60,17 +59,21 @@ class SystemSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final navy = ColorUtils.getRoleColor('admin');
+    final accent = ColorUtils.getRoleColor('admin');
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          _Hero(navy: navy, subtitle: subtitle),
-          const SizedBox(height: AppSpacing.lg),
-          CategoryGridHero(tiles: _buildTiles(context, ref, navy)),
+          ShellTabHeader(
+            title: 'Sistem',
+            subtitle: 'Konfigurasi · sinkron sehat',
+            accentColor: accent,
+          ),
           const SizedBox(height: AppSpacing.md),
-          _AuditLogPinConsumer(navy: navy),
+          ..._buildTiles(context, ref),
+          const SizedBox(height: AppSpacing.md),
+          _AuditLogPinConsumer(),
           SizedBox(
             height: AppSpacing.xl + MediaQuery.of(context).padding.bottom,
           ),
@@ -79,66 +82,72 @@ class SystemSettingsScreen extends ConsumerWidget {
     );
   }
 
-  List<CategoryTile> _buildTiles(
-    BuildContext context,
-    WidgetRef ref,
-    Color navy,
-  ) {
+  /// One `DashboardListTile` per sub-module — same shape, padding, and
+  /// shadow as the parent Akademik hub so cross-role list menus
+  /// render identically.
+  List<Widget> _buildTiles(BuildContext context, WidgetRef ref) {
     return [
-      CategoryTile(
-        icon: Icons.calendar_today_rounded,
-        iconBg: const Color(0xFFEEF2FF),
-        iconFg: navy,
-        title: 'Tahun Ajaran',
-        subline: 'Periode aktif & arsip',
-        meta: 'Profil sekolah · jenjang',
-        onTap: () =>
-            AppNavigator.push(context, const SchoolLevelSettingsScreen()),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: DashboardListTile(
+          title: 'Tahun Ajaran',
+          subtitle: 'Periode aktif & arsip · profil sekolah',
+          icon: DashboardModules.tahunAjaran.icon,
+          color: DashboardModules.tahunAjaran.color,
+          onTap: () =>
+              AppNavigator.push(context, const SchoolLevelSettingsScreen()),
+        ),
       ),
-      CategoryTile(
-        icon: Icons.access_time_rounded,
-        iconBg: const Color(0xFFFEF3C7),
-        iconFg: const Color(0xFF92400E),
-        title: 'Waktu Pembelajaran',
-        subline: 'Jam pelajaran & durasi',
-        meta: 'Per hari · per kelas',
-        onTap: () => AppNavigator.push(context, const TimeSettingsScreen()),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: DashboardListTile(
+          title: 'Waktu Pembelajaran',
+          subtitle: 'Jam pelajaran & durasi per hari',
+          icon: DashboardModules.waktuPembelajaran.icon,
+          color: DashboardModules.waktuPembelajaran.color,
+          onTap: () => AppNavigator.push(context, const TimeSettingsScreen()),
+        ),
       ),
-      CategoryTile(
-        icon: Icons.dataset_rounded,
-        iconBg: const Color(0xFFDCFCE7),
-        iconFg: const Color(0xFF166534),
-        title: 'Manajemen Data',
-        subline: 'Siswa, guru, kelas, mapel',
-        onTap: () =>
-            AppNavigator.push(context, const AdminDataManagementScreen()),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: DashboardListTile(
+          title: 'Manajemen Data',
+          subtitle: 'Siswa, guru, kelas, mapel',
+          icon: DashboardModules.manajemenData.icon,
+          color: DashboardModules.manajemenData.color,
+          onTap: () =>
+              AppNavigator.push(context, const AdminDataManagementScreen()),
+        ),
       ),
-      CategoryTile(
-        icon: Icons.language_rounded,
-        iconBg: const Color(0xFFF3E8FF),
-        iconFg: const Color(0xFF7C3AED),
-        title: 'Bahasa',
-        subline: 'Antarmuka & laporan',
-        meta: 'Indonesia · default',
-        onTap: () => AppNavigator.push(context, const SettingsScreen()),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: DashboardListTile(
+          title: 'Bahasa',
+          subtitle: 'Antarmuka & laporan · Indonesia',
+          icon: DashboardModules.bahasa.icon,
+          color: DashboardModules.bahasa.color,
+          onTap: () => AppNavigator.push(context, const SettingsScreen()),
+        ),
       ),
-      CategoryTile(
-        icon: Icons.notifications_active_rounded,
-        iconBg: const Color(0xFFFEE2E2),
-        iconFg: const Color(0xFFDC2626),
-        title: 'Notifikasi',
-        subline: 'Push, email, SMS',
-        trailingBadge: 'SEGERA',
-        onTap: () => _comingSoon(context),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: DashboardListTile(
+          title: 'Notifikasi',
+          subtitle: 'Push, email, SMS · segera hadir',
+          icon: DashboardModules.notifikasi.icon,
+          color: DashboardModules.notifikasi.color,
+          onTap: () => _comingSoon(context),
+        ),
       ),
-      CategoryTile(
-        icon: Icons.backup_rounded,
-        iconBg: const Color(0xFFE0E7FF),
-        iconFg: const Color(0xFF4338CA),
-        title: 'Backup & Audit',
-        subline: 'Cadangan otomatis',
-        meta: 'Harian · audit log',
-        onTap: () => _comingSoon(context),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: DashboardListTile(
+          title: 'Backup & Audit',
+          subtitle: 'Cadangan otomatis · harian',
+          icon: DashboardModules.backupAudit.icon,
+          color: DashboardModules.backupAudit.color,
+          onTap: () => _comingSoon(context),
+        ),
       ),
     ];
   }
@@ -151,85 +160,8 @@ class SystemSettingsScreen extends ConsumerWidget {
   }
 }
 
-class _Hero extends StatelessWidget {
-  final Color navy;
-  final String subtitle;
-  const _Hero({required this.navy, required this.subtitle});
-
-  @override
-  Widget build(BuildContext context) {
-    final topInset = MediaQuery.of(context).padding.top;
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        topInset + AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.lg,
-      ),
-      decoration: BoxDecoration(gradient: ColorUtils.brandGradient('admin')),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Material(
-            color: Colors.white.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => AppNavigator.pop(context),
-              child: const SizedBox(
-                width: 36,
-                height: 36,
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    'Konfigurasi',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.85),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Sistem',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const HealthPill(
-                  state: HealthState.ok,
-                  label: 'Sinkron · konfigurasi sehat',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _AuditLogPinConsumer extends ConsumerWidget {
-  final Color navy;
-  const _AuditLogPinConsumer({required this.navy});
+  const _AuditLogPinConsumer();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -234,9 +234,7 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
         // Frame C — copy attendance from the teacher's most recent
         // session. Calls the new last-session endpoint and fills the
         // current form's status map student-by-student.
-        onCopyFromLastSession: () {
-          _copyFromLastSession();
-        },
+        onCopyFromLastSession: _copyFromLastSession,
         // Frame C — Pindah tanggal/sesi opens Frame D so the teacher
         // can switch slots without leaving Ambil Presensi.
         onMoveDateOrSession: () async {

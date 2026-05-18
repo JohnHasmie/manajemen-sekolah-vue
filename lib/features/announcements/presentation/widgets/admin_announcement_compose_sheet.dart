@@ -224,14 +224,14 @@ class _AdminAnnouncementComposeSheetState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _SectionLabel(text: 'JUDUL'),
+                    const _SectionLabel(text: 'JUDUL'),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _titleController,
                       decoration: _inputDecoration('Misal: Persiapan PAS'),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    _SectionLabel(text: 'ISI'),
+                    const _SectionLabel(text: 'ISI'),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _contentController,
@@ -239,7 +239,7 @@ class _AdminAnnouncementComposeSheetState
                       decoration: _inputDecoration('Tulis isi pengumuman…'),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    _SectionLabel(text: 'AUDIENS · matriks'),
+                    const _SectionLabel(text: 'AUDIENS · matriks'),
                     const SizedBox(height: 6),
                     AudienceMatrix(
                       columns: _columns,
@@ -258,7 +258,7 @@ class _AdminAnnouncementComposeSheetState
                       hasAudience: _preview.hasAudience,
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    _SectionLabel(text: 'PENJADWALAN'),
+                    const _SectionLabel(text: 'PENJADWALAN'),
                     const SizedBox(height: 6),
                     AdminFormToggle(
                       title: 'Kirim sekarang',

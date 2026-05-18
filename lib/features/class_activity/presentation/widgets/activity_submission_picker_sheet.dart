@@ -142,7 +142,7 @@ class _ActivitySubmissionPickerSheetState
             (b['status'] ?? _statusBelum).toString(),
           );
           if (ai != bi) return ai.compareTo(bi);
-          return ((a['student_name'] ?? '').toString()).compareTo(
+          return (a['student_name'] ?? '').toString().compareTo(
             (b['student_name'] ?? '').toString(),
           );
         });

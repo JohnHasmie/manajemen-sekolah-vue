@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'lesson_plan_format.dart';
+import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan_format.dart';
 
 part 'lesson_plan.freezed.dart';
 part 'lesson_plan.g.dart';

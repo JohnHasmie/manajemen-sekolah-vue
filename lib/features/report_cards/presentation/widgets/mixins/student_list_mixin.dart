@@ -86,7 +86,7 @@ mixin StudentListMixin {
     final rerata =
         student['rerata'] ?? student['average'] ?? student['avg_score'];
     final hasRerata = rerata is num && rerata > 0;
-    final rerataVal = hasRerata ? (rerata as num).toDouble() : 0.0;
+    final rerataVal = hasRerata ? rerata.toDouble() : 0.0;
 
     return Material(
       color: Colors.white,

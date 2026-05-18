@@ -15,7 +15,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/widgets/admin_finance_components.dart';
 import 'package:manajemensekolah/features/finance/data/money_flow_service.dart';
 
 class FinanceKpiBlock extends ConsumerWidget {
@@ -387,13 +386,13 @@ class _AliranBar extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Row(
+        const Row(
           children: [
-            _Legend(color: const Color(0xFF10B981), label: 'Terbayar'),
-            const SizedBox(width: 12),
-            _Legend(color: const Color(0xFFF59E0B), label: 'Belum lunas'),
-            const SizedBox(width: 12),
-            _Legend(color: const Color(0xFFDC2626), label: 'Jatuh tempo'),
+            _Legend(color: Color(0xFF10B981), label: 'Terbayar'),
+            SizedBox(width: 12),
+            _Legend(color: Color(0xFFF59E0B), label: 'Belum lunas'),
+            SizedBox(width: 12),
+            _Legend(color: Color(0xFFDC2626), label: 'Jatuh tempo'),
           ],
         ),
       ],
@@ -561,8 +560,8 @@ class _ErrorBanner extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: const [
+          const Row(
+            children: [
               Icon(Icons.cloud_off_rounded, size: 16, color: Color(0xFFDC2626)),
               SizedBox(width: 8),
               Text(

@@ -252,9 +252,9 @@ class _ParentBillCheckoutScreenState
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: const Color(0xFFF1F5F9))),
+        border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
       ),
       child: Row(
         children: [
@@ -910,9 +910,9 @@ class _ParentBillCheckoutScreenState
         AppSpacing.md,
         AppSpacing.md + MediaQuery.of(context).viewPadding.bottom,
       ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: const Color(0xFFF1F5F9))),
+        border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
       ),
       child: SizedBox(
         width: double.infinity,
@@ -1180,18 +1180,18 @@ class _ParentBillCheckoutScreenState
                     color: const Color(0xFFFEF3C7),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.support_agent_rounded,
                         size: 16,
                         color: Color(0xFF92400E),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Ada kendala? Hubungi admin sekolah untuk bantuan.',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF92400E),

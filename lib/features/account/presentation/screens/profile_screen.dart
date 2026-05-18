@@ -9,7 +9,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
@@ -122,11 +121,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     ),
                     const Spacer(),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 20),
                       child: Text(
                         'Profil Saya',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -264,21 +263,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             color: Color(0xFFDC2626),
                           ),
                         )
-                      : Row(
+                      : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
                               Icons.logout_rounded,
                               size: 18,
-                              color: const Color(0xFFDC2626),
+                              color: Color(0xFFDC2626),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Text(
                               'Keluar Akun',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
-                                color: const Color(0xFFDC2626),
+                                color: Color(0xFFDC2626),
                               ),
                             ),
                           ],
@@ -330,9 +329,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 style: TextStyle(fontSize: 10, color: ColorUtils.slate400),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(color: const Color(0xFFF1F5F9), height: 20),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Divider(color: Color(0xFFF1F5F9), height: 20),
             ),
             _InfoRow(label: 'EMAIL', value: _email),
             _InfoRow(
@@ -435,9 +434,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Divider(color: const Color(0xFFF1F5F9), height: 20),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Divider(color: Color(0xFFF1F5F9), height: 20),
             ),
             _AccessRow(
               icon: Icons.person_outline,

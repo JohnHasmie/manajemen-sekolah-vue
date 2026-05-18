@@ -14,7 +14,6 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -317,7 +316,7 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _HeroPill(label: 'Periode aktif · Ganjil'),
+                      const _HeroPill(label: 'Periode aktif · Ganjil'),
                       if (hasClass && tingkat != null)
                         _HeroPill(label: 'Tingkat $tingkat'),
                     ],

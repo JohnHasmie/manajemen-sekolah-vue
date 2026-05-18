@@ -194,10 +194,10 @@ mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
             disabledBackgroundColor: Colors.transparent,
           ),
           child: authState.isLoading
-              ? Row(
+              ? const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     SizedBox(
                       height: 16,
                       width: 16,

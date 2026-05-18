@@ -37,6 +37,10 @@ class ApiEndpoints {
   static const parentAcademicRecent = '/dashboard/parent-academic-recent';
   static const parentInbox = '/dashboard/parent-inbox';
   static const teacherPriorityInbox = '/dashboard/teacher-priority-inbox';
+  static const adminPriorityInbox = '/dashboard/admin-priority-inbox';
+  static const adminPriorityInboxAll = '/dashboard/admin-priority-inbox/all';
+  static const parentPriorityInbox = '/dashboard/parent-priority-inbox';
+  static const parentPriorityInboxAll = '/dashboard/parent-priority-inbox/all';
   static const health = '/health';
 
   // ── Students ──

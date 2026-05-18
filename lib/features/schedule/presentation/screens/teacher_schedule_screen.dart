@@ -27,7 +27,6 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/role_toggle_chip_row.dart';
@@ -208,8 +207,9 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
     var count = selectedDayIdsInternal.length;
     if (selectedClassIdInternal != null) count++;
     if (selectedFilterSemesterInternal != null &&
-        selectedFilterSemesterInternal != selectedTerm)
+        selectedFilterSemesterInternal != selectedTerm) {
       count++;
+    }
     return count;
   }
 
@@ -453,7 +453,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
 
     for (final s in schedules) {
       if (s is! Map) continue;
-      final m = Schedule.fromJson(Map<String, dynamic>.from(s as Map));
+      final m = Schedule.fromJson(Map<String, dynamic>.from(s));
       if ((m.subjectId ?? '').isNotEmpty) subjectIds.add(m.subjectId!);
       if ((m.classId ?? '').isNotEmpty) classIds.add(m.classId!);
       if ((m.teacherId ?? '').isNotEmpty) teacherIds.add(m.teacherId!);

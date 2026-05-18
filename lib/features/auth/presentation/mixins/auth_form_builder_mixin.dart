@@ -275,7 +275,7 @@ class _SchoolPickerStepState extends State<_SchoolPickerStep> {
   List<Map<String, dynamic>> get _filtered {
     final list = widget.authState.schoolList
         .whereType<Map>()
-        .map((m) => Map<String, dynamic>.from(m))
+        .map(Map<String, dynamic>.from)
         .toList();
     if (_query.trim().isEmpty) return list;
     final q = _query.trim().toLowerCase();
@@ -330,7 +330,7 @@ class _SchoolPickerStepState extends State<_SchoolPickerStep> {
         ),
         if (utama.isNotEmpty) ...[
           const SizedBox(height: 14),
-          _SectionLabel('UTAMA'),
+          const _SectionLabel('UTAMA'),
           const SizedBox(height: 6),
           for (final s in utama) _SchoolCard(school: s, active: true),
         ],
@@ -1119,7 +1119,7 @@ class _PickerFooterCta extends StatelessWidget {
                   : null,
             ),
             child: ElevatedButton(
-              onPressed: primaryEnabled ? () => onPrimary() : null,
+              onPressed: primaryEnabled ? onPrimary : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
@@ -1130,10 +1130,10 @@ class _PickerFooterCta extends StatelessWidget {
                 ),
               ),
               child: isLoading
-                  ? Row(
+                  ? const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         SizedBox(
                           height: 16,
                           width: 16,

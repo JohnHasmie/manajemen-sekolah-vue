@@ -781,8 +781,9 @@ class AppLocalizations {
   static Map<String, String> get changeAction => _kChangeAction;
 
   static String greeting(int hour) {
-    if (hour < 11)
+    if (hour < 11) {
       return welcome.tr; // "Selamat datang," fallback if specific missing
+    }
     if (hour < 11) return goodMorning.tr;
     if (hour < 15) return goodAfternoon.tr;
     if (hour < 18) return _kDbGoodSore.tr;

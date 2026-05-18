@@ -6,7 +6,6 @@ import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_ai_result_screen.dart';

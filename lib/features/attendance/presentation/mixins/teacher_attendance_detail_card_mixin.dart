@@ -234,7 +234,7 @@ mixin TeacherAttendanceDetailCardMixin
       date: widget.date,
       teacherId:
           widget.filterTeacherId ??
-          ((widget.canEdit ? (widget.teacher['id']?.toString()) : null) ?? ''),
+          ((widget.canEdit ? widget.teacher['id']?.toString() : null) ?? ''),
       lessonHourId: widget.lessonHourId,
     );
 
@@ -249,7 +249,7 @@ mixin TeacherAttendanceDetailCardMixin
         // persist via the same path the FAB/Edit sheet uses, so it
         // re-fetches on success and the row repaints.
         ref.read(teacherAttendanceProvider(params).notifier)
-          ..updateStatus(student.id, status);
+          .updateStatus(student.id, status);
         await ref
             .read(teacherAttendanceProvider(params).notifier)
             .saveChanges();

@@ -16,9 +16,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/academic_year_chip.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_carousel.dart';
 import 'package:manajemensekolah/core/widgets/hero_stats_card.dart';
@@ -34,8 +36,9 @@ import 'package:manajemensekolah/features/class_activity/presentation/screens/te
 import 'package:manajemensekolah/features/dashboard/data/priority_inbox_snooze_store.dart';
 import 'package:manajemensekolah/features/dashboard/domain/models/priority_inbox_item.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/screens/teacher_inbox_screen.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/widgets/academic_year_picker_sheet.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/priority_inbox_snooze_sheet.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
@@ -64,7 +67,7 @@ import 'package:manajemensekolah/features/settings/presentation/screens/settings
 // blue or parent's azure. Tokens live in `ColorUtils` so a brand refresh
 // updates one place; `ColorUtils.getRoleColor('guru')` returns cobalt.
 final Color _teacherBrandDark = ColorUtils.brandDarkBlue;
-final Color _teacherBrandAzure = ColorUtils.brandAzure;
+
 final Color _teacherCobalt = ColorUtils.brandCobalt;
 const Duration _pollInterval = Duration(seconds: 60);
 
@@ -170,6 +173,14 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   String get _userName {
     final raw = widget.state.userData['name']?.toString().trim();
     return (raw == null || raw.isEmpty) ? AppLocalizations.dbTeacher.tr : raw;
+  }
+
+  /// Display label for the academic-year chip in the hero. Watches
+  /// `academicYearRiverpod` so the chip updates when the user picks a
+  /// different year via [showAcademicYearPickerSheet].
+  String get _academicYearLabel {
+    final year = ref.watch(academicYearRiverpod).selectedAcademicYear;
+    return year?['year']?.toString() ?? '—';
   }
 
   // Server-ranked Perlu Perhatian rows. Backend caps at 5 and ranks
@@ -436,13 +447,46 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
                 const SizedBox(height: AppSpacing.md),
                 _RealtimePill(isFresh: _isFresh, lastSync: _lastSync),
                 const SizedBox(height: AppSpacing.md),
-                SchoolPill.expanded(
-                  schoolName: _schoolName,
-                  subtitle: _greetingSubtitle,
-                  onTap: widget.onSchoolSwitchTap,
-                  accentColor: _teacherCobalt,
-                  actionLabel: 'Ganti',
-                  onDarkSurface: true,
+                // School pill (flex 3) + tahun-ajaran chip (flex 2)
+                // side-by-side, mirroring the parent dashboard. The
+                // pill ellipsises on narrow screens; the chip stays
+                // legible. Tapping the chip opens the same shared
+                // academic-year picker sheet — single source of truth
+                // for the year context across all three role
+                // dashboards.
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: SchoolPill.expanded(
+                          schoolName: _schoolName,
+                          subtitle: _greetingSubtitle,
+                          onTap: widget.onSchoolSwitchTap,
+                          accentColor: _teacherCobalt,
+                          actionLabel: 'Ganti',
+                          onDarkSurface: true,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        flex: 2,
+                        child: AcademicYearChip(
+                          yearLabel: _academicYearLabel,
+                          semesterLabel: widget.state.currentSemesterLabel
+                              ?.replaceAll(RegExp(r'\s*[-–—·].*'), '')
+                              .trim(),
+                          onTap: () => showAcademicYearPickerSheet(
+                            context: context,
+                            ref: ref,
+                            currentSemesterLabel:
+                                widget.state.currentSemesterLabel,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -847,34 +891,37 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   }
 
   Widget _buildQuickActions() {
+    // Icons + colors come from the shared `DashboardModules` catalog
+    // so every role uses the same icon identity per module (Kehadiran
+    // is violet across all roles; Nilai is green; etc.).
     return QuickActionGrid(
       columnsPerRow: 4,
       actions: [
         QuickAction(
-          icon: Icons.schedule_outlined,
-          label: 'Jadwal',
-          color: widget.primaryColor,
+          icon: DashboardModules.jadwal.icon,
+          label: DashboardModules.jadwal.defaultLabel,
+          color: DashboardModules.jadwal.color,
           caption: 'Mengajar',
           onTap: _openSchedule,
         ),
         QuickAction(
-          icon: Icons.how_to_reg_outlined,
+          icon: DashboardModules.kehadiran.icon,
           label: 'Absensi',
-          color: ColorUtils.warning600,
+          color: DashboardModules.kehadiran.color,
           caption: 'Kehadiran',
           onTap: _openAttendance,
         ),
         QuickAction(
-          icon: Icons.local_activity_outlined,
+          icon: DashboardModules.kegiatanKelas.icon,
           label: 'Kegiatan',
-          color: ColorUtils.info600,
+          color: DashboardModules.kegiatanKelas.color,
           caption: 'Kelas',
           onTap: _openActivities,
         ),
         QuickAction(
-          icon: Icons.edit_note_outlined,
-          label: 'Nilai',
-          color: ColorUtils.success600,
+          icon: DashboardModules.nilai.icon,
+          label: DashboardModules.nilai.defaultLabel,
+          color: DashboardModules.nilai.color,
           caption: 'Input',
           onTap: _openGrades,
         ),
@@ -889,40 +936,40 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
       accentColor: _teacherCobalt,
       visibleItems: [
         ModulLainStripItem(
-          label: 'Materi',
-          icon: Icons.article_outlined,
+          label: DashboardModules.materi.defaultLabel,
+          icon: DashboardModules.materi.icon,
           onTap: _openMaterials,
         ),
         ModulLainStripItem(
-          label: 'RPP',
-          icon: Icons.description_outlined,
+          label: DashboardModules.rpp.defaultLabel,
+          icon: DashboardModules.rpp.icon,
           onTap: _openLessonPlans,
         ),
         ModulLainStripItem(
-          label: 'Rekap Nilai',
-          icon: Icons.assessment_outlined,
+          label: DashboardModules.rekapNilai.defaultLabel,
+          icon: DashboardModules.rekapNilai.icon,
           onTap: _openGradeRecap,
         ),
         ModulLainStripItem(
-          label: 'Rapor',
-          icon: Icons.school_outlined,
+          label: DashboardModules.raport.defaultLabel,
+          icon: DashboardModules.raport.icon,
           onTap: _openReportCards,
         ),
       ],
       overflowItems: [
         ModulLainStripItem(
-          label: 'Pengumuman',
-          icon: Icons.announcement_outlined,
+          label: DashboardModules.pengumuman.defaultLabel,
+          icon: DashboardModules.pengumuman.icon,
           onTap: _openAnnouncementDrafts,
         ),
         ModulLainStripItem(
-          label: 'Rekomendasi',
-          icon: Icons.lightbulb_outline,
+          label: DashboardModules.rekomendasi.defaultLabel,
+          icon: DashboardModules.rekomendasi.icon,
           onTap: _openRecommendation,
         ),
         ModulLainStripItem(
-          label: 'Akun',
-          icon: Icons.account_circle_outlined,
+          label: DashboardModules.akun.defaultLabel,
+          icon: DashboardModules.akun.icon,
           onTap: _openAccount,
         ),
       ],

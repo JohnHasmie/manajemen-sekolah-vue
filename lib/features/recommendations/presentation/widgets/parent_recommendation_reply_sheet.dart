@@ -92,7 +92,7 @@ class _ReplySheetBodyState extends State<_ReplySheetBody> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Label('Balasan cepat', trailing: '· tap untuk pakai'),
+          const _Label('Balasan cepat', trailing: '· tap untuk pakai'),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
@@ -107,7 +107,7 @@ class _ReplySheetBodyState extends State<_ReplySheetBody> {
             ],
           ),
           const SizedBox(height: 16),
-          _Label('Pesan'),
+          const _Label('Pesan'),
           const SizedBox(height: 8),
           TextField(
             controller: _ctrl,

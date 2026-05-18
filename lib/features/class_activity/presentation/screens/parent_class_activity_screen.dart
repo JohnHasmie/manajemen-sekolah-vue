@@ -38,8 +38,6 @@ import 'package:manajemensekolah/features/class_activity/presentation/mixins/par
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/parent_activity_ui_builder_mixin.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/shell/shell_controller.dart';
-import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 /// Parent's read-only view of class activities with read tracking.
 class ParentClassActivityScreen extends ConsumerStatefulWidget {

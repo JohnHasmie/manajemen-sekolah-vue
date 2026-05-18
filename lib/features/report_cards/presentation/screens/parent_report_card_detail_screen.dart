@@ -126,7 +126,7 @@ class _ParentReportCardDetailScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ParentRaporSectionHeader(
+                const ParentRaporSectionHeader(
                   title: 'Sikap',
                   trailing: 'Wali kelas',
                 ),
@@ -145,7 +145,7 @@ class _ParentReportCardDetailScreenState
                   ),
                 ),
                 if (_subjects.isEmpty)
-                  ParentRaporEmptyHint(
+                  const ParentRaporEmptyHint(
                     label: 'Belum ada nilai mata pelajaran.',
                   ),
                 if (_extras.isNotEmpty) ...[
