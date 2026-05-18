@@ -126,6 +126,7 @@ class AttendancePageState extends ConsumerState<AttendancePage>
 
   @override
   Map<String, dynamic> get kpiSummary => _kpiSummary;
+  @override
   set kpiSummary(Map<String, dynamic> v) => _kpiSummary = v;
 
   @override

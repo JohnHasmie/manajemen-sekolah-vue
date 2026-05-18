@@ -568,11 +568,11 @@ class _AdminRaportBulkPublishSheetState
                   textColor: ColorUtils.slate900,
                 ),
                 const SizedBox(height: 8),
-                _ImpactCard(
+                const _ImpactCard(
                   title: 'Tindakan tidak dapat dibatalkan',
                   subtitle: 'Ubah ke Diperiksa harus manual per kelas',
-                  color: const Color(0xFFFFFBEB),
-                  textColor: const Color(0xFF92400E),
+                  color: Color(0xFFFFFBEB),
+                  textColor: Color(0xFF92400E),
                 ),
                 const SizedBox(height: 16),
                 Container(

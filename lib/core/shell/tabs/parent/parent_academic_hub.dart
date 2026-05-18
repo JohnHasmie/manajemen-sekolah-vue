@@ -19,9 +19,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
 import 'package:manajemensekolah/features/dashboard/data/dashboard_service.dart';
@@ -65,41 +67,56 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
+          // Icons + colors come from the shared `DashboardModules`
+          // catalog — same identity per module across every role's
+          // hub tab. The row layout itself lives in the shared
+          // `DashboardListTile` widget so admin / teacher hubs render
+          // identically.
           children: [
             _buildHero(context),
             const SizedBox(height: AppSpacing.lg),
-            _AcademicFeatureCard(
-              iconBg: const Color(0xFFDCFCE7),
-              iconFg: const Color(0xFF15803D),
-              icon: Icons.star_rounded,
-              title: 'Nilai',
-              subtitle: 'Daftar penilaian per mapel',
-              onTap: () => _openGrades(context, ref),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: DashboardListTile(
+                title: 'Nilai',
+                subtitle: 'Daftar penilaian per mapel',
+                icon: DashboardModules.nilai.icon,
+                color: DashboardModules.nilai.color,
+                onTap: () => _openGrades(context, ref),
+              ),
             ),
-            _AcademicFeatureCard(
-              iconBg: const Color(0xFFDBEAFE),
-              iconFg: const Color(0xFF1D4ED8),
-              icon: Icons.assignment_turned_in_outlined,
-              title: 'E-Raport',
-              subtitle: 'Ringkasan rapor tiap semester',
-              onTap: () => _openReportCard(context, ref),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: DashboardListTile(
+                title: 'E-Raport',
+                subtitle: 'Ringkasan rapor tiap semester',
+                icon: DashboardModules.raport.icon,
+                color: DashboardModules.raport.color,
+                onTap: () => _openReportCard(context, ref),
+              ),
             ),
-            _AcademicFeatureCard(
-              iconBg: const Color(0xFFFEF3C7),
-              iconFg: const Color(0xFFB45309),
-              icon: Icons.menu_book_rounded,
-              title: 'Kegiatan Kelas',
-              subtitle: 'Tugas & materi yang diberikan guru',
-              onTap: () => _openClassActivity(context, ref),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: DashboardListTile(
+                title: 'Kegiatan Kelas',
+                subtitle: 'Tugas & materi yang diberikan guru',
+                icon: DashboardModules.kegiatanKelas.icon,
+                color: DashboardModules.kegiatanKelas.color,
+                onTap: () => _openClassActivity(context, ref),
+              ),
             ),
-            _AcademicFeatureCard(
-              iconBg: const Color(0xFFE0F2FE),
-              iconFg: const Color(0xFF0E7490),
-              icon: Icons.campaign_outlined,
-              title: 'Pengumuman',
-              subtitle: 'Informasi resmi dari sekolah',
-              onTap: () =>
-                  AppNavigator.push(context, const ParentAnnouncementScreen()),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: DashboardListTile(
+                title: 'Pengumuman',
+                subtitle: 'Informasi resmi dari sekolah',
+                icon: DashboardModules.pengumuman.icon,
+                color: DashboardModules.pengumuman.color,
+                onTap: () => AppNavigator.push(
+                  context,
+                  const ParentAnnouncementScreen(),
+                ),
+              ),
             ),
             _RecentActivitySection(future: _recentFuture, onTapItem: _openItem),
             const SizedBox(height: AppSpacing.xxl),
@@ -130,10 +147,10 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
         ],
       ),
       padding: EdgeInsets.fromLTRB(20, statusBarHeight + 16, 20, 18),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        children: const [
+        children: [
           Text(
             'Untuk anak Anda',
             style: TextStyle(
@@ -212,95 +229,6 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
         // it's the most common parent-facing feed.
         AppNavigator.push(context, const ParentAnnouncementScreen());
     }
-  }
-}
-
-/// Compact feature card per v2 mockup — 64 px tall, 44 px icon
-/// tile, 14 pt title, single-line subtitle, chevron on the right.
-class _AcademicFeatureCard extends StatelessWidget {
-  final Color iconBg;
-  final Color iconFg;
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _AcademicFeatureCard({
-    required this.iconBg,
-    required this.iconFg,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Material(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
-            decoration: BoxDecoration(
-              border: Border.all(color: ColorUtils.slate200, width: 0.75),
-              borderRadius: const BorderRadius.all(Radius.circular(14)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: const BorderRadius.all(Radius.circular(11)),
-                  ),
-                  child: Icon(icon, size: 22, color: iconFg),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorUtils.slate900,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: ColorUtils.slate600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: ColorUtils.slate400,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

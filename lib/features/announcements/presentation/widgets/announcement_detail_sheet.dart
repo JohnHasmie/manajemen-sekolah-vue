@@ -135,7 +135,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      Divider(color: const Color(0xFFF1F5F9), height: 1),
+                      const Divider(color: Color(0xFFF1F5F9), height: 1),
                       const SizedBox(height: 20),
 
                       // Body content
@@ -201,7 +201,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
                       ],
 
                       const SizedBox(height: 20),
-                      Divider(color: const Color(0xFFF1F5F9), height: 1),
+                      const Divider(color: Color(0xFFF1F5F9), height: 1),
                       const SizedBox(height: 20),
 
                       // Metadata grid

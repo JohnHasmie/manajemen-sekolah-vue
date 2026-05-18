@@ -38,7 +38,6 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/widgets/drag_handle.dart';
 import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
 import 'package:manajemensekolah/features/grades/data/grade_service.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/modern_grade_editor_parts.dart';
@@ -203,8 +202,7 @@ class _ModernGradeEditorSheetState
 
   /// Indonesian-school predikat mapping. Mirrors the thresholds used on the
   /// grade recap screen so teachers see the same letter grade in both places.
-  ({String letter, Color color, String label}) _predikat(int? score) =>
-      modernGradeEditorPredikat(score);
+
 
   void _bumpScore(int delta) {
     HapticFeedback.selectionClick();

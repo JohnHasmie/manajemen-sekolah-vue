@@ -15,10 +15,8 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -86,7 +84,7 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
   Map<String, dynamic> _regenLimits = {};
 
   // (Edit toggle dropped — see "Removed" note further down.)
-  bool _isSaving = false;
+  final bool _isSaving = false;
   bool _isLoadingLimits = false;
   bool _isDownloading = false;
   String? _regeneratingField; // 'all' or a fieldKey

@@ -97,7 +97,7 @@ const _kUnsavedChangesConfirm = {
       'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? Perubahan akan hilang.',
 };
 const _kLeave = {'en': 'Leave', 'id': 'Keluar'};
-const _kAuthDeleteMaterial = {'en': 'Delete Material', 'id': 'Hapus Materi'};
+
 const _kFinalizeReportCard = {
   'en': 'Finalize Report Card?',
   'id': 'Selesaikan Raport?',

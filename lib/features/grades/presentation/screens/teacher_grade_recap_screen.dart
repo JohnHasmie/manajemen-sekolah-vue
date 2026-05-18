@@ -1133,11 +1133,8 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
           'gradeLabel': lp.getTranslatedText({'en': 'Grade', 'id': 'Nilai'}),
           'descLabel': lp.getTranslatedText({'en': 'Desc.', 'id': 'Desk.'}),
         },
-        cellBuilder: (studentClassId, type, chapterIndex) {
-          return buildEditableGradeCell(studentClassId, type, chapterIndex);
-        },
-        onBulkSelect: (type, chapterIndex) =>
-            showBulkDialog(type, chapterIndex),
+        cellBuilder: buildEditableGradeCell,
+        onBulkSelect: showBulkDialog,
         onDeleteChapter: deleteChapter,
         onDeskripsiTap: showEditDeskripsi,
       ),
@@ -1189,11 +1186,8 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
           'gradeLabel': lp.getTranslatedText({'en': 'Grade', 'id': 'Nilai'}),
           'descLabel': lp.getTranslatedText({'en': 'Desc.', 'id': 'Desk.'}),
         },
-        cellBuilder: (studentClassId, type, chapterIndex) {
-          return buildEditableGradeCell(studentClassId, type, chapterIndex);
-        },
-        onBulkSelect: (type, chapterIndex) =>
-            showBulkDialog(type, chapterIndex),
+        cellBuilder: buildEditableGradeCell,
+        onBulkSelect: showBulkDialog,
         onDeleteChapter: deleteChapter,
         onDeskripsiTap: showEditDeskripsi,
       ),

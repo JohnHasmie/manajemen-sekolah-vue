@@ -144,8 +144,8 @@ class ClassPromotionStep4Summary extends StatelessWidget {
                 Divider(height: 1, color: ColorUtils.slate100),
             itemBuilder: (context, index) {
               final student = selectedStudentsList[index];
-              final _s = Student.fromJson(student as Map<String, dynamic>);
-              final nameStr = _s.name.isNotEmpty ? _s.name : '-';
+              final s = Student.fromJson(student as Map<String, dynamic>);
+              final nameStr = s.name.isNotEmpty ? s.name : '-';
               final nameHash = nameStr.codeUnits.fold(0, (sum, c) => sum + c);
               final avatarColor = ColorUtils.getColorForIndex(nameHash);
 

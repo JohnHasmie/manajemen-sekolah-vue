@@ -535,7 +535,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
       secondaryAction: BrandEmptyStateAction(
         label: lang.getTranslatedText({'en': 'Refresh', 'id': 'Muat ulang'}),
         icon: Icons.refresh_rounded,
-        onTap: () => forceRefresh(),
+        onTap: forceRefresh,
       ),
     );
   }

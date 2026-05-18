@@ -89,7 +89,7 @@ class _LearningRecommendationEditScreenState
     );
     final raw = widget.recommendation['materials'];
     _materialChips = raw is List
-        ? raw.whereType<Map>().map((m) => Map<String, dynamic>.from(m)).toList()
+        ? raw.whereType<Map>().map(Map<String, dynamic>.from).toList()
         : <Map<String, dynamic>>[];
   }
 

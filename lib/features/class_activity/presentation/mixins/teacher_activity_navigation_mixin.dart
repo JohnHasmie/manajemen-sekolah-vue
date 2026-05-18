@@ -55,7 +55,7 @@ mixin TeacherActivityNavigationMixin
   Future<void> showAddActivityFlow(LanguageProvider lp) async {
     final classes = classList
         .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
+        .map(Map<String, dynamic>.from)
         .toList();
 
     // Fetch all subjects the teacher teaches. Best-effort — if it
@@ -72,7 +72,7 @@ mixin TeacherActivityNavigationMixin
                 : const []);
       subjects = list
           .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
+          .map(Map<String, dynamic>.from)
           .toList();
     } catch (e) {
       // Non-fatal — sheet still opens with an empty subject list.

@@ -210,7 +210,7 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen>
   /// Used to populate the 4-cell KPI overlap strip below the brand
   /// header. Falls back to all-zero when students haven't loaded yet.
   ({int siswa, int terbit, int draft, double rerata}) _kpiStats() {
-    var siswa = _students.length;
+    final siswa = _students.length;
     var terbit = 0;
     var draft = 0;
     double sumScore = 0;

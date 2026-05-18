@@ -146,7 +146,7 @@ class _BrandBand extends StatelessWidget {
             // and tagline below.
             const _LogoMark(size: 76, lifted: true),
             const SizedBox(height: 14),
-            _Wordmark(fontSize: 24, accentOpacity: .86),
+            const _Wordmark(fontSize: 24, accentOpacity: .86),
             const SizedBox(height: 8),
             Text(
               'Platform Manajemen Sekolah Terpadu',
@@ -161,11 +161,11 @@ class _BrandBand extends StatelessWidget {
             // Compact lockup for the school/role/otp steps — the
             // mark + wordmark inline, no tagline. Saves ~80dp of
             // vertical space so the picker list has more room.
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const _LogoMark(size: 28, lifted: false),
-                const SizedBox(width: 10),
+                _LogoMark(size: 28, lifted: false),
+                SizedBox(width: 10),
                 _Wordmark(fontSize: 18, accentOpacity: .86),
               ],
             ),

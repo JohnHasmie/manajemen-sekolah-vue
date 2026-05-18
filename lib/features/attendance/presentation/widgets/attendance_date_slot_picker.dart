@@ -90,7 +90,7 @@ class _DateSlotPickerBodyState extends State<_DateSlotPickerBody> {
             .toSet();
         _todaysSessions = ((res['sessions_today'] as List?) ?? const [])
             .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
+            .map(Map<String, dynamic>.from)
             .toList();
         _loading = false;
       });

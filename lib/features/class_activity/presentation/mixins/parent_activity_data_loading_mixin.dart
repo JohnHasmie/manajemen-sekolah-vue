@@ -98,9 +98,7 @@ mixin ParentActivityDataLoadingMixin
         // so there's no point making them tap a picker first. Only
         // skip auto-pick if a previous selection survived (e.g.
         // parent navigated back).
-        if (_state.selectedStudentId == null) {
-          _state.selectedStudentId = _state.studentList[0]['id'];
-        }
+        _state.selectedStudentId ??= _state.studentList[0]['id'];
         if (!hadCacheHit) {
           await loadActivities(useCache: useCache);
         } else {

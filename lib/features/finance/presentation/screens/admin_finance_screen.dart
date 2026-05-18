@@ -589,7 +589,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   Future<void> _openTagihanFilterSheet() async {
     final jenisOptions = _paymentTypeList
         .whereType<Map>()
-        .map((raw) => Map<String, dynamic>.from(raw))
+        .map(Map<String, dynamic>.from)
         .map(
           (m) => {
             'id': (m['id'] ?? '').toString(),

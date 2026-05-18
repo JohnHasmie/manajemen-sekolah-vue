@@ -17,7 +17,6 @@
 // case. The multi-section regen sheet (Frame J in the original
 // mockup) remains for bulk regen and is a separate widget.
 
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -423,7 +422,7 @@ class _SectionEditorSheetState extends State<_SectionEditorSheet> {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: _isSaving ? null : () => _attemptClose(),
+                  onTap: _isSaving ? null : _attemptClose,
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
                     width: 36,

@@ -433,8 +433,8 @@ class _ParentRecommendationDetailScreenState
                     const SizedBox(height: 10),
                   ],
                   // ── AI Reasoning (collapsible) ──
-                  if ((_rec['ai_reasoning']?.toString().trim().isNotEmpty ??
-                      false))
+                  if (_rec['ai_reasoning']?.toString().trim().isNotEmpty ??
+                      false)
                     _AiReasoningTile(
                       reasoning: _rec['ai_reasoning'].toString(),
                       expanded: _showReasoning,

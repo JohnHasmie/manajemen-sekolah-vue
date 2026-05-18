@@ -223,7 +223,7 @@ class ModulLainStrip extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          SizedBox(
+          const SizedBox(
             width: 64,
             height: 26, // match _buildTile label height
             child: Text(
@@ -231,7 +231,7 @@ class ModulLainStrip extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
                 color: Color(0xFF475569),
@@ -360,8 +360,8 @@ class _OverflowSheet extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border(
-            bottom: BorderSide(color: const Color(0xFFF1F5F9), width: 0.5),
+          border: const Border(
+            bottom: BorderSide(color: Color(0xFFF1F5F9), width: 0.5),
           ),
         ),
         child: Row(
@@ -402,7 +402,7 @@ class _OverflowSheet extends StatelessWidget {
                   ),
                 ),
               ),
-            Icon(Icons.chevron_right, color: const Color(0xFF94A3B8), size: 20),
+            const Icon(Icons.chevron_right, color: Color(0xFF94A3B8), size: 20),
           ],
         ),
       ),

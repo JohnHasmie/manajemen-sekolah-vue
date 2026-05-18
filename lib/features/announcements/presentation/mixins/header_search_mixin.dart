@@ -16,8 +16,6 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/shell/shell_controller.dart';
-import 'package:manajemensekolah/core/shell/shell_tab.dart';
 
 /// Mixin for the parent-announcements gradient header + search slot.
 mixin HeaderSearchMixin on ConsumerState<ParentAnnouncementScreen> {
@@ -82,9 +80,9 @@ class _SearchField extends StatelessWidget {
     return Container(
       key: searchKey,
       height: 44,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
       child: TextField(
         controller: controller,

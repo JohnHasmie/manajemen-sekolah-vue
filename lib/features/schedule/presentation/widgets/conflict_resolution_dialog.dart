@@ -179,8 +179,8 @@ class ConflictResolutionDialogState
     final model = Schedule.fromJson(Map<String, dynamic>.from(schedule as Map));
     final scheduleId = model.id;
     final isSelected = _selectedScheduleToDelete == scheduleId;
-    final startTime = (model.startTime ?? '');
-    final endTime = (model.endTime ?? '');
+    final startTime = model.startTime ?? '';
+    final endTime = model.endTime ?? '';
     final startDisplay = startTime.length >= 5
         ? startTime.substring(0, 5)
         : startTime;

@@ -95,9 +95,9 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
   // ═══════════════════════════════════════════
 
   Future<void> loadUserData() async {
-    final _tm = Teacher.fromJson(widget.teacher);
-    String tid = _tm.id;
-    String tname = _tm.name;
+    final tm = Teacher.fromJson(widget.teacher);
+    String tid = tm.id;
+    String tname = tm.name;
 
     // Try TeacherProvider
     if (tid.isEmpty) {
@@ -178,8 +178,8 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
       // Treat all of those as truthy so the role chip strip renders
       // for teachers who have homeroom assignments regardless of how
       // the column was encoded upstream.
-      bool _truthy(Object? v) => v == true || v == 1 || v == 'true' || v == '1';
-      final homeroom = classes.where((c) => _truthy(c['is_homeroom'])).toList();
+      bool truthy(Object? v) => v == true || v == 1 || v == 'true' || v == '1';
+      final homeroom = classes.where((c) => truthy(c['is_homeroom'])).toList();
 
       final data = (summaryResult['data'] as List?) ?? [];
       final pagination = summaryResult['pagination'];

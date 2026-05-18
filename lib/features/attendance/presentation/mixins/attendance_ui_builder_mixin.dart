@@ -36,6 +36,7 @@ mixin AttendanceUIBuilderMixin
 
   @override
   Color get primaryColor;
+  @override
   bool get isHomeroomView;
   set isHomeroomView(bool v);
   @override

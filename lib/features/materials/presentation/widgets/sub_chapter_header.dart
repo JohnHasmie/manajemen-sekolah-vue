@@ -185,10 +185,10 @@ class _HeroCard extends StatelessWidget {
                   color: ColorUtils.success600,
                 ),
               if (hasAi)
-                _MetaPill(
+                const _MetaPill(
                   icon: Icons.auto_awesome_rounded,
                   label: 'AI Siap',
-                  color: const Color(0xFF7C3AED),
+                  color: Color(0xFF7C3AED),
                 ),
               _MetaPill(
                 icon: Icons.access_time_rounded,

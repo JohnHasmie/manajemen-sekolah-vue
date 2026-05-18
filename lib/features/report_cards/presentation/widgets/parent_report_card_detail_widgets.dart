@@ -863,15 +863,15 @@ class ParentRaporAchievementsCard extends StatelessWidget {
         Container(
           width: 32,
           height: 32,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFEF3C7),
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFEF3C7),
+            borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
           alignment: Alignment.center,
-          child: Icon(
+          child: const Icon(
             Icons.emoji_events_rounded,
             size: 16,
-            color: const Color(0xFFB45309),
+            color: Color(0xFFB45309),
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -885,16 +885,16 @@ class ParentRaporAchievementsCard extends StatelessWidget {
                     horizontal: 8,
                     vertical: 2,
                   ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                   child: Text(
                     ach['type'].toString(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFFB45309),
+                      color: Color(0xFFB45309),
                     ),
                   ),
                 ),

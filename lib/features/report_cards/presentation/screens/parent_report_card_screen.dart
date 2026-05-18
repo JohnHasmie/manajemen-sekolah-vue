@@ -18,7 +18,6 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
@@ -27,8 +26,6 @@ import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/mixins/report_card_data_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/mixins/report_card_ui_builder_mixin.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/parent_report_card_filter_mixin.dart';
-import 'package:manajemensekolah/core/shell/shell_controller.dart';
-import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 

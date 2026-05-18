@@ -92,7 +92,7 @@ class _LearningRecommendationResultScreenState
   String _errorMessage = '';
   final GlobalKey _recommendationListKey = GlobalKey();
   final GlobalKey _editButtonKey = GlobalKey();
-  String _priorityFilter = 'all';
+  final String _priorityFilter = 'all';
   String _statusFilter = 'all'; // 'all', 'pending', 'completed'
 
   /// Tracks which recommendation IDs are currently updating status.

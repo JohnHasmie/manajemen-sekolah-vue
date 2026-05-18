@@ -102,7 +102,7 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
   @override
   Widget build(BuildContext context) {
     final count = widget.items.length;
-    final accent = const Color(0xFFDC2626); // danger red
+    const accent = Color(0xFFDC2626); // danger red
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -132,7 +132,7 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
                   Container(
                     width: 44,
                     height: 44,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       color: accent,
                     ),
@@ -246,17 +246,17 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: accent, width: 1.6),
+                    borderSide: const BorderSide(color: accent, width: 1.6),
                   ),
                   suffixIcon: _matches
-                      ? Icon(
+                      ? const Icon(
                           Icons.check_circle_rounded,
-                          color: const Color(0xFF15803D),
+                          color: Color(0xFF15803D),
                           size: 20,
                         )
                       : null,
                 ),
-                style: TextStyle(
+                style: const TextStyle(
                   color: accent,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 2,

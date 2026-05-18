@@ -207,7 +207,7 @@ class _ChildChip extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 child._resolvedInitials,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: avatarTextColor,

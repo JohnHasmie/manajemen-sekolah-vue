@@ -386,27 +386,27 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
                         horizontal: 8,
                         vertical: 4,
                       ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDCFCE7),
-                        borderRadius: const BorderRadius.all(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFDCFCE7),
+                        borderRadius: BorderRadius.all(
                           Radius.circular(10),
                         ),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.check_circle_rounded,
                             size: 11,
-                            color: const Color(0xFF15803D),
+                            color: Color(0xFF15803D),
                           ),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                           Text(
                             'Terbit',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF15803D),
+                              color: Color(0xFF15803D),
                               letterSpacing: 0.2,
                             ),
                           ),

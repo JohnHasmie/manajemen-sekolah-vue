@@ -337,9 +337,9 @@ class _MenungguPill extends StatelessWidget {
         color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(7),
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
+        children: [
           Icon(Icons.schedule_rounded, size: 11, color: Color(0xFFB45309)),
           SizedBox(width: 4),
           Text(

@@ -27,7 +27,6 @@ import 'package:manajemensekolah/features/schedule/presentation/mixins/formattin
 import 'package:manajemensekolah/features/schedule/presentation/mixins/grid_timetable_mixin.dart';
 import 'package:manajemensekolah/features/schedule/presentation/mixins/schedule_filtering_mixin.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
-import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 
 /// Riverpod provider — use `ref.read(
 /// adminScheduleControllerProvider)` in the screen to get

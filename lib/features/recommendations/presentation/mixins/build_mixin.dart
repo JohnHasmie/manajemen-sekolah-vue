@@ -498,7 +498,7 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
                     primaryColor: primaryColor,
                   ),
                   FilterChipGrid<String>(
-                    options: [
+                    options: const [
                       FilterOption<String>(
                         value: _filterActive,
                         label: 'Sudah ada',

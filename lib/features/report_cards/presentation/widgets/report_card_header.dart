@@ -218,7 +218,7 @@ class _HeroCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               _RerataPill(
-                value: hasRerata ? (rerata).toDouble() : 0.0,
+                value: hasRerata ? rerata.toDouble() : 0.0,
                 hasValue: hasRerata,
               ),
             ],

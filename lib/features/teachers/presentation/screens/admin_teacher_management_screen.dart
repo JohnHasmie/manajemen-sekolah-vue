@@ -26,7 +26,6 @@ import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/bulk_action_bar.dart';
 import 'package:manajemensekolah/core/widgets/bulk_delete_confirm_dialog.dart';
 import 'package:manajemensekolah/core/widgets/paginated_list_view.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 import 'package:manajemensekolah/features/teachers/presentation/controllers/admin_teacher_controller.dart';
 import 'package:manajemensekolah/features/teachers/presentation/controllers/helpers/teacher_filter_helper.dart';
@@ -516,7 +515,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
 
     // v3 brand chips — sticky inside hero. Tapping any chip routes to the
     // full filter sheet (single-filter pickers can be added later).
-    String? _classNameForId(String? id) {
+    String? classNameForId(String? id) {
       if (id == null) return null;
       final match = _availableClass.cast<Map<String, dynamic>>().firstWhere(
         (c) => c['id']?.toString() == id,
@@ -545,7 +544,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
       ),
       BrandFilterChip(
         label: lang.getTranslatedText(const {'en': 'Class', 'id': 'Kelas'}),
-        value: _classNameForId(_selectedTeachingClassId),
+        value: classNameForId(_selectedTeachingClassId),
         onTap: _openFilterSheet,
       ),
       BrandFilterChip(

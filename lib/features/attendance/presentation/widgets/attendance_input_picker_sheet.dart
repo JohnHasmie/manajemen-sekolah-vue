@@ -128,7 +128,7 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
       final sessions = raw is List
           ? raw
                 .whereType<Map>()
-                .map((m) => Map<String, dynamic>.from(m))
+                .map(Map<String, dynamic>.from)
                 .toList()
           : <Map<String, dynamic>>[];
       if (!mounted) return;
@@ -217,7 +217,7 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
         endTime: s['end_time']?.toString(),
         date: (s['date'] ?? '').toString().isEmpty
             ? DateFormat('yyyy-MM-dd').format(DateTime.now())
-            : (s['date']).toString(),
+            : s['date'].toString(),
       ),
     );
   }
@@ -297,7 +297,7 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
                     color: Colors.white.withValues(alpha: 0.22),
                   ),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.event_available_rounded,
                   size: 16,
                   color: Colors.white,
@@ -528,11 +528,10 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  widget.lp.getTranslatedText({
+                  '${widget.lp.getTranslatedText({
                         'en': 'Live now',
                         'id': 'Sesi sekarang',
-                      }) +
-                      ' · ${s['lesson_hour_name'] ?? ''} · ${s['class_name'] ?? ''} · ${s['subject_name'] ?? ''}',
+                      })} · ${s['lesson_hour_name'] ?? ''} · ${s['class_name'] ?? ''} · ${s['subject_name'] ?? ''}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -823,8 +822,7 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
       icon = Icons.radio_button_checked;
     } else if (status == 'recorded') {
       label =
-          widget.lp.getTranslatedText({'en': 'Done', 'id': 'Sudah'}) +
-          ' · $recordedCount hadir';
+          '${widget.lp.getTranslatedText({'en': 'Done', 'id': 'Sudah'})} · $recordedCount hadir';
       tint = ColorUtils.success600.withValues(alpha: 0.14);
       fg = ColorUtils.success600;
       icon = Icons.check_circle_rounded;

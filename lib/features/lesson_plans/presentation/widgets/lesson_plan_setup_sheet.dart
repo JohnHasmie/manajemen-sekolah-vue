@@ -629,7 +629,7 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
 
   Widget _buildSubjectChips(Color accent) {
     if (_subjects.isEmpty) {
-      return _ChipPlaceholder(text: 'Belum ada mata pelajaran ditugaskan');
+      return const _ChipPlaceholder(text: 'Belum ada mata pelajaran ditugaskan');
     }
     return FilterChipGrid<String>(
       options: [
@@ -673,10 +673,10 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
 
   Widget _buildClassChips(Color accent) {
     if (_subjectId == null) {
-      return _ChipPlaceholder(text: 'Pilih mata pelajaran dulu');
+      return const _ChipPlaceholder(text: 'Pilih mata pelajaran dulu');
     }
     if (_classes.isEmpty) {
-      return _ChipPlaceholder(text: 'Belum ada kelas untuk mapel ini');
+      return const _ChipPlaceholder(text: 'Belum ada kelas untuk mapel ini');
     }
     return FilterChipGrid<String>(
       options: [
@@ -706,10 +706,10 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
 
   Widget _buildChapterChips(Color accent) {
     if (_subjectId == null) {
-      return _ChipPlaceholder(text: 'Pilih mata pelajaran dulu');
+      return const _ChipPlaceholder(text: 'Pilih mata pelajaran dulu');
     }
     if (_chapters.isEmpty) {
-      return _ChipPlaceholder(text: 'Belum ada bab untuk mapel ini');
+      return const _ChipPlaceholder(text: 'Belum ada bab untuk mapel ini');
     }
     return FilterChipGrid<String>(
       options: [
@@ -754,10 +754,10 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
 
   Widget _buildSubChapterChips(Color accent) {
     if (_chapterId == null) {
-      return _ChipPlaceholder(text: 'Pilih bab dulu');
+      return const _ChipPlaceholder(text: 'Pilih bab dulu');
     }
     if (_subChapters.isEmpty) {
-      return _ChipPlaceholder(text: 'Tidak ada sub-bab — opsional');
+      return const _ChipPlaceholder(text: 'Tidak ada sub-bab — opsional');
     }
     return FilterChipGrid<String>(
       options: [

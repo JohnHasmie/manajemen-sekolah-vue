@@ -9,14 +9,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/teachers/presentation/providers/teacher_provider.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_input_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_recap_overview.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_overview.dart';
@@ -36,36 +37,51 @@ class TeacherGradesHub extends ConsumerWidget {
             subtitle: 'Rekap nilai, input, raport, dan presensi siswa',
             accentColor: accent,
           ),
+          // Shared `DashboardListTile` — same card design as parent
+          // Akademik hub. Icons + colors from the catalog.
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
               children: [
-                MenuItemCard(
-                  title: 'Rekap Nilai',
-                  icon: Icons.assessment_outlined,
-                  primaryColor: accent,
-                  onTap: () => _openGradeRecap(context, ref),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Rekap Nilai',
+                    subtitle: 'Ringkasan nilai per kelas & mapel',
+                    icon: DashboardModules.rekapNilai.icon,
+                    color: DashboardModules.rekapNilai.color,
+                    onTap: () => _openGradeRecap(context, ref),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Input Nilai',
-                  icon: Icons.edit_note_outlined,
-                  primaryColor: accent,
-                  onTap: () => _openGradeInput(context, ref),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Input Nilai',
+                    subtitle: 'Buku nilai per penilaian',
+                    icon: DashboardModules.bukuNilai.icon,
+                    color: DashboardModules.bukuNilai.color,
+                    onTap: () => _openGradeInput(context, ref),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Absensi Siswa',
-                  icon: Icons.check_circle_outline,
-                  primaryColor: accent,
-                  onTap: () => _openAttendance(context, ref),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Absensi Siswa',
+                    subtitle: 'Catat kehadiran per sesi',
+                    icon: DashboardModules.kehadiran.icon,
+                    color: DashboardModules.kehadiran.color,
+                    onTap: () => _openAttendance(context, ref),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: 'Raport',
-                  icon: Icons.contact_page_outlined,
-                  primaryColor: accent,
-                  onTap: () => _openReportCard(context, ref),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: DashboardListTile(
+                    title: 'Raport',
+                    subtitle: 'Isi & terbitkan raport siswa',
+                    icon: DashboardModules.raport.icon,
+                    color: DashboardModules.raport.color,
+                    onTap: () => _openReportCard(context, ref),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xxl),
               ],

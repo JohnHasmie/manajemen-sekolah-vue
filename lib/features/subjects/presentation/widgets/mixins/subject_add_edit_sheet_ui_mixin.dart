@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_form_components.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_add_edit_sheet.dart';
@@ -33,8 +32,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
         children: [
           AdminFormSection(
             label:
-                lang.getTranslatedText({'en': 'BASIC DATA', 'id': 'DATA POKOK'})
-                    as String,
+                lang.getTranslatedText({'en': 'BASIC DATA', 'id': 'DATA POKOK'}),
             children: [
               _buildCodeField(lang),
               _buildMasterSubjectAutocomplete(lang),
@@ -44,8 +42,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
           ),
           AdminFormSection(
             label:
-                lang.getTranslatedText({'en': 'STATUS', 'id': 'STATUS'})
-                    as String,
+                lang.getTranslatedText({'en': 'STATUS', 'id': 'STATUS'}),
             bottomGap: 4,
             children: [
               Column(
@@ -57,8 +54,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
                         lang.getTranslatedText({
                               'en': 'Active status',
                               'id': 'Status aktif',
-                            })
-                            as String,
+                            }),
                   ),
                   AdminFormChoiceChips<bool>(
                     value: isActive,
@@ -70,8 +66,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
                             lang.getTranslatedText({
                                   'en': 'Active',
                                   'id': 'Aktif',
-                                })
-                                as String,
+                                }),
                         icon: Icons.check_circle_rounded,
                       ),
                       AdminFormChoice(
@@ -80,8 +75,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
                             lang.getTranslatedText({
                                   'en': 'Inactive',
                                   'id': 'Nonaktif',
-                                })
-                                as String,
+                                }),
                         icon: Icons.cancel_outlined,
                       ),
                     ],

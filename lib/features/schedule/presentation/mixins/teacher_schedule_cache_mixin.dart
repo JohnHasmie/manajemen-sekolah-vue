@@ -4,7 +4,6 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/schedule/presentation/controllers/teacher_schedule_controller.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
@@ -238,7 +237,7 @@ mixin TeacherScheduleCacheMixin on ConsumerState<TeachingScheduleScreen> {
       AppLogger.debug(
         'schedule',
         'loadSchedule success — isHomeroomView=$isHomeroomViewInternal, '
-            'skipping week-summary=${isHomeroomViewInternal}',
+            'skipping week-summary=$isHomeroomViewInternal',
       );
       if (!isHomeroomViewInternal) {
         loadDailySummary();
