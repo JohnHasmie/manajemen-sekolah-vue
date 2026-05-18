@@ -177,7 +177,7 @@ class _MenuRow extends StatelessWidget {
   final Color? iconColor;
   final String label;
 
-  const _MenuRow({required this.icon, required this.label});
+  const _MenuRow({required this.icon, this.iconColor, required this.label});
 
   @override
   Widget build(BuildContext context) {
