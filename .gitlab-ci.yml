@@ -182,7 +182,18 @@ release:
       echo "═══════════════════════════════════════════"
       echo "  Release: ${VERSION_NAME}+${BUILD_NUMBER}"
       echo "═══════════════════════════════════════════"
-    - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub --no-tree-shake-icons
+    # Note: `--no-pub` was dropped here. The .shorebird_setup template
+    # runs `flutter pub get` with the LOCAL Flutter SDK (which gets
+    # bumped past FLUTTER_VERSION by the `flutter upgrade --force`
+    # earlier), so .dart_tool/package_config.json ends up pointing to
+    # the local SDK's framework sources. With `--no-pub`, Shorebird's
+    # bundled flutter compiles those mismatched sources against the
+    # bundled (older) engine — surfacing as "Type 'DisplayCornerRadii'
+    # not found" and flutter_quill missing TextInputClient.
+    # onFocusReceived. Letting Shorebird re-run pub get rewrites
+    # package_config.json with paths to the bundled SDK matching
+    # FLUTTER_VERSION, so framework + engine line up.
+    - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-tree-shake-icons
     - command -v fastlane &>/dev/null || gem install fastlane --no-document
     - echo "${PLAY_STORE_JSON_BASE64}" | base64 -d > play-store-key.json
     - |
@@ -240,7 +251,13 @@ patch:
       echo "  Patching latest release (OTA)..."
       echo "  NEEDS_RELEASE: ${NEEDS_RELEASE:-unknown}"
       echo "═══════════════════════════════════════════"
-    - shorebird patch android --release-version=latest --allow-asset-diffs --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+    # `--no-pub` removed for the same reason as the release job above:
+    # the pre-job `flutter pub get` ran with the LOCAL upgraded SDK,
+    # leaving package_config.json pointing to mismatched framework
+    # sources. Letting Shorebird's bundled flutter re-do pub get
+    # ensures the patch compiles against framework + engine of the
+    # same version as the release it's patching.
+    - shorebird patch android --release-version=latest --allow-asset-diffs --dart-define=API_BASE_URL=${API_BASE_URL}
     - |
       echo ""
       echo "✅ Patch pushed — users will receive it on next app restart"
