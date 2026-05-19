@@ -9,7 +9,7 @@ import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart'
     as sched;
 import 'package:manajemensekolah/features/schedule/presentation/mixins/schedule_form_mixin.dart';
-import 'package:manajemensekolah/core/widgets/admin_form_sheet_header.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_footer.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_teacher_dropdown.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_subject_dropdown.dart';
@@ -210,7 +210,12 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog>
   @override
   ApiTeacherService get apiTeacherService => widget.apiTeacherService;
 
-  Color _getPrimaryColor() => ColorUtils.blue600;
+  // Use the admin brand navy (Color(0xFF143068)) so the Edit/Tambah
+  // Jadwal sheet header matches the rest of the admin chrome. The
+  // previous ColorUtils.blue600 was a brighter cobalt-violet that read
+  // as a different role's surface — out of place against the navy
+  // BrandPageHeader the sheet is opened from.
+  Color _getPrimaryColor() => ColorUtils.getRoleColor('admin');
 
   List<dynamic> _removeDuplicates(List<dynamic> items, String idField) {
     final seen = <String>{};
@@ -377,69 +382,34 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog>
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageRiverpod);
+    final isEdit = widget.schedule != null;
+    final title = isEdit
+        ? lang.getTranslatedText(const {
+            'en': 'Edit Schedule',
+            'id': 'Edit Jadwal',
+          })
+        : lang.getTranslatedText(const {
+            'en': 'Add Schedule',
+            'id': 'Tambah Jadwal',
+          });
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+    return AppBottomSheet(
+      title: title,
+      subtitle: isEdit ? 'EDIT DATA' : 'TAMBAH BARU',
+      icon: isEdit ? Icons.edit_rounded : Icons.add_rounded,
+      primaryColor: _getPrimaryColor(),
+      maxHeightFactor: 0.85,
+      contentPadding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        4,
+        AppSpacing.lg,
+        AppSpacing.lg,
       ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.88,
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: Material(
-            color: Colors.white,
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 42,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  AdminFormSheetHeader(
-                    title: widget.schedule != null
-                        ? lang.getTranslatedText(const {
-                            'en': 'Edit Schedule',
-                            'id': 'Edit Jadwal',
-                          })
-                        : lang.getTranslatedText(const {
-                            'en': 'Add Schedule',
-                            'id': 'Tambah Jadwal',
-                          }),
-                    isEditMode: widget.schedule != null,
-                    kicker: widget.schedule != null
-                        ? 'EDIT DATA'
-                        : 'TAMBAH BARU',
-                  ),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        4,
-                        AppSpacing.lg,
-                        AppSpacing.lg,
-                      ),
-                      child: Form(key: _formKey, child: _buildFormFields(lang)),
-                    ),
-                  ),
-                  ScheduleFormFooter(
-                    onSave: _saveSchedule,
-                    primaryColor: _getPrimaryColor(),
-                    languageProvider: lang,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+      content: Form(key: _formKey, child: _buildFormFields(lang)),
+      footer: ScheduleFormFooter(
+        onSave: _saveSchedule,
+        primaryColor: _getPrimaryColor(),
+        languageProvider: lang,
       ),
     );
   }
