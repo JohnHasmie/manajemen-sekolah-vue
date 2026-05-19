@@ -482,6 +482,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
                             ref: ref,
                             currentSemesterLabel:
                                 widget.state.currentSemesterLabel,
+                            role: 'guru',
                           ),
                         ),
                       ),

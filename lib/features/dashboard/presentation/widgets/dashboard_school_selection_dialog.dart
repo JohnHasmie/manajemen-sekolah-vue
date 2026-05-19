@@ -114,12 +114,9 @@ class _SchoolSwitcherSheet extends StatelessWidget {
     required this.onNeedsRoleSelection,
   });
 
-  /// Brand-azure gradient — used for the "Saat ini" school hero card.
-  static final LinearGradient _schoolGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [ColorUtils.brandAzure, ColorUtils.brandAzureDeep],
-  );
+  /// Role-aware gradient for the "Saat ini" school hero card.
+  LinearGradient get _schoolGradient =>
+      ColorUtils.brandGradient(currentRole);
 
   String _schoolName(Map<dynamic, dynamic> school) =>
       (school['school_name'] ?? school['name'] ?? 'Sekolah').toString();
