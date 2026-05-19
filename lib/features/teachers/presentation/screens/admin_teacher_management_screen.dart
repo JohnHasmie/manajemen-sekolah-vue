@@ -367,10 +367,9 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
     final model = Teacher.fromJson(teacher);
     final name = model.name.isNotEmpty ? model.name : 'No Name';
-    final nip = (teacher['nip'] ?? teacher['nuptk'] ?? '').toString();
+    final nip = (model.employeeNumber ?? '').isNotEmpty ? model.employeeNumber! : '-';
     final email = model.email.isNotEmpty ? model.email : '-';
-    final phone = (teacher['phone'] ?? teacher['user']?['phone'] ?? '-')
-        .toString();
+    final phone = (model.phoneNumber ?? '').isNotEmpty ? model.phoneNumber! : '-';
     final employmentStatus = (teacher['employment_status'] ?? '-').toString();
     final isHomeroom = model.isHomeroomTeacher;
     final homeroomClass = model.homeroomClassName ?? '-';
