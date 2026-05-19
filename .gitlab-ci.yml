@@ -27,6 +27,15 @@ stages:
 
 variables:
   FLUTTER_VERSION: "3.41.6"
+  # Exact commit Shorebird bundles for FLUTTER_VERSION. Both the
+  # local Flutter SDK at $HOME/MobileProjects/flutter and Shorebird's
+  # cached SDK at $HOME/.shorebird/bin/cache/flutter/<commit> must
+  # resolve to the same framework+engine — otherwise pub get writes
+  # package_config.json paths into a mismatched local SDK and
+  # compilation fails. Bump this when bumping FLUTTER_VERSION; the
+  # commit is printed in the `shorebird release/patch` log as e.g.
+  # "Building patch with Flutter 3.41.6 (76ca3dff01)".
+  FLUTTER_COMMIT: "76ca3dff01cc7c5e6978e6b51e442777c6930419"
   LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
   GIT_STRATEGY: fetch
@@ -38,9 +47,21 @@ variables:
   before_script:
     - unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
     - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$PATH"
-    # Clear stale git locks and upgrade Flutter (bumps bundled Dart SDK)
+    # Pin the LOCAL Flutter SDK to the same commit Shorebird bundles
+    # (FLUTTER_COMMIT below). Previously `flutter upgrade --force`
+    # would bump the runner's SDK past FLUTTER_VERSION, which made the
+    # subsequent pub get write package_config.json paths into a newer
+    # framework that referenced types missing from Shorebird's older
+    # engine (DisplayCornerRadii, TextInputClient.onFocusReceived).
+    # `|| true` keeps the job alive if the runner already has the
+    # commit checked out (no-op fetch/checkout).
     - rm -f "$HOME/MobileProjects/flutter/.git/index.lock"
-    - flutter upgrade --force || true
+    - |
+      cd "$HOME/MobileProjects/flutter"
+      git fetch origin "${FLUTTER_COMMIT}" --depth=1 || true
+      git checkout -- . || true
+      git checkout "${FLUTTER_COMMIT}" || true
+      cd -
     - flutter precache || true
     - flutter --version
     - echo "API_BASE_URL=${API_BASE_URL}" > .env
@@ -55,9 +76,17 @@ variables:
   before_script:
     - unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
     - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$HOME/.shorebird/bin:$PATH"
-    # Clear stale git locks and upgrade Flutter
+    # Pin to FLUTTER_COMMIT (same commit Shorebird bundles) — see
+    # .flutter_setup above for the rationale. This is the load-bearing
+    # change that keeps framework + engine in sync across local dev,
+    # analyze/test, and shorebird release/patch.
     - rm -f "$HOME/MobileProjects/flutter/.git/index.lock"
-    - flutter upgrade --force || true
+    - |
+      cd "$HOME/MobileProjects/flutter"
+      git fetch origin "${FLUTTER_COMMIT}" --depth=1 || true
+      git checkout -- . || true
+      git checkout "${FLUTTER_COMMIT}" || true
+      cd -
     - flutter precache || true
     - flutter --version
     - |
@@ -182,7 +211,18 @@ release:
       echo "═══════════════════════════════════════════"
       echo "  Release: ${VERSION_NAME}+${BUILD_NUMBER}"
       echo "═══════════════════════════════════════════"
-    - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub --no-tree-shake-icons
+    # Note: `--no-pub` was dropped here. The .shorebird_setup template
+    # runs `flutter pub get` with the LOCAL Flutter SDK (which gets
+    # bumped past FLUTTER_VERSION by the `flutter upgrade --force`
+    # earlier), so .dart_tool/package_config.json ends up pointing to
+    # the local SDK's framework sources. With `--no-pub`, Shorebird's
+    # bundled flutter compiles those mismatched sources against the
+    # bundled (older) engine — surfacing as "Type 'DisplayCornerRadii'
+    # not found" and flutter_quill missing TextInputClient.
+    # onFocusReceived. Letting Shorebird re-run pub get rewrites
+    # package_config.json with paths to the bundled SDK matching
+    # FLUTTER_VERSION, so framework + engine line up.
+    - shorebird release android --flutter-version=${FLUTTER_VERSION} --build-name=${VERSION_NAME} --build-number=${BUILD_NUMBER} --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-tree-shake-icons
     - command -v fastlane &>/dev/null || gem install fastlane --no-document
     - echo "${PLAY_STORE_JSON_BASE64}" | base64 -d > play-store-key.json
     - |
@@ -240,7 +280,13 @@ patch:
       echo "  Patching latest release (OTA)..."
       echo "  NEEDS_RELEASE: ${NEEDS_RELEASE:-unknown}"
       echo "═══════════════════════════════════════════"
-    - shorebird patch android --release-version=latest --allow-asset-diffs --dart-define=API_BASE_URL=${API_BASE_URL} -- --no-pub
+    # `--no-pub` removed for the same reason as the release job above:
+    # the pre-job `flutter pub get` ran with the LOCAL upgraded SDK,
+    # leaving package_config.json pointing to mismatched framework
+    # sources. Letting Shorebird's bundled flutter re-do pub get
+    # ensures the patch compiles against framework + engine of the
+    # same version as the release it's patching.
+    - shorebird patch android --release-version=latest --allow-asset-diffs --dart-define=API_BASE_URL=${API_BASE_URL}
     - |
       echo ""
       echo "✅ Patch pushed — users will receive it on next app restart"
