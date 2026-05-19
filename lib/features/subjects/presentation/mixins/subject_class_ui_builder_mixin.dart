@@ -14,24 +14,44 @@ import 'package:manajemensekolah/features/classrooms/presentation/widgets/assign
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_class_quick_action_sheet.dart';
 
 mixin SubjectClassUiBuilderMixin {
+  Set<String> get selectedIds;
+  bool get bulkMode;
+  void toggleSelection(String id);
+  BuildContext get context;
+
   Widget buildClassCard(
     Map<String, dynamic> classItem,
     int index,
     bool isAssigned,
+    bool isSelected,
   ) {
     final model = Classroom.fromJson(classItem);
 
     return _ClassRow(
       model: model,
       isAssigned: isAssigned,
-      onTapRow: () => handleClassCardTap(classItem, isAssigned),
-      onLongPressRow: (context) => SubjectClassQuickActionSheet.show(
-        context: context,
-        model: model,
-        isAssigned: isAssigned,
-        onToggleAssignment: () => handleClassCardTap(classItem, isAssigned),
-        onWaliReassigned: onWaliReassigned,
-      ),
+      selected: isSelected,
+      onTapRow: () {
+        if (bulkMode) {
+          if (isAssigned) {
+            toggleSelection(model.id);
+          }
+        } else {
+          // Tap 1x shows quick action sheet
+          SubjectClassQuickActionSheet.show(
+            context: context,
+            model: model,
+            isAssigned: isAssigned,
+            onToggleAssignment: () => handleClassCardTap(classItem, isAssigned),
+            onWaliReassigned: onWaliReassigned,
+          );
+        }
+      },
+      onLongPressRow: (context) {
+        if (isAssigned) {
+          toggleSelection(model.id);
+        }
+      },
       onWaliReassigned: onWaliReassigned,
     );
   }
@@ -83,6 +103,7 @@ mixin SubjectClassUiBuilderMixin {
 class _ClassRow extends StatelessWidget {
   final Classroom model;
   final bool isAssigned;
+  final bool selected;
   final VoidCallback onTapRow;
   final void Function(BuildContext context) onLongPressRow;
   final VoidCallback onWaliReassigned;
@@ -90,6 +111,7 @@ class _ClassRow extends StatelessWidget {
   const _ClassRow({
     required this.model,
     required this.isAssigned,
+    required this.selected,
     required this.onTapRow,
     required this.onLongPressRow,
     required this.onWaliReassigned,
@@ -126,8 +148,11 @@ class _ClassRow extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: ColorUtils.slate200, width: 0.75),
+              color: selected ? adminAccent.withValues(alpha: 0.04) : Colors.white,
+              border: Border.all(
+                color: selected ? adminAccent : ColorUtils.slate200,
+                width: selected ? 1.4 : 0.75,
+              ),
               borderRadius: const BorderRadius.all(Radius.circular(16)),
             ),
             child: Row(
@@ -183,15 +208,18 @@ class _ClassRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  '$ctaLabel →',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: ctaColor,
-                    height: 1.0,
+                if (selected)
+                  Icon(Icons.check_circle_rounded, size: 22, color: adminAccent)
+                else
+                  Text(
+                    '$ctaLabel →',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: ctaColor,
+                      height: 1.0,
+                    ),
                   ),
-                ),
               ],
             ),
           ),

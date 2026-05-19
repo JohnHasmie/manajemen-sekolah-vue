@@ -12,6 +12,8 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/search_filter_bar.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart'
     as model_subject;
@@ -52,6 +54,96 @@ class SubjectClassManagementPageState
   /// dashboard. The mixin guards against fire-after-dispose.
   @override
   void onAcademicYearChanged() => loadData();
+
+  @override
+  final Set<String> selectedIds = <String>{};
+
+  @override
+  bool get bulkMode => selectedIds.isNotEmpty;
+
+  @override
+  void toggleSelection(String id) {
+    setState(() {
+      if (selectedIds.contains(id)) {
+        selectedIds.remove(id);
+      } else {
+        selectedIds.add(id);
+      }
+    });
+  }
+
+  @override
+  void clearSelection() {
+    if (selectedIds.isEmpty) return;
+    setState(selectedIds.clear);
+  }
+
+  @override
+  Future<void> bulkDetachSelected() async {
+    if (selectedIds.isEmpty) return;
+    final lang = ref.read(languageRiverpod);
+
+    final selected = assignedClasses0
+        .cast<Map<String, dynamic>>()
+        .where((s) => selectedIds.contains(s['id']?.toString()))
+        .toList();
+
+    if (selected.isEmpty) {
+      setState(selectedIds.clear);
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => ConfirmationDialog(
+        title: lang.getTranslatedText(const {
+          'en': 'Remove Classes',
+          'id': 'Lepas Kelas',
+        }),
+        content: lang.getTranslatedText({
+          'en': 'Are you sure you want to remove ${selected.length} class(es) from this subject?',
+          'id': 'Yakin ingin melepas ${selected.length} kelas dari mata pelajaran ini?',
+        }),
+        confirmColor: Colors.red,
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    final subjectIdStr = getSubjectId().toString();
+    var detached = 0;
+
+    for (final c in selected) {
+      try {
+        await getIt<ApiSubjectService>().detachClass(
+          subjectIdStr,
+          c['id'].toString(),
+        );
+        detached++;
+      } catch (e) {
+        // Ignored
+      }
+    }
+
+    if (!mounted) return;
+
+    setState(selectedIds.clear);
+    await loadData();
+
+    if (mounted) {
+      SnackBarUtils.showSuccess(
+        context,
+        lang.getTranslatedText({
+          'en': '$detached class(es) removed successfully',
+          'id': '$detached kelas berhasil dilepas',
+        }),
+      );
+    }
+  }
 
   @override
   late TextEditingController searchController;
@@ -221,7 +313,7 @@ class SubjectClassManagementPageState
       ),
       widget.subject,
       onEdit: _openEditSubjectSheet,
-      headerFilterChips: buildStatusFilterChipStrip(
+      brandChips: buildBrandChips(
         currentFilter: selectedFilter,
         currentSort: selectedSort,
         onTap: _openFilterSortSheet,

@@ -30,12 +30,18 @@ import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
+import 'package:manajemensekolah/core/widgets/bulk_action_bar.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_filter_mixin.dart';
 import 'package:manajemensekolah/features/subjects/presentation/screens/subject_class_management_page.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_meta_card.dart';
 
 mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
+  Set<String> get selectedIds;
+  bool get bulkMode;
+  void clearSelection();
+  Future<void> bulkDetachSelected();
   /// Builds the main UI scaffold. The header carries the navy
   /// gradient + kicker pattern and an optional [headerFilterChips]
   /// slot. Edit is exposed via the [SubjectMetaCard] inside the body,
@@ -50,35 +56,53 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
     VoidCallback onFabPressed,
     dynamic subject, {
     VoidCallback? onEdit,
-    Widget? headerFilterChips,
+    List<BrandFilterChip>? brandChips,
   }) {
-    return Scaffold(
-      backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          BrandPageHeader(
-            role: 'admin',
-            title: _resolveSubjectName(subject),
-            subtitle: 'MANAJEMEN KELAS',
-            bottomSlot: headerFilterChips,
+    final toolbarWidget = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (subject != null)
+          buildSubjectMetaCard(
+            subject: subject,
+            totalClasses: availableClasses.length,
+            onEdit: onEdit,
           ),
-          Expanded(
-            child: AppRefreshIndicator(
-              onRefresh: onRefresh,
-              role: 'admin',
-              child: buildBody(
-                isLoading,
-                filteredClasses,
-                availableClasses,
-                assignedClasses0,
-                subject: subject,
-                onEdit: onEdit,
-              ),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: buildFab(onFabPressed),
+        buildStatsContainer(availableClasses.length, assignedClasses0.length),
+      ],
+    );
+
+    return AdminCrudScaffold(
+      title: _resolveSubjectName(subject),
+      subtitle: 'MANAJEMEN KELAS',
+      role: 'admin',
+      primaryColor: getPrimaryColor(),
+      searchController: searchController,
+      searchHint: 'Cari kelas...',
+      onSearchChanged: (_) => setState(() {}),
+      brandChips: brandChips,
+      toolbar: toolbarWidget,
+      isLoading: isLoading,
+      isEmpty: filteredClasses.isEmpty,
+      onRefresh: onRefresh,
+      emptyTitle: 'Tidak ada kelas',
+      emptySubtitle: 'Tidak ditemukan hasil pencarian',
+      emptyIcon: Icons.class_outlined,
+      childBuilder: () => buildClassList(filteredClasses),
+      onFabTap: onFabPressed,
+      fabIcon: Icons.add,
+      hideFab: ref.read(academicYearRiverpod).isReadOnly,
+      selectedCount: selectedIds.length,
+      onClearSelection: clearSelection,
+      bulkItemNoun: 'kelas',
+      bulkActions: [
+        BulkAction(
+          icon: Icons.delete_outline_rounded,
+          label: 'Lepas',
+          onTap: bulkDetachSelected,
+          isDestructive: true,
+        ),
+      ],
     );
   }
 
@@ -205,9 +229,6 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
     );
   }
 
-  /// Builds class list or empty state. Returns a non-scrollable list
-  /// because the parent body is already a `ListView` wrapped in
-  /// `AppRefreshIndicator`.
   Widget buildClassList(List<dynamic> filteredClasses) {
     if (filteredClasses.isEmpty) {
       return const Padding(
@@ -222,43 +243,44 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: AppSpacing.sm),
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: filteredClasses.length,
-      itemBuilder: (context, index) {
-        final classItem = filteredClasses[index];
-        final isAssigned = checkIfClassAssigned(classItem['id']);
-        return buildClassCard(classItem, index, isAssigned);
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        buildResultCount(filteredClasses),
+        ListView.builder(
+          padding: const EdgeInsets.only(top: AppSpacing.sm),
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: filteredClasses.length,
+          itemBuilder: (context, index) {
+            final classItem = filteredClasses[index];
+            final id = classItem['id']?.toString() ?? '';
+            final isSelected = selectedIds.contains(id);
+            final isAssigned = checkIfClassAssigned(id);
+            return buildClassCard(classItem, index, isAssigned, isSelected);
+          },
+        ),
+      ],
     );
   }
 
-  /// Builds the Status filter chip strip used inside the header's
-  /// bottomSlot. Renders two chips side-by-side: Status + Urutkan.
-  /// Both open the same combined filter sheet (Frame B), which is
-  /// less surface area than two separate pickers and matches the
-  /// admin Jadwal / Buku Nilai pattern.
-  Widget buildStatusFilterChipStrip({
+  List<BrandFilterChip> buildBrandChips({
     required String currentFilter,
     required SubjectClassSort currentSort,
     required VoidCallback onTap,
   }) {
-    return BrandFilterChipStrip(
-      chips: [
-        BrandFilterChip(
-          label: 'Status',
-          value: _statusLabel(currentFilter),
-          onTap: onTap,
-        ),
-        BrandFilterChip(
-          label: 'Urutkan',
-          value: _sortLabel(currentSort),
-          onTap: onTap,
-        ),
-      ],
-    );
+    return [
+      BrandFilterChip(
+        label: 'Status',
+        value: _statusLabel(currentFilter),
+        onTap: onTap,
+      ),
+      BrandFilterChip(
+        label: 'Urutkan',
+        value: _sortLabel(currentSort),
+        onTap: onTap,
+      ),
+    ];
   }
 
   String _statusLabel(String currentFilter) {
@@ -311,6 +333,7 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
     Map<String, dynamic> classItem,
     int index,
     bool isAssigned,
+    bool isSelected,
   );
 
   /// Builds stat item
