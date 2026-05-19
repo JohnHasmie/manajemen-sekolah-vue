@@ -1,7 +1,8 @@
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, exit;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/update_provider.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:restart_app/restart_app.dart';
@@ -49,7 +50,9 @@ class UpdatePromptWrapper extends ConsumerWidget {
     AppBottomSheet.show(
       context: context,
       title: 'Update Tersedia',
-      subtitle: 'Versi terbaru telah diunduh. Segarkan aplikasi untuk menerapkan perubahan.',
+      subtitle:
+          'Versi terbaru telah diunduh. Tutup aplikasi dan buka kembali '
+          'untuk menerapkan perubahan.',
       icon: Icons.auto_fix_high_rounded,
       primaryColor: const Color(0xFF143068), // Brand dark blue
       isDismissible: false,
@@ -58,7 +61,10 @@ class UpdatePromptWrapper extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Kami telah melakukan perbaikan kecil dan peningkatan performa. Silakan mulai ulang aplikasi untuk mendapatkan pengalaman terbaik.',
+            'Kami telah melakukan perbaikan kecil dan peningkatan '
+            'performa. Tap "Tutup Aplikasi" lalu buka kembali dari '
+            'layar utama — pembaruan akan otomatis aktif saat aplikasi '
+            'mulai ulang.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.black87,
@@ -68,31 +74,52 @@ class UpdatePromptWrapper extends ConsumerWidget {
         ],
       ),
       footer: BottomSheetFooter(
-        primaryLabel: 'Segarkan Sekarang',
+        primaryLabel: 'Tutup Aplikasi',
         secondaryLabel: 'Nanti Saja',
         primaryColor: const Color(0xFF143068),
         onPrimary: () async {
           AppLogger.info(
             'update',
-            'User triggered app restart for Shorebird patch.',
+            'User opted to close app to apply Shorebird patch.',
           );
-          // Persist the patch number *before* restart so the next
+          // Persist the patch number *before* exit so the next
           // cold-launch poll knows the user has already seen this
-          // pop-up — protects against `restart_app` not actually
-          // booting the Flutter engine on some devices (the original
-          // bug where the dialog re-fired on every refresh).
+          // pop-up. UpdateNotifier.checkUpdates auto-clears this
+          // marker once currentPatch catches up to it (i.e. the
+          // patch actually applied) so a future update can fire
+          // the dialog again.
           await ref.read(updateProvider.notifier).acknowledgeCurrentPatch();
-          // RestartMode.process forces Runtime.getRuntime().exit(0) on
-          // Android, which kills the JVM. The next launch boots a
-          // fresh Dart isolate and Shorebird applies the staged patch
-          // during engine init. Without this (the default
-          // platformDefault mode), the Android plugin only calls
-          // finishAffinity() — the activity dies but the process /
-          // Dart isolate stays alive, so the staged patch never
-          // loads and the user sees the old code after "Segarkan".
-          // iOS path is unchanged: restart_app shows its native
-          // restart dialog because programmatic exit is forbidden.
-          await Restart.restartApp(mode: RestartMode.process);
+          if (context.mounted) {
+            SnackBarUtils.showInfo(
+              context,
+              'Menutup aplikasi… buka kembali dari layar utama untuk '
+              'menerapkan pembaruan.',
+            );
+          }
+          // Why exit(0) instead of Restart.restartApp(mode: process):
+          // restart_app's "process" mode launches a new MainActivity
+          // via Intent BEFORE killing the old process. Android then
+          // keeps that warm-started activity running with the same
+          // Flutter engine the old process had — Shorebird's native
+          // bootloader only swaps the staged patch in during a true
+          // cold start, so the auto-relaunched activity boots
+          // pre-patch code and the user sees no changes. Closing the
+          // app outright (no relaunch) forces the user back to home;
+          // when they tap the launcher icon, Android starts a fully
+          // fresh process and Shorebird applies the staged patch
+          // during engine init. The 1.5 s delay lets the snackbar
+          // render + any pending FS writes for the staged patch
+          // settle before the JVM dies.
+          //
+          // iOS: restart_app shows its own native restart dialog
+          // because programmatic exit is forbidden by App Store
+          // review — keep that path.
+          await Future.delayed(const Duration(milliseconds: 1500));
+          if (Platform.isAndroid) {
+            exit(0);
+          } else {
+            await Restart.restartApp(mode: RestartMode.process);
+          }
         },
         onSecondary: () async {
           // "Nanti Saja" is an explicit opt-out for *this specific*

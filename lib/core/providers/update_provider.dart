@@ -75,23 +75,40 @@ class UpdateNotifier extends Notifier<UpdateState> {
 
     try {
       final shorebirdService = getIt<ShorebirdService>();
+
+      // Self-healing step: if currentPatch has caught up to the patch
+      // number the user previously acknowledged, the patch successfully
+      // applied — clear the marker so a NEW patch with the same number
+      // (extremely unlikely) or any subsequent update can fire the
+      // dialog normally. Without this clear, the marker would also
+      // hold stale on devices that never received a newer patch.
+      final dismissed = PreferencesService().getInt(_kDismissedPatchKey);
+      if (dismissed != null && dismissed > 0) {
+        final currentPatchNum = await shorebirdService.currentPatchNumber();
+        if (currentPatchNum != null && currentPatchNum >= dismissed) {
+          AppLogger.info(
+            'update',
+            'Patch $dismissed applied successfully — clearing marker.',
+          );
+          await PreferencesService().setInt(_kDismissedPatchKey, 0);
+        }
+      }
+
       final result = await shorebirdService.checkForUpdates();
       if (result.hasUpdate) {
         // Suppress the dialog when the staged patch matches what the
-        // user has already acknowledged. Two scenarios this catches:
-        //   1. User tapped "Segarkan Sekarang" but the restart didn't
-        //      properly reboot the engine, so the patch is still
-        //      `nextPatch` on the next 15-min poll → would otherwise
-        //      re-fire the dialog forever.
-        //   2. User tapped "Nanti Saja" — they explicitly opted out
-        //      for this patch and shouldn't be nagged again until a
-        //      newer patch ships.
-        // A genuinely-newer patch (different number) does fire because
-        // the equality check no longer holds.
-        final dismissed = PreferencesService().getInt(_kDismissedPatchKey);
-        if (dismissed != null &&
+        // user has already acknowledged. The marker is cleared above
+        // once the patch actually applies, so this only fires while
+        // the patch is still pending — the user opted into closing
+        // the app (or tapped "Nanti Saja") and shouldn't be nagged
+        // until a newer patch arrives or this one finally lands.
+        final pendingDismissed = PreferencesService().getInt(
+          _kDismissedPatchKey,
+        );
+        if (pendingDismissed != null &&
+            pendingDismissed > 0 &&
             result.patchNumber != null &&
-            result.patchNumber == dismissed) {
+            result.patchNumber == pendingDismissed) {
           AppLogger.info(
             'update',
             'Shorebird patch ${result.patchNumber} already '
