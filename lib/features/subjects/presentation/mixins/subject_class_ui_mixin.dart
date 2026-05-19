@@ -59,20 +59,6 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
     VoidCallback? onEdit,
     List<BrandFilterChip>? brandChips,
   }) {
-    final toolbarWidget = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (subject != null)
-          buildSubjectMetaCard(
-            subject: subject,
-            totalClasses: availableClasses.length,
-            onEdit: onEdit,
-          ),
-        buildStatsContainer(availableClasses.length, assignedClasses0.length),
-      ],
-    );
-
     return AdminCrudScaffold(
       title: _resolveSubjectName(subject),
       subtitle: 'MANAJEMEN KELAS',
@@ -82,14 +68,19 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
       searchHint: 'Cari kelas...',
       onSearchChanged: (_) => setState(() {}),
       brandChips: brandChips,
-      toolbar: toolbarWidget,
       isLoading: isLoading,
-      isEmpty: filteredClasses.isEmpty,
+      isEmpty: false, // We handle the empty state internally inside buildClassList
       onRefresh: onRefresh,
       emptyTitle: 'Tidak ada kelas',
       emptySubtitle: 'Tidak ditemukan hasil pencarian',
       emptyIcon: Icons.class_outlined,
-      childBuilder: () => buildClassList(filteredClasses),
+      childBuilder: () => buildClassList(
+        filteredClasses,
+        availableClasses,
+        assignedClasses0,
+        subject,
+        onEdit,
+      ),
       onFabTap: onFabPressed,
       fabIcon: Icons.add,
       hideFab: ref.read(academicYearRiverpod).isReadOnly,
@@ -230,38 +221,64 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
     );
   }
 
-  Widget buildClassList(List<dynamic> filteredClasses) {
-    if (filteredClasses.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
-        child: EmptyState(
-          title: 'Tidak ada kelas',
-          subtitle:
-              'Tidak ditemukan hasil '
-              'pencarian',
-          icon: Icons.class_outlined,
-        ),
-      );
-    }
+  Widget buildClassList(
+    List<dynamic> filteredClasses,
+    List<dynamic> availableClasses,
+    List<dynamic> assignedClasses0,
+    dynamic subject,
+    VoidCallback? onEdit,
+  ) {
+    final bool isEmpty = filteredClasses.isEmpty;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        buildResultCount(filteredClasses),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: 16),
-            itemCount: filteredClasses.length,
-            itemBuilder: (context, index) {
-              final classItem = filteredClasses[index];
-              final id = classItem['id']?.toString() ?? '';
-              final isSelected = selectedIds.contains(id);
-              final isAssigned = checkIfClassAssigned(id);
-              return buildClassCard(classItem, index, isAssigned, isSelected);
-            },
-          ),
-        ),
-      ],
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 24),
+      itemCount: isEmpty ? 3 : filteredClasses.length + 3,
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          if (subject != null) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                0,
+              ),
+              child: buildSubjectMetaCard(
+                subject: subject,
+                totalClasses: availableClasses.length,
+                onEdit: onEdit,
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        }
+        if (index == 1) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: buildStatsContainer(availableClasses.length, assignedClasses0.length),
+          );
+        }
+        if (index == 2) {
+          if (isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+              child: EmptyState(
+                title: 'Tidak ada kelas',
+                subtitle: 'Tidak ditemukan hasil pencarian',
+                icon: Icons.class_outlined,
+              ),
+            );
+          }
+          return buildResultCount(filteredClasses);
+        }
+
+        final classIndex = index - 3;
+        final classItem = filteredClasses[classIndex];
+        final id = classItem['id']?.toString() ?? '';
+        final isSelected = selectedIds.contains(id);
+        final isAssigned = checkIfClassAssigned(id);
+        return buildClassCard(classItem, classIndex, isAssigned, isSelected);
+      },
     );
   }
 
