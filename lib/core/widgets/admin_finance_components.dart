@@ -718,7 +718,15 @@ class InvoiceRow extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '${data.studentName} · ${data.invoiceNumber}',
+                        // Drop the trailing " · <id>" when invoiceNumber is
+                        // empty so grouped bill rows (which only carry a
+                        // count/summary in studentName) don't render a
+                        // dangling separator. The Tagihan tab also relies on
+                        // this to suppress the raw UUID fallback admins
+                        // didn't want to see.
+                        data.invoiceNumber.isEmpty
+                            ? data.studentName
+                            : '${data.studentName} · ${data.invoiceNumber}',
                         style: TextStyle(
                           fontSize: 10.5,
                           color: ColorUtils.slate500,
