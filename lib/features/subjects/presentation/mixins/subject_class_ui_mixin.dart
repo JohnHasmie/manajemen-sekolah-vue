@@ -24,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
@@ -32,18 +33,20 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_filter_mixin.dart';
 import 'package:manajemensekolah/features/subjects/presentation/screens/subject_class_management_page.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_meta_card.dart';
 
 mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
-  /// Builds the main UI scaffold. The header carries the navy gradient
-  /// + kicker pattern + edit/refresh action icons, and an optional
-  /// [headerFilterChips] slot hosts the Status filter chip strip so
-  /// the applied filter is visible without opening a sheet.
+  /// Builds the main UI scaffold. The header carries the navy
+  /// gradient + kicker pattern and an optional [headerFilterChips]
+  /// slot. Edit is exposed via the [SubjectMetaCard] inside the body,
+  /// and refresh is via pull-to-refresh — so the action-icon slot is
+  /// empty, matching the parent / teacher detail screens.
   Widget buildMainScaffold(
     bool isLoading,
     List<dynamic> filteredClasses,
     List<dynamic> availableClasses,
     List<dynamic> assignedClasses0,
-    VoidCallback onRefresh,
+    Future<void> Function() onRefresh,
     VoidCallback onFabPressed,
     dynamic subject, {
     VoidCallback? onEdit,
@@ -57,22 +60,20 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
             role: 'admin',
             title: _resolveSubjectName(subject),
             subtitle: 'MANAJEMEN KELAS',
-            actionIcons: [
-              if (onEdit != null)
-                BrandHeaderIconButton(icon: Icons.edit_outlined, onTap: onEdit),
-              BrandHeaderIconButton(
-                icon: Icons.refresh_rounded,
-                onTap: onRefresh,
-              ),
-            ],
             bottomSlot: headerFilterChips,
           ),
           Expanded(
-            child: buildBody(
-              isLoading,
-              filteredClasses,
-              availableClasses,
-              assignedClasses0,
+            child: AppRefreshIndicator(
+              onRefresh: onRefresh,
+              role: 'admin',
+              child: buildBody(
+                isLoading,
+                filteredClasses,
+                availableClasses,
+                assignedClasses0,
+                subject: subject,
+                onEdit: onEdit,
+              ),
             ),
           ),
         ],
@@ -91,19 +92,37 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
     return 'Subject';
   }
 
-  /// Builds main body content
+  /// Builds main body content. The body is a single scrollable so the
+  /// pull-to-refresh gesture works everywhere — even when the list is
+  /// empty. The class list slots into the bottom as a sliver-style
+  /// `ListView.builder` wrapped in a `NeverScrollable` shrink-wrap so
+  /// the outer scroll handles all gestures.
   Widget buildBody(
     bool isLoading,
     List<dynamic> filteredClasses,
     List<dynamic> availableClasses,
-    List<dynamic> assignedClasses0,
-  ) {
+    List<dynamic> assignedClasses0, {
+    dynamic subject,
+    VoidCallback? onEdit,
+  }) {
     if (isLoading) {
-      return const SkeletonListLoading(itemCount: 6, infoTagCount: 2);
+      return ListView(
+        children: const [
+          SizedBox(height: AppSpacing.md),
+          SkeletonListLoading(itemCount: 6, infoTagCount: 2),
+        ],
+      );
     }
 
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 96),
       children: [
+        if (subject != null)
+          buildSubjectMetaCard(
+            subject: subject,
+            totalClasses: availableClasses.length,
+            onEdit: onEdit,
+          ),
         buildStatsContainer(availableClasses.length, assignedClasses0.length),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -113,6 +132,26 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
         buildResultCount(filteredClasses),
         buildClassList(filteredClasses),
       ],
+    );
+  }
+
+  /// Builds the subject identity card sitting above the KPI strip.
+  /// Reads the subject map via [Subject.fromJson] so admin/parent key
+  /// variations are handled at one site. The card flips to a slate
+  /// "Hanya baca" pill instead of the Edit CTA when the dashboard is
+  /// pointed at a past academic year.
+  Widget buildSubjectMetaCard({
+    required dynamic subject,
+    required int totalClasses,
+    VoidCallback? onEdit,
+  }) {
+    if (subject is! Map<String, dynamic>) return const SizedBox.shrink();
+    final model = Subject.fromJson(subject);
+    return SubjectMetaCard(
+      subject: model,
+      totalClasses: totalClasses,
+      onEdit: onEdit ?? () {},
+      isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
     );
   }
 
@@ -166,10 +205,13 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
     );
   }
 
-  /// Builds class list or empty state
+  /// Builds class list or empty state. Returns a non-scrollable list
+  /// because the parent body is already a `ListView` wrapped in
+  /// `AppRefreshIndicator`.
   Widget buildClassList(List<dynamic> filteredClasses) {
     if (filteredClasses.isEmpty) {
-      return const Expanded(
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
         child: EmptyState(
           title: 'Tidak ada kelas',
           subtitle:
@@ -180,16 +222,16 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
       );
     }
 
-    return Expanded(
-      child: ListView.builder(
-        padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: 96),
-        itemCount: filteredClasses.length,
-        itemBuilder: (context, index) {
-          final classItem = filteredClasses[index];
-          final isAssigned = checkIfClassAssigned(classItem['id']);
-          return buildClassCard(classItem, index, isAssigned);
-        },
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: filteredClasses.length,
+      itemBuilder: (context, index) {
+        final classItem = filteredClasses[index];
+        final isAssigned = checkIfClassAssigned(classItem['id']);
+        return buildClassCard(classItem, index, isAssigned);
+      },
     );
   }
 

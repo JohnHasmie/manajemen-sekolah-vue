@@ -18,7 +18,7 @@ import 'package:manajemensekolah/features/students/presentation/widgets/student_
 import 'package:manajemensekolah/features/students/presentation/widgets/student_dialog_text_field.dart';
 import 'package:manajemensekolah/features/students/presentation/mixins/student_form_validation_mixin.dart';
 import 'package:manajemensekolah/features/students/presentation/mixins/student_form_save_mixin.dart';
-import 'package:manajemensekolah/features/students/presentation/mixins/student_form_header_mixin.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/features/students/presentation/mixins/student_form_footer_mixin.dart';
 
 /// Opens a bottom sheet for adding or editing a student.
@@ -76,7 +76,6 @@ class _StudentAddEditSheetContentState
     with
         StudentFormValidationMixin,
         StudentFormSaveMixin,
-        StudentFormHeaderMixin,
         StudentFormFooterMixin {
   // ── Text controllers (like Vue v-model bindings) ──────────────────────────
   late final TextEditingController _nameController;
@@ -156,11 +155,9 @@ class _StudentAddEditSheetContentState
   @override
   Color get primaryColor => widget.primaryColor;
 
-  @override
   bool get isEditMode => _isEdit;
 
   /// "MENGEDIT: <Nama · Kelas>" context strip — only rendered in edit mode.
-  @override
   String? get editingContextLabel {
     if (!_isEdit) return null;
     final s = widget.student;
@@ -171,7 +168,6 @@ class _StudentAddEditSheetContentState
     return cls.isEmpty ? name : '$name · $cls';
   }
 
-  @override
   String? get editingContextInitials {
     final s = widget.student;
     if (s == null) return null;
@@ -185,6 +181,14 @@ class _StudentAddEditSheetContentState
     String tLocal(Map<String, String> map) =>
         languageProvider.getTranslatedText(map);
 
+    final title = _isEdit
+        ? tLocal(const {'en': 'Edit Student', 'id': 'Edit Siswa'})
+        : tLocal(const {'en': 'Add Student', 'id': 'Tambah Siswa'});
+        
+    final subtitle = _isEdit
+        ? (editingContextLabel ?? tLocal(const {'en': 'EDIT DATA', 'id': 'EDIT DATA'}))
+        : tLocal(const {'en': 'NEW ENTRY', 'id': 'TAMBAH BARU'});
+
     // Sheet sizes naturally to its content (capped at 88 % of screen so
     // the user can still see something behind the modal). The body
     // scrolls when content exceeds the cap.
@@ -192,42 +196,23 @@ class _StudentAddEditSheetContentState
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.88,
+      child: AppBottomSheet(
+        title: title,
+        subtitle: subtitle,
+        icon: _isEdit ? Icons.edit_rounded : Icons.person_add_rounded,
+        primaryColor: widget.primaryColor,
+        maxHeightFactor: 0.85,
+        contentPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          4,
+          AppSpacing.lg,
+          AppSpacing.lg,
         ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: Material(
-            color: Colors.white,
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Drag handle
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 42,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  buildHeaderWidget(),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        4,
-                        AppSpacing.lg,
-                        AppSpacing.lg,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+        footer: buildFooterWidget(),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
                           // ── DATA POKOK ─────────────────────────────
                           AdminFormSection(
                             label: tLocal(const {
@@ -458,15 +443,7 @@ class _StudentAddEditSheetContentState
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  buildFooterWidget(),
-                ],
-              ),
-            ),
-          ),
+          ],
         ),
       ),
     );

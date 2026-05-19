@@ -61,6 +61,15 @@ class ApiEndpoints {
   static const classImport = '/class/import';
   static const classBySubject = '/class-by-mata-pelajaran';
 
+  /// GET /class/{id}/wali-candidates — returns { current, available,
+  /// already_wali[] } for the Mata Pelajaran detail wali-picker.
+  static String classWaliCandidates(String classId) =>
+      '/class/$classId/wali-candidates';
+
+  /// PATCH /class/{id}/homeroom { teacher_id } — assigns or clears the
+  /// wali kelas within the class's academic year.
+  static String classHomeroom(String classId) => '/class/$classId/homeroom';
+
   // ── Subjects ──
   static const subjects = '/subject';
   static const subjectTemplate = '/subject/template';

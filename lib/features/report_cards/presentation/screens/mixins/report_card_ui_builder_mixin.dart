@@ -388,9 +388,7 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
                       ),
                       decoration: const BoxDecoration(
                         color: Color(0xFFDCFCE7),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(10),
-                        ),
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,

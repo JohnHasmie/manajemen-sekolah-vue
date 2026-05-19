@@ -64,10 +64,7 @@ class ScheduleAdminActionsService {
   }) async {
     final response = await dioClient.patch(
       '/teaching-schedule/$scheduleId/reschedule',
-      data: {
-        'lesson_hour_days_id': lessonHourDaysId,
-        if (force) 'force': true,
-      },
+      data: {'lesson_hour_days_id': lessonHourDaysId, if (force) 'force': true},
     );
     await CacheInvalidationService.onScheduleChanged();
     final data = response.data;
@@ -111,11 +108,7 @@ class ScheduleAdminActionsService {
   }) async {
     final response = await dioClient.patch(
       '/teaching-schedule/bulk/change-teacher',
-      data: {
-        'ids': ids,
-        'teacher_id': teacherId,
-        if (force) 'force': true,
-      },
+      data: {'ids': ids, 'teacher_id': teacherId, if (force) 'force': true},
     );
     await CacheInvalidationService.onScheduleChanged();
     final data = response.data;

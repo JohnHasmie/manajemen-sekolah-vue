@@ -15,6 +15,7 @@
 // shell.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -53,7 +54,8 @@ class StudentManagementScreen extends ConsumerStatefulWidget {
 /// flags (loading / error / filters / pagination cursor) and the
 /// dispatch glue.
 class StudentManagementScreenState
-    extends ConsumerState<StudentManagementScreen> {
+    extends ConsumerState<StudentManagementScreen>
+    with AdminAcademicYearReloadMixin<StudentManagementScreen> {
   // Search field controller — reused across rebuilds and disposed in
   // [dispose]. The AdminCrudScaffold wires it into its header.
   final TextEditingController _searchController = TextEditingController();
@@ -89,15 +91,9 @@ class StudentManagementScreenState
   final Set<String> _selectedIds = <String>{};
   bool get _bulkMode => _selectedIds.isNotEmpty;
 
-  // Cache the provider reference so dispose() doesn't call ref after unmount.
-  late final _academicYearProvider = ref.read(academicYearRiverpod);
-
   @override
   void initState() {
     super.initState();
-
-    // Reload data whenever the active academic year changes in the header.
-    _academicYearProvider.addListener(_onAcademicYearChanged);
 
     // If we arrived from a class detail screen, pre-apply that class id as
     // the only filter.
@@ -112,7 +108,6 @@ class StudentManagementScreenState
   @override
   void dispose() {
     _searchController.dispose();
-    _academicYearProvider.removeListener(_onAcademicYearChanged);
     super.dispose();
   }
 
@@ -221,7 +216,8 @@ class StudentManagementScreenState
     await _loadData(resetPage: true, useCache: false);
   }
 
-  void _onAcademicYearChanged() {
+  @override
+  void onAcademicYearChanged() {
     if (mounted) _loadData();
   }
 

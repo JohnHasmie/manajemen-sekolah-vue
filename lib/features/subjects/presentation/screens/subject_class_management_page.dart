@@ -4,12 +4,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/core/widgets/search_filter_bar.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
@@ -21,6 +21,8 @@ import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_c
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_ui_mixin.dart';
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_ui_builder_mixin.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_add_edit_sheet.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_bulk_add_classes_sheet.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_class_filter_sheet.dart';
 
 class SubjectClassManagementPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> subject;
@@ -35,11 +37,22 @@ class SubjectClassManagementPage extends ConsumerStatefulWidget {
 class SubjectClassManagementPageState
     extends ConsumerState<SubjectClassManagementPage>
     with
+        AdminAcademicYearReloadMixin<SubjectClassManagementPage>,
         SubjectClassDataMixin,
         SubjectClassFilterMixin,
         SubjectClassActionsMixin,
         SubjectClassUiMixin,
         SubjectClassUiBuilderMixin {
+  /// Bridges the AY mixin's getter into the data mixin so the API
+  /// calls always include the dashboard-selected year.
+  @override
+  String? getCurrentAcademicYearId() => currentAcademicYearId;
+
+  /// Reload data when the user switches academic year on the
+  /// dashboard. The mixin guards against fire-after-dispose.
+  @override
+  void onAcademicYearChanged() => loadData();
+
   @override
   late TextEditingController searchController;
 
@@ -106,6 +119,12 @@ class SubjectClassManagementPageState
     }
   }
 
+  /// Reloads data after the wali kelas was changed via Frame D.
+  @override
+  void onWaliReassigned() {
+    if (mounted) loadData();
+  }
+
   /// Builds the body search bar — solid `SearchFilterBar` without a
   /// filter icon (the Status filter lives as a chip in the header
   /// bottom slot so it's always visible without an extra tap).
@@ -120,35 +139,32 @@ class SubjectClassManagementPageState
     );
   }
 
-  /// Opens the Status picker sheet. Three mutually-exclusive options:
-  /// Semua / Terdaftar / Belum Terdaftar.
-  void _openStatusFilterSheet() {
-    AppBottomSheet.show(
+  /// Opens the combined Filter & Urutkan sheet (Frame B). Changes are
+  /// applied live via the callbacks; the sheet's own Terapkan button
+  /// just closes it.
+  void _openFilterSortSheet() {
+    SubjectClassFilterSheet.show(
       context: context,
-      title: 'Status Kelas',
-      subtitle: 'Saring kelas berdasarkan status pendaftaran',
-      icon: Icons.tune_rounded,
+      initialFilter: selectedFilter,
+      initialSort: selectedSort,
       primaryColor: getPrimaryColor(),
-      content: _StatusFilterPicker(
-        selected: selectedFilter,
-        primaryColor: getPrimaryColor(),
-        onSelect: (filter) {
-          setState(() => selectedFilter = filter);
-          AppNavigator.pop(context);
-        },
-      ),
+      onFilterChanged: (value) => setState(() => selectedFilter = value),
+      onSortChanged: (value) => setState(() => selectedSort = value),
     );
   }
 
-  /// Shows quick add class dialog
+  /// Opens the Frame E multi-select add sheet. Replaces the legacy
+  /// AlertDialog with the new bulk-attach UX backed by
+  /// POST /subject/{id}/classes/bulk-attach.
   @override
   void showQuickAddClassDialog(
     List<dynamic> availableClasses,
     List<dynamic> assignedClasses0,
     dynamic subjectName,
-  ) {
+  ) async {
     final unassignedClasses = availableClasses
         .where((classItem) => !isClassAssigned(classItem['id']))
+        .whereType<Map<String, dynamic>>()
         .toList();
 
     if (unassignedClasses.isEmpty) {
@@ -160,72 +176,15 @@ class SubjectClassManagementPageState
       return;
     }
 
-    showDialog(
+    final changed = await SubjectBulkAddClassesSheet.show(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return Dialog(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  buildDialogHeader(
-                    getPrimaryColor(),
-                    () => AppNavigator.pop(context),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Pilih kelas yang ingin '
-                          'ditambahkan ke '
-                          '${_subjectName()}:',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: ColorUtils.slate600,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Container(
-                          constraints: const BoxConstraints(maxHeight: 300),
-                          child: unassignedClasses.isEmpty
-                              ? buildEmptyState()
-                              : ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: unassignedClasses.length,
-                                  itemBuilder: (context, index) {
-                                    final classItem = unassignedClasses[index];
-                                    return buildClassListItem(
-                                      classItem,
-                                      getPrimaryColor(),
-                                      () {
-                                        AppNavigator.pop(context);
-                                        addClassToSubject(classItem);
-                                      },
-                                    );
-                                  },
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  buildDialogFooter(() => AppNavigator.pop(context), () {
-                    AppNavigator.pop(context);
-                    setState(() {});
-                  }),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+      subjectId: getSubjectId().toString(),
+      subjectName: _subjectName(),
+      unassignedClasses: unassignedClasses,
     );
+    if (changed == true && mounted) {
+      await loadData();
+    }
   }
 
   /// Builds empty state for unassigned classes
@@ -264,7 +223,8 @@ class SubjectClassManagementPageState
       onEdit: _openEditSubjectSheet,
       headerFilterChips: buildStatusFilterChipStrip(
         currentFilter: selectedFilter,
-        onTap: _openStatusFilterSheet,
+        currentSort: selectedSort,
+        onTap: _openFilterSortSheet,
       ),
     );
   }
@@ -285,111 +245,6 @@ class SubjectClassManagementPageState
             loadData();
           }
         },
-      ),
-    );
-  }
-}
-
-/// Three-option mutually-exclusive Status filter list. Renders as
-/// large tappable rows with a check icon on the currently-selected
-/// row. Keeps the picker minimal so it feels like a lightweight chip
-/// affordance rather than a full filter form.
-class _StatusFilterPicker extends StatelessWidget {
-  final String selected;
-  final Color primaryColor;
-  final ValueChanged<String> onSelect;
-
-  const _StatusFilterPicker({
-    required this.selected,
-    required this.primaryColor,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const options = <(String, String, IconData)>[
-      ('All', 'Semua', Icons.layers_outlined),
-      ('Assigned', 'Terdaftar', Icons.check_circle_outline),
-      ('Unassigned', 'Belum Terdaftar', Icons.radio_button_unchecked),
-    ];
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final opt in options)
-          _StatusFilterRow(
-            label: opt.$2,
-            icon: opt.$3,
-            isSelected: selected == opt.$1,
-            primaryColor: primaryColor,
-            onTap: () => onSelect(opt.$1),
-          ),
-      ],
-    );
-  }
-}
-
-class _StatusFilterRow extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final Color primaryColor;
-  final VoidCallback onTap;
-
-  const _StatusFilterRow({
-    required this.label,
-    required this.icon,
-    required this.isSelected,
-    required this.primaryColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        child: Container(
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
-          ),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? primaryColor.withValues(alpha: 0.08)
-                : Colors.transparent,
-            border: Border.all(
-              color: isSelected ? primaryColor : ColorUtils.slate200,
-              width: isSelected ? 1.2 : 0.75,
-            ),
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? primaryColor : ColorUtils.slate500,
-                size: 20,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? primaryColor : ColorUtils.slate800,
-                  ),
-                ),
-              ),
-              if (isSelected)
-                Icon(Icons.check_rounded, color: primaryColor, size: 20),
-            ],
-          ),
-        ),
       ),
     );
   }

@@ -8,6 +8,7 @@
 // subject filtering.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -49,7 +50,27 @@ class AdminClassActivityScreenState
         ClassActivityDataMixin,
         ClassActivityHeaderMixin,
         ClassActivityNavigationMixin,
-        ClassActivityUiMixin {
+        ClassActivityUiMixin,
+        AdminAcademicYearReloadMixin<AdminClassActivityScreen> {
+  /// Reload the teacher roster when the dashboard AY picker flips.
+  /// The drill-down state (selected teacher → subject → activity) is
+  /// AY-scoped, so we wipe it and bounce back to the teacher list.
+  @override
+  void onAcademicYearChanged() {
+    if (!mounted) return;
+    setState(() {
+      _showTeacherList = true;
+      _showSubjectList = false;
+      _selectedTeacherId = null;
+      _selectedTeacherName = null;
+      _selectedSubjectId = null;
+      _selectedSubjectName = null;
+      _subjectList = [];
+      _activityList = [];
+    });
+    loadTeachers();
+  }
+
   // Data state
   List<dynamic> _teacherList = [];
   List<dynamic> _subjectList = [];

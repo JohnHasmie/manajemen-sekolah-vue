@@ -24,20 +24,27 @@ mixin SubjectClassDataMixin on ConsumerState<SubjectClassManagementPage> {
     loadData();
   }
 
-  /// Loads all available classes and classes assigned to subject
+  /// Loads all available classes and classes assigned to subject.
+  /// Filters both queries by the currently-selected academic year on
+  /// the dashboard so admin sees only data for the year they're
+  /// browsing.
   Future<void> loadData() async {
     try {
       setState(() {
         isLoading = true;
       });
 
-      // Load all available classes
-      final allClassesResponse = await apiService.get('/class');
+      final ayId = getCurrentAcademicYearId();
+      final ayQuery = ayId == null ? '' : '?academic_year_id=$ayId';
+      final assignedQueryPrefix = ayId == null ? '?' : '$ayQuery&';
 
-      // Load classes already assigned to this subject
+      // Load all available classes scoped to the current AY
+      final allClassesResponse = await apiService.get('/class$ayQuery');
+
+      // Load classes already assigned to this subject for this AY
       final assignedClassesRaw = await apiService.get(
         '${ApiEndpoints.classBySubject}'
-        '?subject_id=${getSubjectId().toString()}',
+        '${assignedQueryPrefix}subject_id=${getSubjectId().toString()}',
       );
 
       // Handle Map format (pagination) or direct List
@@ -130,4 +137,9 @@ mixin SubjectClassDataMixin on ConsumerState<SubjectClassManagementPage> {
 
   /// Gets subject ID from widget
   dynamic getSubjectId();
+
+  /// Returns the dashboard-selected academic year id, or null if no
+  /// year has been picked yet. Provided by the
+  /// `AdminAcademicYearReloadMixin` on the host State.
+  String? getCurrentAcademicYearId();
 }

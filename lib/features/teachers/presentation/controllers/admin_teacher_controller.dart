@@ -355,6 +355,7 @@ class AdminTeacherController {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      useSafeArea: true,
       builder: (_) => TeacherFormDialog(
         teacher: teacher,
         subjects: subjects,

@@ -106,8 +106,8 @@ class AdminScheduleRowCard extends StatelessWidget {
     final cardBg = hasConflict
         ? ColorUtils.error600.withValues(alpha: 0.04)
         : (selected
-            ? ColorUtils.brandCobalt.withValues(alpha: 0.04)
-            : Colors.white);
+              ? ColorUtils.brandCobalt.withValues(alpha: 0.04)
+              : Colors.white);
 
     return GestureDetector(
       onTap: onTap,
@@ -120,7 +120,10 @@ class AdminScheduleRowCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: cardBg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: borderColor, width: hasConflict ? 1.2 : 1),
+              border: Border.all(
+                color: borderColor,
+                width: hasConflict ? 1.2 : 1,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: ColorUtils.slate900.withValues(alpha: 0.03),
@@ -140,59 +143,59 @@ class AdminScheduleRowCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                // ── Left time column ──────────────────────────────────
-                _TimeColumn(
-                  startHours: startHours,
-                  startMinutes: startMinutes,
-                  endLabel: endTimeLabel,
-                  duration: durationLabel,
-                ),
-                const SizedBox(width: 10),
-                // ── Body ──────────────────────────────────────────────
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          subjectName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate900,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        _MetaLine(
-                          className: className,
-                          teacherName: teacherName,
-                          roomName: roomName,
-                        ),
-                        if (hasConflict) ...[
-                          const SizedBox(height: 4),
+                  // ── Left time column ──────────────────────────────────
+                  _TimeColumn(
+                    startHours: startHours,
+                    startMinutes: startMinutes,
+                    endLabel: endTimeLabel,
+                    duration: durationLabel,
+                  ),
+                  const SizedBox(width: 10),
+                  // ── Body ──────────────────────────────────────────────
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                           Text(
-                            conflictCount == 1
-                                ? '⚠ Bentrok dengan 1 sesi lain'
-                                : '⚠ Bentrok dengan $conflictCount sesi lain',
+                            subjectName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: ColorUtils.error600,
+                              color: ColorUtils.slate900,
                               height: 1.2,
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          _MetaLine(
+                            className: className,
+                            teacherName: teacherName,
+                            roomName: roomName,
+                          ),
+                          if (hasConflict) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              conflictCount == 1
+                                  ? '⚠ Bentrok dengan 1 sesi lain'
+                                  : '⚠ Bentrok dengan $conflictCount sesi lain',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: ColorUtils.error600,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
                   const SizedBox(width: 6),
                   // ── Right rail: chevron OR selection checkbox ─────────
                   _RightRail(selected: selected),
@@ -201,11 +204,7 @@ class AdminScheduleRowCard extends StatelessWidget {
             ),
           ),
           if (hasConflict)
-            Positioned(
-              top: -8,
-              right: 12,
-              child: _ConflictPill(),
-            ),
+            Positioned(top: -8, right: 12, child: _ConflictPill()),
         ],
       ),
     );
@@ -235,9 +234,7 @@ class _TimeColumn extends StatelessWidget {
       width: 60,
       padding: const EdgeInsets.only(right: 10),
       decoration: BoxDecoration(
-        border: Border(
-          right: BorderSide(color: ColorUtils.slate200),
-        ),
+        border: Border(right: BorderSide(color: ColorUtils.slate200)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -318,10 +315,7 @@ class _MetaLine extends StatelessWidget {
     if (!hasClass && !hasTeacher && !hasRoom) {
       return Text(
         '—',
-        style: TextStyle(
-          fontSize: 11,
-          color: ColorUtils.slate400,
-        ),
+        style: TextStyle(fontSize: 11, color: ColorUtils.slate400),
       );
     }
 
@@ -501,10 +495,7 @@ class AdminScheduleDayTabStrip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
-          _AllTab(
-            active: selectedDayId == null,
-            onTap: () => onChanged(null),
-          ),
+          _AllTab(active: selectedDayId == null, onTap: () => onChanged(null)),
           for (final d in days) ...[
             const SizedBox(width: 6),
             _DayTab(

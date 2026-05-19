@@ -79,9 +79,7 @@ class ScheduleGridSkeleton extends StatelessWidget {
                 ),
                 // Day columns with ghost blocks at varying positions.
                 for (var i = 0; i < 6; i++)
-                  Expanded(
-                    child: _GhostDayColumn(seed: i),
-                  ),
+                  Expanded(child: _GhostDayColumn(seed: i)),
               ],
             ),
           ),
@@ -115,11 +113,7 @@ class ScheduleListSkeleton extends StatelessWidget {
         // Day-header kicker.
         const Padding(
           padding: EdgeInsets.fromLTRB(20, 8, 20, 4),
-          child: Row(
-            children: [
-              _SkeletonBar(width: 70, height: 11),
-            ],
-          ),
+          child: Row(children: [_SkeletonBar(width: 70, height: 11)]),
         ),
         // Pagi/Siang section head.
         const Padding(
@@ -212,10 +206,7 @@ class _GhostDayColumn extends StatelessWidget {
                       color: ColorUtils.slate100,
                       borderRadius: BorderRadius.circular(5),
                       border: Border(
-                        left: BorderSide(
-                          color: ColorUtils.slate200,
-                          width: 3,
-                        ),
+                        left: BorderSide(color: ColorUtils.slate200, width: 3),
                       ),
                     ),
                   ),

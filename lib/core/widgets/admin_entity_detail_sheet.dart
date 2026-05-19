@@ -1,21 +1,9 @@
 // AdminEntityDetailSheet — canonical detail view for any admin entity
-// (Siswa, Guru, Kelas, Mapel, Jadwal, …) shown as a full-height bottom
-// sheet rather than a separate route.
+// (Siswa, Guru, Kelas, Mapel, Jadwal, …) shown as a bottom sheet.
 //
-// Mirrors the v3 actions mockup (frame A): admin-navy hero band with a
-// gradient avatar + close ✕ + kicker + bold title + meta + status pill,
-// then a scrollable body of label/value sections, then a Hapus / Edit
-// footer pinned to the bottom.
-//
-// Why a sheet instead of a screen
-// -------------------------------
-// Every admin detail today (StudentDetailScreen / TeacherDetailScreen /
-// ClassDetailDialog / ScheduleDetailDialog) re-implements its own
-// gradient header, scroll body, edit/delete actions, safe-area handling,
-// and back-navigation. Moving the visual into a single shared sheet:
-//   • removes 4× per-feature header/scaffold code,
-//   • locks the v3 mockup look across roles in one place,
-//   • makes the sheet dismiss-then-edit pattern (close → showSheet) trivial.
+// Built on top of the shared [AppBottomSheet] scaffold so it inherits
+// the app-wide max-height (0.85), border radius (24), DragHandle,
+// gradient header, scrollable body, and footer conventions.
 //
 // Caller pattern:
 // ```dart
@@ -41,7 +29,11 @@ import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/core/widgets/initials_avatar.dart';
+
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Pill rendered in the top-right of the hero band — typically the
 /// entity's primary status (Aktif, Nonaktif, Cuti, etc.).
@@ -120,119 +112,87 @@ Future<void> showAdminEntityDetailSheet(
   VoidCallback? onDelete,
   bool isReadOnly = false,
 }) {
-  return showModalBottomSheet<void>(
+  final effectiveRole = role ?? 'admin';
+  final accent = ColorUtils.getRoleColor(effectiveRole);
+  final canEdit = onEdit != null && !isReadOnly;
+  final canDelete = onDelete != null && !isReadOnly;
+
+  // Build the scrollable body content (sections list).
+  final body = Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Identity card — avatar + name + meta + status pill
+      _IdentityCard(
+        kicker: kicker,
+        title: title,
+        meta: meta,
+        initials: initials ?? title,
+        status: status,
+      ),
+      const SizedBox(height: 18),
+      // Detail sections
+      for (var i = 0; i < sections.length; i++) ...[
+        _DetailSectionView(section: sections[i], accent: accent),
+        if (i < sections.length - 1) const SizedBox(height: 18),
+      ],
+    ],
+  );
+
+  // Build footer using BottomSheetFooter if edit/delete are available.
+  Widget? footer;
+  if (canEdit || canDelete) {
+    footer = BottomSheetFooter(
+      primaryLabel: 'Edit Data',
+      secondaryLabel: 'Hapus',
+      primaryColor: accent,
+      onPrimary: () {
+        AppNavigator.pop(context);
+        onEdit?.call();
+      },
+      onSecondary: () {
+        AppNavigator.pop(context);
+        onDelete?.call();
+      },
+      secondaryDestructive: true,
+    );
+  }
+
+  // Construct sheetTitle based on kicker and current active language.
+  final isIndonesian = languageProvider.currentLanguage == 'id';
+  final displayKicker = kicker.toLowerCase().split(' ').map((word) {
+    if (word.isEmpty) return '';
+    return word[0].toUpperCase() + word.substring(1);
+  }).join(' ');
+
+  final sheetTitle = isIndonesian ? 'Detail $displayKicker' : '$displayKicker Detail';
+
+  return AppBottomSheet.show<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    // useSafeArea: false — the navy hero band owns its own top inset so
-    // the gradient can extend behind the status bar without a white gap.
-    useSafeArea: false,
-    builder: (_) => _AdminEntityDetailSheet(
-      kicker: kicker,
-      title: title,
-      meta: meta,
-      initials: initials ?? title,
-      status: status,
-      role: role ?? 'admin',
-      sections: sections,
-      onEdit: onEdit,
-      onDelete: onDelete,
-      isReadOnly: isReadOnly,
-    ),
+    title: sheetTitle,
+    subtitle: null,
+    icon: Icons.person_rounded,
+    primaryColor: accent,
+    content: body,
+    footer: footer,
+    contentPadding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
   );
 }
 
-class _AdminEntityDetailSheet extends StatelessWidget {
-  final String kicker;
-  final String title;
-  final String meta;
-  final String initials;
-  final EntityStatus? status;
-  final String role;
-  final List<EntityDetailSection> sections;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
-  final bool isReadOnly;
+// ─────────────────────────────────────────────────────────────────────
+// Internal widgets
+// ─────────────────────────────────────────────────────────────────────
 
-  const _AdminEntityDetailSheet({
-    required this.kicker,
-    required this.title,
-    required this.meta,
-    required this.initials,
-    required this.status,
-    required this.role,
-    required this.sections,
-    required this.onEdit,
-    required this.onDelete,
-    required this.isReadOnly,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = ColorUtils.getRoleColor(role);
-    // Full-height sheet so the navy hero band can extend behind the
-    // status bar with no white strip above. The hero's own top padding
-    // pushes its content below the status bar.
-    final maxHeight = MediaQuery.of(context).size.height;
-    final canEdit = onEdit != null && !isReadOnly;
-    final canDelete = onDelete != null && !isReadOnly;
-    final showFooter = canEdit || canDelete;
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxHeight),
-      child: ClipRRect(
-        // Top corners stay rounded for visual continuity with other sheets
-        // but the navy hero fills the radius cleanly.
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: Material(
-          color: Colors.white,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Hero band — owns the drag handle so the navy gradient
-              // draws flush against the rounded top edge (no white strip).
-              _HeroBand(
-                accent: accent,
-                kicker: kicker,
-                title: title,
-                meta: meta,
-                initials: initials,
-                status: status,
-              ),
-              // Scrollable body
-              Flexible(
-                child: ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-                  itemCount: sections.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 18),
-                  itemBuilder: (_, i) =>
-                      _DetailSectionView(section: sections[i], accent: accent),
-                ),
-              ),
-              if (showFooter)
-                _Footer(
-                  accent: accent,
-                  onEdit: canEdit ? onEdit : null,
-                  onDelete: canDelete ? onDelete : null,
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HeroBand extends StatelessWidget {
-  final Color accent;
+/// Identity card — avatar disc + kicker + name + meta + status pill.
+/// Sits at the top of the scrollable body, inside a branded card.
+class _IdentityCard extends StatelessWidget {
   final String kicker;
   final String title;
   final String meta;
   final String initials;
   final EntityStatus? status;
 
-  const _HeroBand({
-    required this.accent,
+  const _IdentityCard({
     required this.kicker,
     required this.title,
     required this.meta,
@@ -242,121 +202,67 @@ class _HeroBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Sheet is rendered without `useSafeArea`, so the hero owns the top
-    // inset (status bar + notch). The navy gradient now extends edge-to-
-    // edge — no white strip above the hero, even on devices with cameras
-    // bumps or large status bars.
-    final topInset = MediaQuery.of(context).padding.top;
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(gradient: ColorUtils.brandGradient('admin')),
-      padding: EdgeInsets.fromLTRB(20, topInset + 8, 16, 22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: ColorUtils.brandGradient('admin'),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Drag handle — sits ON the gradient with white opacity.
-          Center(
-            child: Container(
-              width: 42,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
+          InitialsAvatar.onDark(
+            name: initials,
+            size: 56,
+            borderRadius: 14,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  kicker.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF9DC4E8),
+                    letterSpacing: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  meta,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF9DC4E8),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (status != null) ...[
+                  const SizedBox(height: 8),
+                  _StatusPill(status: status!),
+                ],
+              ],
             ),
           ),
-          // Top row — close icon trailing
-          Row(
-            children: [
-              const Spacer(),
-              _CloseButton(onTap: () => AppNavigator.pop(context)),
-            ],
-          ),
-          const SizedBox(height: 4),
-          // Avatar + meta block
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              InitialsAvatar(
-                name: initials,
-                size: 64,
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: 16,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      kicker.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF9DC4E8),
-                        letterSpacing: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      meta,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: Color(0xFF9DC4E8),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (status != null) ...[
-            const SizedBox(height: 12),
-            _StatusPill(status: status!),
-          ],
         ],
-      ),
-    );
-  }
-}
-
-class _CloseButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _CloseButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white.withValues(alpha: 0.18),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(10)),
-      ),
-      child: InkWell(
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
-        onTap: onTap,
-        child: const SizedBox(
-          width: 36,
-          height: 36,
-          child: Icon(Icons.close_rounded, color: Colors.white, size: 18),
-        ),
       ),
     );
   }
@@ -369,30 +275,30 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: status.color,
-        borderRadius: const BorderRadius.all(Radius.circular(11)),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 6,
-            height: 6,
+            width: 5,
+            height: 5,
             decoration: const BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           Text(
             status.label.toUpperCase(),
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: FontWeight.w800,
-              letterSpacing: 0.6,
+              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -405,7 +311,10 @@ class _DetailSectionView extends StatelessWidget {
   final EntityDetailSection section;
   final Color accent;
 
-  const _DetailSectionView({required this.section, required this.accent});
+  const _DetailSectionView({
+    required this.section,
+    required this.accent,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -439,7 +348,10 @@ class _DetailSectionView extends StatelessWidget {
           child: Column(
             children: [
               for (var i = 0; i < section.rows.length; i++) ...[
-                _DetailRowView(row: section.rows[i], accent: accent),
+                _DetailRowView(
+                  row: section.rows[i],
+                  accent: accent,
+                ),
                 if (i < section.rows.length - 1)
                   Divider(
                     height: 1,
@@ -504,7 +416,11 @@ class _DetailRowView extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
               child: Padding(
                 padding: const EdgeInsets.all(2),
-                child: Icon(row.trailingIcon, size: 16, color: accent),
+                child: Icon(
+                  row.trailingIcon,
+                  size: 16,
+                  color: accent,
+                ),
               ),
             ),
           ] else if (isInteractive) ...[
@@ -523,85 +439,6 @@ class _DetailRowView extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(onTap: row.onTap, child: body),
-    );
-  }
-}
-
-class _Footer extends StatelessWidget {
-  final Color accent;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
-
-  const _Footer({
-    required this.accent,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: ColorUtils.slate200)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        12 + MediaQuery.of(context).padding.bottom,
-      ),
-      child: Row(
-        children: [
-          if (onDelete != null)
-            Expanded(
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: Color(0xFFFCA5A5), width: 1.4),
-                  foregroundColor: const Color(0xFFDC2626),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () {
-                  AppNavigator.pop(context);
-                  onDelete!();
-                },
-                icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                label: const Text(
-                  'Hapus',
-                  style: TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
-            ),
-          if (onDelete != null && onEdit != null) const SizedBox(width: 10),
-          if (onEdit != null)
-            Expanded(
-              flex: onDelete == null ? 1 : 1,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: accent,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () {
-                  AppNavigator.pop(context);
-                  onEdit!();
-                },
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: const Text(
-                  'Edit Data',
-                  style: TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }

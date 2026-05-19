@@ -71,13 +71,9 @@ mixin SubjectClassFilterMixin {
           if (aAssigned != bAssigned) return aAssigned - bAssigned;
           return _gradeThenNameCompare(modelA, modelB);
         case SubjectClassSort.nameAsc:
-          return modelA.name.toLowerCase().compareTo(
-            modelB.name.toLowerCase(),
-          );
+          return modelA.name.toLowerCase().compareTo(modelB.name.toLowerCase());
         case SubjectClassSort.nameDesc:
-          return modelB.name.toLowerCase().compareTo(
-            modelA.name.toLowerCase(),
-          );
+          return modelB.name.toLowerCase().compareTo(modelA.name.toLowerCase());
         case SubjectClassSort.gradeAsc:
           return _gradeThenNameCompare(modelA, modelB);
       }

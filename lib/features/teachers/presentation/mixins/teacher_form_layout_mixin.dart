@@ -47,6 +47,7 @@ mixin TeacherFormLayoutMixin on ConsumerState<TeacherFormDialog> {
               'id': 'Tambah Guru',
             }),
       isEditMode: isEdit,
+      showDragHandle: true,
       kicker: isEdit
           ? languageProvider.getTranslatedText(const {
               'en': 'EDIT DATA',

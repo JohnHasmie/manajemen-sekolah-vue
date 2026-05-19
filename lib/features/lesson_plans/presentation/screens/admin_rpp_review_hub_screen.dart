@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_lesson_plan_components.dart';
@@ -34,9 +35,19 @@ class AdminRppReviewHubScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminRppReviewHubScreenState
-    extends ConsumerState<AdminRppReviewHubScreen> {
+    extends ConsumerState<AdminRppReviewHubScreen>
+    with AdminAcademicYearReloadMixin<AdminRppReviewHubScreen> {
   /// Active status filter — null = show all.
   String? _statusFilter;
+
+  /// Reload the RPP queue when the dashboard AY picker flips. The
+  /// queue provider reads the AY scope internally, so invalidating
+  /// it triggers a refresh with the new year.
+  @override
+  void onAcademicYearChanged() {
+    if (!mounted) return;
+    _refresh();
+  }
 
   Future<void> _refresh() async {
     ref.invalidate(adminLessonPlanQueueProvider);

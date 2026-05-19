@@ -14,6 +14,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -45,7 +46,8 @@ class TeacherAdminScreen extends ConsumerStatefulWidget {
 /// Holds the pagination cursor, filter selections, and loaded-data cache
 /// that feed [AdminCrudScaffold]. All network + cache + Excel work is
 /// delegated to [AdminTeacherController].
-class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
+class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
+    with AdminAcademicYearReloadMixin<TeacherAdminScreen> {
   // Search text — shared with [AdminCrudScaffold] via [searchController].
   final TextEditingController _searchController = TextEditingController();
 
@@ -83,12 +85,9 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
   // FAB GlobalKey reserved for potential reintroduction of tour plumbing.
   final GlobalKey _fabKey = GlobalKey();
 
-  late final _academicYearProvider = ref.read(academicYearRiverpod);
-
   @override
   void initState() {
     super.initState();
-    _academicYearProvider.addListener(_onAcademicYearChanged);
     FCMService().syncTrigger.addListener(_onSyncTriggered);
     _loadFilterOptions();
     _loadData();
@@ -98,7 +97,6 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
   void dispose() {
     _searchController.dispose();
     FCMService().syncTrigger.removeListener(_onSyncTriggered);
-    _academicYearProvider.removeListener(_onAcademicYearChanged);
     super.dispose();
   }
 
@@ -219,7 +217,8 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     await _loadData(resetPage: true, useCache: false);
   }
 
-  void _onAcademicYearChanged() {
+  @override
+  void onAcademicYearChanged() {
     if (!mounted) return;
     _loadFilterOptions();
     _loadData();
@@ -367,12 +366,51 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
     final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
     final model = Teacher.fromJson(teacher);
     final name = model.name.isNotEmpty ? model.name : 'No Name';
-    final nip = (model.employeeNumber ?? '').isNotEmpty ? model.employeeNumber! : '-';
+    final nip = (model.employeeNumber ?? '').isNotEmpty
+        ? model.employeeNumber!
+        : '-';
     final email = model.email.isNotEmpty ? model.email : '-';
-    final phone = (model.phoneNumber ?? '').isNotEmpty ? model.phoneNumber! : '-';
-    final employmentStatus = (teacher['employment_status'] ?? '-').toString();
+    final phone = (model.phoneNumber ?? '').isNotEmpty
+        ? model.phoneNumber!
+        : '-';
+
+    // Gender display
+    final rawGender = (teacher['gender'] ?? '').toString();
+    final genderDisplay = switch (rawGender) {
+      'L' => lang.getTranslatedText(const {'en': 'Male', 'id': 'Laki-laki'}),
+      'P' => lang.getTranslatedText(const {'en': 'Female', 'id': 'Perempuan'}),
+      _ => '-',
+    };
+
+    // Employment status display
+    final rawStatus = (teacher['employment_status'] ?? '')
+        .toString()
+        .toLowerCase();
+    final statusDisplay = switch (rawStatus) {
+      'permanent' || 'tetap' => lang.getTranslatedText(const {
+        'en': 'Permanent',
+        'id': 'Tetap',
+      }),
+      'contract' || 'kontrak' || 'tidak_tetap' => lang.getTranslatedText(const {
+        'en': 'Contract',
+        'id': 'Kontrak',
+      }),
+      'temporary' || 'honorer' || 'honor' => lang.getTranslatedText(const {
+        'en': 'Honorary',
+        'id': 'Honorer',
+      }),
+      'probation' || 'probasi' => lang.getTranslatedText(const {
+        'en': 'Probation',
+        'id': 'Probasi',
+      }),
+      _ => rawStatus.isNotEmpty ? rawStatus : '-',
+    };
+
+    // Homeroom
     final isHomeroom = model.isHomeroomTeacher;
     final homeroomClass = model.homeroomClassName ?? '-';
+
+    // Subjects
     final subjects =
         (teacher['subjects'] as List<dynamic>?)
             ?.map((s) => (s is Map ? s['name'] : s).toString())
@@ -380,11 +418,22 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
             .join(', ') ??
         '-';
 
+    // Teaching classes
+    final teachingClasses =
+        (teacher['classes'] as List<dynamic>?)
+            ?.map((c) => (c is Map ? c['name'] : c).toString())
+            .where((c) => c.isNotEmpty)
+            .join(', ') ??
+        '-';
+
+    // Address (from user object or direct)
+    final address = (model.address ?? '').isNotEmpty ? model.address! : '-';
+
     showAdminEntityDetailSheet(
       context,
       kicker: lang.getTranslatedText(const {'en': 'TEACHER', 'id': 'GURU'}),
       title: name,
-      meta: nip.isNotEmpty ? 'NIP $nip' : email,
+      meta: nip != '-' ? 'NIP $nip' : email,
       initials: name,
       status: EntityStatus.success(
         lang.getTranslatedText(const {'en': 'Active', 'id': 'Aktif'}),
@@ -396,10 +445,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
             'id': 'Identitas',
           }),
           rows: [
-            EntityDetailRow(
-              label: 'NIP / NUPTK',
-              value: nip.isEmpty ? '-' : nip,
-            ),
+            EntityDetailRow(label: 'NIP / NUPTK', value: nip),
             EntityDetailRow(label: 'Email', value: email),
             EntityDetailRow(
               label: lang.getTranslatedText(const {
@@ -408,6 +454,21 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
               }),
               value: phone,
             ),
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
+                'en': 'Gender',
+                'id': 'Jenis Kelamin',
+              }),
+              value: genderDisplay,
+            ),
+            if (address != '-')
+              EntityDetailRow(
+                label: lang.getTranslatedText(const {
+                  'en': 'Address',
+                  'id': 'Alamat',
+                }),
+                value: address,
+              ),
           ],
         ),
         EntityDetailSection(
@@ -437,21 +498,17 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
             ),
             EntityDetailRow(
               label: lang.getTranslatedText(const {
-                'en': 'Classes',
-                'id': 'Kelas',
+                'en': 'Teaching Classes',
+                'id': 'Kelas Mengajar',
               }),
-              value: (teacher['classes'] as List<dynamic>?)
-                      ?.map((c) => (c is Map ? c['name'] : c).toString())
-                      .where((c) => c.isNotEmpty)
-                      .join(', ') ??
-                  '-',
+              value: teachingClasses,
             ),
             EntityDetailRow(
               label: lang.getTranslatedText(const {
-                'en': 'Employment',
-                'id': 'Status Kerja',
+                'en': 'Employment Status',
+                'id': 'Status Kepegawaian',
               }),
-              value: employmentStatus,
+              value: statusDisplay,
             ),
           ],
         ),

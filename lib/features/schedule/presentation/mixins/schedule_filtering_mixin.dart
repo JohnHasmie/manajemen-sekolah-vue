@@ -13,6 +13,7 @@ mixin ScheduleFilteringMixin {
     required String? selectedClassId,
     required String? selectedDayId,
     required String? selectedJamPelajaran,
+    String? selectedSubjectId,
   }) {
     final searchTerm = searchText.toLowerCase();
     return scheduleList.where((schedule) {
@@ -21,6 +22,7 @@ mixin ScheduleFilteringMixin {
         dayList: dayList,
         searchTerm: searchTerm,
         selectedTeacherId: selectedTeacherId,
+        selectedSubjectId: selectedSubjectId,
         selectedClassId: selectedClassId,
         selectedDayId: selectedDayId,
         selectedJamPelajaran: selectedJamPelajaran,
@@ -35,6 +37,7 @@ mixin ScheduleFilteringMixin {
     required List<dynamic> dayList,
     required String searchTerm,
     required String? selectedTeacherId,
+    required String? selectedSubjectId,
     required String? selectedClassId,
     required String? selectedDayId,
     required String? selectedJamPelajaran,
@@ -52,6 +55,10 @@ mixin ScheduleFilteringMixin {
       schedule: schedule,
       selectedTeacherId: selectedTeacherId,
     );
+    final matchesMapel = _matchesSubject(
+      schedule: schedule,
+      selectedSubjectId: selectedSubjectId,
+    );
     final matchesKelas = _matchesClass(
       schedule: schedule,
       selectedClassId: selectedClassId,
@@ -68,6 +75,7 @@ mixin ScheduleFilteringMixin {
 
     return matchesSearch &&
         matchesGuru &&
+        matchesMapel &&
         matchesKelas &&
         matchesHari &&
         matchesJamPelajaran;
@@ -133,6 +141,18 @@ mixin ScheduleFilteringMixin {
   }
 
   /// Checks if schedule matches
+  /// selected subject.
+  bool _matchesSubject({
+    required Map<String, dynamic> schedule,
+    required String? selectedSubjectId,
+  }) {
+    if (selectedSubjectId == null) {
+      return true;
+    }
+    return Schedule.fromJson(schedule).subjectId == selectedSubjectId;
+  }
+
+  /// Checks if schedule matches
   /// selected class.
   bool _matchesClass({
     required Map<String, dynamic> schedule,
@@ -165,10 +185,15 @@ mixin ScheduleFilteringMixin {
     required Map<String, dynamic> schedule,
     required String selectedJamPelajaran,
   }) {
-    final lessonHour = schedule['lesson_hour'] as Map<String, dynamic>?;
-    final hourNumber =
-        lessonHour?['hour_number']?.toString() ??
-        lessonHour?['jam_ke']?.toString();
+    final rawHour = schedule['lesson_hour'];
+    String? hourNumber;
+    if (rawHour is Map) {
+      hourNumber =
+          rawHour['hour_number']?.toString() ??
+          rawHour['jam_ke']?.toString();
+    } else if (rawHour != null) {
+      hourNumber = rawHour.toString();
+    }
     return hourNumber == selectedJamPelajaran;
   }
 
@@ -179,10 +204,14 @@ mixin ScheduleFilteringMixin {
     required String? selectedJamPelajaran,
     required String? selectedFilterSemester,
     required String selectedSemester,
+    String? selectedTeacherId,
+    String? selectedSubjectId,
   }) {
     return selectedDayId != null ||
         selectedClassId != null ||
         selectedJamPelajaran != null ||
+        selectedTeacherId != null ||
+        selectedSubjectId != null ||
         (selectedFilterSemester != null &&
             selectedFilterSemester != selectedSemester);
   }

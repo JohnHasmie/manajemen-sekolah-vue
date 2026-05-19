@@ -264,6 +264,26 @@ class SubjectCrudService {
     await CacheInvalidationService.onSubjectChanged();
   }
 
+  /// Attaches multiple classes to a subject in a single round-trip.
+  /// Used by the Frame E multi-select Tambah Kelas sheet on the Mata
+  /// Pelajaran detail screen.
+  ///
+  /// Returns the backend payload `{ attached_count, skipped_count }`
+  /// so the caller can show an accurate toast (e.g. "3 ditambahkan,
+  /// 1 dilewati karena sudah terdaftar").
+  Future<Map<String, dynamic>> bulkAttachClasses(
+    String subjectId,
+    List<String> classIds,
+  ) async {
+    final response = await ApiService().post(
+      '/subject/$subjectId/classes/bulk-attach',
+      {'class_ids': classIds},
+    );
+    await CacheInvalidationService.onSubjectChanged();
+    if (response is Map<String, dynamic>) return response;
+    return <String, dynamic>{};
+  }
+
   /// Fetches the master list of all available subjects.
   /// System-wide reference data, not school-specific.
   Future<List<dynamic>> getAllMasterSubjects() async {

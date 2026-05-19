@@ -174,11 +174,7 @@ const _sortOptions = <_SortOption>[
 const _statusOptions = <_StatusOption>[
   _StatusOption('Semua kelas', Icons.list_alt_rounded, 'All'),
   _StatusOption('Terdaftar', Icons.check_circle_outline, 'Assigned'),
-  _StatusOption(
-    'Belum terdaftar',
-    Icons.radio_button_unchecked,
-    'Unassigned',
-  ),
+  _StatusOption('Belum terdaftar', Icons.radio_button_unchecked, 'Unassigned'),
 ];
 
 class _SectionTitle extends StatelessWidget {
@@ -255,9 +251,7 @@ class _PickerRow extends StatelessWidget {
                   label,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: isSelected
-                        ? FontWeight.w700
-                        : FontWeight.w500,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     color: isSelected ? primaryColor : ColorUtils.slate800,
                   ),
                 ),

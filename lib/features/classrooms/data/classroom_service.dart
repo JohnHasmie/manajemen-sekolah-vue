@@ -267,6 +267,35 @@ class ApiClassService {
     }
   }
 
+  /// Fetches wali kelas candidates for the given class. Returns three
+  /// groups:
+  ///   • `current`     — the teacher currently wali kelas (or null)
+  ///   • `available`   — teachers with no homeroom this academic year
+  ///   • `already_wali` — teachers wali for some other class this AY,
+  ///                     each carrying `current_class_id` + `current_class_name`
+  ///
+  /// Hits `GET /class/{id}/wali-candidates`.
+  Future<Map<String, dynamic>> getWaliCandidates(String classId) async {
+    final result = await ApiService().get('/class/$classId/wali-candidates');
+    if (result is Map<String, dynamic>) return result;
+    return <String, dynamic>{};
+  }
+
+  /// Assigns or clears the wali kelas for [classId] within its
+  /// academic year. Pass `teacherId: null` to remove the assignment.
+  /// Clears the class cache on success so the list reloads.
+  Future<Map<String, dynamic>> setHomeroomTeacher(
+    String classId,
+    String? teacherId,
+  ) async {
+    final result = await ApiService().patch('/class/$classId/homeroom', {
+      'teacher_id': teacherId,
+    });
+    await _clearClassCache();
+    if (result is Map<String, dynamic>) return result;
+    return <String, dynamic>{};
+  }
+
   /// Fetches all students in a given class.
   /// Like `Student::where('class_id', $classId)->get()` in Laravel.
   Future<List<dynamic>> getStudentsByClassId(

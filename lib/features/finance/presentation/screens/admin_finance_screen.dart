@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
@@ -49,7 +50,28 @@ class FinanceScreen extends ConsumerStatefulWidget {
 
 /// State for FinanceScreen with mixins.
 class FinanceScreenState extends ConsumerState<FinanceScreen>
-    with FinanceFilterMixin, FinanceDataMixin, FinanceActionMixin {
+    with
+        FinanceFilterMixin,
+        FinanceDataMixin,
+        FinanceActionMixin,
+        AdminAcademicYearReloadMixin<FinanceScreen> {
+  /// Reload bills + pending payments + payment types when the
+  /// dashboard AY picker flips. The current tab is preserved (admin
+  /// stays where they were); pagination state is reset on each list
+  /// so we don't accumulate pages across years. `useCache: false`
+  /// avoids serving stale per-year data on the first paint.
+  @override
+  void onAcademicYearChanged() {
+    if (!mounted) return;
+    setState(() {
+      _currentPage = 1;
+      _hasMoreData = true;
+      _pendingPage = 1;
+      _hasMorePending = true;
+    });
+    loadData(useCache: false);
+  }
+
   AdminFinanceController get _ctrl => ref.read(adminFinanceControllerProvider);
 
   // Core state

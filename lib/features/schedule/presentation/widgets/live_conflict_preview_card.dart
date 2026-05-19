@@ -255,21 +255,18 @@ class _ConflictPreview extends StatelessWidget {
   const _ConflictPreview({required this.conflicts});
 
   String _describe(Map<String, dynamic> c) {
-    final subject = (c['subject']?['name'] ??
-            c['subject_name'] ??
-            c['mata_pelajaran_nama'] ??
-            'Sesi lain')
-        .toString();
-    final className = (c['class']?['name'] ??
-            c['class_name'] ??
-            c['kelas_nama'] ??
-            '')
-        .toString();
-    final teacher = (c['teacher']?['name'] ??
-            c['teacher_name'] ??
-            c['guru_nama'] ??
-            '')
-        .toString();
+    final subject =
+        (c['subject']?['name'] ??
+                c['subject_name'] ??
+                c['mata_pelajaran_nama'] ??
+                'Sesi lain')
+            .toString();
+    final className =
+        (c['class']?['name'] ?? c['class_name'] ?? c['kelas_nama'] ?? '')
+            .toString();
+    final teacher =
+        (c['teacher']?['name'] ?? c['teacher_name'] ?? c['guru_nama'] ?? '')
+            .toString();
     final pieces = <String>[
       subject,
       if (className.isNotEmpty) className,
