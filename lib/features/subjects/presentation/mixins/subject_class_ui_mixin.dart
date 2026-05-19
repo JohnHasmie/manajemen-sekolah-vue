@@ -112,44 +112,7 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
   /// pull-to-refresh gesture works everywhere — even when the list is
   /// empty. The class list slots into the bottom as a sliver-style
   /// `ListView.builder` wrapped in a `NeverScrollable` shrink-wrap so
-  /// the outer scroll handles all gestures.
-  Widget buildBody(
-    bool isLoading,
-    List<dynamic> filteredClasses,
-    List<dynamic> availableClasses,
-    List<dynamic> assignedClasses0, {
-    dynamic subject,
-    VoidCallback? onEdit,
-  }) {
-    if (isLoading) {
-      return ListView(
-        children: const [
-          SizedBox(height: AppSpacing.md),
-          SkeletonListLoading(itemCount: 6, infoTagCount: 2),
-        ],
-      );
-    }
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 96),
-      children: [
-        if (subject != null)
-          buildSubjectMetaCard(
-            subject: subject,
-            totalClasses: availableClasses.length,
-            onEdit: onEdit,
-          ),
-        buildStatsContainer(availableClasses.length, assignedClasses0.length),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: buildSearchBar(),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        buildResultCount(filteredClasses),
-        buildClassList(filteredClasses),
-      ],
-    );
-  }
 
   /// Builds the subject identity card sitting above the KPI strip.
   /// Reads the subject map via [Subject.fromJson] so admin/parent key
