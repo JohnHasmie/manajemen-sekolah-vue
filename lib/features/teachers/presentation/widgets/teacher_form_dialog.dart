@@ -93,6 +93,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog>
           children: [
             buildNameField(languageProvider),
             buildEmailField(languageProvider),
+            buildPhoneField(languageProvider),
             buildNipField(),
           ],
         ),

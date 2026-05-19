@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/network/api_exceptions.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -57,7 +59,12 @@ mixin StudentFormSaveMixin on StudentFormValidationMixin {
   Future<void> handleSave() async {
     if (!validateAndShowError()) return;
 
-    setState(() {});
+    // Clear any stale per-field errors (e.g. previous "NIS sudah
+    // digunakan") so the user sees the form in a clean state during
+    // submit.
+    setState(() {
+      nisFieldError = null;
+    });
 
     final name = nameController.text.trim();
     final nis = nisController.text.trim();
@@ -95,7 +102,7 @@ mixin StudentFormSaveMixin on StudentFormValidationMixin {
     } catch (e) {
       AppLogger.error('student', 'Save/Update student error: $e');
       if (isMounted) {
-        _showErrorDialog(e);
+        _handleSaveError(e);
       }
     } finally {
       if (isMounted) {
@@ -135,13 +142,91 @@ mixin StudentFormSaveMixin on StudentFormValidationMixin {
     AppNavigator.pop(buildContext);
   }
 
-  /// Display error message — migrated from a hand-rolled `showDialog(AlertDialog)`
-  /// to the shared [SnackBarUtils.showError] so the error surface stays
-  /// consistent across the app.
-  void _showErrorDialog(dynamic error) {
+  /// Route save errors: 422 validation errors get surfaced inline on
+  /// the offending field (currently NIS / student_number) so the user
+  /// can fix the value without losing form context. Anything else falls
+  /// back to the friendly snackbar.
+  ///
+  /// Backend payload shape (Laravel-style):
+  /// ```json
+  /// {
+  ///   "message": "The given data was invalid.",
+  ///   "errors": {
+  ///     "student_number": ["NIS sudah digunakan oleh siswa lain"]
+  ///   }
+  /// }
+  /// ```
+  void _handleSaveError(dynamic error) {
+    final ValidationException? validation = _extractValidation(error);
+    if (validation != null) {
+      final nisMsg = _firstFieldError(validation.errors, const [
+        'student_number',
+        'nis',
+        'nisn',
+      ]);
+      if (nisMsg != null) {
+        // Inline error on NIS field — form stays open with all other
+        // values intact.
+        setState(() {
+          nisFieldError = _humanizeNisError(nisMsg);
+        });
+        SnackBarUtils.showError(buildContext, nisFieldError!);
+        return;
+      }
+      // Other validation error — surface the first message generically.
+      SnackBarUtils.showError(
+        buildContext,
+        validation.message.isNotEmpty
+            ? validation.message
+            : t(const {'en': 'Validation failed', 'id': 'Data tidak valid'}),
+      );
+      return;
+    }
+
     SnackBarUtils.showError(
       buildContext,
       '${t({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
     );
+  }
+
+  /// Unwraps the Dio layers to find a `ValidationException`. The error
+  /// interceptor wraps 422s as `DioException(error: ValidationException)`.
+  ValidationException? _extractValidation(dynamic error) {
+    if (error is ValidationException) return error;
+    if (error is DioException && error.error is ValidationException) {
+      return error.error as ValidationException;
+    }
+    return null;
+  }
+
+  /// Pulls the first error message for any of [keys] from a Laravel
+  /// `errors` map shape (each value is a List<String> of messages).
+  String? _firstFieldError(Map<String, dynamic>? errors, List<String> keys) {
+    if (errors == null) return null;
+    for (final k in keys) {
+      final v = errors[k];
+      if (v is List && v.isNotEmpty) return v.first.toString();
+      if (v is String && v.isNotEmpty) return v;
+    }
+    return null;
+  }
+
+  /// Normalises common backend phrasings to the user-friendly "NIS
+  /// sudah digunakan" wording, regardless of whether the backend says
+  /// "has already been taken", "duplicate", "already exists", etc.
+  String _humanizeNisError(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('taken') ||
+        lower.contains('duplicate') ||
+        lower.contains('already') ||
+        lower.contains('sudah') ||
+        lower.contains('digunakan') ||
+        lower.contains('unique')) {
+      return t(const {
+        'en': 'NIS is already used by another student.',
+        'id': 'NIS sudah digunakan oleh siswa lain.',
+      });
+    }
+    return raw;
   }
 }

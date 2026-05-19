@@ -1,16 +1,42 @@
-// Main UI layout for subject class management
+// Main UI layout for subject class management.
+//
+// Visual contract (matches the admin Akademik detail pattern used by
+// Raport, Pengumuman, Buku Nilai etc.):
+//
+//   ┌───────────────────────────────────────┐
+//   │  BrandPageHeader (navy gradient)      │
+//   │   subtitle = "MANAJEMEN KELAS"        │
+//   │   title    = <subject name>           │
+//   │   actions  = ✎ edit · ↻ refresh       │
+//   │   bottomSlot = BrandFilterChipStrip   │
+//   │     [ Status: <Semua|Terdaftar|...> ] │
+//   └───────────────────────────────────────┘
+//   │  BrandKpiStrip (Total / Terdaftar /   │
+//   │  Belum Terdaftar)                     │
+//   │  SearchFilterBar (solid)              │
+//   │  ListView<BrandListRow>               │
+//
+// The filter chip lives inside the gradient so the "currently applied"
+// state is visible at a glance — matching every other admin detail
+// screen that follows the parent-pioneered chip-strip pattern.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 import 'package:manajemensekolah/features/subjects/presentation/screens/subject_class_management_page.dart';
 
 mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
-  /// Builds the main UI scaffold
+  /// Builds the main UI scaffold. The header carries the navy gradient
+  /// + kicker pattern + edit/refresh action icons, and an optional
+  /// [headerFilterChips] slot hosts the Status filter chip strip so
+  /// the applied filter is visible without opening a sheet.
   Widget buildMainScaffold(
     bool isLoading,
     List<dynamic> filteredClasses,
@@ -18,54 +44,39 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
     List<dynamic> assignedClasses0,
     VoidCallback onRefresh,
     VoidCallback onFabPressed,
-    dynamic subject,
-  ) {
+    dynamic subject, {
+    VoidCallback? onEdit,
+    Widget? headerFilterChips,
+  }) {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      appBar: buildAppBar(subject, onRefresh),
-      body: buildBody(
-        isLoading,
-        filteredClasses,
-        availableClasses,
-        assignedClasses0,
-      ),
-      floatingActionButton: buildFab(onFabPressed),
-    );
-  }
-
-  /// Builds app bar with title and refresh button
-  PreferredSizeWidget buildAppBar(dynamic subject, VoidCallback onRefresh) {
-    return AppBar(
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
         children: [
-          Text(
-            _resolveSubjectName(subject),
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          BrandPageHeader(
+            role: 'admin',
+            title: _resolveSubjectName(subject),
+            subtitle: 'MANAJEMEN KELAS',
+            actionIcons: [
+              if (onEdit != null)
+                BrandHeaderIconButton(icon: Icons.edit_outlined, onTap: onEdit),
+              BrandHeaderIconButton(
+                icon: Icons.refresh_rounded,
+                onTap: onRefresh,
+              ),
+            ],
+            bottomSlot: headerFilterChips,
           ),
-          Text(
-            'Manajemen Kelas',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.8),
+          Expanded(
+            child: buildBody(
+              isLoading,
+              filteredClasses,
+              availableClasses,
+              assignedClasses0,
             ),
           ),
         ],
       ),
-      backgroundColor: ColorUtils.corporateBlue600,
-      elevation: 0,
-      iconTheme: const IconThemeData(color: Colors.white),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-          onPressed: onRefresh,
-          tooltip: 'Refresh',
-        ),
-      ],
+      floatingActionButton: buildFab(onFabPressed),
     );
   }
 
@@ -93,57 +104,45 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
     return Column(
       children: [
         buildStatsContainer(availableClasses.length, assignedClasses0.length),
-        buildSearchBar(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: buildSearchBar(),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         buildResultCount(filteredClasses),
         buildClassList(filteredClasses),
       ],
     );
   }
 
-  /// Builds stats container at top
+  /// Builds the KPI strip — replaces the legacy corporate-blue stats
+  /// card with the shared `BrandKpiStrip` so the visual identity
+  /// matches every other admin detail screen (Raport, Kehadiran, etc.).
   Widget buildStatsContainer(int totalClasses, int assignedCount) {
-    return Container(
-      margin: const EdgeInsets.all(AppSpacing.lg),
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ColorUtils.corporateBlue600,
-            ColorUtils.corporateBlue600.withValues(alpha: 0.75),
-          ],
-        ),
-        borderRadius: const BorderRadius.all(Radius.circular(16)),
-        boxShadow: ColorUtils.corporateShadow(elevation: 2.0),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          buildStatItem(
-            icon: Icons.class_,
-            value: totalClasses.toString(),
-            label: 'Total Kelas',
-            color: Colors.white,
-          ),
-          buildStatItem(
-            icon: Icons.check_circle,
-            value: assignedCount.toString(),
+    final remaining = totalClasses - assignedCount;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, AppSpacing.md, 0, AppSpacing.md),
+      child: BrandKpiStrip(
+        columns: [
+          BrandKpiColumn(label: 'Total Kelas', value: totalClasses.toString()),
+          BrandKpiColumn(
             label: 'Terdaftar',
-            color: Colors.white,
+            value: assignedCount.toString(),
+            valueColor: ColorUtils.success600,
           ),
-          buildStatItem(
-            icon: Icons.add_circle,
-            value: (totalClasses - assignedCount).toString(),
+          BrandKpiColumn(
             label: 'Belum Terdaftar',
-            color: Colors.white,
+            value: remaining.toString(),
+            valueColor: remaining > 0
+                ? ColorUtils.warning600
+                : ColorUtils.slate600,
           ),
         ],
       ),
     );
   }
 
-  /// Builds search and filter bar
+  /// Builds search bar widget
   Widget buildSearchBar();
 
   /// Builds result count text
@@ -168,8 +167,6 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
 
   /// Builds class list or empty state
   Widget buildClassList(List<dynamic> filteredClasses) {
-    const SizedBox(height: AppSpacing.xs);
-
     if (filteredClasses.isEmpty) {
       return const Expanded(
         child: EmptyState(
@@ -184,6 +181,7 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
 
     return Expanded(
       child: ListView.builder(
+        padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: 96),
         itemCount: filteredClasses.length,
         itemBuilder: (context, index) {
           final classItem = filteredClasses[index];
@@ -191,6 +189,31 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
           return buildClassCard(classItem, index, isAssigned);
         },
       ),
+    );
+  }
+
+  /// Builds the Status filter chip strip used inside the header's
+  /// bottomSlot. The single "Status" chip displays the applied value
+  /// ("Semua" / "Terdaftar" / "Belum Terdaftar") and opens a picker
+  /// sheet on tap.
+  Widget buildStatusFilterChipStrip({
+    required String currentFilter,
+    required VoidCallback onTap,
+  }) {
+    String label;
+    switch (currentFilter) {
+      case 'Assigned':
+        label = 'Terdaftar';
+        break;
+      case 'Unassigned':
+        label = 'Belum Terdaftar';
+        break;
+      case 'All':
+      default:
+        label = 'Semua';
+    }
+    return BrandFilterChipStrip(
+      chips: [BrandFilterChip(label: 'Status', value: label, onTap: onTap)],
     );
   }
 

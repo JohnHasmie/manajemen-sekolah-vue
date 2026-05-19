@@ -8,6 +8,7 @@ mixin TeacherFormInitMixin on ConsumerState<TeacherFormDialog> {
   late TextEditingController nameController;
   late TextEditingController emailController;
   late TextEditingController nipController;
+  late TextEditingController phoneController;
 
   String? selectedGender;
   String? selectedWaliKelasId;
@@ -34,6 +35,13 @@ mixin TeacherFormInitMixin on ConsumerState<TeacherFormDialog> {
     nameController = TextEditingController(text: model?.name ?? '');
     emailController = TextEditingController(text: model?.email ?? '');
     nipController = TextEditingController(text: model?.employeeNumber ?? '');
+    // Phone number — accept either `phone` or `phone_number` from the
+    // backend payload so legacy + new responses both populate.
+    final rawPhone =
+        widget.teacher?['phone_number'] ??
+        widget.teacher?['phone'] ??
+        widget.teacher?['no_hp'];
+    phoneController = TextEditingController(text: rawPhone?.toString() ?? '');
   }
 
   void _initializeGender() {
@@ -126,6 +134,7 @@ mixin TeacherFormInitMixin on ConsumerState<TeacherFormDialog> {
     nameController.dispose();
     emailController.dispose();
     nipController.dispose();
+    phoneController.dispose();
     super.dispose();
   }
 }

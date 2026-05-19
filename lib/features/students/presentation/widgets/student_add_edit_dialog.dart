@@ -250,6 +250,15 @@ class _StudentAddEditSheetContentState
                                 label: 'NIS',
                                 icon: Icons.badge,
                                 keyboardType: TextInputType.number,
+                                // Inline error from a 422 duplicate-NIS
+                                // response (see student_form_save_mixin).
+                                // Clears as soon as the user edits.
+                                errorText: nisFieldError,
+                                onChanged: nisFieldError == null
+                                    ? null
+                                    : (_) => setState(() {
+                                        nisFieldError = null;
+                                      }),
                               ),
                               StudentDialogDropdown(
                                 primaryColor: widget.primaryColor,

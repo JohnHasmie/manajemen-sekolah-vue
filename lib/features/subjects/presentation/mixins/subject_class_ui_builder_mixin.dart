@@ -1,167 +1,60 @@
-// Widget builders for class cards and UI components
+// Widget builders for class cards and UI components.
+//
+// Migrated to use the shared `BrandListRow` so this screen's class list
+// matches every other admin/parent list (Siswa, Guru, Kelas, parent
+// Akademik feature cards). Each row shows:
+//
+//   • Tinted leading icon (44×44) — assigned = success green, available
+//     = slate neutral.
+//   • Bold title = class name (e.g. "7A").
+//   • Inline meta = tingkat + wali kelas in topMeta line.
+//   • Inline status row = green "Terdaftar" dot + label OR neutral
+//     "Belum Terdaftar".
+//   • Trailing CTA = "Tambah" or "Lepas" so the action is discoverable
+//     without long-press menus.
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/widgets/status_badge.dart';
+import 'package:manajemensekolah/core/widgets/brand_list_row.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 
 mixin SubjectClassUiBuilderMixin {
-  /// Builds individual class card
+  /// Builds an individual class row using the shared `BrandListRow`.
   Widget buildClassCard(
     Map<String, dynamic> classItem,
     int index,
     bool isAssigned,
   ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        border: Border.all(
-          color: isAssigned
-              ? ColorUtils.corporateBlue600.withValues(alpha: 0.3)
-              : ColorUtils.slate200,
-          width: isAssigned ? 1.5 : 1,
-        ),
-        boxShadow: ColorUtils.corporateShadow(
-          elevation: isAssigned ? 1.5 : 1.0,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: const BorderRadius.all(Radius.circular(14)),
-        child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(14)),
-          onTap: () => handleClassCardTap(classItem, isAssigned),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: buildClassCardContent(classItem, isAssigned),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Builds content inside class card
-  Widget buildClassCardContent(
-    Map<String, dynamic> classItem,
-    bool isAssigned,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        buildClassIconContainer(isAssigned),
-        const SizedBox(width: AppSpacing.md),
-        buildClassInfo(classItem),
-        const SizedBox(width: AppSpacing.sm),
-        buildStatusIndicator(isAssigned),
-      ],
-    );
-  }
-
-  /// Builds class icon container
-  Widget buildClassIconContainer(bool isAssigned) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: isAssigned
-            ? ColorUtils.corporateBlue600.withValues(alpha: 0.1)
-            : ColorUtils.slate100,
-        borderRadius: const BorderRadius.all(Radius.circular(11)),
-        border: Border.all(
-          color: isAssigned
-              ? ColorUtils.corporateBlue600.withValues(alpha: 0.2)
-              : ColorUtils.slate200,
-        ),
-      ),
-      child: Icon(
-        Icons.class_outlined,
-        color: isAssigned ? ColorUtils.corporateBlue600 : ColorUtils.slate500,
-        size: 22,
-      ),
-    );
-  }
-
-  /// Builds class information column
-  Widget buildClassInfo(Map<String, dynamic> classItem) {
     final model = Classroom.fromJson(classItem);
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            model.name.isEmpty ? 'Kelas' : model.name,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: ColorUtils.slate800,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            children: [
-              if ((model.gradeLevel ?? '').isNotEmpty)
-                buildClassInfoTag(
-                  Icons.layers_outlined,
-                  'Tingkat ${model.gradeLevel}',
-                ),
-              if ((model.homeroomTeacherName ?? '').isNotEmpty)
-                buildClassInfoTag(
-                  Icons.person_outline,
-                  model.homeroomTeacherName!,
-                ),
-            ],
-          ),
-        ],
-      ),
+
+    final accent = isAssigned ? ColorUtils.success600 : ColorUtils.slate500;
+    final ctaColor = isAssigned
+        ? ColorUtils.error600
+        : ColorUtils.getRoleColor('admin');
+
+    final tingkat = (model.gradeLevel ?? '').trim();
+    final wali = (model.homeroomTeacherName ?? '').trim();
+    final topMetaParts = <String>[
+      if (tingkat.isNotEmpty) 'Tingkat $tingkat',
+      if (wali.isNotEmpty) 'Wali: $wali',
+    ];
+    final topMeta = topMetaParts.isEmpty ? null : topMetaParts.join(' · ');
+
+    return BrandListRow(
+      leading: _ClassLeadingIcon(color: accent),
+      title: model.name.isEmpty ? 'Kelas' : model.name,
+      topMeta: topMeta,
+      status: isAssigned
+          ? const BrandRowStatus.success('Terdaftar')
+          : const BrandRowStatus.neutral('Belum terdaftar'),
+      trailingActionLabel: isAssigned ? 'Lepas' : 'Tambah',
+      trailingActionColor: ctaColor,
+      showChevron: false,
+      onTap: () => handleClassCardTap(classItem, isAssigned),
     );
   }
 
-  /// Builds status indicator badge
-  Widget buildStatusIndicator(bool isAssigned) {
-    return StatusBadge(
-      label: isAssigned ? 'Terdaftar' : 'Tambahkan',
-      color: isAssigned ? ColorUtils.success600 : ColorUtils.corporateBlue600,
-      fontSize: 11,
-      icon: isAssigned ? Icons.check_circle_outline : Icons.add_circle_outline,
-      iconSize: 14,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-    );
-  }
-
-  /// Builds info tag (level, teacher)
-  Widget buildClassInfoTag(IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: const BorderRadius.all(Radius.circular(6)),
-        border: Border.all(color: ColorUtils.slate200),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: ColorUtils.slate600),
-          const SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11,
-              color: ColorUtils.slate700,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Builds stat item in stats container
+  /// Builds stat item in stats container (legacy — kept for back-compat
+  /// with the mixin contract; the screen now uses `BrandKpiStrip`).
   Widget buildStatItem({
     required IconData icon,
     required String value,
@@ -169,17 +62,10 @@ mixin SubjectClassUiBuilderMixin {
     required Color color,
   }) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.2),
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
-          ),
-          child: Icon(icon, color: color, size: 18),
-        ),
-        const SizedBox(height: AppSpacing.xs),
+        Icon(icon, color: color, size: 18),
+        const SizedBox(height: 4),
         Text(
           value,
           style: TextStyle(
@@ -198,4 +84,23 @@ mixin SubjectClassUiBuilderMixin {
 
   /// Handles class card tap
   void handleClassCardTap(Map<String, dynamic> classItem, bool isAssigned);
+}
+
+/// Leading tile for the class row — 44×44 tinted square with a class
+/// icon, mirroring the parent Akademik feature card leading style.
+class _ClassLeadingIcon extends StatelessWidget {
+  final Color color;
+
+  const _ClassLeadingIcon({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+      ),
+      child: Icon(Icons.class_outlined, color: color, size: 22),
+    );
+  }
 }

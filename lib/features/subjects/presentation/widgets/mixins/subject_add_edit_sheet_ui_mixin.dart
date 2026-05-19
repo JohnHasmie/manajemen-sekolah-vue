@@ -31,8 +31,10 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           AdminFormSection(
-            label:
-                lang.getTranslatedText({'en': 'BASIC DATA', 'id': 'DATA POKOK'}),
+            label: lang.getTranslatedText({
+              'en': 'BASIC DATA',
+              'id': 'DATA POKOK',
+            }),
             children: [
               _buildCodeField(lang),
               _buildMasterSubjectAutocomplete(lang),
@@ -41,8 +43,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
             ],
           ),
           AdminFormSection(
-            label:
-                lang.getTranslatedText({'en': 'STATUS', 'id': 'STATUS'}),
+            label: lang.getTranslatedText({'en': 'STATUS', 'id': 'STATUS'}),
             bottomGap: 4,
             children: [
               Column(
@@ -50,11 +51,10 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AdminFormFieldLabel(
-                    text:
-                        lang.getTranslatedText({
-                              'en': 'Active status',
-                              'id': 'Status aktif',
-                            }),
+                    text: lang.getTranslatedText({
+                      'en': 'Active status',
+                      'id': 'Status aktif',
+                    }),
                   ),
                   AdminFormChoiceChips<bool>(
                     value: isActive,
@@ -62,20 +62,18 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
                     choices: [
                       AdminFormChoice(
                         value: true,
-                        label:
-                            lang.getTranslatedText({
-                                  'en': 'Active',
-                                  'id': 'Aktif',
-                                }),
+                        label: lang.getTranslatedText({
+                          'en': 'Active',
+                          'id': 'Aktif',
+                        }),
                         icon: Icons.check_circle_rounded,
                       ),
                       AdminFormChoice(
                         value: false,
-                        label:
-                            lang.getTranslatedText({
-                                  'en': 'Inactive',
-                                  'id': 'Nonaktif',
-                                }),
+                        label: lang.getTranslatedText({
+                          'en': 'Inactive',
+                          'id': 'Nonaktif',
+                        }),
                         icon: Icons.cancel_outlined,
                       ),
                     ],

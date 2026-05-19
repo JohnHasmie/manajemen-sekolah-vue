@@ -17,6 +17,7 @@ mixin TeacherFormLogicMixin on ConsumerState<TeacherFormDialog> {
   abstract TextEditingController nameController;
   abstract TextEditingController emailController;
   abstract TextEditingController nipController;
+  abstract TextEditingController phoneController;
   abstract String? selectedGender;
   abstract String? selectedWaliKelasId;
   abstract String? selectedStatus;
@@ -50,12 +51,17 @@ mixin TeacherFormLogicMixin on ConsumerState<TeacherFormDialog> {
       final selectedYearId = academicYearProvider.selectedAcademicYear?['id']
           ?.toString();
 
+      final phone = phoneController.text.trim();
       final data = {
         'name': name,
         'email': email,
         'employee_number': nipController.text.isNotEmpty
             ? nipController.text
             : null,
+        // Send phone under both legacy (`phone`) and new (`phone_number`)
+        // keys so whichever the backend listens for fills correctly.
+        'phone_number': phone.isEmpty ? null : phone,
+        'phone': phone.isEmpty ? null : phone,
         'gender': selectedGender,
         'homeroom_class_id': selectedWaliKelasId,
         'employment_status': selectedStatus,

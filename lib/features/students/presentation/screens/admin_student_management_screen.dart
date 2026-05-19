@@ -373,7 +373,11 @@ class StudentManagementScreenState
     final lang = ref.read(languageRiverpod);
     final model = Student.fromJson(student);
 
-    final nis = (student['nis'] ?? student['nisn'] ?? '').toString();
+    // Canonical NIS field is `student_number` (matches the form +
+    // backend column). Fall back to legacy keys only if missing.
+    final nis =
+        (student['student_number'] ?? student['nis'] ?? student['nisn'] ?? '')
+            .toString();
     final className = model.className.isNotEmpty ? model.className : '-';
     final genderText = ref
         .read(adminStudentControllerProvider)

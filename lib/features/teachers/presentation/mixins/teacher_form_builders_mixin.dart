@@ -13,6 +13,7 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
   abstract TextEditingController nameController;
   abstract TextEditingController emailController;
   abstract TextEditingController nipController;
+  abstract TextEditingController phoneController;
   abstract String? selectedGender;
   abstract String? selectedWaliKelasId;
   abstract String? selectedStatus;
@@ -66,6 +67,20 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
       controller: nipController,
       label: 'NIP',
       icon: Icons.badge,
+    );
+  }
+
+  /// Phone number — optional. Accepts a free-form string so country
+  /// codes / dashes / spaces all survive (backend can normalise).
+  Widget buildPhoneField(LanguageProvider languageProvider) {
+    return buildDialogTextField(
+      controller: phoneController,
+      label: languageProvider.getTranslatedText({
+        'en': 'Phone Number',
+        'id': 'Nomor HP',
+      }),
+      icon: Icons.phone_outlined,
+      keyboardType: TextInputType.phone,
     );
   }
 

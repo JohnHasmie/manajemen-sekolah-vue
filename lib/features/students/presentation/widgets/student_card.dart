@@ -41,7 +41,13 @@ class StudentCard extends StatelessWidget {
     final model = Student.fromJson(student);
     final accent = ColorUtils.getRoleColor('admin');
     final className = model.className.isNotEmpty ? model.className : '-';
-    final nis = (student['nis'] ?? student['nisn'] ?? '').toString();
+    // Canonical NIS field is `student_number` (matches the backend
+    // column and the form). Fall back to legacy `nis` / `nisn` only
+    // when the canonical key is missing so older API responses still
+    // surface a NIS rather than going blank.
+    final nis =
+        (student['student_number'] ?? student['nis'] ?? student['nisn'] ?? '')
+            .toString();
 
     final topMeta = nis.isNotEmpty ? '$className · NIS $nis' : className;
 

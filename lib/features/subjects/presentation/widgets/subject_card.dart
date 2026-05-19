@@ -54,23 +54,122 @@ class SubjectCard extends ConsumerWidget {
             lang.getTranslatedText(const {'en': 'Inactive', 'id': 'Nonaktif'}),
           );
 
-    return BrandListRow(
-      leading: InitialsAvatar(
-        name: model.name.isNotEmpty ? model.name : '?',
-        size: 44,
-        color: accent,
-        borderRadius: 12,
+    // BrandListRow + a small popup menu overlay so admins have a
+    // visible Edit / Hapus affordance (long-press → edit still works
+    // as a secondary shortcut). Read-only AY hides the menu so the
+    // mutation actions don't tease an action that can't fire.
+    return Stack(
+      children: [
+        BrandListRow(
+          leading: InitialsAvatar(
+            name: model.name.isNotEmpty ? model.name : '?',
+            size: 44,
+            color: accent,
+            borderRadius: 12,
+          ),
+          topMeta: topMeta,
+          title: model.name.isNotEmpty ? model.name : 'No Name',
+          status: status,
+          trailingActionLabel: selected
+              ? null
+              : lang.getTranslatedText(const {'en': 'Detail', 'id': 'Detail'}),
+          trailingActionColor: accent,
+          onTap: onTap,
+          onLongPress: onLongPress ?? (isReadOnly ? null : onEdit),
+          selected: selected,
+        ),
+        if (!selected && !isReadOnly)
+          Positioned(
+            top: 6,
+            right: 6,
+            child: _SubjectRowMenu(
+              onEdit: onEdit,
+              onDelete: onDelete,
+              editLabel: lang.getTranslatedText(const {
+                'en': 'Edit',
+                'id': 'Edit',
+              }),
+              deleteLabel: lang.getTranslatedText(const {
+                'en': 'Delete',
+                'id': 'Hapus',
+              }),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Small kebab menu button — sits over the top-right of the card and
+/// exposes Edit + Hapus actions. Replaces the long-press-only edit
+/// flow so admins can find the action without the hidden gesture.
+class _SubjectRowMenu extends StatelessWidget {
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final String editLabel;
+  final String deleteLabel;
+
+  const _SubjectRowMenu({
+    required this.onEdit,
+    required this.onDelete,
+    required this.editLabel,
+    required this.deleteLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: PopupMenuButton<String>(
+        tooltip: editLabel,
+        icon: Icon(
+          Icons.more_vert_rounded,
+          size: 18,
+          color: ColorUtils.slate500,
+        ),
+        padding: EdgeInsets.zero,
+        offset: const Offset(0, 32),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        onSelected: (v) {
+          if (v == 'edit') onEdit();
+          if (v == 'delete') onDelete();
+        },
+        itemBuilder: (_) => [
+          PopupMenuItem<String>(
+            value: 'edit',
+            height: 40,
+            child: Row(
+              children: [
+                Icon(Icons.edit_outlined, size: 16, color: ColorUtils.slate700),
+                const SizedBox(width: 10),
+                Text(editLabel, style: const TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'delete',
+            height: 40,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.delete_outline_rounded,
+                  size: 16,
+                  color: ColorUtils.error600,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  deleteLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: ColorUtils.error600,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      topMeta: topMeta,
-      title: model.name.isNotEmpty ? model.name : 'No Name',
-      status: status,
-      trailingActionLabel: selected
-          ? null
-          : lang.getTranslatedText(const {'en': 'Detail', 'id': 'Detail'}),
-      trailingActionColor: accent,
-      onTap: onTap,
-      onLongPress: onLongPress ?? (isReadOnly ? null : onEdit),
-      selected: selected,
     );
   }
 }

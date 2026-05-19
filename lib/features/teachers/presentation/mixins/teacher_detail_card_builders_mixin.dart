@@ -170,6 +170,12 @@ mixin TeacherDetailCardBuildersMixin {
                 : 'Tidak ada',
           ),
           TeacherInfoRow(label: 'Email', value: model.email),
+          TeacherInfoRow(
+            label: 'Nomor HP',
+            value: (model.phoneNumber ?? '').isNotEmpty
+                ? model.phoneNumber!
+                : 'Tidak ada',
+          ),
         ],
       ),
     );

@@ -9,8 +9,9 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
-import 'package:manajemensekolah/core/widgets/enhanced_search_bar.dart';
+import 'package:manajemensekolah/core/widgets/search_filter_bar.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart'
     as model_subject;
@@ -19,6 +20,7 @@ import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_c
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_actions_mixin.dart';
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_ui_mixin.dart';
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_ui_builder_mixin.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_add_edit_sheet.dart';
 
 class SubjectClassManagementPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> subject;
@@ -104,46 +106,38 @@ class SubjectClassManagementPageState
     }
   }
 
-  /// Builds search bar widget
+  /// Builds the body search bar — solid `SearchFilterBar` without a
+  /// filter icon (the Status filter lives as a chip in the header
+  /// bottom slot so it's always visible without an extra tap).
   @override
   Widget buildSearchBar() {
-    final translatedOptions = _getTranslatedFilterOptions();
-
-    return EnhancedSearchBar(
+    return SearchFilterBar(
       controller: searchController,
-      hintText: 'Cari classItem...',
-      onChanged: (value) {
-        setState(() {});
-      },
-      filterOptions: translatedOptions,
-      selectedFilter:
-          translatedOptions[selectedFilter == 'All'
-              ? 0
-              : selectedFilter == 'Assigned'
-              ? 1
-              : 2],
-      onFilterChanged: (filter) {
-        final index = translatedOptions.indexOf(filter);
-        setState(() {
-          selectedFilter = index == 0
-              ? 'All'
-              : index == 1
-              ? 'Assigned'
-              : 'Unassigned';
-        });
-      },
-      showFilter: true,
+      hintText: 'Cari kelas...',
+      transparentStyle: false,
+      primaryColor: getPrimaryColor(),
+      onChanged: (_) => setState(() {}),
     );
   }
 
-  /// Gets translated filter options
-  List<String> _getTranslatedFilterOptions() {
-    final lang = ref.read(languageRiverpod);
-    return [
-      lang.getTranslatedText({'en': 'All', 'id': 'Semua'}),
-      lang.getTranslatedText({'en': 'Assigned', 'id': 'Terdaftar'}),
-      lang.getTranslatedText({'en': 'Unassigned', 'id': 'Belum Terdaftar'}),
-    ];
+  /// Opens the Status picker sheet. Three mutually-exclusive options:
+  /// Semua / Terdaftar / Belum Terdaftar.
+  void _openStatusFilterSheet() {
+    AppBottomSheet.show(
+      context: context,
+      title: 'Status Kelas',
+      subtitle: 'Saring kelas berdasarkan status pendaftaran',
+      icon: Icons.tune_rounded,
+      primaryColor: getPrimaryColor(),
+      content: _StatusFilterPicker(
+        selected: selectedFilter,
+        primaryColor: getPrimaryColor(),
+        onSelect: (filter) {
+          setState(() => selectedFilter = filter);
+          AppNavigator.pop(context);
+        },
+      ),
+    );
   }
 
   /// Shows quick add class dialog
@@ -267,6 +261,136 @@ class SubjectClassManagementPageState
         _subjectName(),
       ),
       widget.subject,
+      onEdit: _openEditSubjectSheet,
+      headerFilterChips: buildStatusFilterChipStrip(
+        currentFilter: selectedFilter,
+        onTap: _openStatusFilterSheet,
+      ),
+    );
+  }
+
+  /// Opens the same `SubjectAddEditSheet` the list uses, pre-filled
+  /// with the current subject. On save we reload local data so the
+  /// header title (subject name) and class roster stay in sync.
+  void _openEditSubjectSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SubjectAddEditSheet(
+        subject: widget.subject,
+        availableMasterSubjects: const [],
+        onSaved: () {
+          if (mounted) {
+            loadData();
+          }
+        },
+      ),
+    );
+  }
+}
+
+/// Three-option mutually-exclusive Status filter list. Renders as
+/// large tappable rows with a check icon on the currently-selected
+/// row. Keeps the picker minimal so it feels like a lightweight chip
+/// affordance rather than a full filter form.
+class _StatusFilterPicker extends StatelessWidget {
+  final String selected;
+  final Color primaryColor;
+  final ValueChanged<String> onSelect;
+
+  const _StatusFilterPicker({
+    required this.selected,
+    required this.primaryColor,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const options = <(String, String, IconData)>[
+      ('All', 'Semua', Icons.layers_outlined),
+      ('Assigned', 'Terdaftar', Icons.check_circle_outline),
+      ('Unassigned', 'Belum Terdaftar', Icons.radio_button_unchecked),
+    ];
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final opt in options)
+          _StatusFilterRow(
+            label: opt.$2,
+            icon: opt.$3,
+            isSelected: selected == opt.$1,
+            primaryColor: primaryColor,
+            onTap: () => onSelect(opt.$1),
+          ),
+      ],
+    );
+  }
+}
+
+class _StatusFilterRow extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final Color primaryColor;
+  final VoidCallback onTap;
+
+  const _StatusFilterRow({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.primaryColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm + 2,
+          ),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? primaryColor.withValues(alpha: 0.08)
+                : Colors.transparent,
+            border: Border.all(
+              color: isSelected ? primaryColor : ColorUtils.slate200,
+              width: isSelected ? 1.2 : 0.75,
+            ),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? primaryColor : ColorUtils.slate500,
+                size: 20,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? primaryColor : ColorUtils.slate800,
+                  ),
+                ),
+              ),
+              if (isSelected)
+                Icon(Icons.check_rounded, color: primaryColor, size: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
