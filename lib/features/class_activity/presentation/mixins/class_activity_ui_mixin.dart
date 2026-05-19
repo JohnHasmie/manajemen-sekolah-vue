@@ -176,7 +176,7 @@ class _AdminActivityDetailContent extends StatelessWidget {
               border: Border.all(color: ColorUtils.slate200),
             ),
             child: Text(
-              description!,
+              description,
               style: TextStyle(
                 fontSize: 14,
                 color: ColorUtils.slate700,
