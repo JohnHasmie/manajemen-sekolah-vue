@@ -115,18 +115,17 @@ class SubjectClassManagementPageState
     });
 
     final subjectIdStr = getSubjectId().toString();
+    final idsToDetach = selected.map((c) => c['id'].toString()).toList();
     var detached = 0;
 
-    for (final c in selected) {
-      try {
-        await getIt<ApiSubjectService>().detachClass(
-          subjectIdStr,
-          c['id'].toString(),
-        );
-        detached++;
-      } catch (e) {
-        // Ignored
-      }
+    try {
+      final res = await getIt<ApiSubjectService>().bulkDetachClasses(
+        subjectIdStr,
+        idsToDetach,
+      );
+      detached = res['detached_count'] as int? ?? idsToDetach.length;
+    } catch (e) {
+      // Ignored
     }
 
     if (!mounted) return;

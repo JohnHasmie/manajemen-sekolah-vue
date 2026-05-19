@@ -248,18 +248,18 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         buildResultCount(filteredClasses),
-        ListView.builder(
-          padding: const EdgeInsets.only(top: AppSpacing.sm),
-          physics: const NeverScrollableScrollPhysics(),
-          shrinkWrap: true,
-          itemCount: filteredClasses.length,
-          itemBuilder: (context, index) {
-            final classItem = filteredClasses[index];
-            final id = classItem['id']?.toString() ?? '';
-            final isSelected = selectedIds.contains(id);
-            final isAssigned = checkIfClassAssigned(id);
-            return buildClassCard(classItem, index, isAssigned, isSelected);
-          },
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: 16),
+            itemCount: filteredClasses.length,
+            itemBuilder: (context, index) {
+              final classItem = filteredClasses[index];
+              final id = classItem['id']?.toString() ?? '';
+              final isSelected = selectedIds.contains(id);
+              final isAssigned = checkIfClassAssigned(id);
+              return buildClassCard(classItem, index, isAssigned, isSelected);
+            },
+          ),
         ),
       ],
     );

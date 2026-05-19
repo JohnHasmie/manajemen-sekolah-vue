@@ -284,6 +284,20 @@ class SubjectCrudService {
     return <String, dynamic>{};
   }
 
+  /// Detaches multiple classes from a subject in a single round-trip.
+  Future<Map<String, dynamic>> bulkDetachClasses(
+    String subjectId,
+    List<String> classIds,
+  ) async {
+    final response = await ApiService().post(
+      '/subject/$subjectId/classes/bulk-detach',
+      {'class_ids': classIds},
+    );
+    await CacheInvalidationService.onSubjectChanged();
+    if (response is Map<String, dynamic>) return response;
+    return <String, dynamic>{};
+  }
+
   /// Fetches the master list of all available subjects.
   /// System-wide reference data, not school-specific.
   Future<List<dynamic>> getAllMasterSubjects() async {
