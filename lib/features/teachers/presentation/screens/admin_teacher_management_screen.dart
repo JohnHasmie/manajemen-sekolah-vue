@@ -437,6 +437,17 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen> {
             ),
             EntityDetailRow(
               label: lang.getTranslatedText(const {
+                'en': 'Classes',
+                'id': 'Kelas',
+              }),
+              value: (teacher['classes'] as List<dynamic>?)
+                      ?.map((c) => (c is Map ? c['name'] : c).toString())
+                      .where((c) => c.isNotEmpty)
+                      .join(', ') ??
+                  '-',
+            ),
+            EntityDetailRow(
+              label: lang.getTranslatedText(const {
                 'en': 'Employment',
                 'id': 'Status Kerja',
               }),

@@ -37,11 +37,7 @@ mixin TeacherFormInitMixin on ConsumerState<TeacherFormDialog> {
     nipController = TextEditingController(text: model?.employeeNumber ?? '');
     // Phone number — accept either `phone` or `phone_number` from the
     // backend payload so legacy + new responses both populate.
-    final rawPhone =
-        widget.teacher?['phone_number'] ??
-        widget.teacher?['phone'] ??
-        widget.teacher?['no_hp'];
-    phoneController = TextEditingController(text: rawPhone?.toString() ?? '');
+    phoneController = TextEditingController(text: model?.phoneNumber ?? '');
   }
 
   void _initializeGender() {

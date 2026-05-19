@@ -30,6 +30,7 @@ import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
+import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_filter_mixin.dart';
 import 'package:manajemensekolah/features/subjects/presentation/screens/subject_class_management_page.dart';
 
 mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
@@ -193,28 +194,56 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
   }
 
   /// Builds the Status filter chip strip used inside the header's
-  /// bottomSlot. The single "Status" chip displays the applied value
-  /// ("Semua" / "Terdaftar" / "Belum Terdaftar") and opens a picker
-  /// sheet on tap.
+  /// bottomSlot. Renders two chips side-by-side: Status + Urutkan.
+  /// Both open the same combined filter sheet (Frame B), which is
+  /// less surface area than two separate pickers and matches the
+  /// admin Jadwal / Buku Nilai pattern.
   Widget buildStatusFilterChipStrip({
     required String currentFilter,
+    required SubjectClassSort currentSort,
     required VoidCallback onTap,
   }) {
-    String label;
+    return BrandFilterChipStrip(
+      chips: [
+        BrandFilterChip(
+          label: 'Status',
+          value: _statusLabel(currentFilter),
+          onTap: onTap,
+        ),
+        BrandFilterChip(
+          label: 'Urutkan',
+          value: _sortLabel(currentSort),
+          onTap: onTap,
+        ),
+      ],
+    );
+  }
+
+  String _statusLabel(String currentFilter) {
     switch (currentFilter) {
       case 'Assigned':
-        label = 'Terdaftar';
-        break;
+        return 'Terdaftar';
       case 'Unassigned':
-        label = 'Belum Terdaftar';
-        break;
+        return 'Belum Terdaftar';
       case 'All':
       default:
-        label = 'Semua';
+        return 'Semua';
     }
-    return BrandFilterChipStrip(
-      chips: [BrandFilterChip(label: 'Status', value: label, onTap: onTap)],
-    );
+  }
+
+  String _sortLabel(SubjectClassSort sort) {
+    switch (sort) {
+      case SubjectClassSort.assignedFirst:
+        return 'Terdaftar dulu';
+      case SubjectClassSort.unassignedFirst:
+        return 'Belum dulu';
+      case SubjectClassSort.nameAsc:
+        return 'Nama A→Z';
+      case SubjectClassSort.nameDesc:
+        return 'Nama Z→A';
+      case SubjectClassSort.gradeAsc:
+        return 'Tingkat ↑';
+    }
   }
 
   /// Builds floating action button

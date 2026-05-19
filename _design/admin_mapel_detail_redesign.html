@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Admin · Mata Pelajaran Detail · Redesign mockup</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-dark-deep: #1F4A8F;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --brand-azure-deep: #1885B2;
+    --green-50: #DCFCE7;
+    --green-100: #BBF7D0;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-100: #FDE68A;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --indigo-50: #E0E7FF;
+    --indigo-600: #4F46E5;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+    --teal-50: #CCFBF1;
+    --teal-600: #0D9488;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0; padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 8px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .subtitle {
+    color: var(--slate-500); font-size: 14px; margin: 0 0 24px;
+    max-width: 1000px; line-height: 1.55;
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin: 0 0 28px; padding: 14px 18px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; color: var(--slate-700); font-weight: 600;
+    max-width: 1000px;
+  }
+  .legend .swatch {
+    width: 14px; height: 14px; border-radius: 4px;
+    display: inline-block; vertical-align: -2px; margin-right: 6px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 28px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 28px;
+    border: 1px solid var(--slate-200);
+    padding: 14px;
+    box-shadow: 0 12px 36px rgba(15,23,42,.08);
+  }
+  .frame-label {
+    font-size: 11px; font-weight: 700;
+    color: var(--brand-dark);
+    letter-spacing: 1.4px; text-transform: uppercase;
+    margin: 0 0 10px 6px;
+  }
+  .frame-note {
+    font-size: 12px; color: var(--slate-500);
+    margin: 0 6px 12px; line-height: 1.45;
+  }
+  .phone {
+    background: var(--slate-50);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--slate-200);
+  }
+  /* ---------- Brand header ---------- */
+  .header {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-dark-deep) 60%, var(--brand-cobalt) 100%);
+    color: white;
+    padding: 14px 16px 20px;
+    border-bottom-left-radius: 28px;
+    border-bottom-right-radius: 28px;
+    position: relative;
+  }
+  .header-toolbar {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .icon-btn {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: grid; place-items: center;
+    color: white; font-size: 14px;
+  }
+  .icon-btn.no-bg { background: transparent; }
+  .header-title {
+    flex: 1; text-align: center;
+  }
+  .kicker {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.4px;
+    color: rgba(255,255,255,.72);
+  }
+  .title {
+    font-size: 19px; font-weight: 700;
+    letter-spacing: -0.1px; line-height: 1.15;
+    margin-top: 2px;
+  }
+  .hairline {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.32) 25%, rgba(255,255,255,.32) 75%, transparent);
+    margin: 12px 0 10px;
+  }
+  .chip-strip {
+    display: flex; gap: 6px;
+  }
+  .chip {
+    height: 32px; padding: 0 10px;
+    border-radius: 10px;
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(255,255,255,.25);
+    color: white; font-size: 11px; font-weight: 600;
+    flex: 1; justify-content: center;
+  }
+  .chip .label {
+    opacity: 1;
+  }
+  .chip svg { width: 10px; height: 10px; }
+  .chip.placeholder {
+    background: rgba(255,255,255,.18);
+    border: 1px dashed rgba(255,255,255,.5);
+  }
+  /* ---------- Body ---------- */
+  .body {
+    padding: 16px 14px 24px;
+  }
+  .meta-card {
+    background: white;
+    border-radius: 16px;
+    padding: 14px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 1px 0 rgba(15,23,42,.02);
+    margin-bottom: 14px;
+  }
+  .meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .meta-cell {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .meta-label {
+    font-size: 10px; color: var(--slate-500);
+    text-transform: uppercase; letter-spacing: .6px; font-weight: 600;
+  }
+  .meta-val {
+    font-size: 13px; font-weight: 700; color: var(--slate-900);
+  }
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    padding: 12px 0;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 0 rgba(15,23,42,.02);
+  }
+  .kpi-cell {
+    text-align: center;
+    border-right: 1px solid var(--slate-200);
+    padding: 0 6px;
+  }
+  .kpi-cell:last-child { border-right: 0; }
+  .kpi-val {
+    font-size: 22px; font-weight: 800; color: var(--slate-900); line-height: 1.1;
+  }
+  .kpi-val.success { color: var(--green-700); }
+  .kpi-val.warning { color: var(--amber-700); }
+  .kpi-label {
+    font-size: 10px; color: var(--slate-500); margin-top: 2px;
+    text-transform: uppercase; letter-spacing: .4px;
+  }
+  /* ---------- Search ---------- */
+  .search {
+    background: white;
+    border-radius: 12px;
+    padding: 0 12px;
+    height: 44px;
+    display: flex; align-items: center;
+    border: 1px solid var(--slate-200);
+    margin-bottom: 10px;
+  }
+  .search input {
+    border: 0; outline: 0; flex: 1; font-size: 13px;
+    background: transparent;
+    color: var(--slate-900);
+  }
+  .search-ico { color: var(--brand-dark); }
+  .result-count {
+    font-size: 11px; color: var(--slate-500); margin: 0 4px 8px;
+  }
+  /* ---------- Class list rows ---------- */
+  .row {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    padding: 12px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 12px; align-items: center;
+  }
+  .row.selected {
+    border-color: var(--brand-cobalt);
+    background: rgba(27,111,184,.04);
+    border-width: 1.4px;
+  }
+  .leading {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 18px;
+    color: var(--slate-500);
+    background: rgba(100,116,139,.12);
+  }
+  .leading.assigned {
+    background: rgba(22,163,74,.12);
+    color: var(--green-700);
+  }
+  .row-body {
+    display: flex; flex-direction: column; gap: 4px; min-width: 0;
+  }
+  .row-meta {
+    font-size: 11.5px; color: var(--slate-500); font-weight: 500;
+  }
+  .row-title {
+    font-size: 15px; font-weight: 800; color: var(--slate-900);
+  }
+  .row-status {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot.green { background: var(--green-700); }
+  .dot.slate { background: var(--slate-500); }
+  .status-text { font-size: 11.5px; font-weight: 700; }
+  .status-text.green { color: var(--green-700); }
+  .status-text.slate { color: var(--slate-500); }
+  .wali-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--indigo-50);
+    color: var(--indigo-600);
+    border-radius: 8px;
+    padding: 2px 6px 2px 4px;
+    font-size: 10.5px; font-weight: 700;
+    margin-left: 6px;
+  }
+  .wali-chip .avatar {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--indigo-600); color: white;
+    font-size: 8px; display: grid; place-items: center; font-weight: 800;
+  }
+  .wali-chip.missing {
+    background: var(--amber-50); color: var(--amber-700);
+  }
+  .row-cta {
+    font-size: 12.5px; font-weight: 700;
+  }
+  .row-cta.add { color: var(--brand-dark); }
+  .row-cta.remove { color: var(--red-600); }
+  .row-cta .kebab {
+    display: inline-grid; place-items: center;
+    width: 24px; height: 24px; border-radius: 8px;
+    color: var(--slate-500); background: var(--slate-100);
+    margin-left: 6px;
+  }
+  /* ---------- FAB ---------- */
+  .fab {
+    position: absolute; right: 16px; bottom: 16px;
+    width: 52px; height: 52px; border-radius: 16px;
+    background: var(--brand-dark);
+    color: white;
+    display: grid; place-items: center;
+    font-size: 22px; font-weight: 800;
+    box-shadow: 0 8px 20px rgba(20,48,104,.4);
+  }
+  /* ---------- Sheets ---------- */
+  .sheet {
+    background: white;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    padding: 16px 14px 18px;
+    margin-top: -28px;
+    position: relative;
+    border: 1px solid var(--slate-200);
+    border-bottom: 0;
+  }
+  .sheet-header {
+    display: flex; align-items: start; gap: 10px;
+    padding: 4px 4px 10px;
+    border-bottom: 1px solid var(--slate-100);
+    margin-bottom: 12px;
+  }
+  .sheet-icon {
+    width: 36px; height: 36px; border-radius: 12px;
+    background: rgba(20,48,104,.1); color: var(--brand-dark);
+    display: grid; place-items: center; font-size: 18px;
+  }
+  .sheet-title-block { flex: 1; }
+  .sheet-title { font-size: 15px; font-weight: 800; color: var(--slate-900); }
+  .sheet-sub { font-size: 11.5px; color: var(--slate-500); margin-top: 2px; }
+  .sheet-x {
+    width: 28px; height: 28px; border-radius: 8px;
+    color: var(--slate-500); display: grid; place-items: center;
+    background: var(--slate-100); font-size: 14px;
+  }
+  .sec-title {
+    font-size: 11.5px; font-weight: 700;
+    color: var(--brand-dark);
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin: 12px 6px 8px;
+  }
+  .picker-row {
+    display: flex; align-items: center; gap: 12px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin: 4px 0;
+  }
+  .picker-row.sel {
+    border-color: var(--brand-cobalt); border-width: 1.4px;
+    background: rgba(27,111,184,.06);
+  }
+  .picker-row .check {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 1.5px solid var(--slate-300);
+    display: grid; place-items: center;
+    color: white; font-size: 12px;
+  }
+  .picker-row.sel .check {
+    background: var(--brand-cobalt); border-color: var(--brand-cobalt);
+  }
+  .picker-row .ic {
+    width: 20px; color: var(--slate-500);
+  }
+  .picker-row.sel .ic { color: var(--brand-cobalt); }
+  .picker-row .lbl {
+    flex: 1; font-size: 13.5px; font-weight: 600; color: var(--slate-800);
+  }
+  .picker-row.sel .lbl { color: var(--brand-cobalt); font-weight: 800; }
+  .footer-row {
+    display: grid; grid-template-columns: 1fr 2fr; gap: 8px;
+    padding-top: 14px; border-top: 1px solid var(--slate-100); margin-top: 12px;
+  }
+  .btn {
+    height: 44px; border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 13px; font-weight: 700;
+  }
+  .btn.sec { background: var(--slate-100); color: var(--slate-700); }
+  .btn.pri { background: var(--brand-dark); color: white; }
+  .btn.danger { background: var(--red-600); color: white; }
+  .btn-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    padding-top: 14px; border-top: 1px solid var(--slate-100); margin-top: 12px;
+  }
+  /* Teacher row in wali kelas sheet */
+  .teacher-row {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 12px; align-items: center;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--slate-200);
+    padding: 10px 12px;
+    margin: 4px 0;
+  }
+  .teacher-row.sel {
+    border-color: var(--brand-cobalt);
+    background: rgba(27,111,184,.06);
+    border-width: 1.4px;
+  }
+  .teacher-row.disabled {
+    background: var(--slate-50);
+    opacity: 0.7;
+  }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--brand-cobalt); color: white;
+    display: grid; place-items: center; font-weight: 800; font-size: 14px;
+  }
+  .avatar.cobalt { background: var(--brand-cobalt); }
+  .avatar.azure { background: var(--brand-azure); }
+  .avatar.green { background: var(--green-600); }
+  .avatar.violet { background: var(--violet-600); }
+  .avatar.amber { background: var(--amber-600); }
+  .teacher-name { font-size: 13.5px; font-weight: 800; color: var(--slate-900); }
+  .teacher-sub { font-size: 11px; color: var(--slate-500); margin-top: 2px; }
+  .teacher-flag {
+    background: var(--amber-50); color: var(--amber-700);
+    font-size: 10px; font-weight: 700;
+    padding: 2px 6px; border-radius: 8px;
+    margin-top: 2px; display: inline-block;
+  }
+  .check-trail {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid var(--slate-300);
+    display: grid; place-items: center;
+    color: white; font-size: 12px;
+  }
+  .teacher-row.sel .check-trail {
+    background: var(--brand-cobalt); border-color: var(--brand-cobalt);
+  }
+  /* Detail row (Frame C) */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 6px 0 14px;
+  }
+  .detail-cell {
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 10px;
+  }
+  .action-row {
+    display: flex; gap: 8px; padding-top: 10px;
+  }
+  .action-btn {
+    flex: 1; height: 44px; border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 12.5px; font-weight: 700;
+  }
+  .action-btn.cobalt { background: rgba(27,111,184,.1); color: var(--brand-cobalt); }
+  .action-btn.azure { background: rgba(33,175,230,.1); color: var(--brand-azure-deep); }
+  .action-btn.red { background: rgba(220,38,38,.08); color: var(--red-700); }
+  /* Add class — tingkat group */
+  .tingkat-tab {
+    display: flex; gap: 6px;
+    background: var(--slate-100);
+    padding: 4px; border-radius: 12px;
+    margin-bottom: 10px;
+  }
+  .tt {
+    flex: 1; height: 32px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700;
+    color: var(--slate-600);
+  }
+  .tt.sel {
+    background: white; color: var(--brand-dark);
+    box-shadow: 0 1px 0 rgba(15,23,42,.04);
+  }
+  .selection-summary {
+    background: rgba(27,111,184,.06);
+    border: 1px solid rgba(27,111,184,.2);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 11.5px; color: var(--brand-cobalt); font-weight: 700;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .selection-summary .clear {
+    font-size: 11px; color: var(--brand-cobalt);
+    background: rgba(27,111,184,.15);
+    padding: 4px 8px; border-radius: 8px;
+  }
+  /* Field block (edit subject) */
+  .field {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin: 6px 0;
+  }
+  .field-label {
+    font-size: 10.5px; font-weight: 700;
+    color: var(--slate-500);
+    text-transform: uppercase; letter-spacing: .6px;
+  }
+  .field-val {
+    font-size: 14px; color: var(--slate-900); font-weight: 600;
+    margin-top: 4px;
+  }
+  .field-val.placeholder { color: var(--slate-400); font-weight: 500; }
+  .row-flex2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  /* Flow annotations */
+  .flow-callouts {
+    margin: 24px 0 0;
+    padding: 18px 20px;
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    max-width: 1000px;
+    font-size: 13px; color: var(--slate-700); line-height: 1.55;
+  }
+  .flow-callouts h2 {
+    font-size: 14px; font-weight: 800; color: var(--brand-dark);
+    margin: 0 0 8px; letter-spacing: -.1px;
+  }
+  .flow-callouts ul { margin: 6px 0 0 18px; padding: 0; }
+  .flow-callouts li { margin: 4px 0; }
+  .flow-callouts strong { color: var(--brand-dark); }
+</style>
+</head>
+<body>
+
+<h1>Admin · Mata Pelajaran Detail · Flow redesign</h1>
+<p class="subtitle">
+  Proposed redesign for the subject-detail screen and its supporting sheets.
+  The current screen mixes a dialog-style add flow, a search-bar dropdown
+  filter, and ad-hoc cards. This redesign aligns every surface with the
+  shared brand contract (BrandPageHeader · BrandKpiStrip · BrandListRow ·
+  AppBottomSheet · BrandFilterChipStrip) and introduces the missing
+  affordances: <strong>wali kelas assignment per class</strong>,
+  <strong>multi-select add</strong>, <strong>sort + status filter</strong>,
+  and a <strong>quick action sheet</strong> on assigned rows.
+</p>
+
+<div class="legend">
+  <span><span class="swatch" style="background: var(--brand-dark)"></span>Admin navy gradient (header)</span>
+  <span><span class="swatch" style="background: var(--green-700)"></span>Status: Terdaftar</span>
+  <span><span class="swatch" style="background: var(--slate-500)"></span>Status: Belum Terdaftar</span>
+  <span><span class="swatch" style="background: var(--amber-700)"></span>Wali kelas belum diset</span>
+  <span><span class="swatch" style="background: var(--indigo-600)"></span>Wali kelas chip</span>
+  <span><span class="swatch" style="background: var(--red-600)"></span>Destructive (Lepas)</span>
+</div>
+
+<div class="grid">
+
+  <!-- =============== FRAME A: Detail Hub =============== -->
+  <div class="frame">
+    <p class="frame-label">Frame A · Detail hub (default)</p>
+    <p class="frame-note">
+      Brand header + subject meta card + KPI strip + Status & Urutkan
+      chip strip inside the gradient (no extra sheet round-trip to
+      change filter). Each class row carries an inline Wali Kelas chip
+      so admin can scan the homeroom roster at a glance.
+    </p>
+    <div class="phone">
+      <div class="header">
+        <div class="header-toolbar">
+          <div class="icon-btn">←</div>
+          <div class="header-title">
+            <div class="kicker">MANAJEMEN KELAS</div>
+            <div class="title">Matematika</div>
+          </div>
+          <div class="icon-btn">✎</div>
+          <div class="icon-btn">↻</div>
+          <div class="icon-btn">⋮</div>
+        </div>
+        <div class="hairline"></div>
+        <div class="chip-strip">
+          <div class="chip">Status<svg viewBox="0 0 10 10"><path d="M0 3 L5 8 L10 3" fill="none" stroke="white" stroke-width="1.4"/></svg></div>
+          <div class="chip">Urutkan: Terdaftar dulu<svg viewBox="0 0 10 10"><path d="M0 3 L5 8 L10 3" fill="none" stroke="white" stroke-width="1.4"/></svg></div>
+        </div>
+      </div>
+      <div class="body" style="position:relative;">
+        <div class="meta-card">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:36px; height:36px; border-radius:10px; background: rgba(27,111,184,.1); color: var(--brand-cobalt); display:grid; place-items:center; font-size:18px;">📘</div>
+            <div style="flex:1;">
+              <div style="font-size:13px; font-weight:800; color:var(--slate-900);">Matematika</div>
+              <div style="font-size:11px; color:var(--slate-500);">Kode MTK · Kategori Wajib</div>
+            </div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-cell"><span class="meta-label">JP / minggu</span><span class="meta-val">5</span></div>
+            <div class="meta-cell"><span class="meta-label">KKM</span><span class="meta-val">75</span></div>
+            <div class="meta-cell"><span class="meta-label">Tingkat</span><span class="meta-val">VII – IX</span></div>
+          </div>
+        </div>
+        <div class="kpi-strip">
+          <div class="kpi-cell">
+            <div class="kpi-val">12</div>
+            <div class="kpi-label">Total Kelas</div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-val success">8</div>
+            <div class="kpi-label">Terdaftar</div>
+          </div>
+          <div class="kpi-cell">
+            <div class="kpi-val warning">4</div>
+            <div class="kpi-label">Belum</div>
+          </div>
+        </div>
+        <div class="search">
+          <input placeholder="Cari kelas..." />
+          <span class="search-ico">🔍</span>
+        </div>
+        <div class="result-count">8 kelas ditemukan</div>
+
+        <div class="row">
+          <div class="leading assigned">📚</div>
+          <div class="row-body">
+            <div class="row-meta">Tingkat 7</div>
+            <div class="row-title">7A</div>
+            <div class="row-status">
+              <span class="dot green"></span>
+              <span class="status-text green">Terdaftar</span>
+              <span class="wali-chip"><span class="avatar">AY</span>Ahmad Y.</span>
+            </div>
+          </div>
+          <div class="row-cta">
+            <span style="color:var(--brand-dark)">Detail</span>
+            <span class="kebab">⋮</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="leading assigned">📚</div>
+          <div class="row-body">
+            <div class="row-meta">Tingkat 7</div>
+            <div class="row-title">7B</div>
+            <div class="row-status">
+              <span class="dot green"></span>
+              <span class="status-text green">Terdaftar</span>
+              <span class="wali-chip missing">⚠ Wali belum diset</span>
+            </div>
+          </div>
+          <div class="row-cta">
+            <span style="color:var(--brand-dark)">Detail</span>
+            <span class="kebab">⋮</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="leading">📋</div>
+          <div class="row-body">
+            <div class="row-meta">Tingkat 8</div>
+            <div class="row-title">8A</div>
+            <div class="row-status">
+              <span class="dot slate"></span>
+              <span class="status-text slate">Belum terdaftar</span>
+            </div>
+          </div>
+          <div class="row-cta add">+ Tambah</div>
+        </div>
+
+        <div class="row">
+          <div class="leading">📋</div>
+          <div class="row-body">
+            <div class="row-meta">Tingkat 8</div>
+            <div class="row-title">8B</div>
+            <div class="row-status">
+              <span class="dot slate"></span>
+              <span class="status-text slate">Belum terdaftar</span>
+            </div>
+          </div>
+          <div class="row-cta add">+ Tambah</div>
+        </div>
+
+        <div class="fab">+</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== FRAME B: Filter / Sort sheet =============== -->
+  <div class="frame">
+    <p class="frame-label">Frame B · Filter & Urutkan sheet</p>
+    <p class="frame-note">
+      Tapping any chip in the header bottom slot opens this combined
+      sheet. Two mutually-exclusive sections: Urutkan and Status.
+      Tapping a row applies immediately and closes; "Reset" returns to
+      defaults (Terdaftar dulu · Semua).
+    </p>
+    <div class="phone">
+      <div class="header" style="opacity:.55; filter: blur(.4px);">
+        <div class="header-toolbar">
+          <div class="icon-btn">←</div>
+          <div class="header-title">
+            <div class="kicker">MANAJEMEN KELAS</div>
+            <div class="title">Matematika</div>
+          </div>
+          <div class="icon-btn">✎</div>
+          <div class="icon-btn">↻</div>
+          <div class="icon-btn">⋮</div>
+        </div>
+      </div>
+      <div class="sheet">
+        <div class="sheet-header">
+          <div class="sheet-icon">⚙</div>
+          <div class="sheet-title-block">
+            <div class="sheet-title">Filter &amp; Urutkan</div>
+            <div class="sheet-sub">Sesuaikan tampilan daftar kelas</div>
+          </div>
+          <div class="sheet-x">✕</div>
+        </div>
+
+        <div class="sec-title">Urutkan</div>
+        <div class="picker-row sel">
+          <span class="ic">⇣</span>
+          <span class="lbl">Terdaftar dulu</span>
+          <span style="color:var(--brand-cobalt)">✓</span>
+        </div>
+        <div class="picker-row">
+          <span class="ic">⇡</span>
+          <span class="lbl">Belum terdaftar dulu</span>
+        </div>
+        <div class="picker-row">
+          <span class="ic">A</span>
+          <span class="lbl">Nama kelas A → Z</span>
+        </div>
+        <div class="picker-row">
+          <span class="ic">Z</span>
+          <span class="lbl">Nama kelas Z → A</span>
+        </div>
+        <div class="picker-row">
+          <span class="ic">7→</span>
+          <span class="lbl">Tingkat (terendah dulu)</span>
+        </div>
+
+        <div class="sec-title">Status</div>
+        <div class="picker-row sel">
+          <span class="ic">≡</span>
+          <span class="lbl">Semua kelas</span>
+          <span style="color:var(--brand-cobalt)">✓</span>
+        </div>
+        <div class="picker-row">
+          <span class="ic">●</span>
+          <span class="lbl">Terdaftar</span>
+        </div>
+        <div class="picker-row">
+          <span class="ic">○</span>
+          <span class="lbl">Belum terdaftar</span>
+        </div>
+
+        <div class="footer-row">
+          <div class="btn sec">Reset</div>
+          <div class="btn pri">Terapkan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== FRAME C: Row quick action sheet =============== -->
+  <div class="frame">
+    <p class="frame-label">Frame C · Kebab quick-action sheet</p>
+    <p class="frame-note">
+      Triggered by the ⋮ kebab or long-press on an assigned row.
+      Shows class context (siswa count, last jadwal, KKM mapel),
+      three CTAs, and a destructive Lepas.
+    </p>
+    <div class="phone">
+      <div class="header" style="opacity:.55;">
+        <div class="header-toolbar">
+          <div class="icon-btn">←</div>
+          <div class="header-title">
+            <div class="kicker">MANAJEMEN KELAS</div>
+            <div class="title">Matematika</div>
+          </div>
+          <div class="icon-btn">✎</div>
+          <div class="icon-btn">↻</div>
+          <div class="icon-btn">⋮</div>
+        </div>
+      </div>
+      <div class="sheet">
+        <div class="sheet-header">
+          <div class="sheet-icon" style="background: rgba(22,163,74,.12); color: var(--green-700);">📚</div>
+          <div class="sheet-title-block">
+            <div class="sheet-title">Kelas 7A</div>
+            <div class="sheet-sub">Tingkat 7 · 32 siswa</div>
+          </div>
+          <div class="sheet-x">✕</div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-cell">
+            <div class="meta-label">Wali kelas</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+              <div class="avatar cobalt" style="width:26px; height:26px; font-size:10px;">AY</div>
+              <div style="font-size:12.5px; font-weight:700; color:var(--slate-900);">Ahmad Yahya H.</div>
+            </div>
+          </div>
+          <div class="detail-cell">
+            <div class="meta-label">JP / minggu</div>
+            <div class="field-val" style="margin-top:6px;">5 JP</div>
+          </div>
+          <div class="detail-cell">
+            <div class="meta-label">KKM</div>
+            <div class="field-val" style="margin-top:6px;">75</div>
+          </div>
+          <div class="detail-cell">
+            <div class="meta-label">Pertemuan</div>
+            <div class="field-val" style="margin-top:6px;">Sen, Rab, Jum</div>
+          </div>
+        </div>
+
+        <div class="action-row" style="flex-direction:column; gap:8px;">
+          <div class="action-btn cobalt">👤 Ganti wali kelas</div>
+          <div class="action-btn azure">📅 Lihat jadwal pertemuan</div>
+          <div class="action-btn azure">📊 Buka buku nilai</div>
+          <div class="action-btn red">✕ Lepas dari mata pelajaran</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== FRAME D: Assign Wali Kelas sheet =============== -->
+  <div class="frame">
+    <p class="frame-label">Frame D · Tetapkan Wali Kelas sheet</p>
+    <p class="frame-note">
+      Opened from Frame C "Ganti wali kelas" or the inline "⚠ Wali
+      belum diset" chip in Frame A. Teachers grouped by availability:
+      <strong>Saat ini</strong>, <strong>Tersedia</strong>, then
+      <strong>Sudah jadi wali</strong> (disabled with badge showing
+      their current class so admin can decide whether to reassign).
+    </p>
+    <div class="phone">
+      <div class="header" style="opacity:.55;">
+        <div class="header-toolbar">
+          <div class="icon-btn">←</div>
+          <div class="header-title">
+            <div class="kicker">MANAJEMEN KELAS</div>
+            <div class="title">Matematika</div>
+          </div>
+        </div>
+      </div>
+      <div class="sheet">
+        <div class="sheet-header">
+          <div class="sheet-icon" style="background: rgba(79,70,229,.1); color: var(--indigo-600);">👤</div>
+          <div class="sheet-title-block">
+            <div class="sheet-title">Tetapkan Wali Kelas</div>
+            <div class="sheet-sub">Kelas 7B · Matematika</div>
+          </div>
+          <div class="sheet-x">✕</div>
+        </div>
+
+        <div class="search" style="margin-bottom: 6px;">
+          <input placeholder="Cari nama / NIP guru..." />
+          <span class="search-ico">🔍</span>
+        </div>
+
+        <div class="sec-title">Saat ini</div>
+        <div class="teacher-row">
+          <div class="avatar amber">—</div>
+          <div>
+            <div class="teacher-name">Belum ada wali kelas</div>
+            <div class="teacher-sub">Pilih guru di bawah</div>
+          </div>
+          <div></div>
+        </div>
+
+        <div class="sec-title">Tersedia</div>
+        <div class="teacher-row sel">
+          <div class="avatar cobalt">SR</div>
+          <div>
+            <div class="teacher-name">Siti Rahmawati</div>
+            <div class="teacher-sub">NIP 198703 · Matematika</div>
+          </div>
+          <div class="check-trail">✓</div>
+        </div>
+        <div class="teacher-row">
+          <div class="avatar azure">BS</div>
+          <div>
+            <div class="teacher-name">Bambang Santoso</div>
+            <div class="teacher-sub">NIP 199004 · Matematika</div>
+          </div>
+          <div class="check-trail"></div>
+        </div>
+        <div class="teacher-row">
+          <div class="avatar green">DK</div>
+          <div>
+            <div class="teacher-name">Dewi Kartika</div>
+            <div class="teacher-sub">NIP 198512 · IPA</div>
+          </div>
+          <div class="check-trail"></div>
+        </div>
+
+        <div class="sec-title">Sudah jadi wali</div>
+        <div class="teacher-row disabled">
+          <div class="avatar cobalt">AY</div>
+          <div>
+            <div class="teacher-name">Ahmad Yahya H.</div>
+            <div class="teacher-sub">NIP 198901 · Matematika</div>
+            <span class="teacher-flag">⚠ Wali 7A</span>
+          </div>
+          <div class="check-trail"></div>
+        </div>
+        <div class="teacher-row disabled">
+          <div class="avatar violet">RW</div>
+          <div>
+            <div class="teacher-name">Rini Wulandari</div>
+            <div class="teacher-sub">NIP 199102 · Bahasa Indonesia</div>
+            <span class="teacher-flag">⚠ Wali 8A</span>
+          </div>
+          <div class="check-trail"></div>
+        </div>
+
+        <div class="btn-row">
+          <div class="btn sec">Batal</div>
+          <div class="btn pri">Simpan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== FRAME E: Multi-select Add Class =============== -->
+  <div class="frame">
+    <p class="frame-label">Frame E · Tambah Kelas (multi-select)</p>
+    <p class="frame-note">
+      Replaces today's modal dialog (one-at-a-time) with a multi-select
+      sheet. Tab pills group kelas by tingkat. Tap a row to toggle,
+      see live count in the selection summary, then Tambah <em>n</em>
+      Kelas in one batch.
+    </p>
+    <div class="phone">
+      <div class="header" style="opacity:.55;">
+        <div class="header-toolbar">
+          <div class="icon-btn">←</div>
+          <div class="header-title">
+            <div class="kicker">MANAJEMEN KELAS</div>
+            <div class="title">Matematika</div>
+          </div>
+        </div>
+      </div>
+      <div class="sheet">
+        <div class="sheet-header">
+          <div class="sheet-icon">+</div>
+          <div class="sheet-title-block">
+            <div class="sheet-title">Tambah Kelas</div>
+            <div class="sheet-sub">Pilih kelas untuk Matematika</div>
+          </div>
+          <div class="sheet-x">✕</div>
+        </div>
+
+        <div class="tingkat-tab">
+          <div class="tt sel">Semua</div>
+          <div class="tt">Tingkat 7</div>
+          <div class="tt">Tingkat 8</div>
+          <div class="tt">Tingkat 9</div>
+        </div>
+
+        <div class="selection-summary">
+          <span>3 kelas dipilih · 96 siswa terjangkau</span>
+          <span class="clear">Bersihkan</span>
+        </div>
+
+        <div class="search" style="margin-bottom: 6px;">
+          <input placeholder="Cari kelas..." />
+          <span class="search-ico">🔍</span>
+        </div>
+
+        <div class="picker-row sel">
+          <span class="check">✓</span>
+          <span class="ic">📋</span>
+          <div class="lbl">
+            <div>8A <span style="font-weight:500; color:var(--slate-500); font-size:11.5px;">· Tingkat 8</span></div>
+            <div style="font-size:10.5px; color:var(--slate-500); font-weight:500; margin-top:2px;">Wali: Wahyu Saputra · 32 siswa</div>
+          </div>
+        </div>
+        <div class="picker-row sel">
+          <span class="check">✓</span>
+          <span class="ic">📋</span>
+          <div class="lbl">
+            <div>8B <span style="font-weight:500; color:var(--slate-500); font-size:11.5px;">· Tingkat 8</span></div>
+            <div style="font-size:10.5px; color:var(--slate-500); font-weight:500; margin-top:2px;">Wali: belum diset · 30 siswa</div>
+          </div>
+        </div>
+        <div class="picker-row sel">
+          <span class="check">✓</span>
+          <span class="ic">📋</span>
+          <div class="lbl">
+            <div>9A <span style="font-weight:500; color:var(--slate-500); font-size:11.5px;">· Tingkat 9</span></div>
+            <div style="font-size:10.5px; color:var(--slate-500); font-weight:500; margin-top:2px;">Wali: Indra Permana · 34 siswa</div>
+          </div>
+        </div>
+        <div class="picker-row">
+          <span class="check"></span>
+          <span class="ic">📋</span>
+          <div class="lbl">
+            <div>9B <span style="font-weight:500; color:var(--slate-500); font-size:11.5px;">· Tingkat 9</span></div>
+            <div style="font-size:10.5px; color:var(--slate-500); font-weight:500; margin-top:2px;">Wali: belum diset · 28 siswa</div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <div class="btn sec">Batal</div>
+          <div class="btn pri">Tambah 3 Kelas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== FRAME F: Edit Subject sheet =============== -->
+  <div class="frame">
+    <p class="frame-label">Frame F · Edit Mata Pelajaran sheet</p>
+    <p class="frame-note">
+      Reached from the ✎ icon in the BrandPageHeader actions, or from
+      the kebab on the Frame A header. Mirrors the existing
+      SubjectAddEditSheet but wrapped in AppBottomSheet brand chrome
+      so the header (kicker · title · icon · ✕) matches every other
+      sheet on this screen.
+    </p>
+    <div class="phone">
+      <div class="header" style="opacity:.55;">
+        <div class="header-toolbar">
+          <div class="icon-btn">←</div>
+          <div class="header-title">
+            <div class="kicker">MANAJEMEN KELAS</div>
+            <div class="title">Matematika</div>
+          </div>
+        </div>
+      </div>
+      <div class="sheet">
+        <div class="sheet-header">
+          <div class="sheet-icon">✎</div>
+          <div class="sheet-title-block">
+            <div class="sheet-title">Edit Mata Pelajaran</div>
+            <div class="sheet-sub">Perbarui identitas mapel</div>
+          </div>
+          <div class="sheet-x">✕</div>
+        </div>
+
+        <div class="row-flex2">
+          <div class="field">
+            <div class="field-label">Kode</div>
+            <div class="field-val">MTK</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Kategori</div>
+            <div class="field-val">Wajib</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Nama Mata Pelajaran</div>
+          <div class="field-val">Matematika</div>
+        </div>
+
+        <div class="row-flex2">
+          <div class="field">
+            <div class="field-label">JP / minggu</div>
+            <div class="field-val">5</div>
+          </div>
+          <div class="field">
+            <div class="field-label">KKM default</div>
+            <div class="field-val">75</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Deskripsi</div>
+          <div class="field-val placeholder">Tambahkan deskripsi singkat...</div>
+        </div>
+
+        <div class="field" style="border-color: var(--red-100); background: rgba(220,38,38,.03);">
+          <div class="field-label" style="color: var(--red-600);">Zona berbahaya</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
+            <span style="font-size:12px; color: var(--slate-600);">Hapus mata pelajaran ini</span>
+            <span style="font-size:12px; font-weight:700; color: var(--red-600);">Hapus →</span>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <div class="btn sec">Batal</div>
+          <div class="btn pri">Simpan</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="flow-callouts">
+  <h2>What's new vs. the current screen</h2>
+  <ul>
+    <li><strong>Header chip strip</strong> — Status <em>and</em> Urutkan as two chips inside the gradient. Tapping either opens Frame B. Default sort is "Terdaftar dulu" so wali-kelas-needed rows surface immediately.</li>
+    <li><strong>Inline wali kelas chip</strong> on each assigned row — indigo pill with a 2-letter avatar when set, amber "⚠ Wali belum diset" when missing. Tapping the chip opens Frame D directly (no detour through the kebab).</li>
+    <li><strong>Subject meta card</strong> at the top of the body — Kode · Kategori · JP · KKM · Tingkat. Today the screen shows none of this; admin has to leave the screen to remember which mapel they're editing.</li>
+    <li><strong>Multi-select add</strong> (Frame E) — replaces the one-at-a-time dialog. Tingkat tabs + live selection summary + batch Tambah n Kelas. Mirrors how Buku Nilai's bulk-attach flow works.</li>
+    <li><strong>Quick-action sheet</strong> (Frame C) on the kebab — surfaces Ganti wali · Lihat jadwal · Buka buku nilai · Lepas. Today the only action is tap-to-toggle, which is destructive without confirmation.</li>
+    <li><strong>Edit in brand chrome</strong> (Frame F) — same SubjectAddEditSheet underlying widget, wrapped in AppBottomSheet so the header pattern (kicker · title · icon · ✕) matches every other sheet on this screen. Adds a Zona berbahaya block for delete so it doesn't live as a separate trash icon in the AppBar.</li>
+    <li><strong>BrandListRow rows</strong> — green leading icon + green status dot + Terdaftar label for assigned, neutral slate for unassigned, with a single "Detail" / "+ Tambah" trailing CTA so the action is discoverable without a long-press.</li>
+  </ul>
+  <h2 style="margin-top:14px;">Open questions for you</h2>
+  <ul>
+    <li>Should the <strong>Wali kelas chip</strong> on the row open Frame D (current proposal) or open Frame C first? I picked direct because "fix the missing wali" is the most common reason admin opens that row.</li>
+    <li>Frame E currently shows 1 tab "Semua" plus per-tingkat tabs. Do you want to default to <strong>filtered by the subject's allowed tingkat</strong> (Matematika is VII–IX so only those tabs show), or show all and let admin add e.g. SD kelas if needed?</li>
+    <li>Frame D groups teachers as Saat ini / Tersedia / Sudah jadi wali. Do you want the "Sudah jadi wali" group <strong>hidden by default</strong> behind an "Tampilkan yang sudah jadi wali" toggle, or always shown like the mockup?</li>
+    <li>Frame F has a Zona berbahaya delete block. The current screen has no delete at all from inside the detail — should I keep delete here, or only on the list?</li>
+  </ul>
+  <h2 style="margin-top:14px;">Apply order (when you approve)</h2>
+  <ul>
+    <li><strong>1.</strong> Add Urutkan chip + sort logic — small, no backend touch.</li>
+    <li><strong>2.</strong> Add subject meta card to body — backend already returns code/JP/KKM.</li>
+    <li><strong>3.</strong> Wire wali kelas chip + Frame D — needs <code>GET /classes/{id}/wali-candidates</code> + <code>PATCH /classes/{id}/homeroom</code> if not present.</li>
+    <li><strong>4.</strong> Replace Add modal dialog with Frame E multi-select — needs <code>POST /subjects/{id}/classes/bulk-attach</code>.</li>
+    <li><strong>5.</strong> Frame C kebab quick-action sheet — pure frontend.</li>
+    <li><strong>6.</strong> Frame F edit sheet brand chrome wrap — pure frontend.</li>
+  </ul>
+</div>
+
+</body>
+</html>
