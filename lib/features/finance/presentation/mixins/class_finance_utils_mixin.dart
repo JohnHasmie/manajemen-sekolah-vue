@@ -7,8 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_report_screen.dart';
-
 /// Utility methods for file handling and formatting.
 mixin ClassFinanceUtilsMixin on State<ClassFinanceReportScreen> {
   /// Formats amount as Indonesian Rupiah currency.
@@ -74,21 +74,28 @@ mixin ClassFinanceUtilsMixin on State<ClassFinanceReportScreen> {
   }
 
   Future<ImageSource?> showImageSourceDialog() async {
-    return showDialog<ImageSource>(
+    return AppBottomSheet.show<ImageSource>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.chooseSource.tr),
-        content: Text(AppLocalizations.chooseImageSource.tr),
-        actions: [
-          TextButton(
-            onPressed: () => AppNavigator.pop(context, ImageSource.gallery),
-            child: Text(AppLocalizations.gallery.tr),
-          ),
-          TextButton(
-            onPressed: () => AppNavigator.pop(context, ImageSource.camera),
-            child: Text(AppLocalizations.camera.tr),
-          ),
-        ],
+      title: AppLocalizations.chooseSource.tr,
+      subtitle: AppLocalizations.chooseImageSource.tr,
+      icon: Icons.camera_alt_rounded,
+      primaryColor: getPrimaryColor(),
+      content: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.photo_library_outlined, color: getPrimaryColor()),
+              title: Text(AppLocalizations.gallery.tr),
+              onTap: () => AppNavigator.pop(sheetContext, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: Icon(Icons.camera_alt_outlined, color: getPrimaryColor()),
+              title: Text(AppLocalizations.camera.tr),
+              onTap: () => AppNavigator.pop(sheetContext, ImageSource.camera),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -114,9 +121,29 @@ mixin ClassFinanceUtilsMixin on State<ClassFinanceReportScreen> {
 
   /// Shows file picker dialog.
   Future<void> pickFile(StateSetter setDialogState) async {
-    final action = await showDialog<String>(
+    final action = await AppBottomSheet.show<String>(
       context: context,
-      builder: (context) => buildFilePickerDialog(),
+      title: AppLocalizations.chooseFileType.tr,
+      subtitle: AppLocalizations.uploadPaymentProof.tr,
+      icon: Icons.upload_file_rounded,
+      primaryColor: getPrimaryColor(),
+      content: Builder(
+        builder: (sheetContext) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.image_outlined, color: getPrimaryColor()),
+              title: Text(AppLocalizations.imageCameraGallery.tr),
+              onTap: () => AppNavigator.pop(sheetContext, 'image'),
+            ),
+            ListTile(
+              leading: Icon(Icons.picture_as_pdf_outlined, color: getPrimaryColor()),
+              title: Text(AppLocalizations.pdfDocument.tr),
+              onTap: () => AppNavigator.pop(sheetContext, 'pdf'),
+            ),
+          ],
+        ),
+      ),
     );
 
     if (action == 'image') {
@@ -124,23 +151,6 @@ mixin ClassFinanceUtilsMixin on State<ClassFinanceReportScreen> {
     } else if (action == 'pdf') {
       await pickPDF(setDialogState);
     }
-  }
-
-  AlertDialog buildFilePickerDialog() {
-    return AlertDialog(
-      title: Text(AppLocalizations.chooseFileType.tr),
-      content: Text(AppLocalizations.uploadPaymentProof.tr),
-      actions: [
-        TextButton(
-          onPressed: () => AppNavigator.pop(context, 'image'),
-          child: Text(AppLocalizations.imageCameraGallery.tr),
-        ),
-        TextButton(
-          onPressed: () => AppNavigator.pop(context, 'pdf'),
-          child: Text(AppLocalizations.pdfDocument.tr),
-        ),
-      ],
-    );
   }
 
   /// Callback when image is picked - must be implemented by State.

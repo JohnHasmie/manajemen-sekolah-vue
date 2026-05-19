@@ -149,6 +149,47 @@ class ApiClassActivityService {
   static Future<void> clearSummaryCache(String teacherId) =>
       MetadataHelper.clearSummaryCache(teacherId);
 
+  /// AK.2 — Admin Kegiatan Kelas hub data.
+  ///
+  /// Calls `GET /class-activities/admin-summary` and returns
+  /// `{ data, kpi, pagination }`. Each row in `data` already carries a
+  /// `submissions_summary` block so the admin card can render the
+  /// "X / Y submit" progress bar without follow-up requests.
+  Future<Map<String, dynamic>> getAdminActivitySummary({
+    String? classId,
+    String? subjectId,
+    String? teacherId,
+    String? type,
+    String? period,
+    String? academicYearId,
+    String? search,
+    int page = 1,
+    int perPage = 20,
+  }) => _metadataHelper.getAdminActivitySummary(
+    classId: classId,
+    subjectId: subjectId,
+    teacherId: teacherId,
+    type: type,
+    period: period,
+    academicYearId: academicYearId,
+    search: search,
+    page: page,
+    perPage: perPage,
+  );
+
+  /// Cached admin summary for instant first paint (5-min TTL).
+  static Future<Map<String, dynamic>?> loadCachedAdminActivitySummary({
+    String? academicYearId,
+    String? period,
+  }) => MetadataHelper.loadCachedAdminSummary(
+    academicYearId: academicYearId,
+    period: period,
+  );
+
+  /// Wipes the cached admin summary slices — called on AY change.
+  static Future<void> clearAdminSummaryCache() =>
+      MetadataHelper.clearAdminSummaryCache();
+
   /// Fetches the teacher's schedule to populate form dropdowns.
   /// Like loading relationship data for a Laravel form.
   /// Used to show which class/subject/day options are available when

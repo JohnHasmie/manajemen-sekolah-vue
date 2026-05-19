@@ -137,6 +137,130 @@ class MetadataHelper {
     );
   }
 
+  /// AK.2 — admin counterpart to [getTeacherActivitySummary].
+  ///
+  /// Calls GET /class-activities/admin-summary with the filter params
+  /// surfaced by the new admin hub:
+  ///   page, per_page, class_id, subject_id, teacher_id, type, period,
+  ///   academic_year_id, search.
+  ///
+  /// Returns the raw decoded payload:
+  /// ```
+  /// {
+  ///   'data': List<Map> (each row has submissions_summary block),
+  ///   'kpi':  Map { total, this_week, pending_submissions },
+  ///   'pagination': Map { current_page, per_page, total_items, ... },
+  /// }
+  /// ```
+  /// Failures degrade to an empty result so the UI can render the
+  /// empty state instead of crashing on a transient 500. Cache is
+  /// only persisted for the unfiltered first page; any filter combo
+  /// returns a `null` cache key so we never serve a stale slice.
+  Future<Map<String, dynamic>> getAdminActivitySummary({
+    String? classId,
+    String? subjectId,
+    String? teacherId,
+    String? type,
+    String? period,
+    String? academicYearId,
+    String? search,
+    int page = 1,
+    int perPage = 20,
+  }) async {
+    final cacheKey =
+        (page == 1 &&
+            classId == null &&
+            subjectId == null &&
+            teacherId == null &&
+            type == null &&
+            (search == null || search.isEmpty))
+        ? 'activity_admin_summary_${academicYearId ?? 'all'}_${period ?? 'year'}'
+        : null;
+
+    try {
+      final params = <String, dynamic>{'page': page, 'per_page': perPage};
+      if (classId != null) params['class_id'] = classId;
+      if (subjectId != null) params['subject_id'] = subjectId;
+      if (teacherId != null) params['teacher_id'] = teacherId;
+      if (type != null) params['type'] = type;
+      if (period != null) params['period'] = period;
+      if (academicYearId != null) params['academic_year_id'] = academicYearId;
+      if (search != null && search.isNotEmpty) params['search'] = search;
+
+      final response = await dioClient.get(
+        '/class-activities/admin-summary',
+        queryParameters: params,
+      );
+
+      final result = response.data;
+      if (result is Map<String, dynamic>) {
+        final parsed = <String, dynamic>{
+          'data': (result['data'] as List?) ?? const [],
+          'kpi':
+              result['kpi'] is Map
+                  ? Map<String, dynamic>.from(result['kpi'] as Map)
+                  : <String, dynamic>{
+                      'total': 0,
+                      'this_week': 0,
+                      'pending_submissions': 0,
+                    },
+          'pagination': result['pagination'],
+        };
+        if (cacheKey != null) {
+          await LocalCacheService.save(cacheKey, parsed);
+        }
+        return parsed;
+      }
+      return {
+        'data': const [],
+        'kpi': const {
+          'total': 0,
+          'this_week': 0,
+          'pending_submissions': 0,
+        },
+        'pagination': null,
+      };
+    } catch (e) {
+      AppLogger.error(
+        'class_activity',
+        'Error getting admin activity summary: $e',
+      );
+      return {
+        'data': const [],
+        'kpi': const {
+          'total': 0,
+          'this_week': 0,
+          'pending_submissions': 0,
+        },
+        'pagination': null,
+      };
+    }
+  }
+
+  /// Loads the cached admin summary (page 1 unfiltered) for instant
+  /// paint. Returns null on miss. TTL 5 minutes to balance freshness
+  /// vs perceived speed.
+  static Future<Map<String, dynamic>?> loadCachedAdminSummary({
+    String? academicYearId,
+    String? period,
+  }) async {
+    final key = 'activity_admin_summary_${academicYearId ?? 'all'}_${period ?? 'year'}';
+    final cached = await LocalCacheService.load(
+      key,
+      ttl: const Duration(minutes: 5),
+    );
+    if (cached is Map) {
+      return Map<String, dynamic>.from(cached);
+    }
+    return null;
+  }
+
+  /// Wipes every cached admin-summary slice so the next hub load
+  /// fetches fresh data. Called from the AY-change listener.
+  static Future<void> clearAdminSummaryCache() async {
+    await LocalCacheService.clearStartingWith('activity_admin_summary_');
+  }
+
   /// Fetches the teacher's schedule to populate form dropdowns.
   /// Like loading relationship data for a Laravel form.
   /// Used to show which class/subject/day options are available when
