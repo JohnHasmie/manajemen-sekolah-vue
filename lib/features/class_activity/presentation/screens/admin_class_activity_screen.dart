@@ -28,6 +28,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/services/filter_options_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -176,29 +177,27 @@ class _AdminClassActivityScreenState
       _selectedPeriod != AdminActivityPeriod.sevenDays;
 
   Future<void> _openFilterSheet() async {
-    // Lazy-load the filter option lists once per AY change. Reuses
-    // the existing query helpers so we don't duplicate endpoints.
+    // Lazy-load the filter option lists once per AY change. We hit
+    // the consolidated `/filter-options?role=admin` endpoint (cached
+    // 6h) instead of the legacy per-feature variant that 404s.
     if (_availableClasses == null ||
         _availableSubjects == null ||
         _availableTeachers == null) {
       try {
-        final opts = await _service.getActivityFilterOptions();
+        final opts = await FilterOptionsService.getFilterOptions(
+          role: 'admin',
+          academicYearId: currentAcademicYearId,
+        );
         if (opts.isNotEmpty) {
-          _availableClasses = (opts['classes'] as List?)
+          List<Map<String, dynamic>> pluck(String key) =>
+              (opts[key] as List?)
                   ?.whereType<Map>()
                   .map((m) => Map<String, dynamic>.from(m))
                   .toList() ??
               const [];
-          _availableSubjects = (opts['subjects'] as List?)
-                  ?.whereType<Map>()
-                  .map((m) => Map<String, dynamic>.from(m))
-                  .toList() ??
-              const [];
-          _availableTeachers = (opts['teachers'] as List?)
-                  ?.whereType<Map>()
-                  .map((m) => Map<String, dynamic>.from(m))
-                  .toList() ??
-              const [];
+          _availableClasses = pluck('classes');
+          _availableSubjects = pluck('subjects');
+          _availableTeachers = pluck('teachers');
         }
       } catch (e) {
         AppLogger.warning('admin_class_activity', 'filter options: $e');
@@ -240,32 +239,6 @@ class _AdminClassActivityScreenState
         _loadData();
       },
     );
-  }
-
-  void _clearFilter(String key) {
-    setState(() {
-      switch (key) {
-        case 'class':
-          _selectedClassId = null;
-          _selectedClassName = null;
-          break;
-        case 'subject':
-          _selectedSubjectId = null;
-          _selectedSubjectName = null;
-          break;
-        case 'teacher':
-          _selectedTeacherId = null;
-          _selectedTeacherName = null;
-          break;
-        case 'type':
-          _selectedType = null;
-          break;
-        case 'period':
-          _selectedPeriod = AdminActivityPeriod.sevenDays;
-          break;
-      }
-    });
-    _loadData();
   }
 
   void _clearAllFilters() {
