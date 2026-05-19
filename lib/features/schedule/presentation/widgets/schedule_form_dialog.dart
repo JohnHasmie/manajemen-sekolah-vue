@@ -9,7 +9,7 @@ import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart'
     as sched;
 import 'package:manajemensekolah/features/schedule/presentation/mixins/schedule_form_mixin.dart';
-import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/admin_form_sheet_header.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_footer.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_teacher_dropdown.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_subject_dropdown.dart';
@@ -393,24 +393,92 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog>
             'id': 'Tambah Jadwal',
           });
 
-    return AppBottomSheet(
-      title: title,
-      subtitle: isEdit ? 'EDIT DATA' : 'TAMBAH BARU',
-      icon: isEdit ? Icons.edit_rounded : Icons.add_rounded,
-      primaryColor: _getPrimaryColor(),
-      maxHeightFactor: 0.85,
-      contentPadding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        4,
-        AppSpacing.lg,
-        AppSpacing.lg,
+    // Sheet shell mirrors the canonical admin add/edit pattern used
+    // by Siswa / Guru / Kelas / Mapel / Pengumuman forms — hand-rolled
+    // Container with a 85% maxHeight + SafeArea, hosting the shared
+    // AdminFormSheetHeader (drag handle + gradient + EDIT DATA kicker
+    // + optional EDIT context strip), the scrollable form body, and a
+    // schedule-specific ScheduleFormFooter (keeps the live conflict
+    // preview + Simpan-when-valid behaviour). The previous
+    // AppBottomSheet wrapper was the only outlier among admin
+    // add/edit sheets and rendered a less-rich header.
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      content: Form(key: _formKey, child: _buildFormFields(lang)),
-      footer: ScheduleFormFooter(
-        onSave: _saveSchedule,
-        primaryColor: _getPrimaryColor(),
-        languageProvider: lang,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AdminFormSheetHeader(
+                title: title,
+                isEditMode: isEdit,
+                showDragHandle: true,
+                kicker: isEdit
+                    ? lang.getTranslatedText(const {
+                        'en': 'EDIT DATA',
+                        'id': 'EDIT DATA',
+                      })
+                    : lang.getTranslatedText(const {
+                        'en': 'NEW ENTRY',
+                        'id': 'TAMBAH BARU',
+                      }),
+                editingContext: _buildEditingContext(),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    4,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: Form(key: _formKey, child: _buildFormFields(lang)),
+                ),
+              ),
+              ScheduleFormFooter(
+                onSave: _saveSchedule,
+                primaryColor: _getPrimaryColor(),
+                languageProvider: lang,
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  /// Surfaces a "MENGEDIT: Kelas · Mapel · Hari" context strip in edit
+  /// mode so the admin can confirm at a glance which session they're
+  /// touching. Falls back to null in add mode (no context to show).
+  AdminFormContext? _buildEditingContext() {
+    final s = widget.schedule;
+    if (s == null) return null;
+    final className = (s['class_name'] ?? s['class']?['name'] ?? '')
+        .toString()
+        .trim();
+    final subjectName = (s['subject_name'] ?? s['subject']?['name'] ?? '')
+        .toString()
+        .trim();
+    final dayName = (s['day_name'] ?? s['day']?['name'] ?? '').toString().trim();
+    final parts = [
+      if (className.isNotEmpty) className,
+      if (subjectName.isNotEmpty) subjectName,
+      if (dayName.isNotEmpty) dayName,
+    ];
+    if (parts.isEmpty) return null;
+    return AdminFormContext(
+      label: parts.join(' · '),
+      initials: className.isNotEmpty ? className : subjectName,
     );
   }
 }
