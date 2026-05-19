@@ -42,6 +42,7 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
   bool get bulkMode;
   void clearSelection();
   Future<void> bulkDetachSelected();
+  TextEditingController get searchController;
   /// Builds the main UI scaffold. The header carries the navy
   /// gradient + kicker pattern and an optional [headerFilterChips]
   /// slot. Edit is exposed via the [SubjectMetaCard] inside the body,
