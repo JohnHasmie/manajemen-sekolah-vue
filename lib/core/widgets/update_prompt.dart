@@ -82,7 +82,17 @@ class UpdatePromptWrapper extends ConsumerWidget {
           // booting the Flutter engine on some devices (the original
           // bug where the dialog re-fired on every refresh).
           await ref.read(updateProvider.notifier).acknowledgeCurrentPatch();
-          Restart.restartApp();
+          // RestartMode.process forces Runtime.getRuntime().exit(0) on
+          // Android, which kills the JVM. The next launch boots a
+          // fresh Dart isolate and Shorebird applies the staged patch
+          // during engine init. Without this (the default
+          // platformDefault mode), the Android plugin only calls
+          // finishAffinity() — the activity dies but the process /
+          // Dart isolate stays alive, so the staged patch never
+          // loads and the user sees the old code after "Segarkan".
+          // iOS path is unchanged: restart_app shows its native
+          // restart dialog because programmatic exit is forbidden.
+          await Restart.restartApp(mode: RestartMode.process);
         },
         onSecondary: () async {
           // "Nanti Saja" is an explicit opt-out for *this specific*
