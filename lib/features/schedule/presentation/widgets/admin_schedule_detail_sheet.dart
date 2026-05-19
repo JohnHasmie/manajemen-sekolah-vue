@@ -59,7 +59,7 @@ void showAdminScheduleDetailSheet({
     }),
     subtitle: _composeHeaderSubtitle(schedule, controller, lang, dayList),
     icon: Icons.menu_book_rounded,
-    primaryColor: ColorUtils.brandDarkBlue,
+    primaryColor: ColorUtils.getRoleColor('admin'),
     content: _DetailContent(
       schedule: schedule,
       lang: lang,
@@ -140,16 +140,15 @@ class _DetailContent extends StatelessWidget {
     final subject =
         (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'] ?? '—')
             .toString();
-    final className =
-        (schedule['class_name'] ?? schedule['kelas_nama'] ?? '—').toString();
-    final teacher =
-        (schedule['teacher_name'] ?? schedule['guru_nama'] ?? '—').toString();
-    final room =
-        (schedule['room'] ?? schedule['ruangan'] ?? '—').toString();
+    final className = (schedule['class_name'] ?? schedule['kelas_nama'] ?? '—')
+        .toString();
+    final teacher = (schedule['teacher_name'] ?? schedule['guru_nama'] ?? '—')
+        .toString();
+    final room = (schedule['room'] ?? schedule['ruangan'] ?? '—').toString();
     final lessonHour = _readLessonHour(schedule);
     final duration = _formatDuration(schedule);
-    final notes =
-        (schedule['description'] ?? schedule['catatan'] ?? '').toString();
+    final notes = (schedule['description'] ?? schedule['catatan'] ?? '')
+        .toString();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -418,7 +417,8 @@ class _MetaTile extends StatelessWidget {
             value,
             maxLines: fullWidth ? 4 : 1,
             overflow: TextOverflow.ellipsis,
-            style: valueStyle ??
+            style:
+                valueStyle ??
                 TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,

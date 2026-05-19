@@ -24,11 +24,16 @@ class ScheduleFilterSheet extends ConsumerStatefulWidget {
     super.key,
     required this.availableDays,
     required this.availableClasses,
+    required this.availableTeachers,
+    required this.availableSubjects,
     required this.semesterList,
     required this.lessonHourList,
     required this.currentSemester,
+    this.scheduleList = const [],
     this.selectedDayId,
     this.selectedClassId,
+    this.selectedTeacherId,
+    this.selectedSubjectId,
     this.selectedFilterSemester,
     this.selectedJamPelajaran,
     this.activeAcademicYearLabel,
@@ -38,8 +43,14 @@ class ScheduleFilterSheet extends ConsumerStatefulWidget {
   /// Reference data passed in from the parent screen (already loaded).
   final List<dynamic> availableDays;
   final List<dynamic> availableClasses;
+  final List<dynamic> availableTeachers;
+  final List<dynamic> availableSubjects;
   final List<dynamic> semesterList;
   final List<dynamic> lessonHourList;
+
+  /// The full schedule list — used to derive teacher↔subject relationships
+  /// for cross-filtering (selecting a teacher narrows subjects, and vice versa).
+  final List<dynamic> scheduleList;
 
   /// The screen-level default semester id used for the Reset action.
   final String currentSemester;
@@ -47,6 +58,8 @@ class ScheduleFilterSheet extends ConsumerStatefulWidget {
   /// Pre-selected filter values - null means "no filter active for this field".
   final String? selectedDayId;
   final String? selectedClassId;
+  final String? selectedTeacherId;
+  final String? selectedSubjectId;
   final String? selectedFilterSemester;
   final String? selectedJamPelajaran;
 
@@ -58,10 +71,14 @@ class ScheduleFilterSheet extends ConsumerStatefulWidget {
   final String? activeAcademicYearLabel;
 
   /// Called when the user confirms their filter selections.
-  /// Parameters mirror the four filterable dimensions exposed by the sheet.
+  /// Parameters mirror the six filterable dimensions exposed by the sheet:
+  /// teacher, subject, day, class, semester, lesson-hour. Teacher + subject
+  /// were added in Fix-1a so admin can scope per-guru / per-mapel listings.
   final void Function({
     required String? dayId,
     required String? classId,
+    required String? teacherId,
+    required String? subjectId,
     required String? semester,
     required String? lessonHour,
   })
@@ -88,6 +105,8 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet>
   // Like unsaved form fields in Vue before submit().
   late String? _tempSelectedHariId;
   late String? _tempSelectedClassId;
+  late String? _tempSelectedTeacherId;
+  late String? _tempSelectedSubjectId;
   late String? _tempSelectedSemester;
   late String? _tempSelectedLessonHour;
 
@@ -101,6 +120,16 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet>
   String? get tempSelectedClassId => _tempSelectedClassId;
   @override
   set tempSelectedClassId(String? value) => _tempSelectedClassId = value;
+
+  @override
+  String? get tempSelectedTeacherId => _tempSelectedTeacherId;
+  @override
+  set tempSelectedTeacherId(String? value) => _tempSelectedTeacherId = value;
+
+  @override
+  String? get tempSelectedSubjectId => _tempSelectedSubjectId;
+  @override
+  set tempSelectedSubjectId(String? value) => _tempSelectedSubjectId = value;
 
   @override
   String? get tempSelectedSemester => _tempSelectedSemester;
@@ -118,9 +147,15 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet>
   @override
   List<dynamic> get availableClasses => widget.availableClasses;
   @override
+  List<dynamic> get availableTeachers => widget.availableTeachers;
+  @override
+  List<dynamic> get availableSubjects => widget.availableSubjects;
+  @override
   List<dynamic> get semesterList => widget.semesterList;
   @override
   List<dynamic> get lessonHourList => widget.lessonHourList;
+  @override
+  List<dynamic> get scheduleList => widget.scheduleList;
 
   @override
   void initState() {
@@ -128,6 +163,8 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet>
     // Seed the temporary selections from the current values passed by parent.
     _tempSelectedHariId = widget.selectedDayId;
     _tempSelectedClassId = widget.selectedClassId;
+    _tempSelectedTeacherId = widget.selectedTeacherId;
+    _tempSelectedSubjectId = widget.selectedSubjectId;
     // Default to the screen-level semester when no filter semester is active.
     _tempSelectedSemester =
         widget.selectedFilterSemester ?? widget.currentSemester;
@@ -141,6 +178,8 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet>
     setState(() {
       _tempSelectedHariId = null;
       _tempSelectedClassId = null;
+      _tempSelectedTeacherId = null;
+      _tempSelectedSubjectId = null;
       _tempSelectedLessonHour = null;
       _tempSelectedSemester = widget.currentSemester;
     });
@@ -152,6 +191,8 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet>
     var n = 0;
     if (_tempSelectedHariId != null) n++;
     if (_tempSelectedClassId != null) n++;
+    if (_tempSelectedTeacherId != null) n++;
+    if (_tempSelectedSubjectId != null) n++;
     if (_tempSelectedLessonHour != null) n++;
     // Semester is treated as "active" only when it differs from the
     // screen-level default; matching the default reads as "no override".
@@ -162,24 +203,77 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet>
     return n;
   }
 
-  /// Builds the header subtitle that surfaces the active academic period
-  /// + filter count. Reads like "Periode 2024/2025 · 2 filter aktif"
-  /// when filters are set, or just the period when none are pending.
+  /// Live preview count — how many rows in [widget.scheduleList] match
+  /// the *pending* temp selections (the chip taps not yet applied).
+  ///
+  /// Updates every rebuild so the header subtitle shows "12 jadwal
+  /// cocok" alongside the period, giving admin a confidence cue
+  /// before they hit Apply. Matches Frame G's brand intent — make
+  /// the sheet feel responsive instead of "guess + check".
+  int get _previewCount {
+    if (widget.scheduleList.isEmpty) return 0;
+    var n = 0;
+    for (final raw in widget.scheduleList) {
+      if (raw is! Map) continue;
+      final s = raw as Map<String, dynamic>;
+      if (_tempSelectedTeacherId != null &&
+          s['teacher_id']?.toString() != _tempSelectedTeacherId) {
+        continue;
+      }
+      if (_tempSelectedSubjectId != null &&
+          s['subject_id']?.toString() != _tempSelectedSubjectId) {
+        continue;
+      }
+      if (_tempSelectedClassId != null &&
+          s['class_id']?.toString() != _tempSelectedClassId) {
+        continue;
+      }
+      if (_tempSelectedHariId != null &&
+          s['day_id']?.toString() != _tempSelectedHariId) {
+        continue;
+      }
+      if (_tempSelectedLessonHour != null) {
+        final rawHour = s['lesson_hour'];
+        String? hourNumber;
+        if (rawHour is Map) {
+          hourNumber = (rawHour['hour_number'] ?? rawHour['jam_ke'])
+              ?.toString();
+        } else if (rawHour != null) {
+          hourNumber = rawHour.toString();
+        }
+        if (hourNumber != _tempSelectedLessonHour) continue;
+      }
+      n++;
+    }
+    return n;
+  }
+
+  /// Builds the header subtitle that surfaces the active academic
+  /// period + live preview count. Reads like
+  /// "Periode 2024/2025 · 12 jadwal cocok" — the second segment
+  /// updates in real-time as the admin selects / deselects chips so
+  /// they can see if their filter will narrow to nothing before
+  /// applying. Falls back to just the period (or null) when no list
+  /// is available.
   String? _composeSubtitle(dynamic languageProvider) {
     final year = widget.activeAcademicYearLabel;
-    final count = _activeFilterCount;
     final pieces = <String>[];
     if (year != null && year.isNotEmpty) {
-      pieces.add(languageProvider.getTranslatedText({
-        'en': 'Period $year',
-        'id': 'Periode $year',
-      }));
+      pieces.add(
+        languageProvider.getTranslatedText({
+          'en': 'Period $year',
+          'id': 'Periode $year',
+        }),
+      );
     }
-    if (count > 0) {
-      pieces.add(languageProvider.getTranslatedText({
-        'en': count == 1 ? '1 active filter' : '$count active filters',
-        'id': '$count filter aktif',
-      }));
+    if (widget.scheduleList.isNotEmpty) {
+      final preview = _previewCount;
+      pieces.add(
+        languageProvider.getTranslatedText({
+          'en': '$preview matches',
+          'id': '$preview jadwal cocok',
+        }),
+      );
     }
     return pieces.isEmpty ? null : pieces.join(' · ');
   }
@@ -195,6 +289,10 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet>
         'en': 'Filter Schedules',
         'id': 'Filter Jadwal',
       }),
+      // Brand alignment (TR.G) — calendar icon makes the schedule
+      // filter's intent obvious in the header rail vs the generic
+      // `Icons.tune_rounded` default.
+      icon: Icons.calendar_view_week_rounded,
       headerSubtitle: _composeSubtitle(languageProvider),
       content: buildFilterContent(languageProvider, primaryColor),
       primaryColor: primaryColor,
@@ -217,6 +315,8 @@ class ScheduleFilterSheetState extends ConsumerState<ScheduleFilterSheet>
     widget.onApply(
       dayId: _tempSelectedHariId,
       classId: _tempSelectedClassId,
+      teacherId: _tempSelectedTeacherId,
+      subjectId: _tempSelectedSubjectId,
       semester: _tempSelectedSemester,
       lessonHour: _tempSelectedLessonHour,
     );

@@ -14,6 +14,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -37,7 +38,24 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
     with
         AdminReportCardDataMixin,
         AdminReportCardActionsMixin,
-        AdminReportCardUtilsMixin {
+        AdminReportCardUtilsMixin,
+        AdminAcademicYearReloadMixin<AdminReportCardScreen> {
+  /// Reload the class list (and clear the in-progress student
+  /// selection) when admin flips the dashboard AY picker. Classes
+  /// are AY-scoped, so the old selection is meaningless under a new
+  /// year — wiping `_selectedClass` + `_students` prevents flashes
+  /// of stale data while the fresh list loads.
+  @override
+  void onAcademicYearChanged() {
+    if (!mounted) return;
+    setState(() {
+      _selectedClass = null;
+      _students = [];
+      _isLoading = true;
+    });
+    loadInitialData();
+  }
+
   late LanguageProvider _languageProvider;
 
   bool _isLoading = true;

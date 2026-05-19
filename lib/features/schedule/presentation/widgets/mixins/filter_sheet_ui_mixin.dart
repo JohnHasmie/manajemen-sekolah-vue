@@ -14,16 +14,19 @@ mixin FilterSheetUiMixin {
   // Stubs for chip builders - derived classes mix in chip builder mixin.
   Widget buildDayChips(dynamic languageProvider) => const SizedBox.shrink();
   Widget buildClassChips() => const SizedBox.shrink();
+  Widget buildTeacherChips(dynamic languageProvider) => const SizedBox.shrink();
+  Widget buildSubjectChips(dynamic languageProvider) => const SizedBox.shrink();
   Widget buildTermChips() => const SizedBox.shrink();
   Widget buildLessonHourChips() => const SizedBox.shrink();
 
-  /// Scrollable content with period, day, class, and lesson chips.
+  /// Scrollable content with teacher, subject, day, class, and lesson-hour
+  /// chips.
   ///
-  /// Order matches the hub's brand chip strip — Periode (Semester) ·
-  /// Hari · Kelas · Jam — so the admin sees the same dimensions in the
-  /// same sequence as the entry surface. Academic year sits in the
-  /// global app shell picker (not here) — the header subtitle on the
-  /// sheet surfaces the active year for context.
+  /// Academic year + semester sit in the global app shell picker — not
+  /// here — so this sheet only edits the five dimensions the admin
+  /// can override per-table-view: guru, mapel, hari, kelas, jam
+  /// pelajaran. Guru + Mapel were added in Fix-1a so admin can scope
+  /// per-teacher / per-subject listings (e.g. before printing).
   Widget buildFilterContent(dynamic languageProvider, Color primaryColor) {
     return TeacherFilterContent(
       sections: [
@@ -32,13 +35,27 @@ mixin FilterSheetUiMixin {
           children: [
             FilterSectionHeader(
               title: languageProvider.getTranslatedText({
-                'en': 'Period (Semester)',
-                'id': 'Periode (Semester)',
+                'en': 'Teacher',
+                'id': 'Guru',
               }),
-              icon: Icons.event_note_rounded,
+              icon: Icons.person_outline_rounded,
               primaryColor: primaryColor,
             ),
-            buildTermChips(),
+            buildTeacherChips(languageProvider),
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FilterSectionHeader(
+              title: languageProvider.getTranslatedText({
+                'en': 'Subject',
+                'id': 'Mata Pelajaran',
+              }),
+              icon: Icons.menu_book_outlined,
+              primaryColor: primaryColor,
+            ),
+            buildSubjectChips(languageProvider),
           ],
         ),
         Column(

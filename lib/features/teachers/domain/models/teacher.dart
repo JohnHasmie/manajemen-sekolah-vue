@@ -57,6 +57,7 @@ abstract class Teacher with _$Teacher {
       final user = mapped['user'] as Map;
       mapped['email'] ??= user['email'];
       mapped['user_id'] ??= user['id'];
+      mapped['phone_number'] ??= user['phone_number'] ?? user['phone'];
     }
 
     // Homeroom class can arrive as:

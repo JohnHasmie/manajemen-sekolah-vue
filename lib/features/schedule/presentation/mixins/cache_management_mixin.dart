@@ -23,10 +23,12 @@ mixin CacheManagementMixin {
     required String searchText,
     required String? lastCachedAcademicYear,
     required String? lastCachedSemester,
+    String? selectedSubjectId,
   }) {
     if (currentPage != 1) return null;
     if (showTableView) return null;
     if (selectedTeacherId != null ||
+        selectedSubjectId != null ||
         selectedClassId != null ||
         selectedDayId != null ||
         selectedJamPelajaran != null ||

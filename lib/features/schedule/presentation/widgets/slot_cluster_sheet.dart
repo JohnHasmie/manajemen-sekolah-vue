@@ -57,7 +57,7 @@ Future<bool?> showSlotClusterSheet({
     title: '$dayName · $startTime${endTime.isNotEmpty ? ' – $endTime' : ''}',
     subtitle: _composeSubtitle(sessions),
     icon: Icons.calendar_today_rounded,
-    primaryColor: ColorUtils.brandDarkBlue,
+    primaryColor: ColorUtils.getRoleColor('admin'),
     scrollable: false,
     contentPadding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
     content: _SlotClusterContent(
@@ -140,36 +140,39 @@ class _SlotClusterContentState extends State<_SlotClusterContent> {
 
   List<Map<String, dynamic>> get _filtered {
     final q = _query.text.trim().toLowerCase();
-    return widget.sessions.where((s) {
-      // Subject / conflict filter.
-      if (_activeFilter == _kConflict && !s.hasScheduleConflict) {
-        return false;
-      } else if (_activeFilter != _kAll && _activeFilter != _kConflict) {
-        final subj = (s['subject_name'] ?? s['mata_pelajaran_nama'] ?? '')
-            .toString();
-        if (subj != _activeFilter) return false;
-      }
-      // Free-text search across class / subject / teacher.
-      if (q.isEmpty) return true;
-      final fields = [
-        s['class_name'],
-        s['kelas_nama'],
-        s['subject_name'],
-        s['mata_pelajaran_nama'],
-        s['teacher_name'],
-        s['guru_nama'],
-        s['room'],
-        s['ruangan'],
-      ].whereType<String>().map((e) => e.toLowerCase()).toList();
-      return fields.any((f) => f.contains(q));
-    }).toList(growable: false);
+    return widget.sessions
+        .where((s) {
+          // Subject / conflict filter.
+          if (_activeFilter == _kConflict && !s.hasScheduleConflict) {
+            return false;
+          } else if (_activeFilter != _kAll && _activeFilter != _kConflict) {
+            final subj = (s['subject_name'] ?? s['mata_pelajaran_nama'] ?? '')
+                .toString();
+            if (subj != _activeFilter) return false;
+          }
+          // Free-text search across class / subject / teacher.
+          if (q.isEmpty) return true;
+          final fields = [
+            s['class_name'],
+            s['kelas_nama'],
+            s['subject_name'],
+            s['mata_pelajaran_nama'],
+            s['teacher_name'],
+            s['guru_nama'],
+            s['room'],
+            s['ruangan'],
+          ].whereType<String>().map((e) => e.toLowerCase()).toList();
+          return fields.any((f) => f.contains(q));
+        })
+        .toList(growable: false);
   }
 
   @override
   Widget build(BuildContext context) {
     final filtered = _filtered;
-    final conflictCount =
-        widget.sessions.where((s) => s.hasScheduleConflict).length;
+    final conflictCount = widget.sessions
+        .where((s) => s.hasScheduleConflict)
+        .length;
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.6,
       child: Column(
@@ -183,10 +186,7 @@ class _SlotClusterContentState extends State<_SlotClusterContent> {
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search_rounded, size: 18),
                 hintText: 'Cari mapel / kelas / guru...',
-                hintStyle: TextStyle(
-                  fontSize: 13,
-                  color: ColorUtils.slate400,
-                ),
+                hintStyle: TextStyle(fontSize: 13, color: ColorUtils.slate400),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -303,8 +303,9 @@ class _FilterTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor =
-        destructive ? ColorUtils.error600 : ColorUtils.brandDarkBlue;
+    final activeColor = destructive
+        ? ColorUtils.error600
+        : ColorUtils.getRoleColor('admin');
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -317,8 +318,8 @@ class _FilterTab extends StatelessWidget {
             color: active
                 ? activeColor
                 : (destructive
-                    ? ColorUtils.error600.withValues(alpha: 0.35)
-                    : ColorUtils.slate200),
+                      ? ColorUtils.error600.withValues(alpha: 0.35)
+                      : ColorUtils.slate200),
           ),
           borderRadius: BorderRadius.circular(999),
         ),
@@ -354,18 +355,18 @@ class _ClusterRow extends StatelessWidget {
     final subject =
         (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'] ?? '—')
             .toString();
-    final className =
-        (schedule['class_name'] ?? schedule['kelas_nama'] ?? '').toString();
-    final teacher =
-        (schedule['teacher_name'] ?? schedule['guru_nama'] ?? '').toString();
+    final className = (schedule['class_name'] ?? schedule['kelas_nama'] ?? '')
+        .toString();
+    final teacher = (schedule['teacher_name'] ?? schedule['guru_nama'] ?? '')
+        .toString();
     final room = (schedule['room'] ?? schedule['ruangan'] ?? '').toString();
     final isConflict = schedule.hasScheduleConflict;
 
     final avatarText = className.isEmpty
         ? '?'
         : (className.length <= 2
-            ? className.toUpperCase()
-            : className.substring(0, 2).toUpperCase());
+              ? className.toUpperCase()
+              : className.substring(0, 2).toUpperCase());
 
     return GestureDetector(
       onTap: onTap,
@@ -373,7 +374,8 @@ class _ClusterRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
         decoration: BoxDecoration(
-          color: isConflict ? ColorUtils.error600.withValues(alpha: 0.04)
+          color: isConflict
+              ? ColorUtils.error600.withValues(alpha: 0.04)
               : Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
@@ -440,9 +442,10 @@ class _ClusterRow extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(
-                        [teacher, if (room.isNotEmpty) room]
-                            .where((e) => e.isNotEmpty)
-                            .join(' · '),
+                        [
+                          teacher,
+                          if (room.isNotEmpty) room,
+                        ].where((e) => e.isNotEmpty).join(' · '),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(

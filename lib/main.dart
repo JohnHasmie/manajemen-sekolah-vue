@@ -373,8 +373,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
       supportedLocales: const [Locale('en', 'US'), Locale('id', 'ID')],
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        final appcastUrl =
-            '${ApiService.baseUrl.replaceAll('/api', '')}${ApiEndpoints.appcast}';
+        final appcastUrl = '${ApiService.baseUrl.replaceAll('/api', '')}'
+            '${ApiEndpoints.appcast}';
         UpgraderAppcastStore appcastStore() => UpgraderAppcastStore(
           appcastURL: appcastUrl,
           osVersion: Version.parse('0.0.0'),

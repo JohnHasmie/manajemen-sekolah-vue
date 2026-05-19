@@ -8,9 +8,10 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/mixins/subject_add_edit_sheet_ui_mixin.dart';
-import 'package:manajemensekolah/features/subjects/presentation/widgets/mixins/subject_add_edit_sheet_header_mixin.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/mixins/subject_add_edit_sheet_buttons_mixin.dart';
 
 /// A modal bottom-sheet for creating or editing a subject.
@@ -43,7 +44,6 @@ class SubjectAddEditSheet extends ConsumerStatefulWidget {
 class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet>
     with
         SubjectAddEditSheetUiMixin,
-        SubjectAddEditSheetHeaderMixin,
         SubjectAddEditSheetButtonsMixin {
   // Form controllers – like Vue's reactive `ref()` values
   late final TextEditingController _codeController;
@@ -186,46 +186,35 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet>
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.subject != null;
+    final lang = ref.watch(languageRiverpod);
+    
+    final title = isEditing
+        ? lang.getTranslatedText(const {'en': 'Edit Subject', 'id': 'Edit Mapel'})
+        : lang.getTranslatedText(const {'en': 'Add Subject', 'id': 'Tambah Mapel'});
+        
+    final subtitle = isEditing
+        ? (() {
+            final s = widget.subject!;
+            final name = (s['name'] ?? '').toString();
+            final code = (s['code'] ?? '').toString();
+            if (name.isEmpty) return code;
+            return code.isEmpty ? name : '$name · $code';
+          })()
+        : lang.getTranslatedText(const {'en': 'NEW ENTRY', 'id': 'TAMBAH BARU'});
 
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.88,
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: Material(
-            color: Colors.white,
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 42,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  buildHeader(
-                    context,
-                    isEditing ? 'edit' : 'add',
-                    isEditing ? 'edit' : 'add',
-                    isEditing,
-                  ),
-                  Flexible(child: buildFormBody(context)),
-                  buildFooterButtons(context),
-                ],
-              ),
-            ),
-          ),
-        ),
+      child: AppBottomSheet(
+        title: title,
+        subtitle: subtitle,
+        icon: isEditing ? Icons.edit_rounded : Icons.book_outlined,
+        primaryColor: ColorUtils.getRoleColor('admin'),
+        maxHeightFactor: 0.85,
+        contentPadding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+        footer: buildFooterButtons(context),
+        content: buildFormBody(context),
       ),
     );
   }

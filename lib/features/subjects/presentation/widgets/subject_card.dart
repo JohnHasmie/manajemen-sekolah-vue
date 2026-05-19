@@ -54,6 +54,8 @@ class SubjectCard extends ConsumerWidget {
             lang.getTranslatedText(const {'en': 'Inactive', 'id': 'Nonaktif'}),
           );
 
+    // BrandListRow
+    // Read-only AY disables the long-press edit flow.
     return BrandListRow(
       leading: InitialsAvatar(
         name: model.name.isNotEmpty ? model.name : '?',

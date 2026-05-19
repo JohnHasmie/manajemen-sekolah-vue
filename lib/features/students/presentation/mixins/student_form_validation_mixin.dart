@@ -16,6 +16,11 @@ mixin StudentFormValidationMixin {
   String? selectedClassId;
   String? selectedGender;
 
+  /// Inline error shown beneath the NIS field — set after a 422 from
+  /// the backend reports a duplicate `student_number`. Cleared when the
+  /// user starts typing again (see consumer widget).
+  String? nisFieldError;
+
   /// Translation helper — must be implemented by consuming class.
   String t(Map<String, String> translations);
 

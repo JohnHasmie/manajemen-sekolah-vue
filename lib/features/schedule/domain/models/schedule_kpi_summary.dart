@@ -45,12 +45,12 @@ class ScheduleKpiSummary {
   /// Empty snapshot — used as a placeholder before the first fetch
   /// completes so the KPI strip can render `—` without flickering.
   const ScheduleKpiSummary.empty()
-      : total = 0,
-        today = 0,
-        conflicts = 0,
-        totalTeachers = 0,
-        totalClasses = 0,
-        totalSubjects = 0;
+    : total = 0,
+      today = 0,
+      conflicts = 0,
+      totalTeachers = 0,
+      totalClasses = 0,
+      totalSubjects = 0;
 
   factory ScheduleKpiSummary.fromJson(Map<String, dynamic> json) {
     int asInt(dynamic value) {

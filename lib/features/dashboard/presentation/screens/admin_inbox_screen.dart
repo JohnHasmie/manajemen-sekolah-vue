@@ -16,6 +16,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
@@ -67,7 +68,8 @@ class AdminInboxScreen extends ConsumerStatefulWidget {
   ConsumerState<AdminInboxScreen> createState() => _AdminInboxScreenState();
 }
 
-class _AdminInboxScreenState extends ConsumerState<AdminInboxScreen> {
+class _AdminInboxScreenState extends ConsumerState<AdminInboxScreen>
+    with AdminAcademicYearReloadMixin<AdminInboxScreen> {
   _AdminInboxFilter _filter = _AdminInboxFilter.all;
   List<PriorityInboxItem> _items = const [];
   bool _isLoading = true;
@@ -82,10 +84,28 @@ class _AdminInboxScreenState extends ConsumerState<AdminInboxScreen> {
     _load();
   }
 
+  /// Reload when the dashboard AY picker flips. The optimistic
+  /// `initialItems` snapshot is for the old year, so we wipe it back
+  /// to "loading" so admin doesn't briefly see stale data.
+  @override
+  void onAcademicYearChanged() {
+    if (!mounted) return;
+    setState(() {
+      _items = const [];
+      _isLoading = true;
+    });
+    _load();
+  }
+
   Future<void> _load() async {
     setState(() => _isLoading = true);
+    // Prefer the live `currentAcademicYearId` from the mixin over the
+    // widget param so the inbox follows the dashboard's selection
+    // after the screen has opened. Fall back to the widget param when
+    // the global picker hasn't selected anything yet (cold start).
+    final ayId = currentAcademicYearId ?? widget.academicYearId?.toString();
     final raw = await DashboardService.getAdminPriorityInboxAll(
-      academicYearId: widget.academicYearId?.toString(),
+      academicYearId: ayId,
     );
     if (!mounted) return;
     setState(() {

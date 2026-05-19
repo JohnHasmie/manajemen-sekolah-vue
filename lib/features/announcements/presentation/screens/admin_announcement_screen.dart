@@ -21,6 +21,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/mixins/pagination_mixin.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
@@ -60,7 +61,19 @@ class AdminAnnouncementScreenState
         AdminFilterMixin,
         AdminDataLoadingMixin,
         AdminDialogMixin,
-        AdminFileOperationsMixin {
+        AdminFileOperationsMixin,
+        AdminAcademicYearReloadMixin<AdminAnnouncementScreen> {
+  /// Reload announcements when the dashboard AY picker flips. The
+  /// announcement list is school-wide but new entries are AY-scoped
+  /// on the server, so refreshing the data fetches the right slice
+  /// for the year admin just switched to.
+  @override
+  void onAcademicYearChanged() {
+    if (!mounted) return;
+    loadFilterOptions();
+    loadData();
+  }
+
   final GlobalKey _addKey = GlobalKey();
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _filterKey = GlobalKey();

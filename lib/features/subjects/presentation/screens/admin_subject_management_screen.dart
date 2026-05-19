@@ -15,6 +15,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
@@ -51,7 +52,25 @@ class AdminSubjectManagementScreen extends ConsumerStatefulWidget {
 /// master-subject + class-name + grade-level lookup lists that populate
 /// the add/edit sheet and filter sheet.
 class AdminSubjectManagementScreenState
-    extends ConsumerState<AdminSubjectManagementScreen> {
+    extends ConsumerState<AdminSubjectManagementScreen>
+    with AdminAcademicYearReloadMixin<AdminSubjectManagementScreen> {
+  /// Reload the subject list when the user switches academic year on
+  /// the dashboard. Subjects themselves aren't AY-scoped in the DB
+  /// (subject_classes pivot has no academic_year_id column), but the
+  /// filter-option lookups (kelas, tingkat) do change per AY so we
+  /// refresh everything for visual consistency with the dashboard
+  /// chip selection.
+  @override
+  void onAcademicYearChanged() {
+    if (!mounted) return;
+    _loadFilterOptions().then((_) {
+      if (mounted) _loadSubjects(resetPage: true, useCache: false);
+    });
+  }
+
+  Future<void> _loadFilterOptions() =>
+      ref.read(adminSubjectControllerProvider).loadFilterOptions();
+
   // Search — shared with [AdminCrudScaffold] via [searchController].
   final TextEditingController _searchController = TextEditingController();
 

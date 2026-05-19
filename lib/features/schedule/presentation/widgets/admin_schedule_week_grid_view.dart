@@ -129,6 +129,17 @@ class AdminScheduleWeekGridView extends StatelessWidget {
   /// on a 360dp phone.
   final double timeColumnWidth;
 
+  /// IDs currently selected in bulk-select mode (TR.F).
+  ///
+  /// When non-empty the grid switches into "select" mode: blocks
+  /// render a cobalt check-corner overlay when their id is in the
+  /// set, tapping a block toggles its membership instead of opening
+  /// the detail sheet, and drag-and-drop is suppressed so the admin
+  /// can sweep selections without accidental drops. The screen
+  /// passes the same `_selectedIds` set the BulkActionBar reads.
+  final Set<String> selectedIds;
+  bool get isBulkMode => selectedIds.isNotEmpty;
+
   const AdminScheduleWeekGridView({
     super.key,
     required this.scheduleList,
@@ -144,6 +155,7 @@ class AdminScheduleWeekGridView extends StatelessWidget {
     this.onFocusedDayChanged,
     this.pxPerMinute = 0.7,
     this.timeColumnWidth = 32,
+    this.selectedIds = const <String>{},
   });
 
   // ── Time axis helpers ─────────────────────────────────────────────
@@ -161,8 +173,6 @@ class AdminScheduleWeekGridView extends StatelessWidget {
     if (h == null || m == null) return null;
     return h * 60 + m;
   }
-
-
 
   /// Returns (earliest, latest) minutes-from-midnight across all
   /// lesson_hour slots, with a small padding on each side. Falls back
@@ -434,6 +444,8 @@ class AdminScheduleWeekGridView extends StatelessWidget {
                             onReschedule: onReschedule,
                             onSlotClusterTap: onSlotClusterTap,
                             onSlotClusterLongPress: onSlotClusterLongPress,
+                            selectedIds: selectedIds,
+                            isBulkMode: isBulkMode,
                           ),
                         ),
                       ],
@@ -508,6 +520,8 @@ class AdminScheduleWeekGridView extends StatelessWidget {
                           onReschedule: onReschedule,
                           onSlotClusterTap: onSlotClusterTap,
                           onSlotClusterLongPress: onSlotClusterLongPress,
+                          selectedIds: selectedIds,
+                          isBulkMode: isBulkMode,
                         ),
                       ),
                   ],
@@ -713,6 +727,10 @@ class _DayColumn extends StatefulWidget {
   final void Function(List<Map<String, dynamic>> sessions)?
   onSlotClusterLongPress;
 
+  /// Bulk-select state forwarded from the grid widget (TR.F).
+  final Set<String> selectedIds;
+  final bool isBulkMode;
+
   const _DayColumn({
     required this.dayId,
     required this.isToday,
@@ -729,6 +747,8 @@ class _DayColumn extends StatefulWidget {
     required this.onReschedule,
     required this.onSlotClusterTap,
     required this.onSlotClusterLongPress,
+    required this.selectedIds,
+    required this.isBulkMode,
   });
 
   @override
@@ -1175,19 +1195,111 @@ class _DayColumnState extends State<_DayColumn> {
     );
 
     final blockHeight = height.clamp(18.0, double.infinity);
+    final sessionId = (s['id'] ?? '').toString();
+    final isSelected =
+        sessionId.isNotEmpty && widget.selectedIds.contains(sessionId);
+
+    // Gesture-arena policy on grid blocks:
+    //   * Tap (any mode):
+    //       - bulk-mode  → toggle selection (routes via onLongPress
+    //                       so the screen reuses _toggleSelection)
+    //       - otherwise → open the detail sheet
+    //   * Long-press:
+    //       - When drag is enabled (onReschedule != null) the
+    //         enclosing LongPressDraggable owns the long-press —
+    //         we must NOT register an inner onLongPress, otherwise
+    //         the inner GestureDetector wins the arena and the
+    //         block becomes a "toggle selection" instead of a
+    //         draggable. This was the TR.F regression: drag stopped
+    //         working in editable AY because the inner detector
+    //         hijacked every long-press. Bulk-mode entry from the
+    //         grid view is now via cluster-card long-press / list
+    //         view long-press; long-press on a block always means
+    //         "pick it up to reschedule".
+    //       - When drag is disabled (read-only AY), keep the inner
+    //         onLongPress as a no-op — there's no reason to enter
+    //         bulk-mode in read-only since the bulk actions can't
+    //         mutate anything.
+    final dragEnabled = widget.onReschedule != null;
     final blockGesture = GestureDetector(
-      onTap: widget.onTap == null ? null : () => widget.onTap!(s),
-      onLongPress: widget.onLongPress == null
+      onTap: widget.isBulkMode
+          ? (widget.onLongPress == null ? null : () => widget.onLongPress!(s))
+          : (widget.onTap == null ? null : () => widget.onTap!(s)),
+      onLongPress: dragEnabled
           ? null
-          : () => widget.onLongPress!(s),
+          : (widget.onLongPress == null
+                ? null
+                : () => widget.onLongPress!(s)),
       child: cardContent,
     );
 
-    // Drag is disabled when the column has no reschedule callback
-    // (read-only) — in that case render the block as before so tap
-    // still opens the detail sheet.
+    // Compose the visual: card + optional selection overlay (cobalt
+    // outline + check-corner dot) when this session is in the bulk
+    // selection set. The overlay sits inside the same bounding rect
+    // so it doesn't disrupt the Stack/Positioned layout above.
+    final visual = isSelected
+        ? Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(child: blockGesture),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                        color: ColorUtils.brandCobalt,
+                        width: 2,
+                      ),
+                      color: ColorUtils.brandCobalt.withValues(alpha: 0.06),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 2,
+                right: 2,
+                child: IgnorePointer(
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: ColorUtils.brandCobalt,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: ColorUtils.brandCobalt.withValues(alpha: 0.35),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.check_rounded,
+                      size: 9,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          )
+        : blockGesture;
+
+    // Drag stays enabled whenever the AY is editable — even mid
+    // bulk-select. Initial TR.F shipping killed drag in bulk mode
+    // to avoid the long-press gesture conflicting with "extend
+    // selection", but that left the admin unable to reschedule once
+    // they'd selected anything from the cluster card / list view.
+    // The new model: long-press always initiates a drag (so reorder
+    // is one gesture away even mid-select), and bulk-select is
+    // extended via tap-on-block while [isBulkMode] is true (see the
+    // tap gesture above, which routes to onLongPress in bulk mode).
+    // Tap on a non-selected block in bulk mode adds it to the
+    // selection — no drag required.
     final Widget interactive = widget.onReschedule == null
-        ? blockGesture
+        ? visual
         : LongPressDraggable<Map<String, dynamic>>(
             // Press-and-hold for ~500ms before the block starts to
             // float — matches Flutter's default LongPressDraggable
@@ -1204,7 +1316,7 @@ class _DayColumnState extends State<_DayColumn> {
               opacity: 0.35,
               child: DottedOutline(child: cardContent),
             ),
-            child: blockGesture,
+            child: visual,
           );
 
     return [

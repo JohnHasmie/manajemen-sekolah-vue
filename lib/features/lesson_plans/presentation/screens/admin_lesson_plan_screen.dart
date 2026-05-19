@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
@@ -51,7 +52,37 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen>
         AdminLessonPlanDataMixin,
         FilterManagementMixin,
         NavigationHelperMixin,
-        BuildHelperMixin {
+        BuildHelperMixin,
+        AdminAcademicYearReloadMixin<AdminLessonPlanScreen> {
+  /// Reload the teacher roster when the dashboard AY picker flips.
+  /// Skips the reset when the screen was deep-linked to a specific
+  /// teacher (`widget.teacherId != null`) — in that mode the admin
+  /// is already inside one teacher's RPP list, so we just reload
+  /// that list under the new year without bouncing back to the
+  /// roster (which would discard their navigation context).
+  @override
+  void onAcademicYearChanged() {
+    if (!mounted) return;
+    if (widget.teacherId == null) {
+      setState(() {
+        _showTeacherList = true;
+        _selectedTeacherId = null;
+        _selectedTeacherName = null;
+        lessonPlanList = [];
+        currentPage = 1;
+        hasMoreData = true;
+      });
+      loadTeachersPaginated(reset: true);
+    } else {
+      setState(() {
+        lessonPlanList = [];
+        currentPage = 1;
+        hasMoreData = true;
+      });
+      loadLessonPlansPaginated(reset: true);
+    }
+  }
+
   // ── State fields (bridged to mixins) ─────────
   @override
   List<dynamic> lessonPlanList = [];

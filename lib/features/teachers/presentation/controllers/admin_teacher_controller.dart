@@ -25,7 +25,7 @@ import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/teachers/data/teacher_service.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 import 'package:manajemensekolah/features/teachers/exports/teacher_export_service.dart';
-import 'package:manajemensekolah/features/teachers/presentation/screens/teacher_detail_screen.dart';
+
 import 'package:manajemensekolah/features/teachers/presentation/widgets/teacher_form_dialog.dart';
 
 /// Riverpod provider — `ref.read(adminTeacherControllerProvider)` yields a
@@ -355,6 +355,7 @@ class AdminTeacherController {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      useSafeArea: true,
       builder: (_) => TeacherFormDialog(
         teacher: teacher,
         subjects: subjects,
@@ -407,10 +408,7 @@ class AdminTeacherController {
     }
   }
 
-  /// Navigates to the detail screen for [teacher].
-  void navigateToDetail(BuildContext context, Map<String, dynamic> teacher) {
-    AppNavigator.push(context, TeacherDetailScreen(teacher: teacher));
-  }
+
 
   // ---------------------------------------------------------------------------
   // Excel flows

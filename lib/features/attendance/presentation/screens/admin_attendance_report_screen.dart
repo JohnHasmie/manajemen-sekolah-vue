@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -83,7 +84,33 @@ class AdminAttendanceReportScreenState
         AdminReportDataLoadingMixin,
         AdminReportFilterMixin,
         AdminReportActionsMixin,
-        AdminReportHelperMixin {
+        AdminReportHelperMixin,
+        AdminAcademicYearReloadMixin<AdminAttendanceReportScreen> {
+  /// Reload everything when the dashboard AY picker flips. Filter
+  /// state (subject/class/day/lesson-hour) is wiped because class
+  /// rosters and subject offerings are AY-scoped — keeping last
+  /// year's IDs selected would surface "no results" for the new
+  /// year and confuse admin. Pagination is reset so we don't
+  /// accumulate pages across years.
+  @override
+  void onAcademicYearChanged() {
+    if (!mounted) return;
+    setState(() {
+      _attendanceSummaryList = [];
+      _currentPage = 1;
+      _hasMoreData = true;
+      _selectedDateFilter = null;
+      _selectedSubjectIds.clear();
+      _selectedClassIds.clear();
+      _selectedDayIds.clear();
+      _selectedLessonHourIds.clear();
+      _hasActiveFilter = false;
+      _selectedClassData = null;
+      _searchController.clear();
+    });
+    loadFilterData();
+  }
+
   late AdminAttendanceReportController _controller;
 
   List<AttendanceSummary> _attendanceSummaryList = [];

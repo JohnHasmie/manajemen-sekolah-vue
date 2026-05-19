@@ -86,6 +86,16 @@ class ApiSubjectService {
   Future<void> detachClass(String subjectId, String classId) =>
       _crudService.detachClass(subjectId, classId);
 
+  Future<Map<String, dynamic>> bulkAttachClasses(
+    String subjectId,
+    List<String> classIds,
+  ) => _crudService.bulkAttachClasses(subjectId, classIds);
+
+  Future<Map<String, dynamic>> bulkDetachClasses(
+    String subjectId,
+    List<String> classIds,
+  ) => _crudService.bulkDetachClasses(subjectId, classIds);
+
   Future<List<dynamic>> getAllMasterSubjects() =>
       _crudService.getAllMasterSubjects();
 

@@ -43,39 +43,25 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog>
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      // Sheet sizes naturally to its content (capped at 88 % so users
-      // can still see the dimmed list behind). The form body inside
-      // buildFormContent() handles its own scrolling when needed.
-      child: ConstrainedBox(
+      child: Container(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.88,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
         ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: Material(
-            color: Colors.white,
-            child: SafeArea(
-              top: false,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 42,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFCBD5E1),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  buildHeader(languageProvider),
-                  Flexible(
-                    child: buildFormContent(languageProvider, _buildFormBody),
-                  ),
-                  buildFooter(saveTeacher),
-                ],
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              buildHeader(languageProvider),
+              Flexible(
+                child: buildFormContent(languageProvider, _buildFormBody),
               ),
-            ),
+              buildFooter(saveTeacher),
+            ],
           ),
         ),
       ),
@@ -93,6 +79,7 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog>
           children: [
             buildNameField(languageProvider),
             buildEmailField(languageProvider),
+            buildPhoneField(languageProvider),
             buildNipField(),
           ],
         ),

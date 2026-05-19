@@ -4,13 +4,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
-import 'package:manajemensekolah/core/widgets/enhanced_search_bar.dart';
+import 'package:manajemensekolah/core/widgets/search_filter_bar.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart'
     as model_subject;
@@ -19,6 +22,9 @@ import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_c
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_actions_mixin.dart';
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_ui_mixin.dart';
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_ui_builder_mixin.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_add_edit_sheet.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_bulk_add_classes_sheet.dart';
+import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_class_filter_sheet.dart';
 
 class SubjectClassManagementPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> subject;
@@ -33,11 +39,111 @@ class SubjectClassManagementPage extends ConsumerStatefulWidget {
 class SubjectClassManagementPageState
     extends ConsumerState<SubjectClassManagementPage>
     with
+        AdminAcademicYearReloadMixin<SubjectClassManagementPage>,
         SubjectClassDataMixin,
         SubjectClassFilterMixin,
         SubjectClassActionsMixin,
         SubjectClassUiMixin,
         SubjectClassUiBuilderMixin {
+  /// Bridges the AY mixin's getter into the data mixin so the API
+  /// calls always include the dashboard-selected year.
+  @override
+  String? getCurrentAcademicYearId() => currentAcademicYearId;
+
+  /// Reload data when the user switches academic year on the
+  /// dashboard. The mixin guards against fire-after-dispose.
+  @override
+  void onAcademicYearChanged() => loadData();
+
+  @override
+  final Set<String> selectedIds = <String>{};
+
+  @override
+  bool get bulkMode => selectedIds.isNotEmpty;
+
+  @override
+  void toggleSelection(String id) {
+    setState(() {
+      if (selectedIds.contains(id)) {
+        selectedIds.remove(id);
+      } else {
+        selectedIds.add(id);
+      }
+    });
+  }
+
+  @override
+  void clearSelection() {
+    if (selectedIds.isEmpty) return;
+    setState(selectedIds.clear);
+  }
+
+  @override
+  Future<void> bulkDetachSelected() async {
+    if (selectedIds.isEmpty) return;
+    final lang = ref.read(languageRiverpod);
+
+    final selected = assignedClasses0
+        .cast<Map<String, dynamic>>()
+        .where((s) => selectedIds.contains(s['id']?.toString()))
+        .toList();
+
+    if (selected.isEmpty) {
+      setState(selectedIds.clear);
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => ConfirmationDialog(
+        title: lang.getTranslatedText(const {
+          'en': 'Remove Classes',
+          'id': 'Lepas Kelas',
+        }),
+        content: lang.getTranslatedText({
+          'en': 'Are you sure you want to remove ${selected.length} class(es) from this subject?',
+          'id': 'Yakin ingin melepas ${selected.length} kelas dari mata pelajaran ini?',
+        }),
+        confirmColor: Colors.red,
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    final subjectIdStr = getSubjectId().toString();
+    final idsToDetach = selected.map((c) => c['id'].toString()).toList();
+    var detached = 0;
+
+    try {
+      final res = await getIt<ApiSubjectService>().bulkDetachClasses(
+        subjectIdStr,
+        idsToDetach,
+      );
+      detached = res['detached_count'] as int? ?? idsToDetach.length;
+    } catch (e) {
+      // Ignored
+    }
+
+    if (!mounted) return;
+
+    setState(selectedIds.clear);
+    await loadData();
+
+    if (mounted) {
+      SnackBarUtils.showSuccess(
+        context,
+        lang.getTranslatedText({
+          'en': '$detached class(es) removed successfully',
+          'id': '$detached kelas berhasil dilepas',
+        }),
+      );
+    }
+  }
+
   @override
   late TextEditingController searchController;
 
@@ -104,57 +210,52 @@ class SubjectClassManagementPageState
     }
   }
 
-  /// Builds search bar widget
+  /// Reloads data after the wali kelas was changed via Frame D.
+  @override
+  void onWaliReassigned() {
+    if (mounted) loadData();
+  }
+
+  /// Builds the body search bar — solid `SearchFilterBar` without a
+  /// filter icon (the Status filter lives as a chip in the header
+  /// bottom slot so it's always visible without an extra tap).
   @override
   Widget buildSearchBar() {
-    final translatedOptions = _getTranslatedFilterOptions();
-
-    return EnhancedSearchBar(
+    return SearchFilterBar(
       controller: searchController,
-      hintText: 'Cari classItem...',
-      onChanged: (value) {
-        setState(() {});
-      },
-      filterOptions: translatedOptions,
-      selectedFilter:
-          translatedOptions[selectedFilter == 'All'
-              ? 0
-              : selectedFilter == 'Assigned'
-              ? 1
-              : 2],
-      onFilterChanged: (filter) {
-        final index = translatedOptions.indexOf(filter);
-        setState(() {
-          selectedFilter = index == 0
-              ? 'All'
-              : index == 1
-              ? 'Assigned'
-              : 'Unassigned';
-        });
-      },
-      showFilter: true,
+      hintText: 'Cari kelas...',
+      transparentStyle: false,
+      primaryColor: getPrimaryColor(),
+      onChanged: (_) => setState(() {}),
     );
   }
 
-  /// Gets translated filter options
-  List<String> _getTranslatedFilterOptions() {
-    final lang = ref.read(languageRiverpod);
-    return [
-      lang.getTranslatedText({'en': 'All', 'id': 'Semua'}),
-      lang.getTranslatedText({'en': 'Assigned', 'id': 'Terdaftar'}),
-      lang.getTranslatedText({'en': 'Unassigned', 'id': 'Belum Terdaftar'}),
-    ];
+  /// Opens the combined Filter & Urutkan sheet (Frame B). Changes are
+  /// applied live via the callbacks; the sheet's own Terapkan button
+  /// just closes it.
+  void _openFilterSortSheet() {
+    SubjectClassFilterSheet.show(
+      context: context,
+      initialFilter: selectedFilter,
+      initialSort: selectedSort,
+      primaryColor: getPrimaryColor(),
+      onFilterChanged: (value) => setState(() => selectedFilter = value),
+      onSortChanged: (value) => setState(() => selectedSort = value),
+    );
   }
 
-  /// Shows quick add class dialog
+  /// Opens the Frame E multi-select add sheet. Replaces the legacy
+  /// AlertDialog with the new bulk-attach UX backed by
+  /// POST /subject/{id}/classes/bulk-attach.
   @override
   void showQuickAddClassDialog(
     List<dynamic> availableClasses,
     List<dynamic> assignedClasses0,
     dynamic subjectName,
-  ) {
+  ) async {
     final unassignedClasses = availableClasses
         .where((classItem) => !isClassAssigned(classItem['id']))
+        .whereType<Map<String, dynamic>>()
         .toList();
 
     if (unassignedClasses.isEmpty) {
@@ -166,72 +267,15 @@ class SubjectClassManagementPageState
       return;
     }
 
-    showDialog(
+    final changed = await SubjectBulkAddClassesSheet.show(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return Dialog(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  buildDialogHeader(
-                    getPrimaryColor(),
-                    () => AppNavigator.pop(context),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Pilih kelas yang ingin '
-                          'ditambahkan ke '
-                          '${_subjectName()}:',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: ColorUtils.slate600,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Container(
-                          constraints: const BoxConstraints(maxHeight: 300),
-                          child: unassignedClasses.isEmpty
-                              ? buildEmptyState()
-                              : ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: unassignedClasses.length,
-                                  itemBuilder: (context, index) {
-                                    final classItem = unassignedClasses[index];
-                                    return buildClassListItem(
-                                      classItem,
-                                      getPrimaryColor(),
-                                      () {
-                                        AppNavigator.pop(context);
-                                        addClassToSubject(classItem);
-                                      },
-                                    );
-                                  },
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  buildDialogFooter(() => AppNavigator.pop(context), () {
-                    AppNavigator.pop(context);
-                    setState(() {});
-                  }),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+      subjectId: getSubjectId().toString(),
+      subjectName: _subjectName(),
+      unassignedClasses: unassignedClasses,
     );
+    if (changed == true && mounted) {
+      await loadData();
+    }
   }
 
   /// Builds empty state for unassigned classes
@@ -267,6 +311,32 @@ class SubjectClassManagementPageState
         _subjectName(),
       ),
       widget.subject,
+      onEdit: _openEditSubjectSheet,
+      brandChips: buildBrandChips(
+        currentFilter: selectedFilter,
+        currentSort: selectedSort,
+        onTap: _openFilterSortSheet,
+      ),
+    );
+  }
+
+  /// Opens the same `SubjectAddEditSheet` the list uses, pre-filled
+  /// with the current subject. On save we reload local data so the
+  /// header title (subject name) and class roster stay in sync.
+  void _openEditSubjectSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SubjectAddEditSheet(
+        subject: widget.subject,
+        availableMasterSubjects: const [],
+        onSaved: () {
+          if (mounted) {
+            loadData();
+          }
+        },
+      ),
     );
   }
 }

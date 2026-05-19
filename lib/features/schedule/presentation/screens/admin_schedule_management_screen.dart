@@ -25,6 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -39,7 +40,6 @@ import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/bulk_action_bar.dart';
 import 'package:manajemensekolah/core/widgets/bulk_delete_confirm_dialog.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/schedule/domain/models/schedule_kpi_summary.dart';
 import 'package:manajemensekolah/features/schedule/presentation/controllers/admin_schedule_controller.dart';
@@ -50,8 +50,12 @@ import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_sc
 import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_skeleton.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/slot_cluster_sheet.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/admin_schedule_week_grid_view.dart';
+import 'package:manajemensekolah/features/schedule/exports/schedule_print_pdf_service.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_filter_sheet.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_reschedule_banner.dart';
 import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_form_dialog.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule_print_scope_sheet.dart';
+import 'package:manajemensekolah/features/schedule/presentation/widgets/single_reschedule_sheet.dart';
 
 /// Admin teaching-schedule management screen with full CRUD, search, filters,
 /// and Excel import/export.
@@ -72,7 +76,8 @@ class TeachingScheduleManagementScreen extends ConsumerStatefulWidget {
 /// teacher + class + day + semester + academic-year + lesson-hour lookup
 /// lists that populate the add/edit sheet and filter sheet.
 class TeachingScheduleManagementScreenState
-    extends ConsumerState<TeachingScheduleManagementScreen> {
+    extends ConsumerState<TeachingScheduleManagementScreen>
+    with AdminAcademicYearReloadMixin<TeachingScheduleManagementScreen> {
   // Search controller — kept as an always-empty backing field so the
   // existing cache-key + load helpers continue to work after TR.E
   // removed the visible search bar from the hub. Filtering is now
@@ -101,6 +106,14 @@ class TeachingScheduleManagementScreenState
   // UI flags.
   bool _isLoading = true;
   String? _errorMessage;
+
+  // Drag-and-drop reschedule banner state (TR.E creative loading).
+  // Set inside [_doReschedule] before the PATCH races the network so
+  // the admin sees a shimmering "Memindahkan…" pill while the request
+  // is in flight, then flips to success/error before auto-dismissing.
+  // Null when no reschedule is currently visible.
+  ScheduleRescheduleSnapshot? _rescheduleBanner;
+  Timer? _rescheduleBannerTimer;
 
   // View mode — drives which body widget renders.
   //   * grid   → week calendar grid (TR.A.2 — placeholder for now)
@@ -148,6 +161,14 @@ class TeachingScheduleManagementScreenState
   String? _selectedDayId;
   String? _selectedFilterTerm;
   String? _selectedLessonHour;
+  // Teacher filter hits the server (backend already supports
+  // ?teacher_id=…). Subject filter is overlaid client-side because the
+  // teaching-schedule index endpoint doesn't accept subject_id today;
+  // since admin Jadwal pulls every row in one batch (perPage=2000) the
+  // overlay is cheap and avoids a backend round-trip just to surface
+  // the chip.
+  String? _selectedTeacherId;
+  String? _selectedSubjectId;
   bool _hasActiveFilter = false;
 
   // Bulk-select state.
@@ -159,24 +180,18 @@ class TeachingScheduleManagementScreenState
   String? _lastCachedAcademicYear;
   String? _lastCachedTerm;
 
-  // Provider listener — reacts to academic-year changes in the app-level
-  // picker.
-  AcademicYearProvider? _academicYearProvider;
-
   @override
   void initState() {
     super.initState();
     FCMService().syncTrigger.addListener(_onSyncTriggered);
-    _academicYearProvider = ref.read(academicYearRiverpod);
-    _academicYearProvider?.addListener(_onAcademicYearChanged);
     _initialize();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _rescheduleBannerTimer?.cancel();
     FCMService().syncTrigger.removeListener(_onSyncTriggered);
-    _academicYearProvider?.removeListener(_onAcademicYearChanged);
     super.dispose();
   }
 
@@ -185,7 +200,7 @@ class TeachingScheduleManagementScreenState
   Future<void> _initialize() async {
     // Seed the academic year from the global picker when available; fall back
     // to the API's "current" flag otherwise.
-    final providerYear = _academicYearProvider?.selectedAcademicYear;
+    final providerYear = ref.read(academicYearRiverpod).selectedAcademicYear;
     if (providerYear != null) {
       _selectedAcademicYear = providerYear['id'].toString();
     }
@@ -285,7 +300,8 @@ class TeachingScheduleManagementScreenState
       showTableView: false,
       selectedAcademicYear: _selectedAcademicYear,
       selectedSemester: _selectedTerm,
-      selectedTeacherId: null,
+      selectedTeacherId: _selectedTeacherId,
+      selectedSubjectId: _selectedSubjectId,
       selectedClassId: _selectedClassId,
       selectedDayId: _selectedDayId,
       selectedJamPelajaran: _selectedLessonHour,
@@ -323,7 +339,7 @@ class TeachingScheduleManagementScreenState
         selectedSemester: _selectedTerm,
         selectedFilterSemester: _selectedFilterTerm,
         selectedAcademicYear: _selectedAcademicYear,
-        selectedTeacherId: null,
+        selectedTeacherId: _selectedTeacherId,
         selectedClassId: _selectedClassId,
         selectedDayId: _selectedDayId,
         selectedJamPelajaran: _selectedLessonHour,
@@ -454,11 +470,21 @@ class TeachingScheduleManagementScreenState
     }
   }
 
-  void _onAcademicYearChanged() {
+  @override
+  void onAcademicYearChanged() {
     if (!mounted) return;
-    final providerYear = _academicYearProvider?.selectedAcademicYear;
+    final providerYear = ref.read(academicYearRiverpod).selectedAcademicYear;
     if (providerYear == null) return;
-    setState(() => _selectedAcademicYear = providerYear['id'].toString());
+    setState(() {
+      _selectedAcademicYear = providerYear['id'].toString();
+      // Clear any teacher / subject narrowing — the picked entities may not
+      // exist (or may carry different IDs) under the new year. Other
+      // dimensions (Hari, Jam Pelajaran) are AY-stable so they can stay.
+      _selectedTeacherId = null;
+      _selectedSubjectId = null;
+      _selectedClassId = null;
+    });
+    _refreshHasActiveFilter();
     _loadFilterOptions();
     _loadSchedules(resetPage: true, useCache: true);
   }
@@ -475,6 +501,8 @@ class TeachingScheduleManagementScreenState
             selectedJamPelajaran: _selectedLessonHour,
             selectedFilterSemester: _selectedFilterTerm,
             selectedSemester: _selectedTerm,
+            selectedTeacherId: _selectedTeacherId,
+            selectedSubjectId: _selectedSubjectId,
           );
     });
   }
@@ -484,7 +512,8 @@ class TeachingScheduleManagementScreenState
     // "2024/2025") so the filter sheet can show it in its header subtitle.
     // The year picker itself lives in the app shell — the sheet only
     // surfaces it as context, not as an editable field.
-    final yearLabel = _availableAcademicYears
+    final yearLabel =
+        _availableAcademicYears
             .cast<Map<String, dynamic>>()
             .firstWhere(
               (y) => y['id']?.toString() == _selectedAcademicYear,
@@ -492,13 +521,13 @@ class TeachingScheduleManagementScreenState
             )['year']
             ?.toString() ??
         _availableAcademicYears
-                .cast<Map<String, dynamic>>()
-                .firstWhere(
-                  (y) => y['id']?.toString() == _selectedAcademicYear,
-                  orElse: () => const {'year': null, 'name': null},
-                )['name']
-                ?.toString() ??
-            '';
+            .cast<Map<String, dynamic>>()
+            .firstWhere(
+              (y) => y['id']?.toString() == _selectedAcademicYear,
+              orElse: () => const {'year': null, 'name': null},
+            )['name']
+            ?.toString() ??
+        '';
 
     showModalBottomSheet(
       context: context,
@@ -507,11 +536,16 @@ class TeachingScheduleManagementScreenState
       builder: (_) => ScheduleFilterSheet(
         availableDays: _availableDays,
         availableClasses: _availableClasses,
+        availableTeachers: _availableTeachers,
+        availableSubjects: _subjectList,
         semesterList: _termList,
         lessonHourList: _lessonHourList,
         currentSemester: _selectedTerm,
+        scheduleList: _scheduleList,
         selectedDayId: _selectedDayId,
         selectedClassId: _selectedClassId,
+        selectedTeacherId: _selectedTeacherId,
+        selectedSubjectId: _selectedSubjectId,
         selectedFilterSemester: _selectedFilterTerm,
         selectedJamPelajaran: _selectedLessonHour,
         activeAcademicYearLabel: yearLabel.isEmpty ? null : yearLabel,
@@ -519,12 +553,16 @@ class TeachingScheduleManagementScreenState
             ({
               required String? dayId,
               required String? classId,
+              required String? teacherId,
+              required String? subjectId,
               required String? semester,
               required String? lessonHour,
             }) {
               setState(() {
                 _selectedDayId = dayId;
                 _selectedClassId = classId;
+                _selectedTeacherId = teacherId;
+                _selectedSubjectId = subjectId;
                 _selectedFilterTerm = semester;
                 _selectedLessonHour = lessonHour;
               });
@@ -542,6 +580,8 @@ class TeachingScheduleManagementScreenState
       _selectedClassId = null;
       _selectedFilterTerm = null;
       _selectedLessonHour = null;
+      _selectedTeacherId = null;
+      _selectedSubjectId = null;
       _hasActiveFilter = false;
     });
     _loadSchedules();
@@ -591,29 +631,60 @@ class TeachingScheduleManagementScreenState
   ///
   /// Reuses [showBulkDayPickerSheet] + [ApiScheduleService.bulkMoveSessions]
   /// with a one-element id list so the List view's per-row Pindah Slot
-  /// gives the same UX as the bulk action — including the PAKSA SIMPAN
-  /// retry path on 409 conflicts.
+  /// single row to the target day AND hour.
+  ///
+  /// Reuses [_doReschedule] so it has the same UX as drag-and-drop
+  /// (including the "Urungkan" action and "Paksa Simpan" conflict toast).
   Future<void> _moveSlotForSchedule(Map<String, dynamic> schedule) async {
     final id = schedule['id']?.toString();
     if (id == null || id.isEmpty) return;
+    
     final visibleDays = _visibleListDays();
-    final targetDayId = await showBulkDayPickerSheet(
+    final targetLessonHourDaysId = await showSingleRescheduleSheet(
       context: context,
+      schedule: schedule,
       days: visibleDays,
-      selectedCount: 1,
+      lessonHours: _lessonHourList,
+      semesterId: _selectedTerm,
+      academicYearId: _selectedAcademicYear,
+      languageProvider: ref.read(languageRiverpod),
     );
-    if (targetDayId == null || !mounted) return;
-    final dayName = visibleDays
-            .firstWhere(
-              (d) => d['id']?.toString() == targetDayId,
-              orElse: () => const {'name': ''},
-            )['name']
-            ?.toString() ??
-        '';
-    await _runBulkMove(
-      ids: [id],
-      targetDayId: targetDayId,
+    
+    if (targetLessonHourDaysId == null || !mounted) return;
+    
+    // The sheet returns the specific lesson_hour_days_id. We need to 
+    // find the corresponding day name and start time for the success toast.
+    final targetHourData = _lessonHourList.firstWhere(
+      (h) => h['id']?.toString() == targetLessonHourDaysId,
+      orElse: () => const <String, dynamic>{},
+    );
+    
+    final targetDayId = targetHourData['day_id']?.toString() ?? targetHourData['hari_id']?.toString();
+    final dayName = visibleDays.firstWhere(
+      (d) => d['id']?.toString() == targetDayId,
+      orElse: () => const {'name': ''},
+    )['name']?.toString() ?? '';
+    
+    final startTime = (targetHourData['start_time'] ?? targetHourData['jam_mulai'] ?? '').toString();
+    
+    final previousLessonHourId = schedule['lesson_hour_days_id']?.toString() ?? '';
+    final previousDayName = visibleDays.firstWhere(
+      (d) => d['id']?.toString() == schedule['day_id']?.toString(),
+      orElse: () => const {'name': ''},
+    )['name']?.toString() ?? '';
+    final previousStartTime = (schedule['start_time'] ?? '').toString();
+    
+    final subjectName = (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'] ?? '—').toString();
+
+    await _doReschedule(
+      scheduleId: id,
+      targetLessonHourId: targetLessonHourDaysId,
       targetDayName: dayName,
+      targetStartTime: startTime,
+      subjectName: subjectName,
+      previousLessonHourId: previousLessonHourId,
+      previousDayName: previousDayName,
+      previousStartTime: previousStartTime,
       force: false,
     );
   }
@@ -621,8 +692,7 @@ class TeachingScheduleManagementScreenState
   /// "Ganti Guru" per-row handler — opens the teacher picker and
   /// reassigns this single row to the selected teacher. Mirrors the
   /// bulk flow with a single id.
-  Future<void> _changeTeacherForSchedule(
-      Map<String, dynamic> schedule) async {
+  Future<void> _changeTeacherForSchedule(Map<String, dynamic> schedule) async {
     final id = schedule['id']?.toString();
     if (id == null || id.isEmpty) return;
     final teachers = _availableTeachers
@@ -635,7 +705,8 @@ class TeachingScheduleManagementScreenState
       selectedCount: 1,
     );
     if (teacherId == null || !mounted) return;
-    final teacherName = teachers
+    final teacherName =
+        teachers
             .firstWhere(
               (t) => t['id']?.toString() == teacherId,
               orElse: () => const {'name': ''},
@@ -665,7 +736,8 @@ class TeachingScheduleManagementScreenState
   /// every session in a cluster shares `day_id`, `day_name`, and the
   /// `start_time` / `end_time` window by construction.
   Future<void> _openSlotClusterSheet(
-      List<Map<String, dynamic>> sessions) async {
+    List<Map<String, dynamic>> sessions,
+  ) async {
     if (sessions.isEmpty) return;
     final first = sessions.first;
     final dayName = (first['day_name'] ?? '').toString();
@@ -683,14 +755,16 @@ class TeachingScheduleManagementScreenState
       onAddInSlot: () {
         // Seed the add form with this slot's day_id + lesson_hour_days_id
         // so the admin doesn't have to pick them again.
-        _openAddEditSheet(schedule: {
-          'day_id': first['day_id'],
-          'day_name': first['day_name'],
-          'lesson_hour_days_id': first['lesson_hour_days_id'],
-          'lesson_hour': first['lesson_hour'],
-          'start_time': first['start_time'],
-          'end_time': first['end_time'],
-        });
+        _openAddEditSheet(
+          schedule: {
+            'day_id': first['day_id'],
+            'day_name': first['day_name'],
+            'lesson_hour_days_id': first['lesson_hour_days_id'],
+            'lesson_hour': first['lesson_hour'],
+            'start_time': first['start_time'],
+            'end_time': first['end_time'],
+          },
+        );
       },
     );
     if (changed == true && mounted) {
@@ -753,10 +827,9 @@ class TeachingScheduleManagementScreenState
         schedule['lesson_hour_days_id']?.toString() ?? '';
     final previousDayName = resolveDayName(schedule['day_id']?.toString());
     final previousStartTime = (schedule['start_time'] ?? '').toString();
-    final subjectName = (schedule['subject_name'] ??
-            schedule['mata_pelajaran_nama'] ??
-            '—')
-        .toString();
+    final subjectName =
+        (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'] ?? '—')
+            .toString();
 
     await _doReschedule(
       scheduleId: scheduleId,
@@ -788,6 +861,45 @@ class TeachingScheduleManagementScreenState
   /// `previousLessonHourId` is allowed to be empty (and the Urungkan
   /// action is then suppressed) for callers that don't have access to
   /// a rollback slot — e.g. an admin who refreshes the list mid-undo.
+  /// Pulls the most actionable error string out of a [DioException].
+  ///
+  /// Priority: 409 conflict's `conflicts[].message` (says which side
+  /// is blocked) → top-level `error` → top-level `message` → null.
+  /// Used by the banner to show a short reason without re-implementing
+  /// the same extraction inside the catch block below.
+  String? _extractServerMessage(DioException e) {
+    final body = e.response?.data;
+    if (body is! Map) return null;
+    if (e.response?.statusCode == 409 && body['conflicts'] is List) {
+      for (final c in body['conflicts'] as List) {
+        if (c is Map && c['message'] is String) {
+          return c['message'] as String;
+        }
+      }
+    }
+    if (body['error'] is String) return body['error'] as String;
+    if (body['message'] is String) return body['message'] as String;
+    return null;
+  }
+
+  /// Sets the floating reschedule banner state and (optionally)
+  /// auto-dismisses it after [autoDismiss]. Used by [_doReschedule]
+  /// to drive the loading → success / error animation lifecycle.
+  void _setRescheduleBanner(
+    ScheduleRescheduleSnapshot? snapshot, {
+    Duration? autoDismiss,
+  }) {
+    _rescheduleBannerTimer?.cancel();
+    if (!mounted) return;
+    setState(() => _rescheduleBanner = snapshot);
+    if (snapshot != null && autoDismiss != null) {
+      _rescheduleBannerTimer = Timer(autoDismiss, () {
+        if (!mounted) return;
+        setState(() => _rescheduleBanner = null);
+      });
+    }
+  }
+
   Future<void> _doReschedule({
     required String scheduleId,
     required String targetLessonHourId,
@@ -800,6 +912,28 @@ class TeachingScheduleManagementScreenState
     required bool force,
   }) async {
     final lang = ref.read(languageRiverpod);
+
+    // Compose the slot labels surfaced in the banner. Falls back to
+    // an em-dash when either side is empty (e.g. an Urungkan that
+    // doesn't carry the rollback day name).
+    String fmtSlot(String day, String time) {
+      final d = day.trim();
+      final t = time.trim();
+      if (d.isEmpty && t.isEmpty) return '—';
+      if (d.isEmpty) return t;
+      if (t.isEmpty) return d;
+      return '$d · $t';
+    }
+
+    _setRescheduleBanner(
+      ScheduleRescheduleSnapshot(
+        subjectName: subjectName,
+        fromSlotLabel: fmtSlot(previousDayName, previousStartTime),
+        toSlotLabel: fmtSlot(targetDayName, targetStartTime),
+        phase: ScheduleReschedulePhase.loading,
+      ),
+    );
+
     try {
       await getIt<ApiScheduleService>().rescheduleSession(
         scheduleId: scheduleId,
@@ -807,6 +941,16 @@ class TeachingScheduleManagementScreenState
         force: force,
       );
       if (!mounted) return;
+      // Flip the banner to success the moment the server confirms —
+      // before the list refresh — so the admin sees the green tick
+      // even on slow networks where _loadSchedules adds a beat. The
+      // banner auto-dismisses 1.4s later regardless of refresh state.
+      _setRescheduleBanner(
+        _rescheduleBanner?.copyWith(
+          phase: ScheduleReschedulePhase.success,
+        ),
+        autoDismiss: const Duration(milliseconds: 1400),
+      );
       await _loadSchedules(resetPage: true, useCache: false);
       unawaited(_loadKpiSummary());
       if (!mounted) return;
@@ -814,14 +958,16 @@ class TeachingScheduleManagementScreenState
       // Only offer Urungkan when we know where to roll back to and
       // the rollback would actually move the row (rules out no-op
       // drops onto the source slot, which the grid filters anyway).
-      final canUndo = previousLessonHourId.isNotEmpty &&
+      final canUndo =
+          previousLessonHourId.isNotEmpty &&
           previousLessonHourId != targetLessonHourId;
 
       SnackBarUtils.showWithActions(
         context,
         message: lang.getTranslatedText({
           'en': 'Moved "$subjectName" to $targetDayName $targetStartTime',
-          'id': 'Sesi "$subjectName" dipindah ke '
+          'id':
+              'Sesi "$subjectName" dipindah ke '
               '$targetDayName $targetStartTime',
         }),
         backgroundColor: ColorUtils.success600,
@@ -856,42 +1002,34 @@ class TeachingScheduleManagementScreenState
             'body=${e.response?.data}',
       );
       if (!mounted) return;
+      // Flip the banner to error before extracting the message — gives
+      // an instant red signal even before the snackbar fires. The
+      // banner sticks around until the snackbar dismisses (longer
+      // auto-dismiss tolerates the reader checking what went wrong).
+      _setRescheduleBanner(
+        _rescheduleBanner?.copyWith(
+          phase: ScheduleReschedulePhase.error,
+          errorMessage: _extractServerMessage(e),
+        ),
+        autoDismiss: const Duration(seconds: 5),
+      );
       // Extract the server's structured `error` / `message` field
       // before falling back to ErrorUtils. Backend may surface a
       // 422 "lesson_hour_days_id invalid" / 500 "no slot at this
       // day" etc. — those messages are actionable, so we want them
       // verbatim instead of the generic "Terjadi kesalahan sistem".
-      String? serverMsg;
-      final body = e.response?.data;
-      if (body is Map) {
-        if (body['error'] is String) {
-          serverMsg = body['error'] as String;
-        } else if (body['message'] is String) {
-          serverMsg = body['message'] as String;
-        }
-      }
+      // For 409s, [_extractServerMessage] already prefers the first
+      // conflict's `message` over the top-level `error` so the admin
+      // sees "Guru sudah punya jadwal" instead of the generic
+      // "Slot bentrok" — no extra conflict lookup needed here.
+      final serverMsg = _extractServerMessage(e);
 
-      // 409 = teacher / class collision. Server returns
-      //   { error: "Slot bentrok", conflicts: [{type, schedule_id, message}, ...] }
-      // — the top-level `error` is too generic ("Slot bentrok"), so we
-      // prefer the first conflict's `message` field which tells the
-      // admin *which* dimension is blocked ("Guru sudah punya jadwal"
-      // vs "Kelas sudah punya jadwal"). Falls back to a built-in copy
-      // if the body shape is unexpected.
+      // 409 = teacher / class collision. Falls back to a built-in
+      // copy if the body shape is unexpected.
       if (e.response?.statusCode == 409) {
-        String? conflictMsg;
-        if (body is Map && body['conflicts'] is List) {
-          final list = body['conflicts'] as List;
-          for (final c in list) {
-            if (c is Map && c['message'] is String) {
-              conflictMsg = c['message'] as String;
-              break;
-            }
-          }
-        }
         SnackBarUtils.showWithActions(
           context,
-          message: conflictMsg ??
+          message:
               serverMsg ??
               lang.getTranslatedText({
                 'en': 'Slot $targetDayName $targetStartTime is already taken.',
@@ -1114,8 +1252,7 @@ class TeachingScheduleManagementScreenState
     setState(_selectedIds.clear);
 
     try {
-      final deleted = await getIt<ApiScheduleService>()
-          .bulkDeleteSessions(ids);
+      final deleted = await getIt<ApiScheduleService>().bulkDeleteSessions(ids);
       if (!mounted) return;
       await _loadSchedules(resetPage: true, useCache: false);
       unawaited(_loadKpiSummary());
@@ -1157,7 +1294,8 @@ class TeachingScheduleManagementScreenState
     );
     if (targetDayId == null || !mounted) return;
 
-    final dayName = visibleDays
+    final dayName =
+        visibleDays
             .firstWhere(
               (d) => d['id']?.toString() == targetDayId,
               orElse: () => const {'name': ''},
@@ -1207,9 +1345,11 @@ class TeachingScheduleManagementScreenState
         SnackBarUtils.showSuccess(
           context,
           lang.getTranslatedText({
-            'en': '$movedCount of ${ids.length} sessions moved to '
+            'en':
+                '$movedCount of ${ids.length} sessions moved to '
                 '$targetDayName',
-            'id': '$movedCount dari ${ids.length} sesi dipindah ke '
+            'id':
+                '$movedCount dari ${ids.length} sesi dipindah ke '
                 '$targetDayName',
           }),
         );
@@ -1284,7 +1424,8 @@ class TeachingScheduleManagementScreenState
     );
     if (teacherId == null || !mounted) return;
 
-    final teacherName = teachers
+    final teacherName =
+        teachers
             .firstWhere(
               (t) => t['id']?.toString() == teacherId,
               orElse: () => const {'name': ''},
@@ -1334,9 +1475,11 @@ class TeachingScheduleManagementScreenState
         SnackBarUtils.showSuccess(
           context,
           lang.getTranslatedText({
-            'en': '$movedCount of ${ids.length} sessions assigned to '
+            'en':
+                '$movedCount of ${ids.length} sessions assigned to '
                 '$teacherName',
-            'id': '$movedCount dari ${ids.length} sesi dialihkan ke '
+            'id':
+                '$movedCount dari ${ids.length} sesi dialihkan ke '
                 '$teacherName',
           }),
         );
@@ -1351,7 +1494,8 @@ class TeachingScheduleManagementScreenState
       SnackBarUtils.showWithActions(
         context,
         message: lang.getTranslatedText({
-          'en': '$movedCount reassigned, ${skipped.length} skipped (conflicts).',
+          'en':
+              '$movedCount reassigned, ${skipped.length} skipped (conflicts).',
           'id': '$movedCount dialihkan, ${skipped.length} dilewati (bentrok).',
         }),
         backgroundColor: ColorUtils.error600,
@@ -1420,6 +1564,82 @@ class TeachingScheduleManagementScreenState
     }
   }
 
+  // ── Print PDF ───────────────────────────────────────────────────────
+
+  /// Opens the Print PDF scope picker; once admin chooses a scope,
+  /// calls the backend `/teaching-schedule/print-pdf` endpoint with the
+  /// currently-applied filters and the chosen scope. Snackbar feedback
+  /// is handled inside [SchedulePrintPdfService.printAndShow] so the
+  /// screen stays thin.
+  void _openPrintPdfSheet() {
+    // Compose a one-line summary of active filters so admin sees the
+    // PDF will mirror the visible list. The labels reuse the same
+    // resolvers as the BrandFilterChip strip.
+    final lang = ref.read(languageRiverpod);
+    final parts = <String>[];
+    String? teacherLabel;
+    if (_selectedTeacherId != null) {
+      final m = _availableTeachers.cast<Map<String, dynamic>>().firstWhere(
+        (t) => t['id']?.toString() == _selectedTeacherId,
+        orElse: () => const {'name': null},
+      );
+      teacherLabel = (m['name'] ?? m['nama'])?.toString();
+      if (teacherLabel != null) parts.add('Guru $teacherLabel');
+    }
+    String? subjectLabel;
+    if (_selectedSubjectId != null) {
+      final m = _subjectList.cast<Map<String, dynamic>>().firstWhere(
+        (s) => s['id']?.toString() == _selectedSubjectId,
+        orElse: () => const {'name': null},
+      );
+      subjectLabel = (m['name'] ?? m['nama'])?.toString();
+      if (subjectLabel != null) parts.add('Mapel $subjectLabel');
+    }
+    if (_selectedClassId != null) {
+      final m = _availableClasses.cast<Map<String, dynamic>>().firstWhere(
+        (c) => c['id']?.toString() == _selectedClassId,
+        orElse: () => const {'name': null},
+      );
+      final classLabel = (m['name'] ?? m['nama'])?.toString();
+      if (classLabel != null) parts.add('Kelas $classLabel');
+    }
+    if (_selectedDayId != null) {
+      final m = _availableDays.cast<Map<String, dynamic>>().firstWhere(
+        (d) => d['id']?.toString() == _selectedDayId,
+        orElse: () => const {'name': null},
+      );
+      final dayLabel = (m['name'] ?? m['nama'])?.toString();
+      if (dayLabel != null) parts.add('Hari $dayLabel');
+    }
+    if (_selectedLessonHour != null) {
+      parts.add('Jam $_selectedLessonHour');
+    }
+    final summary = parts.isEmpty
+        ? lang.getTranslatedText(const {
+            'en': 'No filters active — full timetable.',
+            'id': 'Tanpa filter — seluruh jadwal akan dicetak.',
+          })
+        : '${lang.getTranslatedText(const {'en': 'Active filter: ', 'id': 'Filter aktif: '})}${parts.join(' · ')}';
+
+    SchedulePrintScopeSheet.show(
+      context: context,
+      filterSummary: summary,
+      onConfirm: (scope) async {
+        await SchedulePrintPdfService.printAndShow(
+          context: context,
+          scope: scope,
+          teacherId: _selectedTeacherId,
+          subjectId: _selectedSubjectId,
+          classId: _selectedClassId,
+          dayId: _selectedDayId,
+          hourNumber: _selectedLessonHour,
+          semesterId: _selectedFilterTerm ?? _selectedTerm,
+          academicYearId: _selectedAcademicYear,
+        );
+      },
+    );
+  }
+
   // ── Build ───────────────────────────────────────────────────────────
 
   @override
@@ -1437,7 +1657,8 @@ class TeachingScheduleManagementScreenState
       scheduleList: _scheduleList,
       dayList: _dayList,
       searchText: _searchController.text,
-      selectedTeacherId: null,
+      selectedTeacherId: _selectedTeacherId,
+      selectedSubjectId: _selectedSubjectId,
       selectedClassId: _selectedClassId,
       selectedDayId: _selectedDayId,
       selectedJamPelajaran: _selectedLessonHour,
@@ -1463,27 +1684,42 @@ class TeachingScheduleManagementScreenState
       return m['name']?.toString();
     }
 
-    // Resolve the academic-year ID to its year string (e.g. "2025/2026")
-    // so the Periode chip reads as "2025/2026 · Sem. 2" instead of the
-    // raw id ("3 · Sem. 2"). Falls back to the id only if the lookup
-    // misses, so a stale list never empties the chip.
-    String yearLabelForChip() {
-      final match = _availableAcademicYears
-          .cast<Map<String, dynamic>>()
-          .firstWhere(
-            (y) => y['id']?.toString() == _selectedAcademicYear,
-            orElse: () => const {'year': null, 'name': null},
-          );
-      return (match['year'] ?? match['name'] ?? _selectedAcademicYear)
-          .toString();
+    String? teacherName(String? id) {
+      if (id == null) return null;
+      final m = _availableTeachers.cast<Map<String, dynamic>>().firstWhere(
+        (t) => t['id']?.toString() == id,
+        orElse: () => const {'name': null},
+      );
+      return m['name']?.toString() ?? m['nama']?.toString();
     }
 
+    String? subjectName(String? id) {
+      if (id == null) return null;
+      final m = _subjectList.cast<Map<String, dynamic>>().firstWhere(
+        (s) => s['id']?.toString() == id,
+        orElse: () => const {'name': null},
+      );
+      return m['name']?.toString() ?? m['nama']?.toString();
+    }
+
+    // Periode chip retired — the academic year is owned by the global
+    // dashboard picker (top-right chip), and the semester defaults to
+    // the backend's "current" flag. Keeping it here would duplicate the
+    // dashboard's source of truth and let admin pick two different
+    // years in two different places. The Guru / Mapel / Hari / Kelas /
+    // Jam chips remain so admin can still narrow the table along each
+    // dimension. Guru + Mapel were added in Fix-1a so admin can print
+    // per-teacher / per-subject schedule listings.
     final brandChips = <BrandFilterChip>[
       BrandFilterChip(
-        label: lang.getTranslatedText(const {'en': 'Period', 'id': 'Periode'}),
-        value: '${yearLabelForChip()} · Sem. $_selectedTerm',
+        label: lang.getTranslatedText(const {'en': 'Teacher', 'id': 'Guru'}),
+        value: teacherName(_selectedTeacherId),
         onTap: _openFilterSheet,
-        width: 168,
+      ),
+      BrandFilterChip(
+        label: lang.getTranslatedText(const {'en': 'Subject', 'id': 'Mapel'}),
+        value: subjectName(_selectedSubjectId),
+        onTap: _openFilterSheet,
       ),
       BrandFilterChip(
         label: lang.getTranslatedText(const {'en': 'Day', 'id': 'Hari'}),
@@ -1568,6 +1804,10 @@ class TeachingScheduleManagementScreenState
               kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
               actionIcons: [
                 BrandHeaderIconButton(
+                  icon: Icons.print_rounded,
+                  onTap: _openPrintPdfSheet,
+                ),
+                BrandHeaderIconButton(
                   icon: _hasActiveFilter
                       ? Icons.filter_alt_rounded
                       : Icons.tune_rounded,
@@ -1604,6 +1844,31 @@ class TeachingScheduleManagementScreenState
               const SizedBox(height: 8),
               ...bodyContent,
             ],
+          ),
+          // Reschedule progress banner (TR.E creative loading) —
+          // overlaid above the body while a drag-and-drop PATCH is
+          // racing the network. Sits below the header at the very
+          // top of the body area; uses SafeArea so it doesn't slip
+          // under the status bar. IgnorePointer so it doesn't steal
+          // taps from the grid while it animates.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  // Push below the BrandPageHeader's compact rail so
+                  // the banner reads as "the row that just landed"
+                  // rather than fighting the header for attention.
+                  top: MediaQuery.of(context).padding.top > 0 ? 64 : 84,
+                ),
+                child: IgnorePointer(
+                  child: ScheduleRescheduleBanner(snapshot: _rescheduleBanner),
+                ),
+              ),
+            ),
           ),
           // Bulk-select bottom bar — only when rows are selected.
           //
@@ -1756,20 +2021,34 @@ class TeachingScheduleManagementScreenState
             dayList: _dayList.isNotEmpty ? _dayList : _availableDays,
             lessonHourList: _lessonHourList,
             highlightDayId: _selectedDayId,
+            // In bulk mode the screen routes block taps through
+            // _toggleSelection (parity with list rows). Outside bulk
+            // mode taps open the detail sheet as before. The grid's
+            // own block-render layer flips behaviour based on
+            // [isBulkMode] / [selectedIds], so the screen just hands
+            // it both callbacks.
             onScheduleTap: _showScheduleDetail,
+            onScheduleLongPress: isReadOnly
+                ? null
+                : (s) {
+                    final id = s['id']?.toString();
+                    if (id != null && id.isNotEmpty) _toggleSelection(id);
+                  },
+            // Drag-drop is auto-suppressed inside the grid when
+            // [isBulkMode] is true, so we don't need to gate the
+            // reschedule callback here.
             onReschedule: isReadOnly ? null : _handleReschedule,
+            selectedIds: _selectedIds,
             // Density-mode hooks — 6+ session clusters open the slot
             // expansion sheet on tap and seed bulk-select on long-press.
             onSlotClusterTap: _openSlotClusterSheet,
-            onSlotClusterLongPress:
-                isReadOnly ? null : _selectClusterForBulk,
+            onSlotClusterLongPress: isReadOnly ? null : _selectClusterForBulk,
             // Zoom-in day view — default to today on first load, allow
             // the admin to tap a day-header cell (week mode) or any
             // pill (focused mode) to switch days, swipe horizontally
             // to navigate, and tap the grid icon to zoom out.
             focusedDayId: _focusedDayId,
-            onFocusedDayChanged: (id) =>
-                setState(() => _focusedDayId = id),
+            onFocusedDayChanged: (id) => setState(() => _focusedDayId = id),
           ),
         ];
 
@@ -1843,9 +2122,10 @@ class TeachingScheduleManagementScreenState
     final List<dynamic> tabFiltered = _activeDayTab == null
         ? filteredSchedules
         : filteredSchedules
-            .where((s) =>
-                s is Map && s['day_id']?.toString() == _activeDayTab)
-            .toList(growable: false);
+              .where(
+                (s) => s is Map && s['day_id']?.toString() == _activeDayTab,
+              )
+              .toList(growable: false);
 
     final widgets = <Widget>[
       // Day-tab pill strip.
@@ -1961,19 +2241,15 @@ class TeachingScheduleManagementScreenState
             startTimeLabel: startTime,
             endTimeLabel: endTime,
             durationLabel: duration,
-            subjectName: (m['subject_name'] ??
-                    m['mata_pelajaran_nama'] ??
-                    'No Subject')
-                .toString(),
-            className:
-                (m['class_name'] ?? m['kelas_nama'] ?? '').toString(),
-            teacherName:
-                (m['teacher_name'] ?? m['guru_nama'] ?? '').toString(),
+            subjectName:
+                (m['subject_name'] ?? m['mata_pelajaran_nama'] ?? 'No Subject')
+                    .toString(),
+            className: (m['class_name'] ?? m['kelas_nama'] ?? '').toString(),
+            teacherName: (m['teacher_name'] ?? m['guru_nama'] ?? '').toString(),
             roomName: (m['room'] ?? m['ruangan'] ?? '').toString(),
             selected: isSelected,
-            onTap: () => _bulkMode
-                ? _toggleSelection(id)
-                : _showScheduleDetail(m),
+            onTap: () =>
+                _bulkMode ? _toggleSelection(id) : _showScheduleDetail(m),
             onLongPress: () => _toggleSelection(id),
           ),
         ),
@@ -1985,18 +2261,24 @@ class TeachingScheduleManagementScreenState
   /// Renders the empty-state card shown when the list (or any view
   /// mode) has zero schedules.
   ///
-  /// Two flavours:
-  ///   * **Pristine empty** — no filters, no day tab, search cleared.
-  ///     Shows the "Belum ada jadwal" hero + dual CTAs (Tambah Manual +
-  ///     Import Excel) so the admin can start populating data right
-  ///     from the empty state without having to find the FAB or hunt
-  ///     down the overflow menu.
+  /// Three flavours (TR.H):
+  ///   * **Pristine empty** — no filters, no day tab, search cleared,
+  ///     AY editable. Shows the "Belum ada jadwal" hero + dual CTAs
+  ///     (Tambah Manual + Import Excel) so the admin can start
+  ///     populating data right from the empty state without having to
+  ///     find the FAB or hunt down the overflow menu.
   ///   * **Filter-empty** — at least one filter active or a day-tab
-  ///     selected. Shows the "Tidak ada hasil" copy + a single secondary
-  ///     button to clear filters. Hides the data-entry CTAs because the
-  ///     issue is filtering, not lack of data.
+  ///     selected. Shows the "Tidak ada hasil" copy + a single
+  ///     secondary button to clear filters. Hides the data-entry CTAs
+  ///     because the issue is filtering, not lack of data.
+  ///   * **Read-only AY** — admin is browsing a past academic year.
+  ///     Shows the "Belum ada jadwal di tahun ajaran ini" copy with
+  ///     no write CTAs (would 403 anyway), just a read-only pill so
+  ///     it's clear the absence is intentional, not a missing import.
   Widget _buildEmptyListCard(LanguageProvider lang) {
-    final hasFilters = _hasActiveFilter ||
+    final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
+    final hasFilters =
+        _hasActiveFilter ||
         _activeDayTab != null ||
         _searchController.text.isNotEmpty;
     return Padding(
@@ -2028,24 +2310,31 @@ class TeachingScheduleManagementScreenState
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                hasFilters
-                    ? Icons.filter_alt_off_rounded
-                    : Icons.calendar_today_outlined,
+                isReadOnly
+                    ? Icons.lock_outline_rounded
+                    : (hasFilters
+                          ? Icons.filter_alt_off_rounded
+                          : Icons.calendar_today_outlined),
                 size: 26,
                 color: ColorUtils.brandCobalt,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              hasFilters
+              isReadOnly
                   ? lang.getTranslatedText(const {
-                      'en': 'No results',
-                      'id': 'Tidak ada hasil',
+                      'en': 'No schedules this year',
+                      'id': 'Belum ada jadwal di tahun ini',
                     })
-                  : lang.getTranslatedText(const {
-                      'en': 'No schedules yet',
-                      'id': 'Belum ada jadwal',
-                    }),
+                  : (hasFilters
+                        ? lang.getTranslatedText(const {
+                            'en': 'No results',
+                            'id': 'Tidak ada hasil',
+                          })
+                        : lang.getTranslatedText(const {
+                            'en': 'No schedules yet',
+                            'id': 'Belum ada jadwal',
+                          })),
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
@@ -2054,17 +2343,30 @@ class TeachingScheduleManagementScreenState
             ),
             const SizedBox(height: 6),
             Text(
-              hasFilters
+              isReadOnly
                   ? lang.getTranslatedText(const {
-                      'en': 'Try clearing filters or picking another day.',
-                      'id': 'Coba bersihkan filter atau pilih hari lain.',
+                      'en':
+                          'This academic year is read-only. Switch to the '
+                          'current year to add or import.',
+                      'id':
+                          'Tahun ajaran ini hanya baca. Pindah ke tahun '
+                          'berjalan untuk menambah atau import.',
                     })
-                  : lang.getTranslatedText(const {
-                      'en': 'Add the first session manually, or import a '
-                          'schedule sheet to bulk-populate.',
-                      'id': 'Tambah sesi pertama manual, atau import '
-                          'sheet jadwal sekaligus banyak.',
-                    }),
+                  : (hasFilters
+                        ? lang.getTranslatedText(const {
+                            'en':
+                                'Try clearing filters or picking another day.',
+                            'id':
+                                'Coba bersihkan filter atau pilih hari lain.',
+                          })
+                        : lang.getTranslatedText(const {
+                            'en':
+                                'Add the first session manually, or import a '
+                                'schedule sheet to bulk-populate.',
+                            'id':
+                                'Tambah sesi pertama manual, atau import '
+                                'sheet jadwal sekaligus banyak.',
+                          })),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
@@ -2073,15 +2375,53 @@ class TeachingScheduleManagementScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            // CTA row varies by flavour.
-            if (hasFilters)
+            // CTA row varies by flavour. Read-only AY: a single
+            // status pill, no write CTAs (backend would 403 anyway).
+            if (isReadOnly)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate100,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: ColorUtils.slate200),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: 14,
+                      color: ColorUtils.slate600,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      lang.getTranslatedText(const {
+                        'en': 'Read-only year',
+                        'id': 'Hanya baca',
+                      }),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: ColorUtils.slate700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (hasFilters)
               OutlinedButton.icon(
                 onPressed: _clearAllFilters,
                 icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: Text(lang.getTranslatedText(const {
-                  'en': 'Clear all filters',
-                  'id': 'Bersihkan semua filter',
-                })),
+                label: Text(
+                  lang.getTranslatedText(const {
+                    'en': 'Clear all filters',
+                    'id': 'Bersihkan semua filter',
+                  }),
+                ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: ColorUtils.brandCobalt,
                   side: BorderSide(color: ColorUtils.slate200),
@@ -2157,19 +2497,15 @@ class TeachingScheduleManagementScreenState
             startTimeLabel: (m['start_time'] ?? '').toString(),
             endTimeLabel: (m['end_time'] ?? '').toString(),
             durationLabel: _formatDuration(m),
-            subjectName: (m['subject_name'] ??
-                    m['mata_pelajaran_nama'] ??
-                    'No Subject')
-                .toString(),
-            className:
-                (m['class_name'] ?? m['kelas_nama'] ?? '').toString(),
-            teacherName:
-                (m['teacher_name'] ?? m['guru_nama'] ?? '').toString(),
+            subjectName:
+                (m['subject_name'] ?? m['mata_pelajaran_nama'] ?? 'No Subject')
+                    .toString(),
+            className: (m['class_name'] ?? m['kelas_nama'] ?? '').toString(),
+            teacherName: (m['teacher_name'] ?? m['guru_nama'] ?? '').toString(),
             roomName: (m['room'] ?? m['ruangan'] ?? '').toString(),
             selected: _selectedIds.contains(id),
-            onTap: () => _bulkMode
-                ? _toggleSelection(id)
-                : _showScheduleDetail(m),
+            onTap: () =>
+                _bulkMode ? _toggleSelection(id) : _showScheduleDetail(m),
             onLongPress: () => _toggleSelection(id),
           ),
         ),
@@ -2260,7 +2596,6 @@ class TeachingScheduleManagementScreenState
     if (diff <= 0) return null;
     return '$diff mnt';
   }
-
 }
 
 /// 2-tab view toggle strip — Grid · List.

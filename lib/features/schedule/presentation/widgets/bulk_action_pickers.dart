@@ -32,7 +32,8 @@ Future<String?> showBulkDayPickerSheet({
   return AppBottomSheet.show<String>(
     context: context,
     title: 'Pindah Hari',
-    subtitle: 'Pindahkan $selectedCount sesi ke hari berikut '
+    subtitle:
+        'Pindahkan $selectedCount sesi ke hari berikut '
         '(jam ke- dipertahankan)',
     icon: Icons.swap_horiz_rounded,
     primaryColor: ColorUtils.brandDarkBlue,
@@ -162,10 +163,12 @@ class _TeacherSearchListState extends State<_TeacherSearchList> {
   List<Map<String, dynamic>> get _filtered {
     final q = _query.text.trim().toLowerCase();
     if (q.isEmpty) return widget.teachers;
-    return widget.teachers.where((t) {
-      final name = (t['name'] ?? t['nama'] ?? '').toString().toLowerCase();
-      return name.contains(q);
-    }).toList(growable: false);
+    return widget.teachers
+        .where((t) {
+          final name = (t['name'] ?? t['nama'] ?? '').toString().toLowerCase();
+          return name.contains(q);
+        })
+        .toList(growable: false);
   }
 
   @override
@@ -183,10 +186,7 @@ class _TeacherSearchListState extends State<_TeacherSearchList> {
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search_rounded, size: 18),
                 hintText: 'Cari guru...',
-                hintStyle: TextStyle(
-                  fontSize: 13,
-                  color: ColorUtils.slate400,
-                ),
+                hintStyle: TextStyle(fontSize: 13, color: ColorUtils.slate400),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -259,12 +259,13 @@ class _TeacherTile extends StatelessWidget {
     // the row card so the bulk picker visually matches the surface the
     // admin came from.
     final parts = name.trim().split(RegExp(r'\s+'));
-    final initials = (parts.isEmpty
-            ? '?'
-            : parts.length == 1
+    final initials =
+        (parts.isEmpty
+                ? '?'
+                : parts.length == 1
                 ? parts.first.substring(0, parts.first.length.clamp(0, 2))
                 : '${parts.first[0]}${parts.last[0]}')
-        .toUpperCase();
+            .toUpperCase();
 
     return InkWell(
       onTap: onTap,
