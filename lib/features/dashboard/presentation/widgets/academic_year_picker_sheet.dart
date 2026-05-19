@@ -43,21 +43,28 @@ Future<String?> showAcademicYearPickerSheet({
   required BuildContext context,
   required WidgetRef ref,
   String? currentSemesterLabel,
+  String role = 'admin',
 }) {
   return showModalBottomSheet<String?>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (sheetCtx) =>
-        _AcademicYearPickerSheet(currentSemesterLabel: currentSemesterLabel),
+    builder: (sheetCtx) => _AcademicYearPickerSheet(
+      currentSemesterLabel: currentSemesterLabel,
+      role: role,
+    ),
   );
 }
 
 class _AcademicYearPickerSheet extends ConsumerWidget {
   final String? currentSemesterLabel;
+  final String role;
 
-  const _AcademicYearPickerSheet({required this.currentSemesterLabel});
+  const _AcademicYearPickerSheet({
+    required this.currentSemesterLabel,
+    this.role = 'admin',
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -138,6 +145,7 @@ class _AcademicYearPickerSheet extends ConsumerWidget {
                   return _ExpandedYearTile(
                     yearLabel: yearLabel,
                     semesterLabel: currentSemesterLabel,
+                    role: role,
                   );
                 }
                 final isNext = i > selectedIndex && selectedIndex != -1;
@@ -145,6 +153,7 @@ class _AcademicYearPickerSheet extends ConsumerWidget {
                   yearLabel: yearLabel,
                   label: isNext ? 'Selanjutnya' : 'Sebelumnya',
                   onTap: () => _onPickYear(context, ref, id),
+                  role: role,
                 );
               },
             ),
@@ -211,17 +220,23 @@ class _AcademicYearPickerSheet extends ConsumerWidget {
 class _ExpandedYearTile extends StatelessWidget {
   final String yearLabel;
   final String? semesterLabel;
+  final String role;
 
-  const _ExpandedYearTile({required this.yearLabel, this.semesterLabel});
+  const _ExpandedYearTile({
+    required this.yearLabel,
+    this.semesterLabel,
+    this.role = 'admin',
+  });
 
   @override
   Widget build(BuildContext context) {
+    final roleColor = ColorUtils.getRoleColor(role);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F9FF),
+        color: roleColor.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFBAE6FD)),
+        border: Border.all(color: roleColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,7 +246,7 @@ class _ExpandedYearTile extends StatelessWidget {
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.w800,
-              color: ColorUtils.brandAzureDeep,
+              color: roleColor,
               letterSpacing: 0.6,
             ),
           ),
@@ -256,6 +271,7 @@ class _ExpandedYearTile extends StatelessWidget {
                   label: 'Ganjil',
                   caption: 'Semester 1',
                   active: _isGanjil(semesterLabel),
+                  roleColor: roleColor,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -264,6 +280,7 @@ class _ExpandedYearTile extends StatelessWidget {
                   label: 'Genap',
                   caption: 'Semester 2',
                   active: !_isGanjil(semesterLabel),
+                  roleColor: roleColor,
                 ),
               ),
             ],
@@ -284,11 +301,13 @@ class _SemesterChip extends StatelessWidget {
   final String label;
   final String caption;
   final bool active;
+  final Color roleColor;
 
   const _SemesterChip({
     required this.label,
     required this.caption,
     required this.active,
+    required this.roleColor,
   });
 
   @override
@@ -299,7 +318,7 @@ class _SemesterChip extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: active ? ColorUtils.brandAzure : const Color(0xFFE2E8F0),
+          color: active ? roleColor : const Color(0xFFE2E8F0),
           width: active ? 1.5 : 0.75,
         ),
       ),
@@ -321,7 +340,7 @@ class _SemesterChip extends StatelessWidget {
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     color: active
-                        ? ColorUtils.brandAzureDeep
+                        ? roleColor
                         : ColorUtils.slate600,
                   ),
                 ),
@@ -333,7 +352,7 @@ class _SemesterChip extends StatelessWidget {
               width: 18,
               height: 18,
               decoration: BoxDecoration(
-                color: ColorUtils.brandAzureDeep,
+                color: roleColor,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -350,11 +369,13 @@ class _CollapsedYearTile extends StatelessWidget {
   final String yearLabel;
   final String label;
   final VoidCallback onTap;
+  final String role;
 
   const _CollapsedYearTile({
     required this.yearLabel,
     required this.label,
     required this.onTap,
+    this.role = 'admin',
   });
 
   @override
@@ -402,7 +423,7 @@ class _CollapsedYearTile extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: ColorUtils.brandAzureDeep,
+                  color: ColorUtils.getRoleColor(role),
                 ),
               ),
             ],

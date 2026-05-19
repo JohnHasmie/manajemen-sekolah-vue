@@ -512,6 +512,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
                             ref: ref,
                             currentSemesterLabel:
                                 widget.state.currentSemesterLabel,
+                            role: 'admin',
                           ),
                         ),
                       ),

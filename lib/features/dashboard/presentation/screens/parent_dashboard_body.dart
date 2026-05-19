@@ -468,6 +468,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
                             ref: ref,
                             currentSemesterLabel:
                                 widget.state.currentSemesterLabel,
+                            role: 'wali',
                           ),
                         ),
                       ),
