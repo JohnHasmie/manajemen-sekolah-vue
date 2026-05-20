@@ -156,12 +156,22 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   /// time it reaches TagihanTab.
   Future<void> _loadBillGroups() async {
     try {
-      final ayId = ref
-          .read(academicYearRiverpod)
-          .selectedAcademicYear?['id']
-          ?.toString();
+      // Deliberately NOT scoping by academic_year_id here. The global
+      // AY picker drives the rest of the hub (KPI strip, Pembayaran
+      // tab, Jenis tab) but admin feedback showed the Tagihan tab was
+      // routinely empty because the AY picker's selected year rarely
+      // matched the year stamped on the bills (esp. when the school
+      // hasn't promoted classes yet for the new AY). The bulan filter
+      // — which carries the year inside its `YYYY-MM` value — is the
+      // explicit scope on this tab; without a bulan pick we surface
+      // every (jenis × kelas × tahun) bucket the school has so the
+      // admin can drill into whichever one needs attention.
+      //
+      // The detail screen still scopes its own per-student fetch by
+      // AY when the user taps a group — that AY comes from the group
+      // row itself (resolved server-side by the LATERAL join), so
+      // crossings between hub-list and detail stay consistent.
       final groups = await FinanceService.getBillGroups(
-        academicYearId: ayId,
         paymentTypeId: _tagihanSelectedJenisIds.length == 1
             ? _tagihanSelectedJenisIds.first
             : null,
