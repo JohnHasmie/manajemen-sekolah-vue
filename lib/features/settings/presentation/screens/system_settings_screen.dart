@@ -62,22 +62,24 @@ class SystemSettingsScreen extends ConsumerWidget {
     final accent = ColorUtils.getRoleColor('admin');
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          ShellTabHeader(
-            title: 'Sistem',
-            subtitle: 'Konfigurasi · sinkron sehat',
-            accentColor: accent,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ..._buildTiles(context, ref),
-          const SizedBox(height: AppSpacing.md),
-          _AuditLogPinConsumer(),
-          SizedBox(
-            height: AppSpacing.xl + MediaQuery.of(context).padding.bottom,
-          ),
-        ],
+      body: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            ShellTabHeader(
+              title: 'Sistem',
+              subtitle: 'Konfigurasi · sinkron sehat',
+              accentColor: accent,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            ..._buildTiles(context, ref),
+            const SizedBox(height: AppSpacing.md),
+            _AuditLogPinConsumer(),
+            SizedBox(
+              height: AppSpacing.xl + MediaQuery.of(context).padding.bottom,
+            ),
+          ],
+        ),
       ),
     );
   }

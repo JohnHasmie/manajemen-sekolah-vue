@@ -195,6 +195,19 @@ class ColorUtils {
   static Color get error600 => const Color(0xFFDC2626);
   static Color get info600 => const Color(0xFF0891B2);
 
+  /// Tailwind 700-weight tints used by the admin RPP mockup palette
+  /// (status pill foregrounds, KPI numerals, audit timeline dot fg,
+  /// pill borders). Slightly less saturated than the 600s so they read
+  /// as text on tinted-50 backgrounds without screaming.
+  static Color get success700 => const Color(0xFF15803D);
+  static Color get warning700 => const Color(0xFFB45309);
+  static Color get error700 => const Color(0xFFB91C1C);
+
+  /// Tailwind green-600 — the mockup's status-pill / approve-CTA
+  /// canonical green. `success600` is emerald-600 (#059669) which
+  /// reads cooler; this hue matches the design tokens 1:1.
+  static Color get green600 => const Color(0xFF16A34A);
+
   // ── Common UI colors (Tailwind-inspired) ──
   static Color get emerald500 => const Color(0xFF10B981);
   static Color get violet500 => const Color(0xFF8B5CF6);

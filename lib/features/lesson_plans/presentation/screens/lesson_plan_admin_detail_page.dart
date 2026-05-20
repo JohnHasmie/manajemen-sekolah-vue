@@ -5,7 +5,9 @@
 // sheet-shaped Container to match the teacher detail sheet.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/status_utils_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/ui_builders_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/file_operations_mixin.dart';
@@ -15,6 +17,7 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/heade
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/content_card_builder_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_action_bar.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
+import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan_format.dart';
 
 class LessonPlanAdminDetailPage extends StatefulWidget {
   final Map<String, dynamic> lessonPlan;
@@ -56,10 +59,32 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
   @override
   late Map<String, dynamic> lessonPlan;
 
+  /// Hydrate the sheet with the FULL lesson plan record (including
+  /// fresh `file_path` + `file_name` + content sections). The list
+  /// endpoint sometimes returns a thinner summary, so we always
+  /// re-fetch via `/rpp/{id}` to be safe.
   @override
   void initState() {
     super.initState();
     lessonPlan = widget.lessonPlan;
+    _refreshFromBackend();
+  }
+
+  Future<void> _refreshFromBackend() async {
+    final id = widget.lessonPlan['id']?.toString();
+    if (id == null || id.isEmpty) return;
+    try {
+      final fresh = await LessonPlanService.getLessonPlanById(id);
+      if (!mounted || fresh.isEmpty) return;
+      setState(() {
+        // Merge — preserve any keys the list payload had that the
+        // detail might not (cosmetic class/subject names, etc.).
+        lessonPlan = {...lessonPlan, ...fresh};
+      });
+    } catch (e) {
+      AppLogger.warning('lesson_plan', 'admin detail refresh failed: $e');
+      // Silent — the sheet still renders with the list payload.
+    }
   }
 
   @override
@@ -69,14 +94,27 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
     final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
     final mediaHeight = MediaQuery.of(context).size.height;
 
-    // Setujui / Tolak action bar at the foot of the sheet. Hidden for
-    // Draft rows (teacher hasn't submitted yet) so the bar doesn't show
-    // up before there's anything for the admin to act on.
+    // Setujui / Kembalikan / Tolak action bar at the foot of the
+    // sheet. Hidden for Draft rows (teacher hasn't submitted yet) so
+    // the bar doesn't show up before there's anything for the admin to
+    // act on. Pulls display strings off the model so the confirmation
+    // sheets render their summary card without an extra refetch.
+    final formatLabel = LessonPlanFormat.fromMap(lessonPlan).shortLabel;
     final actionBar = LessonPlanAdminActionBar.maybeBuild(
       lessonPlanId: model.id,
       status: model.status,
       currentNote: model.adminNotes,
       onStatusChanged: _onStatusChanged,
+      title: model.title.isNotEmpty ? model.title : 'RPP tanpa judul',
+      format: model.format,
+      formatLabel: formatLabel,
+      subjectLabel: (model.subjectName ?? '').isNotEmpty
+          ? model.subjectName!
+          : '—',
+      classLabel: (model.className ?? '').isNotEmpty ? model.className! : '—',
+      teacherName: (model.teacherName ?? '').isNotEmpty
+          ? model.teacherName!
+          : '—',
     );
 
     return Padding(

@@ -20,6 +20,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/dashboard/data/dashboard_service.dart';
 import 'package:manajemensekolah/features/dashboard/domain/models/priority_inbox_item.dart';
 
@@ -209,66 +210,15 @@ class _ParentPriorityInboxScreenState
   }
 
   Widget _buildHero(int total) {
-    final statusBar = MediaQuery.of(context).viewPadding.top;
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [ColorUtils.brandAzure, ColorUtils.brandAzureDeep],
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
-        ),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        statusBar + AppSpacing.md,
-        AppSpacing.md,
-        AppSpacing.lg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            onTap: () => AppNavigator.pop(context),
-            borderRadius: BorderRadius.circular(14),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.arrow_back_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'Beranda · Wali',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.85),
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Perlu Perhatian',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
+    return BrandPageHeader(
+      role: 'parent',
+      subtitle: 'BERANDA · WALI',
+      title: 'Perlu Perhatian',
+      bottomSlot: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.18),
@@ -283,7 +233,7 @@ class _ParentPriorityInboxScreenState
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

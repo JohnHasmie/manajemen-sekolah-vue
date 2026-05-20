@@ -1,0 +1,2214 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>RPP · Admin · Detail, Aksi, Filter, Riwayat</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --teacher: #0D9488;
+    --parent:  #7C3AED;
+    --green-50: #DCFCE7;
+    --green-100: #BBF7D0;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-100: #FDE68A;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-100: #FECACA;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-100: #BFDBFE;
+    --blue-600: #1D4ED8;
+    --blue-700: #1E40AF;
+    --indigo-50: #E0E7FF;
+    --indigo-100: #C7D2FE;
+    --indigo-600: #4F46E5;
+    --indigo-700: #4338CA;
+    --rose-50: #FFE4E6;
+    --rose-600: #E11D48;
+    --teal-50: #CCFBF1;
+    --teal-100: #99F6E4;
+    --teal-600: #0D9488;
+    --teal-700: #0F766E;
+    --violet-50: #EDE9FE;
+    --violet-100: #DDD6FE;
+    --violet-600: #7C3AED;
+    --violet-700: #6D28D9;
+    --sky-50: #E0F2FE;
+    --sky-100: #BAE6FD;
+    --sky-600: #0284C7;
+    --sky-700: #0369A1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0; padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  h2 { font-size: 16px; margin: 36px 0 14px; color: var(--brand-dark); letter-spacing: -0.2px; }
+  .subtitle { color: var(--slate-500); font-size: 13px; margin: 0 0 18px; max-width: 920px; line-height: 1.55; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin: 0 0 6px; padding: 12px 16px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; color: var(--slate-700); font-weight: 600;
+    max-width: 920px;
+  }
+  .legend .swatch { width: 12px; height: 12px; border-radius: 4px; display: inline-block; vertical-align: -1px; margin-right: 5px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 28px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 13px 16px 11px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px; text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100); background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .role { color: var(--brand-dark); margin-right: 8px; font-weight: 800; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%; aspect-ratio: 380 / 760;
+    position: relative; overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+  /* Brand admin header */
+  .header { padding: 14px 16px 30px; color: white; flex: 0 0 auto;
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto; position: relative;
+  }
+  .h-icon svg, .h-back svg {
+    width: 16px; height: 16px; stroke-width: 2.4; fill: none; stroke: currentColor;
+  }
+  .h-title-wrap { flex: 1; margin: 0 6px; }
+  .h-eyebrow {
+    text-transform: uppercase; font-size: 10px; opacity: .8;
+    font-weight: 700; letter-spacing: 1.4px; margin-bottom: 1px;
+  }
+  .h-title { font-size: 17px; font-weight: 800; letter-spacing: -0.2px; }
+  /* KPI strip overlap */
+  .kpi-strip {
+    margin: -20px 16px 0; background: white;
+    border-radius: 16px; padding: 12px 8px;
+    box-shadow: 0 6px 18px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.04);
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;
+    position: relative; z-index: 1;
+  }
+  .kpi-col { text-align: center; padding: 4px 6px; }
+  .kpi-col + .kpi-col { border-left: 1px solid var(--slate-100); }
+  .kpi-num { font-size: 18px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.2px; }
+  .kpi-num.amber  { color: var(--amber-700); }
+  .kpi-num.green  { color: var(--green-700); }
+  .kpi-num.red    { color: var(--red-700); }
+  .kpi-label {
+    font-size: 10px; color: var(--slate-500); margin-top: 1px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  /* Filter chip strip in header */
+  .chip-strip {
+    margin: 12px 0 0; padding: 0 16px;
+    display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.16); color: white;
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+    border: 1px solid rgba(255,255,255,.16);
+  }
+  .chip.on { background: white; color: var(--brand-dark); border-color: transparent; }
+  .chip svg { width: 11px; height: 11px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  /* Body & cards */
+  .body { flex: 1; overflow-y: auto; padding: 14px 16px 60px; }
+  .sec-head {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); margin: 6px 0 8px;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .sec-head .line { flex: 1; height: 1px; background: var(--slate-200); }
+  .sec-head .count {
+    background: var(--slate-100); color: var(--slate-700);
+    font-size: 10px; font-weight: 800; padding: 1px 8px; border-radius: 999px;
+  }
+  /* RPP card */
+  .rpp-card {
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    margin-bottom: 10px; overflow: hidden;
+    position: relative;
+  }
+  .rpp-card .accent {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; border-radius: 3px 0 0 3px;
+    background: var(--amber-600);
+  }
+  .rpp-card.approved .accent { background: var(--green-600); }
+  .rpp-card.rejected .accent { background: var(--red-600); }
+  .rpp-card .row1 {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 12px 4px;
+  }
+  .fmt-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .fmt-pill.k13      { background: var(--blue-50);   color: var(--blue-700); }
+  .fmt-pill.modul    { background: var(--violet-50); color: var(--violet-700); }
+  .fmt-pill.h1       { background: var(--teal-50);   color: var(--teal-700); }
+  .fmt-pill.upload   { background: var(--slate-100); color: var(--slate-700); }
+  .fmt-pill svg { width: 10px; height: 10px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .status-pill.menunggu  { background: var(--amber-50); color: var(--amber-700); }
+  .status-pill.disetujui { background: var(--green-50); color: var(--green-700); }
+  .status-pill.ditolak   { background: var(--red-50);   color: var(--red-700); }
+  .status-pill svg { width: 10px; height: 10px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .rpp-time { margin-left: auto; font-size: 10px; color: var(--slate-500); font-weight: 600; }
+  .rpp-title {
+    padding: 0 12px; font-size: 13.5px; font-weight: 800;
+    color: var(--slate-900); line-height: 1.35; letter-spacing: -0.1px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .rpp-meta {
+    padding: 4px 12px 8px; font-size: 11px;
+    color: var(--slate-600); line-height: 1.45;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .rpp-meta .dot { width: 3px; height: 3px; border-radius: 999px; background: var(--slate-300); }
+  .rpp-foot {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 10px 10px; border-top: 1px dashed var(--slate-200);
+  }
+  .rpp-foot .who {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; color: var(--slate-600); font-weight: 600;
+    flex: 1;
+  }
+  .rpp-foot .who .avatar {
+    width: 22px; height: 22px; border-radius: 999px;
+    background: var(--brand-cobalt); color: white;
+    font-size: 10px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .quick-btn {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--slate-200); background: white;
+    color: var(--slate-600);
+  }
+  .quick-btn.approve { background: var(--green-50); border-color: var(--green-100); color: var(--green-700); }
+  .quick-btn.reject  { background: var(--red-50);   border-color: var(--red-100);   color: var(--red-700); }
+  .quick-btn.send    { background: var(--amber-50); border-color: var(--amber-100); color: var(--amber-700); }
+  .quick-btn svg { width: 14px; height: 14px; stroke-width: 2.6; fill: none; stroke: currentColor; }
+  /* FAB */
+  .fab {
+    position: absolute; right: 16px; bottom: 16px;
+    width: 52px; height: 52px; border-radius: 999px;
+    background: var(--brand-cobalt); color: white;
+    box-shadow: 0 8px 20px rgba(27,111,184,.32);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fab svg { width: 22px; height: 22px; stroke-width: 2.6; fill: none; stroke: currentColor; }
+  /* Dialog popup overlay */
+  .overlay {
+    position: absolute; inset: 0; background: rgba(15,23,42,.45);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .dlg {
+    width: 100%; background: white; border-radius: 18px;
+    overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,.25);
+  }
+  .dlg-head {
+    padding: 16px 18px 8px; display: flex; align-items: center; gap: 10px;
+  }
+  .dlg-head .ic {
+    width: 38px; height: 38px; border-radius: 12px;
+    background: var(--green-50); color: var(--green-700);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dlg-head .ic.reject  { background: var(--red-50);   color: var(--red-700); }
+  .dlg-head .ic.send    { background: var(--amber-50); color: var(--amber-700); }
+  .dlg-head .ic svg { width: 18px; height: 18px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .dlg-head h3 { margin: 0; font-size: 15px; font-weight: 800; color: var(--brand-dark); letter-spacing: -0.1px; }
+  .dlg-head p  { margin: 1px 0 0; font-size: 11px; color: var(--slate-500); }
+  .dlg-body { padding: 6px 18px 14px; }
+  .dlg-summary {
+    background: var(--slate-50); border-radius: 10px; padding: 10px 12px;
+    border: 1px solid var(--slate-200); margin-bottom: 12px;
+  }
+  .dlg-summary .l { font-size: 10px; color: var(--slate-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
+  .dlg-summary .v { font-size: 12.5px; color: var(--slate-900); font-weight: 700; margin-top: 1px; }
+  .dlg-summary .r { font-size: 10.5px; color: var(--slate-500); margin-top: 2px; }
+  .dlg-foot {
+    padding: 0 14px 14px; display: flex; gap: 8px;
+  }
+  .btn {
+    flex: 1; padding: 11px; border-radius: 12px;
+    font-size: 13px; font-weight: 800; text-align: center;
+    border: none;
+  }
+  .btn.outline { background: white; border: 1px solid var(--slate-200); color: var(--slate-700); }
+  .btn.primary { background: var(--brand-cobalt); color: white; }
+  .btn.success { background: var(--green-600); color: white; }
+  .btn.danger  { background: var(--red-600);   color: white; }
+  .btn.warn    { background: var(--amber-700); color: white; }
+  /* Sheet (bottom-sheet) container that fills the phone — used for compose / reject / filter */
+  .sheet { display: flex; flex-direction: column; flex: 1; background: white; }
+  .sheet-handle {
+    width: 36px; height: 4px; background: var(--slate-200);
+    border-radius: 999px; margin: 8px auto;
+  }
+  .sheet-head {
+    padding: 0 16px 12px;
+    border-bottom: 1px solid var(--slate-200);
+  }
+  .sheet-head .row { display: flex; align-items: center; gap: 10px; }
+  .sheet-head .ic {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sheet-head .ic.green  { background: var(--green-50);  color: var(--green-700); }
+  .sheet-head .ic.red    { background: var(--red-50);    color: var(--red-700); }
+  .sheet-head .ic.amber  { background: var(--amber-50);  color: var(--amber-700); }
+  .sheet-head .ic.blue   { background: var(--blue-50);   color: var(--blue-700); }
+  .sheet-head .ic.violet { background: var(--violet-50); color: var(--violet-700); }
+  .sheet-head .ic.teal   { background: var(--teal-50);   color: var(--teal-700); }
+  .sheet-head .ic.slate  { background: var(--slate-100); color: var(--slate-700); }
+  .sheet-head .ic svg { width: 16px; height: 16px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .sheet-head h3 { margin: 0; font-size: 15px; font-weight: 800; color: var(--brand-dark); }
+  .sheet-head p  { margin: 1px 0 0; font-size: 11px; color: var(--slate-500); }
+  .sheet-body { padding: 14px 16px; overflow-y: auto; flex: 1; }
+  .sheet-foot {
+    padding: 10px 16px 16px;
+    border-top: 1px solid var(--slate-200);
+    background: white;
+    display: flex; gap: 8px;
+  }
+  /* Form fields */
+  .field { margin-bottom: 12px; }
+  .field-label {
+    font-size: 11px; font-weight: 700; color: var(--slate-700);
+    margin-bottom: 5px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .field-label .req { color: var(--red-600); }
+  .field-label .opt {
+    background: var(--slate-100); color: var(--slate-500);
+    font-size: 9px; font-weight: 700;
+    padding: 1px 6px; border-radius: 999px; margin-left: 2px; text-transform: uppercase;
+  }
+  .input, .textarea, .select {
+    width: 100%; background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 10px; padding: 10px 12px;
+    font-size: 12px; color: var(--slate-900);
+  }
+  .textarea { min-height: 70px; resize: none; }
+  .select { display: flex; align-items: center; gap: 8px; }
+  .select .ic {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: white; display: inline-flex; align-items: center; justify-content: center;
+    color: var(--brand-cobalt);
+  }
+  .select .ic svg { width: 12px; height: 12px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .select .v { flex: 1; }
+  .select .caret { color: var(--slate-400); }
+  .select .caret svg { width: 12px; height: 12px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  /* Reason chip suggestions */
+  .reason-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .reason-chip {
+    padding: 5px 10px; border-radius: 999px;
+    background: var(--slate-50); border: 1px dashed var(--slate-300);
+    color: var(--slate-600); font-size: 10.5px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .reason-chip.on {
+    background: var(--red-50); border: 1px solid var(--red-100); color: var(--red-700);
+  }
+  .reason-chip.amber.on {
+    background: var(--amber-50); border: 1px solid var(--amber-100); color: var(--amber-700);
+  }
+  .reason-chip svg { width: 10px; height: 10px; stroke-width: 2.6; fill: none; stroke: currentColor; }
+  /* Toggle segmented */
+  .seg {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .seg .opt {
+    background: var(--slate-50); border: 1px solid var(--slate-200);
+    border-radius: 12px; padding: 10px 8px; text-align: left;
+    font-size: 11px; font-weight: 700; color: var(--slate-600);
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .seg .opt .ic {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: white; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    color: var(--slate-500);
+  }
+  .seg .opt .ic svg { width: 14px; height: 14px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .seg .opt .t-title { font-size: 12px; font-weight: 800; color: var(--slate-800); }
+  .seg .opt .t-sub   { font-size: 10px; color: var(--slate-500); margin-top: 2px; line-height: 1.4; font-weight: 600; }
+  .seg .opt.on.amber { background: var(--amber-50); border-color: var(--amber-100); color: var(--amber-700); }
+  .seg .opt.on.amber .ic { background: var(--amber-100); color: var(--amber-700); }
+  .seg .opt.on.amber .t-title { color: var(--amber-700); }
+  .seg .opt.on.violet { background: var(--violet-50); border-color: var(--violet-100); color: var(--violet-700); }
+  .seg .opt.on.violet .ic { background: var(--violet-100); color: var(--violet-700); }
+  .seg .opt.on.violet .t-title { color: var(--violet-700); }
+  /* Hero status card on detail */
+  .detail-hero {
+    margin: 14px 16px 0; padding: 14px;
+    background: white; border-radius: 16px;
+    border: 1px solid var(--slate-200);
+  }
+  .detail-hero.menunggu  { background: linear-gradient(135deg, #FFFBEB 0%, white 60%); border-color: var(--amber-100); }
+  .detail-hero.disetujui { background: linear-gradient(135deg, #F0FDF4 0%, white 60%); border-color: var(--green-100); }
+  .detail-hero.ditolak   { background: linear-gradient(135deg, #FEF2F2 0%, white 60%); border-color: var(--red-100); }
+  .detail-hero .top {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .detail-hero .top .status-pill { font-size: 10px; padding: 3px 9px; }
+  .detail-hero .top .fmt-pill { font-size: 10px; padding: 3px 9px; }
+  .detail-hero h2 {
+    font-size: 16px; font-weight: 800; color: var(--slate-900);
+    margin: 4px 0 6px; line-height: 1.3; letter-spacing: -0.2px;
+  }
+  .detail-hero .who-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--slate-600); font-weight: 600;
+  }
+  .detail-hero .who-row .avatar {
+    width: 24px; height: 24px; border-radius: 999px;
+    background: var(--brand-cobalt); color: white;
+    font-size: 10px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .detail-hero .meta-grid {
+    margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--slate-200);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .detail-hero .meta-grid .cell .l {
+    font-size: 9.5px; font-weight: 700; color: var(--slate-500);
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .detail-hero .meta-grid .cell .v {
+    font-size: 12.5px; font-weight: 700; color: var(--slate-800); margin-top: 1px;
+  }
+  /* Generic content card */
+  .detail-card {
+    margin: 12px 16px 0; padding: 14px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+  }
+  .detail-card .head {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .detail-card .head .ic {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: var(--blue-50); color: var(--blue-700);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .detail-card .head .ic.violet { background: var(--violet-50); color: var(--violet-700); }
+  .detail-card .head .ic.teal   { background: var(--teal-50);   color: var(--teal-700); }
+  .detail-card .head .ic.slate  { background: var(--slate-100); color: var(--slate-700); }
+  .detail-card .head .ic.amber  { background: var(--amber-50);  color: var(--amber-700); }
+  .detail-card .head .ic svg { width: 14px; height: 14px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .detail-card .head h4 { margin: 0; font-size: 12.5px; font-weight: 800; color: var(--brand-dark); letter-spacing: -0.1px; }
+  .detail-card .head .sub { font-size: 10px; color: var(--slate-500); font-weight: 600; margin-top: 1px; }
+  .detail-card .head .right {
+    margin-left: auto; font-size: 10px; color: var(--slate-500); font-weight: 700;
+  }
+  .detail-card p {
+    margin: 0 0 6px; font-size: 11.5px; color: var(--slate-700); line-height: 1.55;
+  }
+  .detail-card ul { margin: 0; padding-left: 18px; font-size: 11.5px; color: var(--slate-700); line-height: 1.55; }
+  .detail-card .kv-row {
+    display: flex; gap: 8px; padding: 6px 0;
+    border-bottom: 1px dashed var(--slate-100); font-size: 11.5px; color: var(--slate-700);
+  }
+  .detail-card .kv-row:last-child { border-bottom: none; }
+  .detail-card .kv-row .k { color: var(--slate-500); font-weight: 600; min-width: 100px; }
+  .detail-card .kv-row .v { font-weight: 700; color: var(--slate-900); flex: 1; }
+  /* K13 section breakdown */
+  .k13-section {
+    margin: 0 0 10px; background: var(--slate-50);
+    border: 1px solid var(--slate-200); border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .k13-section .head {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  }
+  .k13-section .num {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--blue-100); color: var(--blue-700);
+    font-size: 11px; font-weight: 800;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .k13-section .ttl { font-size: 11.5px; font-weight: 800; color: var(--slate-800); }
+  .k13-section .body { font-size: 11px; color: var(--slate-600); line-height: 1.55; }
+  /* Modul Ajar specific block */
+  .ma-block {
+    background: var(--violet-50); border: 1px solid var(--violet-100);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 10px;
+  }
+  .ma-block .ttl { font-size: 11px; font-weight: 800; color: var(--violet-700); text-transform: uppercase; letter-spacing: 0.5px; }
+  .ma-block .body { font-size: 11px; color: var(--slate-700); margin-top: 4px; line-height: 1.5; }
+  /* Upload file card */
+  .file-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px; border: 1px solid var(--slate-200);
+    background: var(--slate-50); border-radius: 12px;
+  }
+  .file-card .ic {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: var(--red-50); color: var(--red-700);
+    display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  }
+  .file-card .ic.docx { background: var(--blue-50); color: var(--blue-700); }
+  .file-card .ic svg { width: 18px; height: 18px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .file-card .meta { flex: 1; min-width: 0; }
+  .file-card .meta .name {
+    font-size: 12.5px; font-weight: 800; color: var(--slate-900);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .file-card .meta .sub { font-size: 10.5px; color: var(--slate-500); margin-top: 2px; font-weight: 600; }
+  .file-card .dl {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: white; border: 1px solid var(--slate-200);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .file-card .dl svg { width: 16px; height: 16px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  /* Audit timeline */
+  .timeline { list-style: none; padding: 0; margin: 0; }
+  .timeline li {
+    display: flex; gap: 10px; padding: 8px 0;
+    border-bottom: 1px dashed var(--slate-100);
+  }
+  .timeline li:last-child { border-bottom: none; }
+  .timeline .dot {
+    width: 26px; height: 26px; border-radius: 999px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid white; box-shadow: 0 0 0 1px var(--slate-200);
+  }
+  .timeline .dot.submit  { background: var(--blue-50);  color: var(--blue-700); }
+  .timeline .dot.approve { background: var(--green-50); color: var(--green-700); }
+  .timeline .dot.reject  { background: var(--red-50);   color: var(--red-700); }
+  .timeline .dot.sendback{ background: var(--amber-50); color: var(--amber-700); }
+  .timeline .dot.regen   { background: var(--violet-50);color: var(--violet-700); }
+  .timeline .dot.edit    { background: var(--sky-50);   color: var(--sky-700); }
+  .timeline .dot svg { width: 13px; height: 13px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .timeline .info { flex: 1; }
+  .timeline .row1 {
+    display: flex; align-items: baseline; gap: 6px;
+    font-size: 11.5px; font-weight: 700; color: var(--slate-900);
+  }
+  .timeline .row1 .when { margin-left: auto; font-size: 10px; color: var(--slate-500); font-weight: 600; }
+  .timeline .row2 { font-size: 10.5px; color: var(--slate-600); font-weight: 600; margin-top: 1px; }
+  .timeline .note {
+    margin-top: 4px; font-size: 11px; color: var(--slate-700);
+    padding: 6px 8px; background: var(--slate-50); border-radius: 6px;
+    border-left: 3px solid var(--slate-300); line-height: 1.4;
+  }
+  .timeline li.amber .note { border-left-color: var(--amber-400, var(--amber-600)); background: var(--amber-50); color: var(--amber-700); }
+  .timeline li.red   .note { border-left-color: var(--red-600); background: var(--red-50); color: var(--red-700); }
+  /* Bottom action bar of admin detail */
+  .action-bar {
+    padding: 10px 12px 12px;
+    background: white; border-top: 1px solid var(--slate-200);
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .ab-btn {
+    padding: 11px 6px; border-radius: 12px;
+    font-size: 12px; font-weight: 800; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .ab-btn svg { width: 16px; height: 16px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .ab-btn.approve { background: var(--green-600);  color: white; }
+  .ab-btn.send    { background: var(--amber-700);  color: white; }
+  .ab-btn.reject  { background: white; border: 1px solid var(--red-100); color: var(--red-700); }
+  .ab-btn.edit    { background: white; border: 1px solid var(--slate-200); color: var(--slate-700); }
+  .ab-btn.regen   { background: white; border: 1px solid var(--violet-100); color: var(--violet-700); }
+  /* Filter sheet pieces */
+  .fil-section { margin-bottom: 14px; }
+  .fil-section .ttl {
+    font-size: 11px; font-weight: 800; color: var(--brand-dark);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .fil-chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .fil-chip {
+    padding: 6px 11px; border-radius: 999px;
+    background: var(--slate-50); border: 1px solid var(--slate-200);
+    color: var(--slate-700); font-size: 11px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .fil-chip.on { background: var(--brand-cobalt); border-color: var(--brand-cobalt); color: white; }
+  .fil-chip.on.green  { background: var(--green-600); border-color: var(--green-600); }
+  .fil-chip.on.amber  { background: var(--amber-700); border-color: var(--amber-700); }
+  .fil-chip.on.red    { background: var(--red-600);   border-color: var(--red-600); }
+  .fil-chip.on.violet { background: var(--violet-600);border-color: var(--violet-600); }
+  .fil-chip.on.teal   { background: var(--teal-600);  border-color: var(--teal-600); }
+  .fil-chip svg { width: 11px; height: 11px; stroke-width: 2.6; fill: none; stroke: currentColor; }
+  /* Empty card on list (e.g., Ditolak section empty) */
+  .empty-card {
+    padding: 14px; margin-bottom: 10px;
+    background: white; border-radius: 12px; border: 1px dashed var(--slate-200);
+    text-align: center; color: var(--slate-500); font-size: 11.5px; font-weight: 600;
+  }
+  /* Inline notice (admin-only banner) */
+  .notice {
+    margin: 12px 16px 0; padding: 10px 12px;
+    border-radius: 12px; font-size: 11px; font-weight: 600;
+    display: flex; gap: 8px; align-items: flex-start; line-height: 1.45;
+  }
+  .notice.amber { background: var(--amber-50); border: 1px solid var(--amber-100); color: var(--amber-700); }
+  .notice.green { background: var(--green-50); border: 1px solid var(--green-100); color: var(--green-700); }
+  .notice.red   { background: var(--red-50);   border: 1px solid var(--red-100);   color: var(--red-700); }
+  .notice .ic { width: 18px; height: 18px; flex: 0 0 auto; }
+  .notice .ic svg { width: 18px; height: 18px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .notice .body b { font-weight: 800; }
+  /* Token meter for regen */
+  .meter {
+    height: 6px; background: var(--slate-100); border-radius: 999px; overflow: hidden;
+    margin-top: 6px;
+  }
+  .meter .fill { height: 100%; background: var(--violet-600); border-radius: 999px; }
+  /* Format selector buttons (Frame D1) */
+  .fmt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .fmt-card {
+    padding: 10px 12px; border-radius: 12px;
+    background: var(--slate-50); border: 1px solid var(--slate-200);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .fmt-card.on { background: var(--blue-50); border-color: var(--blue-100); }
+  .fmt-card .t { font-size: 12px; font-weight: 800; color: var(--slate-900); }
+  .fmt-card .s { font-size: 10.5px; color: var(--slate-500); line-height: 1.45; font-weight: 600; }
+  /* Quill mock toolbar */
+  .quill-mock {
+    border: 1px solid var(--slate-200); border-radius: 10px; overflow: hidden;
+  }
+  .quill-mock .tool {
+    display: flex; gap: 4px; padding: 8px 8px;
+    background: var(--slate-50); border-bottom: 1px solid var(--slate-200);
+  }
+  .quill-mock .tool .b {
+    width: 26px; height: 24px; border-radius: 6px;
+    background: white; border: 1px solid var(--slate-200);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; color: var(--slate-600);
+  }
+  .quill-mock .tool .b.bold { font-weight: 900; color: var(--slate-800); }
+  .quill-mock .body {
+    padding: 10px 12px; font-size: 11.5px; color: var(--slate-700);
+    min-height: 92px; line-height: 1.55;
+  }
+  .quill-mock .body b { color: var(--slate-900); }
+  /* Inline color "before/after" diff row */
+  .diff-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+  }
+  .diff-cell {
+    padding: 10px 12px; border-radius: 10px; font-size: 11px; line-height: 1.45;
+    border: 1px solid var(--slate-200);
+  }
+  .diff-cell.before { background: var(--red-50);   border-color: var(--red-100);   color: var(--red-700); }
+  .diff-cell.after  { background: var(--green-50); border-color: var(--green-100); color: var(--green-700); }
+  .diff-cell .l { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  /* Confirmation popup */
+  .toast {
+    position: absolute; left: 16px; right: 16px; bottom: 80px;
+    padding: 12px 14px; border-radius: 12px;
+    background: var(--slate-900); color: white;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 14px 30px rgba(0,0,0,.25); font-size: 12px; font-weight: 700;
+  }
+  .toast .ic {
+    width: 26px; height: 26px; border-radius: 999px;
+    background: var(--green-600); display: flex; align-items: center; justify-content: center;
+  }
+  .toast .ic svg { width: 14px; height: 14px; stroke-width: 2.6; fill: none; stroke: white; }
+  /* Small helper for inline color */
+  .muted { color: var(--slate-500); }
+</style>
+</head>
+<body>
+
+<h1>RPP · Admin · Detail, Aksi, Filter, Riwayat</h1>
+<p class="subtitle">
+  Penambahan layar yang sebelumnya berhenti di snackbar
+  <em>"Detail RPP akan tersedia di rilis berikutnya"</em>. Sekarang admin punya
+  alur lengkap untuk membuka, meninjau, menyetujui, menolak, mengembalikan
+  ke guru, atau langsung mengedit/regen sendiri — semuanya bekerja per format
+  (K13, Modul Ajar, RPP 1 Halaman, Upload file). Mengikuti pola brand-chrome
+  yang sama dengan layar guru sebagai referensi alur, namun dengan tindakan
+  khas admin (Setujui · Tolak · Kembalikan ke guru · Edit manual · Regen AI).
+</p>
+
+<div class="legend">
+  <span><span class="swatch" style="background:#143068"></span> Brand Navy (Admin)</span>
+  <span><span class="swatch" style="background:#16A34A"></span> Setujui / Disetujui</span>
+  <span><span class="swatch" style="background:#DC2626"></span> Tolak / Ditolak</span>
+  <span><span class="swatch" style="background:#B45309"></span> Kembalikan ke guru</span>
+  <span><span class="swatch" style="background:#7C3AED"></span> Regen via AI</span>
+  <span><span class="swatch" style="background:#0284C7"></span> Edit manual</span>
+</div>
+
+<h2>A · Daftar &amp; Quick-Approve</h2>
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- A1 — Admin RPP list (baseline brand chrome — matches build) -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">A1</span><span class="role">Admin</span>· List baseline (cocok dengan layar saat ini)
+      <span class="desc">brand header · KPI · groups: Perlu review / Disetujui / Ditolak · row-level quick actions</span>
+    </div>
+    <div class="phone">
+
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back">
+            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+          </div>
+          <div class="h-title-wrap">
+            <div class="h-eyebrow">Manajemen Akademik</div>
+            <div class="h-title">Manajemen RPP</div>
+          </div>
+          <div class="h-icon">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+          </div>
+          <div class="h-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+          </div>
+        </div>
+        <div class="chip-strip">
+          <div class="chip on">
+            <svg viewBox="0 0 24 24"><path d="M3 12h12"/><path d="M3 6h18"/><path d="M3 18h8"/></svg>
+            Semua
+          </div>
+          <div class="chip">Mapel · Matematika</div>
+          <div class="chip">Kelas · XII IPA</div>
+          <div class="chip">Guru · 4</div>
+        </div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi-col">
+          <div class="kpi-num amber">41</div>
+          <div class="kpi-label">Perlu Review</div>
+        </div>
+        <div class="kpi-col">
+          <div class="kpi-num green">29</div>
+          <div class="kpi-label">Disetujui</div>
+        </div>
+        <div class="kpi-col">
+          <div class="kpi-num red">1</div>
+          <div class="kpi-label">Ditolak</div>
+        </div>
+      </div>
+
+      <div class="body">
+
+        <div class="sec-head">
+          <span>Perlu Review</span>
+          <span class="count">3</span>
+          <span class="line"></span>
+        </div>
+
+        <!-- Card 1: K13 -->
+        <div class="rpp-card">
+          <div class="accent"></div>
+          <div class="row1">
+            <div class="fmt-pill k13">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+              K13
+            </div>
+            <div class="status-pill menunggu">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Menunggu
+            </div>
+            <div class="rpp-time">2 jam</div>
+          </div>
+          <div class="rpp-title">Sistem Persamaan Linear Tiga Variabel — Pertemuan 1</div>
+          <div class="rpp-meta">
+            Matematika · XII IPA 1 <span class="dot"></span> Semester Ganjil <span class="dot"></span> 2 × 45 menit
+          </div>
+          <div class="rpp-foot">
+            <div class="who">
+              <span class="avatar">SR</span>
+              <span>Siti Rohimah, S.Pd.</span>
+            </div>
+            <div class="quick-btn approve" title="Setujui cepat">
+              <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+            </div>
+            <div class="quick-btn send" title="Kembalikan ke guru">
+              <svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>
+            </div>
+            <div class="quick-btn reject" title="Tolak">
+              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Modul Ajar -->
+        <div class="rpp-card">
+          <div class="accent"></div>
+          <div class="row1">
+            <div class="fmt-pill modul">
+              <svg viewBox="0 0 24 24"><path d="M4 4h13a3 3 0 013 3v13H7a3 3 0 01-3-3V4z"/><path d="M4 17h13"/></svg>
+              Modul Ajar
+            </div>
+            <div class="status-pill menunggu">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Menunggu
+            </div>
+            <div class="rpp-time">Kemarin</div>
+          </div>
+          <div class="rpp-title">Reaksi Redoks &amp; Penyetaraan — Topik 3</div>
+          <div class="rpp-meta">
+            Kimia · XII IPA 2 <span class="dot"></span> Semester Ganjil <span class="dot"></span> 3 × 45 menit
+          </div>
+          <div class="rpp-foot">
+            <div class="who">
+              <span class="avatar" style="background:var(--teal-600)">DH</span>
+              <span>Dewi Hapsari, S.Si.</span>
+            </div>
+            <div class="quick-btn approve">
+              <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+            </div>
+            <div class="quick-btn send">
+              <svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>
+            </div>
+            <div class="quick-btn reject">
+              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Upload -->
+        <div class="rpp-card">
+          <div class="accent"></div>
+          <div class="row1">
+            <div class="fmt-pill upload">
+              <svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg>
+              Upload · PDF
+            </div>
+            <div class="status-pill menunggu">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Menunggu
+            </div>
+            <div class="rpp-time">3 hari</div>
+          </div>
+          <div class="rpp-title">RPP Tematik Kelas IV — Tema 6 Cita-citaku</div>
+          <div class="rpp-meta">
+            Tematik · IV B <span class="dot"></span> Semester Ganjil <span class="dot"></span> 6 × 35 menit
+          </div>
+          <div class="rpp-foot">
+            <div class="who">
+              <span class="avatar" style="background:var(--violet-600)">RA</span>
+              <span>Rina Anwar, S.Pd.SD.</span>
+            </div>
+            <div class="quick-btn approve">
+              <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+            </div>
+            <div class="quick-btn send">
+              <svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>
+            </div>
+            <div class="quick-btn reject">
+              <svg viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-head">
+          <span>Disetujui</span>
+          <span class="count">29</span>
+          <span class="line"></span>
+        </div>
+
+        <!-- Approved card collapsed -->
+        <div class="rpp-card approved">
+          <div class="accent"></div>
+          <div class="row1">
+            <div class="fmt-pill h1">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h12M4 18h10"/></svg>
+              1 Halaman
+            </div>
+            <div class="status-pill disetujui">
+              <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+              Disetujui
+            </div>
+            <div class="rpp-time">12 Mei</div>
+          </div>
+          <div class="rpp-title">Kalor &amp; Perpindahan Kalor — Pertemuan 2</div>
+          <div class="rpp-meta">
+            IPA · VII A <span class="dot"></span> Semester Ganjil <span class="dot"></span> 2 × 40 menit
+          </div>
+        </div>
+
+      </div>
+
+      <div class="fab">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- A2 — Quick approve confirmation popup                        -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">A2</span><span class="role">Admin</span>· Quick-Approve · Konfirmasi popup
+      <span class="desc">tap ✓ pada baris → popup ringan; catatan opsional; tanpa membuka detail</span>
+    </div>
+    <div class="phone">
+
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back">
+            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+          </div>
+          <div class="h-title-wrap">
+            <div class="h-eyebrow">Manajemen Akademik</div>
+            <div class="h-title">Manajemen RPP</div>
+          </div>
+          <div class="h-icon">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+          </div>
+          <div class="h-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi-col"><div class="kpi-num amber">41</div><div class="kpi-label">Perlu Review</div></div>
+        <div class="kpi-col"><div class="kpi-num green">29</div><div class="kpi-label">Disetujui</div></div>
+        <div class="kpi-col"><div class="kpi-num red">1</div><div class="kpi-label">Ditolak</div></div>
+      </div>
+
+      <div class="body" style="opacity:.45">
+        <div class="sec-head">
+          <span>Perlu Review</span><span class="count">3</span><span class="line"></span>
+        </div>
+        <div class="rpp-card">
+          <div class="accent"></div>
+          <div class="row1">
+            <div class="fmt-pill k13">K13</div>
+            <div class="status-pill menunggu">Menunggu</div>
+            <div class="rpp-time">2 jam</div>
+          </div>
+          <div class="rpp-title">Sistem Persamaan Linear Tiga Variabel</div>
+          <div class="rpp-meta">Matematika · XII IPA 1 <span class="dot"></span> 2 × 45 menit</div>
+        </div>
+      </div>
+
+      <!-- Confirmation overlay -->
+      <div class="overlay">
+        <div class="dlg">
+          <div class="dlg-head">
+            <div class="ic">
+              <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+            </div>
+            <div>
+              <h3>Setujui RPP ini?</h3>
+              <p>Status akan berubah menjadi <b>Disetujui</b> &amp; guru menerima notifikasi.</p>
+            </div>
+          </div>
+          <div class="dlg-body">
+            <div class="dlg-summary">
+              <div class="l">RPP K13 · Pertemuan 1</div>
+              <div class="v">Sistem Persamaan Linear Tiga Variabel</div>
+              <div class="r">Matematika · XII IPA 1 · Siti Rohimah, S.Pd.</div>
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <div class="field-label">
+                Catatan untuk guru <span class="opt">opsional</span>
+              </div>
+              <textarea class="textarea" placeholder="Bagus, lanjutkan dengan format ini untuk pertemuan selanjutnya">Bagus, alur kegiatan sudah runtut.</textarea>
+            </div>
+          </div>
+          <div class="dlg-foot">
+            <button class="btn outline">Batal</button>
+            <button class="btn success">
+              Setujui
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<h2>B · Detail per Format</h2>
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- B1 — Detail · Format K13 (8 section)                          -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">B1</span><span class="role">Admin</span>· Detail · Format <b>K13</b>
+      <span class="desc">hero status · meta · 8 bagian K13 (Identitas/KD/Tujuan/Materi/Metode/Kegiatan/Penilaian/Sumber) · timeline · action-bar</span>
+    </div>
+    <div class="phone">
+
+      <div class="header" style="padding-bottom:14px">
+        <div class="h-row">
+          <div class="h-back">
+            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+          </div>
+          <div class="h-title-wrap">
+            <div class="h-eyebrow">Manajemen RPP</div>
+            <div class="h-title">Detail RPP</div>
+          </div>
+          <div class="h-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4l8 8-8 8"/></svg>
+          </div>
+          <div class="h-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="18" r="1.4"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="body" style="padding-top:6px">
+
+        <div class="detail-hero menunggu" style="margin:0 0 12px">
+          <div class="top">
+            <div class="fmt-pill k13">K13</div>
+            <div class="status-pill menunggu">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Menunggu Review
+            </div>
+            <div style="margin-left:auto;font-size:10px;color:var(--slate-500);font-weight:700">Dikirim 2 jam lalu</div>
+          </div>
+          <h2>Sistem Persamaan Linear Tiga Variabel — Pertemuan 1</h2>
+          <div class="who-row">
+            <span class="avatar">SR</span>
+            <span><b style="color:var(--slate-800)">Siti Rohimah, S.Pd.</b> · Matematika</span>
+          </div>
+          <div class="meta-grid">
+            <div class="cell"><div class="l">Mapel</div><div class="v">Matematika</div></div>
+            <div class="cell"><div class="l">Kelas</div><div class="v">XII IPA 1</div></div>
+            <div class="cell"><div class="l">Semester</div><div class="v">Ganjil 2025/2026</div></div>
+            <div class="cell"><div class="l">Alokasi</div><div class="v">2 × 45 menit</div></div>
+          </div>
+        </div>
+
+        <!-- Section 1 -->
+        <div class="detail-card" style="margin-left:0;margin-right:0">
+          <div class="head">
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h12M4 18h10"/></svg></div>
+            <div>
+              <h4>Bagian K13</h4>
+              <div class="sub">8 bagian terisi · siap ditinjau</div>
+            </div>
+            <div class="right">8/8</div>
+          </div>
+
+          <div class="k13-section">
+            <div class="head" style="margin-bottom:4px"><div class="num">1</div><div class="ttl">Identitas</div></div>
+            <div class="body">Matematika · XII IPA 1 · Semester Ganjil 2025/2026 · 2 × 45 menit</div>
+          </div>
+
+          <div class="k13-section">
+            <div class="head" style="margin-bottom:4px"><div class="num">2</div><div class="ttl">Kompetensi Dasar &amp; Indikator</div></div>
+            <div class="body">3.3 Menyusun sistem persamaan linear tiga variabel dari masalah kontekstual; 4.3 Menyelesaikan masalah kontekstual yang berkaitan dengan SPLTV…</div>
+          </div>
+
+          <div class="k13-section">
+            <div class="head" style="margin-bottom:4px"><div class="num">3</div><div class="ttl">Tujuan Pembelajaran</div></div>
+            <div class="body">Siswa mampu memodelkan masalah kontekstual menjadi SPLTV dan menyelesaikannya menggunakan metode substitusi dan eliminasi…</div>
+          </div>
+
+          <div class="k13-section">
+            <div class="head" style="margin-bottom:4px"><div class="num">4</div><div class="ttl">Materi Pembelajaran</div></div>
+            <div class="body">Bentuk umum SPLTV, metode substitusi, metode eliminasi, gabungan kedua metode, aplikasi pada masalah ekonomi sederhana.</div>
+          </div>
+
+          <div class="k13-section">
+            <div class="head" style="margin-bottom:4px"><div class="num">5</div><div class="ttl">Metode Pembelajaran</div></div>
+            <div class="body">Diskusi kelompok, problem based learning, demonstrasi penyelesaian soal di papan tulis.</div>
+          </div>
+
+          <div class="k13-section">
+            <div class="head" style="margin-bottom:4px"><div class="num">6</div><div class="ttl">Kegiatan Pembelajaran</div></div>
+            <div class="body"><b>Pendahuluan</b> (10') · salam, apersepsi sistem persamaan linear 2 var · <b>Inti</b> (70') · pemberian masalah kontekstual, diskusi, presentasi kelompok · <b>Penutup</b> (10') · refleksi, penugasan rumah.</div>
+          </div>
+
+          <div class="k13-section">
+            <div class="head" style="margin-bottom:4px"><div class="num">7</div><div class="ttl">Penilaian</div></div>
+            <div class="body">Sikap (observasi), Pengetahuan (kuis 5 soal essay), Keterampilan (presentasi kelompok dengan rubrik).</div>
+          </div>
+
+          <div class="k13-section" style="margin-bottom:0">
+            <div class="head" style="margin-bottom:4px"><div class="num">8</div><div class="ttl">Sumber Belajar</div></div>
+            <div class="body">Buku Matematika Kelas XII Kemendikbud 2018, modul internal sekolah, lembar kerja siswa SPLTV.</div>
+          </div>
+        </div>
+
+        <!-- Audit timeline -->
+        <div class="detail-card" style="margin-left:0;margin-right:0">
+          <div class="head">
+            <div class="ic slate"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div>
+              <h4>Riwayat Persetujuan</h4>
+              <div class="sub">3 kejadian</div>
+            </div>
+          </div>
+          <ul class="timeline">
+            <li>
+              <div class="dot submit"><svg viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6"/></svg></div>
+              <div class="info">
+                <div class="row1">Dikirim oleh guru <span class="when">2 jam lalu</span></div>
+                <div class="row2">Siti Rohimah, S.Pd. · format K13</div>
+              </div>
+            </li>
+            <li class="amber">
+              <div class="dot sendback"><svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg></div>
+              <div class="info">
+                <div class="row1">Dikembalikan ke guru <span class="when">3 hari lalu</span></div>
+                <div class="row2">oleh Anda · format K13 · revisi diminta</div>
+                <div class="note">"Tujuan pembelajaran masih bersifat umum, mohon dibuat lebih SMART dan ditambah aspek keterampilan."</div>
+              </div>
+            </li>
+            <li>
+              <div class="dot submit"><svg viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6"/></svg></div>
+              <div class="info">
+                <div class="row1">Dikirim pertama kali <span class="when">5 hari lalu</span></div>
+                <div class="row2">Siti Rohimah, S.Pd. · v1</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Bottom admin action bar -->
+      <div class="action-bar">
+        <div class="ab-btn reject">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>
+          Tolak
+        </div>
+        <div class="ab-btn send">
+          <svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>
+          Kembalikan
+        </div>
+        <div class="ab-btn approve">
+          <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+          Setujui
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- B2 — Detail · Format Modul Ajar                               -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">B2</span><span class="role">Admin</span>· Detail · Format <b>Modul Ajar</b>
+      <span class="desc">Capaian Pembelajaran · ATP · Asesmen Diagnostik/Formatif/Sumatif · Refleksi · Lampiran</span>
+    </div>
+    <div class="phone">
+
+      <div class="header" style="padding-bottom:14px">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="h-title-wrap">
+            <div class="h-eyebrow">Manajemen RPP</div>
+            <div class="h-title">Detail RPP</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 4l8 8-8 8"/></svg></div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="18" r="1.4"/></svg></div>
+        </div>
+      </div>
+
+      <div class="body" style="padding-top:6px">
+
+        <div class="detail-hero menunggu" style="margin:0 0 12px">
+          <div class="top">
+            <div class="fmt-pill modul">Modul Ajar</div>
+            <div class="status-pill menunggu">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Menunggu Review
+            </div>
+            <div style="margin-left:auto;font-size:10px;color:var(--slate-500);font-weight:700">Kemarin · 14:22</div>
+          </div>
+          <h2>Reaksi Redoks &amp; Penyetaraan — Topik 3</h2>
+          <div class="who-row">
+            <span class="avatar" style="background:var(--teal-600)">DH</span>
+            <span><b style="color:var(--slate-800)">Dewi Hapsari, S.Si.</b> · Kimia</span>
+          </div>
+          <div class="meta-grid">
+            <div class="cell"><div class="l">Mata Pelajaran</div><div class="v">Kimia</div></div>
+            <div class="cell"><div class="l">Kelas / Fase</div><div class="v">XII IPA 2 · Fase F</div></div>
+            <div class="cell"><div class="l">Semester</div><div class="v">Ganjil 2025/2026</div></div>
+            <div class="cell"><div class="l">Alokasi</div><div class="v">3 × 45 menit</div></div>
+          </div>
+        </div>
+
+        <!-- AI-generated badge -->
+        <div class="notice amber" style="margin:0 0 12px">
+          <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 2l2.5 5L20 8l-4 4 1 6-5-3-5 3 1-6L4 8l5.5-1L12 2z"/></svg></span>
+          <span class="body"><b>Dihasilkan oleh AI</b> · Claude Opus 4.6 · 2.4k token · guru meninjau &amp; menambahkan 3 paragraf.</span>
+        </div>
+
+        <div class="detail-card" style="margin:0 0 12px">
+          <div class="head">
+            <div class="ic violet"><svg viewBox="0 0 24 24"><path d="M4 4h13a3 3 0 013 3v13H7a3 3 0 01-3-3V4z"/></svg></div>
+            <div>
+              <h4>Bagian Modul Ajar</h4>
+              <div class="sub">10 bagian terisi · siap ditinjau</div>
+            </div>
+            <div class="right">10/10</div>
+          </div>
+
+          <div class="ma-block">
+            <div class="ttl">Informasi Umum</div>
+            <div class="body">Penyusun: Dewi Hapsari · Sekolah: SMA Kamiledu · Fase F · Profil Pelajar Pancasila: Bernalar Kritis, Mandiri, Kreatif</div>
+          </div>
+
+          <div class="ma-block">
+            <div class="ttl">Capaian Pembelajaran</div>
+            <div class="body">Peserta didik mampu menganalisis reaksi redoks berdasarkan perubahan bilangan oksidasi dan menyetarakan persamaan reaksi redoks dengan metode setengah-reaksi.</div>
+          </div>
+
+          <div class="ma-block">
+            <div class="ttl">Alur Tujuan Pembelajaran (ATP)</div>
+            <div class="body">11.K.1 Mengidentifikasi reaksi redoks → 11.K.2 Menentukan biloks → 11.K.3 Menyetarakan reaksi metode bilangan oksidasi → 11.K.4 Metode setengah-reaksi.</div>
+          </div>
+
+          <div class="ma-block">
+            <div class="ttl">Kegiatan Pembelajaran</div>
+            <div class="body">Pertemuan 1: Eksplorasi konsep redoks via demonstrasi paku berkarat · Pertemuan 2: Latihan penentuan biloks · Pertemuan 3: Penyetaraan reaksi kompleks.</div>
+          </div>
+
+          <div class="ma-block">
+            <div class="ttl">Asesmen Diagnostik</div>
+            <div class="body">Kuis singkat 5 soal (sebelum pembelajaran) — mengukur pemahaman awal tentang bilangan oksidasi sederhana.</div>
+          </div>
+
+          <div class="ma-block">
+            <div class="ttl">Asesmen Formatif</div>
+            <div class="body">Diskusi kelompok &amp; presentasi penyetaraan reaksi · rubrik penilaian 4 indikator.</div>
+          </div>
+
+          <div class="ma-block">
+            <div class="ttl">Asesmen Sumatif</div>
+            <div class="body">Tes tertulis 10 soal essay di akhir topik · cakupan: identifikasi redoks, biloks, penyetaraan, aplikasi.</div>
+          </div>
+
+          <div class="ma-block">
+            <div class="ttl">Refleksi Guru &amp; Peserta Didik</div>
+            <div class="body">Refleksi guru: efektivitas metode setengah-reaksi · Refleksi siswa: lembar refleksi 3 pertanyaan terbuka.</div>
+          </div>
+
+          <div class="ma-block" style="margin-bottom:0">
+            <div class="ttl">Lampiran</div>
+            <div class="body">LKPD-3a Penyetaraan Redoks · Rubrik penilaian presentasi · Glosarium istilah kimia.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="action-bar">
+        <div class="ab-btn reject"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>Tolak</div>
+        <div class="ab-btn send"><svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>Kembalikan</div>
+        <div class="ab-btn approve"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Setujui</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- B3 — Detail · Format RPP 1 Halaman                            -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">B3</span><span class="role">Admin</span>· Detail · Format <b>RPP 1 Halaman</b>
+      <span class="desc">format ringkas 3 komponen: Tujuan · Langkah Pembelajaran · Penilaian — sesuai SE Mendikbud 14/2019</span>
+    </div>
+    <div class="phone">
+
+      <div class="header" style="padding-bottom:14px">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="h-title-wrap">
+            <div class="h-eyebrow">Manajemen RPP</div>
+            <div class="h-title">Detail RPP</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 4l8 8-8 8"/></svg></div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="18" r="1.4"/></svg></div>
+        </div>
+      </div>
+
+      <div class="body" style="padding-top:6px">
+
+        <div class="detail-hero disetujui" style="margin:0 0 12px">
+          <div class="top">
+            <div class="fmt-pill h1">1 Halaman</div>
+            <div class="status-pill disetujui">
+              <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+              Disetujui
+            </div>
+            <div style="margin-left:auto;font-size:10px;color:var(--slate-500);font-weight:700">12 Mei · oleh Anda</div>
+          </div>
+          <h2>Kalor &amp; Perpindahan Kalor — Pertemuan 2</h2>
+          <div class="who-row">
+            <span class="avatar" style="background:var(--violet-600)">YB</span>
+            <span><b style="color:var(--slate-800)">Yudi Baskoro, S.Pd.</b> · IPA</span>
+          </div>
+          <div class="meta-grid">
+            <div class="cell"><div class="l">Mata Pelajaran</div><div class="v">IPA Terpadu</div></div>
+            <div class="cell"><div class="l">Kelas</div><div class="v">VII A</div></div>
+            <div class="cell"><div class="l">Semester</div><div class="v">Ganjil 2025/2026</div></div>
+            <div class="cell"><div class="l">Alokasi</div><div class="v">2 × 40 menit</div></div>
+          </div>
+        </div>
+
+        <!-- Admin note (approved) -->
+        <div class="notice green" style="margin:0 0 12px">
+          <span class="ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>
+          <span class="body"><b>Catatan persetujuan:</b> Sederhana, jelas, dan langsung ke poin. Gunakan format ini untuk semua pertemuan IPA.</span>
+        </div>
+
+        <div class="detail-card" style="margin:0 0 12px">
+          <div class="head">
+            <div class="ic teal"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h12M4 18h10"/></svg></div>
+            <div>
+              <h4>RPP 1 Halaman</h4>
+              <div class="sub">3 komponen inti</div>
+            </div>
+            <div class="right">3/3</div>
+          </div>
+
+          <div class="k13-section" style="background:var(--teal-50);border-color:var(--teal-100)">
+            <div class="head" style="margin-bottom:4px">
+              <div class="num" style="background:var(--teal-100);color:var(--teal-700)">A</div>
+              <div class="ttl">Tujuan Pembelajaran</div>
+            </div>
+            <div class="body">Setelah pembelajaran, peserta didik mampu (1) menjelaskan konsep kalor sebagai energi yang berpindah, (2) membedakan tiga cara perpindahan kalor: konduksi, konveksi, dan radiasi, (3) memberikan minimal 2 contoh nyata untuk masing-masing cara.</div>
+          </div>
+
+          <div class="k13-section" style="background:var(--teal-50);border-color:var(--teal-100)">
+            <div class="head" style="margin-bottom:4px">
+              <div class="num" style="background:var(--teal-100);color:var(--teal-700)">B</div>
+              <div class="ttl">Langkah Pembelajaran</div>
+            </div>
+            <div class="body">
+              <b>Pendahuluan (10')</b> · Apersepsi via demonstrasi sendok panas di gelas air.<br>
+              <b>Inti (60')</b> · Eksperimen sederhana: konduksi pada batang besi, konveksi pada air berwarna, radiasi via lilin &amp; tangan. Siswa mengisi LKPD per kelompok.<br>
+              <b>Penutup (10')</b> · Refleksi · soal kuis 3 nomor.
+            </div>
+          </div>
+
+          <div class="k13-section" style="background:var(--teal-50);border-color:var(--teal-100);margin-bottom:0">
+            <div class="head" style="margin-bottom:4px">
+              <div class="num" style="background:var(--teal-100);color:var(--teal-700)">C</div>
+              <div class="ttl">Penilaian</div>
+            </div>
+            <div class="body">Kognitif: kuis 3 soal pilihan ganda &amp; 1 essay · Psikomotor: lembar observasi eksperimen · Sikap: jurnal sikap (kerjasama, jujur).</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Approved → action bar shows different actions -->
+      <div class="action-bar" style="grid-template-columns:1fr 1fr">
+        <div class="ab-btn edit"><svg viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4z"/></svg>Edit manual</div>
+        <div class="ab-btn regen"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0114-5l2-2v6h-6l2-2"/><path d="M20 12a8 8 0 01-14 5l-2 2v-6h6l-2 2"/></svg>Regen via AI</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- B4 — Detail · Format Upload (PDF/DOCX)                        -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">B4</span><span class="role">Admin</span>· Detail · Format <b>Upload file</b>
+      <span class="desc">tidak ada section konten · fokus pada lampiran + tombol unduh proxy + catatan ringkas guru</span>
+    </div>
+    <div class="phone">
+
+      <div class="header" style="padding-bottom:14px">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="h-title-wrap">
+            <div class="h-eyebrow">Manajemen RPP</div>
+            <div class="h-title">Detail RPP</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 4l8 8-8 8"/></svg></div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="18" r="1.4"/></svg></div>
+        </div>
+      </div>
+
+      <div class="body" style="padding-top:6px">
+
+        <div class="detail-hero menunggu" style="margin:0 0 12px">
+          <div class="top">
+            <div class="fmt-pill upload">Upload · PDF</div>
+            <div class="status-pill menunggu">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Menunggu Review
+            </div>
+            <div style="margin-left:auto;font-size:10px;color:var(--slate-500);font-weight:700">3 hari lalu</div>
+          </div>
+          <h2>RPP Tematik Kelas IV — Tema 6 Cita-citaku</h2>
+          <div class="who-row">
+            <span class="avatar" style="background:var(--violet-600)">RA</span>
+            <span><b style="color:var(--slate-800)">Rina Anwar, S.Pd.SD.</b> · Tematik</span>
+          </div>
+          <div class="meta-grid">
+            <div class="cell"><div class="l">Mata Pelajaran</div><div class="v">Tematik</div></div>
+            <div class="cell"><div class="l">Kelas</div><div class="v">IV B</div></div>
+            <div class="cell"><div class="l">Semester</div><div class="v">Ganjil 2025/2026</div></div>
+            <div class="cell"><div class="l">Alokasi</div><div class="v">6 × 35 menit</div></div>
+          </div>
+        </div>
+
+        <div class="notice amber" style="margin:0 0 12px">
+          <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span>
+          <span class="body"><b>RPP berupa lampiran.</b> Tinjau dokumen sebelum menyetujui — sistem tidak bisa membaca isi PDF/DOCX secara otomatis.</span>
+        </div>
+
+        <div class="detail-card" style="margin:0 0 12px">
+          <div class="head">
+            <div class="ic slate"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/></svg></div>
+            <div>
+              <h4>Lampiran</h4>
+              <div class="sub">1 berkas · diunggah oleh guru</div>
+            </div>
+          </div>
+
+          <div class="file-card">
+            <div class="ic">
+              <svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6"/><path d="M8 14h8M8 17h5" stroke-width="1.8"/></svg>
+            </div>
+            <div class="meta">
+              <div class="name">RPP-Tema6-Cita2ku-IVB.pdf</div>
+              <div class="sub">2.4 MB · diunggah 3 hari lalu</div>
+            </div>
+            <div class="dl">
+              <svg viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6"/><path d="M5 20h14"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-card" style="margin:0 0 12px">
+          <div class="head">
+            <div class="ic amber"><svg viewBox="0 0 24 24"><path d="M21 11v2a9 9 0 11-18 0v-2"/><path d="M12 18v3M8 21h8"/></svg></div>
+            <div>
+              <h4>Catatan dari guru</h4>
+              <div class="sub">deskripsi singkat saat upload</div>
+            </div>
+          </div>
+          <p>RPP ini disusun untuk satu sub-tema (3 pertemuan) dengan fokus integrasi muatan PPKn, Bahasa Indonesia, dan IPS. Dilengkapi LKPD per pertemuan di halaman terakhir.</p>
+        </div>
+
+      </div>
+
+      <div class="action-bar">
+        <div class="ab-btn reject"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>Tolak</div>
+        <div class="ab-btn send"><svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>Kembalikan</div>
+        <div class="ab-btn approve"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Setujui</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<h2>C · Aksi Admin — Tolak &amp; Kembalikan</h2>
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- C1 — Reject sheet                                             -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">C1</span><span class="role">Admin</span>· Sheet · <b>Tolak RPP</b>
+      <span class="desc">catatan wajib · quick-pick alasan revisi · konfirmasi dampak (status final)</span>
+    </div>
+    <div class="phone">
+
+      <!-- backdrop preview (faded list peek) -->
+      <div class="header" style="padding-bottom:14px;opacity:.5">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="h-title-wrap">
+            <div class="h-eyebrow">Manajemen RPP</div>
+            <div class="h-title">Detail RPP</div>
+          </div>
+          <div class="h-icon"></div><div class="h-icon"></div>
+        </div>
+      </div>
+
+      <!-- sheet -->
+      <div class="sheet" style="border-radius: 24px 24px 0 0; box-shadow: 0 -8px 22px rgba(0,0,0,.08);">
+        <div class="sheet-handle"></div>
+        <div class="sheet-head">
+          <div class="row">
+            <div class="ic red"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg></div>
+            <div>
+              <h3>Tolak RPP</h3>
+              <p>Status menjadi <b>Ditolak</b>. Guru harus membuat ulang RPP.</p>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-body">
+
+          <div class="dlg-summary" style="margin-bottom:14px">
+            <div class="l">Sistem Persamaan Linear Tiga Variabel</div>
+            <div class="v" style="font-size:11.5px;font-weight:700;color:var(--slate-700)">K13 · Matematika · XII IPA 1</div>
+            <div class="r">Siti Rohimah, S.Pd. · dikirim 2 jam lalu</div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">
+              Alasan penolakan <span class="req">*</span>
+            </div>
+            <div class="reason-row" style="margin-bottom:8px">
+              <div class="reason-chip on">
+                <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+                Tidak sesuai KD / CP
+              </div>
+              <div class="reason-chip">Tujuan kurang SMART</div>
+              <div class="reason-chip on">
+                <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+                Penilaian kurang lengkap
+              </div>
+              <div class="reason-chip">Alokasi waktu tidak realistis</div>
+              <div class="reason-chip">Duplikat dengan RPP lain</div>
+              <div class="reason-chip">Format tidak sesuai</div>
+            </div>
+            <textarea class="textarea" placeholder="Jelaskan alasan penolakan secara spesifik agar guru dapat memperbaiki…">RPP perlu disusun ulang. Indikator pencapaian tidak terhubung dengan KD 3.3 dan rubrik penilaian keterampilan tidak ada.</textarea>
+          </div>
+
+          <div class="notice red">
+            <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span>
+            <span class="body"><b>RPP ditolak bersifat final.</b> Guru harus membuat RPP baru — bukan revisi. Gunakan "Kembalikan ke guru" untuk meminta revisi tanpa membuang versi ini.</span>
+          </div>
+
+        </div>
+        <div class="sheet-foot">
+          <button class="btn outline">Batal</button>
+          <button class="btn danger">Tolak RPP</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- C2 — Send-back-to-guru sheet                                  -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">C2</span><span class="role">Admin</span>· Sheet · <b>Kembalikan ke guru</b>
+      <span class="desc">toggle: minta edit manual / minta regen AI · saran section yang perlu diperbaiki</span>
+    </div>
+    <div class="phone">
+
+      <div class="header" style="padding-bottom:14px;opacity:.5">
+        <div class="h-row">
+          <div class="h-back"></div>
+          <div class="h-title-wrap"><div class="h-eyebrow">Manajemen RPP</div><div class="h-title">Detail RPP</div></div>
+          <div class="h-icon"></div><div class="h-icon"></div>
+        </div>
+      </div>
+
+      <div class="sheet" style="border-radius: 24px 24px 0 0; box-shadow: 0 -8px 22px rgba(0,0,0,.08);">
+        <div class="sheet-handle"></div>
+        <div class="sheet-head">
+          <div class="row">
+            <div class="ic amber"><svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg></div>
+            <div>
+              <h3>Kembalikan ke guru</h3>
+              <p>Status tetap <b>Menunggu</b>, tetapi guru mendapat notifikasi revisi.</p>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-body">
+
+          <div class="field">
+            <div class="field-label">Tipe revisi yang diminta</div>
+            <div class="seg">
+              <div class="opt on amber">
+                <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4z"/></svg></div>
+                <div>
+                  <div class="t-title">Edit manual</div>
+                  <div class="t-sub">Guru memperbaiki bagian sendiri</div>
+                </div>
+              </div>
+              <div class="opt">
+                <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0114-5l2-2v6h-6l2-2"/><path d="M20 12a8 8 0 01-14 5l-2 2v-6h6l-2 2"/></svg></div>
+                <div>
+                  <div class="t-title">Regen AI</div>
+                  <div class="t-sub">Guru diminta regen ulang</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Bagian yang perlu diperbaiki <span class="opt">multi</span></div>
+            <div class="reason-row">
+              <div class="reason-chip amber on"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Tujuan Pembelajaran</div>
+              <div class="reason-chip amber on"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Penilaian</div>
+              <div class="reason-chip">KD / Indikator</div>
+              <div class="reason-chip">Materi</div>
+              <div class="reason-chip">Kegiatan</div>
+              <div class="reason-chip">Sumber Belajar</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">
+              Catatan untuk guru <span class="req">*</span>
+            </div>
+            <textarea class="textarea" placeholder="Tuliskan poin yang perlu diperbaiki…">Tujuan pembelajaran masih bersifat umum, mohon dibuat lebih SMART dan ditambah aspek keterampilan. Rubrik penilaian psikomotor belum ada.</textarea>
+          </div>
+
+          <div class="notice amber">
+            <span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></span>
+            <span class="body">Guru akan menerima notifikasi push dan in-app, plus catatan revisi muncul di card RPP mereka.</span>
+          </div>
+
+        </div>
+        <div class="sheet-foot">
+          <button class="btn outline">Batal</button>
+          <button class="btn warn">Kembalikan</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<h2>D · Aksi Admin — Edit Manual &amp; Regen AI</h2>
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- D1 — Admin edit manual                                        -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">D1</span><span class="role">Admin</span>· Layar · <b>Edit manual</b>
+      <span class="desc">admin override langsung · rich-text editor per section · simpan menjadi versi baru atas nama guru</span>
+    </div>
+    <div class="phone">
+
+      <div class="header" style="padding-bottom:14px">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+          <div class="h-title-wrap">
+            <div class="h-eyebrow">Edit RPP · Admin</div>
+            <div class="h-title">Sistem Persamaan Linear…</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 13h6M9 17h6"/></svg></div>
+        </div>
+      </div>
+
+      <div class="body" style="padding-top:14px">
+
+        <div class="notice amber" style="margin:0 0 12px">
+          <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 2l2.5 5L20 8l-4 4 1 6-5-3-5 3 1-6L4 8l5.5-1L12 2z"/></svg></span>
+          <span class="body"><b>Anda mengedit atas nama guru.</b> Perubahan akan tercatat di riwayat sebagai edit oleh admin.</span>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Pilih bagian untuk diedit</div>
+          <div class="fmt-grid">
+            <div class="fmt-card on"><div class="t">3 · Tujuan Pembelajaran</div><div class="s">Sedang diedit</div></div>
+            <div class="fmt-card"><div class="t">7 · Penilaian</div><div class="s">Belum diedit</div></div>
+            <div class="fmt-card"><div class="t">1 · Identitas</div><div class="s">Belum diedit</div></div>
+            <div class="fmt-card"><div class="t">2 · KD &amp; Indikator</div><div class="s">Belum diedit</div></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Konten bagian <span class="req">*</span></div>
+          <div class="quill-mock">
+            <div class="tool">
+              <div class="b bold">B</div>
+              <div class="b" style="font-style:italic">I</div>
+              <div class="b" style="text-decoration:underline">U</div>
+              <div class="b">H₁</div>
+              <div class="b">•</div>
+              <div class="b">1.</div>
+              <div class="b">⤺</div>
+              <div class="b">⤻</div>
+            </div>
+            <div class="body">
+              Siswa mampu:
+              <ul style="margin:4px 0 0 18px;padding:0">
+                <li><b>Memodelkan</b> masalah kontekstual menjadi SPLTV (C3)</li>
+                <li><b>Menyelesaikan</b> SPLTV menggunakan metode substitusi (C4)</li>
+                <li><b>Menyelesaikan</b> SPLTV menggunakan metode eliminasi (C4)</li>
+                <li><b>Mempresentasikan</b> hasil dengan rubrik keterampilan (P3)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="diff-row" style="margin-top:12px">
+          <div class="diff-cell before">
+            <div class="l">Sebelum</div>
+            Siswa mampu memodelkan dan menyelesaikan SPLTV menggunakan metode substitusi dan eliminasi.
+          </div>
+          <div class="diff-cell after">
+            <div class="l">Sesudah (Anda)</div>
+            4 tujuan SMART, dengan ranah C3, C4, dan P3 dieksplisit.
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Alasan edit <span class="req">*</span></div>
+          <textarea class="textarea" placeholder="Jelaskan kenapa Anda mengedit langsung alih-alih meminta revisi…">Mengedit langsung karena guru sedang cuti, tujuan diperbaiki agar memenuhi standar SMART.</textarea>
+        </div>
+
+      </div>
+
+      <div class="sheet-foot" style="position:relative;border-top:1px solid var(--slate-200)">
+        <button class="btn outline">Batal</button>
+        <button class="btn primary">Simpan &amp; Setujui</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- D2 — Admin regen via AI sheet                                 -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">D2</span><span class="role">Admin</span>· Sheet · <b>Regen via AI</b>
+      <span class="desc">pilih section yang akan di-regen · pilih model/output · meter sisa kuota AI · jejak audit</span>
+    </div>
+    <div class="phone">
+
+      <div class="header" style="padding-bottom:14px;opacity:.5">
+        <div class="h-row">
+          <div class="h-back"></div>
+          <div class="h-title-wrap"><div class="h-eyebrow">Manajemen RPP</div><div class="h-title">Detail RPP</div></div>
+          <div class="h-icon"></div><div class="h-icon"></div>
+        </div>
+      </div>
+
+      <div class="sheet" style="border-radius: 24px 24px 0 0; box-shadow: 0 -8px 22px rgba(0,0,0,.08);">
+        <div class="sheet-handle"></div>
+        <div class="sheet-head">
+          <div class="row">
+            <div class="ic violet"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0114-5l2-2v6h-6l2-2"/><path d="M20 12a8 8 0 01-14 5l-2 2v-6h6l-2 2"/></svg></div>
+            <div>
+              <h3>Regen via AI</h3>
+              <p>AI akan menghasilkan ulang bagian yang dipilih saja.</p>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-body">
+
+          <div class="dlg-summary" style="margin-bottom:14px">
+            <div class="l">Reaksi Redoks &amp; Penyetaraan</div>
+            <div class="v" style="font-size:11.5px;font-weight:700;color:var(--slate-700)">Modul Ajar · Kimia · XII IPA 2</div>
+            <div class="r">Dewi Hapsari, S.Si.</div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Bagian yang akan di-regen <span class="opt">multi</span></div>
+            <div class="reason-row">
+              <div class="reason-chip on" style="background:var(--violet-50);border-color:var(--violet-100);color:var(--violet-700)">
+                <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+                Asesmen Diagnostik
+              </div>
+              <div class="reason-chip on" style="background:var(--violet-50);border-color:var(--violet-100);color:var(--violet-700)">
+                <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+                Asesmen Sumatif
+              </div>
+              <div class="reason-chip">Capaian Pembelajaran</div>
+              <div class="reason-chip">ATP</div>
+              <div class="reason-chip">Kegiatan</div>
+              <div class="reason-chip">Refleksi</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Model AI</div>
+            <div class="seg">
+              <div class="opt on violet">
+                <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2l2.5 5L20 8l-4 4 1 6-5-3-5 3 1-6L4 8l5.5-1L12 2z"/></svg></div>
+                <div>
+                  <div class="t-title">Claude Opus 4.6</div>
+                  <div class="t-sub">Kualitas terbaik · ~2k token</div>
+                </div>
+              </div>
+              <div class="opt">
+                <div class="ic"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h7l-2 8 9-12h-7l2-8z"/></svg></div>
+                <div>
+                  <div class="t-title">Claude Haiku 4.5</div>
+                  <div class="t-sub">Lebih cepat · ~1k token</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Arahan tambahan <span class="opt">opsional</span></div>
+            <textarea class="textarea" placeholder="Mis. fokuskan asesmen pada HOTS C4–C5…">Asesmen diagnostik harus berbasis miskonsepsi umum biloks. Sumatif fokus pada penyetaraan reaksi metode setengah-reaksi.</textarea>
+          </div>
+
+          <div class="field" style="margin-bottom:0">
+            <div class="field-label">Kuota AI bulan ini</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--slate-700);font-weight:700">
+              <span>137 / 200 generasi terpakai</span>
+              <span class="muted">sisa 63</span>
+            </div>
+            <div class="meter"><div class="fill" style="width:68%"></div></div>
+          </div>
+
+        </div>
+        <div class="sheet-foot">
+          <button class="btn outline">Batal</button>
+          <button class="btn primary" style="background:var(--violet-600)">
+            Jalankan Regen
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<h2>E · Filter &amp; Pencarian Lanjut</h2>
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- E1 — Filter sheet                                             -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">E1</span><span class="role">Admin</span>· Sheet · <b>Filter</b>
+      <span class="desc">Status · Format · Mapel · Kelas · Guru · Periode — dengan reset &amp; terapkan</span>
+    </div>
+    <div class="phone">
+
+      <div class="header" style="padding-bottom:14px;opacity:.5">
+        <div class="h-row">
+          <div class="h-back"></div>
+          <div class="h-title-wrap"><div class="h-eyebrow">Manajemen Akademik</div><div class="h-title">Manajemen RPP</div></div>
+          <div class="h-icon"></div><div class="h-icon"></div>
+        </div>
+      </div>
+
+      <div class="sheet" style="border-radius: 24px 24px 0 0; box-shadow: 0 -8px 22px rgba(0,0,0,.08);">
+        <div class="sheet-handle"></div>
+        <div class="sheet-head">
+          <div class="row">
+            <div class="ic blue"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></div>
+            <div>
+              <h3>Filter RPP</h3>
+              <p>Pilih kombinasi filter — terapkan saat selesai.</p>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-body">
+
+          <div class="fil-section">
+            <div class="ttl">Status</div>
+            <div class="fil-chip-row">
+              <div class="fil-chip on amber">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                Menunggu
+              </div>
+              <div class="fil-chip">
+                <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+                Disetujui
+              </div>
+              <div class="fil-chip">
+                <svg viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>
+                Ditolak
+              </div>
+              <div class="fil-chip">
+                <svg viewBox="0 0 24 24"><path d="M3 12h18"/></svg>
+                Semua
+              </div>
+            </div>
+          </div>
+
+          <div class="fil-section">
+            <div class="ttl">Format</div>
+            <div class="fil-chip-row">
+              <div class="fil-chip on"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>K13</div>
+              <div class="fil-chip on violet"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Modul Ajar</div>
+              <div class="fil-chip on teal"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>RPP 1 Halaman</div>
+              <div class="fil-chip">Upload file</div>
+            </div>
+          </div>
+
+          <div class="fil-section">
+            <div class="ttl">Mata Pelajaran</div>
+            <div class="select">
+              <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h12M4 18h8"/></svg></div>
+              <div class="v">Semua mata pelajaran (12)</div>
+              <div class="caret"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+            </div>
+          </div>
+
+          <div class="fil-section">
+            <div class="ttl">Kelas</div>
+            <div class="fil-chip-row">
+              <div class="fil-chip on">XII IPA 1</div>
+              <div class="fil-chip on">XII IPA 2</div>
+              <div class="fil-chip">XII IPS 1</div>
+              <div class="fil-chip">XI IPA 1</div>
+              <div class="fil-chip">+ lihat 12 lainnya</div>
+            </div>
+          </div>
+
+          <div class="fil-section">
+            <div class="ttl">Guru</div>
+            <div class="select">
+              <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg></div>
+              <div class="v">Semua guru (24)</div>
+              <div class="caret"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+            </div>
+          </div>
+
+          <div class="fil-section" style="margin-bottom:0">
+            <div class="ttl">Periode</div>
+            <div class="fil-chip-row">
+              <div class="fil-chip on">Bulan ini</div>
+              <div class="fil-chip">Minggu ini</div>
+              <div class="fil-chip">Semester berjalan</div>
+              <div class="fil-chip">Kustom…</div>
+            </div>
+          </div>
+
+        </div>
+        <div class="sheet-foot">
+          <button class="btn outline">Reset Filter</button>
+          <button class="btn primary">Terapkan (41)</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- F1 — Status history (full timeline)                          -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">F1</span><span class="role">Admin</span>· Layar · <b>Riwayat Persetujuan</b>
+      <span class="desc">timeline lengkap dari draft → submit → review → kembalikan → submit → disetujui</span>
+    </div>
+    <div class="phone">
+
+      <div class="header" style="padding-bottom:14px">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="h-title-wrap">
+            <div class="h-eyebrow">Audit Trail</div>
+            <div class="h-title">Riwayat Persetujuan</div>
+          </div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 4l8 8-8 8"/></svg></div>
+        </div>
+      </div>
+
+      <div class="body" style="padding-top:14px">
+
+        <div class="detail-hero disetujui" style="margin:0 0 12px">
+          <div class="top">
+            <div class="fmt-pill k13">K13</div>
+            <div class="status-pill disetujui"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Disetujui</div>
+          </div>
+          <h2 style="font-size:14.5px">Sistem Persamaan Linear Tiga Variabel — Pertemuan 1</h2>
+          <div class="who-row">
+            <span class="avatar">SR</span>
+            <span><b style="color:var(--slate-800)">Siti Rohimah</b> · 5 versi · 14 hari</span>
+          </div>
+        </div>
+
+        <div class="detail-card" style="margin:0">
+          <ul class="timeline">
+
+            <li>
+              <div class="dot approve"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></div>
+              <div class="info">
+                <div class="row1">Disetujui <span class="when">Hari ini · 09:14</span></div>
+                <div class="row2">oleh Anda · v3 final</div>
+                <div class="note" style="background:var(--green-50);border-left-color:var(--green-600);color:var(--green-700)">"Bagus, alur kegiatan sudah runtut. Lanjutkan dengan format ini untuk pertemuan selanjutnya."</div>
+              </div>
+            </li>
+
+            <li>
+              <div class="dot submit"><svg viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6"/></svg></div>
+              <div class="info">
+                <div class="row1">Dikirim ulang <span class="when">Hari ini · 07:52</span></div>
+                <div class="row2">Siti Rohimah · v3 · revisi atas catatan admin</div>
+              </div>
+            </li>
+
+            <li>
+              <div class="dot edit"><svg viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16v4z"/></svg></div>
+              <div class="info">
+                <div class="row1">Diedit oleh guru <span class="when">Kemarin · 21:08</span></div>
+                <div class="row2">menambahkan rubrik keterampilan · bagian 7 Penilaian</div>
+              </div>
+            </li>
+
+            <li class="amber">
+              <div class="dot sendback"><svg viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></svg></div>
+              <div class="info">
+                <div class="row1">Dikembalikan ke guru <span class="when">2 hari lalu · 11:30</span></div>
+                <div class="row2">oleh Anda · meminta revisi · Edit manual</div>
+                <div class="note">"Tujuan pembelajaran masih bersifat umum, mohon dibuat lebih SMART dan ditambah aspek keterampilan."</div>
+              </div>
+            </li>
+
+            <li>
+              <div class="dot regen"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0114-5l2-2v6h-6l2-2"/><path d="M20 12a8 8 0 01-14 5l-2 2v-6h6l-2 2"/></svg></div>
+              <div class="info">
+                <div class="row1">Regen via AI oleh guru <span class="when">3 hari lalu · 19:42</span></div>
+                <div class="row2">Claude Opus 4.6 · 1.8k token · bagian 3 Tujuan &amp; bagian 6 Kegiatan</div>
+              </div>
+            </li>
+
+            <li>
+              <div class="dot submit"><svg viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6"/></svg></div>
+              <div class="info">
+                <div class="row1">Dikirim pertama kali <span class="when">5 hari lalu · 22:18</span></div>
+                <div class="row2">Siti Rohimah · v1 · format K13</div>
+              </div>
+            </li>
+
+            <li>
+              <div class="dot" style="background:var(--slate-100);color:var(--slate-500)"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg></div>
+              <div class="info">
+                <div class="row1">Draft dibuat <span class="when">14 hari lalu</span></div>
+                <div class="row2">Siti Rohimah · template kosong</div>
+              </div>
+            </li>
+
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<h2>G · Sukses &amp; Toast</h2>
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- G1 — Approve success                                          -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">G1</span><span class="role">Admin</span>· Sukses · <b>RPP disetujui</b>
+      <span class="desc">toast bawah · status hero berubah hijau · timeline bertambah entri baru</span>
+    </div>
+    <div class="phone">
+
+      <div class="header" style="padding-bottom:14px">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="h-title-wrap"><div class="h-eyebrow">Manajemen RPP</div><div class="h-title">Detail RPP</div></div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 4l8 8-8 8"/></svg></div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="18" r="1.4"/></svg></div>
+        </div>
+      </div>
+
+      <div class="body" style="padding-top:6px">
+        <div class="detail-hero disetujui" style="margin:0 0 12px">
+          <div class="top">
+            <div class="fmt-pill k13">K13</div>
+            <div class="status-pill disetujui"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Disetujui</div>
+            <div style="margin-left:auto;font-size:10px;color:var(--green-700);font-weight:800">Baru saja</div>
+          </div>
+          <h2>Sistem Persamaan Linear Tiga Variabel — Pertemuan 1</h2>
+          <div class="who-row">
+            <span class="avatar">SR</span>
+            <span><b style="color:var(--slate-800)">Siti Rohimah, S.Pd.</b> · Matematika</span>
+          </div>
+        </div>
+
+        <div class="detail-card" style="margin:0 0 12px">
+          <div class="head">
+            <div class="ic" style="background:var(--green-50);color:var(--green-700)"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></div>
+            <div>
+              <h4>Catatan persetujuan Anda</h4>
+              <div class="sub">terkirim ke guru sebagai notifikasi</div>
+            </div>
+          </div>
+          <p style="margin:0">"Bagus, alur kegiatan sudah runtut. Lanjutkan dengan format ini untuk pertemuan selanjutnya."</p>
+        </div>
+
+        <div class="detail-card" style="margin:0">
+          <div class="head">
+            <div class="ic slate"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div>
+              <h4>Riwayat Persetujuan</h4>
+              <div class="sub">terbaru di atas</div>
+            </div>
+          </div>
+          <ul class="timeline">
+            <li>
+              <div class="dot approve"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></div>
+              <div class="info">
+                <div class="row1">Disetujui oleh Anda <span class="when">baru saja</span></div>
+                <div class="row2">v3 final · status Disetujui</div>
+              </div>
+            </li>
+            <li>
+              <div class="dot submit"><svg viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6"/></svg></div>
+              <div class="info">
+                <div class="row1">Dikirim ulang <span class="when">07:52</span></div>
+                <div class="row2">v3 · revisi atas catatan admin</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="toast">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>
+        <div>
+          <div>RPP berhasil disetujui</div>
+          <div style="font-size:11px;color:var(--slate-300);font-weight:600;margin-top:1px">Notifikasi terkirim ke Siti Rohimah</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- G2 — Empty state for "Ditolak" section                       -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">G2</span><span class="role">Admin</span>· List · <b>Tidak ada hasil</b>
+      <span class="desc">filter aktif tapi sub-section kosong · panduan langkah berikutnya</span>
+    </div>
+    <div class="phone">
+
+      <div class="header">
+        <div class="h-row">
+          <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="h-title-wrap"><div class="h-eyebrow">Manajemen Akademik</div><div class="h-title">Manajemen RPP</div></div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg></div>
+          <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></div>
+        </div>
+        <div class="chip-strip">
+          <div class="chip on">Ditolak</div>
+          <div class="chip">Mapel · Matematika</div>
+        </div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi-col"><div class="kpi-num amber">41</div><div class="kpi-label">Perlu Review</div></div>
+        <div class="kpi-col"><div class="kpi-num green">29</div><div class="kpi-label">Disetujui</div></div>
+        <div class="kpi-col"><div class="kpi-num red" style="color:var(--slate-400)">0</div><div class="kpi-label">Ditolak</div></div>
+      </div>
+
+      <div class="body">
+        <div class="sec-head"><span>Ditolak</span><span class="count" style="background:var(--slate-50);color:var(--slate-400)">0</span><span class="line"></span></div>
+        <div class="empty-card">
+          <div style="margin-bottom:8px">
+            <div style="width:48px;height:48px;border-radius:12px;background:var(--green-50);color:var(--green-700);display:inline-flex;align-items:center;justify-content:center">
+              <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke-width:2.4;fill:none;stroke:currentColor"><path d="M5 12l5 5L20 7"/></svg>
+            </div>
+          </div>
+          <div style="font-size:13px;font-weight:800;color:var(--slate-700);margin-bottom:2px">Tidak ada RPP ditolak</div>
+          <div style="font-size:11.5px;color:var(--slate-500);line-height:1.5;font-weight:500">
+            Dengan filter saat ini, tidak ada RPP yang berstatus Ditolak.<br>
+            Coba <b style="color:var(--brand-cobalt)">ubah filter</b> atau buka <b style="color:var(--brand-cobalt)">Perlu Review</b>.
+          </div>
+        </div>
+
+        <div class="sec-head" style="margin-top:18px"><span>Perlu Review</span><span class="count">3</span><span class="line"></span></div>
+        <div class="rpp-card">
+          <div class="accent"></div>
+          <div class="row1">
+            <div class="fmt-pill k13">K13</div>
+            <div class="status-pill menunggu">Menunggu</div>
+            <div class="rpp-time">2 jam</div>
+          </div>
+          <div class="rpp-title">Sistem Persamaan Linear Tiga Variabel</div>
+          <div class="rpp-meta">Matematika · XII IPA 1 <span class="dot"></span> 2 × 45 menit</div>
+        </div>
+      </div>
+
+      <div class="fab">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

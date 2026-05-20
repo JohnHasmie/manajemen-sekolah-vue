@@ -762,6 +762,8 @@ class AppLocalizations {
       _kDbNoPendingActivities;
   static Map<String, String> get dbDataManagement => _kDbDataManagement;
   static Map<String, String> get dbTypesAndBills => _kDbTypesAndBills;
+  static Map<String, String> get dbLessonsAndMaterials =>
+      _kDbLessonsAndMaterials;
   static Map<String, String> get dbGradesAndReportCards =>
       _kDbGradesAndReportCards;
   static Map<String, String> get dbOtherModules => _kDbOtherModules;

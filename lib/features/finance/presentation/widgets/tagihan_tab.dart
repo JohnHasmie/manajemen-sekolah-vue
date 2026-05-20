@@ -108,7 +108,12 @@ class TagihanTab extends StatelessWidget {
                 title: group.title,
                 paymentTypeId: group.paymentTypeId,
                 classId: group.classId,
-                academicYearId: academicYearId,
+                // Prefer the bucket's own AY (resolved server-side
+                // by the LATERAL JOIN); fall back to the hub's
+                // globally-picked AY only when the bucket has none
+                // (e.g. legacy bills with NULL AY whose pivot was
+                // also missing an AY).
+                academicYearId: group.academicYearId ?? academicYearId,
                 onTagih: onTagih,
                 onTapBill: onTap,
               ),

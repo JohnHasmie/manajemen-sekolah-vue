@@ -13,6 +13,8 @@
 // [AdminStudentController]. The per-feature gradient header and tour
 // plumbing are retired — every admin CRUD screen now shares the same
 // shell.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
@@ -91,6 +93,9 @@ class StudentManagementScreenState
   final Set<String> _selectedIds = <String>{};
   bool get _bulkMode => _selectedIds.isNotEmpty;
 
+  // Search debounce — avoids spamming the API on every keystroke.
+  Timer? _searchDebounce;
+
   @override
   void initState() {
     super.initState();
@@ -108,6 +113,7 @@ class StudentManagementScreenState
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -219,6 +225,16 @@ class StudentManagementScreenState
   @override
   void onAcademicYearChanged() {
     if (mounted) _loadData();
+  }
+
+  // ── Search ──────────────────────────────────────────────────────────
+
+  void _onSearchChanged(String _) {
+    _refreshHasActiveFilter();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) _loadData();
+    });
   }
 
   // ── Filter state ────────────────────────────────────────────────────
@@ -606,7 +622,7 @@ class StudentManagementScreenState
         'en': 'Search students...',
         'id': 'Cari siswa...',
       }),
-      onSearchChanged: (_) => _refreshHasActiveFilter(),
+      onSearchChanged: _onSearchChanged,
       onSearchSubmitted: (_) => _loadData(),
       onFilterTap: _openFilterSheet,
       hasActiveFilter: _hasActiveFilter,

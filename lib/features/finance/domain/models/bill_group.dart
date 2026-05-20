@@ -19,6 +19,15 @@ class BillGroup {
   final String classId;
   final String className;
 
+  /// Bucket's resolved academic_year_id — the COALESCE of the bill's
+  /// own AY and the student_classes pivot AY (see the repository's
+  /// LATERAL JOIN). Used by the detail screen to scope its
+  /// per-student /bills fetch by the SAME AY the hub aggregated
+  /// against, rather than relying on the global AY picker (which
+  /// frequently doesn't match the bill's actual year — the original
+  /// source of the empty-Tagihan bug).
+  final String? academicYearId;
+
   /// Academic year name as stored on `academic_years.name` (typically
   /// "2024/2025"). May be null if the bill row was orphaned from its
   /// AY — render the title without a year suffix in that case.
@@ -37,6 +46,7 @@ class BillGroup {
     required this.paymentTypeName,
     required this.classId,
     required this.className,
+    required this.academicYearId,
     required this.yearLabel,
     required this.totalCount,
     required this.paidCount,
@@ -64,6 +74,7 @@ class BillGroup {
       paymentTypeName: (json['payment_type_name'] ?? '').toString(),
       classId: (json['class_id'] ?? '').toString(),
       className: (json['class_name'] ?? '').toString(),
+      academicYearId: json['academic_year_id']?.toString(),
       yearLabel: json['year_label']?.toString(),
       totalCount: parseCount(json['total_count']),
       paidCount: parseCount(json['paid_count']),

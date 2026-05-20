@@ -222,6 +222,10 @@ const _kDbNoPendingActivities = {
 };
 const _kDbDataManagement = {'en': 'Data management', 'id': 'Kelola data'};
 const _kDbTypesAndBills = {'en': 'Types & bills', 'id': 'Jenis & tagihan'};
+const _kDbLessonsAndMaterials = {
+  'en': 'Lessons & materials',
+  'id': 'Pelajaran & materi',
+};
 const _kDbGradesAndReportCards = {
   'en': 'Grades & report cards',
   'id': 'Nilai & raport',

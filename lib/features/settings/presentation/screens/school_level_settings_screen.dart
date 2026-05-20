@@ -8,10 +8,10 @@
 // In Laravel terms, this calls `GET /api/settings/school` and
 // `PUT /api/settings/school`.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/settings/presentation/mixins/school_level_data_mixin.dart';
 import 'package:manajemensekolah/features/settings/presentation/mixins/school_level_dialog_mixin.dart';
 import 'package:manajemensekolah/features/settings/presentation/mixins/school_level_dialog_builder_mixin.dart';
@@ -87,90 +87,21 @@ class _SchoolLevelSettingsScreenState extends State<SchoolLevelSettingsScreen>
     );
   }
 
-  /// Builds the custom gradient header.
+  /// Builds the brand-aligned header. `BrandPageHeader` owns the
+  /// back button + gradient; we only need to pass the title/subtitle
+  /// and the optional edit action.
   Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: ColorUtils.headerFadeGradient(
-          ColorUtils.brandAzure,
-          endOpacity: 0.8,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return BrandPageHeader(
+      role: 'admin',
+      subtitle: 'TAHUN AJARAN · SEKOLAH',
+      title: 'Pengaturan Umum',
+      actionIcons: [
+        if (!_isLoading)
+          BrandHeaderIconButton(
+            icon: Icons.edit_rounded,
+            onTap: _showEditDialog,
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => AppNavigator.pop(context),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Pengaturan Umum',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Jenjang & informasi sekolah',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (!_isLoading)
-            GestureDetector(
-              onTap: _showEditDialog,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                ),
-                child: const Icon(
-                  Icons.edit_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
-        ],
-      ),
+      ],
     );
   }
 

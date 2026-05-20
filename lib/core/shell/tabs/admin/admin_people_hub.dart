@@ -1,9 +1,9 @@
 // Admin "People" tab root — hub of 3 people-management surfaces.
 //
 // Renders inside a [RoleShell] tab branch, so it does NOT include a back
-// button (the shell owns back-nav). The header is a gradient strip with
-// title + subtitle; below it sits a list of [MenuItemCard]s that push
-// the existing admin CRUD screens.
+// button (the shell owns back-nav). The header is a [ShellTabHeader]
+// with title + subtitle; below it sits a list of [DashboardListTile]s
+// that push the existing admin CRUD screens.
 //
 // Per `P1_BottomNav_Spec.md` § 2.1 — admin's People tab groups the
 // entity-management screens that represent humans (Siswa, Guru) plus
