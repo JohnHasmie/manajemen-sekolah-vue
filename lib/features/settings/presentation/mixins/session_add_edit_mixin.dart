@@ -15,7 +15,7 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
   Widget buildTimeFields(
     TimeOfDay startTime,
     TimeOfDay endTime,
-    StateSetter setModalState,
+    Future<void> Function(bool isStart) onPickTime,
   );
   Widget buildHourField(TextEditingController hourController);
 
@@ -51,8 +51,8 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
         isEdit: isEdit,
         session: session,
         hourController: hourController,
-        startTime: startTime,
-        endTime: endTime,
+        initialStartTime: startTime,
+        initialEndTime: endTime,
       ),
     );
   }
@@ -61,14 +61,40 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
     required bool isEdit,
     required Map<String, dynamic>? session,
     required TextEditingController hourController,
-    required TimeOfDay startTime,
-    required TimeOfDay endTime,
+    required TimeOfDay initialStartTime,
+    required TimeOfDay initialEndTime,
   }) {
+    // Mutable state lives HERE — in the same scope as the
+    // StatefulBuilder. The builder closure below captures these
+    // variables by reference; calling `setModalState` re-runs the
+    // closure which then reads the mutated values. This is the fix
+    // for the long-standing "jam tidak berubah" bug.
+    TimeOfDay startTime = initialStartTime;
+    TimeOfDay endTime = initialEndTime;
     const bool isSaving = false;
     return StatefulBuilder(
       builder: (context, setModalState) {
-        return Container(
-          margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 20),
+        Future<void> pickTime(bool isStart) async {
+          final picked = await showTimePicker(
+            context: context,
+            initialTime: isStart ? startTime : endTime,
+          );
+          if (picked == null) return;
+          setModalState(() {
+            if (isStart) {
+              startTime = picked;
+            } else {
+              endTime = picked;
+            }
+          });
+        }
+
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.85,
+          ),
+          child: Container(
+            margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 20),
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -86,7 +112,7 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
                       children: [
                         buildHourField(hourController),
                         const SizedBox(height: AppSpacing.md),
-                        buildTimeFields(startTime, endTime, setModalState),
+                        buildTimeFields(startTime, endTime, pickTime),
                       ],
                     ),
                   ),
@@ -103,6 +129,7 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
               ),
             ],
           ),
+        ),
         );
       },
     );
@@ -286,7 +313,7 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
           endTime: endStr,
         );
       }
-      if (context.mounted) {
+      if (mounted) {
         AppNavigator.pop(context);
       }
       await refreshSessions();
@@ -303,7 +330,7 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
         ),
       );
     } finally {
-      if (context.mounted) {
+      if (mounted) {
         setModalState(() {});
       }
     }

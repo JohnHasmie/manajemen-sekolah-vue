@@ -59,14 +59,8 @@ mixin SettingsScreenDialogsMixin {
         addressController,
       ),
       footer: BottomSheetFooter(
-        primaryLabel: lang.getTranslatedText({
-          'en': 'Save',
-          'id': 'Simpan',
-        }),
-        secondaryLabel: lang.getTranslatedText({
-          'en': 'Cancel',
-          'id': 'Batal',
-        }),
+        primaryLabel: lang.getTranslatedText({'en': 'Save', 'id': 'Simpan'}),
+        secondaryLabel: lang.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
         primaryColor: primaryColor,
         onPrimary: () => _handleProfileUpdate(
           nameController,

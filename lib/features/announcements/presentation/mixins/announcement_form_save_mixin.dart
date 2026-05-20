@@ -21,7 +21,7 @@ mixin AnnouncementFormSaveMixin on State<AnnouncementFormSheet> {
 
   @override
   bool get mounted;
-  bool get _isEdit;
+  bool get isEdit;
 
   Map<String, dynamic>? get announcementData;
 
@@ -74,7 +74,7 @@ mixin AnnouncementFormSaveMixin on State<AnnouncementFormSheet> {
     Map<String, String> data,
     LanguageProvider lang,
   ) async {
-    if (_isEdit) {
+    if (isEdit) {
       await getIt<ApiAnnouncementService>().updateAnnouncement(
         announcementData!['id'],
         data,
@@ -94,7 +94,7 @@ mixin AnnouncementFormSaveMixin on State<AnnouncementFormSheet> {
 
     SnackBarUtils.showSuccess(
       context,
-      _isEdit
+      isEdit
           ? lang.getTranslatedText({
               'en': 'Announcement successfully updated',
               'id': 'Pengumuman berhasil diperbarui',

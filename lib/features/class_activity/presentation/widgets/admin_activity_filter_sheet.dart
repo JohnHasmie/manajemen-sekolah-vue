@@ -1,11 +1,11 @@
 // Filter sheet for the admin Kegiatan Kelas hub (Frame C).
 //
 // Five sections wired into `AppFilterBottomSheet` chrome:
+//   * Periode    — FilterChipGrid (Hari Ini / 7 / 30 / Semester / Tahun)
 //   * Kelas      — FilterChipGrid
 //   * Mapel      — FilterChipGrid
 //   * Guru       — autocomplete field (lists can be hundreds long)
 //   * Tipe       — FilterChipGrid (Tugas / PR / Ulangan / Lainnya)
-//   * Periode    — FilterChipGrid (Hari Ini / 7 / 30 / Semester / Tahun)
 //
 // Returns the selected values to the host screen via the [onApply]
 // callback. Reset clears every section back to the defaults
@@ -188,6 +188,28 @@ class _AdminActivityFilterSheetState extends State<AdminActivityFilterSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           FilterSectionHeader(
+            title: 'Periode',
+            icon: Icons.calendar_month_rounded,
+            primaryColor: primary,
+          ),
+          FilterChipGrid<AdminActivityPeriod>(
+            options: AdminActivityPeriod.values
+                .map(
+                  (p) => FilterOption<AdminActivityPeriod>(
+                    value: p,
+                    label: p.labelId,
+                  ),
+                )
+                .toList(),
+            selectedValue: _period,
+            onSelected: (v) {
+              if (v == null) return;
+              setState(() => _period = v);
+            },
+            selectedColor: primary,
+          ),
+          const SizedBox(height: 16),
+          FilterSectionHeader(
             title: 'Kelas',
             icon: Icons.class_outlined,
             primaryColor: primary,
@@ -251,28 +273,6 @@ class _AdminActivityFilterSheetState extends State<AdminActivityFilterSheet> {
                 .toList(),
             selectedValue: _type,
             onSelected: (v) => setState(() => _type = v),
-            selectedColor: primary,
-          ),
-          const SizedBox(height: 16),
-          FilterSectionHeader(
-            title: 'Periode',
-            icon: Icons.calendar_month_rounded,
-            primaryColor: primary,
-          ),
-          FilterChipGrid<AdminActivityPeriod>(
-            options: AdminActivityPeriod.values
-                .map(
-                  (p) => FilterOption<AdminActivityPeriod>(
-                    value: p,
-                    label: p.labelId,
-                  ),
-                )
-                .toList(),
-            selectedValue: _period,
-            onSelected: (v) {
-              if (v == null) return;
-              setState(() => _period = v);
-            },
             selectedColor: primary,
           ),
         ],

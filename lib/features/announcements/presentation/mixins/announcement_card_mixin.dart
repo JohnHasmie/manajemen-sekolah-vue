@@ -28,7 +28,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
+import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_event_block.dart';
 
 /// Mixin for building announcement card widgets.
 mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
@@ -160,6 +162,7 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
     bool isImportant,
   ) {
     final model = Announcement.fromJson(announcementData);
+    final event = AnnouncementEvent.fromJson(announcementData);
     final dateLabel = _formatRelativeDate(model.createdAt);
     final source = _sourceCaption(announcementData);
     final attachment = _attachmentName(announcementData);
@@ -225,6 +228,13 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
+        ],
+        // Event block (Pengumuman+Acara) — only when the
+        // announcement carries an event_at. Sits below the preview
+        // and above any attachment/important chip row.
+        if (event != null) ...[
+          const SizedBox(height: 8),
+          AnnouncementEventBlock(event: event, dense: true),
         ],
         if (hasChipRow) ...[
           const SizedBox(height: 8),

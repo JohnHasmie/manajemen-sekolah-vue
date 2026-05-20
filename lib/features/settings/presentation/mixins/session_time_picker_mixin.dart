@@ -4,32 +4,25 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/settings/presentation/widgets/day_session_management_sheet.dart';
 
 mixin SessionTimePickerMixin on State<DaySessionManagementSheet> {
+  /// Renders the Mulai/Selesai time fields.
+  ///
+  /// History: this used to own the `showTimePicker` call internally,
+  /// mutating its own `startTime` / `endTime` parameters and calling
+  /// `setModalState` — which silently failed because the parent
+  /// `StatefulBuilder` rebuilt with the OLD values from its enclosing
+  /// scope. We now expose a pure-presentational widget that delegates
+  /// picking + state mutation to [onPickTime], so the parent owns the
+  /// scope where the mutation lives.
   Widget buildTimeFields(
     TimeOfDay startTime,
     TimeOfDay endTime,
-    StateSetter setModalState,
+    Future<void> Function(bool isStart) onPickTime,
   ) {
-    Future<void> pickTime(bool isStart) async {
-      final picked = await showTimePicker(
-        context: context,
-        initialTime: isStart ? startTime : endTime,
-      );
-      if (picked != null) {
-        setModalState(() {
-          if (isStart) {
-            startTime = picked;
-          } else {
-            endTime = picked;
-          }
-        });
-      }
-    }
-
     return Row(
       children: [
-        buildTimeField('Mulai', startTime, true, pickTime),
+        buildTimeField('Mulai', startTime, true, onPickTime),
         const SizedBox(width: 10),
-        buildTimeField('Selesai', endTime, false, pickTime),
+        buildTimeField('Selesai', endTime, false, onPickTime),
       ],
     );
   }
@@ -38,7 +31,7 @@ mixin SessionTimePickerMixin on State<DaySessionManagementSheet> {
     String label,
     TimeOfDay time,
     bool isStart,
-    Function(bool) pickTime,
+    Future<void> Function(bool isStart) pickTime,
   ) {
     return Expanded(
       child: InkWell(

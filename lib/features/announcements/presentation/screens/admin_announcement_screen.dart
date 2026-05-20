@@ -78,13 +78,10 @@ class AdminAnnouncementScreenState
   final GlobalKey _searchKey = GlobalKey();
   final GlobalKey _filterKey = GlobalKey();
 
-  @override
   GlobalKey? get addKey => _addKey;
 
-  @override
   GlobalKey? get searchKey => _searchKey;
 
-  @override
   GlobalKey? get filterKey => _filterKey;
 
   @override

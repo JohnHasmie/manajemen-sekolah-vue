@@ -24,6 +24,9 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
+import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_event_detail_hero.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/personal_reminder_picker_sheet.dart';
 
 class AnnouncementDetailDialog extends StatelessWidget {
   final Map<String, dynamic> announcementData;
@@ -34,6 +37,12 @@ class AnnouncementDetailDialog extends StatelessWidget {
   final String Function(Map<String, dynamic>) getTargetText;
   final void Function(String url, String fileName) onOpenFile;
 
+  /// 'admin' | 'teacher' | 'parent'. Drives which reminder block
+  /// renders on the event hero — admin sees the audit ("status
+  /// peringatan") list, non-admin sees their personal reminders +
+  /// the "Atur Pengingat" CTA.
+  final String viewerRole;
+
   const AnnouncementDetailDialog({
     super.key,
     required this.announcementData,
@@ -43,6 +52,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
     required this.formatDate,
     required this.getTargetText,
     required this.onOpenFile,
+    this.viewerRole = 'admin',
   });
 
   @override
@@ -62,7 +72,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
       minChildSize: 0.4,
-      maxChildSize: 0.92,
+      maxChildSize: 0.85,
       expand: false,
       builder: (context, scrollController) {
         return Container(
@@ -93,6 +103,31 @@ class AnnouncementDetailDialog extends StatelessWidget {
                       const Divider(height: 1, color: Color(0xFFF1F5F9)),
                       AppSpacing.v16,
                       _buildBody(model),
+                      // Acara hero — rendered only when the
+                      // announcement carries an event_at. Drops
+                      // the countdown + admin reminder status under
+                      // the body, above any attachment. Admin sees
+                      // the audit list; teacher/wali see personal
+                      // reminders + the "Tambah" picker.
+                      if (AnnouncementEvent.fromJson(announcementData)
+                          case final ev?) ...[
+                        AppSpacing.v16,
+                        AnnouncementEventDetailHero(
+                          event: ev,
+                          adminReminders: viewerRole == 'admin'
+                              ? _remindersFrom(announcementData)
+                              : null,
+                          personalReminders: viewerRole == 'admin'
+                              ? null
+                              : _personalRemindersFrom(announcementData),
+                          onAddPersonalReminder: viewerRole == 'admin'
+                              ? null
+                              : () => _openPersonalReminderPicker(
+                                  context,
+                                  ev.announcementId,
+                                ),
+                        ),
+                      ],
                       if (filePath != null && filePath.isNotEmpty) ...[
                         AppSpacing.v16,
                         _buildAttachment(filePath, fileName),
@@ -113,6 +148,47 @@ class AnnouncementDetailDialog extends StatelessWidget {
   }
 
   // ── pieces ────────────────────────────────────────────────────────
+
+  /// Pull admin-scheduled reminder rows out of the API response.
+  /// Backend embeds them under `reminders` (HasMany on Announcement).
+  /// Returns null when the payload didn't include them — caller hides
+  /// the status card in that case.
+  List<Map<String, dynamic>>? _remindersFrom(Map<String, dynamic> data) {
+    final raw = data['reminders'];
+    if (raw is! List) return null;
+    return raw
+        .whereType<Map>()
+        .map((m) => Map<String, dynamic>.from(m))
+        .toList();
+  }
+
+  /// Same shape but for the viewer-scoped personal reminder list. The
+  /// backend embeds these under `personal_reminders` for the
+  /// authenticated user; empty list = card is shown with just the
+  /// "Tambah" CTA.
+  List<Map<String, dynamic>> _personalRemindersFrom(
+    Map<String, dynamic> data,
+  ) {
+    final raw = data['personal_reminders'];
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((m) => Map<String, dynamic>.from(m))
+        .toList();
+  }
+
+  /// Open the personal-reminder picker sheet. On success the parent
+  /// screen should re-fetch the announcement so the new row renders.
+  Future<void> _openPersonalReminderPicker(
+    BuildContext context,
+    String announcementId,
+  ) async {
+    await PersonalReminderPickerSheet.show(
+      context: context,
+      announcementId: announcementId,
+      roleColor: primaryColor,
+    );
+  }
 
   Widget _buildDragHandle() {
     return Padding(

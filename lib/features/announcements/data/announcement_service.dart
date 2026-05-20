@@ -234,4 +234,107 @@ class AnnouncementService extends ApiAnnouncementService {
       return false;
     }
   }
+
+  // ── Pengumuman + Acara ──────────────────────────────────────────
+
+  /// GET /announcements/upcoming-events
+  ///
+  /// Returns the next N (default 3) announcements with a future
+  /// event_at, scoped to the viewer's audience. Drives the dashboard
+  /// "Acara Mendatang" hero strip across admin / guru / wali.
+  static Future<List<Map<String, dynamic>>> fetchUpcomingEvents({
+    int limit = 3,
+  }) async {
+    try {
+      final response = await dioClient.get(
+        '/announcements/upcoming-events',
+        queryParameters: {'limit': limit},
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic>) {
+        final data = result['data'];
+        if (data is List) {
+          return data.whereType<Map>().map((m) {
+            return Map<String, dynamic>.from(m);
+          }).toList();
+        }
+      }
+      return const [];
+    } catch (e) {
+      AppLogger.error('announcement', 'Error fetching upcoming events: $e');
+      return const [];
+    }
+  }
+
+  /// POST /announcements/{id}/personal-reminder
+  ///
+  /// Stores a per-user reminder offset. Idempotent — re-posting the
+  /// same offset returns the existing row. Returns the reminder row
+  /// on success, null on any failure.
+  static Future<Map<String, dynamic>?> setPersonalReminder({
+    required String announcementId,
+    required int offsetMinutes,
+  }) async {
+    try {
+      final response = await dioClient.post(
+        '/announcements/$announcementId/personal-reminder',
+        data: {'offset_minutes': offsetMinutes},
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic> && result['success'] == true) {
+        final data = result['data'];
+        if (data is Map) return Map<String, dynamic>.from(data);
+      }
+      return null;
+    } catch (e) {
+      AppLogger.error('announcement', 'Error setting personal reminder: $e');
+      return null;
+    }
+  }
+
+  /// DELETE /announcements/{id}/personal-reminder/{reminderId}
+  static Future<bool> deletePersonalReminder({
+    required String announcementId,
+    required String reminderId,
+  }) async {
+    try {
+      final response = await dioClient.delete(
+        '/announcements/$announcementId/personal-reminder/$reminderId',
+      );
+      final result = response.data;
+      return result is Map && result['success'] == true;
+    } catch (e) {
+      AppLogger.error('announcement', 'Error deleting personal reminder: $e');
+      return false;
+    }
+  }
+
+  /// Index filter — pass through to the regular paginated endpoint
+  /// with has_event / event_from / event_to params for the admin
+  /// kalender screen.
+  static Future<Map<String, dynamic>> fetchEventsForCalendar({
+    required DateTime from,
+    required DateTime to,
+    int limit = 100,
+  }) async {
+    try {
+      final response = await dioClient.get(
+        '/announcements',
+        queryParameters: {
+          'has_event': 1,
+          'event_from': from.toIso8601String(),
+          'event_to': to.toIso8601String(),
+          'limit': limit,
+        },
+      );
+      final result = response.data;
+      if (result is Map<String, dynamic>) {
+        return result;
+      }
+      return {'data': []};
+    } catch (e) {
+      AppLogger.error('announcement', 'Error fetching kalender events: $e');
+      return {'data': []};
+    }
+  }
 }

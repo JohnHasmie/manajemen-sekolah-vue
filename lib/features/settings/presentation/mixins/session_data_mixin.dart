@@ -8,7 +8,8 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/settings/presentation/widgets/day_session_management_sheet.dart';
 
 mixin SessionDataMixin on State<DaySessionManagementSheet> {
-  late List<dynamic> _sessions;
+  List<dynamic> get sessions;
+  set sessions(List<dynamic> value);
 
   // Abstract method provided by SessionDialogMixin
   Widget _buildDeleteConfirmDialog();
@@ -25,7 +26,7 @@ mixin SessionDataMixin on State<DaySessionManagementSheet> {
         (a, b) => (a['hour_number'] as int).compareTo(b['hour_number'] as int),
       );
 
-      if (mounted) setState(() => _sessions = updated);
+      if (mounted) setState(() => sessions = updated);
       widget.onSave();
     } catch (e) {
       AppLogger.error('settings', e);

@@ -61,6 +61,9 @@ mixin UiInteractionMixin on ConsumerState<ParentAnnouncementScreen> {
       builder: (_) => AnnouncementDetailSheet(
         announcementData: announcementData,
         primaryColor: getPrimaryColor(),
+        // Parent context — surface personal reminder picker + list
+        // inside the event hero. Same sheet, different reminder block.
+        viewerRole: 'parent',
       ),
     );
   }
