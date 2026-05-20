@@ -788,11 +788,11 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
       columnsPerRow: 4,
       actions: [
         QuickAction(
-          icon: DashboardModules.siswa.icon,
-          label: AppLocalizations.students.tr,
-          color: DashboardModules.siswa.color,
-          caption: AppLocalizations.dbDataManagement.tr,
-          onTap: _openSiswa,
+          icon: DashboardModules.kegiatanKelas.icon,
+          label: AppLocalizations.classActivities.tr,
+          color: DashboardModules.kegiatanKelas.color,
+          caption: AppLocalizations.dbLessonsAndMaterials.tr,
+          onTap: _openAktivitasKelas,
         ),
         QuickAction(
           icon: DashboardModules.keuangan.icon,

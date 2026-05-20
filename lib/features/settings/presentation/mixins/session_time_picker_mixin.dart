@@ -60,12 +60,14 @@ mixin SessionTimePickerMixin on State<DaySessionManagementSheet> {
                     style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
                   ),
                   const SizedBox(height: 1),
-                  Text(
-                    time.format(context),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: ColorUtils.slate900,
+                  Builder(
+                    builder: (context) => Text(
+                      time.format(context),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: ColorUtils.slate900,
+                      ),
                     ),
                   ),
                 ],
