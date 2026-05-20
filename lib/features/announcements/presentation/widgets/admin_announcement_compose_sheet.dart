@@ -27,6 +27,7 @@ import 'package:manajemensekolah/core/widgets/admin_announcement_components.dart
 import 'package:manajemensekolah/core/widgets/admin_form_components.dart';
 import 'package:manajemensekolah/core/widgets/admin_form_sheet_header.dart';
 import 'package:manajemensekolah/features/announcements/data/audience_preview_service.dart';
+import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
 
 class AdminAnnouncementComposeSheet extends ConsumerStatefulWidget {
@@ -78,6 +79,10 @@ class _AdminAnnouncementComposeSheetState
   static const _defaultOffsets = <int>[1440, 60, 0];
   Set<int> _reminderOffsets = {..._defaultOffsets};
 
+  // ── Broadcast/Hari Tayang state ──────────────────────────────────
+  DateTime? _startDate;
+  DateTime? _endDate;
+
   bool get _isEdit => widget.announcementData != null;
 
   @override
@@ -89,8 +94,48 @@ class _AdminAnnouncementComposeSheetState
       _contentController.text = (widget.announcementData!['content'] ?? '')
           .toString();
       _pin = widget.announcementData!['is_pinned'] == true;
-      // Future enhancement: rehydrate audience_matrix from edit data.
-
+      _startDate = widget.announcementData!['start_date'] != null
+          ? DateTime.tryParse(widget.announcementData!['start_date'].toString())?.toLocal() ?? DateTime.now()
+          : DateTime.now();
+      _endDate = widget.announcementData!['end_date'] != null
+          ? DateTime.tryParse(widget.announcementData!['end_date'].toString())?.toLocal()
+          : null;
+      // Rehydrate audience_matrix from edit data.
+      final existingMatrix = widget.announcementData!['audience_matrix'];
+      if (existingMatrix is Map) {
+        final cells = <MapEntry<AudienceRole, Object>>{};
+        for (final entry in existingMatrix.entries) {
+          final roleStr = entry.key.toString();
+          AudienceRole? role;
+          if (roleStr == AudienceRole.guru.apiKey) role = AudienceRole.guru;
+          if (roleStr == AudienceRole.waliKelas.apiKey) role = AudienceRole.waliKelas;
+          if (roleStr == AudienceRole.waliMurid.apiKey) role = AudienceRole.waliMurid;
+          
+          if (role != null && entry.value is List) {
+            for (final val in (entry.value as List)) {
+              cells.add(MapEntry(role, val));
+            }
+          }
+        }
+        _selection = AudienceMatrixSelection(cells);
+        _refreshPreview();
+      } else {
+        // Fallback to legacy role_target if no matrix exists
+        final rt = widget.announcementData!['role_target']?.toString() ?? 'all';
+        final cells = <MapEntry<AudienceRole, Object>>{};
+        if (rt == 'all' || rt == 'admin') {
+          cells.add(const MapEntry(AudienceRole.guru, 'all'));
+          cells.add(const MapEntry(AudienceRole.waliKelas, 'all'));
+          cells.add(const MapEntry(AudienceRole.waliMurid, 'all'));
+        } else if (rt == 'guru') {
+          cells.add(const MapEntry(AudienceRole.guru, 'all'));
+          cells.add(const MapEntry(AudienceRole.waliKelas, 'all'));
+        } else if (rt == 'wali' || rt == 'siswa') {
+          cells.add(const MapEntry(AudienceRole.waliMurid, 'all'));
+        }
+        _selection = AudienceMatrixSelection(cells);
+        _refreshPreview();
+      }
       // Rehydrate Acara payload when editing an announcement that
       // already carries one. AnnouncementEvent.fromJson returns null
       // for plain pengumuman — we keep _hasEvent = false in that case.
@@ -116,6 +161,9 @@ class _AdminAnnouncementComposeSheetState
           _reminderOffsets = existing.reminderOffsetMinutes.toSet();
         }
       }
+    } else {
+      _startDate = DateTime.now();
+      _endDate = DateTime.now().add(const Duration(days: 30));
     }
   }
 
@@ -190,6 +238,35 @@ class _AdminAnnouncementComposeSheetState
     }
   }
 
+  Future<void> _pickStartDate() async {
+    final picked = await showModernDatePicker(
+      context: context,
+      initialDate: _startDate ?? DateTime.now(),
+      title: 'Pilih Tanggal Mulai Tayang',
+    );
+    if (picked != null) {
+      setState(() {
+        _startDate = picked;
+        if (_endDate != null && _endDate!.isBefore(picked)) {
+          _endDate = picked.add(const Duration(days: 30));
+        }
+      });
+    }
+  }
+
+  Future<void> _pickEndDate() async {
+    final picked = await showModernDatePicker(
+      context: context,
+      initialDate: _endDate ?? _startDate ?? DateTime.now(),
+      title: 'Pilih Tanggal Selesai Tayang',
+    );
+    if (picked != null) {
+      setState(() {
+        _endDate = picked;
+      });
+    }
+  }
+
   /// Compose the event_at DateTime from the separate date + (optional)
   /// time inputs. Returns null when no date is set, or when time is
   /// hidden by the "Sepanjang hari" toggle (date is then anchored at
@@ -241,7 +318,14 @@ class _AdminAnnouncementComposeSheetState
         'priority': _pin ? 'penting' : 'biasa',
         'audience_matrix': apiPayload,
         'is_pinned': _pin,
+        'start_date': _startDate?.toIso8601String(),
       };
+
+      if (_endDate != null) {
+        body['end_date'] = _endDate!.toIso8601String();
+      } else if (_isEdit) {
+        body['end_date'] = '__clear__';
+      }
 
       // Acara payload — only included when the admin enabled the
       // Tambahkan Acara toggle. On edit, the sentinel "__clear__"
@@ -365,6 +449,16 @@ class _AdminAnnouncementComposeSheetState
                           ? 'Menghitung audiens…'
                           : _preview.caption,
                       hasAudience: _preview.hasAudience,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    const _SectionLabel(text: 'HARI TAYANG'),
+                    const SizedBox(height: 6),
+                    _BroadcastDateTimeRow(
+                      startDate: _startDate,
+                      endDate: _endDate,
+                      onPickStartDate: _pickStartDate,
+                      onPickEndDate: _pickEndDate,
+                      onClearEndDate: () => setState(() => _endDate = null),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     const _SectionLabel(text: 'ACARA · opsional'),
@@ -737,4 +831,76 @@ class _ReminderOption {
   const _ReminderOption({required this.label, required this.value});
   final String label;
   final int value;
+}
+
+class _BroadcastDateTimeRow extends StatelessWidget {
+  const _BroadcastDateTimeRow({
+    required this.startDate,
+    required this.endDate,
+    required this.onPickStartDate,
+    required this.onPickEndDate,
+    required this.onClearEndDate,
+  });
+
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final VoidCallback onPickStartDate;
+  final VoidCallback onPickEndDate;
+  final VoidCallback onClearEndDate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _PickerCell(
+            label: 'Mulai Tayang',
+            value: startDate == null ? 'Pilih tanggal' : _fmtDate(startDate!),
+            icon: Icons.play_arrow_rounded,
+            onTap: onPickStartDate,
+            placeholder: startDate == null,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _PickerCell(
+            label: 'Selesai Tayang',
+            value: endDate == null ? 'Selamanya (Indefinite)' : _fmtDate(endDate!),
+            icon: Icons.stop_rounded,
+            onTap: onPickEndDate,
+            placeholder: endDate == null,
+            trailing: endDate != null
+                ? GestureDetector(
+                    onTap: onClearEndDate,
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 14,
+                      color: ColorUtils.slate400,
+                    ),
+                  )
+                : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  static String _fmtDate(DateTime d) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
 }

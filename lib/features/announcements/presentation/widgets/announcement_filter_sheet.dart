@@ -108,5 +108,7 @@ class _AnnouncementFilterSheetState extends State<AnnouncementFilterSheet>
       _tempSelectedTarget = null;
       _tempSelectedStatus = null;
     });
+    widget.onApply(null, null, null);
+    AppNavigator.pop(context);
   }
 }

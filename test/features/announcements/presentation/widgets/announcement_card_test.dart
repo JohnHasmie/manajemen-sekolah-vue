@@ -16,8 +16,6 @@ void main() {
   Widget buildSubject({
     Map<String, dynamic>? data,
     VoidCallback? onTap,
-    VoidCallback? onEdit,
-    VoidCallback? onDelete,
     String importantLabel = 'Penting',
   }) {
     return MaterialApp(
@@ -29,8 +27,6 @@ void main() {
             formattedDate: '09/06/2025',
             targetText: 'Semua',
             onTap: onTap ?? () {},
-            onEdit: onEdit ?? () {},
-            onDelete: onDelete ?? () {},
             importantLabel: importantLabel,
           ),
         ),

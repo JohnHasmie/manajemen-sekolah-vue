@@ -30,11 +30,11 @@ class AnnouncementCard extends StatelessWidget {
   /// Called when the card body is tapped — opens the detail dialog.
   final VoidCallback onTap;
 
-  /// Called when the edit icon is tapped — opens the edit form sheet.
-  final VoidCallback onEdit;
+  /// Called when the card is long-pressed — triggers bulk selection mode.
+  final VoidCallback? onLongPress;
 
-  /// Called when the delete icon is tapped — triggers delete confirmation.
-  final VoidCallback onDelete;
+  /// Whether this card is currently selected in bulk mode.
+  final bool isSelected;
 
   /// i18n label for "Important" — passed from parent to avoid re-reading the provider here.
   final String importantLabel;
@@ -46,8 +46,8 @@ class AnnouncementCard extends StatelessWidget {
     required this.formattedDate,
     required this.targetText,
     required this.onTap,
-    required this.onEdit,
-    required this.onDelete,
+    this.onLongPress,
+    this.isSelected = false,
     required this.importantLabel,
   });
 
@@ -64,17 +64,22 @@ class AnnouncementCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
+      color: isSelected ? primaryColor.withValues(alpha: 0.04) : Colors.transparent,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
+          onLongPress: onLongPress,
           borderRadius: const BorderRadius.all(Radius.circular(14)),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: const BorderRadius.all(Radius.circular(14)),
-              border: Border.all(color: ColorUtils.slate200, width: 1),
+              border: Border.all(
+                color: isSelected ? primaryColor : ColorUtils.slate200,
+                width: isSelected ? 2 : 1,
+              ),
               boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
             ),
             child: Row(
@@ -162,26 +167,35 @@ class AnnouncementCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
 
-                // Right: unread dot + icon action buttons
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (isUnread)
-                      Container(
-                        width: 8,
-                        height: 8,
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          color: ColorUtils.error600,
-                          shape: BoxShape.circle,
+                if (isUnread || isSelected)
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isUnread && !isSelected)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: ColorUtils.error600,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                    // Per-row edit/delete affordances removed (PR-7 / Audit
-                    // Theme 7). The unread dot above stays. Tap-to-detail /
-                    // bulk-mode / 3-dot overflow take over for actions.
-                    // `onEdit` and `onDelete` props kept on the constructor.
-                  ],
-                ),
+                      if (isSelected)
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: primaryColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                    ],
+                  ),
               ],
             ),
           ),
