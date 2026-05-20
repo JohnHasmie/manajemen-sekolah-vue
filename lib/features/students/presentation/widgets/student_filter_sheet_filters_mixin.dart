@@ -176,11 +176,11 @@ mixin StudentFilterSheetFiltersMixin on State<StudentFilterSheetContent> {
           options: [
             FilterOption(value: null, label: t({'en': 'All', 'id': 'Semua'})),
             FilterOption(
-              value: 'M',
+              value: 'L',
               label: t({'en': 'Male', 'id': 'Laki-laki'}),
             ),
             FilterOption(
-              value: 'F',
+              value: 'P',
               label: t({'en': 'Female', 'id': 'Perempuan'}),
             ),
           ],
