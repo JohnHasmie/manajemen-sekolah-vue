@@ -126,7 +126,7 @@ class StudentFilterHelper {
     LanguageProvider lang,
     VoidCallback onRemove,
   ) {
-    final genderText = selectedGender == 'M'
+    final genderText = selectedGender == 'L'
         ? lang.getTranslatedText(const {'en': 'Male', 'id': 'Laki-laki'})
         : lang.getTranslatedText(const {'en': 'Female', 'id': 'Perempuan'});
     final genderLabel = lang.getTranslatedText(const {

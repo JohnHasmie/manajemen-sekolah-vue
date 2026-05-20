@@ -104,14 +104,14 @@ class SubjectFilterSheetState extends ConsumerState<SubjectFilterSheet> {
               FilterChipGrid<String?>(
                 options: [
                   FilterOption(
-                    value: 'Aktif',
+                    value: 'active',
                     label: lang.getTranslatedText({
                       'en': 'Active',
                       'id': 'Aktif',
                     }),
                   ),
                   FilterOption(
-                    value: 'Non-Aktif',
+                    value: 'inactive',
                     label: lang.getTranslatedText({
                       'en': 'Inactive',
                       'id': 'Non-Aktif',
