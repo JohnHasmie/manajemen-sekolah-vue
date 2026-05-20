@@ -250,6 +250,58 @@ class LessonPlanService {
     return response.data;
   }
 
+  /// Admin "Kembalikan ke guru" — request revisions without rejecting.
+  ///
+  /// Status stays Pending; `revision_requested_at` + `revision_areas`
+  /// are set on the lesson_plans row, and the guru gets a notification
+  /// + the revision banner on their detail screen. Use [areas] to flag
+  /// specific section keys ("tujuan", "penilaian", etc.) the guru
+  /// should fix.
+  static Future<dynamic> sendBackLessonPlan(
+    String lessonPlanId, {
+    required String catatan,
+    List<String>? areas,
+  }) async {
+    final response = await dioClient.put(
+      '/rpp/$lessonPlanId/send-back',
+      data: {
+        'catatan': catatan,
+        if (areas != null) 'revision_areas': areas,
+      },
+    );
+    await CacheInvalidationService.onLessonPlanChanged();
+    return response.data;
+  }
+
+  /// Audit-trail timeline for a lesson plan.
+  ///
+  /// Returns rows in newest-first order with `action`, `actor_name`,
+  /// `actor_role`, `from_status`, `to_status`, `note`,
+  /// `revision_areas`, and `created_at`. Powers the admin "Riwayat
+  /// Persetujuan" timeline screen.
+  static Future<List<Map<String, dynamic>>> getLessonPlanReviews(
+    String lessonPlanId,
+  ) async {
+    final response = await dioClient.get('/rpp/$lessonPlanId/reviews');
+    final body = response.data;
+    if (body is Map<String, dynamic>) {
+      final data = body['data'];
+      if (data is List) {
+        return data
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList(growable: false);
+      }
+    }
+    if (body is List) {
+      return body
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(growable: false);
+    }
+    return const [];
+  }
+
   static Future<dynamic> deleteLessonPlan(String lessonPlanId) async {
     final response = await dioClient.delete('/rpp/$lessonPlanId');
     await CacheInvalidationService.onLessonPlanChanged();

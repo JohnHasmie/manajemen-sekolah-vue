@@ -28,24 +28,17 @@ import 'package:manajemensekolah/core/shell/tabs/teacher/teacher_other_hub.dart'
 import 'package:manajemensekolah/core/shell/tabs/teacher/teacher_teaching_hub.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/mixins/helpers_mixin.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/content_builders_mixin.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/mixins/cards_mixin.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/mixins/helpers_mixin.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/mixins/dialog_mixin.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/screens/admin_dashboard_body.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/screens/teacher_dashboard_body.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/screens/parent_dashboard_body.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/finance_popup_dialog.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_popup_dialog.dart';
 import 'package:manajemensekolah/features/notifications/presentation/screens/notification_list_screen.dart';
 
 export 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 export 'package:manajemensekolah/features/notifications/presentation/screens/notification_list_screen.dart'
     show NotificationListScreen;
-export 'package:manajemensekolah/features/dashboard/presentation/widgets/finance_popup_dialog.dart'
-    show FinancePopupDialog;
-export 'package:manajemensekolah/features/dashboard/presentation/widgets/attendance_popup_dialog.dart'
-    show AttendancePopupDialog;
 
 /// The main dashboard widget. Like a Vue page component
 /// (`pages/dashboard.vue`).
@@ -90,7 +83,6 @@ class _DashboardState extends ConsumerState<Dashboard>
         TickerProviderStateMixin,
         HelpersMixin,
         ContentBuildersMixin,
-        CardsMixin,
         DialogMixin {
   late AnimationController _animationController;
 
@@ -99,7 +91,6 @@ class _DashboardState extends ConsumerState<Dashboard>
   final GlobalKey _heroSectionKey = GlobalKey();
   final GlobalKey _quickActionsKey = GlobalKey();
   final GlobalKey _statsSectionKey = GlobalKey();
-  final GlobalKey _scheduleSectionKey = GlobalKey();
 
   /// Like Vue's `mounted()` lifecycle hook.
   /// Sets up animation controllers, listens for FCM sync triggers,
@@ -312,61 +303,16 @@ class _DashboardState extends ConsumerState<Dashboard>
       );
     }
 
-    // Fallback (should not reach here)
-    return buildDashboardContent(
-      context,
-      languageProvider,
-      state,
-      _profileHeaderKey,
-      _heroSectionKey,
-      _quickActionsKey,
-      _statsSectionKey,
-      primaryColor,
-      effectiveRole,
-      () => showLanguageDialog(context, languageProvider, primaryColor),
-      () async {
-        await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => NotificationListScreen(role: widget.role),
-          ),
-        );
-        ref.read(dashboardProvider.notifier).refreshStats();
-      },
-      (state) => showAccountBottomSheet(
-        context,
-        state,
-        primaryColor,
-        effectiveRole,
-        onLanguageTap: () =>
-            showLanguageDialog(context, languageProvider, primaryColor),
-      ),
-      () => showAcademicYearDialog(context),
-      (state) => getTodaysOverviewCards(
-        state,
-        effectiveRole,
-        _scheduleSectionKey,
-        (ctx, data) {
-          showDialog(
-            context: ctx,
-            builder: (context) => FinancePopupDialog(
-              semestersData: List<Map<String, dynamic>>.from(data),
-            ),
-          );
-        },
-        (ctx, yearId, data) {
-          showDialog(
-            context: ctx,
-            builder: (context) => AttendancePopupDialog(
-              semesterLabel: state.currentSemesterLabel,
-              initialData: List<Map<String, dynamic>>.from(data),
-              academicYearId: yearId,
-            ),
-          );
-        },
-      ),
-      (state) => getQuickActions(state, effectiveRole, primaryColor),
-      onRefresh: () => ref.read(dashboardProvider.notifier).pullToRefresh(),
-    );
+    // Unreachable in practice — admin/guru/wali all branch above. The
+    // legacy `buildDashboardContent` fallback (and the CardsMixin +
+    // ContentBuildersMixin that powered it) was retired alongside
+    // Sub-PR 7's role-specific bodies; a stale role string just gets
+    // a blank screen now rather than re-introducing the legacy card
+    // composition path. Same outcome as the previous fallback —
+    // nothing renders — without the dependency on widgets that no
+    // longer exist (FinanceBarChartCard / AttendanceBarChartCard /
+    // ScheduleSliderCard / MaterialSliderCard).
+    return const SizedBox.shrink();
   }
 
   Widget _buildLoadingStateWrapper(

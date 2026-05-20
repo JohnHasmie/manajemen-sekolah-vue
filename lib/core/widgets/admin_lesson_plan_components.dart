@@ -23,14 +23,18 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 enum QueueTone { warn, good, bad }
 
 extension QueueToneTokens on QueueTone {
+  /// Card left-edge stripe + tier dot accent. Mockup uses Tailwind
+  /// 600-weight tints (amber-600 / green-600 / red-600) for these
+  /// stripes — a touch darker than the previous 500s so they read
+  /// against the white card background instead of bleeding in.
   Color get accent {
     switch (this) {
       case QueueTone.warn:
-        return const Color(0xFFF59E0B);
+        return ColorUtils.warning600;
       case QueueTone.good:
-        return const Color(0xFF10B981);
+        return ColorUtils.green600;
       case QueueTone.bad:
-        return const Color(0xFFDC2626);
+        return ColorUtils.error600;
     }
   }
 }
@@ -145,6 +149,20 @@ class SwipeableQueueCard extends StatelessWidget {
   final VoidCallback? onRegen;
   final List<Widget>? actionsRow;
 
+  /// Optional pill that sits before the status pill in the meta row —
+  /// surfaces the RPP format (K13 / Modul Ajar / 1 Halaman / Upload).
+  /// Pass null on tiers where format-by-format readout would be noise.
+  final Widget? formatBadge;
+
+  /// "Kembalikan ke guru" quick action. When provided, the right-rail
+  /// column adds an amber ⤺ button between Approve (✓) and Reject (✗).
+  final VoidCallback? onSendBack;
+
+  /// Teacher avatar initials — rendered as a 22dp cobalt circle next
+  /// to the footer text. Pass null/empty to keep the older "footer
+  /// only" rendering.
+  final String? avatarInitials;
+
   const SwipeableQueueCard({
     super.key,
     required this.subtitle,
@@ -158,6 +176,9 @@ class SwipeableQueueCard extends StatelessWidget {
     this.onReject,
     this.onRegen,
     this.actionsRow,
+    this.formatBadge,
+    this.onSendBack,
+    this.avatarInitials,
   });
 
   @override
@@ -187,14 +208,30 @@ class SwipeableQueueCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             child: Row(
               children: [
-                Container(width: 4, color: tone.accent),
+                // Mockup `.rpp-card .accent` is 3 px — keep card visual
+                // density consistent with the design system.
+                Container(width: 3, color: tone.accent),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Top row — format pill + meta chips (status
+                        // pill, updated_at). Mockup `.row1` layout.
+                        if (formatBadge != null || meta.isNotEmpty) ...[
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              if (formatBadge != null) formatBadge!,
+                              ...meta,
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                        ],
                         Text(
                           subtitle,
                           style: TextStyle(
@@ -210,17 +247,11 @@ class SwipeableQueueCard extends StatelessWidget {
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
                             color: ColorUtils.slate900,
+                            height: 1.3,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        if (meta.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 6,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: meta,
-                          ),
-                        ],
                         if (rejectionReason != null &&
                             rejectionReason!.isNotEmpty) ...[
                           const SizedBox(height: 6),
@@ -235,45 +266,98 @@ class SwipeableQueueCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
-                        const SizedBox(height: 6),
-                        Text(
-                          footer,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: ColorUtils.slate300,
+                        // Footer with dashed top border per mockup
+                        // `.rpp-foot`. Holds the teacher avatar +
+                        // name on the left and the 3-button quick
+                        // action column on the right.
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.only(top: 8),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                color: ColorUtils.slate200,
+                                width: 1,
+                              ),
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          child: Row(
+                            children: [
+                              if ((avatarInitials ?? '').isNotEmpty) ...[
+                                Container(
+                                  width: 22,
+                                  height: 22,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: ColorUtils.brandCobalt,
+                                  ),
+                                  child: Text(
+                                    avatarInitials!,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  footer,
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: ColorUtils.slate600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (onApprove != null ||
+                                  onSendBack != null ||
+                                  onReject != null) ...[
+                                if (onApprove != null)
+                                  _QuickActionButton(
+                                    icon: Icons.check_rounded,
+                                    bg: const Color(0xFFDCFCE7),
+                                    fg: ColorUtils.success700,
+                                    onTap: onApprove!,
+                                    tooltip: 'Setujui cepat',
+                                  ),
+                                if (onSendBack != null) ...[
+                                  const SizedBox(width: 4),
+                                  _QuickActionButton(
+                                    icon: Icons.reply_rounded,
+                                    bg: const Color(0xFFFEF3C7),
+                                    fg: ColorUtils.warning700,
+                                    onTap: onSendBack!,
+                                    tooltip: 'Kembalikan ke guru',
+                                  ),
+                                ],
+                                if (onReject != null) ...[
+                                  const SizedBox(width: 4),
+                                  _QuickActionButton(
+                                    icon: Icons.close_rounded,
+                                    bg: const Color(0xFFFEE2E2),
+                                    fg: ColorUtils.error700,
+                                    onTap: onReject!,
+                                    tooltip: 'Tolak',
+                                  ),
+                                ],
+                              ],
+                            ],
+                          ),
                         ),
                         if (actionsRow != null) ...[
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           Row(children: actionsRow!),
                         ],
                       ],
                     ),
                   ),
                 ),
-                if (onApprove != null && tone == QueueTone.warn)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: Material(
-                      color: const Color(0xFF10B981),
-                      borderRadius: BorderRadius.circular(10),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(10),
-                        onTap: onApprove,
-                        child: const SizedBox(
-                          width: 38,
-                          height: 32,
-                          child: Icon(
-                            Icons.check_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -410,6 +494,45 @@ class _TierHeader extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// 30dp square button used by the SwipeableQueueCard footer row to
+/// surface ✓ approve / ⤺ kembalikan / ✗ tolak quick actions. Mockup
+/// `.quick-btn` — pill-rounded with status-tinted bg + fg.
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color bg;
+  final Color fg;
+  final VoidCallback onTap;
+  final String tooltip;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.bg,
+    required this.fg,
+    required this.onTap,
+    required this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: Icon(icon, size: 15, color: fg),
+          ),
+        ),
       ),
     );
   }

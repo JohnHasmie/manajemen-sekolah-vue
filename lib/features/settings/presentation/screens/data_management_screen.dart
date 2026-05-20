@@ -1,160 +1,111 @@
-// Admin data management hub screen - navigation menu to CRUD sub-screens.
+// Admin · Kelola Data hub.
 //
-// Like `pages/admin/data-management/index.vue` in a Vue app - a menu page
-// that links to Students, Teachers, Classes, and Subjects management screens.
-// In Laravel terms, this is like a resource index that links to individual
-// resource controllers (StudentController, TeacherController, etc.).
+// Brand-aligned navigation hub linking to the four master-data CRUD
+// screens (Siswa, Guru, Kelas, Mata Pelajaran). Visual contract
+// mirrors `SystemSettingsScreen`'s DashboardListTile pattern so every
+// admin list-menu reads as the same chrome:
+//
+//   1. `BrandPageHeader` — admin gradient + back arrow + title
+//      "Kelola Data" + descriptive subtitle. Replaces the legacy
+//      hand-rolled gradient + Row chrome.
+//   2. Vertical list of `DashboardListTile` rows — icons + accents
+//      pulled from the shared `DashboardModules` catalog so the icon
+//      next to "Siswa" here matches the icon on the Beranda People
+//      tile, the Priority Inbox deep-link, etc.
+//
+// Reached from the admin Sistem tab and from priority inbox items
+// like "Wali kelas belum dipilih".
 import 'package:flutter/material.dart';
+
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/screens/admin_classroom_management_screen.dart';
 import 'package:manajemensekolah/features/students/presentation/screens/admin_student_management_screen.dart';
 import 'package:manajemensekolah/features/subjects/presentation/screens/admin_subject_management_screen.dart';
 import 'package:manajemensekolah/features/teachers/presentation/screens/admin_teacher_management_screen.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/language_utils.dart';
-import 'package:manajemensekolah/features/dashboard/presentation/widgets/menu_item_card.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
-/// Admin data management hub - a navigation menu linking to CRUD sub-screens.
-///
-/// This is a [StatelessWidget] (no local state, like a Vue component with no `data()`).
-/// Each menu item navigates to a full CRUD screen using `Navigator.push()`,
-/// which is Flutter's equivalent of Vue Router's `router.push('/admin/students')`.
 class AdminDataManagementScreen extends StatelessWidget {
   const AdminDataManagementScreen({super.key});
 
-  /// Builds the menu grid layout. Like Vue's `<template>` with a list of
-  /// `<MenuItemCard>` components. Each card uses `Navigator.push` (like `router.push`).
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
+      body: ListView(
+        padding: EdgeInsets.zero,
         children: [
-          // Header with gradient (matching Schedule Management style)
-          _buildGradientHeader(context),
-
-          // Menu items
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              children: [
-                MenuItemCard(
-                  title: AppLocalizations.manageStudents.tr,
-                  icon: Icons.people_alt_outlined,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const StudentManagementScreen(),
-                  ),
-                  primaryColor: ColorUtils.corporateBlue600,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: AppLocalizations.manageTeachers.tr,
-                  icon: Icons.person_outline,
-                  onTap: () =>
-                      AppNavigator.push(context, const TeacherAdminScreen()),
-                  primaryColor: ColorUtils.corporateBlue600,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: AppLocalizations.manageClasses.tr,
-                  icon: Icons.class_outlined,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const AdminClassManagementScreen(),
-                  ),
-                  primaryColor: ColorUtils.corporateBlue600,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                MenuItemCard(
-                  title: AppLocalizations.manageSubjects.tr,
-                  icon: Icons.book_outlined,
-                  onTap: () => AppNavigator.push(
-                    context,
-                    const AdminSubjectManagementScreen(),
-                  ),
-                  primaryColor: ColorUtils.corporateBlue600,
-                ),
-                const SizedBox(height: AppSpacing.xxl),
-              ],
-            ),
+          BrandPageHeader(
+            role: 'admin',
+            subtitle: 'MANAJEMEN DATA',
+            title: 'Kelola Data',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ..._buildTiles(context),
+          SizedBox(
+            height: AppSpacing.xl + MediaQuery.of(context).padding.bottom,
           ),
         ],
       ),
     );
   }
 
-  /// Builds the gradient header with back button and title.
-  /// A reusable UI pattern across admin screens - like a Vue `<AppHeader>` component.
-  Widget _buildGradientHeader(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
-        left: 16,
-        right: 16,
-        bottom: 16,
-      ),
-      decoration: BoxDecoration(
-        gradient: ColorUtils.headerFadeGradient(
-          ColorUtils.brandAzure,
-          endOpacity: 0.8,
+  List<Widget> _buildTiles(BuildContext context) {
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: DashboardListTile(
+          title: AppLocalizations.manageStudents.tr,
+          subtitle: 'Daftar siswa · NIS · kelas aktif',
+          icon: DashboardModules.siswa.icon,
+          color: DashboardModules.siswa.color,
+          onTap: () => AppNavigator.push(
+            context,
+            const StudentManagementScreen(),
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: ColorUtils.corporateBlue600.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
-      child: Row(
-        children: [
-          // Back button
-          GestureDetector(
-            onTap: () => AppNavigator.pop(context),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-              ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          // Title and subtitle
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Kelola Data',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Kelola semua data master sistem',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: DashboardListTile(
+          title: AppLocalizations.manageTeachers.tr,
+          subtitle: 'Profil guru · mapel diampu · kontak',
+          icon: DashboardModules.guru.icon,
+          color: DashboardModules.guru.color,
+          onTap: () =>
+              AppNavigator.push(context, const TeacherAdminScreen()),
+        ),
       ),
-    );
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: DashboardListTile(
+          title: AppLocalizations.manageClasses.tr,
+          subtitle: 'Rombel · wali kelas · tingkat',
+          icon: DashboardModules.kelas.icon,
+          color: DashboardModules.kelas.color,
+          onTap: () => AppNavigator.push(
+            context,
+            const AdminClassManagementScreen(),
+          ),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: DashboardListTile(
+          title: AppLocalizations.manageSubjects.tr,
+          subtitle: 'Mapel · KKM · kelas penerima',
+          icon: DashboardModules.mataPelajaran.icon,
+          color: DashboardModules.mataPelajaran.color,
+          onTap: () => AppNavigator.push(
+            context,
+            const AdminSubjectManagementScreen(),
+          ),
+        ),
+      ),
+    ];
   }
 }

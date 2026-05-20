@@ -25,6 +25,13 @@ import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/features/lesson_plans/data/admin_lesson_plan_queue_service.dart';
+import 'package:manajemensekolah/features/lesson_plans/data/lesson_plan_service.dart';
+import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan_format.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_admin_detail_page.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_approve_sheet.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_filter_sheet.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_reject_sheet.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_send_back_sheet.dart';
 
 class AdminRppReviewHubScreen extends ConsumerStatefulWidget {
   const AdminRppReviewHubScreen({super.key});
@@ -37,8 +44,13 @@ class AdminRppReviewHubScreen extends ConsumerStatefulWidget {
 class _AdminRppReviewHubScreenState
     extends ConsumerState<AdminRppReviewHubScreen>
     with AdminAcademicYearReloadMixin<AdminRppReviewHubScreen> {
-  /// Active status filter — null = show all.
-  String? _statusFilter;
+  /// Full filter (status / format / mapel / kelas / guru / periode).
+  ///
+  /// The `status` field also acts as the bottom-slot chip's display
+  /// label — but the other dimensions get pushed into the query and
+  /// surfaced as an "+N filter aktif" pill instead of cluttering the
+  /// chip strip with 6 chips on a narrow phone.
+  LessonPlanAdminFilter _filter = const LessonPlanAdminFilter.empty();
 
   /// Reload the RPP queue when the dashboard AY picker flips. The
   /// queue provider reads the AY scope internally, so invalidating
@@ -56,10 +68,20 @@ class _AdminRppReviewHubScreenState
     await ref.read(adminLessonPlanQueueProvider.future);
   }
 
-  void _setStatusFilter(String? key) {
-    setState(() {
-      _statusFilter = (_statusFilter == key) ? null : key;
-    });
+  /// Push the non-status filter dimensions into the queue params
+  /// provider so any change flips the FutureProvider into the loading
+  /// state and refetches. Status stays purely client-side — the
+  /// backend doesn't have a status query param on /admin-queue and
+  /// the queue is already grouped by tier.
+  void _syncQueryParams() {
+    ref.read(adminLessonPlanQueueParamsProvider.notifier).state =
+        AdminLessonPlanQueueParams(
+          format: _filter.format,
+          subjectId: _filter.subjectId,
+          classId: _filter.classId,
+          teacherId: _filter.teacherId,
+          period: _filter.period,
+        );
   }
 
   @override
@@ -83,22 +105,39 @@ class _AdminRppReviewHubScreenState
           actionIcons: [
             BrandHeaderIconButton(
               icon: Icons.tune_rounded,
-              onTap: () => _showStatusSheet(context),
-              badgeCount: _statusFilter != null ? 1 : null,
+              onTap: () => _openFilterSheet(context),
+              badgeCount: _filter.isEmpty ? null : _filter.activeCount,
             ),
           ],
-          // Filter chip strip — matches parent role pattern
-          // (parent_billing_screen): one BrandFilterChip whose `value`
-          // reflects the active status. Tapping the chip OR the tune
-          // icon opens the same status sheet.
+          // Filter chip strip — mockup shows 4 chips ("Semua / Mapel
+          // · X / Kelas · Y / Guru · 4") so the strip looks balanced
+          // and the admin can see active filters at a glance. We
+          // populate Status + Format always (the two most-used
+          // dimensions) and replace the placeholder labels with the
+          // active value when a filter is applied. Tapping any chip
+          // opens the same full filter sheet.
           bottomSlot: BrandFilterChipStrip(
             chips: [
               BrandFilterChip(
                 label: 'Status',
-                value: _statusFilter == null
+                value: _filter.status == null
                     ? null
-                    : _filterLabel(_statusFilter!),
-                onTap: () => _showStatusSheet(context),
+                    : _statusLabel(_filter.status!),
+                onTap: () => _openFilterSheet(context),
+              ),
+              BrandFilterChip(
+                label: 'Format',
+                value: _filter.format == null
+                    ? null
+                    : LessonPlanFormat.fromValue(_filter.format!).shortLabel,
+                onTap: () => _openFilterSheet(context),
+              ),
+              BrandFilterChip(
+                label: 'Periode',
+                value: _filter.period == null
+                    ? null
+                    : _periodLabel(_filter.period!),
+                onTap: () => _openFilterSheet(context),
               ),
             ],
           ),
@@ -122,24 +161,27 @@ class _AdminRppReviewHubScreenState
     final approved = q?.tierByKey('approved');
     final rejected = q?.tierByKey('rejected');
 
+    // Mockup uses Tailwind 700-weight tints for the KPI numerals so
+    // they read as text — not loud 500-weight accents — against the
+    // white strip. See `.kpi-num.amber/.green/.red` in the mockup.
     return BrandKpiStrip(
       columns: [
         BrandKpiColumn(
           label: 'Perlu Review',
           value: '${pending?.totalCount ?? 0}',
-          valueColor: const Color(0xFFF59E0B),
+          valueColor: ColorUtils.warning700,
           sub: pending?.deltaLabel,
         ),
         BrandKpiColumn(
           label: 'Disetujui',
           value: '${approved?.totalCount ?? 0}',
-          valueColor: const Color(0xFF10B981),
+          valueColor: ColorUtils.success700,
           sub: approved?.deltaLabel,
         ),
         BrandKpiColumn(
           label: 'Ditolak',
           value: '${rejected?.totalCount ?? 0}',
-          valueColor: const Color(0xFFDC2626),
+          valueColor: ColorUtils.error700,
           sub: rejected?.deltaLabel,
         ),
       ],
@@ -175,10 +217,20 @@ class _AdminRppReviewHubScreenState
   }
 
   Widget _buildQueue(BuildContext context, AdminLessonPlanQueue queue) {
-    // Filter tiers by status if a filter is active.
+    // Filter tiers by status if the filter sheet's status field is
+    // active. The other filter dimensions are server-side (already
+    // applied at /admin-queue?format=…&class_id=…) so we don't
+    // re-filter them here.
+    final tierKeyFromStatus = switch (_filter.status) {
+      'Pending' => 'pending',
+      'Approved' => 'approved',
+      'Rejected' => 'rejected',
+      _ => null,
+    };
+
     var tiers = queue.tiers;
-    if (_statusFilter != null) {
-      tiers = tiers.where((t) => t.key == _statusFilter).toList();
+    if (tierKeyFromStatus != null) {
+      tiers = tiers.where((t) => t.key == tierKeyFromStatus).toList();
     }
 
     if (tiers.isEmpty) {
@@ -186,9 +238,9 @@ class _AdminRppReviewHubScreenState
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Center(
           child: Text(
-            _statusFilter != null
+            _filter.status != null
                 ? 'Tidak ada RPP dengan status '
-                      '"${_filterLabel(_statusFilter!)}"'
+                      '"${_statusLabel(_filter.status!)}"'
                 : 'Belum ada RPP.',
             style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
           ),
@@ -198,11 +250,16 @@ class _AdminRppReviewHubScreenState
 
     final rendered = tiers.map((t) {
       final cards = t.items.take(t.key == 'approved' ? 3 : 5).map((item) {
+        final fmt = LessonPlanFormat.fromValue(item.format);
         return SwipeableQueueCard(
           subtitle: item.subtitle,
           title: item.title,
           tone: t.tone,
           rejectionReason: item.rejectionReason,
+          // Format pill (K13 / Modul Ajar / 1 HAL / FILE) on the
+          // left, then status pill, then relative time \u2014 matches
+          // mockup `.rpp-card .row1`.
+          formatBadge: _FormatPill(format: fmt),
           meta: [
             _StatusPill(label: item.status, tone: t.tone),
             if (item.updatedAtHuman != null)
@@ -212,37 +269,30 @@ class _AdminRppReviewHubScreenState
               ),
           ],
           footer: item.teacherName,
-          onTap: () => SnackBarUtils.showInfo(
-            context,
-            'Detail RPP akan tersedia '
-            'di rilis berikutnya.',
-          ),
+          avatarInitials: _initialsFor(item.teacherName),
+          // Tap \u2192 open the admin detail sheet. The detail page hydrates
+          // its own state via /rpp/{id}, so we only pass the minimum
+          // identifier + display strings the sheet can show before the
+          // refresh lands.
+          onTap: () => _openDetail(context, item),
+          // 3 quick actions \u2014 only on Pending rows. Approved/Rejected
+          // rows stay read-only (no per-card action; admin flips via
+          // the detail action bar if they really need to).
           onApprove: t.key == 'pending'
-              ? () => _handleApprove(context, item.id)
+              ? () => _handleApprove(context, item)
               : null,
-          actionsRow: t.key == 'rejected'
-              ? [
-                  _ActionButton(
-                    label: '\u27F3 Regen via AI',
-                    primary: true,
-                    onTap: () => SnackBarUtils.showInfo(
-                      context,
-                      'Regen via AI akan tersedia '
-                      'di rilis berikutnya.',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _ActionButton(
-                    label: 'Edit manual',
-                    primary: false,
-                    onTap: () => SnackBarUtils.showInfo(
-                      context,
-                      'Edit manual akan tersedia '
-                      'di rilis berikutnya.',
-                    ),
-                  ),
-                ]
+          onSendBack: t.key == 'pending'
+              ? () => _handleSendBack(context, item)
               : null,
+          onReject: t.key == 'pending'
+              ? () => _handleReject(context, item)
+              : null,
+          // Rejected rows used to surface "Regen via AI" / "Edit
+          // manual" CTAs targeting the guru's job. Per the new admin
+          // policy, admin doesn't regen or edit on the guru's behalf \u2014
+          // the row stays read-only here. The guru sees their own
+          // edit/regen affordances on the teacher detail screen.
+          actionsRow: null,
         );
       }).toList();
 
@@ -254,11 +304,7 @@ class _AdminRppReviewHubScreenState
         cards: cards,
         collapsed: t.key == 'approved' && t.items.length > 3,
         onSeeAll: t.key == 'approved'
-            ? () => SnackBarUtils.showInfo(
-                context,
-                'Daftar lengkap akan tersedia '
-                'di rilis berikutnya.',
-              )
+            ? () => _openFullList(context, 'approved')
             : null,
       );
     }).toList();
@@ -268,102 +314,204 @@ class _AdminRppReviewHubScreenState
 
   // ── Actions ──
 
-  Future<void> _handleApprove(BuildContext context, String id) async {
+  /// Quick-approve flow from the row's ✓ button. Shows the confirmation
+  /// sheet (Frame A2) so the admin sees a summary + can attach an
+  /// optional catatan before the PATCH. Falls back to a friendly error
+  /// snackbar on network failure.
+  Future<void> _handleApprove(BuildContext context, QueueItem item) async {
+    // Parse the "Mapel · Kelas X" subtitle that the backend pre-formats
+    // — we display the same shape inside the confirmation summary.
+    final parts = item.subtitle.split('·').map((e) => e.trim()).toList();
+    final subjectLabel = parts.isNotEmpty ? parts.first : '';
+    final classLabel = parts.length > 1 ? parts[1] : '';
+
+    final result = await showLessonPlanAdminApproveSheet(
+      context: context,
+      title: item.title,
+      formatLabel: 'RPP',
+      subjectLabel: subjectLabel,
+      classLabel: classLabel,
+      teacherName: item.teacherName,
+    );
+    if (result == null) return;
+    if (!context.mounted) return;
+
     try {
-      await ref
-          .read(adminLessonPlanQueueServiceProvider)
-          .updateStatus(id, 'Approved');
+      await LessonPlanService.updateLessonPlanStatus(
+        item.id,
+        'Disetujui',
+        catatan: result.note,
+      );
       ref.invalidate(adminLessonPlanQueueProvider);
       if (context.mounted) {
-        SnackBarUtils.showSuccess(context, 'RPP disetujui');
+        SnackBarUtils.showSuccess(context, 'RPP disetujui.');
       }
     } catch (e) {
       if (context.mounted) {
-        SnackBarUtils.showError(context, 'Gagal: $e');
+        SnackBarUtils.showError(context, 'Gagal menyetujui RPP: $e');
       }
     }
   }
 
-  // ── Status filter sheet ──
+  /// Quick-reject from the row's ✗ button. Opens the same reject sheet
+  /// the detail page uses (Frame C1) so admin sees the same chip
+  /// reasons + required catatan flow without having to navigate first.
+  Future<void> _handleReject(BuildContext context, QueueItem item) async {
+    final parts = item.subtitle.split('·').map((e) => e.trim()).toList();
+    final subjectLabel = parts.isNotEmpty ? parts.first : '';
+    final classLabel = parts.length > 1 ? parts[1] : '';
 
-  String _filterLabel(String key) => switch (key) {
-    'pending' => 'Perlu Review',
-    'approved' => 'Disetujui',
-    'rejected' => 'Ditolak',
-    _ => key,
+    final result = await showLessonPlanAdminRejectSheet(
+      context: context,
+      title: item.title,
+      formatLabel: LessonPlanFormat.fromValue(item.format).shortLabel,
+      subjectLabel: subjectLabel,
+      classLabel: classLabel,
+      teacherName: item.teacherName,
+      initialNote: item.rejectionReason,
+    );
+    if (result == null || !context.mounted) return;
+
+    try {
+      await LessonPlanService.updateLessonPlanStatus(
+        item.id,
+        'Ditolak',
+        catatan: result.note,
+      );
+      ref.invalidate(adminLessonPlanQueueProvider);
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(context, 'RPP ditolak.');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showError(context, 'Gagal menolak RPP: $e');
+      }
+    }
+  }
+
+  /// Quick-send-back from the row's ⤺ button. Opens the same send-back
+  /// sheet (Frame C2) the detail page uses. Status stays Pending but
+  /// revision_requested_at + revision_areas are set on the backend.
+  Future<void> _handleSendBack(BuildContext context, QueueItem item) async {
+    final parts = item.subtitle.split('·').map((e) => e.trim()).toList();
+    final subjectLabel = parts.isNotEmpty ? parts.first : '';
+    final classLabel = parts.length > 1 ? parts[1] : '';
+
+    final result = await showLessonPlanAdminSendBackSheet(
+      context: context,
+      title: item.title,
+      format: item.format,
+      formatLabel: LessonPlanFormat.fromValue(item.format).shortLabel,
+      subjectLabel: subjectLabel,
+      classLabel: classLabel,
+      teacherName: item.teacherName,
+      initialNote: item.rejectionReason,
+    );
+    if (result == null || !context.mounted) return;
+
+    try {
+      await LessonPlanService.sendBackLessonPlan(
+        item.id,
+        catatan: result.note,
+        areas: result.areas.isEmpty ? null : result.areas,
+      );
+      ref.invalidate(adminLessonPlanQueueProvider);
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(
+          context,
+          'RPP dikembalikan ke guru untuk direvisi.',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showError(context, 'Gagal mengembalikan RPP: $e');
+      }
+    }
+  }
+
+  /// Open the admin detail sheet for [item]. We pass a thin map so
+  /// LessonPlanAdminDetailPage can render a header immediately; the
+  /// sheet's own initState() re-fetches the full record via
+  /// LessonPlanService.getLessonPlanById to populate format-specific
+  /// sections and the attachment card.
+  Future<void> _openDetail(BuildContext context, QueueItem item) async {
+    final seed = <String, dynamic>{
+      'id': item.id,
+      'title': item.title,
+      'status': item.status,
+      'teacher_name': item.teacherName,
+      'subject_name': item.subtitle.split('·').first.trim(),
+      if (item.rejectionReason != null) 'note_admin': item.rejectionReason,
+    };
+    await LessonPlanAdminDetailPage.show(
+      context: context,
+      lessonPlan: seed,
+    );
+    // Always refresh — admin may have acted on the row inside the sheet.
+    ref.invalidate(adminLessonPlanQueueProvider);
+  }
+
+  /// "Lihat semua Disetujui" — defers to the full admin RPP list screen
+  /// with the status pre-filtered. The list screen handles pagination,
+  /// search, and the per-card kebab while the hub keeps the top-N
+  /// teaser collapsed.
+  void _openFullList(BuildContext context, String statusKey) {
+    SnackBarUtils.showInfo(
+      context,
+      'Buka tab "Manajemen RPP" untuk daftar lengkap.',
+    );
+    // TODO(admin-rpp): when AdminLessonPlanScreen gains a public route
+    // we can wire AppNavigator.push here. For now the inbox tile +
+    // bottom nav already cover this path.
+  }
+
+  // ── Filter sheet ──
+
+  /// Human label for a backend status key. Used both by the
+  /// bottom-slot chip and the empty-state copy.
+  String _statusLabel(String backendKey) => switch (backendKey) {
+    'Pending' => 'Perlu Review',
+    'Approved' => 'Disetujui',
+    'Rejected' => 'Ditolak',
+    _ => backendKey,
   };
 
-  void _showStatusSheet(BuildContext context) {
-    final navy = ColorUtils.getRoleColor('admin');
-    showModalBottomSheet<void>(
+  /// Short label for the periode chip on the header strip. Matches
+  /// the strings the filter sheet uses for its single-select chips.
+  String _periodLabel(String backendKey) => switch (backendKey) {
+    'week' => 'Minggu ini',
+    'month' => 'Bulan ini',
+    'semester' => 'Semester',
+    'all' => 'Semua',
+    _ => backendKey,
+  };
+
+  /// First-two-character initials for the teacher avatar. Mirrors
+  /// the helper inside CardBuildersMixin so the list card avatar
+  /// renders the same letters as the detail-page hero avatar.
+  String _initialsFor(String name) {
+    final clean = name.trim();
+    if (clean.isEmpty) return '?';
+    final parts = clean.split(RegExp(r'\s+'));
+    if (parts.length == 1) {
+      return parts.first.substring(0, parts.first.length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
+  }
+
+  Future<void> _openFilterSheet(BuildContext context) async {
+    final updated = await showLessonPlanAdminFilterSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: ColorUtils.slate300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Filter Status',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: ColorUtils.slate900,
-              ),
-            ),
-            const SizedBox(height: 12),
-            for (final key in ['pending', 'approved', 'rejected'])
-              ListTile(
-                title: Text(
-                  _filterLabel(key),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: _statusFilter == key
-                        ? FontWeight.w800
-                        : FontWeight.w500,
-                    color: _statusFilter == key ? navy : ColorUtils.slate700,
-                  ),
-                ),
-                trailing: _statusFilter == key
-                    ? Icon(Icons.check_rounded, color: navy, size: 18)
-                    : null,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _setStatusFilter(key);
-                },
-              ),
-            if (_statusFilter != null)
-              ListTile(
-                title: const Text(
-                  'Hapus filter',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFDC2626),
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _setStatusFilter(null);
-                },
-              ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+      initial: _filter,
+      role: 'admin',
+      // TODO(admin-rpp): pass the currently-selected academic_year_id
+      // once the dashboard exposes it via Riverpod. For now the
+      // FilterOptionsService falls back to "current" which is the
+      // only year the admin queue surfaces anyway.
     );
+    if (updated == null) return;
+    setState(() => _filter = updated);
+    _syncQueryParams();
   }
 }
 
@@ -378,62 +526,71 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Tailwind-50 / -700 pairs, mirrored from the mockup
+    // `.status-pill.menunggu/.disetujui/.ditolak` palette.
     final (bg, fg) = switch (tone) {
-      QueueTone.warn => (const Color(0xFFFFFBEB), const Color(0xFF92400E)),
-      QueueTone.good => (const Color(0xFFF0FDF4), const Color(0xFF166534)),
-      QueueTone.bad => (const Color(0xFFFEF2F2), const Color(0xFF991B1B)),
+      QueueTone.warn => (const Color(0xFFFEF3C7), ColorUtils.warning700),
+      QueueTone.good => (const Color(0xFFDCFCE7), ColorUtils.success700),
+      QueueTone.bad => (const Color(0xFFFEE2E2), ColorUtils.error700),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: fg),
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.4,
+        ),
       ),
     );
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  final String label;
-  final bool primary;
-  final VoidCallback onTap;
-  const _ActionButton({
-    required this.label,
-    required this.primary,
-    required this.onTap,
-  });
+// Note: _ActionButton (Regen/Edit CTAs on rejected rows) was retired
+// when the admin role lost regen + edit responsibilities. Kept as a
+// comment marker so a future "I swear we used to have those buttons"
+// search lands here and the rationale is one git log away.
+
+/// Format pill used by SwipeableQueueCard's `formatBadge` slot — shows
+/// K13 / 1 HAL / MODUL AJAR / FILE with the same tinted-50/700 palette
+/// as the detail-page hero. Keeps list ↔ detail visual continuity.
+class _FormatPill extends StatelessWidget {
+  final LessonPlanFormat format;
+  const _FormatPill({required this.format});
 
   @override
   Widget build(BuildContext context) {
-    final navy = ColorUtils.getRoleColor('admin');
-    final bg = primary ? navy : Colors.white;
-    final fg = primary ? Colors.white : ColorUtils.slate700;
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: primary
-                ? null
-                : Border.all(color: ColorUtils.slate300, width: 1),
+    final (bg, fg) = switch (format) {
+      LessonPlanFormat.k13 => (const Color(0xFFDBEAFE), const Color(0xFF1E40AF)),
+      LessonPlanFormat.modulAjar => (
+            const Color(0xFFEDE9FE),
+            const Color(0xFF6D28D9),
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: fg,
-            ),
+      LessonPlanFormat.rpp1Halaman => (
+            const Color(0xFFCCFBF1),
+            const Color(0xFF0F766E),
           ),
+      LessonPlanFormat.file => (ColorUtils.slate100, ColorUtils.slate700),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        format.shortLabel,
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.5,
         ),
       ),
     );

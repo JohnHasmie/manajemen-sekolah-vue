@@ -109,8 +109,16 @@ abstract class LessonPlan with _$LessonPlan {
       'notes',
       'admin_notes',
       'created_at',
+      'revision_requested_at',
     ]) {
       if (m[key] != null) m[key] = m[key].toString();
+    }
+
+    // revision_areas can arrive as a List<dynamic> (JSON array) or null.
+    // Coerce to List<String> so the Freezed model picks it up cleanly.
+    final ra = m['revision_areas'];
+    if (ra is List) {
+      m['revision_areas'] = ra.map((e) => e?.toString() ?? '').toList();
     }
 
     return m;
