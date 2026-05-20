@@ -23,9 +23,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/mixins/pagination_mixin.dart';
+import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
+import 'package:manajemensekolah/core/widgets/bulk_action_bar.dart';
+import 'package:manajemensekolah/core/widgets/bulk_delete_confirm_dialog.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/admin_data_loading_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/admin_dialog_mixin.dart';
 import 'package:manajemensekolah/features/announcements/presentation/mixins/admin_file_operations_mixin.dart';
@@ -72,6 +75,66 @@ class AdminAnnouncementScreenState
     if (!mounted) return;
     loadFilterOptions();
     loadData();
+  }
+
+  // ── Bulk Selection State ──
+  final Set<String> _selectedIds = <String>{};
+  bool get _bulkMode => _selectedIds.isNotEmpty;
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _clearSelection() {
+    if (_selectedIds.isEmpty) return;
+    setState(_selectedIds.clear);
+  }
+
+  Future<void> _bulkDeleteSelected() async {
+    if (_selectedIds.isEmpty) return;
+
+    // We filter the announcements list to get the objects for the preview list
+    final selectedItems = announcements
+        .where((a) => _selectedIds.contains(a['id'].toString()))
+        .toList();
+
+    final ok = await showBulkDeleteConfirm(
+      context,
+      entityNoun: 'pengumuman',
+      items: selectedItems
+          .map(
+            (a) => BulkDeleteItem(
+              id: a['id'].toString(),
+              title: (a['title'] ?? 'Tanpa Judul').toString(),
+              subtitle: 'Target: ${getTargetText(a, ref.read(languageRiverpod))}',
+            ),
+          )
+          .toList(),
+    );
+
+    if (ok != true || !mounted) return;
+
+    setState(() => errorMessage = null);
+
+    // Call individual deletes (the service doesn't have a bulk-delete endpoint yet,
+    // so we loop it just like the Student Management screen does)
+    try {
+      final api = ApiService();
+      for (final id in _selectedIds) {
+        await api.delete('/announcement/$id');
+      }
+      _clearSelection();
+      forceRefresh();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => errorMessage = e.toString());
+    }
   }
 
   final GlobalKey _addKey = GlobalKey();
@@ -208,6 +271,23 @@ class AdminAnnouncementScreenState
       hasActiveFilter: hasActiveFilter,
       brandChips: brandChips,
       onClearAllFilters: clearAllFilters,
+      
+      // Bulk Actions
+      selectedCount: _selectedIds.length,
+      onClearSelection: _clearSelection,
+      bulkItemNoun: 'pengumuman',
+      bulkActions: [
+        BulkAction(
+          icon: Icons.delete_outline_rounded,
+          label: languageProvider.getTranslatedText(const {
+            'en': 'Delete',
+            'id': 'Hapus',
+          }),
+          onTap: _bulkDeleteSelected,
+          isDestructive: true,
+        ),
+      ],
+      
       isLoading: isLoading && announcements.isEmpty,
       errorMessage: errorMessage,
       isEmpty: announcements.isEmpty && !isLoading && errorMessage == null,
@@ -245,9 +325,15 @@ class AdminAnnouncementScreenState
           'en': 'Important',
           'id': 'Penting',
         }),
-        onItemTap: showAnnouncementDetail,
-        onItemEdit: (item) => showAddEditDialog(announcementData: item),
-        onItemDelete: deleteAnnouncement,
+        onItemTap: (item) {
+          if (_bulkMode) {
+            _toggleSelection(item['id'].toString());
+          } else {
+            showAnnouncementDetail(item);
+          }
+        },
+        selectedIds: _selectedIds,
+        onToggleSelection: _toggleSelection,
         onRefresh: loadData,
         onLoadMore: () => loadPage(currentPage + 1),
       ),

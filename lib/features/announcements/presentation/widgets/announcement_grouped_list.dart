@@ -161,8 +161,8 @@ class AnnouncementGroupedList extends StatelessWidget {
   final String Function(Map<String, dynamic>) getTargetText;
   final String importantLabel;
   final void Function(Map<String, dynamic>) onItemTap;
-  final void Function(Map<String, dynamic>) onItemEdit;
-  final void Function(Map<String, dynamic>) onItemDelete;
+  final Set<String> selectedIds;
+  final void Function(String) onToggleSelection;
   final Future<void> Function() onRefresh;
   final Future<void> Function() onLoadMore;
 
@@ -184,8 +184,8 @@ class AnnouncementGroupedList extends StatelessWidget {
     required this.getTargetText,
     required this.importantLabel,
     required this.onItemTap,
-    required this.onItemEdit,
-    required this.onItemDelete,
+    required this.selectedIds,
+    required this.onToggleSelection,
     required this.onRefresh,
     required this.onLoadMore,
   });
@@ -209,16 +209,17 @@ class AnnouncementGroupedList extends StatelessWidget {
           );
         }
         if (item is _CardItem) {
-          onItemVisible(item.data);
+          final data = item.data;
+          onItemVisible(data);
           return AnnouncementCard(
-            announcementData: item.data,
+            announcementData: data,
             primaryColor: primaryColor,
-            formattedDate: formatDate(item.data['created_at'] as String?),
-            targetText: getTargetText(item.data),
+            formattedDate: formatDate(data['created_at']?.toString()),
+            targetText: getTargetText(data),
             importantLabel: importantLabel,
-            onTap: () => onItemTap(item.data),
-            onEdit: () => onItemEdit(item.data),
-            onDelete: () => onItemDelete(item.data),
+            isSelected: selectedIds.contains(data['id'].toString()),
+            onTap: () => onItemTap(data),
+            onLongPress: () => onToggleSelection(data['id'].toString()),
           );
         }
         return const SizedBox.shrink();

@@ -101,6 +101,12 @@ mixin AdminDialogMixin on ConsumerState<AdminAnnouncementScreen> {
         formatDate: formatDate,
         getTargetText: (item) => getTargetText(item, languageProvider),
         onOpenFile: (path, fileName) => openFile(getFileUrl(path), fileName),
+        onEdit: () {
+          showAddEditDialog(announcementData: announcementData);
+        },
+        onDelete: () {
+          deleteAnnouncement(announcementData);
+        },
       ),
     );
   }

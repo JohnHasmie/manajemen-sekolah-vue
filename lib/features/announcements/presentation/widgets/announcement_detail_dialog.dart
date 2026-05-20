@@ -1,28 +1,9 @@
-// Detail bottom-sheet for an announcement. Phase-4 surface 2.
-//
-// Was a center `Dialog` with a top-of-card gradient header + "Tutup"
-// footer button. The Phase-4 redesign converts it to a brand-style
-// bottom sheet:
-//
-//   • Drag handle on top, close-X in top-right
-//   • Compact header: tinted icon badge + role-target chip + title
-//   • Prominent body content (the announcement text itself)
-//   • Optional attachment chip (file name + size)
-//   • 2x2 detail grid at the bottom (Dibuat oleh, Role Target,
-//     Tanggal Mulai, Tanggal Berakhir, Dibuat pada)
-//   • No footer "Tutup" button — close-X + tap-outside dismisses
-//
-// The widget signature is preserved so the existing `mixins/
-// admin_dialog_mixin.dart` caller works unchanged; only the parent
-// invocation switched from `showDialog` to `showModalBottomSheet`.
-//
-// Used by admin AND parent announcement screens (parent invokes the
-// same mixin via inheritance).
-
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
+import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_event_detail_hero.dart';
@@ -37,11 +18,10 @@ class AnnouncementDetailDialog extends StatelessWidget {
   final String Function(Map<String, dynamic>) getTargetText;
   final void Function(String url, String fileName) onOpenFile;
 
-  /// 'admin' | 'teacher' | 'parent'. Drives which reminder block
-  /// renders on the event hero — admin sees the audit ("status
-  /// peringatan") list, non-admin sees their personal reminders +
-  /// the "Atur Pengingat" CTA.
   final String viewerRole;
+
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const AnnouncementDetailDialog({
     super.key,
@@ -53,7 +33,48 @@ class AnnouncementDetailDialog extends StatelessWidget {
     required this.getTargetText,
     required this.onOpenFile,
     this.viewerRole = 'admin',
+    this.onEdit,
+    this.onDelete,
   });
+
+  // ── Date helpers ──────────────────────────────────────────────────
+
+  static const _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+  ];
+
+  String _prettyDate(String? raw) {
+    if (raw == null || raw.isEmpty) return '—';
+    final dt = DateTime.tryParse(raw);
+    if (dt == null) return raw;
+    final local = dt.toLocal();
+    return '${local.day} ${_months[local.month - 1]} ${local.year}';
+  }
+
+  String _prettyTime(String? raw) {
+    if (raw == null || raw.isEmpty) return '—';
+    try {
+      final dt = DateTime.parse(raw).toLocal();
+      final h = dt.hour.toString().padLeft(2, '0');
+      final m = dt.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    } catch (_) {
+      return '—';
+    }
+  }
+
+  String _prettyDateTime(String? raw) {
+    if (raw == null || raw.isEmpty) return '—';
+    final dt = DateTime.tryParse(raw);
+    if (dt == null) return raw;
+    final local = dt.toLocal();
+    final h = local.hour.toString().padLeft(2, '0');
+    final m = local.minute.toString().padLeft(2, '0');
+    return '${local.day} ${_months[local.month - 1]} ${local.year}, $h:$m';
+  }
+
+  // ── Build ────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -68,121 +89,86 @@ class AnnouncementDetailDialog extends StatelessWidget {
         announcementData['creator']?['name'] ??
         announcementData['creator_name'] ??
         '—';
+    final hasEvent = announcementData['event_at'] != null;
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.7,
-      minChildSize: 0.4,
-      maxChildSize: 0.85,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(28),
-              topRight: Radius.circular(28),
+    final titleStr = model.title.isNotEmpty ? model.title : 'Tanpa Judul';
+    
+    return AppBottomSheet(
+      title: isImportant ? 'Pengumuman Penting' : 'Detail Pengumuman',
+      subtitle: titleStr,
+      icon: isImportant ? Icons.warning_amber_rounded : Icons.campaign_outlined,
+      primaryColor: isImportant ? ColorUtils.error600 : primaryColor,
+      footer: BottomSheetFooter(
+        primaryLabel: 'Edit Data',
+        secondaryLabel: onDelete != null ? 'Hapus' : 'Tutup',
+        secondaryDestructive: onDelete != null,
+        primaryColor: primaryColor,
+        primaryEnabled: onEdit != null,
+        onPrimary: () {
+          if (onEdit != null) {
+            Navigator.pop(context);
+            onEdit?.call();
+          }
+        },
+        onSecondary: () {
+          Navigator.pop(context);
+          if (onDelete != null) onDelete?.call();
+        },
+      ),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildBody(model),
+
+          // Event hero
+          if (AnnouncementEvent.fromJson(announcementData) case final ev?) ...[
+            const SizedBox(height: 16),
+            AnnouncementEventDetailHero(
+              event: ev,
+              adminReminders: viewerRole == 'admin'
+                  ? _remindersFrom(announcementData)
+                  : null,
+              personalReminders: viewerRole == 'admin'
+                  ? null
+                  : _personalRemindersFrom(announcementData),
+              onAddPersonalReminder: viewerRole == 'admin'
+                  ? null
+                  : () => _openPersonalReminderPicker(context, ev.announcementId),
             ),
-          ),
-          child: Column(
-            children: [
-              _buildDragHandle(),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    8,
-                    AppSpacing.md,
-                    AppSpacing.md,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(context, model, isImportant),
-                      AppSpacing.v16,
-                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                      AppSpacing.v16,
-                      _buildBody(model),
-                      // Acara hero — rendered only when the
-                      // announcement carries an event_at. Drops
-                      // the countdown + admin reminder status under
-                      // the body, above any attachment. Admin sees
-                      // the audit list; teacher/wali see personal
-                      // reminders + the "Tambah" picker.
-                      if (AnnouncementEvent.fromJson(announcementData)
-                          case final ev?) ...[
-                        AppSpacing.v16,
-                        AnnouncementEventDetailHero(
-                          event: ev,
-                          adminReminders: viewerRole == 'admin'
-                              ? _remindersFrom(announcementData)
-                              : null,
-                          personalReminders: viewerRole == 'admin'
-                              ? null
-                              : _personalRemindersFrom(announcementData),
-                          onAddPersonalReminder: viewerRole == 'admin'
-                              ? null
-                              : () => _openPersonalReminderPicker(
-                                  context,
-                                  ev.announcementId,
-                                ),
-                        ),
-                      ],
-                      if (filePath != null && filePath.isNotEmpty) ...[
-                        AppSpacing.v16,
-                        _buildAttachment(filePath, fileName),
-                      ],
-                      AppSpacing.v16,
-                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
-                      AppSpacing.v16,
-                      _buildDetailGrid(creator, model),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+          ],
+
+          // Attachment
+          if (filePath != null && filePath.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _buildAttachment(filePath, fileName),
+          ],
+
+          const SizedBox(height: 20),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 16),
+
+          // ── Detail cards ──
+          _buildInfoSection(creator, model, hasEvent),
+        ],
+      ),
     );
   }
 
-  // ── pieces ────────────────────────────────────────────────────────
+  // ── Pieces ────────────────────────────────────────────────────────
 
-  /// Pull admin-scheduled reminder rows out of the API response.
-  /// Backend embeds them under `reminders` (HasMany on Announcement).
-  /// Returns null when the payload didn't include them — caller hides
-  /// the status card in that case.
   List<Map<String, dynamic>>? _remindersFrom(Map<String, dynamic> data) {
     final raw = data['reminders'];
     if (raw is! List) return null;
-    return raw
-        .whereType<Map>()
-        .map((m) => Map<String, dynamic>.from(m))
-        .toList();
+    return raw.whereType<Map>().map((m) => Map<String, dynamic>.from(m)).toList();
   }
 
-  /// Same shape but for the viewer-scoped personal reminder list. The
-  /// backend embeds these under `personal_reminders` for the
-  /// authenticated user; empty list = card is shown with just the
-  /// "Tambah" CTA.
-  List<Map<String, dynamic>> _personalRemindersFrom(
-    Map<String, dynamic> data,
-  ) {
+  List<Map<String, dynamic>> _personalRemindersFrom(Map<String, dynamic> data) {
     final raw = data['personal_reminders'];
     if (raw is! List) return const [];
-    return raw
-        .whereType<Map>()
-        .map((m) => Map<String, dynamic>.from(m))
-        .toList();
+    return raw.whereType<Map>().map((m) => Map<String, dynamic>.from(m)).toList();
   }
 
-  /// Open the personal-reminder picker sheet. On success the parent
-  /// screen should re-fetch the announcement so the new row renders.
-  Future<void> _openPersonalReminderPicker(
-    BuildContext context,
-    String announcementId,
-  ) async {
+  Future<void> _openPersonalReminderPicker(BuildContext context, String announcementId) async {
     await PersonalReminderPickerSheet.show(
       context: context,
       announcementId: announcementId,
@@ -190,93 +176,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildDragHandle() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 4),
-      child: Stack(
-        children: [
-          // Centered drag handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFCBD5E1),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          // Close-X in top-right
-          Positioned(right: 8, top: -2, child: _CloseButton()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(
-    BuildContext context,
-    Announcement model,
-    bool isImportant,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Tinted icon badge
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: primaryColor.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.center,
-          child: Icon(
-            isImportant ? Icons.warning_amber_rounded : Icons.campaign_outlined,
-            color: primaryColor,
-            size: 28,
-          ),
-        ),
-        AppSpacing.h12,
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _kickerLabel(isImportant),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
-                  color: ColorUtils.slate500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                model.title.isNotEmpty ? model.title : '—',
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: ColorUtils.slate900,
-                  height: 1.25,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _kickerLabel(bool isImportant) {
-    final base = languageProvider.getTranslatedText({
-      'en': 'ANNOUNCEMENT',
-      'id': 'PENGUMUMAN',
-    });
-    if (!isImportant) return '$base · UMUM';
-    return '$base · ${languageProvider.getTranslatedText({'en': 'IMPORTANT', 'id': 'PENTING'})}';
-  }
+  // ── Body ──────────────────────────────────────────────────────────
 
   Widget _buildBody(Announcement model) {
     return Column(
@@ -288,24 +188,26 @@ class AnnouncementDetailDialog extends StatelessWidget {
             'id': 'ISI PENGUMUMAN',
           }),
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.5,
-            color: ColorUtils.slate500,
+            color: ColorUtils.slate400,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           model.content.isEmpty ? '—' : model.content,
           style: TextStyle(
-            fontSize: 14,
-            height: 1.55,
+            fontSize: 13.5,
+            height: 1.6,
             color: ColorUtils.slate700,
           ),
         ),
       ],
     );
   }
+
+  // ── Attachment ────────────────────────────────────────────────────
 
   Widget _buildAttachment(String filePath, String? fileName) {
     return InkWell(
@@ -328,11 +230,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
-              child: Icon(
-                Icons.attach_file_rounded,
-                color: primaryColor,
-                size: 18,
-              ),
+              child: Icon(Icons.attach_file_rounded, color: primaryColor, size: 18),
             ),
             AppSpacing.h12,
             Expanded(
@@ -368,138 +266,205 @@ class AnnouncementDetailDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailGrid(String creator, Announcement model) {
+  // ── Info section ───────────────────────────────────────
+
+  Widget _buildInfoSection(String creator, Announcement model, bool hasEvent) {
+    final eventLocation = announcementData['event_location']?.toString();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'DETAIL',
+          'INFORMASI',
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.w800,
-            letterSpacing: 0.5,
-            color: ColorUtils.slate500,
+            letterSpacing: 0.6,
+            color: ColorUtils.slate400,
           ),
         ),
+        const SizedBox(height: 10),
+
+        // ── Metadata card ──
+        _InfoCard(
+          children: [
+            _InfoRow(
+              icon: Icons.person_outline_rounded,
+              label: 'Dibuat oleh',
+              value: creator,
+              color: primaryColor,
+            ),
+            _InfoRow(
+              icon: Icons.group_outlined,
+              label: 'Target',
+              value: getTargetText(announcementData),
+              color: primaryColor,
+            ),
+            _InfoRow(
+              icon: Icons.access_time_rounded,
+              label: 'Dibuat pada',
+              value: _prettyDateTime(model.createdAt),
+              color: primaryColor,
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 10),
+
+        // ── Broadcast schedule card ──
+        _InfoCard(
+          accent: const Color(0xFF0EA5E9),
+          children: [
+            _InfoRow(
+              icon: Icons.play_circle_outline_rounded,
+              label: 'Mulai Tayang',
+              value: _prettyDate(announcementData['start_date']?.toString()),
+              color: const Color(0xFF0EA5E9),
+            ),
+            _InfoRow(
+              icon: Icons.stop_circle_outlined,
+              label: 'Selesai Tayang',
+              value: announcementData['end_date'] != null
+                  ? _prettyDate(announcementData['end_date']?.toString())
+                  : 'Selamanya',
+              color: const Color(0xFF0EA5E9),
+            ),
+          ],
+        ),
+
+        // ── Event schedule card ──
+        if (hasEvent) ...[
+          const SizedBox(height: 10),
+          _InfoCard(
+            accent: const Color(0xFF8B5CF6),
+            children: [
+              _InfoRow(
+                icon: Icons.event_rounded,
+                label: 'Tanggal Acara',
+                value: _prettyDate(announcementData['event_at']?.toString()),
+                color: const Color(0xFF8B5CF6),
+              ),
+              _InfoRow(
+                icon: Icons.schedule_rounded,
+                label: 'Jam Acara',
+                value: announcementData['event_has_time'] == false
+                    ? 'Sepanjang hari'
+                    : _prettyTime(announcementData['event_at']?.toString()),
+                color: const Color(0xFF8B5CF6),
+              ),
+              if (eventLocation != null && eventLocation.isNotEmpty)
+                _InfoRow(
+                  icon: Icons.location_on_outlined,
+                  label: 'Lokasi',
+                  value: eventLocation,
+                  color: const Color(0xFF8B5CF6),
+                ),
+            ],
+          ),
+        ],
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _DetailCell(
-                label: languageProvider.getTranslatedText({
-                  'en': 'Created by',
-                  'id': 'Dibuat oleh',
-                }),
-                value: creator,
-              ),
-            ),
-            Expanded(
-              child: _DetailCell(
-                label: languageProvider.getTranslatedText({
-                  'en': 'Target Role',
-                  'id': 'Role Target',
-                }),
-                value: getTargetText(announcementData),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _DetailCell(
-                label: languageProvider.getTranslatedText({
-                  'en': 'Start Date',
-                  'id': 'Tanggal Mulai',
-                }),
-                value: announcementData['start_date'] != null
-                    ? formatDate(announcementData['start_date']?.toString())
-                    : '—',
-              ),
-            ),
-            Expanded(
-              child: _DetailCell(
-                label: languageProvider.getTranslatedText({
-                  'en': 'End Date',
-                  'id': 'Tanggal Berakhir',
-                }),
-                value: announcementData['end_date'] != null
-                    ? formatDate(announcementData['end_date']?.toString())
-                    : '—',
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _DetailCell(
-          label: languageProvider.getTranslatedText({
-            'en': 'Created at',
-            'id': 'Dibuat pada',
-          }),
-          value: formatDate(model.createdAt),
-        ),
       ],
     );
   }
 }
 
-/// Top-right close-X. Uses a Builder so we can pop the right route.
-class _CloseButton extends StatelessWidget {
+// ═════════════════════════════════════════════════════════════════════
+// Private widgets
+// ═════════════════════════════════════════════════════════════════════
+
+class _InfoCard extends StatelessWidget {
+  final List<Widget> children;
+  final Color? accent;
+
+  const _InfoCard({required this.children, this.accent});
+
   @override
   Widget build(BuildContext context) {
-    return Builder(
-      builder: (ctx) => InkWell(
-        onTap: () => Navigator.of(ctx).pop(),
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(10),
+    final a = accent ?? ColorUtils.slate400;
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: a.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
           ),
-          alignment: Alignment.center,
-          child: Icon(
-            Icons.close_rounded,
-            size: 16,
-            color: ColorUtils.slate600,
-          ),
-        ),
+        ],
+      ),
+      child: Column(
+        children: [
+          for (int i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i < children.length - 1)
+              const Divider(height: 1, indent: 44, color: Color(0xFFF1F5F9)),
+          ],
+        ],
       ),
     );
   }
 }
 
-/// One cell in the 2x2 detail grid — small uppercase label above
-/// a bold value.
-class _DetailCell extends StatelessWidget {
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
+  final Color color;
 
-  const _DetailCell({required this.label, required this.value});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 9.5, color: ColorUtils.slate500),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: ColorUtils.slate900,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 14, color: color),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: ColorUtils.slate400,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: ColorUtils.slate800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
