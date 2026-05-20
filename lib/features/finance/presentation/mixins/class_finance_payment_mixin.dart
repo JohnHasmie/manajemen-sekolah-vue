@@ -25,34 +25,32 @@ mixin ClassFinancePaymentMixin on State<ClassFinanceReportScreen> {
     );
     selectedFile = null;
 
-    showDialog(
+    showManualPaymentSheet(
       context: context,
-      builder: (context) => ClassFinanceManualPaymentDialog(
-        bill: bill,
-        primaryColor: getPrimaryColor(),
-        selectedFile: selectedFile,
-        formatCurrency: formatCurrency,
-        onPickFile: pickFile,
-        getFileTypeText: getFileTypeText,
-        paymentMethodController: paymentMethodController,
-        amountController: amountController,
-        paymentDateController: paymentDateController,
-        onSave:
-            ({
-              required String paymentMethod,
-              required double amount,
-              required String date,
-              File? file,
-            }) {
-              uploadManualPayment(
-                bill: bill,
-                paymentMethod: paymentMethod,
-                amount: amount,
-                date: date,
-                file: file,
-              );
-            },
-      ),
+      bill: bill,
+      primaryColor: getPrimaryColor(),
+      selectedFile: selectedFile,
+      formatCurrency: formatCurrency,
+      onPickFile: pickFile,
+      getFileTypeText: getFileTypeText,
+      paymentMethodController: paymentMethodController,
+      amountController: amountController,
+      paymentDateController: paymentDateController,
+      onSave:
+          ({
+            required String paymentMethod,
+            required double amount,
+            required String date,
+            File? file,
+          }) {
+            uploadManualPayment(
+              bill: bill,
+              paymentMethod: paymentMethod,
+              amount: amount,
+              date: date,
+              file: file,
+            );
+          },
     );
   }
 

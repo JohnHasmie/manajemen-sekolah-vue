@@ -27,6 +27,7 @@ import 'package:manajemensekolah/core/widgets/admin_announcement_components.dart
 import 'package:manajemensekolah/core/widgets/admin_form_components.dart';
 import 'package:manajemensekolah/core/widgets/admin_form_sheet_header.dart';
 import 'package:manajemensekolah/features/announcements/data/audience_preview_service.dart';
+import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
 
 class AdminAnnouncementComposeSheet extends ConsumerStatefulWidget {
   /// Optional existing announcement to edit. Null = create mode.
@@ -64,6 +65,19 @@ class _AdminAnnouncementComposeSheetState
   bool _pin = false;
   bool _isSaving = false;
 
+  // ── Acara state ─────────────────────────────────────────────────
+  // When [_hasEvent] is true, the form persists event_at + optional
+  // event_end_at + event_has_time + event_location + reminder_offsets.
+  bool _hasEvent = false;
+  DateTime? _eventDate;
+  TimeOfDay? _eventTime;
+  bool _eventHasTime = true;
+  final _eventLocationController = TextEditingController();
+  // Default offsets match the mockup chips (1 hari, 1 jam, saat mulai).
+  // Stored in minutes-before-event.
+  static const _defaultOffsets = <int>[1440, 60, 0];
+  Set<int> _reminderOffsets = {..._defaultOffsets};
+
   bool get _isEdit => widget.announcementData != null;
 
   @override
@@ -76,6 +90,32 @@ class _AdminAnnouncementComposeSheetState
           .toString();
       _pin = widget.announcementData!['is_pinned'] == true;
       // Future enhancement: rehydrate audience_matrix from edit data.
+
+      // Rehydrate Acara payload when editing an announcement that
+      // already carries one. AnnouncementEvent.fromJson returns null
+      // for plain pengumuman — we keep _hasEvent = false in that case.
+      final existing = AnnouncementEvent.fromJson(widget.announcementData!);
+      if (existing != null) {
+        _hasEvent = true;
+        _eventDate = DateTime(
+          existing.eventAt.year,
+          existing.eventAt.month,
+          existing.eventAt.day,
+        );
+        _eventHasTime = existing.eventHasTime;
+        if (existing.eventHasTime) {
+          _eventTime = TimeOfDay(
+            hour: existing.eventAt.hour,
+            minute: existing.eventAt.minute,
+          );
+        }
+        if (existing.eventLocation != null) {
+          _eventLocationController.text = existing.eventLocation!;
+        }
+        if (existing.reminderOffsetMinutes.isNotEmpty) {
+          _reminderOffsets = existing.reminderOffsetMinutes.toSet();
+        }
+      }
     }
   }
 
@@ -83,6 +123,7 @@ class _AdminAnnouncementComposeSheetState
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
+    _eventLocationController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -122,6 +163,51 @@ class _AdminAnnouncementComposeSheetState
     }
   }
 
+  Future<void> _pickEventDate() async {
+    final now = DateTime.now();
+    final initial = _eventDate ?? now;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: now.subtract(const Duration(days: 1)),
+      lastDate: now.add(const Duration(days: 365 * 2)),
+    );
+    if (picked != null) {
+      setState(() => _eventDate = picked);
+    }
+  }
+
+  Future<void> _pickEventTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _eventTime ?? const TimeOfDay(hour: 9, minute: 0),
+    );
+    if (picked != null) {
+      setState(() {
+        _eventTime = picked;
+        _eventHasTime = true;
+      });
+    }
+  }
+
+  /// Compose the event_at DateTime from the separate date + (optional)
+  /// time inputs. Returns null when no date is set, or when time is
+  /// hidden by the "Sepanjang hari" toggle (date is then anchored at
+  /// 00:00 local).
+  DateTime? get _composedEventAt {
+    if (_eventDate == null) return null;
+    if (_eventHasTime && _eventTime != null) {
+      return DateTime(
+        _eventDate!.year,
+        _eventDate!.month,
+        _eventDate!.day,
+        _eventTime!.hour,
+        _eventTime!.minute,
+      );
+    }
+    return DateTime(_eventDate!.year, _eventDate!.month, _eventDate!.day);
+  }
+
   Future<void> _save() async {
     final title = _titleController.text.trim();
     final content = _contentController.text.trim();
@@ -132,6 +218,10 @@ class _AdminAnnouncementComposeSheetState
     }
     if (_selection.isEmpty) {
       SnackBarUtils.showError(context, 'Pilih minimal 1 audiens.');
+      return;
+    }
+    if (_hasEvent && _eventDate == null) {
+      SnackBarUtils.showError(context, 'Pilih tanggal acara dulu.');
       return;
     }
 
@@ -152,6 +242,21 @@ class _AdminAnnouncementComposeSheetState
         'audience_matrix': apiPayload,
         'is_pinned': _pin,
       };
+
+      // Acara payload — only included when the admin enabled the
+      // Tambahkan Acara toggle. On edit, the sentinel "__clear__"
+      // explicitly drops a previously-set event_at server-side.
+      if (_hasEvent && _composedEventAt != null) {
+        body['event_at'] = _composedEventAt!.toUtc().toIso8601String();
+        body['event_has_time'] = _eventHasTime;
+        if (_eventLocationController.text.trim().isNotEmpty) {
+          body['event_location'] = _eventLocationController.text.trim();
+        }
+        body['reminder_offsets'] = _reminderOffsets.toList()..sort();
+      } else if (_isEdit) {
+        body['event_at'] = '__clear__';
+      }
+
       if (!_sendNow) {
         // For now, default scheduled_at to 1 hour from now if the
         // toggle is off. A future picker can replace this stub.
@@ -198,7 +303,11 @@ class _AdminAnnouncementComposeSheetState
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
-      child: Container(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -258,6 +367,52 @@ class _AdminAnnouncementComposeSheetState
                       hasAudience: _preview.hasAudience,
                     ),
                     const SizedBox(height: AppSpacing.lg),
+                    const _SectionLabel(text: 'ACARA · opsional'),
+                    const SizedBox(height: 6),
+                    AdminFormToggle(
+                      title: 'Tambahkan Acara',
+                      subtitle:
+                          'Tanggal kejadian + reminder otomatis sebelum mulai',
+                      value: _hasEvent,
+                      onChanged: (v) => setState(() => _hasEvent = v),
+                    ),
+                    if (_hasEvent) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      _EventDateTimeRow(
+                        date: _eventDate,
+                        time: _eventTime,
+                        hasTime: _eventHasTime,
+                        onPickDate: _pickEventDate,
+                        onPickTime: _pickEventTime,
+                        onClearTime: () => setState(() {
+                          _eventTime = null;
+                          _eventHasTime = false;
+                        }),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      TextField(
+                        controller: _eventLocationController,
+                        decoration: _inputDecoration(
+                          'Lokasi (opsional) · misal Aula Lt. 2',
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      const _SectionLabel(text: 'KIRIM PERINGATAN'),
+                      const SizedBox(height: 6),
+                      _ReminderChipRow(
+                        selected: _reminderOffsets,
+                        onToggle: (offset) {
+                          setState(() {
+                            if (_reminderOffsets.contains(offset)) {
+                              _reminderOffsets.remove(offset);
+                            } else {
+                              _reminderOffsets.add(offset);
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.lg),
                     const _SectionLabel(text: 'PENJADWALAN'),
                     const SizedBox(height: 6),
                     AdminFormToggle(
@@ -289,6 +444,7 @@ class _AdminAnnouncementComposeSheetState
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -335,4 +491,250 @@ class _SectionLabel extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Two-cell row holding the date + jam pickers for the Acara block.
+/// Tapping a cell opens its respective picker via the parent's
+/// callbacks. The jam cell is visually muted when "Sepanjang hari"
+/// is active (hasTime = false).
+class _EventDateTimeRow extends StatelessWidget {
+  const _EventDateTimeRow({
+    required this.date,
+    required this.time,
+    required this.hasTime,
+    required this.onPickDate,
+    required this.onPickTime,
+    required this.onClearTime,
+  });
+
+  final DateTime? date;
+  final TimeOfDay? time;
+  final bool hasTime;
+  final VoidCallback onPickDate;
+  final VoidCallback onPickTime;
+  final VoidCallback onClearTime;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 14,
+          child: _PickerCell(
+            label: 'Tanggal',
+            value: date == null ? 'Pilih tanggal' : _fmtDate(date!),
+            icon: Icons.calendar_today_outlined,
+            onTap: onPickDate,
+            placeholder: date == null,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          flex: 10,
+          child: _PickerCell(
+            label: hasTime ? 'Jam' : 'Jam',
+            value: hasTime
+                ? (time == null ? 'Pilih jam' : _fmtTime(time!))
+                : 'Sepanjang hari',
+            icon: Icons.access_time_rounded,
+            onTap: hasTime ? onPickTime : onPickTime,
+            placeholder: hasTime && time == null,
+            trailing: hasTime && time != null
+                ? GestureDetector(
+                    onTap: onClearTime,
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 14,
+                      color: ColorUtils.slate400,
+                    ),
+                  )
+                : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  static String _fmtDate(DateTime d) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
+
+  static String _fmtTime(TimeOfDay t) {
+    final h = t.hour.toString().padLeft(2, '0');
+    final m = t.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+}
+
+class _PickerCell extends StatelessWidget {
+  const _PickerCell({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.onTap,
+    this.placeholder = false,
+    this.trailing,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool placeholder;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: ColorUtils.slate50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: ColorUtils.slate200),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                icon,
+                size: 13,
+                color: ColorUtils.getRoleColor('admin'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: ColorUtils.slate500,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: placeholder
+                          ? ColorUtils.slate400
+                          : ColorUtils.slate900,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Reminder-offset chip row. Each chip toggles inclusion of a fixed
+/// offset (in minutes-before-event). The set persists into the
+/// reminder_offsets JSONB column on save.
+class _ReminderChipRow extends StatelessWidget {
+  const _ReminderChipRow({required this.selected, required this.onToggle});
+
+  final Set<int> selected;
+  final void Function(int offsetMinutes) onToggle;
+
+  static const _options = <_ReminderOption>[
+    _ReminderOption(label: '1 hari sblm', value: 1440),
+    _ReminderOption(label: '1 jam sblm', value: 60),
+    _ReminderOption(label: '30 mnt sblm', value: 30),
+    _ReminderOption(label: 'Saat mulai', value: 0),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: _options.map((opt) {
+        final isOn = selected.contains(opt.value);
+        final bg = isOn ? const Color(0xFFFEF3C7) : ColorUtils.slate50;
+        final fg = isOn ? const Color(0xFFB45309) : ColorUtils.slate600;
+        final border = isOn ? const Color(0xFFFDE68A) : ColorUtils.slate300;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => onToggle(opt.value),
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: border,
+                  style: isOn ? BorderStyle.solid : BorderStyle.solid,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isOn
+                        ? Icons.notifications_active_rounded
+                        : Icons.notifications_none_rounded,
+                    size: 12,
+                    color: fg,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    opt.label,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: fg,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _ReminderOption {
+  const _ReminderOption({required this.label, required this.value});
+  final String label;
+  final int value;
 }

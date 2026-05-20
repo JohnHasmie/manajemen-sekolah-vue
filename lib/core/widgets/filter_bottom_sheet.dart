@@ -60,7 +60,7 @@ class AppFilterBottomSheet extends StatelessWidget {
     required this.onApply,
     required this.onReset,
     this.primaryColor,
-    this.maxHeightFactor = 0.75,
+    this.maxHeightFactor = 0.85,
     this.applyLabel = 'Terapkan Filter',
     this.cancelLabel = 'Batal',
     this.resetLabel = 'Reset',
@@ -160,7 +160,7 @@ class AppFilterBottomSheet extends StatelessWidget {
 ///
 /// Returns a [Future] that completes when the sheet is dismissed.
 ///
-/// [maxHeightFactor] defaults to 0.75 to match [AppFilterBottomSheet]'s own
+/// [maxHeightFactor] defaults to 0.85 to match [AppFilterBottomSheet]'s own
 /// default. The sheet shrink-wraps to its content and only hits this cap
 /// when the filter list would otherwise overflow the viewport.
 Future<T?> showFilterSheet<T>({
@@ -170,7 +170,7 @@ Future<T?> showFilterSheet<T>({
   required VoidCallback onApply,
   required VoidCallback onReset,
   Color? primaryColor,
-  double maxHeightFactor = 0.75,
+  double maxHeightFactor = 0.85,
   String applyLabel = 'Terapkan',
   String resetLabel = 'Reset',
 }) {

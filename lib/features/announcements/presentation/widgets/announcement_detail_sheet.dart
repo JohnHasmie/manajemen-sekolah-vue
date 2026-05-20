@@ -9,21 +9,37 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_event_detail_hero.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/personal_reminder_picker_sheet.dart';
 
 class AnnouncementDetailSheet extends StatelessWidget {
   final Map<String, dynamic> announcementData;
   final Color primaryColor;
 
+  /// 'teacher' | 'parent'. Drives whether the event hero shows the
+  /// personal-reminder picker (this sheet isn't called for admin —
+  /// admin uses [AnnouncementDetailDialog]).
+  final String viewerRole;
+
   const AnnouncementDetailSheet({
     super.key,
     required this.announcementData,
     required this.primaryColor,
+    this.viewerRole = 'parent',
   });
 
   @override
   Widget build(BuildContext context) {
     final title = (announcementData['title'] ?? 'Tanpa Judul').toString();
     final content = (announcementData['content'] ?? '').toString();
+    final event = AnnouncementEvent.fromJson(announcementData);
+    final personalReminders =
+        (announcementData['personal_reminders'] as List?)
+                ?.whereType<Map>()
+                .map((m) => Map<String, dynamic>.from(m))
+                .toList() ??
+            const <Map<String, dynamic>>[];
     final isImportant = [
       'penting',
       'important',
@@ -157,6 +173,24 @@ class AnnouncementDetailSheet extends StatelessWidget {
                           height: 1.6,
                         ),
                       ),
+
+                      // Acara hero — countdown + personal reminder
+                      // section. Hidden when announcement carries no
+                      // event_at, so plain pengumuman renders as
+                      // before.
+                      if (event != null) ...[
+                        const SizedBox(height: 16),
+                        AnnouncementEventDetailHero(
+                          event: event,
+                          personalReminders: personalReminders,
+                          onAddPersonalReminder: () =>
+                              PersonalReminderPickerSheet.show(
+                                context: context,
+                                announcementId: event.announcementId,
+                                roleColor: primaryColor,
+                              ),
+                        ),
+                      ],
 
                       // Attachment chip
                       if (filePath.isNotEmpty && fileName.isNotEmpty) ...[

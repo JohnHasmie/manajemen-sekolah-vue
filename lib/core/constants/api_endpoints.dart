@@ -131,6 +131,13 @@ class ApiEndpoints {
   static const billUnreadCount = '/bill/unread-count';
   static const generateBill = '/generate-bill';
   static const financeDashboard = '/finance/dashboard';
+  // Aggregated Tagihan list — one row per (jenis × kelas × tahun).
+  // The admin Operasional Keuangan hub uses this instead of /bills
+  // so it doesn't ship every individual bill just to render the
+  // grouped Tagihan tab. The bucket detail screen still calls
+  // /bills with payment_type_id + class_id filters for per-student
+  // rows on demand.
+  static const financeBillGroups = '/finance/bill-groups';
   static const financeGeneratedMonths = '/finance/generated-months';
   static const financeBillStats = '/finance/bills/stats';
   static const financeDashboardChart = '/finance/dashboard-chart';

@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/widgets/teacher_async_view.dart';
 import 'package:manajemensekolah/core/widgets/teacher_page_header.dart';
 import 'package:manajemensekolah/core/widgets/view_toggle_button.dart';
 import 'package:manajemensekolah/features/announcements/data/announcement_service.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_event_banner.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/teacher_announcement_card.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/teacher_announcement_filter_sheet.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_summary_view.dart';
@@ -256,6 +257,7 @@ class TeacherAnnouncementScreenState
       builder: (_) => AnnouncementDetailSheet(
         announcementData: item,
         primaryColor: _primaryColor,
+        viewerRole: 'teacher',
       ),
     );
   }
@@ -264,12 +266,6 @@ class TeacherAnnouncementScreenState
   Future<List<Map<String, dynamic>>> _loadMonthItems(String monthKey) async {
     final parts = monthKey.split('-');
     if (parts.length != 2) return [];
-    final year = int.tryParse(parts[0]) ?? 2026;
-    final month = int.tryParse(parts[1]) ?? 1;
-    final dateFrom = '$year-${month.toString().padLeft(2, '0')}-01';
-    final lastDay = DateTime(year, month + 1, 0).day;
-    final dateTo =
-        '$year-${month.toString().padLeft(2, '0')}-${lastDay.toString().padLeft(2, '0')}';
 
     try {
       final result = await _service.getAnnouncementsPaginated(
@@ -415,13 +411,27 @@ class TeacherAnnouncementScreenState
   }
 
   Widget _buildListView() {
+    // Index layout: 0 = upcoming-event banner strip; 1..N = cards;
+    // N+1 = pagination spinner (when isLoadingMore).
+    const bannerIndex = 0;
+    final itemCount = 1 +
+        _announcements.length +
+        (isLoadingMore ? 1 : 0);
+
     return ListView.builder(
       controller: paginationScrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(top: 12, bottom: 100, left: 4, right: 4),
-      itemCount: _announcements.length + (isLoadingMore ? 1 : 0),
+      itemCount: itemCount,
       itemBuilder: (context, index) {
-        if (index == _announcements.length) {
+        if (index == bannerIndex) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: AnnouncementEventBanner(onOpen: _showDetail),
+          );
+        }
+        final dataIndex = index - 1;
+        if (dataIndex == _announcements.length) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Center(
@@ -437,7 +447,7 @@ class TeacherAnnouncementScreenState
           );
         }
 
-        final item = _announcements[index] as Map<String, dynamic>;
+        final item = _announcements[dataIndex] as Map<String, dynamic>;
         return TeacherAnnouncementCard(
           announcementData: item,
           primaryColor: _primaryColor,

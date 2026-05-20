@@ -1,0 +1,1646 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Pengumuman + Acara · Admin · Guru · Wali</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --teacher: #0D9488;
+    --parent:  #7C3AED;
+    --green-50: #DCFCE7;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-100: #FDE68A;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-100: #BFDBFE;
+    --blue-600: #1D4ED8;
+    --blue-700: #1E40AF;
+    --indigo-50: #E0E7FF;
+    --indigo-600: #4F46E5;
+    --rose-50: #FFE4E6;
+    --rose-600: #E11D48;
+    --teal-50: #CCFBF1;
+    --teal-600: #0D9488;
+    --violet-50: #EDE9FE;
+    --violet-100: #DDD6FE;
+    --violet-600: #7C3AED;
+    --violet-700: #6D28D9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0; padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  h2 { font-size: 16px; margin: 36px 0 14px; color: var(--brand-dark); letter-spacing: -0.2px; }
+  .subtitle { color: var(--slate-500); font-size: 13px; margin: 0 0 18px; max-width: 920px; line-height: 1.55; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin: 0 0 6px; padding: 12px 16px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; color: var(--slate-700); font-weight: 600;
+    max-width: 920px;
+  }
+  .legend .swatch { width: 12px; height: 12px; border-radius: 4px; display: inline-block; vertical-align: -1px; margin-right: 5px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 28px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 13px 16px 11px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px; text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100); background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .role { color: var(--brand-dark); margin-right: 8px; font-weight: 800; }
+  .frame-label .role.guru   { color: var(--teacher); }
+  .frame-label .role.wali   { color: var(--parent); }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%; aspect-ratio: 380 / 760;
+    position: relative; overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+  /* Brand header */
+  .header { padding: 14px 16px 30px; color: white; flex: 0 0 auto; }
+  .header.admin   { background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%); }
+  .header.teacher { background: linear-gradient(135deg, #0F766E 0%, var(--teacher) 100%); }
+  .header.parent  { background: linear-gradient(135deg, var(--violet-700) 0%, var(--violet-600) 100%); }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto; position: relative;
+  }
+  .h-icon svg, .h-back svg {
+    width: 16px; height: 16px; stroke-width: 2.4; fill: none; stroke: currentColor;
+  }
+  .h-icon .badge {
+    position: absolute; top: -3px; right: -3px;
+    background: var(--amber-600); color: white;
+    font-size: 9px; font-weight: 800;
+    border-radius: 999px; padding: 1px 5px;
+    border: 1.5px solid white;
+  }
+  .h-title-wrap { flex: 1; margin: 0 6px; }
+  .h-eyebrow {
+    text-transform: uppercase; font-size: 10px; opacity: .8;
+    font-weight: 700; letter-spacing: 1.4px; margin-bottom: 1px;
+  }
+  .h-title { font-size: 17px; font-weight: 800; letter-spacing: -0.2px; }
+  .dot-live {
+    width: 6px; height: 6px; background: #4ADE80;
+    border-radius: 999px; display: inline-block;
+    box-shadow: 0 0 0 3px rgba(74,222,128,.25); margin-left: 6px;
+    transform: translateY(-1px);
+  }
+  /* KPI strip overlap */
+  .kpi-strip {
+    margin: -20px 16px 0; background: white;
+    border-radius: 16px; padding: 12px 8px;
+    box-shadow: 0 6px 18px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.04);
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;
+    position: relative; z-index: 1;
+  }
+  .kpi-col { text-align: center; padding: 4px 6px; }
+  .kpi-col + .kpi-col { border-left: 1px solid var(--slate-100); }
+  .kpi-num { font-size: 18px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.2px; }
+  .kpi-num.cobalt { color: var(--brand-cobalt); }
+  .kpi-num.amber  { color: var(--amber-700); }
+  .kpi-num.violet { color: var(--violet-600); }
+  .kpi-num.teal   { color: var(--teacher); }
+  .kpi-label {
+    font-size: 10px; color: var(--slate-500); margin-top: 1px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  /* Filter chip strip */
+  .chip-strip {
+    margin: 12px 0 0; padding: 0 16px;
+    display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.16); color: white;
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+    border: 1px solid rgba(255,255,255,.16);
+  }
+  .chip.on { background: white; color: var(--brand-dark); border-color: transparent; }
+  .chip svg { width: 11px; height: 11px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  /* Body & cards */
+  .body { flex: 1; overflow-y: auto; padding: 14px 16px 60px; }
+  .sec-head {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); margin: 6px 0 8px;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .sec-head .line { flex: 1; height: 1px; background: var(--slate-200); }
+  /* Pengumuman card */
+  .pe-card {
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    margin-bottom: 10px; overflow: hidden;
+    position: relative;
+  }
+  .pe-card.has-event { border-color: var(--blue-100); }
+  .pe-card.urgent { border-color: var(--amber-100); }
+  .pe-card.fired { background: linear-gradient(180deg,#FFFBEB 0%, white 60%); }
+  .pe-card .accent {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; border-radius: 3px 0 0 3px;
+    background: var(--brand-cobalt);
+  }
+  .pe-card.has-event .accent { background: var(--blue-600); }
+  .pe-card.urgent .accent    { background: var(--amber-600); }
+  .pe-card.fired .accent     { background: var(--amber-700); }
+  .pe-card .row1 {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 12px 4px;
+  }
+  .pe-type-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .pe-type-pill.pengumuman { background: var(--blue-50); color: var(--blue-700); }
+  .pe-type-pill.peringatan { background: var(--amber-50); color: var(--amber-700); }
+  .pe-type-pill.darurat    { background: var(--red-50); color: var(--red-700); }
+  .pe-type-pill svg { width: 10px; height: 10px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .pe-pin {
+    background: var(--violet-50); color: var(--violet-600);
+    width: 18px; height: 18px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .pe-pin svg { width: 10px; height: 10px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .pe-time { margin-left: auto; font-size: 10px; color: var(--slate-500); font-weight: 600; }
+  .pe-kebab {
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--slate-500); border-radius: 6px;
+  }
+  .pe-kebab svg { width: 14px; height: 14px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .pe-title {
+    padding: 0 12px; font-size: 13.5px; font-weight: 800;
+    color: var(--slate-900); line-height: 1.35; letter-spacing: -0.1px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pe-body {
+    padding: 4px 12px 8px; font-size: 11.5px;
+    color: var(--slate-600); line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  /* Event chip block — the headline new component */
+  .event-block {
+    margin: 0 12px 10px; padding: 10px 12px;
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border-radius: 10px; border: 1px solid var(--blue-100);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .event-block.urgent {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border-color: var(--amber-100);
+  }
+  .event-block.fired {
+    background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+    border-color: #FCA5A5;
+  }
+  .event-date {
+    flex: 0 0 auto;
+    width: 44px; text-align: center;
+    background: white; border-radius: 8px; padding: 4px 0;
+    border: 1px solid var(--blue-100);
+  }
+  .event-block.urgent .event-date { border-color: var(--amber-100); }
+  .event-block.fired  .event-date { border-color: #FCA5A5; }
+  .event-date .m {
+    font-size: 9px; font-weight: 800; letter-spacing: 0.6px;
+    color: var(--blue-700); text-transform: uppercase;
+  }
+  .event-block.urgent .event-date .m { color: var(--amber-700); }
+  .event-block.fired  .event-date .m { color: var(--red-700); }
+  .event-date .d {
+    font-size: 18px; font-weight: 800; color: var(--slate-900); line-height: 1; margin-top: 1px;
+  }
+  .event-date .dow {
+    font-size: 8px; font-weight: 700; color: var(--slate-500); text-transform: uppercase; margin-top: 2px;
+  }
+  .event-meta { flex: 1; min-width: 0; }
+  .event-row1 {
+    font-size: 11px; font-weight: 800; color: var(--blue-700);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .event-block.urgent .event-row1 { color: var(--amber-700); }
+  .event-block.fired  .event-row1 { color: var(--red-700); }
+  .event-row1 svg { width: 11px; height: 11px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .event-row2 {
+    font-size: 11.5px; color: var(--slate-700); margin-top: 2px; line-height: 1.4;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .event-cta {
+    flex: 0 0 auto;
+    padding: 5px 10px; border-radius: 999px;
+    background: white; color: var(--blue-700);
+    font-size: 10.5px; font-weight: 800;
+    border: 1px solid var(--blue-100);
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .event-block.urgent .event-cta { color: var(--amber-700); border-color: var(--amber-100); }
+  .event-cta svg { width: 10px; height: 10px; stroke-width: 2.6; fill: none; stroke: currentColor; }
+  /* Audience footer */
+  .pe-foot {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px 10px; border-top: 1px dashed var(--slate-200);
+  }
+  .aud-chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; border-radius: 999px;
+    background: var(--slate-100); color: var(--slate-700);
+    font-size: 10px; font-weight: 700;
+  }
+  .aud-chip svg { width: 10px; height: 10px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .pe-reach { margin-left: auto; font-size: 10px; color: var(--slate-500); font-weight: 600; }
+  .pe-reach .b { color: var(--green-700); font-weight: 800; }
+  /* FAB */
+  .fab {
+    position: absolute; right: 16px; bottom: 16px;
+    width: 52px; height: 52px; border-radius: 999px;
+    background: var(--brand-cobalt); color: white;
+    box-shadow: 0 8px 20px rgba(27,111,184,.32);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fab svg { width: 22px; height: 22px; stroke-width: 2.6; fill: none; stroke: currentColor; }
+  /* Date heading divider */
+  .date-divider {
+    display: flex; align-items: center; gap: 8px;
+    margin: 6px 0 6px;
+  }
+  .date-divider .pill {
+    padding: 3px 9px; border-radius: 999px;
+    background: white; border: 1px solid var(--slate-200);
+    font-size: 10px; font-weight: 800; color: var(--slate-700); letter-spacing: 0.4px;
+  }
+  .date-divider .line { flex: 1; height: 1px; background: var(--slate-200); }
+  .date-divider .ev-dot {
+    width: 7px; height: 7px; border-radius: 999px; background: var(--blue-600);
+    box-shadow: 0 0 0 3px rgba(29,78,216,.18);
+  }
+  /* Compose-sheet specific */
+  .sheet { display: flex; flex-direction: column; flex: 1; }
+  .sheet-handle {
+    width: 36px; height: 4px; background: var(--slate-200);
+    border-radius: 999px; margin: 8px auto;
+  }
+  .sheet-head {
+    padding: 0 16px 12px;
+    border-bottom: 1px solid var(--slate-200);
+  }
+  .sheet-head .row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sheet-head .ic {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sheet-head .ic.peng { background: var(--blue-50); color: var(--blue-700); }
+  .sheet-head .ic.peri { background: var(--amber-50); color: var(--amber-700); }
+  .sheet-head .ic svg { width: 16px; height: 16px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .sheet-head h3 { margin: 0; font-size: 15px; font-weight: 800; color: var(--brand-dark); }
+  .sheet-head p { margin: 1px 0 0; font-size: 11px; color: var(--slate-500); }
+  .sheet-body { padding: 14px 16px; overflow-y: auto; flex: 1; }
+  .field { margin-bottom: 12px; }
+  .field-label {
+    font-size: 11px; font-weight: 700; color: var(--slate-700);
+    margin-bottom: 5px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .field-label .opt {
+    background: var(--slate-100); color: var(--slate-500);
+    font-size: 9px; font-weight: 700;
+    padding: 1px 6px; border-radius: 999px; margin-left: 2px; text-transform: uppercase;
+  }
+  .input, .textarea {
+    width: 100%; background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 10px; padding: 10px 12px;
+    font-size: 12px; color: var(--slate-900);
+  }
+  .textarea { min-height: 60px; resize: none; }
+  .seg {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+  .seg .opt {
+    background: var(--slate-50); border: 1px solid var(--slate-200);
+    border-radius: 10px; padding: 8px 4px; text-align: center;
+    font-size: 11px; font-weight: 700; color: var(--slate-600);
+  }
+  .seg .opt.on { background: var(--blue-50); border-color: var(--blue-100); color: var(--blue-700); }
+  .seg .opt.warn-on { background: var(--amber-50); border-color: var(--amber-100); color: var(--amber-700); }
+  .toggle-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--slate-50); border: 1px solid var(--slate-200);
+    border-radius: 10px;
+  }
+  .toggle-row .l { flex: 1; }
+  .toggle-row .t-title { font-size: 12px; font-weight: 700; color: var(--slate-900); }
+  .toggle-row .t-sub   { font-size: 10.5px; color: var(--slate-500); margin-top: 1px; }
+  .toggle {
+    width: 34px; height: 20px; border-radius: 999px;
+    background: var(--slate-300); position: relative; flex: 0 0 auto;
+  }
+  .toggle::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 999px;
+    background: white;
+  }
+  .toggle.on { background: var(--brand-cobalt); }
+  .toggle.on::after { left: 16px; }
+  /* Date/time picker row */
+  .dt-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; }
+  .dt-cell {
+    background: var(--slate-50); border: 1px solid var(--slate-200);
+    border-radius: 10px; padding: 8px 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dt-cell .ic {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: white; display: flex; align-items: center; justify-content: center;
+    color: var(--brand-cobalt);
+  }
+  .dt-cell .ic svg { width: 12px; height: 12px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .dt-cell .l { font-size: 10px; color: var(--slate-500); font-weight: 600; }
+  .dt-cell .v { font-size: 12.5px; color: var(--slate-900); font-weight: 700; margin-top: -2px; }
+  /* Reminder chips */
+  .rmd-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rmd-chip {
+    padding: 5px 10px; border-radius: 999px;
+    background: var(--slate-50); border: 1px dashed var(--slate-300);
+    color: var(--slate-600); font-size: 10.5px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .rmd-chip.on {
+    background: var(--amber-50); border: 1px solid var(--amber-100); color: var(--amber-700);
+  }
+  .rmd-chip svg { width: 10px; height: 10px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  /* Footer button */
+  .sheet-foot {
+    padding: 10px 16px 16px;
+    border-top: 1px solid var(--slate-200);
+    background: white;
+    display: flex; gap: 8px;
+  }
+  .btn {
+    flex: 1; padding: 11px; border-radius: 12px;
+    font-size: 13px; font-weight: 800; text-align: center;
+  }
+  .btn.outline { background: white; border: 1px solid var(--slate-200); color: var(--slate-700); }
+  .btn.primary { background: var(--brand-cobalt); color: white; }
+  .btn.primary.danger { background: var(--amber-700); }
+  /* Detail screen pieces */
+  .detail-hero {
+    margin: 14px 16px 0; padding: 14px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+  }
+  .detail-event {
+    margin: 12px 16px 0; padding: 14px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border: 1px solid var(--blue-100);
+  }
+  .detail-event.urgent {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border-color: var(--amber-100);
+  }
+  .detail-event .top {
+    font-size: 10px; font-weight: 800; color: var(--blue-700);
+    text-transform: uppercase; letter-spacing: 0.6px;
+    margin-bottom: 4px;
+  }
+  .detail-event.urgent .top { color: var(--amber-700); }
+  .detail-event .when {
+    font-size: 17px; font-weight: 800; color: var(--slate-900);
+    letter-spacing: -0.2px; line-height: 1.2;
+  }
+  .countdown {
+    margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px;
+  }
+  .cd-cell {
+    background: white; border-radius: 8px; padding: 6px;
+    text-align: center; border: 1px solid var(--blue-100);
+  }
+  .detail-event.urgent .cd-cell { border-color: var(--amber-100); }
+  .cd-cell .n {
+    font-size: 18px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.4px;
+  }
+  .cd-cell .l {
+    font-size: 9px; font-weight: 700; color: var(--slate-500);
+    text-transform: uppercase; letter-spacing: 0.6px; margin-top: -1px;
+  }
+  .detail-actions {
+    margin: 10px 16px 0; display: flex; gap: 8px;
+  }
+  .detail-actions .btn { padding: 9px; font-size: 12px; }
+  .detail-card {
+    margin: 12px 16px 0; padding: 14px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+  }
+  .detail-card h4 {
+    margin: 0 0 8px; font-size: 11px; font-weight: 800;
+    color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .detail-card .row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0; border-bottom: 1px dashed var(--slate-100);
+    font-size: 12px; color: var(--slate-700);
+  }
+  .detail-card .row:last-child { border-bottom: none; }
+  .detail-card .row .k { color: var(--slate-500); font-weight: 600; min-width: 90px; }
+  .detail-card .row .v { font-weight: 700; color: var(--slate-900); }
+  .detail-card .ic {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--slate-100); color: var(--slate-600);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .detail-card .ic svg { width: 11px; height: 11px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .rmd-list {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .rmd-list li {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 10px;
+    background: var(--slate-50); border: 1px solid var(--slate-200);
+    font-size: 11.5px; color: var(--slate-700);
+  }
+  .rmd-list li.sent { background: var(--green-50); border-color: #BBF7D0; color: var(--green-700); }
+  .rmd-list li .ic2 {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: white; color: var(--slate-500);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .rmd-list li.sent .ic2 { color: var(--green-700); }
+  .rmd-list li .ic2 svg { width: 11px; height: 11px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .rmd-list li .t { flex: 1; font-weight: 700; }
+  .rmd-list li .b { font-size: 10px; color: var(--slate-500); font-weight: 600; }
+  .rmd-list li.sent .b { color: var(--green-700); }
+  /* Calendar mini */
+  .cal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px 6px;
+  }
+  .cal-head .m { font-size: 14px; font-weight: 800; color: var(--brand-dark); }
+  .cal-grid {
+    margin: 0 12px; background: white; border-radius: 14px;
+    padding: 10px; border: 1px solid var(--slate-200);
+  }
+  .cal-grid .dow-row, .cal-grid .day-row {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+  }
+  .cal-grid .dow-row .dow {
+    font-size: 9px; font-weight: 800; color: var(--slate-400);
+    text-align: center; padding: 4px 0;
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .cal-grid .day {
+    height: 38px; border-radius: 8px; padding: 4px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-size: 11px; font-weight: 700; color: var(--slate-700);
+    position: relative;
+  }
+  .cal-grid .day.muted { color: var(--slate-300); }
+  .cal-grid .day.today { background: var(--brand-cobalt); color: white; }
+  .cal-grid .day .dots {
+    display: flex; gap: 2px; margin-top: auto;
+  }
+  .cal-grid .day .dots .d {
+    width: 4px; height: 4px; border-radius: 999px;
+  }
+  .cal-grid .day .dots .d.peng { background: var(--blue-600); }
+  .cal-grid .day .dots .d.peri { background: var(--amber-600); }
+  .cal-grid .day .dots .d.urg  { background: var(--red-600); }
+  .cal-grid .day.today .dots .d { background: white; }
+  /* Notification reminder card (system tray style) */
+  .notif {
+    margin: 12px 16px; padding: 12px;
+    background: white; border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08);
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .notif .nic {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--amber-50); color: var(--amber-700);
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .notif .nic svg { width: 16px; height: 16px; stroke-width: 2.4; fill: none; stroke: currentColor; }
+  .notif .ntop {
+    display: flex; gap: 6px; align-items: center;
+    font-size: 10px; font-weight: 800; color: var(--amber-700);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .notif .ntop .src { color: var(--slate-500); font-weight: 700; }
+  .notif .ntop .when { margin-left: auto; color: var(--slate-400); }
+  .notif .nt { font-size: 13px; font-weight: 800; color: var(--slate-900); margin-top: 3px; line-height: 1.3; }
+  .notif .nb { font-size: 11.5px; color: var(--slate-600); margin-top: 4px; line-height: 1.4; }
+  .notif .nf {
+    display: flex; gap: 8px; margin-top: 8px;
+  }
+  .notif .nbtn {
+    padding: 5px 10px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 800;
+    background: var(--slate-100); color: var(--slate-700);
+  }
+  .notif .nbtn.primary { background: var(--brand-cobalt); color: white; }
+  /* Schema diff section */
+  .schema {
+    background: white; border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    padding: 18px 20px; max-width: 920px;
+    font-size: 13px;
+  }
+  .schema h3 { margin: 0 0 10px; font-size: 14px; font-weight: 800; color: var(--brand-dark); }
+  .schema code {
+    background: var(--slate-100); padding: 2px 6px;
+    border-radius: 4px; font-family: 'Menlo','Monaco',monospace;
+    font-size: 12px; color: var(--slate-800);
+  }
+  .schema ul { padding-left: 18px; margin: 8px 0; color: var(--slate-700); line-height: 1.65; }
+  .schema .add { color: var(--green-700); font-weight: 800; }
+  .schema .keep { color: var(--brand-cobalt); font-weight: 800; }
+  .schema .endpoint {
+    display: flex; gap: 8px; align-items: center;
+    padding: 6px 0; border-bottom: 1px dashed var(--slate-200);
+  }
+  .schema .endpoint:last-child { border-bottom: none; }
+  .schema .verb {
+    font-family: 'Menlo','Monaco',monospace;
+    font-size: 10px; font-weight: 800; color: white;
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .schema .verb.post  { background: var(--green-600); }
+  .schema .verb.get   { background: var(--brand-cobalt); }
+  .schema .verb.patch { background: var(--amber-600); }
+  .schema .ep { font-family: 'Menlo','Monaco',monospace; font-size: 12px; color: var(--slate-800); }
+  .schema .ep-desc { color: var(--slate-500); font-size: 11.5px; margin-left: auto; }
+  /* Bug fix callout */
+  .callout {
+    background: #FFFBEB; border: 1px solid var(--amber-100);
+    border-radius: 16px; padding: 16px 20px;
+    max-width: 920px; font-size: 13px;
+    color: var(--amber-700);
+  }
+  .callout h3 { color: var(--amber-700); margin: 0 0 6px; font-size: 14px; font-weight: 800; }
+  .callout p { color: var(--slate-700); margin: 0 0 8px; line-height: 1.6; }
+  .callout code { background: white; padding: 2px 6px; border-radius: 4px; font-family: 'Menlo','Monaco',monospace; font-size: 12px; color: var(--slate-800); }
+</style>
+</head>
+<body>
+
+<h1>Pengumuman + Acara · Redesign</h1>
+<p class="subtitle">
+  Pengumuman tetap pengumuman, tapi sekarang bisa membawa <b>Acara</b> opsional —
+  tanggal kejadian + waktu (opsional) + reminder offsets. Acara itu yang
+  membuat pengumuman berubah jadi <b>peringatan</b> otomatis (push +
+  in-app card) sebelum dan saat kejadian. Bekerja untuk Admin (compose,
+  monitor, kalender), Guru (lihat + add-to-calendar), dan Wali (lihat +
+  set reminder pribadi). Bug "jam tidak berubah" di Waktu Pembelajaran
+  diperbaiki di bawah secara terpisah.
+</p>
+
+<div class="legend">
+  <span><span class="swatch" style="background: var(--blue-600);"></span>Pengumuman biasa</span>
+  <span><span class="swatch" style="background: var(--amber-600);"></span>Peringatan / urgent</span>
+  <span><span class="swatch" style="background: var(--red-600);"></span>Darurat / live now</span>
+  <span><span class="swatch" style="background: var(--violet-600);"></span>Disematkan (pinned)</span>
+  <span><span class="swatch" style="background: var(--green-600);"></span>Reminder sudah terkirim</span>
+</div>
+
+<h2>Admin · Compose &amp; monitor</h2>
+<div class="grid">
+
+<!-- ──────────── ADMIN FRAME A: Hub list ──────────── -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A1</span><span class="role">ADMIN</span>Pengumuman Hub<span class="desc">Daftar utama — chip Acara di bawah judul</span></div>
+  <div class="phone">
+    <div class="header admin">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">MANAJEMEN PESAN<span class="dot-live"></span></div>
+          <div class="h-title">Pengumuman</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <div class="h-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+          <span class="badge">3</span>
+        </div>
+      </div>
+      <div class="chip-strip">
+        <div class="chip on">Semua</div>
+        <div class="chip">Pengumuman</div>
+        <div class="chip">Peringatan</div>
+        <div class="chip">Punya Acara</div>
+        <div class="chip">Aktif</div>
+        <div class="chip">Draft</div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-col"><div class="kpi-num">128</div><div class="kpi-label">Total</div></div>
+      <div class="kpi-col"><div class="kpi-num cobalt">12</div><div class="kpi-label">Pekan Ini</div></div>
+      <div class="kpi-col"><div class="kpi-num amber">5</div><div class="kpi-label">Acara Mendatang</div></div>
+    </div>
+    <div class="body">
+
+      <div class="date-divider">
+        <div class="pill">HARI INI</div>
+        <span class="ev-dot"></span>
+        <div class="line"></div>
+      </div>
+
+      <!-- Card 1: pinned w/ event (Rapat) -->
+      <div class="pe-card has-event">
+        <span class="accent"></span>
+        <div class="row1">
+          <span class="pe-type-pill pengumuman">
+            <svg viewBox="0 0 24 24"><path d="M3 11v2a2 2 0 002 2h1l4 4V5L6 9H5a2 2 0 00-2 2z"/></svg>
+            Pengumuman
+          </span>
+          <span class="pe-pin"><svg viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"/></svg></span>
+          <span class="pe-time">2 jam lalu · oleh Yahya H</span>
+          <span class="pe-kebab"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span>
+        </div>
+        <div class="pe-title">Rapat Persiapan Ujian Tengah Semester — Semua Wali Kelas</div>
+        <div class="pe-body">Dimohon kehadiran seluruh wali kelas dan koordinator mapel untuk membahas susunan jadwal UTS pekan depan.</div>
+        <div class="event-block">
+          <div class="event-date">
+            <div class="m">MEI</div>
+            <div class="d">27</div>
+            <div class="dow">Rab</div>
+          </div>
+          <div class="event-meta">
+            <div class="event-row1">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              ACARA · 7 HARI LAGI
+            </div>
+            <div class="event-row2">14:00 · Aula Lt. 2 · Wajib hadir</div>
+          </div>
+          <div class="event-cta">
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+        <div class="pe-foot">
+          <span class="aud-chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M5 21v-2a4 4 0 014-4h6a4 4 0 014 4v2"/></svg> Guru</span>
+          <span class="aud-chip">3 kelas</span>
+          <span class="pe-reach"><span class="b">42/45</span> dibaca</span>
+        </div>
+      </div>
+
+      <!-- Card 2: urgent w/ event (Tryout) -->
+      <div class="pe-card urgent has-event">
+        <span class="accent"></span>
+        <div class="row1">
+          <span class="pe-type-pill peringatan">
+            <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            Peringatan
+          </span>
+          <span class="pe-time">4 jam lalu · oleh Kep. TU</span>
+          <span class="pe-kebab"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span>
+        </div>
+        <div class="pe-title">Tryout SNBT — Bawa pensil 2B &amp; kartu peserta</div>
+        <div class="pe-body">Tryout mulai pukul 07.30. Peserta wajib hadir 30 menit sebelumnya untuk verifikasi.</div>
+        <div class="event-block urgent">
+          <div class="event-date">
+            <div class="m">MEI</div>
+            <div class="d">22</div>
+            <div class="dow">Jum</div>
+          </div>
+          <div class="event-meta">
+            <div class="event-row1">
+              <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+              BESOK · 07:30
+            </div>
+            <div class="event-row2">Lab Komputer · Kelas XII IPA semua</div>
+          </div>
+          <div class="event-cta">
+            <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+        <div class="pe-foot">
+          <span class="aud-chip">Siswa</span>
+          <span class="aud-chip">Wali</span>
+          <span class="aud-chip">4 kelas</span>
+          <span class="pe-reach"><span class="b">112/120</span> dibaca</span>
+        </div>
+      </div>
+
+      <div class="date-divider">
+        <div class="pill">KEMARIN</div>
+        <div class="line"></div>
+      </div>
+
+      <!-- Card 3: no event -->
+      <div class="pe-card">
+        <span class="accent"></span>
+        <div class="row1">
+          <span class="pe-type-pill pengumuman">
+            <svg viewBox="0 0 24 24"><path d="M3 11v2a2 2 0 002 2h1l4 4V5L6 9H5a2 2 0 00-2 2z"/></svg>
+            Pengumuman
+          </span>
+          <span class="pe-time">kemarin</span>
+        </div>
+        <div class="pe-title">Pengumpulan Sumbangan Bencana Banjir</div>
+        <div class="pe-body">Donasi terbuka hingga akhir bulan, dapat dititipkan melalui wali kelas masing-masing.</div>
+        <div class="pe-foot">
+          <span class="aud-chip">Wali</span>
+          <span class="aud-chip">Semua kelas</span>
+          <span class="pe-reach"><span class="b">340/420</span> dibaca</span>
+        </div>
+      </div>
+
+    </div>
+    <div class="fab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+  </div>
+</div>
+
+<!-- ──────────── ADMIN FRAME B: Compose sheet ──────────── -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A2</span><span class="role">ADMIN</span>Compose Sheet<span class="desc">Tulis pengumuman + Acara opsional</span></div>
+  <div class="phone">
+    <div class="header admin" style="height: 60px; padding-bottom: 14px;"></div>
+    <div class="sheet" style="position: relative; margin-top: -38px; background: white; border-radius: 18px 18px 0 0; flex: 1; overflow: hidden;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <div class="row">
+          <div class="ic peng"><svg viewBox="0 0 24 24"><path d="M3 11v2a2 2 0 002 2h1l4 4V5L6 9H5a2 2 0 00-2 2z"/></svg></div>
+          <div>
+            <h3>Tulis Pengumuman</h3>
+            <p>Isi pesan dan, kalau perlu, tambahkan acara</p>
+          </div>
+        </div>
+      </div>
+      <div class="sheet-body">
+
+        <div class="field">
+          <div class="field-label">Tipe</div>
+          <div class="seg">
+            <div class="opt on">Pengumuman</div>
+            <div class="opt">Peringatan</div>
+            <div class="opt">Darurat</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Judul</div>
+          <input class="input" value="Rapat Persiapan UTS — Wali Kelas">
+        </div>
+
+        <div class="field">
+          <div class="field-label">Isi</div>
+          <div class="textarea">Dimohon kehadiran seluruh wali kelas dan koordinator mapel pekan depan untuk membahas susunan jadwal UTS.</div>
+        </div>
+
+        <!-- Audience -->
+        <div class="field">
+          <div class="field-label">Audiens</div>
+          <div class="seg">
+            <div class="opt">Semua</div>
+            <div class="opt on">Guru</div>
+            <div class="opt">Wali</div>
+          </div>
+          <div style="margin-top: 6px; font-size: 11px; color: var(--slate-500);">3 kelas dipilih · perkiraan jangkauan 42 orang</div>
+        </div>
+
+        <!-- ── EVENT BLOCK — the headline new piece ── -->
+        <div class="toggle-row" style="margin-bottom: 10px;">
+          <div class="l">
+            <div class="t-title">Tambahkan Acara</div>
+            <div class="t-sub">Kapan kejadiannya? Sistem akan kirim peringatan otomatis.</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Tanggal &amp; Jam Kejadian
+            <span class="opt">jam opsional</span>
+          </div>
+          <div class="dt-row">
+            <div class="dt-cell">
+              <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg></div>
+              <div>
+                <div class="l">Tanggal</div>
+                <div class="v">Rab, 27 Mei 2026</div>
+              </div>
+            </div>
+            <div class="dt-cell">
+              <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+              <div>
+                <div class="l">Jam</div>
+                <div class="v">14:00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">Kirim Peringatan
+            <span class="opt">otomatis</span>
+          </div>
+          <div class="rmd-row">
+            <div class="rmd-chip on">
+              <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+              1 hari sblm
+            </div>
+            <div class="rmd-chip on">
+              <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+              1 jam sblm
+            </div>
+            <div class="rmd-chip on">
+              <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+              Saat mulai
+            </div>
+            <div class="rmd-chip">+ 15 menit</div>
+            <div class="rmd-chip">+ 30 menit</div>
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <div class="l">
+            <div class="t-title">Sematkan di atas</div>
+            <div class="t-sub">Sampai hari kejadian (otomatis lepas)</div>
+          </div>
+          <div class="toggle on"></div>
+        </div>
+
+      </div>
+      <div class="sheet-foot">
+        <div class="btn outline">Batal</div>
+        <div class="btn primary">Kirim &amp; Jadwalkan</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────── ADMIN FRAME C: Detail ──────────── -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A3</span><span class="role">ADMIN</span>Detail<span class="desc">Hero acara + countdown + status peringatan</span></div>
+  <div class="phone">
+    <div class="header admin">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">DETAIL PENGUMUMAN</div>
+          <div class="h-title">Rapat Persiapan UTS</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M11 4H5a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-6"/><path d="M19 3l3 3-9 9H10v-3z"/></svg></div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></div>
+      </div>
+    </div>
+    <div style="flex: 1; overflow-y: auto;">
+      <div class="detail-hero">
+        <div style="display:flex; align-items:center; gap:6px; font-size: 10px; color: var(--slate-500); font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;">
+          <span class="pe-type-pill pengumuman" style="padding: 2px 6px; font-size: 9px;">
+            Pengumuman
+          </span>
+          <span class="pe-pin"><svg viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"/></svg></span>
+          <span>OLEH YAHYA H · 2 JAM LALU</span>
+        </div>
+        <h3 style="margin: 6px 0 6px; font-size: 16px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.2px;">Rapat Persiapan UTS — Wali Kelas</h3>
+        <p style="margin: 0; font-size: 12.5px; color: var(--slate-700); line-height: 1.55;">Dimohon kehadiran seluruh wali kelas dan koordinator mapel pekan depan untuk membahas susunan jadwal UTS. Mohon hadir tepat waktu.</p>
+      </div>
+
+      <div class="detail-event">
+        <div class="top">ACARA · 27 MEI 2026 · 14:00</div>
+        <div class="when">Rabu, 27 Mei 2026 — pukul 14:00</div>
+        <div class="countdown">
+          <div class="cd-cell"><div class="n">07</div><div class="l">HARI</div></div>
+          <div class="cd-cell"><div class="n">11</div><div class="l">JAM</div></div>
+          <div class="cd-cell"><div class="n">22</div><div class="l">MENIT</div></div>
+          <div class="cd-cell"><div class="n">15</div><div class="l">DETIK</div></div>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <div class="btn outline">Ubah Acara</div>
+        <div class="btn primary">Lihat di Kalender</div>
+      </div>
+
+      <div class="detail-card">
+        <h4>STATUS PERINGATAN</h4>
+        <ul class="rmd-list">
+          <li class="sent">
+            <div class="ic2"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+            <div class="t">1 hari sebelum</div>
+            <div class="b">Terkirim · 42/45</div>
+          </li>
+          <li>
+            <div class="ic2"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div class="t">1 jam sebelum</div>
+            <div class="b">Terjadwal · 13:00</div>
+          </li>
+          <li>
+            <div class="ic2"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div class="t">Saat mulai</div>
+            <div class="b">Terjadwal · 14:00</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="detail-card">
+        <h4>JANGKAUAN &amp; DIBACA</h4>
+        <div class="row"><span class="k">Audiens</span><span class="v">Guru · 3 kelas</span></div>
+        <div class="row"><span class="k">Dibaca</span><span class="v" style="color: var(--green-700);">42 / 45 (93%)</span></div>
+        <div class="row"><span class="k">Konfirmasi hadir</span><span class="v">28 / 45</span></div>
+      </div>
+
+      <div style="height: 24px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────── ADMIN FRAME D: Calendar ──────────── -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A4</span><span class="role">ADMIN</span>Kalender Acara<span class="desc">Bulan ini — titik per pengumuman ber-acara</span></div>
+  <div class="phone">
+    <div class="header admin">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">KALENDER ACARA</div>
+          <div class="h-title">Mei 2026</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></div>
+      </div>
+    </div>
+    <div style="background: white; flex: 1; overflow-y: auto; padding-bottom: 24px;">
+      <div class="cal-head">
+        <span class="m">Mei 2026</span>
+        <div style="display: flex; gap: 6px;">
+          <div class="h-icon" style="background: var(--slate-100); color: var(--slate-600);"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="h-icon" style="background: var(--slate-100); color: var(--slate-600);"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+        </div>
+      </div>
+      <div class="cal-grid">
+        <div class="dow-row">
+          <div class="dow">M</div><div class="dow">S</div><div class="dow">S</div><div class="dow">R</div><div class="dow">K</div><div class="dow">J</div><div class="dow">S</div>
+        </div>
+        <div class="day-row">
+          <div class="day muted">26</div><div class="day muted">27</div><div class="day muted">28</div>
+          <div class="day muted">29</div><div class="day muted">30</div><div class="day">1</div><div class="day">2</div>
+        </div>
+        <div class="day-row">
+          <div class="day">3</div><div class="day">4</div><div class="day">5</div>
+          <div class="day">6</div><div class="day">7</div><div class="day">8</div><div class="day">9</div>
+        </div>
+        <div class="day-row">
+          <div class="day">10</div><div class="day">11</div><div class="day">12</div>
+          <div class="day">13<div class="dots"><div class="d peng"></div></div></div>
+          <div class="day">14</div><div class="day">15</div><div class="day">16</div>
+        </div>
+        <div class="day-row">
+          <div class="day">17</div><div class="day">18</div><div class="day">19</div>
+          <div class="day today">20<div class="dots"><div class="d"></div><div class="d"></div></div></div>
+          <div class="day">21</div><div class="day">22<div class="dots"><div class="d urg"></div></div></div><div class="day">23</div>
+        </div>
+        <div class="day-row">
+          <div class="day">24</div><div class="day">25</div><div class="day">26</div>
+          <div class="day">27<div class="dots"><div class="d peng"></div><div class="d peri"></div></div></div>
+          <div class="day">28</div><div class="day">29</div><div class="day">30<div class="dots"><div class="d peri"></div></div></div>
+        </div>
+        <div class="day-row">
+          <div class="day">31</div>
+          <div class="day muted">1</div><div class="day muted">2</div>
+          <div class="day muted">3</div><div class="day muted">4</div><div class="day muted">5</div><div class="day muted">6</div>
+        </div>
+      </div>
+
+      <div class="sec-head" style="margin: 16px 16px 6px;">ACARA 27 MEI · 2 ITEM<span class="line"></span></div>
+
+      <div style="padding: 0 16px;">
+        <div class="pe-card has-event" style="margin-bottom: 8px;">
+          <span class="accent"></span>
+          <div class="row1">
+            <span class="pe-type-pill pengumuman">Pengumuman</span>
+            <span class="pe-time">14:00 · Aula Lt. 2</span>
+          </div>
+          <div class="pe-title">Rapat Persiapan UTS</div>
+        </div>
+        <div class="pe-card urgent has-event" style="margin-bottom: 0;">
+          <span class="accent"></span>
+          <div class="row1">
+            <span class="pe-type-pill peringatan">Peringatan</span>
+            <span class="pe-time">16:30 · Lab IPA</span>
+          </div>
+          <div class="pe-title">Briefing pengawas ujian praktik</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<h2>Guru · Lihat &amp; Add-to-calendar</h2>
+<div class="grid">
+
+<!-- ──────────── TEACHER FRAME A ──────────── -->
+<div class="frame">
+  <div class="frame-label"><span class="num">G1</span><span class="role guru">GURU</span>Pengumuman List<span class="desc">Chip Acara di bawah, FAB hilang (read-only)</span></div>
+  <div class="phone">
+    <div class="header teacher">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">PESAN SEKOLAH<span class="dot-live"></span></div>
+          <div class="h-title">Pengumuman</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></div>
+      </div>
+      <div class="chip-strip">
+        <div class="chip on">Semua</div>
+        <div class="chip">Belum Dibaca</div>
+        <div class="chip">Punya Acara</div>
+        <div class="chip">Untuk Saya</div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-col"><div class="kpi-num">24</div><div class="kpi-label">Total</div></div>
+      <div class="kpi-col"><div class="kpi-num teal">3</div><div class="kpi-label">Belum Dibaca</div></div>
+      <div class="kpi-col"><div class="kpi-num amber">2</div><div class="kpi-label">Acara Mendatang</div></div>
+    </div>
+    <div class="body">
+
+      <div class="date-divider">
+        <div class="pill">HARI INI</div>
+        <span class="ev-dot"></span>
+        <div class="line"></div>
+      </div>
+
+      <div class="pe-card has-event">
+        <span class="accent"></span>
+        <div class="row1">
+          <span class="pe-type-pill pengumuman">Pengumuman</span>
+          <span class="pe-pin"><svg viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"/></svg></span>
+          <span class="pe-time">dari TU · 2 jam lalu</span>
+          <span style="margin-left: auto; width: 8px; height: 8px; border-radius: 999px; background: var(--teacher); box-shadow: 0 0 0 3px rgba(13,148,136,.18);"></span>
+        </div>
+        <div class="pe-title">Rapat Persiapan UTS — Wali Kelas</div>
+        <div class="pe-body">Dimohon kehadiran seluruh wali kelas dan koordinator mapel pekan depan.</div>
+        <div class="event-block">
+          <div class="event-date">
+            <div class="m">MEI</div>
+            <div class="d">27</div>
+            <div class="dow">Rab</div>
+          </div>
+          <div class="event-meta">
+            <div class="event-row1">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              ACARA · 7 HARI LAGI
+            </div>
+            <div class="event-row2">14:00 · Aula Lt. 2</div>
+          </div>
+          <div class="event-cta">
+            <svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h12"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="pe-card urgent has-event">
+        <span class="accent"></span>
+        <div class="row1">
+          <span class="pe-type-pill peringatan">Peringatan</span>
+          <span class="pe-time">dari Kep. TU · 4 jam lalu</span>
+        </div>
+        <div class="pe-title">Pengawas Tryout SNBT — Jadwal pengganti</div>
+        <div class="event-block urgent">
+          <div class="event-date">
+            <div class="m">MEI</div>
+            <div class="d">22</div>
+            <div class="dow">Jum</div>
+          </div>
+          <div class="event-meta">
+            <div class="event-row1">
+              <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+              BESOK · 07:00
+            </div>
+            <div class="event-row2">Lab Komputer · konfirmasi hadir</div>
+          </div>
+          <div class="event-cta">Hadir</div>
+        </div>
+      </div>
+
+      <div class="date-divider">
+        <div class="pill">PEKAN INI</div>
+        <div class="line"></div>
+      </div>
+
+      <div class="pe-card">
+        <span class="accent"></span>
+        <div class="row1">
+          <span class="pe-type-pill pengumuman">Pengumuman</span>
+          <span class="pe-time">Senin</span>
+        </div>
+        <div class="pe-title">Pengumpulan RPP Bulan Mei — paling lambat 31 Mei</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ──────────── TEACHER FRAME B ──────────── -->
+<div class="frame">
+  <div class="frame-label"><span class="num">G2</span><span class="role guru">GURU</span>Detail<span class="desc">RSVP hadir + add-to-calendar</span></div>
+  <div class="phone">
+    <div class="header teacher">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">DETAIL PENGUMUMAN</div>
+          <div class="h-title">Rapat Persiapan UTS</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/></svg></div>
+      </div>
+    </div>
+    <div style="flex: 1; overflow-y: auto;">
+      <div class="detail-hero">
+        <div style="display:flex; align-items:center; gap:6px; font-size: 10px; color: var(--slate-500); font-weight: 800; text-transform: uppercase;">
+          <span class="pe-type-pill pengumuman" style="padding: 2px 6px; font-size: 9px;">Pengumuman</span>
+          <span>DARI TU · 2 JAM LALU</span>
+        </div>
+        <h3 style="margin: 6px 0 6px; font-size: 16px; font-weight: 800;">Rapat Persiapan UTS — Wali Kelas</h3>
+        <p style="margin: 0; font-size: 12.5px; color: var(--slate-700); line-height: 1.55;">Dimohon kehadiran seluruh wali kelas dan koordinator mapel untuk membahas susunan jadwal UTS pekan depan. Membawa data nilai harian masing-masing.</p>
+      </div>
+
+      <div class="detail-event">
+        <div class="top">ACARA · DALAM 7 HARI</div>
+        <div class="when">Rabu, 27 Mei 2026 — 14:00</div>
+        <div class="countdown">
+          <div class="cd-cell"><div class="n">07</div><div class="l">HARI</div></div>
+          <div class="cd-cell"><div class="n">11</div><div class="l">JAM</div></div>
+          <div class="cd-cell"><div class="n">22</div><div class="l">MENIT</div></div>
+          <div class="cd-cell"><div class="n">15</div><div class="l">DETIK</div></div>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <div class="btn outline">Hadir</div>
+        <div class="btn primary" style="background: var(--teacher);">+ Kalender ponsel</div>
+      </div>
+
+      <div class="detail-card">
+        <h4>PENGINGAT SAYA</h4>
+        <ul class="rmd-list">
+          <li class="sent">
+            <div class="ic2"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+            <div class="t">1 hari sebelum</div>
+            <div class="b">Aktif · push</div>
+          </li>
+          <li class="sent">
+            <div class="ic2"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+            <div class="t">1 jam sebelum</div>
+            <div class="b">Aktif · push</div>
+          </li>
+          <li>
+            <div class="ic2"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+            <div class="t">Tambah pengingat saya sendiri</div>
+            <div class="b">+</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="detail-card">
+        <h4>LOKASI &amp; CATATAN</h4>
+        <div class="row"><span class="k">Tempat</span><span class="v">Aula Lt. 2</span></div>
+        <div class="row"><span class="k">Catatan</span><span class="v">Wajib hadir</span></div>
+      </div>
+
+      <div style="height: 24px;"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<h2>Wali · Lihat &amp; Pengingat Pribadi</h2>
+<div class="grid">
+
+<!-- ──────────── PARENT FRAME A ──────────── -->
+<div class="frame">
+  <div class="frame-label"><span class="num">W1</span><span class="role wali">WALI</span>Pengumuman List<span class="desc">Chip anak + chip acara</span></div>
+  <div class="phone">
+    <div class="header parent">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">DARI SEKOLAH<span class="dot-live"></span></div>
+          <div class="h-title">Pengumuman</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></div>
+      </div>
+      <div class="chip-strip">
+        <div class="chip on">Semua anak</div>
+        <div class="chip">Aisha · IX‑B</div>
+        <div class="chip">Naufal · VI‑A</div>
+        <div class="chip">Punya Acara</div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-col"><div class="kpi-num">36</div><div class="kpi-label">Total</div></div>
+      <div class="kpi-col"><div class="kpi-num violet">2</div><div class="kpi-label">Belum Dibaca</div></div>
+      <div class="kpi-col"><div class="kpi-num amber">3</div><div class="kpi-label">Acara Mendatang</div></div>
+    </div>
+    <div class="body">
+
+      <div class="date-divider">
+        <div class="pill">HARI INI</div>
+        <span class="ev-dot"></span>
+        <div class="line"></div>
+      </div>
+
+      <div class="pe-card urgent has-event">
+        <span class="accent"></span>
+        <div class="row1">
+          <span class="pe-type-pill peringatan">Peringatan</span>
+          <span class="aud-chip" style="background: var(--violet-50); color: var(--violet-700);">Aisha · IX-B</span>
+          <span class="pe-time">2 jam lalu</span>
+        </div>
+        <div class="pe-title">Pengambilan Rapor — Mohon hadir 09:00</div>
+        <div class="event-block urgent">
+          <div class="event-date">
+            <div class="m">JUN</div>
+            <div class="d">14</div>
+            <div class="dow">Sab</div>
+          </div>
+          <div class="event-meta">
+            <div class="event-row1">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              25 HARI LAGI · 09:00
+            </div>
+            <div class="event-row2">Ruang Kelas IX‑B</div>
+          </div>
+          <div class="event-cta">Pengingat</div>
+        </div>
+      </div>
+
+      <div class="pe-card has-event">
+        <span class="accent"></span>
+        <div class="row1">
+          <span class="pe-type-pill pengumuman">Pengumuman</span>
+          <span class="aud-chip" style="background: var(--violet-50); color: var(--violet-700);">Naufal · VI-A</span>
+          <span class="pe-time">kemarin</span>
+        </div>
+        <div class="pe-title">Field Trip Museum Geologi — kelas VI</div>
+        <div class="pe-body">Berangkat 06:30 dari sekolah, pulang 16:00. Bawa bekal dan jaket.</div>
+        <div class="event-block">
+          <div class="event-date">
+            <div class="m">MEI</div>
+            <div class="d">29</div>
+            <div class="dow">Jum</div>
+          </div>
+          <div class="event-meta">
+            <div class="event-row1">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              9 HARI LAGI · 06:30
+            </div>
+            <div class="event-row2">Museum Geologi · biaya Rp 75.000</div>
+          </div>
+          <div class="event-cta">Pengingat</div>
+        </div>
+      </div>
+
+      <div class="date-divider">
+        <div class="pill">PEKAN LALU</div>
+        <div class="line"></div>
+      </div>
+
+      <div class="pe-card">
+        <span class="accent"></span>
+        <div class="row1">
+          <span class="pe-type-pill pengumuman">Pengumuman</span>
+          <span class="aud-chip" style="background: var(--slate-100);">Semua</span>
+          <span class="pe-time">Senin</span>
+        </div>
+        <div class="pe-title">Penyesuaian SPP semester ganjil 2026/2027</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ──────────── PARENT FRAME B ──────────── -->
+<div class="frame">
+  <div class="frame-label"><span class="num">W2</span><span class="role wali">WALI</span>Detail<span class="desc">Pengingat pribadi (10 mnt, 1 jam, dst)</span></div>
+  <div class="phone">
+    <div class="header parent">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">DETAIL PENGUMUMAN</div>
+          <div class="h-title">Pengambilan Rapor</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/></svg></div>
+      </div>
+    </div>
+    <div style="flex: 1; overflow-y: auto;">
+      <div class="detail-hero">
+        <div style="display:flex; align-items:center; gap:6px; font-size: 10px; color: var(--slate-500); font-weight: 800; text-transform: uppercase;">
+          <span class="pe-type-pill peringatan" style="padding: 2px 6px; font-size: 9px;">Peringatan</span>
+          <span class="aud-chip" style="background: var(--violet-50); color: var(--violet-700); font-size: 9px;">Aisha · IX‑B</span>
+        </div>
+        <h3 style="margin: 6px 0 6px; font-size: 16px; font-weight: 800;">Pengambilan Rapor Semester Genap</h3>
+        <p style="margin: 0; font-size: 12.5px; color: var(--slate-700); line-height: 1.55;">Mohon orang tua / wali hadir untuk pengambilan rapor. Apabila berhalangan, dapat menitipkan ke perwakilan dengan surat kuasa.</p>
+      </div>
+
+      <div class="detail-event urgent">
+        <div class="top">ACARA · DALAM 25 HARI</div>
+        <div class="when">Sabtu, 14 Juni 2026 — 09:00</div>
+        <div class="countdown">
+          <div class="cd-cell"><div class="n">25</div><div class="l">HARI</div></div>
+          <div class="cd-cell"><div class="n">06</div><div class="l">JAM</div></div>
+          <div class="cd-cell"><div class="n">40</div><div class="l">MENIT</div></div>
+          <div class="cd-cell"><div class="n">02</div><div class="l">DETIK</div></div>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <div class="btn outline">+ Kalender ponsel</div>
+        <div class="btn primary" style="background: var(--violet-600);">Atur Pengingat</div>
+      </div>
+
+      <div class="detail-card">
+        <h4>PENGINGAT KAMU</h4>
+        <ul class="rmd-list">
+          <li class="sent">
+            <div class="ic2"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+            <div class="t">1 hari sebelum</div>
+            <div class="b">Dari sekolah · 13 Jun 09:00</div>
+          </li>
+          <li>
+            <div class="ic2"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+            <div class="t">3 hari sebelum</div>
+            <div class="b">+ Tambah</div>
+          </li>
+          <li>
+            <div class="ic2"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+            <div class="t">Pengingat kustom</div>
+            <div class="b">+</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="detail-card">
+        <h4>LOKASI &amp; KONTAK</h4>
+        <div class="row"><span class="k">Tempat</span><span class="v">Ruang Kelas IX‑B</span></div>
+        <div class="row"><span class="k">Wali kelas</span><span class="v">Bu Anita · WA 0812-xxxx-9821</span></div>
+      </div>
+
+      <div style="height: 24px;"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<h2>Pengingat / Peringatan otomatis · Push &amp; in‑app</h2>
+<div class="grid">
+
+<!-- ──────────── NOTIF FRAME ──────────── -->
+<div class="frame">
+  <div class="frame-label"><span class="num">N1</span>Push Notification<span class="desc">Yang sampai ke notif tray ponsel</span></div>
+  <div class="phone" style="aspect-ratio: 380 / 480;">
+    <div style="background: linear-gradient(180deg, #1e293b 0%, #334155 100%); flex: 1; padding: 14px;">
+      <div class="notif" style="margin: 0 0 10px;">
+        <div class="nic"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+        <div style="flex: 1; min-width: 0;">
+          <div class="ntop">
+            <span>1 JAM LAGI</span>
+            <span class="src">· KamilEdu</span>
+            <span class="when">13:00</span>
+          </div>
+          <div class="nt">Rapat Persiapan UTS dimulai 14:00</div>
+          <div class="nb">Aula Lt. 2 · Wajib hadir · Bawa data nilai harian masing-masing.</div>
+        </div>
+      </div>
+
+      <div class="notif" style="margin: 0 0 10px;">
+        <div class="nic" style="background: var(--red-50); color: var(--red-700);"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+        <div style="flex: 1; min-width: 0;">
+          <div class="ntop" style="color: var(--red-700);">
+            <span>SEKARANG</span>
+            <span class="src">· KamilEdu</span>
+            <span class="when">07:30</span>
+          </div>
+          <div class="nt">Tryout SNBT dimulai sekarang</div>
+          <div class="nb">Lab Komputer · jangan lupa kartu peserta &amp; pensil 2B.</div>
+        </div>
+      </div>
+
+      <div class="notif" style="margin: 0;">
+        <div class="nic"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div>
+        <div style="flex: 1; min-width: 0;">
+          <div class="ntop">
+            <span>1 HARI LAGI</span>
+            <span class="src">· KamilEdu (Aisha)</span>
+            <span class="when">kmrn</span>
+          </div>
+          <div class="nt">Pengambilan rapor Aisha besok 09:00</div>
+          <div class="nb">Ruang Kelas IX‑B · Bawa kartu wali. Tap untuk lihat lokasi.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ──────────── INBOX BANNER FRAME ──────────── -->
+<div class="frame">
+  <div class="frame-label"><span class="num">N2</span>In‑app banner<span class="desc">Muncul di Beranda &amp; di Pengumuman list</span></div>
+  <div class="phone" style="aspect-ratio: 380 / 480;">
+    <div style="flex: 1; background: var(--slate-50); padding: 14px;">
+
+      <div class="notif" style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); border: 1px solid #FCA5A5;">
+        <div class="nic" style="background: white; color: var(--red-700);"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+        <div style="flex: 1;">
+          <div class="ntop" style="color: var(--red-700);">
+            <span>BERLANGSUNG SEKARANG</span>
+            <span class="when">07:30</span>
+          </div>
+          <div class="nt">Tryout SNBT dimulai sekarang</div>
+          <div class="nf">
+            <div class="nbtn primary" style="background: var(--red-600);">Lihat detail</div>
+            <div class="nbtn">Tutup</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notif" style="margin-top: 10px; background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border: 1px solid var(--amber-100);">
+        <div class="nic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <div style="flex: 1;">
+          <div class="ntop">
+            <span>BESOK · 14:00</span>
+            <span class="when">7 jam lagi</span>
+          </div>
+          <div class="nt">Rapat Persiapan UTS — Wali Kelas</div>
+          <div class="nb">Aula Lt. 2 · Bawa data nilai harian.</div>
+          <div class="nf">
+            <div class="nbtn primary">Buka detail</div>
+            <div class="nbtn">+ Kalender</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notif" style="margin-top: 10px;">
+        <div class="nic" style="background: var(--blue-50); color: var(--blue-700);"><svg viewBox="0 0 24 24"><path d="M3 11v2a2 2 0 002 2h1l4 4V5L6 9H5a2 2 0 00-2 2z"/></svg></div>
+        <div style="flex: 1;">
+          <div class="ntop" style="color: var(--blue-700);">
+            <span>PENGUMUMAN BARU</span>
+            <span class="when">2 mnt</span>
+          </div>
+          <div class="nt">Pengumpulan RPP Bulan Mei — paling lambat 31 Mei</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</div>
+
+<h2>Schema &amp; endpoint diff</h2>
+<div class="schema">
+  <h3>1 · Migration baru</h3>
+  <p>Tambah ke tabel <code>announcements</code>:</p>
+  <ul>
+    <li><span class="add">+ event_at</span> <code>timestamp NULL</code> — kalau set, pengumuman berubah jadi acara.</li>
+    <li><span class="add">+ event_end_at</span> <code>timestamp NULL</code> — durasi opsional (untuk all‑day & rentang).</li>
+    <li><span class="add">+ event_has_time</span> <code>boolean DEFAULT true</code> — jam=opsional, jadi kalau false UI tampilkan "sepanjang hari".</li>
+    <li><span class="add">+ event_location</span> <code>varchar(160) NULL</code> — text bebas (tidak terikat ruangan).</li>
+    <li><span class="add">+ reminder_offsets</span> <code>jsonb NULL</code> — array menit sebelum (mis. <code>[1440, 60, 0]</code> = 1 hari, 1 jam, saat mulai).</li>
+    <li><span class="keep">~ pinned_until</span> <code>DEFAULT (event_at)</code> via update path — sematan auto-lepas hari kejadian.</li>
+  </ul>
+  <p style="margin-top: 10px;">Tabel pendamping <code>announcement_reminders</code> (queue audit):</p>
+  <ul>
+    <li><span class="add">+ id</span> <code>uuid</code></li>
+    <li><span class="add">+ announcement_id</span> <code>uuid → announcements.id</code></li>
+    <li><span class="add">+ offset_minutes</span> <code>int</code></li>
+    <li><span class="add">+ fire_at</span> <code>timestamp</code> — index pada <code>(fire_at, status)</code></li>
+    <li><span class="add">+ status</span> <code>enum('pending','sent','failed','skipped')</code></li>
+    <li><span class="add">+ recipients_total</span> <code>int</code></li>
+    <li><span class="add">+ recipients_delivered</span> <code>int</code></li>
+  </ul>
+
+  <h3>2 · Endpoint</h3>
+  <div class="endpoint">
+    <span class="verb post">POST</span>
+    <span class="ep">/announcements</span>
+    <span class="ep-desc">terima <code>event_at</code>, <code>event_has_time</code>, <code>event_location</code>, <code>reminder_offsets[]</code></span>
+  </div>
+  <div class="endpoint">
+    <span class="verb patch">PATCH</span>
+    <span class="ep">/announcements/{id}</span>
+    <span class="ep-desc">ubah Acara setelah publish — re-queue reminder otomatis</span>
+  </div>
+  <div class="endpoint">
+    <span class="verb get">GET</span>
+    <span class="ep">/announcements?has_event=1&amp;from=YYYY-MM-DD&amp;to=YYYY-MM-DD</span>
+    <span class="ep-desc">untuk kalender admin</span>
+  </div>
+  <div class="endpoint">
+    <span class="verb get">GET</span>
+    <span class="ep">/announcements/upcoming-events</span>
+    <span class="ep-desc">3 acara terdekat — dipakai dashboard hero strip semua role</span>
+  </div>
+  <div class="endpoint">
+    <span class="verb post">POST</span>
+    <span class="ep">/announcements/{id}/personal-reminder</span>
+    <span class="ep-desc">user (wali/guru) tambah reminder lokal · offset_minutes</span>
+  </div>
+
+  <h3>3 · Worker / scheduler</h3>
+  <ul>
+    <li>Job <code>DispatchAnnouncementRemindersJob</code> jalan tiap <b>1 menit</b>, pick semua <code>announcement_reminders</code> dengan <code>fire_at &le; now()</code> &amp; <code>status='pending'</code>.</li>
+    <li>Per row → render template push + insert ke <code>notifications</code> tabel untuk audiens yang sudah diresolusi waktu publish.</li>
+    <li>Setelah dispatch → status = <code>sent</code>; failure → <code>failed</code> dengan retry max 3 dari worker yang sama.</li>
+    <li>Indeks gabungan <code>(fire_at, status)</code> bikin scan tetap O(reminders due) walau tabel 100k+.</li>
+  </ul>
+
+  <h3>4 · Cron snapshot harian</h3>
+  <ul>
+    <li>00:05 — auto-lepas <code>is_pinned</code> untuk pengumuman yang <code>event_at &lt; today</code>.</li>
+    <li>00:10 — kirim "daily digest" ke wali dgn ≥1 acara hari ini (opsional di Phase 2).</li>
+  </ul>
+</div>
+
+<h2>Bug fix paralel — Waktu Pembelajaran (Tambah Sesi)</h2>
+<div class="callout">
+  <h3>Jam tidak berubah setelah dipilih · root cause</h3>
+  <p>
+    Di <code>session_time_picker_mixin.dart:18–24</code>, callback <code>setModalState(() { startTime = picked; })</code>
+    hanya mengubah <b>parameter fungsi lokal</b> <code>buildTimeFields</code>. Variabel asli ada di
+    scope <code>_buildAddEditSessionSheet</code> dan tidak ikut termutasi.
+    Jadi setiap kali <code>StatefulBuilder</code> rebuild, mixin dipanggil ulang dengan nilai <b>lama</b>
+    dari scope luar, dan UI tampak tidak berubah.
+  </p>
+  <p>
+    <b>Perbaikan:</b> hoist <code>startTime</code> / <code>endTime</code> ke dalam scope yang sama
+    dengan <code>setModalState</code> (di dalam <code>_buildAddEditSessionSheet</code>, sebelum
+    <code>return StatefulBuilder(...)</code>), dan pindahkan closure <code>pickTime</code> ke
+    dalam <code>builder:</code> sehingga mutasi setelah <code>setModalState</code> dibaca lagi
+    di build berikutnya. Tidak perlu ubah skema; murni perbaikan state-management Flutter.
+  </p>
+</div>
+
+<h2>Catatan implementasi</h2>
+<div class="schema">
+  <ul>
+    <li><b>Backward compatible</b> — pengumuman tanpa <code>event_at</code> tetap render seperti sekarang. Tidak ada perubahan yang memutus existing data.</li>
+    <li><b>Per-role reach</b> — reminder dispatcher pakai <code>audience_matrix</code> existing untuk resolve daftar penerima sekali (saat publish/ubah), simpan jumlah ke <code>recipients_total</code> agar audit cepat.</li>
+    <li><b>Add-to-calendar</b> — di guru &amp; wali, button generate file <code>.ics</code> via <code>file_picker</code>/<code>share_plus</code> — tidak perlu integrasi kalender native.</li>
+    <li><b>Phase 1 vs Phase 2</b> — Phase 1: schema + compose + dispatcher + list/detail di 3 role. Phase 2: kalender admin penuh, RSVP hadir (guru), digest harian (wali), reminder personal kustom.</li>
+  </ul>
+</div>
+
+</body>
+</html>

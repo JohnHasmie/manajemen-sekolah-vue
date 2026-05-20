@@ -2,6 +2,7 @@ import 'package:manajemensekolah/core/constants/api_endpoints.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/cache_invalidation_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/features/finance/domain/models/bill_group.dart';
 
 /// Dedicated service for all Finance/Billing (Tagihan) API operations.
 /// Extracted from the monolithic ApiService to improve modularity.
@@ -57,6 +58,45 @@ class FinanceService {
         'has_prev_page': false,
       },
     };
+  }
+
+  /// Fetch the aggregated Tagihan list — one [BillGroup] per
+  /// (jenis × kelas × tahun) bucket. Used by the admin Operasional
+  /// Keuangan hub's Tagihan tab; the per-student detail is sourced
+  /// from [getBillsPaginated] with payment_type_id + class_id
+  /// filters once the admin taps a bucket.
+  ///
+  /// Filters are forwarded as-is to the backend — see
+  /// `FinanceRepository::getBillGroups` for the supported keys.
+  static Future<List<BillGroup>> getBillGroups({
+    String? academicYearId,
+    String? status,
+    String? paymentTypeId,
+    String? month,
+  }) async {
+    final params = <String, dynamic>{};
+    if (academicYearId != null && academicYearId.isNotEmpty) {
+      params['academic_year_id'] = academicYearId;
+    }
+    if (status != null && status.isNotEmpty) params['status'] = status;
+    if (paymentTypeId != null && paymentTypeId.isNotEmpty) {
+      params['payment_type_id'] = paymentTypeId;
+    }
+    if (month != null && month.isNotEmpty) params['month'] = month;
+
+    final response = await dioClient.get(
+      ApiEndpoints.financeBillGroups,
+      queryParameters: params,
+    );
+
+    final body = response.data;
+    final rows = body is Map<String, dynamic>
+        ? (body['data'] is List ? body['data'] as List : const [])
+        : (body is List ? body : const []);
+    return rows
+        .whereType<Map>()
+        .map((m) => BillGroup.fromJson(Map<String, dynamic>.from(m)))
+        .toList();
   }
 
   static Future<void> markBillRead({

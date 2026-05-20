@@ -46,37 +46,6 @@ void main() {
       expect(find.textContaining('17 Agustus'), findsOneWidget);
     });
 
-    testWidgets('shows edit and delete icon buttons', (tester) async {
-      await tester.pumpWidget(buildSubject());
-
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
-    });
-
-    testWidgets('fires onEdit callback when edit button is tapped', (
-      tester,
-    ) async {
-      var edited = false;
-      await tester.pumpWidget(buildSubject(onEdit: () => edited = true));
-
-      await tester.tap(find.byIcon(Icons.edit_outlined));
-      await tester.pump();
-
-      expect(edited, isTrue);
-    });
-
-    testWidgets('fires onDelete callback when delete button is tapped', (
-      tester,
-    ) async {
-      var deleted = false;
-      await tester.pumpWidget(buildSubject(onDelete: () => deleted = true));
-
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      await tester.pump();
-
-      expect(deleted, isTrue);
-    });
-
     testWidgets('shows important label chip when priority is "penting"', (
       tester,
     ) async {

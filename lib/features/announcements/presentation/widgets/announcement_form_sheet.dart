@@ -63,7 +63,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet>
   bool _isSaving = false;
 
   @override
-  bool get _isEdit => widget.announcementData != null;
+  bool get isEdit => widget.announcementData != null;
 
   @override
   void initState() {
@@ -199,7 +199,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet>
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: AppBottomSheet(
-        title: _isEdit
+        title: isEdit
             ? lang.getTranslatedText({
                 'en': 'Edit Announcement',
                 'id': 'Edit Pengumuman',
@@ -208,7 +208,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet>
                 'en': 'Add Announcement',
                 'id': 'Tambah Pengumuman',
               }),
-        subtitle: _isEdit
+        subtitle: isEdit
             ? lang.getTranslatedText({
                 'en': 'Update announcement information',
                 'id': 'Perbarui informasi pengumuman',
@@ -217,7 +217,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet>
                 'en': 'Fill in announcement details',
                 'id': 'Isi detail pengumuman',
               }),
-        icon: _isEdit ? Icons.edit_rounded : Icons.announcement_rounded,
+        icon: isEdit ? Icons.edit_rounded : Icons.announcement_rounded,
         primaryColor: primaryColor,
         maxHeightFactor: 0.92,
         contentPadding: const EdgeInsets.all(AppSpacing.xl),
@@ -225,7 +225,7 @@ class _AnnouncementFormSheetState extends State<AnnouncementFormSheet>
         footer: BottomSheetFooter(
           primaryLabel: _isSaving
               ? lang.getTranslatedText({'en': 'Saving…', 'id': 'Menyimpan…'})
-              : (_isEdit
+              : (isEdit
                     ? lang.getTranslatedText({'en': 'Update', 'id': 'Perbarui'})
                     : lang.getTranslatedText({'en': 'Save', 'id': 'Simpan'})),
           secondaryLabel: lang.getTranslatedText({

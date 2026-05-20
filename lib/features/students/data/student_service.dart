@@ -198,8 +198,14 @@ class ApiStudentService {
 
   /// Updates a student record and clears cache.
   Future<void> updateStudent(String id, Map<String, dynamic> data) async {
-    await dioClient.put('/student/$id', data: data);
-    await _clearStudentCache();
+    AppLogger.debug('student', 'Updating student ID: $id with data: $data');
+    try {
+      await dioClient.put('/student/$id', data: data);
+      await _clearStudentCache();
+    } catch (e) {
+      AppLogger.error('student', 'Update student failed for ID $id: $e');
+      rethrow;
+    }
   }
 
   /// Deletes a student and clears cache.

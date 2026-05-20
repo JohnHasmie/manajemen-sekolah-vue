@@ -111,11 +111,15 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
     ref.watch(languageRiverpod);
     final bottomPad = MediaQuery.of(context).viewPadding.bottom;
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
       // Clip so the navy IdentityHero gradient (admin variant)
       // honours the rounded top corners.
       clipBehavior: Clip.antiAlias,
@@ -257,6 +261,7 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
             ),
           ],
         ),
+      ),
       ),
     );
   }

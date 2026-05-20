@@ -6,6 +6,7 @@ import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_event_banner.dart';
 
 /// Mixin for content state UI (loading, error, empty, list).
 mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
@@ -149,27 +150,39 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
     // ScrollableScrollPhysics let this inner list size to its
     // content and defer scrolling to the outer list — and the
     // RefreshIndicator now lives one level up in the screen.
-    return ListView.builder(
-      key: listKey,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(top: 8, bottom: 16),
-      itemCount: grouped.length,
-      itemBuilder: (context, index) {
-        final entry = grouped[index];
-        if (entry is _MonthSectionHeader) {
-          return _buildMonthHeader(entry.label, entry.count);
-        }
-        final item = (entry as _MonthAnnouncementItem).announcement;
-        return Builder(
-          builder: (context) {
-            onItemVisible(item);
-            // Original list-index isn't preserved across grouping; pass 0
-            // since downstream usage is cosmetic (animation stagger only).
-            return buildAnnouncementCard(item, 0, showAnnouncementDetail);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Acara upcoming banner — surfaces "BESOK 14:00" / "BERLANGSUNG"
+        // cards above the dated list. Auto-refresh + dismissable.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+          child: AnnouncementEventBanner(onOpen: showAnnouncementDetail),
+        ),
+        ListView.builder(
+          key: listKey,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(top: 8, bottom: 16),
+          itemCount: grouped.length,
+          itemBuilder: (context, index) {
+            final entry = grouped[index];
+            if (entry is _MonthSectionHeader) {
+              return _buildMonthHeader(entry.label, entry.count);
+            }
+            final item = (entry as _MonthAnnouncementItem).announcement;
+            return Builder(
+              builder: (context) {
+                onItemVisible(item);
+                // Original list-index isn't preserved across grouping; pass 0
+                // since downstream usage is cosmetic (animation stagger only).
+                return buildAnnouncementCard(item, 0, showAnnouncementDetail);
+              },
+            );
           },
-        );
-      },
+        ),
+      ],
     );
   }
 

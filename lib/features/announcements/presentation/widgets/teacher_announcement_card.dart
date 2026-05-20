@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
+import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_event_block.dart';
 import 'package:intl/intl.dart';
 
 /// A clean, minimal announcement card for the teacher list view.
@@ -21,6 +23,7 @@ class TeacherAnnouncementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Announcement.fromJson(announcementData);
+    final event = AnnouncementEvent.fromJson(announcementData);
     final isImportant = [
       'penting',
       'important',
@@ -139,6 +142,12 @@ class TeacherAnnouncementCard extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          // Event block (Pengumuman+Acara) — only when
+                          // the announcement carries an event_at.
+                          if (event != null) ...[
+                            const SizedBox(height: 8),
+                            AnnouncementEventBlock(event: event, dense: true),
+                          ],
                           const SizedBox(height: 8),
 
                           // Meta row: date · target

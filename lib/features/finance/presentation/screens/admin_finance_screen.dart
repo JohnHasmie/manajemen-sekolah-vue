@@ -17,6 +17,7 @@ import 'package:manajemensekolah/features/finance/presentation/widgets/finance_n
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_header.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_kpi_block.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_tab_content.dart';
+import 'package:manajemensekolah/features/finance/domain/models/bill_group.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_fab.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/jenis_filter_pickers.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/month_filter_sheet.dart';
@@ -77,6 +78,11 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   // Core state
   List<dynamic> _paymentTypeList = [];
   List<dynamic> _billList = [];
+  /// Aggregated Tagihan rows from `/finance/bill-groups`. The hub no
+  /// longer downloads every individual bill just to group on-device
+  /// — this list is what feeds the Tagihan tab. The detail screen
+  /// fetches its own per-student bills on tap.
+  List<BillGroup> _billGroups = [];
   List<dynamic> _pendingPaymentList = [];
   int _totalPendingPayments = 0;
   List<dynamic> _classList = [];
@@ -129,6 +135,45 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
     super.initState();
     _setupScrollListeners();
     loadData();
+    _loadBillGroups();
+  }
+
+  /// Pull-to-refresh handler for the Tagihan tab — refreshes the
+  /// legacy bill list (still feeds the bill update path + KPI overdue
+  /// badge) and the new aggregated /finance/bill-groups response in
+  /// parallel. The two requests are independent on the server side
+  /// so running them concurrently doesn't add wall-clock latency.
+  Future<void> _refreshAll() async {
+    await Future.wait([loadData(), _loadBillGroups()]);
+  }
+
+  /// Fetch the aggregated Tagihan rows for the hub. Independent of the
+  /// existing bill-list pipeline (which still feeds the bill update
+  /// path + KPI overdue badge) so a slow groups fetch doesn't block
+  /// the rest of the screen from rendering. Re-run on pull-to-refresh
+  /// alongside `loadData`, and any time the academic-year / jenis /
+  /// bulan filters change so the response is already narrowed by the
+  /// time it reaches TagihanTab.
+  Future<void> _loadBillGroups() async {
+    try {
+      final ayId = ref
+          .read(academicYearRiverpod)
+          .selectedAcademicYear?['id']
+          ?.toString();
+      final groups = await FinanceService.getBillGroups(
+        academicYearId: ayId,
+        paymentTypeId: _tagihanSelectedJenisIds.length == 1
+            ? _tagihanSelectedJenisIds.first
+            : null,
+        month: _tagihanSelectedMonth,
+      );
+      if (!mounted) return;
+      setState(() => _billGroups = groups);
+    } catch (_) {
+      // Swallowed — TagihanTab renders an empty-state when the list
+      // is empty, which is correct behaviour while the fetch fails
+      // or returns no rows.
+    }
   }
 
   void _setupScrollListeners() {
@@ -466,12 +511,18 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
               child: FinanceTabContent(
                 currentTabIndex: _currentTabIndex,
                 pendingPaymentList: _pendingPaymentList,
-                billList: _billList,
+                billGroups: _billGroups,
+                academicYearId: ayId,
                 languageProvider: languageProvider,
+                // Pull-to-refresh on the Tagihan tab now refreshes
+                // both the legacy bill list (still feeds the bill
+                // update path + KPI overdue badge) and the new
+                // aggregated groups in parallel.
+
                 primaryColor: getPrimaryColor(),
                 isReadOnly: isReadOnly,
                 formatCurrency: formatCurrency,
-                onRefresh: loadData,
+                onRefresh: _refreshAll,
                 filteredPaymentTypes: filteredPaymentTypes,
                 searchController: _searchController,
                 hasActiveFilter: _hasActiveFilter,
@@ -603,6 +654,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
     );
     if (!mounted || result == null) return;
     setState(() => _tagihanSelectedMonth = result.month);
+    _loadBillGroups();
   }
 
   /// Opens the Tagihan filter sheet with the current jenis + month
@@ -633,6 +685,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
       _tagihanSelectedJenisIds = result.selectedJenisIds;
       _tagihanSelectedMonth = result.selectedMonth;
     });
+    // Re-fetch groups so the server-side filter narrows the new list.
+    _loadBillGroups();
   }
 
   /// Tagih button handler — opens [showTagihReminderSheet] for the

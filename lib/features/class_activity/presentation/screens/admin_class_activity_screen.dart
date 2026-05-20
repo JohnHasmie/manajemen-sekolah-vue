@@ -343,6 +343,11 @@ class _AdminClassActivityScreenState
   Widget _buildFilterChipStrip(LanguageProvider lang) {
     final chips = <BrandFilterChip>[
       BrandFilterChip(
+        label: lang.getTranslatedText(const {'en': 'Period', 'id': 'Periode'}),
+        value: _selectedPeriod.labelId,
+        onTap: _openFilterSheet,
+      ),
+      BrandFilterChip(
         label: lang.getTranslatedText(const {'en': 'Class', 'id': 'Kelas'}),
         value: _selectedClassName,
         onTap: _openFilterSheet,
@@ -360,13 +365,6 @@ class _AdminClassActivityScreenState
       BrandFilterChip(
         label: lang.getTranslatedText(const {'en': 'Type', 'id': 'Tipe'}),
         value: _selectedType?.labelId,
-        onTap: _openFilterSheet,
-      ),
-      BrandFilterChip(
-        label: lang.getTranslatedText(const {'en': 'Period', 'id': 'Periode'}),
-        value: _selectedPeriod != AdminActivityPeriod.sevenDays
-            ? _selectedPeriod.labelId
-            : null,
         onTap: _openFilterSheet,
       ),
     ];

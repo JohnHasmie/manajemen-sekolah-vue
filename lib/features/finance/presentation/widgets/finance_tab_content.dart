@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/features/finance/domain/models/bill_group.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_payment_types_tab.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_verification_tab.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/tagihan_tab.dart';
@@ -21,7 +22,15 @@ import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 class FinanceTabContent extends StatelessWidget {
   final int currentTabIndex;
   final List<dynamic> pendingPaymentList;
-  final List<dynamic> billList;
+  /// Aggregated Tagihan rows from `/finance/bill-groups`. Replaces
+  /// the old per-bill `billList` that the hub used to download and
+  /// group client-side — the per-student detail screen now fetches
+  /// its own bills on demand via the bucket's payment_type_id +
+  /// class_id filter.
+  final List<BillGroup> billGroups;
+  /// Active academic year id — forwarded to the Tagihan tab so the
+  /// detail-screen fetch can scope to the same AY as the hub.
+  final String? academicYearId;
   final LanguageProvider languageProvider;
   final Color primaryColor;
   final bool isReadOnly;
@@ -55,7 +64,8 @@ class FinanceTabContent extends StatelessWidget {
   const FinanceTabContent({
     required this.currentTabIndex,
     required this.pendingPaymentList,
-    required this.billList,
+    required this.billGroups,
+    required this.academicYearId,
     required this.languageProvider,
     required this.primaryColor,
     required this.isReadOnly,
@@ -90,14 +100,13 @@ class FinanceTabContent extends StatelessWidget {
       index: currentTabIndex.clamp(0, 2),
       children: [
         TagihanTab(
-          billList: billList,
+          billGroups: billGroups,
           activeFilterKey: tagihanFilterKey,
           onTagih: onTagihBill,
           onTap: onTapBill,
           onClassReportTap: onClassReportTap,
           onRefresh: onRefresh,
-          selectedJenisIds: tagihanSelectedJenisIds,
-          selectedMonth: tagihanSelectedMonth,
+          academicYearId: academicYearId,
         ),
         FinanceVerificationTab(
           pendingPaymentList: pendingPaymentList,

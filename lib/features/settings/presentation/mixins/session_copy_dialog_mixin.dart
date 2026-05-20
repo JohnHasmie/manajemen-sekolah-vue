@@ -71,10 +71,7 @@ mixin SessionCopyDialogMixin on State<DaySessionManagementSheet> {
         '$count Sesi',
         style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
       ),
-      trailing: Icon(
-        Icons.chevron_right_rounded,
-        color: ColorUtils.slate400,
-      ),
+      trailing: Icon(Icons.chevron_right_rounded, color: ColorUtils.slate400),
       onTap: () {
         AppNavigator.pop(context);
         copySchedule(d);

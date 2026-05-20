@@ -1,70 +1,66 @@
 // Detail screen for a single Tagihan group (one payment type × one
-// class). Opened when the admin taps a grouped row in the Tagihan tab
-// of the Operasional Keuangan hub — drills into per-student bills so
-// the admin can see who's paid, who's overdue, and trigger reminders
-// per row instead of in bulk.
+// class × one academic year). Opened when the admin taps a grouped
+// row in the Tagihan tab — drills into the per-student bills inside
+// the bucket so the admin can see who's paid, who's overdue, and
+// trigger reminders per row instead of in bulk.
 //
-// All data flows IN via constructor params; the screen owns no remote
-// fetch logic of its own. The parent admin_finance_screen already
-// loads the full bill list once and filters down to this group's
-// subset before pushing this route, which keeps the detail view in
-// sync with whatever the hub is currently showing (status / bulan /
-// jenis filters from the page header all narrow the upstream list
-// before the group is even formed).
+// Data flow: the hub no longer carries every individual bill in
+// memory (it only fetches aggregated /finance/bill-groups). This
+// screen fetches its own per-student bill list on init by calling
+// /bills with payment_type_id + class_id + academic_year_id
+// filters. Pull-to-refresh re-runs the same fetch.
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_finance_components.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
+import 'package:manajemensekolah/features/finance/data/finance_service.dart';
 
-class AdminBillGroupDetailScreen extends StatelessWidget {
-  /// Combined `<jenis> · <kelas>` label — same string the Tagihan tab
-  /// shows on the grouped row, kept in sync so the user lands on a
-  /// header that matches the card they tapped.
+class AdminBillGroupDetailScreen extends StatefulWidget {
+  /// Combined `<jenis> · <kelas> (<tahun>)` label — same string the
+  /// Tagihan tab shows on the grouped row, kept in sync so the user
+  /// lands on a header that matches the card they tapped.
   final String title;
 
-  /// The bills that make up this group. All share the same
-  /// (payment_type_id, class_id) — see TagihanTab._groupBills for the
-  /// keying rule.
-  final List<Map<String, dynamic>> bills;
+  /// Bucket key fields — used to scope the /bills fetch this screen
+  /// runs on init. All three together uniquely identify the bucket.
+  final String paymentTypeId;
+  final String classId;
+  final String? academicYearId;
 
-  /// Optional callbacks forwarded to each [InvoiceRow]. `onTagih`
-  /// fires the reminder flow for a single bill (same handler the
-  /// hub uses); `onTapBill` opens a bill-level detail elsewhere if
-  /// the caller wants one. Both are nullable so the screen still
-  /// renders read-only views.
+  /// Optional callbacks forwarded to each per-bill row. `onTagih`
+  /// fires the reminder flow for a single bill (same handler the hub
+  /// uses); `onTapBill` opens a bill-level detail elsewhere if the
+  /// caller wants one.
   final void Function(Map<String, dynamic> bill)? onTagih;
   final void Function(Map<String, dynamic> bill)? onTapBill;
-
-  /// Pull-to-refresh — re-runs the parent's bill fetch. Reuses the
-  /// hub's existing refresh callback so the data the group filters
-  /// from stays in sync.
-  final Future<void> Function() onRefresh;
 
   const AdminBillGroupDetailScreen({
     super.key,
     required this.title,
-    required this.bills,
-    required this.onRefresh,
+    required this.paymentTypeId,
+    required this.classId,
+    this.academicYearId,
     this.onTagih,
     this.onTapBill,
   });
 
   /// Convenience push so call sites don't have to wire the route
-  /// themselves. Mirrors the pattern used by other admin detail
-  /// sheets/screens in this app (`*.show(context: ..., ...)` static
-  /// helpers).
+  /// themselves.
   static Future<void> show({
     required BuildContext context,
     required String title,
-    required List<Map<String, dynamic>> bills,
-    required Future<void> Function() onRefresh,
+    required String paymentTypeId,
+    required String classId,
+    String? academicYearId,
     void Function(Map<String, dynamic> bill)? onTagih,
     void Function(Map<String, dynamic> bill)? onTapBill,
   }) {
@@ -72,8 +68,9 @@ class AdminBillGroupDetailScreen extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => AdminBillGroupDetailScreen(
           title: title,
-          bills: bills,
-          onRefresh: onRefresh,
+          paymentTypeId: paymentTypeId,
+          classId: classId,
+          academicYearId: academicYearId,
           onTagih: onTagih,
           onTapBill: onTapBill,
         ),
@@ -82,20 +79,79 @@ class AdminBillGroupDetailScreen extends StatelessWidget {
   }
 
   @override
+  State<AdminBillGroupDetailScreen> createState() =>
+      _AdminBillGroupDetailScreenState();
+}
+
+class _AdminBillGroupDetailScreenState
+    extends State<AdminBillGroupDetailScreen> {
+  /// Per-student bills inside the bucket. Empty during the initial
+  /// load and after a failure.
+  List<Map<String, dynamic>> _bills = const [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBills();
+  }
+
+  Future<void> _loadBills() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      // Pull every bill in the bucket — typical school has at most
+      // a few dozen students per (jenis × kelas), so a single page
+      // of 200 is more than enough. paginate=false would be cleaner
+      // but the existing endpoint always paginates.
+      final response = await FinanceService.getBillsPaginated(
+        paymentTypeId: widget.paymentTypeId,
+        classId: widget.classId,
+        academicYearId: widget.academicYearId,
+        limit: 200,
+      );
+      final raw = response['data'];
+      final list = raw is List ? raw : const [];
+      if (!mounted) return;
+      setState(() {
+        _bills = list
+            .whereType<Map>()
+            .map((m) => Map<String, dynamic>.from(m))
+            .toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      AppLogger.error('bill_group_detail', e);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = ErrorUtils.getFriendlyMessage(e);
+      });
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    await _loadBills();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final stats = _GroupStats.from(bills);
+    final stats = _GroupStats.from(_bills);
     final adminColor = ColorUtils.getRoleColor('admin');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       body: BrandPageLayout(
         role: 'admin',
-        onRefresh: onRefresh,
+        onRefresh: _onRefresh,
         header: BrandPageHeader(
           role: 'admin',
           subtitle: 'DETAIL TAGIHAN',
-          title: title,
-          isRealtimeFresh: true,
+          title: widget.title,
+          isRealtimeFresh: !_isLoading && _errorMessage == null,
           kpiOverlayHeight: BrandKpiStrip.defaultOverlap,
         ),
         kpiCard: BrandKpiStrip(
@@ -129,8 +185,20 @@ class AdminBillGroupDetailScreen extends StatelessWidget {
   }
 
   Widget _buildBody(Color adminColor, _GroupStats stats) {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 48),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_errorMessage != null) {
+      return _ErrorState(
+        message: _errorMessage!,
+        onRetry: _loadBills,
+      );
+    }
     return AppRefreshIndicator(
-      onRefresh: onRefresh,
+      onRefresh: _onRefresh,
       role: 'admin',
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(
@@ -141,26 +209,29 @@ class AdminBillGroupDetailScreen extends StatelessWidget {
         ),
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
-        itemCount: 1 + bills.length,
+        itemCount: 1 + _bills.length,
         itemBuilder: (context, index) {
           if (index == 0) {
             // Summary card sits above the per-student list so the
             // total + average read like a "ringkasan tagihan" header.
             return _SummaryCard(stats: stats, adminColor: adminColor);
           }
-          final bill = bills[index - 1];
+          final bill = _bills[index - 1];
           return InvoiceRow(
             data: _mapBillToRow(bill),
-            onTap: onTapBill == null ? null : () => onTapBill!(bill),
-            onTagihTap: onTagih == null ? null : () => onTagih!(bill),
+            onTap: widget.onTapBill == null
+                ? null
+                : () => widget.onTapBill!(bill),
+            onTagihTap: widget.onTagih == null
+                ? null
+                : () => widget.onTagih!(bill),
           );
         },
       ),
     );
   }
 
-  // ── Mapping (mirrors TagihanTab's per-bill mapping, minus the
-  //    UUID fallback admins didn't want to see) ────────────────────
+  // ── Mapping ────────────────────────────────────────────────────
 
   InvoiceRowData _mapBillToRow(Map<String, dynamic> bill) {
     final status = (bill['status'] ?? '').toString().toLowerCase();
@@ -193,10 +264,6 @@ class AdminBillGroupDetailScreen extends StatelessWidget {
                 'Siswa')
             .toString();
 
-    // Per-student row is already inside a (jenis × kelas) detail —
-    // collapsing the title to just the student name reads cleaner
-    // than repeating the jenis · kelas pair the page header already
-    // shows. Subtitle is reserved for the due-date hint.
     final dueLabel = due == null ? '' : 'Jatuh tempo ${_formatDate(due)}';
 
     return InvoiceRowData(
@@ -228,8 +295,6 @@ class AdminBillGroupDetailScreen extends StatelessWidget {
     return _idr.format(n);
   }
 
-  /// Shorten to "Rp 10jt" / "Rp 1,5jt" for the KPI sub-line so it
-  /// fits the narrow column width.
   static String _formatRupiahShort(double raw) {
     if (raw <= 0) return '—';
     if (raw >= 1000000000) {
@@ -269,9 +334,6 @@ class AdminBillGroupDetailScreen extends StatelessWidget {
   }
 }
 
-/// Aggregate stats for the group — derived once at build time and
-/// shared between the KPI strip + the summary card so the numbers
-/// can't drift between them.
 class _GroupStats {
   final int totalCount;
   final int paidCount;
@@ -314,7 +376,9 @@ class _GroupStats {
       } else if (isUnpaid) {
         final dueRaw =
             b['due_date'] ?? b['jatuh_tempo'] ?? b['tanggal_jatuh_tempo'];
-        final due = dueRaw == null ? null : DateTime.tryParse(dueRaw.toString());
+        final due = dueRaw == null
+            ? null
+            : DateTime.tryParse(dueRaw.toString());
         if (due != null && due.isBefore(now)) {
           overdue++;
           overdueAmt += amt;
@@ -380,7 +444,7 @@ class _SummaryCard extends StatelessWidget {
             const SizedBox(height: 10),
             _row(
               label: 'Total tagihan',
-              value: AdminBillGroupDetailScreen._formatRupiahShort(
+              value: _AdminBillGroupDetailScreenState._formatRupiahShort(
                 stats.totalAmount,
               ),
               accent: adminColor,
@@ -390,13 +454,13 @@ class _SummaryCard extends StatelessWidget {
             _row(
               label: 'Sudah dibayar',
               value:
-                  '${AdminBillGroupDetailScreen._formatRupiahShort(stats.paidAmount)} · $pctPaid%',
+                  '${_AdminBillGroupDetailScreenState._formatRupiahShort(stats.paidAmount)} · $pctPaid%',
               accent: const Color(0xFF10B981),
             ),
             const SizedBox(height: 8),
             _row(
               label: 'Rata-rata / siswa',
-              value: AdminBillGroupDetailScreen._formatRupiahShort(avg),
+              value: _AdminBillGroupDetailScreenState._formatRupiahShort(avg),
               accent: ColorUtils.slate700,
             ),
           ],
@@ -432,6 +496,46 @@ class _SummaryCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  final Future<void> Function() onRetry;
+
+  const _ErrorState({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.cloud_off_rounded,
+            size: 36,
+            color: ColorUtils.slate400,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: ColorUtils.slate600,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Coba lagi'),
+          ),
+        ],
+      ),
     );
   }
 }

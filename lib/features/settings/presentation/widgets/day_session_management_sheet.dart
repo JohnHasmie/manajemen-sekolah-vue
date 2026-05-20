@@ -54,6 +54,9 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet>
   List<dynamic> get sessions => _sessions;
 
   @override
+  set sessions(List<dynamic> value) => _sessions = value;
+
+  @override
   Widget build(BuildContext context) {
     final dayName = dayNameToIndonesian(widget.day['name'] ?? 'Hari');
 
@@ -62,7 +65,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet>
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      height: MediaQuery.of(context).size.height * 0.75,
+      height: MediaQuery.of(context).size.height * 0.85,
       child: Column(
         children: [
           buildHeader(dayName),

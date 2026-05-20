@@ -75,7 +75,7 @@ mixin StudentFormSaveMixin on StudentFormValidationMixin {
     final emailParent = emailParentController.text.trim();
 
     try {
-      final data = {
+      final Map<String, dynamic> data = {
         'name': name,
         'student_number': nis,
         'class_id': selectedClassId,
@@ -84,12 +84,40 @@ mixin StudentFormSaveMixin on StudentFormValidationMixin {
         'gender': selectedGender,
         'guardian_name': nameParent,
         'phone_number': noPhone,
-        'guardian_email': emailParent,
-        if (student != null && isChangeUserMode) 'use_another_user': true,
       };
 
+      // Only include guardian_email in specific cases:
+      // 1. When adding a new student (student == null)
+      // 2. When explicitly changing the guardian user (isChangeUserMode == true)
+      // 3. When the email has actually changed from the original
+      if (student == null) {
+        // New student - always include email
+        data['guardian_email'] = emailParent;
+      } else if (isChangeUserMode) {
+        // Explicitly changing guardian - include email and flag
+        data['guardian_email'] = emailParent;
+        data['use_another_user'] = true;
+      } else {
+        // Editing existing student - only include email if it changed
+        final originalEmail = (student!['guardian_email'] ?? 
+                               student!['parent_email'] ?? '').toString();
+        if (emailParent != originalEmail) {
+          data['guardian_email'] = emailParent;
+        }
+      }
+
+      AppLogger.debug('student', 'Preparing to save student. Is edit: ${student != null}');
+      AppLogger.debug('student', 'Student data: $data');
+      
       if (student != null) {
-        await getIt<ApiStudentService>().updateStudent(student!['id'], data);
+        AppLogger.debug('student', 'Student object: $student');
+        final studentId = student!['id']?.toString();
+        if (studentId == null || studentId.isEmpty) {
+          AppLogger.error('student', 'Student ID is null or empty. Full student object: $student');
+          throw Exception('Student ID is missing or invalid');
+        }
+        AppLogger.debug('student', 'Calling updateStudent with ID: $studentId');
+        await getIt<ApiStudentService>().updateStudent(studentId, data);
       } else {
         await getIt<ApiStudentService>().addStudent(data);
       }

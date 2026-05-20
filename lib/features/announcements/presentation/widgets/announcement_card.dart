@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
+import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
+import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_event_block.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_info_tag.dart';
 
 /// A single announcement card row rendered inside the admin list.
@@ -52,6 +54,7 @@ class AnnouncementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Announcement.fromJson(announcementData);
+    final event = AnnouncementEvent.fromJson(announcementData);
     final isUnread = !model.isRead;
     final isImportant = [
       'penting',
@@ -126,6 +129,12 @@ class AnnouncementCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      // Event block (Pengumuman+Acara) — rendered only
+                      // when the announcement carries an event_at.
+                      if (event != null) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        AnnouncementEventBlock(event: event, dense: true),
+                      ],
                       const SizedBox(height: AppSpacing.sm),
                       // Metadata chips row
                       Wrap(
