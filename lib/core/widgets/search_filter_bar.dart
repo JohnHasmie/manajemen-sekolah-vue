@@ -135,7 +135,11 @@ class SearchFilterBar extends StatelessWidget {
                   child: IconButton(
                     icon: Icon(Icons.search, color: color, size: 20),
                     onPressed: () {
-                      onSearchTap?.call();
+                      if (onSearchTap != null) {
+                        onSearchTap!.call();
+                      } else {
+                        onSubmitted?.call(controller.text);
+                      }
                       FocusScope.of(context).unfocus();
                     },
                   ),

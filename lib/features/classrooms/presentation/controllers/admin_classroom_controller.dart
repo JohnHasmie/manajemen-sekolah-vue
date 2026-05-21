@@ -79,10 +79,12 @@ class AdminClassroomController {
   bool checkActiveFilter({
     required String? selectedGradeFilter,
     required String? selectedHomeroomFilter,
+    required String searchText,
   }) {
     return _filterHelper.checkActiveFilter(
       selectedGradeFilter: selectedGradeFilter,
       selectedHomeroomFilter: selectedHomeroomFilter,
+      searchText: searchText,
     );
   }
 

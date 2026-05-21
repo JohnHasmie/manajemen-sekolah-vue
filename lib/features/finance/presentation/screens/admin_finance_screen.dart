@@ -11,7 +11,6 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/admin_finance_controller.dart';
-import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_list_screen.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/finance/data/finance_service.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_navigation_bar.dart';
@@ -79,6 +78,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   // Core state
   List<dynamic> _paymentTypeList = [];
   List<dynamic> _billList = [];
+
   /// Aggregated Tagihan rows from `/finance/bill-groups`. The hub no
   /// longer downloads every individual bill just to group on-device
   /// — this list is what feeds the Tagihan tab. The detail screen
@@ -95,19 +95,23 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   String _errorMessage = '';
   late int _currentTabIndex = widget.initialTabIndex.clamp(0, 2);
 
-  /// Active sub-filter chip on the Tagihan tab — `'all'` (default),
-  /// `'unpaid'`, or `'overdue'`. Drives [TagihanTab.activeFilterKey].
-  String _tagihanFilterKey = 'all';
+  /// Consolidated Tagihan-tab filter snapshot. All filter chrome
+  /// (status, jenis, tahun, bulan, tingkat, kelas) lives in a single
+  /// AppFilterBottomSheet via [showTagihanFilterSheet] — the header
+  /// just renders a single "Filter (N)" chip + counter.
+  TagihanFilterResult _tagihanFilter = TagihanFilterResult.empty();
 
-  /// Set of payment-type IDs to keep in the Tagihan list. Empty = no
-  /// jenis filter applied. Driven by [TagihanFilterSheet].
-  Set<String> _tagihanSelectedJenisIds = {};
-
-  /// Year for Tagihan list filter, null = all years. Shared across tabs.
-  int? _filterYear;
-
-  /// Month for Tagihan list filter (1-12), null = all months. Shared across tabs.
-  int? _filterMonth;
+  /// Convenience getters bridging the consolidated filter to the rest
+  /// of the screen state that still uses scalar fields (notably the
+  /// service call + scroll/filter mixin contracts).
+  String get _tagihanFilterKey => switch (_tagihanFilter.status) {
+    TagihanStatusFilter.unpaid => 'unpaid',
+    TagihanStatusFilter.overdue => 'overdue',
+    TagihanStatusFilter.all => 'all',
+  };
+  Set<String> get _tagihanSelectedJenisIds => _tagihanFilter.selectedJenisIds;
+  int? get _filterYear => _tagihanFilter.year;
+  int? get _filterMonth => _tagihanFilter.month;
 
   final ScrollController _billScrollController = ScrollController();
   final ScrollController _pendingScrollController = ScrollController();
@@ -185,11 +189,25 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
       // row itself (resolved server-side by the LATERAL join), so
       // crossings between hub-list and detail stay consistent.
       final groups = await FinanceService.getBillGroups(
-        paymentTypeId: _tagihanSelectedJenisIds.length == 1
-            ? _tagihanSelectedJenisIds.first
+        // When the admin picks multiple jenis we forward an array so
+        // the backend's whereIn() handles them; single-select still
+        // uses the scalar param for the unchanged hot path.
+        paymentTypeId: _tagihanFilter.selectedJenisIds.length == 1
+            ? _tagihanFilter.selectedJenisIds.first
             : null,
-        year: _filterYear,
-        month: _filterMonth,
+        paymentTypeIds: _tagihanFilter.selectedJenisIds.length > 1
+            ? _tagihanFilter.selectedJenisIds.toList()
+            : null,
+        // Class + tingkat multi-selects from the consolidated sheet.
+        // Empty sets translate to null so the URL stays clean.
+        classIds: _tagihanFilter.selectedClassIds.isEmpty
+            ? null
+            : _tagihanFilter.selectedClassIds.toList(),
+        gradeLevels: _tagihanFilter.selectedTingkat.isEmpty
+            ? null
+            : _tagihanFilter.selectedTingkat.toList(),
+        year: _tagihanFilter.year,
+        month: _tagihanFilter.month,
       );
       if (!mounted) return;
       setState(() => _billGroups = groups);
@@ -578,22 +596,17 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
       buildFilterChips: () => buildFilterChips(languageProvider),
       getGoalDescription: getGoalDescription,
       getTranslatedPeriod: getTranslatedPeriod,
-      onEdit: (index) =>
-          showPaymentTypeDetail(filteredPaymentTypes[index]),
-      onDelete: (index) =>
-          deletePaymentType(filteredPaymentTypes[index]),
+      onEdit: (index) => showPaymentTypeDetail(filteredPaymentTypes[index]),
+      onDelete: (index) => deletePaymentType(filteredPaymentTypes[index]),
       // NOTE: no pendingScrollController — when hosted inside the
       // NestedScrollView body, the inner CustomScrollView attaches to
       // the PrimaryScrollController NestedScrollView provides.
       // Pagination is driven by [_onTabScrollNotification] instead.
       hasMorePending: _hasMorePending,
-      onVerify: (index) =>
-          showVerificationDialog(_pendingPaymentList[index]),
-      onShowProof: (index) =>
-          showPaymentProof(_pendingPaymentList[index]),
+      onVerify: (index) => showVerificationDialog(_pendingPaymentList[index]),
+      onShowProof: (index) => showPaymentProof(_pendingPaymentList[index]),
       tagihanFilterKey: _tagihanFilterKey,
       onTagihBill: _onTagihBill,
-      onClassReportTap: _openClassFinanceReport,
       tagihanSelectedJenisIds: _tagihanSelectedJenisIds,
       filterYear: _filterYear,
       filterMonth: _filterMonth,
@@ -603,7 +616,9 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
       academicYearId: ayId,
       onOverdueTap: () => setState(() {
         _currentTabIndex = 0;
-        _tagihanFilterKey = 'overdue';
+        _tagihanFilter = _tagihanFilter.copyWith(
+          status: TagihanStatusFilter.overdue,
+        );
       }),
     );
 
@@ -630,10 +645,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
         ),
         SliverPersistentHeader(
           pinned: true,
-          delegate: _FinanceNavBarDelegate(
-            navBar: navBar,
-            height: 40,
-          ),
+          delegate: _FinanceNavBarDelegate(navBar: navBar, height: 40),
         ),
       ],
       body: MediaQuery.removePadding(
@@ -651,7 +663,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
     // height is measured (first frame), fall back to a Column so the
     // header can lay out and report its size.
     final body = _headerH == 0
-        ? Column(children: [header, Expanded(child: scrollBody)])
+        ? Column(
+            children: [
+              header,
+              Expanded(child: scrollBody),
+            ],
+          )
         : Stack(
             children: [
               Positioned(top: 0, left: 0, right: 0, child: header),
@@ -695,14 +712,6 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
       if (parsed != null && parsed.isBefore(now)) count++;
     }
     return count;
-  }
-
-  void _openClassFinanceReport() {
-    // ClassFinanceReportScreen requires a (classId, className) pair
-    // — push the class-list screen instead so the admin can pick
-    // which kelas to drill into. This is the same pattern the legacy
-    // 4th tab used to render inline.
-    AppNavigator.push(context, const ClassFinanceListScreen());
   }
 
   /// Header Jenis-tab Status chip — opens the Aktif/Nonaktif picker
@@ -753,7 +762,11 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
       overdueCount: overdueCount,
     );
     if (!mounted || picked == null) return;
-    setState(() => _tagihanFilterKey = picked.key);
+    setState(() {
+      _tagihanFilter = _tagihanFilter.copyWith(
+        status: tagihanStatusFromKey(picked.key),
+      );
+    });
   }
 
   /// Opens the month picker sheet from the header period pill. The
@@ -770,15 +783,19 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
     );
     if (!mounted || result == null) return;
     setState(() {
-      _filterYear = result.year;
-      _filterMonth = result.month;
+      _tagihanFilter = _tagihanFilter.copyWith(
+        year: result.year,
+        month: result.month,
+        clearYear: result.year == null,
+        clearMonth: result.month == null,
+      );
     });
     _loadBillGroups();
   }
 
-  /// Opens the Tagihan filter sheet with the current jenis + month
-  /// selections pre-applied. Stores the result back into screen state
-  /// so the next rebuild filters the bill list.
+  /// Opens the consolidated Tagihan filter sheet with the current
+  /// filter snapshot pre-applied. Stores the result back into screen
+  /// state so the next rebuild filters the bill list.
   Future<void> _openTagihanFilterSheet() async {
     final jenisOptions = _paymentTypeList
         .whereType<Map>()
@@ -792,15 +809,43 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
         .where((opt) => opt['id']!.isNotEmpty)
         .toList(growable: false);
 
+    final classOptions = _classList
+        .whereType<Map>()
+        .map(Map<String, dynamic>.from)
+        .map(
+          (m) => TagihanClassOption(
+            id: (m['id'] ?? '').toString(),
+            name: (m['name'] ?? '-').toString(),
+            gradeLevel: m['grade_level']?.toString(),
+          ),
+        )
+        .where((c) => c.id.isNotEmpty)
+        .toList(growable: false);
+
+    // Available years — derived from the loaded bill groups + a few
+    // sensible fallbacks (current AY ± 1) so the user always sees
+    // something to pick from on a fresh school.
+    final years = <int>{};
+    for (final g in _billGroups) {
+      final label = g.yearLabel?.split('/').first;
+      final n = int.tryParse(label ?? '');
+      if (n != null) years.add(n);
+    }
+    final nowYear = DateTime.now().year;
+    years.addAll([nowYear - 1, nowYear, nowYear + 1]);
+    final yearList = years.toList()..sort((a, b) => b.compareTo(a));
+
     final result = await showTagihanFilterSheet(
       context,
       primaryColor: getPrimaryColor(),
       jenisOptions: jenisOptions,
-      initialJenisIds: _tagihanSelectedJenisIds,
+      classOptions: classOptions,
+      availableYears: yearList,
+      initial: _tagihanFilter,
     );
     if (!mounted || result == null) return;
     setState(() {
-      _tagihanSelectedJenisIds = result.selectedJenisIds;
+      _tagihanFilter = result;
     });
     // Re-fetch groups so the server-side filter narrows the new list.
     _loadBillGroups();
@@ -877,10 +922,7 @@ class _FinanceNavBarDelegate extends SliverPersistentHeaderDelegate {
   final Widget navBar;
   final double height;
 
-  const _FinanceNavBarDelegate({
-    required this.navBar,
-    required this.height,
-  });
+  const _FinanceNavBarDelegate({required this.navBar, required this.height});
 
   @override
   double get minExtent => height;

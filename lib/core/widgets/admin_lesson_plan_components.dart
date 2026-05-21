@@ -233,24 +233,24 @@ class SwipeableQueueCard extends StatelessWidget {
                           const SizedBox(height: 6),
                         ],
                         Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: ColorUtils.slate500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
                           title,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 13.5,
                             fontWeight: FontWeight.w800,
                             color: ColorUtils.slate900,
-                            height: 1.3,
+                            height: 1.35,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: ColorUtils.slate600,
+                          ),
                         ),
                         if (rejectionReason != null &&
                             rejectionReason!.isNotEmpty) ...[

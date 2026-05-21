@@ -171,7 +171,7 @@ class _LessonPlanReviewHistoryScreenState
     }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      child: _TimelineCard(rows: _reviews),
+      child: TimelineCard(rows: _reviews),
     );
   }
 }
@@ -179,9 +179,9 @@ class _LessonPlanReviewHistoryScreenState
 /// Single card containing the full timeline list. Wrapping the
 /// timeline in one card (rather than per-row cards) matches the F1
 /// mockup and reads as a continuous audit log.
-class _TimelineCard extends StatelessWidget {
+class TimelineCard extends StatelessWidget {
   final List<Map<String, dynamic>> rows;
-  const _TimelineCard({required this.rows});
+  const TimelineCard({super.key, required this.rows});
 
   @override
   Widget build(BuildContext context) {
@@ -235,7 +235,7 @@ class _TimelineCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           for (var i = 0; i < rows.length; i++)
-            _TimelineRow(
+            TimelineRow(
               row: rows[i],
               isLast: i == rows.length - 1,
             ),
@@ -245,10 +245,10 @@ class _TimelineCard extends StatelessWidget {
   }
 }
 
-class _TimelineRow extends StatelessWidget {
+class TimelineRow extends StatelessWidget {
   final Map<String, dynamic> row;
   final bool isLast;
-  const _TimelineRow({required this.row, required this.isLast});
+  const TimelineRow({super.key, required this.row, required this.isLast});
 
   @override
   Widget build(BuildContext context) {
@@ -325,11 +325,11 @@ class _TimelineRow extends StatelessWidget {
                 ),
                 if (revisionAreas is List && revisionAreas.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  _AreasRow(areas: revisionAreas.map((e) => e.toString()).toList()),
+                  AreasRow(areas: revisionAreas.map((e) => e.toString()).toList()),
                 ],
                 if (note.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  _NoteBlock(note: note, tint: dotColor, background: dotBg),
+                  NoteBlock(note: note, tint: dotColor, background: dotBg),
                 ],
               ],
             ),
@@ -442,9 +442,9 @@ class _TimelineRow extends StatelessWidget {
   }
 }
 
-class _AreasRow extends StatelessWidget {
+class AreasRow extends StatelessWidget {
   final List<String> areas;
-  const _AreasRow({required this.areas});
+  const AreasRow({super.key, required this.areas});
 
   static const _labels = {
     'identitas': 'Identitas',
@@ -489,11 +489,12 @@ class _AreasRow extends StatelessWidget {
   }
 }
 
-class _NoteBlock extends StatelessWidget {
+class NoteBlock extends StatelessWidget {
   final String note;
   final Color tint;
   final Color background;
-  const _NoteBlock({
+  const NoteBlock({
+    super.key,
     required this.note,
     required this.tint,
     required this.background,

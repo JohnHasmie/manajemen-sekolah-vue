@@ -11,16 +11,22 @@ class GradeService {
     String? studentId,
     String? teacherId,
     String? subjectId,
+    String? classId,
     String? gradeType,
     String? academicYearId,
+    int? limit,
   }) async {
     final queryParams = <String, dynamic>{};
     if (studentId != null) queryParams['student_id'] = studentId;
     if (teacherId != null) queryParams['teacher_id'] = teacherId;
     if (subjectId != null) queryParams['subject_id'] = subjectId;
+    if (classId != null) queryParams['class_id'] = classId;
     if (gradeType != null) queryParams['grade_type'] = gradeType;
     if (academicYearId != null) {
       queryParams['academic_year_id'] = academicYearId;
+    }
+    if (limit != null) {
+      queryParams['limit'] = limit;
     }
 
     final response = await dioClient.get(
@@ -257,6 +263,7 @@ class GradeService {
     String? studentId,
     String? teacherId,
     String? subjectId,
+    String? classId,
     String? gradeType,
     String? academicYearId,
   }) async {
@@ -265,6 +272,7 @@ class GradeService {
       if (studentId != null) queryParams['student_id'] = studentId;
       if (teacherId != null) queryParams['teacher_id'] = teacherId;
       if (subjectId != null) queryParams['subject_id'] = subjectId;
+      if (classId != null) queryParams['class_id'] = classId;
       if (gradeType != null) queryParams['grade_type'] = gradeType;
       if (academicYearId != null) {
         queryParams['academic_year_id'] = academicYearId;

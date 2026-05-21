@@ -15,8 +15,11 @@ class ClassroomFilterHelper {
   bool checkActiveFilter({
     required String? selectedGradeFilter,
     required String? selectedHomeroomFilter,
+    required String searchText,
   }) {
-    return selectedGradeFilter != null || selectedHomeroomFilter != null;
+    return selectedGradeFilter != null ||
+        selectedHomeroomFilter != null ||
+        searchText.trim().isNotEmpty;
   }
 
   /// Builds the chip data list for active filters shown in the header.

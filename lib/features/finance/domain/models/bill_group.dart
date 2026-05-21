@@ -19,6 +19,11 @@ class BillGroup {
   final String classId;
   final String className;
 
+  /// Tingkat / grade-level — backend column `classes.grade_level`.
+  /// Used by the Tagihan tab redesign to group rows by Tingkat. May
+  /// be null on schools that don't seed the column (older data).
+  final String? gradeLevel;
+
   /// Bucket's resolved academic_year_id — the COALESCE of the bill's
   /// own AY and the student_classes pivot AY (see the repository's
   /// LATERAL JOIN). Used by the detail screen to scope its
@@ -46,6 +51,7 @@ class BillGroup {
     required this.paymentTypeName,
     required this.classId,
     required this.className,
+    required this.gradeLevel,
     required this.academicYearId,
     required this.yearLabel,
     required this.totalCount,
@@ -74,6 +80,7 @@ class BillGroup {
       paymentTypeName: (json['payment_type_name'] ?? '').toString(),
       classId: (json['class_id'] ?? '').toString(),
       className: (json['class_name'] ?? '').toString(),
+      gradeLevel: json['class_grade_level']?.toString(),
       academicYearId: json['academic_year_id']?.toString(),
       yearLabel: json['year_label']?.toString(),
       totalCount: parseCount(json['total_count']),
