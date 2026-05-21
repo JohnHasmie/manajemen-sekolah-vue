@@ -16,6 +16,7 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/card_
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/header_builder_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/mixins/content_card_builder_mixin.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_admin_action_bar.dart';
+import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_review_history_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan_format.dart';
 
@@ -59,6 +60,12 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
   @override
   late Map<String, dynamic> lessonPlan;
 
+  late final ScrollController _scrollController;
+  final GlobalKey _historyKey = GlobalKey();
+  List<Map<String, dynamic>> _reviews = const [];
+  bool _loadingReviews = false;
+  String? _reviewsErrorMessage;
+
   /// Hydrate the sheet with the FULL lesson plan record (including
   /// fresh `file_path` + `file_name` + content sections). The list
   /// endpoint sometimes returns a thinner summary, so we always
@@ -66,24 +73,56 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     lessonPlan = widget.lessonPlan;
     _refreshFromBackend();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _refreshFromBackend() async {
     final id = widget.lessonPlan['id']?.toString();
     if (id == null || id.isEmpty) return;
+    setState(() {
+      _loadingReviews = true;
+      _reviewsErrorMessage = null;
+    });
+
+    // Fetch lesson plan details
     try {
       final fresh = await LessonPlanService.getLessonPlanById(id);
-      if (!mounted || fresh.isEmpty) return;
-      setState(() {
-        // Merge — preserve any keys the list payload had that the
-        // detail might not (cosmetic class/subject names, etc.).
-        lessonPlan = {...lessonPlan, ...fresh};
-      });
+      if (mounted && fresh.isNotEmpty) {
+        setState(() {
+          // Merge — preserve any keys the list payload had that the
+          // detail might not (cosmetic class/subject names, etc.).
+          lessonPlan = {...lessonPlan, ...fresh};
+        });
+      }
     } catch (e) {
       AppLogger.warning('lesson_plan', 'admin detail refresh failed: $e');
-      // Silent — the sheet still renders with the list payload.
+    }
+
+    // Fetch review history
+    try {
+      final reviews = await LessonPlanService.getLessonPlanReviews(id);
+      if (mounted) {
+        setState(() {
+          _reviews = reviews;
+          _loadingReviews = false;
+        });
+      }
+    } catch (e) {
+      AppLogger.warning('lesson_plan', 'admin detail reviews fetch failed: $e');
+      if (mounted) {
+        setState(() {
+          _reviewsErrorMessage = e.toString();
+          _loadingReviews = false;
+        });
+      }
     }
   }
 
@@ -155,10 +194,59 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
         lessonPlan['admin_notes'] = newNote;
       }
     });
+    _refreshFromBackend();
+  }
+
+
+
+  Widget _buildReviewsError() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: ColorUtils.errorLight.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.errorLight),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline_rounded, color: ColorUtils.error600, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Gagal memuat riwayat persetujuan',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: ColorUtils.slate800,
+                  ),
+                ),
+                Text(
+                  _reviewsErrorMessage ?? '',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: ColorUtils.slate500,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh, size: 18),
+            onPressed: _refreshFromBackend,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget buildScrollableBody() {
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,6 +259,19 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
           if (lessonPlan['file_path'] != null) ...[
             const SizedBox(height: AppSpacing.lg),
             buildAttachmentCard(context),
+          ],
+          if (_loadingReviews) ...[
+            const SizedBox(height: AppSpacing.lg),
+            const Center(child: CircularProgressIndicator()),
+          ] else if (_reviewsErrorMessage != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _buildReviewsError(),
+          ] else if (_reviews.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.lg),
+            TimelineCard(
+              key: _historyKey,
+              rows: _reviews,
+            ),
           ],
         ],
       ),

@@ -74,6 +74,9 @@ class FinanceService {
     String? academicYearId,
     String? status,
     String? paymentTypeId,
+    List<String>? paymentTypeIds,
+    List<String>? classIds,
+    List<String>? gradeLevels,
     int? year,
     int? month,
   }) async {
@@ -84,6 +87,19 @@ class FinanceService {
     if (status != null && status.isNotEmpty) params['status'] = status;
     if (paymentTypeId != null && paymentTypeId.isNotEmpty) {
       params['payment_type_id'] = paymentTypeId;
+    }
+    // Multi-select arrays. Dio serialises List<String> as the
+    // standard `?key[]=a&key[]=b` form which Laravel's Request->all()
+    // hydrates back as a PHP array — same encoding the repository
+    // already expects under whereIn().
+    if (paymentTypeIds != null && paymentTypeIds.isNotEmpty) {
+      params['payment_type_ids'] = paymentTypeIds;
+    }
+    if (classIds != null && classIds.isNotEmpty) {
+      params['class_ids'] = classIds;
+    }
+    if (gradeLevels != null && gradeLevels.isNotEmpty) {
+      params['grade_levels'] = gradeLevels;
     }
     if (year != null) params['year'] = year;
     if (month != null) params['month'] = month;

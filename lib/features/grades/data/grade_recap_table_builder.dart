@@ -82,13 +82,16 @@ class GradeRecapTableBuilder {
   static Future<List<dynamic>> fetchGradesForSubject({
     required String teacherId,
     required String subjectId,
+    required String classId,
     required String academicYearId,
   }) async {
     try {
       return await GradeService.getGrades(
         teacherId: teacherId.isEmpty ? null : teacherId,
         subjectId: subjectId.isEmpty ? null : subjectId,
+        classId: classId.isEmpty ? null : classId,
         academicYearId: academicYearId.isEmpty ? null : academicYearId,
+        limit: 1000,
       );
     } catch (e) {
       AppLogger.error('grade_recap', 'Error loading grades pool: $e');

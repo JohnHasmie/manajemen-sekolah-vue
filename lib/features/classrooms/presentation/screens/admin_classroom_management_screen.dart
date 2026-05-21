@@ -13,6 +13,8 @@
 // cursor), the teacher + grade-level lookup lists, and dispatch glue
 // that hands state down to the controller + sheets. Everything else
 // has moved out.
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -57,6 +59,9 @@ class AdminClassManagementScreenState
   // Search text — shared with [AdminCrudScaffold] via [searchController].
   final TextEditingController _searchController = TextEditingController();
 
+  // Search debounce.
+  Timer? _searchDebounce;
+
   // Loaded data.
   List<dynamic> _classes = [];
   List<dynamic> _teachers = [];
@@ -94,6 +99,7 @@ class AdminClassManagementScreenState
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
     FCMService().syncTrigger.removeListener(_onSyncTriggered);
     super.dispose();
   }
@@ -234,6 +240,16 @@ class AdminClassManagementScreenState
     }
   }
 
+  // ── Search ──────────────────────────────────────────────────────────
+
+  void _onSearchChanged(String _) {
+    _refreshHasActiveFilter();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) _loadData();
+    });
+  }
+
   // ── Filter state ────────────────────────────────────────────────────
 
   void _refreshHasActiveFilter() {
@@ -243,6 +259,7 @@ class AdminClassManagementScreenState
           .checkActiveFilter(
             selectedGradeFilter: _selectedGradeFilter,
             selectedHomeroomFilter: _selectedHomeroomFilter,
+            searchText: _searchController.text,
           );
     });
   }
@@ -590,7 +607,7 @@ class AdminClassManagementScreenState
         'en': 'Search classes...',
         'id': 'Cari kelas...',
       }),
-      onSearchChanged: (_) => _refreshHasActiveFilter(),
+      onSearchChanged: _onSearchChanged,
       onSearchSubmitted: (_) => _loadData(),
       onFilterTap: _openFilterSheet,
       hasActiveFilter: _hasActiveFilter,

@@ -73,7 +73,6 @@ import 'package:manajemensekolah/features/dashboard/presentation/screens/admin_i
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/academic_year_picker_sheet.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/admin_finance_screen.dart';
-import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_list_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_overview_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_rpp_review_hub_screen.dart';
@@ -86,7 +85,6 @@ import 'package:manajemensekolah/features/settings/presentation/screens/system_s
 /// Sourced from `ColorUtils.brandDarkBlue` so any future brand refresh
 /// updates one place.
 final Color _adminNavy = ColorUtils.brandDarkBlue;
-
 
 /// Polling cadence for the realtime indicator. Not configurable yet — Phase
 /// 3 keeps it fixed at 60 s; Phase 4 may expose it if analytics shows the
@@ -300,13 +298,11 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   }
 
   void _openFinanceClassReport() {
-    // ClassFinanceReport is no longer a tab inside the Keuangan hub —
-    // it lives behind the navy-tinted ClassReportDrillCard at the
-    // bottom of the Tagihan tab. Push the class-list screen first so
-    // the admin can pick which kelas to drill into; the legacy single-
-    // class report ([ClassFinanceReportScreen]) requires a classId so
-    // it can't be pushed directly from a top-level inbox tap.
-    AppNavigator.push(context, const ClassFinanceListScreen());
+    // Per-kelas Laporan no longer has a standalone landing screen. The
+    // admin now drills in via the Tagihan tab's grouped Tingkat → Kelas
+    // rows, which is the same data, but already in context (status +
+    // outstanding amount visible). We just route to the Tagihan tab.
+    AppNavigator.push(context, const FinanceScreen(initialTabIndex: 0));
   }
 
   void _openLessonPlanReview() {

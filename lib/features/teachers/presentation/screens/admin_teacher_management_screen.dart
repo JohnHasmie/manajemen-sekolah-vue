@@ -85,6 +85,9 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
   // FAB GlobalKey reserved for potential reintroduction of tour plumbing.
   final GlobalKey _fabKey = GlobalKey();
 
+  // Search debounce.
+  Timer? _searchDebounce;
+
   @override
   void initState() {
     super.initState();
@@ -96,6 +99,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
   @override
   void dispose() {
     _searchController.dispose();
+    _searchDebounce?.cancel();
     FCMService().syncTrigger.removeListener(_onSyncTriggered);
     super.dispose();
   }
@@ -232,6 +236,16 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
       AppLogger.debug('teacher', 'Sync triggered: ${trigger['type']}');
       _loadData(useCache: false);
     }
+  }
+
+  // ── Search ──────────────────────────────────────────────────────────
+
+  void _onSearchChanged(String _) {
+    _refreshHasActiveFilter();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) _loadData();
+    });
   }
 
   // ── Filter state ────────────────────────────────────────────────────
@@ -636,7 +650,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
         'en': 'Search teachers...',
         'id': 'Cari guru...',
       }),
-      onSearchChanged: (_) => _refreshHasActiveFilter(),
+      onSearchChanged: _onSearchChanged,
       onSearchSubmitted: (_) => _loadData(),
       onFilterTap: _openFilterSheet,
       hasActiveFilter: _hasActiveFilter,

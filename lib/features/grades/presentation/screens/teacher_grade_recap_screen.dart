@@ -166,6 +166,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
         GradeRecapTableBuilder.fetchGradesForSubject(
           teacherId: teacherId,
           subjectId: subjectId,
+          classId: classId,
           academicYearId: ayId,
         ),
       ]);

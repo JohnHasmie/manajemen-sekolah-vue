@@ -22,12 +22,14 @@ import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 class FinanceTabContent extends StatelessWidget {
   final int currentTabIndex;
   final List<dynamic> pendingPaymentList;
+
   /// Aggregated Tagihan rows from `/finance/bill-groups`. Replaces
   /// the old per-bill `billList` that the hub used to download and
   /// group client-side — the per-student detail screen now fetches
   /// its own bills on demand via the bucket's payment_type_id +
   /// class_id filter.
   final List<BillGroup> billGroups;
+
   /// Active academic year id — forwarded to the Tagihan tab so the
   /// detail-screen fetch can scope to the same AY as the hub.
   final String? academicYearId;
@@ -62,7 +64,6 @@ class FinanceTabContent extends StatelessWidget {
   final String tagihanFilterKey;
   final void Function(Map<String, dynamic> bill)? onTagihBill;
   final void Function(Map<String, dynamic> bill)? onTapBill;
-  final VoidCallback onClassReportTap;
   final Set<String> tagihanSelectedJenisIds;
   final int? filterYear;
   final int? filterMonth;
@@ -92,7 +93,6 @@ class FinanceTabContent extends StatelessWidget {
     required this.onVerify,
     required this.onShowProof,
     required this.tagihanFilterKey,
-    required this.onClassReportTap,
     required this.tagihanSelectedJenisIds,
     this.filterYear,
     this.filterMonth,
@@ -120,7 +120,6 @@ class FinanceTabContent extends StatelessWidget {
           activeFilterKey: tagihanFilterKey,
           onTagih: onTagihBill,
           onTap: onTapBill,
-          onClassReportTap: onClassReportTap,
           onRefresh: onRefresh,
           academicYearId: academicYearId,
         );

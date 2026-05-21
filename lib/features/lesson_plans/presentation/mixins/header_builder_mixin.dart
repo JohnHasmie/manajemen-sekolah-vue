@@ -33,14 +33,6 @@ mixin HeaderBuilderMixin on State<LessonPlanAdminDetailPage> {
               buildBackButton(context),
               const SizedBox(width: AppSpacing.md),
               buildHeaderTitle(),
-              // History icon opens the full-screen Riwayat Persetujuan
-              // timeline (Frame F1). The 3-dot kebab that previously
-              // sat to the right used to duplicate Setujui/Tolak via
-              // an older dialog path — retired now that the action
-              // bar at the foot of the detail sheet covers those
-              // actions canonically. If we add a secondary action
-              // group later (Cetak/Bagikan) reintroduce the kebab.
-              buildHistoryButton(context),
             ],
           ),
         ],
@@ -120,37 +112,6 @@ mixin HeaderBuilderMixin on State<LessonPlanAdminDetailPage> {
           overflow: TextOverflow.ellipsis,
         ),
       ],
-    );
-  }
-
-  /// Right-side header button that opens the Riwayat Persetujuan
-  /// timeline. Only shown when we have an lesson-plan ID — for a
-  /// just-created draft (no ID yet) there's nothing to audit.
-  Widget buildHistoryButton(BuildContext context) {
-    final model = LessonPlan.fromJson(lessonPlan);
-    if (model.id.isEmpty) return const SizedBox.shrink();
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: () => LessonPlanReviewHistoryScreen.push(
-        context: context,
-        lessonPlanId: model.id,
-        lessonPlanTitle: model.title.isNotEmpty ? model.title : null,
-        subtitle: [
-          if ((model.subjectName ?? '').isNotEmpty) model.subjectName,
-          if ((model.className ?? '').isNotEmpty) model.className,
-        ].whereType<String>().join(' · '),
-      ),
-      child: Container(
-        width: 40,
-        height: 40,
-        margin: const EdgeInsets.only(right: 4),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
-        ),
-        child: const Icon(Icons.history_rounded, color: Colors.white, size: 20),
-      ),
     );
   }
 
