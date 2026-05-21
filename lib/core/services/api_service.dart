@@ -247,7 +247,17 @@ class ApiService {
       return response.data;
     } catch (error) {
       AppLogger.error('api', 'Upload error: $error');
-      throw Exception('Upload error: $error');
+      // Rethrow instead of wrapping. The `ErrorInterceptor` in
+      // `dio_client.dart` has already attached a typed `ApiException`
+      // (ValidationException, ServerException, etc.) to the
+      // DioException's `.error` field — wrapping it in
+      // `Exception('Upload error: $error')` flattened that to the
+      // unhelpful "DioException [unknown]: null" string and lost the
+      // friendly Laravel validation message (e.g. "Jumlah pembayaran
+      // melebihi sisa tagihan"). Callers can still catch with
+      // `catch (e)` and either render `e.toString()` or extract the
+      // typed payload themselves.
+      rethrow;
     }
   }
 

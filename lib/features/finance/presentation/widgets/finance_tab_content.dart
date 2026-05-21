@@ -46,7 +46,12 @@ class FinanceTabContent extends StatelessWidget {
   final String Function(String?) getTranslatedPeriod;
   final Function(int) onEdit;
   final Function(int) onDelete;
-  final ScrollController pendingScrollController;
+
+  /// Optional — only passed when the Pembayaran tab owns its own
+  /// scrollable (legacy mode). In the new hub layout the tab is hosted
+  /// inside a `NestedScrollView` body and attaches to its provided
+  /// `PrimaryScrollController` instead, so the screen leaves this null.
+  final ScrollController? pendingScrollController;
   final bool hasMorePending;
   final Function(int) onVerify;
   final Function(int) onShowProof;
@@ -59,7 +64,8 @@ class FinanceTabContent extends StatelessWidget {
   final void Function(Map<String, dynamic> bill)? onTapBill;
   final VoidCallback onClassReportTap;
   final Set<String> tagihanSelectedJenisIds;
-  final String? tagihanSelectedMonth;
+  final int? filterYear;
+  final int? filterMonth;
 
   const FinanceTabContent({
     required this.currentTabIndex,
@@ -81,14 +87,15 @@ class FinanceTabContent extends StatelessWidget {
     required this.getTranslatedPeriod,
     required this.onEdit,
     required this.onDelete,
-    required this.pendingScrollController,
     required this.hasMorePending,
+    this.pendingScrollController,
     required this.onVerify,
     required this.onShowProof,
     required this.tagihanFilterKey,
     required this.onClassReportTap,
     required this.tagihanSelectedJenisIds,
-    required this.tagihanSelectedMonth,
+    this.filterYear,
+    this.filterMonth,
     this.onTagihBill,
     this.onTapBill,
     super.key,
@@ -96,10 +103,19 @@ class FinanceTabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IndexedStack(
-      index: currentTabIndex.clamp(0, 2),
-      children: [
-        TagihanTab(
+    // Switched from IndexedStack → single-tab render. The hub now
+    // hosts the tabs inside a `NestedScrollView`, and IndexedStack
+    // kept ALL three inner scrollables alive simultaneously — each
+    // would have tried to attach to NestedScrollView's
+    // PrimaryScrollController and throw "ScrollController attached to
+    // multiple scroll views". Building only the active tab keeps a
+    // single client on the controller. Scroll position resets on tab
+    // switch, but tab DATA is owned by the screen state, so nothing
+    // is actually lost.
+    final idx = currentTabIndex.clamp(0, 2);
+    switch (idx) {
+      case 0:
+        return TagihanTab(
           billGroups: billGroups,
           activeFilterKey: tagihanFilterKey,
           onTagih: onTagihBill,
@@ -107,8 +123,9 @@ class FinanceTabContent extends StatelessWidget {
           onClassReportTap: onClassReportTap,
           onRefresh: onRefresh,
           academicYearId: academicYearId,
-        ),
-        FinanceVerificationTab(
+        );
+      case 1:
+        return FinanceVerificationTab(
           pendingPaymentList: pendingPaymentList,
           hasMorePending: hasMorePending,
           isReadOnly: isReadOnly,
@@ -117,8 +134,9 @@ class FinanceTabContent extends StatelessWidget {
           primaryColor: primaryColor,
           onVerify: onVerify,
           onShowProof: onShowProof,
-        ),
-        FinancePaymentTypesTab(
+        );
+      default:
+        return FinancePaymentTypesTab(
           filteredPaymentTypes: filteredPaymentTypes,
           searchController: searchController,
           hasActiveFilter: hasActiveFilter,
@@ -133,8 +151,7 @@ class FinanceTabContent extends StatelessWidget {
           onEdit: onEdit,
           onDelete: onDelete,
           onRefresh: onRefresh,
-        ),
-      ],
-    );
+        );
+    }
   }
 }

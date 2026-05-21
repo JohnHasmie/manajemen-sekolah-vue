@@ -331,7 +331,7 @@ class _AdminAnnouncementComposeSheetState
       // Tambahkan Acara toggle. On edit, the sentinel "__clear__"
       // explicitly drops a previously-set event_at server-side.
       if (_hasEvent && _composedEventAt != null) {
-        body['event_at'] = _composedEventAt!.toUtc().toIso8601String();
+        body['event_at'] = _composedEventAt!.toIso8601String();
         body['event_has_time'] = _eventHasTime;
         if (_eventLocationController.text.trim().isNotEmpty) {
           body['event_location'] = _eventLocationController.text.trim();

@@ -1,24 +1,25 @@
-// Single-purpose month picker for the Keuangan header period pill.
+// Year + month picker for the Keuangan header period pill.
 //
-// The header used to show a static "May 2026 ▾" label sourced from the
-// money-flow API and ignored taps. Now the pill opens this sheet so the
-// admin can scope the page to a specific month or "Semua bulan".
+// Two-section layout: TAHUN (year chips from backend) and BULAN (month 1-12).
+// Fetches available years via GET /api/finance/available-years on init.
+// When both are selected, filters to that month. Either can be null for "all".
 //
 // Returns a [MonthFilterResult] when Apply / a pill is tapped, or
-// `null` if the sheet is dismissed without a change. The result wraps
-// a nullable `String?` so we can distinguish "all months" (null inside
-// a non-null result) from "dismissed" (null result).
+// `null` if the sheet is dismissed without a change.
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
 class MonthFilterResult {
-  /// `YYYY-MM` to keep, or `null` for "all months".
-  final String? month;
-  const MonthFilterResult(this.month);
+  /// Year (e.g. 2026), null = all years
+  final int? year;
+  /// Month (1-12), null = all months
+  final int? month;
+  const MonthFilterResult({this.year, this.month});
 }
 
 const _monthLong = [
@@ -37,21 +38,26 @@ const _monthLong = [
   'Desember',
 ];
 
-String monthFilterLabelFor(String? key) {
-  if (key == null) return 'Semua bulan';
-  final parts = key.split('-');
-  if (parts.length != 2) return key;
-  final m = int.tryParse(parts[1]) ?? 0;
-  if (m < 1 || m > 12) return key;
-  return '${_monthLong[m]} ${parts[0]}';
+String monthFilterLabelFor({int? year, int? month}) {
+  if (year == null && month == null) return 'Semua periode';
+  if (year != null && month == null) return '$year';
+  if (year == null && month != null) {
+    if (month < 1 || month > 12) return 'Semua bulan';
+    return _monthLong[month];
+  }
+  // Both set
+  if (month == null || year == null) return 'Semua periode';
+  if (month < 1 || month > 12) return '$year';
+  return '${_monthLong[month]} $year';
 }
 
-/// Opens the month picker sheet and returns the chosen result, or
-/// `null` if the user dismissed it.
+/// Opens the year + month picker sheet and returns the chosen result, or
+/// `null` if the user dismissed it. Fetches available years from the backend.
 Future<MonthFilterResult?> showMonthFilterSheet(
   BuildContext context, {
   required Color primaryColor,
-  required String? initialMonth,
+  int? initialYear,
+  int? initialMonth,
 }) {
   return showModalBottomSheet<MonthFilterResult>(
     context: context,
@@ -59,6 +65,7 @@ Future<MonthFilterResult?> showMonthFilterSheet(
     backgroundColor: Colors.transparent,
     builder: (_) => MonthFilterSheet(
       primaryColor: primaryColor,
+      initialYear: initialYear,
       initialMonth: initialMonth,
     ),
   );
@@ -66,12 +73,14 @@ Future<MonthFilterResult?> showMonthFilterSheet(
 
 class MonthFilterSheet extends StatefulWidget {
   final Color primaryColor;
-  final String? initialMonth;
+  final int? initialYear;
+  final int? initialMonth;
 
   const MonthFilterSheet({
     super.key,
     required this.primaryColor,
-    required this.initialMonth,
+    this.initialYear,
+    this.initialMonth,
   });
 
   @override
@@ -79,76 +88,123 @@ class MonthFilterSheet extends StatefulWidget {
 }
 
 class _MonthFilterSheetState extends State<MonthFilterSheet> {
-  String? _month;
+  int? _selectedYear;
+  int? _selectedMonth;
+  List<int> _availableYears = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _month = widget.initialMonth;
+    _selectedYear = widget.initialYear;
+    _selectedMonth = widget.initialMonth;
+    _fetchAvailableYears();
   }
 
-  /// Last 12 months (newest first) plus the next 2 ahead, in case the
-  /// admin wants to scope to upcoming due dates.
-  List<String> _buildMonthKeys() {
-    final now = DateTime.now();
-    return List.generate(14, (i) {
-      // i=0 is +1 month ahead, i=1 is current month, i>=2 backwards
-      final dt = DateTime(now.year, now.month - (i - 1));
-      final mm = dt.month.toString().padLeft(2, '0');
-      return '${dt.year}-$mm';
-    });
+  Future<void> _fetchAvailableYears() async {
+    try {
+      final api = ApiService();
+      final response = await api.get('/finance/available-years');
+      if (mounted && response['data'] is List) {
+        setState(() {
+          _availableYears = List<int>.from(response['data'] as List);
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final navy = widget.primaryColor;
-    final months = _buildMonthKeys();
 
     return AppBottomSheet(
-      title: 'Pilih bulan',
-      subtitle: 'Saring data Keuangan ke bulan tertentu.',
+      title: 'Pilih periode',
+      subtitle: 'Saring data Keuangan berdasarkan tahun dan bulan.',
       icon: Icons.calendar_month_rounded,
       primaryColor: navy,
       maxHeightFactor: 0.82,
       contentPadding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 4),
-          _SectionHeader(
-            label: 'BULAN',
-            icon: Icons.calendar_today_rounded,
-            trailing: _month == null ? 'SEMUA' : null,
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _PillToggle(
-                label: 'Semua bulan',
-                selected: _month == null,
-                primaryColor: navy,
-                onTap: () => setState(() => _month = null),
-              ),
-              for (final m in months)
-                _PillToggle(
-                  label: monthFilterLabelFor(m),
-                  selected: _month == m,
-                  primaryColor: navy,
-                  onTap: () => setState(() => _month = m),
+      content: _isLoading
+          ? const Center(
+              child: SizedBox(
+                height: 100,
+                child: Center(
+                  child: CircularProgressIndicator(),
                 ),
-            ],
-          ),
-          const SizedBox(height: 18),
-        ],
-      ),
+              ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 4),
+                _SectionHeader(
+                  label: 'TAHUN',
+                  icon: Icons.calendar_today_rounded,
+                  trailing: _selectedYear == null ? 'SEMUA' : null,
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _PillToggle(
+                      label: 'Semua tahun',
+                      selected: _selectedYear == null,
+                      primaryColor: navy,
+                      onTap: () => setState(() => _selectedYear = null),
+                    ),
+                    for (final y in _availableYears)
+                      _PillToggle(
+                        label: '$y',
+                        selected: _selectedYear == y,
+                        primaryColor: navy,
+                        onTap: () => setState(() => _selectedYear = y),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                _SectionHeader(
+                  label: 'BULAN',
+                  icon: Icons.calendar_today_rounded,
+                  trailing: _selectedMonth == null ? 'SEMUA' : null,
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _PillToggle(
+                      label: 'Semua bulan',
+                      selected: _selectedMonth == null,
+                      primaryColor: navy,
+                      onTap: () => setState(() => _selectedMonth = null),
+                    ),
+                    for (int m = 1; m <= 12; m++)
+                      _PillToggle(
+                        label: _monthLong[m],
+                        selected: _selectedMonth == m,
+                        primaryColor: navy,
+                        onTap: () => setState(() => _selectedMonth = m),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+              ],
+            ),
       footer: BottomSheetFooter(
         primaryLabel: 'Terapkan',
         primaryColor: navy,
         secondaryLabel: 'Batal',
-        onPrimary: () => AppNavigator.pop(context, MonthFilterResult(_month)),
+        onPrimary: () => AppNavigator.pop(
+          context,
+          MonthFilterResult(year: _selectedYear, month: _selectedMonth),
+        ),
         onSecondary: () => AppNavigator.pop(context),
       ),
     );

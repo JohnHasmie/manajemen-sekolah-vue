@@ -68,11 +68,14 @@ class FinanceService {
   ///
   /// Filters are forwarded as-is to the backend — see
   /// `FinanceRepository::getBillGroups` for the supported keys.
+  /// year/month are now separate int params; month=YYYY-MM backward compat
+  /// is handled by the repository.
   static Future<List<BillGroup>> getBillGroups({
     String? academicYearId,
     String? status,
     String? paymentTypeId,
-    String? month,
+    int? year,
+    int? month,
   }) async {
     final params = <String, dynamic>{};
     if (academicYearId != null && academicYearId.isNotEmpty) {
@@ -82,7 +85,8 @@ class FinanceService {
     if (paymentTypeId != null && paymentTypeId.isNotEmpty) {
       params['payment_type_id'] = paymentTypeId;
     }
-    if (month != null && month.isNotEmpty) params['month'] = month;
+    if (year != null) params['year'] = year;
+    if (month != null) params['month'] = month;
 
     final response = await dioClient.get(
       ApiEndpoints.financeBillGroups,

@@ -50,10 +50,16 @@ class ClassFinanceTable extends StatelessWidget {
   // ── Filtering ────────────────────────────────────────────────────────────
 
   /// Mirrors Laravel scope patterns for bill-status matching.
+  ///
+  /// Backend vocabulary for "fully paid" diverges across surfaces:
+  /// `CreatePaymentAction` writes `'paid'`, older admin flows write
+  /// `'verified'`, some legacy seeds use `'success'`. We accept all
+  /// three here to match [BillStatusCell]'s display logic.
   bool _statusMatches(dynamic bill, String filter) {
     if (filter == 'Semua') return true;
     final String status = bill['status'] ?? 'pending';
-    final bool isPaid = status == 'verified';
+    final bool isPaid =
+        status == 'paid' || status == 'verified' || status == 'success';
 
     if (filter == 'Lunas') return isPaid;
 

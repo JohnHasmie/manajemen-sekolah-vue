@@ -1,10 +1,5 @@
 // Bottom-sheet for filtering the Tagihan list by jenis pembayaran
-// (multi-select) and bulan (single select, last 12 months).
-//
-// The previous Keuangan filter sheet only operated on the Jenis tab
-// (status / period) — Tagihan rows had no way to slice by which
-// payment type or which month, even though both fields are first-class
-// dimensions in the data. This sheet plugs that gap.
+// (multi-select). Year and month are picked from the header pill.
 //
 // Returns the chosen [TagihanFilterResult] when the admin taps Apply,
 // or `null` if dismissed. The caller is responsible for storing the
@@ -20,19 +15,15 @@ class TagihanFilterResult {
   /// IDs of payment types to keep. Empty set means "all jenis".
   final Set<String> selectedJenisIds;
 
-  /// Single `YYYY-MM` month to keep, or `null` for "all months".
-  final String? selectedMonth;
-
   const TagihanFilterResult({
     required this.selectedJenisIds,
-    required this.selectedMonth,
   });
 
   /// Convenience helper — produces the empty / no-filter result.
   factory TagihanFilterResult.empty() =>
-      const TagihanFilterResult(selectedJenisIds: {}, selectedMonth: null);
+      const TagihanFilterResult(selectedJenisIds: {});
 
-  bool get hasAny => selectedJenisIds.isNotEmpty || selectedMonth != null;
+  bool get hasAny => selectedJenisIds.isNotEmpty;
 }
 
 /// Shows the sheet and returns the result on Apply, or `null` if
@@ -42,7 +33,6 @@ Future<TagihanFilterResult?> showTagihanFilterSheet(
   required Color primaryColor,
   required List<Map<String, String>> jenisOptions,
   required Set<String> initialJenisIds,
-  required String? initialMonth,
 }) {
   return showModalBottomSheet<TagihanFilterResult>(
     context: context,
@@ -52,7 +42,6 @@ Future<TagihanFilterResult?> showTagihanFilterSheet(
       primaryColor: primaryColor,
       jenisOptions: jenisOptions,
       initialJenisIds: initialJenisIds,
-      initialMonth: initialMonth,
     ),
   );
 }
@@ -68,15 +57,11 @@ class TagihanFilterSheet extends StatefulWidget {
   /// Pre-selected jenis IDs (from screen state).
   final Set<String> initialJenisIds;
 
-  /// Pre-selected month (`YYYY-MM`).
-  final String? initialMonth;
-
   const TagihanFilterSheet({
     super.key,
     required this.primaryColor,
     required this.jenisOptions,
     required this.initialJenisIds,
-    required this.initialMonth,
   });
 
   @override
@@ -85,57 +70,20 @@ class TagihanFilterSheet extends StatefulWidget {
 
 class _TagihanFilterSheetState extends State<TagihanFilterSheet> {
   late Set<String> _jenisIds;
-  String? _month;
 
   @override
   void initState() {
     super.initState();
     _jenisIds = Set<String>.from(widget.initialJenisIds);
-    _month = widget.initialMonth;
-  }
-
-  static const _monthNames = [
-    '',
-    'Januari',
-    'Februari',
-    'Maret',
-    'April',
-    'Mei',
-    'Juni',
-    'Juli',
-    'Agustus',
-    'September',
-    'Oktober',
-    'November',
-    'Desember',
-  ];
-
-  /// Returns the last 12 months (newest first) as `YYYY-MM`.
-  List<String> _buildMonthKeys() {
-    final now = DateTime.now();
-    return List.generate(12, (i) {
-      final dt = DateTime(now.year, now.month - i);
-      final mm = dt.month.toString().padLeft(2, '0');
-      return '${dt.year}-$mm';
-    });
-  }
-
-  String _monthLabel(String key) {
-    final parts = key.split('-');
-    if (parts.length != 2) return key;
-    final m = int.tryParse(parts[1]) ?? 0;
-    if (m < 1 || m > 12) return key;
-    return '${_monthNames[m]} ${parts[0]}';
   }
 
   @override
   Widget build(BuildContext context) {
     final navy = widget.primaryColor;
-    final months = _buildMonthKeys();
 
     return AppBottomSheet(
       title: 'Filter tagihan',
-      subtitle: 'Saring berdasarkan jenis pembayaran atau bulan.',
+      subtitle: 'Saring berdasarkan jenis pembayaran.',
       icon: Icons.tune_rounded,
       primaryColor: navy,
       maxHeightFactor: 0.86,
@@ -180,39 +128,12 @@ class _TagihanFilterSheetState extends State<TagihanFilterSheet> {
               ],
             ),
           const SizedBox(height: 22),
-          _SectionHeader(
-            label: 'BULAN JATUH TEMPO',
-            icon: Icons.calendar_month_rounded,
-            trailing: _month == null ? 'SEMUA' : null,
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _PillToggle(
-                label: 'Semua bulan',
-                selected: _month == null,
-                primaryColor: navy,
-                onTap: () => setState(() => _month = null),
-              ),
-              for (final m in months)
-                _PillToggle(
-                  label: _monthLabel(m),
-                  selected: _month == m,
-                  primaryColor: navy,
-                  onTap: () => setState(() => _month = m),
-                ),
-            ],
-          ),
-          const SizedBox(height: 18),
           // Reset link
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: () => setState(() {
                 _jenisIds.clear();
-                _month = null;
               }),
               icon: const Icon(
                 Icons.cleaning_services_rounded,
@@ -244,7 +165,6 @@ class _TagihanFilterSheetState extends State<TagihanFilterSheet> {
           context,
           TagihanFilterResult(
             selectedJenisIds: Set.from(_jenisIds),
-            selectedMonth: _month,
           ),
         ),
         onSecondary: () => AppNavigator.pop(context),

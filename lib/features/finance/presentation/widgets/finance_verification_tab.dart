@@ -15,18 +15,25 @@ class FinanceVerificationTab extends StatelessWidget {
     required this.pendingPaymentList,
     required this.hasMorePending,
     required this.isReadOnly,
-    required this.scrollController,
     required this.formatCurrency,
     required this.primaryColor,
     required this.onVerify,
     required this.onShowProof,
+    this.scrollController,
     super.key,
   });
 
   final List<dynamic> pendingPaymentList;
   final bool hasMorePending;
   final bool isReadOnly;
-  final ScrollController scrollController;
+
+  /// Optional explicit scroll controller. Omit (null) when the tab is
+  /// hosted inside a `NestedScrollView` body — the underlying
+  /// `CustomScrollView` will then attach to the `PrimaryScrollController`
+  /// the NestedScrollView provides, so the KPI overlap + sticky tab-bar
+  /// scroll fan-out works as expected. Pass an explicit controller only
+  /// when the tab owns its own scrollable (legacy hosting).
+  final ScrollController? scrollController;
   final String Function(dynamic) formatCurrency;
   final Color primaryColor;
   final Function(int) onVerify;
