@@ -1,18 +1,19 @@
-// Bottom-sheet showing payment options (manual pay, cancel, view detail) for a bill.
+// Options bottom sheet for an UNPAID bill row.
 //
-// Extracted from `_showPaymentOptions` in class_finance_report_screen.dart.
-// Like a Vue component `<PaymentOptionsSheet :bill="bill" @manualPay="..." @cancel="..." @detail="..." />`
-// that emits the chosen action back to the parent screen.
+// Triggered when admin taps a "Belum" cell on the class finance report.
+// Paid bills bypass this sheet entirely — `showPaymentOptions` on
+// `ClassFinancePaymentMixin` routes them straight to the detail sheet
+// since "Bayar Manual" doesn't make sense for an already-settled bill.
+//
+// Built on top of the shared `AppBottomSheet` so the navy gradient
+// header + safe-area padding + drag handle match every other admin
+// sheet in the app.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 
-/// Bottom-sheet widget that shows contextual payment options for a [bill].
-///
-/// Displays "Bayar Manual", "Batalkan Pembayaran", or "Lihat Detail" tiles
-/// depending on the current bill status.  Each tile closes the sheet and
-/// calls the corresponding callback so the parent screen handles the action.
 class ClassFinancePaymentOptionsSheet extends StatelessWidget {
   final dynamic bill;
   final Color primaryColor;
@@ -20,7 +21,10 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
   /// Called when the admin chooses "Bayar Manual".
   final VoidCallback onManualPay;
 
-  /// Called when the admin chooses "Batalkan Pembayaran".
+  /// Called when the admin chooses "Batalkan Pembayaran" — only relevant
+  /// when the bill is paid. Currently never invoked because paid bills
+  /// skip this sheet, but the prop is kept so the report screen wiring
+  /// doesn't need to change.
   final VoidCallback onCancelPayment;
 
   /// Called when the admin chooses "Lihat Detail".
@@ -35,213 +39,150 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
     required this.onViewDetail,
   });
 
-  LinearGradient get _cardGradient => LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [primaryColor, primaryColor.withValues(alpha: 0.7)],
-  );
-
   @override
   Widget build(BuildContext context) {
-    final String currentStatus = bill['status'] ?? 'pending';
-    final bool isPaid = currentStatus == 'verified';
-    final statusColor = isPaid ? ColorUtils.success600 : ColorUtils.error600;
+    // Sheet is only shown for unpaid bills now — see
+    // `ClassFinancePaymentMixin.showPaymentOptions`. We keep an
+    // internal flag rather than removing the paid branch entirely so
+    // that if a caller in another part of the app reaches this widget
+    // with a paid bill, it still degrades gracefully.
+    final String status = (bill?['status'] ?? 'pending').toString();
+    final bool isPaid = status == 'paid' ||
+        status == 'verified' ||
+        status == 'success';
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
+    return AppBottomSheet(
+      title: 'Opsi Pembayaran',
+      subtitle: isPaid ? 'Status: Lunas' : 'Status: Belum Lunas',
+      icon: Icons.account_balance_wallet_rounded,
+      primaryColor: primaryColor,
+      maxHeightFactor: 0.5,
+      content: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: ColorUtils.slate300,
-              borderRadius: const BorderRadius.all(Radius.circular(2)),
+          if (!isPaid)
+            _OptionTile(
+              icon: Icons.payments_rounded,
+              title: 'Bayar Manual',
+              subtitle: 'Catat pembayaran tunai / transfer',
+              tone: _OptionTone.success,
+              onTap: () {
+                AppNavigator.pop(context);
+                onManualPay();
+              },
             ),
+          if (!isPaid) const SizedBox(height: AppSpacing.sm),
+          _OptionTile(
+            icon: Icons.receipt_long_rounded,
+            title: 'Lihat Detail',
+            subtitle: 'Info tagihan & riwayat pembayaran',
+            tone: _OptionTone.neutral,
+            onTap: () {
+              AppNavigator.pop(context);
+              onViewDetail();
+            },
           ),
-          // Gradient Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-            decoration: BoxDecoration(
-              gradient: _cardGradient,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
+          if (isPaid) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _OptionTile(
+              icon: Icons.undo_rounded,
+              title: 'Batalkan Pembayaran',
+              subtitle: 'Kembalikan status ke belum lunas',
+              tone: _OptionTone.danger,
+              onTap: () {
+                AppNavigator.pop(context);
+                onCancelPayment();
+              },
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  ),
-                  child: const Icon(
-                    Icons.payment_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Opsi Pembayaran',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: statusColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            isPaid ? 'Status: Lunas' : 'Status: Belum Lunas',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.85),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Options
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-            child: Column(
-              children: [
-                if (!isPaid)
-                  _buildOptionTile(
-                    context: context,
-                    icon: Icons.payment_rounded,
-                    title: 'Bayar Manual',
-                    subtitle: 'Tandai tagihan sebagai lunas',
-                    color: ColorUtils.success600,
-                    onTap: () {
-                      AppNavigator.pop(context);
-                      onManualPay();
-                    },
-                  ),
-                if (isPaid) ...[
-                  _buildOptionTile(
-                    context: context,
-                    icon: Icons.cancel_outlined,
-                    title: 'Batalkan Pembayaran',
-                    subtitle: 'Kembalikan status ke belum lunas',
-                    color: ColorUtils.error600,
-                    onTap: () {
-                      AppNavigator.pop(context);
-                      onCancelPayment();
-                    },
-                  ),
-                ],
-                AppSpacing.v10,
-                _buildOptionTile(
-                  context: context,
-                  icon: Icons.info_outline_rounded,
-                  title: 'Lihat Detail',
-                  subtitle: 'Riwayat dan informasi tagihan',
-                  color: ColorUtils.corporateBlue600,
-                  onTap: () {
-                    AppNavigator.pop(context);
-                    onViewDetail();
-                  },
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
+          ],
         ],
       ),
     );
   }
+}
 
-  Widget _buildOptionTile({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    String? subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: const BorderRadius.all(Radius.circular(12)),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.06),
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
+enum _OptionTone { success, neutral, danger }
+
+class _OptionTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final _OptionTone tone;
+  final VoidCallback onTap;
+
+  const _OptionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.tone,
+    required this.onTap,
+  });
+
+  Color get _accent => switch (tone) {
+        _OptionTone.success => ColorUtils.success600,
+        _OptionTone.danger => ColorUtils.error600,
+        _OptionTone.neutral => ColorUtils.corporateBlue600,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _accent;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: 0.22)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 20),
               ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: ColorUtils.slate900,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F172A),
+                      ),
                     ),
-                  ),
-                  if (subtitle != null) ...[
-                    AppSpacing.v2,
+                    const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11.5,
                         color: ColorUtils.slate500,
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: ColorUtils.slate400,
-              size: 20,
-            ),
-          ],
+              const SizedBox(width: 6),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: ColorUtils.slate400,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -284,8 +284,23 @@ mixin ClassFinancePaymentMixin on State<ClassFinanceReportScreen> {
     };
   }
 
-  /// Shows payment options bottom sheet.
+  /// Shows the right entry-point for a tapped bill cell.
+  ///
+  /// Paid bills (status `paid` / `verified` / `success`) skip the options
+  /// sheet entirely and open the detail sheet directly — admins should
+  /// see the receipt + payment metadata, not be offered "Bayar Manual"
+  /// for a bill that's already settled. Unpaid bills still go through
+  /// the options sheet so the admin can choose between manual entry and
+  /// viewing detail.
   void showPaymentOptions(dynamic bill) {
+    final status = (bill?['status'] ?? '').toString();
+    final isPaid =
+        status == 'paid' || status == 'verified' || status == 'success';
+    if (isPaid) {
+      showDetailDialog(bill);
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

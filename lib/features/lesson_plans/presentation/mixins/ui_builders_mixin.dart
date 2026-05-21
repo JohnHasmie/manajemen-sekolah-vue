@@ -67,7 +67,11 @@ mixin UIBuildersMixin on State<LessonPlanAdminDetailPage> {
           ),
           child: Text(
             content,
-            style: TextStyle(color: ColorUtils.slate800, height: 1.5),
+            style: TextStyle(
+              fontSize: 13,
+              color: ColorUtils.slate800,
+              height: 1.5,
+            ),
           ),
         ),
       ],
