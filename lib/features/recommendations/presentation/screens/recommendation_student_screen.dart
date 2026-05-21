@@ -183,8 +183,13 @@ class _LearningRecommendationStudentScreenState
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Reload students if dependencies change (e.g., academic year).
+    // Ensures correct data when switching between academic years.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && students.isNotEmpty) Future<void>.value();
+      if (mounted) {
+        loadStudents(useCache: true);
+        _loadStatusCounts();
+      }
     });
   }
 

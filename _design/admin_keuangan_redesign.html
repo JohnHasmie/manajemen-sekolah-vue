@@ -1,0 +1,1268 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Keuangan · Admin · Tagihan list + Laporan per kelas + Matrix per kelas</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --green-50: #DCFCE7;
+    --green-100: #BBF7D0;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-100: #FDE68A;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-100: #FECACA;
+    --red-600: #DC2626;
+    --red-700: #B91C1C;
+    --blue-50: #DBEAFE;
+    --blue-100: #BFDBFE;
+    --blue-600: #1D4ED8;
+    --blue-700: #1E40AF;
+    --indigo-50: #E0E7FF;
+    --indigo-100: #C7D2FE;
+    --indigo-600: #4F46E5;
+    --indigo-700: #4338CA;
+    --violet-50: #EDE9FE;
+    --violet-100: #DDD6FE;
+    --violet-600: #7C3AED;
+    --violet-700: #6D28D9;
+    --rose-50: #FFE4E6;
+    --rose-600: #E11D48;
+    --teal-50: #CCFBF1;
+    --teal-100: #99F6E4;
+    --teal-600: #0D9488;
+    --teal-700: #0F766E;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0; padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  h2 { font-size: 16px; margin: 36px 0 14px; color: var(--brand-dark); letter-spacing: -0.2px; }
+  .subtitle { color: var(--slate-500); font-size: 13px; margin: 0 0 18px; max-width: 920px; line-height: 1.55; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin: 0 0 6px; padding: 12px 16px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; color: var(--slate-700); font-weight: 600;
+    max-width: 920px;
+  }
+  .legend .swatch { width: 12px; height: 12px; border-radius: 4px; display: inline-block; vertical-align: -1px; margin-right: 5px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 28px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 13px 16px 11px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px; text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100); background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .role { color: var(--brand-dark); margin-right: 8px; font-weight: 800; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%; aspect-ratio: 380 / 770;
+    position: relative; overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+  /* Brand admin header */
+  .header {
+    padding: 14px 16px 30px; color: white; flex: 0 0 auto;
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
+  }
+  .h-row { display: flex; align-items: center; gap: 8px; }
+  .h-back, .h-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex: 0 0 auto;
+  }
+  .h-icon svg, .h-back svg {
+    width: 16px; height: 16px; stroke-width: 2.4; fill: none; stroke: currentColor;
+  }
+  .h-title-wrap { flex: 1; margin: 0 6px; }
+  .h-eyebrow {
+    text-transform: uppercase; font-size: 10px; opacity: .82;
+    font-weight: 700; letter-spacing: 1.4px; margin-bottom: 1px;
+  }
+  .h-title { font-size: 17px; font-weight: 800; letter-spacing: -0.2px; }
+  .h-sub { font-size: 11.5px; opacity: .82; margin-top: 1px; font-weight: 500; }
+  /* Year switcher chip in header */
+  .year-row {
+    margin-top: 12px;
+    display: flex; gap: 6px; align-items: center;
+    overflow-x: auto;
+  }
+  .year-chip {
+    padding: 5px 11px; border-radius: 999px;
+    background: rgba(255,255,255,.12); color: white;
+    font-size: 11px; font-weight: 700;
+    border: 1px solid rgba(255,255,255,.16);
+    white-space: nowrap;
+  }
+  .year-chip.on { background: white; color: var(--brand-dark); border-color: transparent; }
+  .year-chip .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--amber-600); margin-right: 4px; vertical-align: 1px; }
+  /* KPI strip overlap */
+  .kpi-strip {
+    margin: -20px 16px 0; background: white;
+    border-radius: 16px; padding: 12px 8px;
+    box-shadow: 0 6px 18px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.04);
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px;
+    position: relative; z-index: 1;
+  }
+  .kpi-col { text-align: center; padding: 4px 6px; }
+  .kpi-col + .kpi-col { border-left: 1px solid var(--slate-100); }
+  .kpi-num { font-size: 16px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.2px; }
+  .kpi-num.amber  { color: var(--amber-700); }
+  .kpi-num.green  { color: var(--green-700); }
+  .kpi-num.red    { color: var(--red-700); }
+  .kpi-label {
+    font-size: 9.5px; color: var(--slate-500); margin-top: 1px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  /* Filter chip strip */
+  .filter-row {
+    margin: 14px 16px 4px;
+    display: flex; gap: 6px; overflow-x: auto;
+  }
+  .filter-row .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 10px; border-radius: 999px;
+    background: white; color: var(--slate-700);
+    font-size: 11px; font-weight: 700;
+    border: 1px solid var(--slate-200);
+    white-space: nowrap;
+  }
+  .filter-row .chip.on {
+    background: var(--brand-dark); color: white; border-color: transparent;
+  }
+  .filter-row .chip.add {
+    border-style: dashed; color: var(--slate-500);
+  }
+  /* Tabs */
+  .tabs {
+    margin: 8px 16px 4px;
+    display: flex; gap: 4px; background: white;
+    border-radius: 12px; padding: 4px;
+    border: 1px solid var(--slate-200);
+  }
+  .tab {
+    flex: 1; text-align: center;
+    padding: 8px 6px; font-size: 11px; font-weight: 700;
+    color: var(--slate-500); border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .tab.on { background: var(--brand-dark); color: white; }
+  .tab .badge {
+    background: var(--amber-600); color: white;
+    font-size: 9.5px; padding: 1px 6px; border-radius: 999px; font-weight: 800;
+  }
+  .tab.on .badge { background: rgba(255,255,255,.22); }
+  /* Body & cards */
+  .body { flex: 1; overflow-y: auto; padding: 8px 16px 60px; }
+  .sec-head {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10.5px; font-weight: 800;
+    color: var(--slate-500); margin: 10px 0 6px;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .sec-head .line { flex: 1; height: 1px; background: var(--slate-200); }
+  .sec-head .count {
+    background: var(--slate-100); color: var(--slate-700);
+    font-size: 9.5px; font-weight: 800; padding: 1px 8px; border-radius: 999px;
+  }
+
+  /* ── Bill-group card (Tagihan tab redesign) ───────────────── */
+  .bg-card {
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    margin-bottom: 10px; padding: 12px;
+    position: relative;
+  }
+  .bg-card .row1 {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  }
+  .type-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 9.5px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .type-pill.spp { background: var(--blue-50); color: var(--blue-700); }
+  .type-pill.pangkal { background: var(--violet-50); color: var(--violet-700); }
+  .type-pill.kegiatan { background: var(--teal-50); color: var(--teal-700); }
+  .type-pill.ujian { background: var(--amber-50); color: var(--amber-700); }
+  .bg-class {
+    font-size: 14px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.1px;
+  }
+  .bg-ay {
+    margin-left: auto; font-size: 10px; color: var(--slate-500);
+    background: var(--slate-100); padding: 2px 7px; border-radius: 6px; font-weight: 700;
+  }
+  .bg-card .row2 {
+    display: flex; align-items: center; gap: 8px; margin-top: 6px;
+    font-size: 11px; color: var(--slate-500);
+  }
+  .bg-card .row2 .dot { width: 3px; height: 3px; background: var(--slate-300); border-radius: 50%; }
+  .bg-progress {
+    margin-top: 8px;
+    height: 5px; background: var(--slate-100); border-radius: 999px; overflow: hidden;
+  }
+  .bg-progress span {
+    display: block; height: 100%; border-radius: 999px;
+  }
+  .bg-progress.danger span { background: linear-gradient(90deg, var(--red-600), var(--rose-600)); }
+  .bg-progress.partial span { background: linear-gradient(90deg, var(--amber-600), #fbbf24); }
+  .bg-progress.done span { background: var(--green-600); }
+  .bg-card .row3 {
+    display: flex; align-items: baseline; gap: 6px; margin-top: 8px;
+  }
+  .bg-total {
+    font-size: 13.5px; font-weight: 800; color: var(--slate-900);
+  }
+  .bg-total .lbl {
+    font-size: 10px; color: var(--slate-500); font-weight: 700; margin-left: 3px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .bg-stat {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 700; color: var(--slate-600);
+  }
+  .bg-stat .num { font-weight: 800; color: var(--slate-900); }
+  .bg-stat.red .num { color: var(--red-700); }
+
+  /* ── Tingkat (level) group with collapsible classes ───────── */
+  .lvl-group {
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    margin-bottom: 12px; overflow: hidden;
+  }
+  .lvl-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 12px;
+    background: linear-gradient(180deg, var(--slate-50), white);
+  }
+  .lvl-badge {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: var(--brand-cobalt); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800;
+  }
+  .lvl-name { font-size: 13px; font-weight: 800; color: var(--slate-900); }
+  .lvl-meta { font-size: 10.5px; color: var(--slate-500); font-weight: 600; margin-top: 1px; }
+  .lvl-pcount {
+    margin-left: auto;
+    background: var(--slate-100); color: var(--slate-700);
+    font-size: 10px; font-weight: 800; padding: 2px 9px; border-radius: 999px;
+  }
+  .lvl-pcount.red { background: var(--red-50); color: var(--red-700); }
+  .lvl-pcount.green { background: var(--green-50); color: var(--green-700); }
+  .lvl-pcount.amber { background: var(--amber-50); color: var(--amber-700); }
+  .lvl-arrow {
+    width: 22px; height: 22px; color: var(--slate-400);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lvl-arrow svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+  .lvl-body { padding: 4px 8px 8px; }
+  .cls-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 8px; border-radius: 10px;
+  }
+  .cls-row + .cls-row { border-top: 1px solid var(--slate-100); }
+  .cls-icon {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: var(--slate-100); color: var(--slate-500);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cls-icon svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.2; fill: none; }
+  .cls-name { font-size: 13px; font-weight: 800; color: var(--slate-900); }
+  .cls-meta {
+    font-size: 10.5px; color: var(--slate-500); font-weight: 600;
+    display: flex; gap: 6px; align-items: center; margin-top: 1px;
+  }
+  .cls-meta .pill {
+    background: var(--red-50); color: var(--red-700);
+    font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 999px;
+  }
+  .cls-meta .pill.g { background: var(--green-50); color: var(--green-700); }
+  .cls-amount {
+    margin-left: auto; text-align: right;
+  }
+  .cls-amount .v {
+    font-size: 12.5px; font-weight: 800; color: var(--slate-900);
+  }
+  .cls-amount .l {
+    font-size: 9.5px; color: var(--slate-500); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .cls-arrow { width: 18px; color: var(--slate-400); }
+  .cls-arrow svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.4; fill: none; }
+
+  /* ── Frame B (Laporan per kelas, grouped) ─────────────────── */
+  .search-bar {
+    margin: 0 16px;
+    background: white; border-radius: 12px;
+    padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; color: var(--slate-500); font-weight: 500;
+  }
+  .search-bar svg { width: 14px; height: 14px; stroke: var(--slate-400); stroke-width: 2.4; fill: none; }
+
+  /* ── Frame C (Matrix per kelas) ───────────────────────────── */
+  .type-tabs {
+    margin: 4px 16px 6px; display: flex; gap: 5px; overflow-x: auto;
+  }
+  .type-tabs .t {
+    padding: 6px 11px; border-radius: 9px;
+    background: white; color: var(--slate-600);
+    font-size: 11px; font-weight: 700; white-space: nowrap;
+    border: 1px solid var(--slate-200);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .type-tabs .t .num {
+    background: var(--slate-100); color: var(--slate-700);
+    padding: 1px 5px; border-radius: 6px; font-size: 9.5px; font-weight: 800;
+  }
+  .type-tabs .t.on { background: var(--brand-dark); color: white; border-color: transparent; }
+  .type-tabs .t.on .num { background: rgba(255,255,255,.22); color: white; }
+
+  /* Sticky-name matrix */
+  .matrix-wrap {
+    margin: 4px 16px 0; background: white;
+    border-radius: 14px; border: 1px solid var(--slate-200);
+    overflow: hidden;
+  }
+  .matrix-head {
+    display: grid; grid-template-columns: 116px repeat(6, 1fr);
+    background: var(--brand-dark); color: white;
+    font-size: 10px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .matrix-head > div {
+    padding: 8px 6px; text-align: center;
+  }
+  .matrix-head .nm { text-align: left; padding-left: 10px; background: var(--brand-dark); }
+  .matrix-row {
+    display: grid; grid-template-columns: 116px repeat(6, 1fr);
+    border-top: 1px solid var(--slate-100);
+  }
+  .matrix-row .nm {
+    padding: 8px 10px; background: var(--slate-50);
+    font-size: 11px; font-weight: 700; color: var(--slate-900);
+    display: flex; flex-direction: column; gap: 2px; justify-content: center;
+    border-right: 1px solid var(--slate-200);
+  }
+  .matrix-row .nm .nis {
+    font-size: 9.5px; color: var(--slate-500); font-weight: 600;
+  }
+  .matrix-row .cell {
+    padding: 8px 4px; display: flex; align-items: center; justify-content: center;
+    border-right: 1px solid var(--slate-100);
+  }
+  .matrix-row .cell:last-child { border-right: 0; }
+  .pill {
+    font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px;
+    text-transform: uppercase; letter-spacing: 0.4px; min-width: 30px; text-align: center;
+  }
+  .pill.lunas { background: var(--green-50); color: var(--green-700); }
+  .pill.belum { background: var(--red-50); color: var(--red-700); }
+  .pill.tempo { background: var(--amber-50); color: var(--amber-700); }
+  .pill.pending { background: var(--blue-50); color: var(--blue-700); }
+  .pill.dash { background: var(--slate-100); color: var(--slate-400); }
+
+  /* ── Per-student card view (Matrix alt) ───────────────────── */
+  .view-toggle {
+    margin: 4px 16px 6px;
+    display: flex; gap: 4px; background: white;
+    border-radius: 12px; padding: 4px;
+    border: 1px solid var(--slate-200);
+  }
+  .vt {
+    flex: 1; text-align: center; padding: 7px 6px;
+    font-size: 11px; font-weight: 700; color: var(--slate-500);
+    border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .vt.on { background: var(--brand-dark); color: white; }
+  .vt svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.2; fill: none; }
+
+  .stu-card {
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    margin-bottom: 10px; padding: 12px;
+  }
+  .stu-head { display: flex; align-items: center; gap: 10px; }
+  .stu-avatar {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--brand-cobalt); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+  }
+  .stu-name { font-size: 13px; font-weight: 800; color: var(--slate-900); }
+  .stu-nis { font-size: 10.5px; color: var(--slate-500); font-weight: 600; margin-top: 1px; }
+  .stu-summary {
+    margin-left: auto; text-align: right;
+  }
+  .stu-summary .pct { font-size: 13px; font-weight: 800; color: var(--green-700); }
+  .stu-summary .l { font-size: 9.5px; color: var(--slate-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+  .stu-strip {
+    margin-top: 10px; display: grid;
+    grid-template-columns: repeat(6, 1fr); gap: 4px;
+  }
+  .stu-strip .cell {
+    aspect-ratio: 1; border-radius: 7px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 800;
+    color: var(--slate-900);
+    border: 1px solid var(--slate-200);
+    background: white;
+  }
+  .stu-strip .cell.lunas { background: var(--green-50); color: var(--green-700); border-color: var(--green-100); }
+  .stu-strip .cell.belum { background: var(--red-50); color: var(--red-700); border-color: var(--red-100); }
+  .stu-strip .cell.tempo { background: var(--amber-50); color: var(--amber-700); border-color: var(--amber-100); }
+  .stu-strip .cell .m { font-size: 8px; text-transform: uppercase; letter-spacing: 0.4px; opacity: .82; }
+  .stu-strip .cell .icon { width: 11px; height: 11px; }
+
+  /* Bottom nav stub */
+  .nav {
+    flex: 0 0 auto; background: white; border-top: 1px solid var(--slate-200);
+    display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 0 10px;
+  }
+  .nav .it { text-align: center; font-size: 10px; color: var(--slate-500); font-weight: 600; }
+  .nav .it.on { color: var(--brand-dark); }
+  .nav .it .ic { display: block; margin: 0 auto 1px; width: 16px; height: 16px; }
+
+  /* Annotation pills */
+  .annotations { margin: 22px 0 0; max-width: 920px; }
+  .annot {
+    background: white; border-radius: 12px;
+    border: 1px solid var(--slate-200);
+    padding: 12px 14px; margin-bottom: 10px;
+    font-size: 13px; color: var(--slate-700); line-height: 1.55;
+  }
+  .annot b { color: var(--brand-dark); font-weight: 800; }
+  .annot code {
+    background: var(--slate-100); padding: 1px 6px; border-radius: 5px;
+    font-size: 12px; color: var(--slate-700);
+  }
+</style>
+</head>
+<body>
+
+<h1>Keuangan · Admin · Tagihan list + Laporan per kelas + Matrix per kelas</h1>
+<p class="subtitle">
+  Three surfaces re-laid-out around the same problem: too many duplicated rows because each
+  payment-type × class × academic-year combination becomes its own row. The new flow groups
+  by academic year first (default to current AY), then by Tingkat → Kelas. Matrix per kelas
+  drops the empty grid in favour of payment-type tabs + status pills, plus a card-view toggle
+  for narrow screens.
+</p>
+
+<div class="legend">
+  <div><span class="swatch" style="background: var(--brand-dark);"></span>Admin brand</div>
+  <div><span class="swatch" style="background: var(--green-600);"></span>Lunas</div>
+  <div><span class="swatch" style="background: var(--red-600);"></span>Belum lunas</div>
+  <div><span class="swatch" style="background: var(--amber-600);"></span>Jatuh tempo</div>
+  <div><span class="swatch" style="background: var(--blue-600);"></span>Menunggu verifikasi</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>Frame A · Tagihan tab — grouped by Tingkat → Kelas (current AY)</h2>
+<div class="grid">
+
+<!-- Frame A1: Tagihan grouped + AY chips -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A1</span><span class="role">Tagihan</span>Hub list — AY tabs + Tingkat groups</div>
+  <div class="phone">
+    <!-- Header -->
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">OPERASIONAL</div>
+          <div class="h-title">Keuangan</div>
+          <div class="h-sub">Tagihan, pembayaran, jenis</div>
+        </div>
+        <div class="h-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+        </div>
+      </div>
+      <div class="year-row">
+        <div class="year-chip"><span class="dot"></span>2024/2025</div>
+        <div class="year-chip on">2025/2026 · Aktif</div>
+        <div class="year-chip">2026/2027</div>
+        <div class="year-chip" style="border-style:dashed">+ Semua</div>
+      </div>
+    </div>
+    <!-- KPI strip -->
+    <div class="kpi-strip">
+      <div class="kpi-col">
+        <div class="kpi-num">7</div>
+        <div class="kpi-label">Total Tagihan</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num green">Rp 12jt</div>
+        <div class="kpi-label">Terkumpul</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num red">Rp 35jt</div>
+        <div class="kpi-label">Outstanding</div>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <div class="tabs" style="margin-top:14px;">
+      <div class="tab on">Tagihan <span class="badge">7</span></div>
+      <div class="tab">Pembayaran <span class="badge">4</span></div>
+      <div class="tab">Jenis</div>
+    </div>
+    <!-- Filter chips -->
+    <div class="filter-row">
+      <div class="chip on">Semua jenis</div>
+      <div class="chip">SPP</div>
+      <div class="chip">Uang Pangkal</div>
+      <div class="chip add">+ Bulan</div>
+    </div>
+    <!-- Body -->
+    <div class="body">
+      <div class="sec-head">
+        TINGKAT 8 <span class="count">3 kelas · Rp 20jt</span> <div class="line"></div>
+      </div>
+      <!-- Tingkat 8 group -->
+      <div class="lvl-group">
+        <div class="lvl-head">
+          <div class="lvl-badge">8</div>
+          <div>
+            <div class="lvl-name">Tingkat 8 · 3 kelas</div>
+            <div class="lvl-meta">60 siswa · 7 tagihan aktif</div>
+          </div>
+          <div class="lvl-pcount red">Rp 18jt belum</div>
+          <div class="lvl-arrow"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+        <div class="lvl-body">
+          <div class="cls-row">
+            <div class="cls-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg></div>
+            <div>
+              <div class="cls-name">8A</div>
+              <div class="cls-meta">30 siswa <span class="pill">30 belum</span></div>
+            </div>
+            <div class="cls-amount">
+              <div class="v">Rp 15jt</div>
+              <div class="l">SPP · 5 bln</div>
+            </div>
+            <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+          <div class="cls-row">
+            <div class="cls-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg></div>
+            <div>
+              <div class="cls-name">8B</div>
+              <div class="cls-meta">30 siswa <span class="pill">30 belum</span></div>
+            </div>
+            <div class="cls-amount">
+              <div class="v">Rp 15jt</div>
+              <div class="l">SPP · 5 bln</div>
+            </div>
+            <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+          <div class="cls-row">
+            <div class="cls-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg></div>
+            <div>
+              <div class="cls-name">8C</div>
+              <div class="cls-meta">26 siswa <span class="pill g">26 lunas</span></div>
+            </div>
+            <div class="cls-amount">
+              <div class="v">Rp 10jt</div>
+              <div class="l">SPP · 5 bln</div>
+            </div>
+            <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <!-- Tingkat 9 group -->
+      <div class="lvl-group">
+        <div class="lvl-head">
+          <div class="lvl-badge">9</div>
+          <div>
+            <div class="lvl-name">Tingkat 9 · 2 kelas</div>
+            <div class="lvl-meta">60 siswa · 2 tagihan aktif</div>
+          </div>
+          <div class="lvl-pcount amber">Rp 12jt belum</div>
+          <div class="lvl-arrow"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+        <div class="lvl-body">
+          <div class="cls-row">
+            <div class="cls-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg></div>
+            <div>
+              <div class="cls-name">9A</div>
+              <div class="cls-meta">30 siswa <span class="pill">28 belum</span></div>
+            </div>
+            <div class="cls-amount">
+              <div class="v">Rp 15jt</div>
+              <div class="l">SPP · 5 bln</div>
+            </div>
+            <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+          <div class="cls-row">
+            <div class="cls-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg></div>
+            <div>
+              <div class="cls-name">9B</div>
+              <div class="cls-meta">30 siswa <span class="pill g">22 lunas</span></div>
+            </div>
+            <div class="cls-amount">
+              <div class="v">Rp 12jt</div>
+              <div class="l">SPP · 4 bln</div>
+            </div>
+            <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav"><div class="it"><div class="ic">🏠</div>Beranda</div><div class="it"><div class="ic">👥</div>Orang</div><div class="it"><div class="ic">📘</div>Akademik</div><div class="it on"><div class="ic">💳</div>Keuangan</div><div class="it"><div class="ic">⚙️</div>Sistem</div></div>
+  </div>
+</div>
+
+<!-- Frame A2: Tagihan grouped by Jenis -->
+<div class="frame">
+  <div class="frame-label"><span class="num">A2</span><span class="role">Tagihan</span>Alt — grouped by jenis pembayaran</div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">OPERASIONAL</div>
+          <div class="h-title">Keuangan</div>
+          <div class="h-sub">Tahun 2025/2026</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></div>
+      </div>
+      <div class="year-row">
+        <div class="year-chip">2024/2025</div>
+        <div class="year-chip on">2025/2026 · Aktif</div>
+        <div class="year-chip">2026/2027</div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-col">
+        <div class="kpi-num">3</div>
+        <div class="kpi-label">Jenis</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num">7</div>
+        <div class="kpi-label">Tagihan</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num red">Rp 35jt</div>
+        <div class="kpi-label">Outstanding</div>
+      </div>
+    </div>
+    <div class="tabs" style="margin-top:14px;">
+      <div class="tab on">Tagihan <span class="badge">7</span></div>
+      <div class="tab">Pembayaran</div>
+      <div class="tab">Jenis</div>
+    </div>
+    <div class="filter-row">
+      <div class="chip on">Per jenis</div>
+      <div class="chip">Per kelas</div>
+      <div class="chip add">+ Bulan</div>
+    </div>
+    <div class="body">
+      <div class="sec-head">
+        SPP — SISWA PER BULAN <span class="count">5 grup</span> <div class="line"></div>
+      </div>
+      <div class="bg-card">
+        <div class="row1">
+          <div class="type-pill spp">SPP</div>
+          <div class="bg-class">5 kelas aktif</div>
+          <div class="bg-ay">2025/2026</div>
+        </div>
+        <div class="row2">150 siswa <div class="dot"></div> 150 jatuh tempo bulan ini</div>
+        <div class="bg-progress danger"><span style="width:18%"></span></div>
+        <div class="row3">
+          <div class="bg-total">Rp 75jt<span class="lbl"> total</span></div>
+          <div class="bg-stat red"><span class="num">122</span> belum</div>
+        </div>
+      </div>
+      <div class="bg-card">
+        <div class="row1">
+          <div class="type-pill pangkal">Uang Pangkal</div>
+          <div class="bg-class">3 kelas — kelas 7</div>
+          <div class="bg-ay">2025/2026</div>
+        </div>
+        <div class="row2">90 siswa <div class="dot"></div> sekali bayar</div>
+        <div class="bg-progress partial"><span style="width:64%"></span></div>
+        <div class="row3">
+          <div class="bg-total">Rp 90jt<span class="lbl"> total</span></div>
+          <div class="bg-stat"><span class="num">58</span>/90 lunas</div>
+        </div>
+      </div>
+      <div class="bg-card">
+        <div class="row1">
+          <div class="type-pill kegiatan">Kegiatan</div>
+          <div class="bg-class">7A · Tahunan</div>
+          <div class="bg-ay">2025/2026</div>
+        </div>
+        <div class="row2">22 siswa <div class="dot"></div> 5 jatuh tempo</div>
+        <div class="bg-progress done"><span style="width:88%"></span></div>
+        <div class="row3">
+          <div class="bg-total">Rp 33jt<span class="lbl"> total</span></div>
+          <div class="bg-stat"><span class="num">20</span>/22 lunas</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav"><div class="it"><div class="ic">🏠</div>Beranda</div><div class="it"><div class="ic">👥</div>Orang</div><div class="it"><div class="ic">📘</div>Akademik</div><div class="it on"><div class="ic">💳</div>Keuangan</div><div class="it"><div class="ic">⚙️</div>Sistem</div></div>
+  </div>
+</div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>Frame B · Laporan per kelas — grouped by Tingkat + AY filter</h2>
+<div class="grid">
+
+<!-- Frame B1: Laporan per kelas, current AY -->
+<div class="frame">
+  <div class="frame-label"><span class="num">B1</span><span class="role">Laporan</span>Hub — Tingkat groups + AY filter</div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">OPERASIONAL · KEUANGAN</div>
+          <div class="h-title">Laporan per kelas</div>
+          <div class="h-sub">Pilih kelas untuk lihat breakdown</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></div>
+      </div>
+      <div class="year-row">
+        <div class="year-chip">2024/2025</div>
+        <div class="year-chip on">2025/2026 · Aktif</div>
+        <div class="year-chip">Semua tahun</div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-col">
+        <div class="kpi-num">8</div>
+        <div class="kpi-label">Kelas</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num">236</div>
+        <div class="kpi-label">Siswa</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num green">66%</div>
+        <div class="kpi-label">Terkumpul</div>
+      </div>
+    </div>
+    <div class="filter-row" style="margin-top:14px;">
+      <div class="chip on">Semua</div>
+      <div class="chip">Tingkat 6</div>
+      <div class="chip">Tingkat 7</div>
+      <div class="chip add">+ Wali kelas</div>
+    </div>
+    <div class="search-bar" style="margin-top:8px;">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      Cari kelas…
+    </div>
+    <div class="body">
+      <div class="sec-head">TINGKAT 7 <span class="count">2 kelas · 34 siswa</span><div class="line"></div></div>
+      <div class="cls-row" style="background:white;border:1px solid var(--slate-200);border-radius:12px;margin-bottom:8px;padding:11px 12px;">
+        <div class="cls-icon" style="background:var(--blue-50);color:var(--blue-700);">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg>
+        </div>
+        <div>
+          <div class="cls-name">7A</div>
+          <div class="cls-meta">22 siswa · Wali Ibu Sari <span class="pill g">Rp 12jt</span></div>
+        </div>
+        <div class="cls-amount">
+          <div class="v">62%</div>
+          <div class="l">Lunas</div>
+        </div>
+        <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+      <div class="cls-row" style="background:white;border:1px solid var(--slate-200);border-radius:12px;margin-bottom:8px;padding:11px 12px;">
+        <div class="cls-icon" style="background:var(--blue-50);color:var(--blue-700);">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg>
+        </div>
+        <div>
+          <div class="cls-name">7B</div>
+          <div class="cls-meta">12 siswa · Wali Bu Ana <span class="pill">Rp 8jt</span></div>
+        </div>
+        <div class="cls-amount">
+          <div class="v">33%</div>
+          <div class="l">Lunas</div>
+        </div>
+        <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+      <div class="sec-head">TINGKAT 8 <span class="count">3 kelas · 86 siswa</span><div class="line"></div></div>
+      <div class="cls-row" style="background:white;border:1px solid var(--slate-200);border-radius:12px;margin-bottom:8px;padding:11px 12px;">
+        <div class="cls-icon" style="background:var(--violet-50);color:var(--violet-700);">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg>
+        </div>
+        <div>
+          <div class="cls-name">8A</div>
+          <div class="cls-meta">30 siswa · Pak Budi <span class="pill">Rp 15jt</span></div>
+        </div>
+        <div class="cls-amount">
+          <div class="v">0%</div>
+          <div class="l">Lunas</div>
+        </div>
+        <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+      <div class="cls-row" style="background:white;border:1px solid var(--slate-200);border-radius:12px;margin-bottom:8px;padding:11px 12px;">
+        <div class="cls-icon" style="background:var(--violet-50);color:var(--violet-700);">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg>
+        </div>
+        <div>
+          <div class="cls-name">8B</div>
+          <div class="cls-meta">30 siswa · Bu Lina <span class="pill">Rp 15jt</span></div>
+        </div>
+        <div class="cls-amount">
+          <div class="v">0%</div>
+          <div class="l">Lunas</div>
+        </div>
+        <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+      <div class="cls-row" style="background:white;border:1px solid var(--slate-200);border-radius:12px;margin-bottom:8px;padding:11px 12px;">
+        <div class="cls-icon" style="background:var(--violet-50);color:var(--violet-700);">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg>
+        </div>
+        <div>
+          <div class="cls-name">8C</div>
+          <div class="cls-meta">26 siswa · Pak Rama <span class="pill g">Rp 10jt</span></div>
+        </div>
+        <div class="cls-amount">
+          <div class="v">100%</div>
+          <div class="l">Lunas</div>
+        </div>
+        <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+    </div>
+    <div class="nav"><div class="it"><div class="ic">🏠</div>Beranda</div><div class="it"><div class="ic">👥</div>Orang</div><div class="it"><div class="ic">📘</div>Akademik</div><div class="it on"><div class="ic">💳</div>Keuangan</div><div class="it"><div class="ic">⚙️</div>Sistem</div></div>
+  </div>
+</div>
+
+<!-- Frame B2: Multi-AY view -->
+<div class="frame">
+  <div class="frame-label"><span class="num">B2</span><span class="role">Laporan</span>Semua tahun — collapsed AY accordion</div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">OPERASIONAL · KEUANGAN</div>
+          <div class="h-title">Laporan per kelas</div>
+          <div class="h-sub">3 tahun ajaran</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></div>
+      </div>
+      <div class="year-row">
+        <div class="year-chip">2024/2025</div>
+        <div class="year-chip">2025/2026 · Aktif</div>
+        <div class="year-chip on">Semua tahun</div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-col">
+        <div class="kpi-num">3</div>
+        <div class="kpi-label">Tahun</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num">16</div>
+        <div class="kpi-label">Kelas</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num">472</div>
+        <div class="kpi-label">Siswa</div>
+      </div>
+    </div>
+    <div class="search-bar" style="margin-top:14px;">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      Cari kelas atau tahun…
+    </div>
+    <div class="body">
+      <!-- AY group: 2025/2026 -->
+      <div class="lvl-group">
+        <div class="lvl-head" style="background:linear-gradient(180deg,var(--blue-50),white)">
+          <div class="lvl-badge" style="background:var(--blue-600);">📅</div>
+          <div>
+            <div class="lvl-name">2025/2026 <span style="font-size:9.5px;background:var(--green-50);color:var(--green-700);padding:1px 6px;border-radius:5px;margin-left:4px;">Aktif</span></div>
+            <div class="lvl-meta">8 kelas · 236 siswa</div>
+          </div>
+          <div class="lvl-pcount green">66%</div>
+          <div class="lvl-arrow"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+        <div class="lvl-body">
+          <div class="cls-row">
+            <div class="cls-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg></div>
+            <div>
+              <div class="cls-name">7A</div>
+              <div class="cls-meta">22 siswa <span class="pill g">62% lunas</span></div>
+            </div>
+            <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+          <div class="cls-row">
+            <div class="cls-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4zM4 10h16"/></svg></div>
+            <div>
+              <div class="cls-name">8A</div>
+              <div class="cls-meta">30 siswa <span class="pill">0% lunas</span></div>
+            </div>
+            <div class="cls-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+        </div>
+      </div>
+      <!-- AY group: 2024/2025 collapsed -->
+      <div class="lvl-group">
+        <div class="lvl-head">
+          <div class="lvl-badge" style="background:var(--slate-500);">📅</div>
+          <div>
+            <div class="lvl-name">2024/2025</div>
+            <div class="lvl-meta">6 kelas · 180 siswa · arsip</div>
+          </div>
+          <div class="lvl-pcount green">98%</div>
+          <div class="lvl-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+        </div>
+      </div>
+      <!-- AY group: 2023/2024 collapsed -->
+      <div class="lvl-group">
+        <div class="lvl-head">
+          <div class="lvl-badge" style="background:var(--slate-500);">📅</div>
+          <div>
+            <div class="lvl-name">2023/2024</div>
+            <div class="lvl-meta">5 kelas · 56 siswa · arsip</div>
+          </div>
+          <div class="lvl-pcount green">100%</div>
+          <div class="lvl-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav"><div class="it"><div class="ic">🏠</div>Beranda</div><div class="it"><div class="ic">👥</div>Orang</div><div class="it"><div class="ic">📘</div>Akademik</div><div class="it on"><div class="ic">💳</div>Keuangan</div><div class="it"><div class="ic">⚙️</div>Sistem</div></div>
+  </div>
+</div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<h2>Frame C · Laporan Keuangan per kelas — payment-type tabs + matrix + card view</h2>
+<div class="grid">
+
+<!-- Frame C1: matrix with payment-type tabs and KPI summary -->
+<div class="frame">
+  <div class="frame-label"><span class="num">C1</span><span class="role">Per-Kelas</span>Matrix — Jenis tabs + pill cells</div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">KEUANGAN · 2025/2026</div>
+          <div class="h-title">7A · Laporan</div>
+          <div class="h-sub">22 siswa · Wali Ibu Sari</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-col">
+        <div class="kpi-num green">14</div>
+        <div class="kpi-label">Lunas</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num red">6</div>
+        <div class="kpi-label">Belum</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num amber">2</div>
+        <div class="kpi-label">Tempo</div>
+      </div>
+    </div>
+    <!-- Payment-type tabs -->
+    <div class="type-tabs" style="margin-top:14px;">
+      <div class="t on">SPP <span class="num">5</span></div>
+      <div class="t">Uang Pangkal <span class="num">1</span></div>
+      <div class="t">Kegiatan <span class="num">2</span></div>
+    </div>
+    <!-- View toggle -->
+    <div class="view-toggle">
+      <div class="vt on">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+        Matrix
+      </div>
+      <div class="vt">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        Per siswa
+      </div>
+    </div>
+    <!-- Search -->
+    <div class="search-bar" style="margin-top:6px;">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      Cari siswa…
+    </div>
+    <!-- Matrix table -->
+    <div class="body" style="padding-top:8px;">
+      <div class="sec-head">SPP — PER BULAN <span class="count">5 bln</span><div class="line"></div></div>
+      <div class="matrix-wrap">
+        <div class="matrix-head">
+          <div class="nm">Siswa</div>
+          <div>Jul</div><div>Ags</div><div>Sep</div><div>Okt</div><div>Nov</div><div>Des</div>
+        </div>
+        <div class="matrix-row">
+          <div class="nm">Anak Abiy 1<span class="nis">T7001</span></div>
+          <div class="cell"><div class="pill lunas">✓</div></div>
+          <div class="cell"><div class="pill lunas">✓</div></div>
+          <div class="cell"><div class="pill belum">✕</div></div>
+          <div class="cell"><div class="pill tempo">!</div></div>
+          <div class="cell"><div class="pill dash">–</div></div>
+          <div class="cell"><div class="pill dash">–</div></div>
+        </div>
+        <div class="matrix-row">
+          <div class="nm">Anak Andro 1<span class="nis">T12001</span></div>
+          <div class="cell"><div class="pill lunas">✓</div></div>
+          <div class="cell"><div class="pill lunas">✓</div></div>
+          <div class="cell"><div class="pill lunas">✓</div></div>
+          <div class="cell"><div class="pill belum">✕</div></div>
+          <div class="cell"><div class="pill dash">–</div></div>
+          <div class="cell"><div class="pill dash">–</div></div>
+        </div>
+        <div class="matrix-row">
+          <div class="nm">Anak Habib 1<span class="nis">T6001</span></div>
+          <div class="cell"><div class="pill lunas">✓</div></div>
+          <div class="cell"><div class="pill pending">⏳</div></div>
+          <div class="cell"><div class="pill belum">✕</div></div>
+          <div class="cell"><div class="pill belum">✕</div></div>
+          <div class="cell"><div class="pill dash">–</div></div>
+          <div class="cell"><div class="pill dash">–</div></div>
+        </div>
+        <div class="matrix-row">
+          <div class="nm">Anak Luay 1<span class="nis">T11001</span></div>
+          <div class="cell"><div class="pill lunas">✓</div></div>
+          <div class="cell"><div class="pill lunas">✓</div></div>
+          <div class="cell"><div class="pill lunas">✓</div></div>
+          <div class="cell"><div class="pill lunas">✓</div></div>
+          <div class="cell"><div class="pill dash">–</div></div>
+          <div class="cell"><div class="pill dash">–</div></div>
+        </div>
+        <div class="matrix-row">
+          <div class="nm">Anak Mas Yahya<span class="nis">T10001A</span></div>
+          <div class="cell"><div class="pill belum">✕</div></div>
+          <div class="cell"><div class="pill belum">✕</div></div>
+          <div class="cell"><div class="pill belum">✕</div></div>
+          <div class="cell"><div class="pill tempo">!</div></div>
+          <div class="cell"><div class="pill dash">–</div></div>
+          <div class="cell"><div class="pill dash">–</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav"><div class="it"><div class="ic">🏠</div>Beranda</div><div class="it"><div class="ic">👥</div>Orang</div><div class="it"><div class="ic">📘</div>Akademik</div><div class="it on"><div class="ic">💳</div>Keuangan</div><div class="it"><div class="ic">⚙️</div>Sistem</div></div>
+  </div>
+</div>
+
+<!-- Frame C2: Per-siswa card view -->
+<div class="frame">
+  <div class="frame-label"><span class="num">C2</span><span class="role">Per-Kelas</span>Per siswa — card view, status strip</div>
+  <div class="phone">
+    <div class="header">
+      <div class="h-row">
+        <div class="h-back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="h-title-wrap">
+          <div class="h-eyebrow">KEUANGAN · 2025/2026</div>
+          <div class="h-title">7A · Laporan</div>
+          <div class="h-sub">22 siswa · Wali Ibu Sari</div>
+        </div>
+        <div class="h-icon"><svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg></div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-col">
+        <div class="kpi-num green">14</div>
+        <div class="kpi-label">Lunas</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num red">6</div>
+        <div class="kpi-label">Belum</div>
+      </div>
+      <div class="kpi-col">
+        <div class="kpi-num amber">2</div>
+        <div class="kpi-label">Tempo</div>
+      </div>
+    </div>
+    <div class="type-tabs" style="margin-top:14px;">
+      <div class="t on">SPP <span class="num">5</span></div>
+      <div class="t">Uang Pangkal <span class="num">1</span></div>
+      <div class="t">Kegiatan <span class="num">2</span></div>
+    </div>
+    <div class="view-toggle">
+      <div class="vt">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+        Matrix
+      </div>
+      <div class="vt on">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        Per siswa
+      </div>
+    </div>
+    <div class="search-bar" style="margin-top:6px;">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      Cari siswa…
+    </div>
+    <div class="body" style="padding-top:8px;">
+      <div class="stu-card">
+        <div class="stu-head">
+          <div class="stu-avatar">AA</div>
+          <div>
+            <div class="stu-name">Anak Abiy 1</div>
+            <div class="stu-nis">T7001 · SPP 2025/2026</div>
+          </div>
+          <div class="stu-summary">
+            <div class="pct" style="color:var(--amber-700);">2/4</div>
+            <div class="l">Lunas</div>
+          </div>
+        </div>
+        <div class="stu-strip">
+          <div class="cell lunas"><div>✓</div><div class="m">Jul</div></div>
+          <div class="cell lunas"><div>✓</div><div class="m">Ags</div></div>
+          <div class="cell belum"><div>✕</div><div class="m">Sep</div></div>
+          <div class="cell tempo"><div>!</div><div class="m">Okt</div></div>
+          <div class="cell"><div>–</div><div class="m">Nov</div></div>
+          <div class="cell"><div>–</div><div class="m">Des</div></div>
+        </div>
+      </div>
+      <div class="stu-card">
+        <div class="stu-head">
+          <div class="stu-avatar">AA</div>
+          <div>
+            <div class="stu-name">Anak Andro 1</div>
+            <div class="stu-nis">T12001 · SPP 2025/2026</div>
+          </div>
+          <div class="stu-summary">
+            <div class="pct">3/4</div>
+            <div class="l">Lunas</div>
+          </div>
+        </div>
+        <div class="stu-strip">
+          <div class="cell lunas"><div>✓</div><div class="m">Jul</div></div>
+          <div class="cell lunas"><div>✓</div><div class="m">Ags</div></div>
+          <div class="cell lunas"><div>✓</div><div class="m">Sep</div></div>
+          <div class="cell belum"><div>✕</div><div class="m">Okt</div></div>
+          <div class="cell"><div>–</div><div class="m">Nov</div></div>
+          <div class="cell"><div>–</div><div class="m">Des</div></div>
+        </div>
+      </div>
+      <div class="stu-card">
+        <div class="stu-head">
+          <div class="stu-avatar">AL</div>
+          <div>
+            <div class="stu-name">Anak Luay 1</div>
+            <div class="stu-nis">T11001 · SPP 2025/2026</div>
+          </div>
+          <div class="stu-summary">
+            <div class="pct">4/4</div>
+            <div class="l">Lunas</div>
+          </div>
+        </div>
+        <div class="stu-strip">
+          <div class="cell lunas"><div>✓</div><div class="m">Jul</div></div>
+          <div class="cell lunas"><div>✓</div><div class="m">Ags</div></div>
+          <div class="cell lunas"><div>✓</div><div class="m">Sep</div></div>
+          <div class="cell lunas"><div>✓</div><div class="m">Okt</div></div>
+          <div class="cell"><div>–</div><div class="m">Nov</div></div>
+          <div class="cell"><div>–</div><div class="m">Des</div></div>
+        </div>
+      </div>
+      <div class="stu-card">
+        <div class="stu-head">
+          <div class="stu-avatar">AY</div>
+          <div>
+            <div class="stu-name">Anak Mas Yahya</div>
+            <div class="stu-nis">T10001A · SPP 2025/2026</div>
+          </div>
+          <div class="stu-summary">
+            <div class="pct" style="color:var(--red-700);">0/4</div>
+            <div class="l">Lunas</div>
+          </div>
+        </div>
+        <div class="stu-strip">
+          <div class="cell belum"><div>✕</div><div class="m">Jul</div></div>
+          <div class="cell belum"><div>✕</div><div class="m">Ags</div></div>
+          <div class="cell belum"><div>✕</div><div class="m">Sep</div></div>
+          <div class="cell tempo"><div>!</div><div class="m">Okt</div></div>
+          <div class="cell"><div>–</div><div class="m">Nov</div></div>
+          <div class="cell"><div>–</div><div class="m">Des</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav"><div class="it"><div class="ic">🏠</div>Beranda</div><div class="it"><div class="ic">👥</div>Orang</div><div class="it"><div class="ic">📘</div>Akademik</div><div class="it on"><div class="ic">💳</div>Keuangan</div><div class="it"><div class="ic">⚙️</div>Sistem</div></div>
+  </div>
+</div>
+
+</div>
+
+<div class="annotations">
+  <div class="annot">
+    <b>A1 — Tagihan grouped by Tingkat → Kelas.</b> Default AY = current (Aktif chip), collapsing the noisy duplicate rows we saw before (SPP 8A 2024/2025, SPP 8A (2024) 2025/2026, SPP 8A 2025/2026 all in one list). Each Tingkat group expands to show its classes; tapping a class drills into the same C1/C2 matrix. KPI strip overlaps the header per <code>BrandPageLayout.kpiOverlapHeight</code>. The "Aktif" chip dot mirrors the Pengumuman event live indicator.
+  </div>
+  <div class="annot">
+    <b>A2 — Tagihan grouped by Jenis.</b> Alternative grouping when admin cares about "how is SPP collection going across all classes" — bill-group card shows the jenis pill, span ("5 kelas aktif"), progress bar, and outstanding count. The two groupings (A1 vs A2) can co-exist behind a single chip-row toggle <i>Per kelas · Per jenis</i> in the filter row.
+  </div>
+  <div class="annot">
+    <b>B1 — Laporan per kelas with Tingkat sections.</b> Replaces the flat list "6A (2024), 6B (2024), 7A, 7A (2024)" pattern by surfacing the AY scope as a header chip first. Each class row carries the wali kelas + outstanding pill so admin doesn't need to drill in to see severity.
+  </div>
+  <div class="annot">
+    <b>B2 — "Semua tahun" mode.</b> When admin flips the AY chip to "Semua tahun", AY groups collapse by default; the active year stays expanded so primary workflow isn't slowed down. Archived years show a single progress pill.
+  </div>
+  <div class="annot">
+    <b>C1 — Matrix view.</b> Sticky student name column, monthly status pills with iconography (✓ lunas, ✕ belum, ! tempo, ⏳ pending, – belum berlaku). Drops the all-empty 12-month grid by paginating per payment type (SPP→5 bln visible) — bigger cells, better readability. Tapping any pill opens the existing detail sheet redesigned earlier.
+  </div>
+  <div class="annot">
+    <b>C2 — Per-siswa card view.</b> Toggleable from the same screen. Each card shows the student avatar, NIS, status summary (e.g. <code>2/4 lunas</code>), and a 6-cell strip representing the current jenis's periods. Friendlier on small phones than horizontal-scrolling a 12-column matrix.
+  </div>
+  <div class="annot">
+    <b>Behavioural rules across all frames.</b>
+    (1) AY chip is sticky-by-default to current AY — admin doesn't need to filter every session.
+    (2) Jenis tabs persist when toggling between Matrix and Per-siswa views.
+    (3) Search bar always scoped to the visible jenis tab.
+    (4) Single source of truth for cell-tap: routes to the existing detail bottom sheet (Lunas → detail, Belum → options sheet with Bayar Manual + Lihat Detail).
+    (5) KPI counts always reflect the active AY × Jenis combination so the numbers always tell the truth about what's currently on screen.
+  </div>
+</div>
+
+</body>
+</html>
