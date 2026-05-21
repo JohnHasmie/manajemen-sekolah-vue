@@ -26,8 +26,19 @@ class BillStatusCell extends StatelessWidget {
     Color color;
     String text;
 
-    // 1. Check Verified / Lunas
-    if (status == 'verified') {
+    // 1. Check paid / Lunas.
+    //
+    // Backend status vocabulary diverges across surfaces:
+    //   * `CreatePaymentAction` flips the bill row to `'paid'` once the
+    //     sum of verified payments equals the bill amount.
+    //   * Older admin flows post `payments.status = 'verified'` directly
+    //     and the bill keeps `'verified'` as a synonym for paid.
+    //   * Some legacy seed rows use `'success'`.
+    //
+    // All three should read as Lunas. Restricting to `'verified'` was
+    // the cause of the "still Belum after successful save" bug — the
+    // payment landed, the bill flipped to `'paid'`, the UI didn't.
+    if (status == 'paid' || status == 'verified' || status == 'success') {
       color = ColorUtils.success600;
       text = 'Lunas';
     } else {

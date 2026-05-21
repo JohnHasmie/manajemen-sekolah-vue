@@ -139,9 +139,9 @@ class _Loaded extends StatelessWidget {
           ),
 
           if (hasFlow) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             Container(height: 1, color: ColorUtils.slate100),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _AliranBar(
               paidPct: summary.paidPct,
               outstandingPct: summary.outstandingPct,
@@ -324,76 +324,78 @@ class _AliranBar extends StatelessWidget {
     final outFrac = outstandingPct / _total;
     final ovrFrac = overduePct / _total;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    // Compact Aliran — inline kicker + bar on a single row, then a
+    // single-line legend row below. The previous 3-row layout (kicker
+    // → bar → legend) burned ~70dp; this comes in at ~28dp without
+    // dropping any information.
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          children: [
-            Icon(
-              Icons.water_drop_outlined,
-              size: 12,
-              color: ColorUtils.slate500,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              'ALIRAN PEMBAYARAN',
-              style: TextStyle(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.6,
-                color: ColorUtils.slate500,
-              ),
-            ),
-          ],
+        Icon(
+          Icons.water_drop_outlined,
+          size: 11,
+          color: ColorUtils.slate500,
         ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(5),
-          child: SizedBox(
-            height: 14,
-            child: Row(
-              children: [
-                if (paidFrac > 0)
-                  Expanded(
-                    flex: (paidFrac * 1000).round(),
-                    child: _AliranSegment(
-                      color: const Color(0xFF10B981),
-                      label: '${paidPct.round()}%',
-                      textColor: Colors.white,
+        const SizedBox(width: 4),
+        Text(
+          'ALIRAN',
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.6,
+            color: ColorUtils.slate500,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: SizedBox(
+              height: 10,
+              child: Row(
+                children: [
+                  if (paidFrac > 0)
+                    Expanded(
+                      flex: (paidFrac * 1000).round(),
+                      child: _AliranSegment(
+                        color: const Color(0xFF10B981),
+                        label: '${paidPct.round()}%',
+                        textColor: Colors.white,
+                      ),
                     ),
-                  ),
-                if (outFrac > 0)
-                  Expanded(
-                    flex: (outFrac * 1000).round(),
-                    child: _AliranSegment(
-                      color: const Color(0xFFF59E0B),
-                      label: '${outstandingPct.round()}%',
-                      textColor: const Color(0xFF7C2D12),
+                  if (outFrac > 0)
+                    Expanded(
+                      flex: (outFrac * 1000).round(),
+                      child: _AliranSegment(
+                        color: const Color(0xFFF59E0B),
+                        label: '${outstandingPct.round()}%',
+                        textColor: const Color(0xFF7C2D12),
+                      ),
                     ),
-                  ),
-                if (ovrFrac > 0)
-                  Expanded(
-                    flex: (ovrFrac * 1000).round(),
-                    child: _AliranSegment(
-                      color: const Color(0xFFDC2626),
-                      label: '${overduePct.round()}%',
-                      textColor: Colors.white,
-                      onTap: onOverdueTap,
+                  if (ovrFrac > 0)
+                    Expanded(
+                      flex: (ovrFrac * 1000).round(),
+                      child: _AliranSegment(
+                        color: const Color(0xFFDC2626),
+                        label: '${overduePct.round()}%',
+                        textColor: Colors.white,
+                        onTap: onOverdueTap,
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        const Row(
-          children: [
-            _Legend(color: Color(0xFF10B981), label: 'Terbayar'),
-            SizedBox(width: 12),
-            _Legend(color: Color(0xFFF59E0B), label: 'Belum lunas'),
-            SizedBox(width: 12),
-            _Legend(color: Color(0xFFDC2626), label: 'Jatuh tempo'),
-          ],
+        const SizedBox(width: 8),
+        _Legend(color: const Color(0xFF10B981), short: 'Lunas'),
+        const SizedBox(width: 6),
+        _Legend(color: const Color(0xFFF59E0B), short: 'Belum'),
+        const SizedBox(width: 6),
+        _Legend(
+          color: const Color(0xFFDC2626),
+          short: 'Tempo',
+          onTap: onOverdueTap,
         ),
       ],
     );
@@ -442,29 +444,39 @@ class _AliranSegment extends StatelessWidget {
 
 class _Legend extends StatelessWidget {
   final Color color;
-  final String label;
-  const _Legend({required this.color, required this.label});
+  final String short;
+  final VoidCallback? onTap;
+  const _Legend({required this.color, required this.short, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final row = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 7,
-          height: 7,
+          width: 6,
+          height: 6,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 5),
+        const SizedBox(width: 4),
         Text(
-          label,
+          short,
           style: TextStyle(
-            fontSize: 10,
+            fontSize: 9.5,
             fontWeight: FontWeight.w700,
             color: ColorUtils.slate600,
           ),
         ),
       ],
+    );
+    if (onTap == null) return row;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+        child: row,
+      ),
     );
   }
 }

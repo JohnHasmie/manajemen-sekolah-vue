@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
@@ -102,8 +103,11 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   /// jenis filter applied. Driven by [TagihanFilterSheet].
   Set<String> _tagihanSelectedJenisIds = {};
 
-  /// Single `YYYY-MM` to keep in the Tagihan list, or null = all months.
-  String? _tagihanSelectedMonth;
+  /// Year for Tagihan list filter, null = all years. Shared across tabs.
+  int? _filterYear;
+
+  /// Month for Tagihan list filter (1-12), null = all months. Shared across tabs.
+  int? _filterMonth;
 
   final ScrollController _billScrollController = ScrollController();
   final ScrollController _pendingScrollController = ScrollController();
@@ -112,6 +116,15 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   /// it can reserve the right amount of top spacing — matters because
   /// the header height varies with status-bar inset and chip count.
   final GlobalKey _headerKey = GlobalKey();
+
+  /// Measured header height. Reused in the Stack-based body layout so
+  /// the NestedScrollView positioned below the header overlaps the
+  /// gradient by exactly [BrandPageLayout.kpiOverlapHeight] dp — the
+  /// shared overlap convention every brand screen uses. Updated in a
+  /// post-frame callback on every build; setState only fires when the
+  /// height actually changes so we don't churn the tree.
+  double _headerH = 0;
+
   // Compact v2 estimate — admin Keuangan: status bar (~44) + toolbar
   // (~52) + filter strip (~32) + padding (~24) ≈ 152. Refined to the
 
@@ -175,7 +188,8 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
         paymentTypeId: _tagihanSelectedJenisIds.length == 1
             ? _tagihanSelectedJenisIds.first
             : null,
-        month: _tagihanSelectedMonth,
+        year: _filterYear,
+        month: _filterMonth,
       );
       if (!mounted) return;
       setState(() => _billGroups = groups);
@@ -394,6 +408,44 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
     periodFilter: _selectedPeriodFilter,
   );
 
+  /// Reads the FinanceHeader's rendered size after layout and triggers
+  /// a setState only when the height has actually changed. The Stack
+  /// body positions the NestedScrollView at `_headerH - overlap`, so
+  /// this measurement is what lets the KPI card tuck into the gradient
+  /// extension at the right vertical position.
+  void _measureHeader() {
+    final ctx = _headerKey.currentContext;
+    if (ctx == null) return;
+    final box = ctx.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final h = box.size.height;
+    if ((h - _headerH).abs() > 0.5) {
+      setState(() => _headerH = h);
+    }
+  }
+
+  /// Pagination tap-in for the Pembayaran tab when the screen hosts
+  /// the tab inside a `NestedScrollView`. The inner ListView no longer
+  /// has its own controller (NestedScrollView's PrimaryScrollController
+  /// drives it), so we fan in pagination via a `ScrollNotification`
+  /// listener at the screen level. We only fire when the active tab is
+  /// Pembayaran (`index == 1`) — Tagihan uses aggregated bill-groups
+  /// (no pagination) and Jenis is short-list (no pagination yet).
+  bool _onTabScrollNotification(ScrollNotification notification) {
+    if (_currentTabIndex != 1) return false;
+    if (!_hasMorePending || _isLoadingMorePending || _isLoading) return false;
+    final metrics = notification.metrics;
+    // Only react to user-driven scrolls on the inner body's
+    // scrollable; the outer NestedScrollView fires its own
+    // notifications but those don't carry the inner list's
+    // maxScrollExtent.
+    if (metrics.axis != Axis.vertical) return false;
+    if (metrics.pixels >= metrics.maxScrollExtent - 200) {
+      loadMorePendingPayments();
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = ref.watch(languageRiverpod);
@@ -415,9 +467,9 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
 
     // Resolve all chip values + active counts up front so the header
     // gets a clean, tab-specific chip list.
-    final monthLabel = _tagihanSelectedMonth == null
+    final monthLabel = (_filterYear == null && _filterMonth == null)
         ? null
-        : monthFilterLabelFor(_tagihanSelectedMonth);
+        : monthFilterLabelFor(year: _filterYear, month: _filterMonth);
     final jenisLabel = _tagihanSelectedJenisIds.isEmpty
         ? null
         : '${_tagihanSelectedJenisIds.length} jenis';
@@ -452,7 +504,7 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
       // Tagihan / Pembayaran tabs — Status (bill) + Bulan + Jenis
       activeFilterCount =
           (tagihanStatus == TagihanStatusFilter.all ? 0 : 1) +
-          (_tagihanSelectedMonth == null ? 0 : 1) +
+          ((_filterYear == null && _filterMonth == null) ? 0 : 1) +
           (_tagihanSelectedJenisIds.isEmpty ? 0 : 1);
       headerChips = [
         BrandFilterChip(
@@ -486,81 +538,136 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
         .selectedAcademicYear?['id']
         ?.toString();
 
+    // Measure FinanceHeader after layout so the Stack body knows the
+    // exact gradient height to overlap into. Cheap no-op when the
+    // height hasn't changed (early return inside `_measureHeader`).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureHeader());
+
+    const overlap = BrandPageLayout.kpiOverlapHeight; // 45dp
+    final header = FinanceHeader(
+      key: _headerKey,
+      languageProvider: languageProvider,
+      primaryColor: getPrimaryColor(),
+      onTuneTap: onTuneTap,
+      activeFilterCount: activeFilterCount,
+      chips: headerChips,
+      // Extends the gradient down past the chip strip so the KPI card
+      // tucks into the gradient when it sits at the top of the body
+      // scrollable — same overlap idiom as every other admin hub.
+      kpiOverlayHeight: overlap,
+    );
+
+    final tabContent = FinanceTabContent(
+      currentTabIndex: _currentTabIndex,
+      pendingPaymentList: _pendingPaymentList,
+      billGroups: _billGroups,
+      academicYearId: ayId,
+      languageProvider: languageProvider,
+      // Pull-to-refresh on the Tagihan tab now refreshes both the
+      // legacy bill list (still feeds the bill update path + KPI
+      // overdue badge) and the new aggregated groups in parallel.
+      primaryColor: getPrimaryColor(),
+      isReadOnly: isReadOnly,
+      formatCurrency: formatCurrency,
+      onRefresh: _refreshAll,
+      filteredPaymentTypes: filteredPaymentTypes,
+      searchController: _searchController,
+      hasActiveFilter: _hasActiveFilter,
+      onShowFilterSheet: showFilterSheet,
+      onClearAllFilters: clearAllFilters,
+      buildFilterChips: () => buildFilterChips(languageProvider),
+      getGoalDescription: getGoalDescription,
+      getTranslatedPeriod: getTranslatedPeriod,
+      onEdit: (index) =>
+          showPaymentTypeDetail(filteredPaymentTypes[index]),
+      onDelete: (index) =>
+          deletePaymentType(filteredPaymentTypes[index]),
+      // NOTE: no pendingScrollController — when hosted inside the
+      // NestedScrollView body, the inner CustomScrollView attaches to
+      // the PrimaryScrollController NestedScrollView provides.
+      // Pagination is driven by [_onTabScrollNotification] instead.
+      hasMorePending: _hasMorePending,
+      onVerify: (index) =>
+          showVerificationDialog(_pendingPaymentList[index]),
+      onShowProof: (index) =>
+          showPaymentProof(_pendingPaymentList[index]),
+      tagihanFilterKey: _tagihanFilterKey,
+      onTagihBill: _onTagihBill,
+      onClassReportTap: _openClassFinanceReport,
+      tagihanSelectedJenisIds: _tagihanSelectedJenisIds,
+      filterYear: _filterYear,
+      filterMonth: _filterMonth,
+    );
+
+    final kpiBlock = FinanceKpiBlock(
+      academicYearId: ayId,
+      onOverdueTap: () => setState(() {
+        _currentTabIndex = 0;
+        _tagihanFilterKey = 'overdue';
+      }),
+    );
+
+    final navBar = FinanceNavigationBar(
+      currentIndex: _currentTabIndex,
+      pendingCount: _totalPendingPayments,
+      overdueCount: overdueCount,
+      primaryColor: getPrimaryColor(),
+      onTabSelected: (index) => setState(() => _currentTabIndex = index),
+    );
+
+    // Scrollable body — KPI card scrolls with content, NavBar pins
+    // below the header gradient once the KPI rolls past. The pinned
+    // NavBar's white background visually covers the gradient overlap
+    // zone, so the transition from "KPI overlap" → "NavBar overlap"
+    // reads as a single brand strip below the header.
+    final scrollBody = NestedScrollView(
+      headerSliverBuilder: (context, _) => [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 0, bottom: 4),
+            child: kpiBlock,
+          ),
+        ),
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _FinanceNavBarDelegate(
+            navBar: navBar,
+            height: 40,
+          ),
+        ),
+      ],
+      body: MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        child: NotificationListener<ScrollNotification>(
+          onNotification: _onTabScrollNotification,
+          child: tabContent,
+        ),
+      ),
+    );
+
+    // Body layout: header sticky at top, scrollable region below
+    // overlapping the gradient by `overlap` dp. Before the header
+    // height is measured (first frame), fall back to a Column so the
+    // header can lay out and report its size.
+    final body = _headerH == 0
+        ? Column(children: [header, Expanded(child: scrollBody)])
+        : Stack(
+            children: [
+              Positioned(top: 0, left: 0, right: 0, child: header),
+              Positioned(
+                top: (_headerH - overlap).clamp(0.0, double.infinity),
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: scrollBody,
+              ),
+            ],
+          );
+
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          FinanceHeader(
-            key: _headerKey,
-            languageProvider: languageProvider,
-            primaryColor: getPrimaryColor(),
-            onTuneTap: onTuneTap,
-            activeFilterCount: activeFilterCount,
-            chips: headerChips,
-          ),
-          // KPI cards (Masuk / Terutang / Jatuh tempo + Aliran bar)
-          FinanceKpiBlock(
-            academicYearId: ayId,
-            onOverdueTap: () => setState(() {
-              _currentTabIndex = 0;
-              _tagihanFilterKey = 'overdue';
-            }),
-          ),
-          const SizedBox(height: 4),
-          FinanceNavigationBar(
-            currentIndex: _currentTabIndex,
-            pendingCount: _totalPendingPayments,
-            overdueCount: overdueCount,
-            primaryColor: getPrimaryColor(),
-            onTabSelected: (index) => setState(() => _currentTabIndex = index),
-          ),
-          Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: FinanceTabContent(
-                currentTabIndex: _currentTabIndex,
-                pendingPaymentList: _pendingPaymentList,
-                billGroups: _billGroups,
-                academicYearId: ayId,
-                languageProvider: languageProvider,
-                // Pull-to-refresh on the Tagihan tab now refreshes
-                // both the legacy bill list (still feeds the bill
-                // update path + KPI overdue badge) and the new
-                // aggregated groups in parallel.
-
-                primaryColor: getPrimaryColor(),
-                isReadOnly: isReadOnly,
-                formatCurrency: formatCurrency,
-                onRefresh: _refreshAll,
-                filteredPaymentTypes: filteredPaymentTypes,
-                searchController: _searchController,
-                hasActiveFilter: _hasActiveFilter,
-                onShowFilterSheet: showFilterSheet,
-                onClearAllFilters: clearAllFilters,
-                buildFilterChips: () => buildFilterChips(languageProvider),
-                getGoalDescription: getGoalDescription,
-                getTranslatedPeriod: getTranslatedPeriod,
-                onEdit: (index) =>
-                    showPaymentTypeDetail(filteredPaymentTypes[index]),
-                onDelete: (index) =>
-                    deletePaymentType(filteredPaymentTypes[index]),
-                pendingScrollController: _pendingScrollController,
-                hasMorePending: _hasMorePending,
-                onVerify: (index) =>
-                    showVerificationDialog(_pendingPaymentList[index]),
-                onShowProof: (index) =>
-                    showPaymentProof(_pendingPaymentList[index]),
-                tagihanFilterKey: _tagihanFilterKey,
-                onTagihBill: _onTagihBill,
-                onClassReportTap: _openClassFinanceReport,
-                tagihanSelectedJenisIds: _tagihanSelectedJenisIds,
-                tagihanSelectedMonth: _tagihanSelectedMonth,
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: body,
       floatingActionButton: FinanceFab(
         isReadOnly: ref.read(academicYearRiverpod).isReadOnly,
         currentTabIndex: _currentTabIndex,
@@ -650,20 +757,22 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
   }
 
   /// Opens the month picker sheet from the header period pill. The
-  /// chosen value is stored in the same `_tagihanSelectedMonth` slot
-  /// the Tagihan filter sheet writes to — so picking "Mei 2026" from
-  /// the pill scopes the Tagihan list to that month, the pill label
-  /// updates, and the dedicated Tagihan filter toolbar reflects the
-  /// same selection. Picking "Semua bulan" resets the override and
-  /// the pill falls back to the API's `periodLabel`.
+  /// Opens the year + month picker. Selections are stored in
+  /// _filterYear and _filterMonth (shared across Tagihan/Pembayaran tabs)
+  /// so picking a value scopes the list, the pill label updates, and
+  /// the Tagihan filter toolbar reflects the same selection.
   Future<void> _pickHeaderMonth() async {
     final result = await showMonthFilterSheet(
       context,
       primaryColor: getPrimaryColor(),
-      initialMonth: _tagihanSelectedMonth,
+      initialYear: _filterYear ?? DateTime.now().year,
+      initialMonth: _filterMonth,
     );
     if (!mounted || result == null) return;
-    setState(() => _tagihanSelectedMonth = result.month);
+    setState(() {
+      _filterYear = result.year;
+      _filterMonth = result.month;
+    });
     _loadBillGroups();
   }
 
@@ -688,12 +797,10 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
       primaryColor: getPrimaryColor(),
       jenisOptions: jenisOptions,
       initialJenisIds: _tagihanSelectedJenisIds,
-      initialMonth: _tagihanSelectedMonth,
     );
     if (!mounted || result == null) return;
     setState(() {
       _tagihanSelectedJenisIds = result.selectedJenisIds;
-      _tagihanSelectedMonth = result.selectedMonth;
     });
     // Re-fetch groups so the server-side filter narrows the new list.
     _loadBillGroups();
@@ -762,4 +869,38 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
 }
 
 // =====================================================================
-// SliverPersistentHeader delegate that pins the navigation bar below
+// SliverPersistentHeader delegate that pins the 3-tab navigation bar
+// below the gradient header once the KPI strip has scrolled past.
+// =====================================================================
+
+class _FinanceNavBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget navBar;
+  final double height;
+
+  const _FinanceNavBarDelegate({
+    required this.navBar,
+    required this.height,
+  });
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    // White-backgrounded navBar so the gradient extension zone (which
+    // it pins over) is fully covered — visually the navBar reads as
+    // sitting directly beneath the header content.
+    return SizedBox(height: height, child: navBar);
+  }
+
+  @override
+  bool shouldRebuild(covariant _FinanceNavBarDelegate old) =>
+      old.navBar != navBar || old.height != height;
+}

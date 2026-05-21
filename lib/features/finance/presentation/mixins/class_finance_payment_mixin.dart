@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/network/api_exceptions.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
+import 'package:manajemensekolah/core/services/cache_invalidation_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_report_screen.dart';
@@ -15,6 +17,10 @@ mixin ClassFinancePaymentMixin on State<ClassFinanceReportScreen> {
   late File? selectedFile;
 
   /// Shows manual payment form dialog with file upload.
+  ///
+  /// The sheet owns its own file-picker state now — we don't pass
+  /// `selectedFile` or `onPickFile` anymore. The picked file comes back via
+  /// the `file` arg on [onSave] and gets uploaded via [uploadManualPayment].
   void showManualPaymentForm(dynamic bill) {
     final paymentMethodController = TextEditingController(text: 'Tunai');
     final amountController = TextEditingController(
@@ -29,10 +35,7 @@ mixin ClassFinancePaymentMixin on State<ClassFinanceReportScreen> {
       context: context,
       bill: bill,
       primaryColor: getPrimaryColor(),
-      selectedFile: selectedFile,
       formatCurrency: formatCurrency,
-      onPickFile: pickFile,
-      getFileTypeText: getFileTypeText,
       paymentMethodController: paymentMethodController,
       amountController: amountController,
       paymentDateController: paymentDateController,
@@ -43,7 +46,7 @@ mixin ClassFinancePaymentMixin on State<ClassFinanceReportScreen> {
             required String date,
             File? file,
           }) {
-            uploadManualPayment(
+            return uploadManualPayment(
               bill: bill,
               paymentMethod: paymentMethod,
               amount: amount,
@@ -54,8 +57,32 @@ mixin ClassFinancePaymentMixin on State<ClassFinanceReportScreen> {
     );
   }
 
-  /// Uploads manual payment to the server.
-  Future<void> uploadManualPayment({
+  /// Uploads a manual payment to the server.
+  ///
+  /// Contract:
+  ///   * NO `showDialog` here. The earlier version pushed a loading
+  ///     spinner via `showDialog`, which defaults to
+  ///     `useRootNavigator: true` — that put the dialog on the app's
+  ///     root navigator while the manual-payment sheet sat on the
+  ///     Keuangan tab's nested navigator (`_TabBranch`). When we then
+  ///     called `AppNavigator.pop(context)` to "dismiss the loading
+  ///     dialog", the pop walked up to the TAB navigator and popped
+  ///     the sheet instead, leaving the dialog stuck on root and
+  ///     accidentally cascading to also pop the ClassFinanceReport
+  ///     screen. Removing the dialog removes the whole cross-navigator
+  ///     hazard — the sheet's Simpan button shows a "Menyimpan..."
+  ///     label + disabled state while the future is in flight, which
+  ///     is sufficient loading feedback.
+  ///   * Caller (`_ManualPaymentSheetContentState._handleSave`) AWAITS
+  ///     this and pops the manual-payment sheet itself when we return
+  ///     `true`. Single owner = single pop = no over-popping.
+  ///   * On success: invalidates the finance cache (bills, dashboard,
+  ///     parent billing) before triggering [onPaymentSuccess] so the
+  ///     report screen's `loadData()` refetch can't be served stale rows.
+  ///   * Returns `true` when the payment was persisted and the report
+  ///     refresh fired, `false` if anything threw — the sheet stays open
+  ///     on `false` so the admin can retry without re-typing.
+  Future<bool> uploadManualPayment({
     required dynamic bill,
     required String paymentMethod,
     required double amount,
@@ -63,26 +90,73 @@ mixin ClassFinancePaymentMixin on State<ClassFinanceReportScreen> {
     File? file,
   }) async {
     try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (c) => const Center(child: CircularProgressIndicator()),
-      );
-
       await submitPaymentData(bill, paymentMethod, amount, date, file);
 
-      if (mounted) AppNavigator.pop(context);
-      onPaymentSuccess();
+      // Flush any finance / dashboard caches so the report screen's
+      // post-success `loadData()` sees the fresh bill status. The bill
+      // fetch itself doesn't cache, but parallel surfaces (dashboard
+      // KPIs, parent billing) do.
+      await CacheInvalidationService.onFinanceChanged();
+
+      if (!mounted) return true;
+      onPaymentSuccess(); // triggers report `loadData()`
       // ignore: use_build_context_synchronously
       SnackBarUtils.showSuccess(
         context,
         AppLocalizations.paymentRecordedSuccessfully.tr,
       );
+      return true;
     } catch (e) {
-      if (mounted) AppNavigator.pop(context);
+      if (!mounted) return false;
       // ignore: use_build_context_synchronously
-      SnackBarUtils.showError(context, '${AppLocalizations.error.tr}:$e');
+      SnackBarUtils.showError(context, _friendlyUploadError(e));
+      return false;
     }
+  }
+
+  /// Pulls the most actionable message out of whatever the payment POST
+  /// threw.
+  ///
+  /// `ApiService.uploadFile` wraps the underlying `DioException` in a
+  /// generic `Exception('Upload error: $error')`, which prints as
+  /// "DioException [unknown]: null" — useless to the admin. The real
+  /// validation message (e.g. "Jumlah pembayaran melebihi sisa tagihan")
+  /// lives inside the `DioException.error` payload as an
+  /// [ApiException] (see `dio_client.dart`'s `ErrorInterceptor`).
+  ///
+  /// This helper digs through the wrappers and returns the friendly
+  /// message when it can find one. Falls back to a generic copy
+  /// otherwise so the admin never sees "DioException [unknown]: null".
+  String _friendlyUploadError(Object error) {
+    // 1. Direct ApiException — preferred path.
+    if (error is ApiException) {
+      return error.message;
+    }
+    // 2. DioException wrapping an ApiException via the interceptor.
+    if (error is DioException) {
+      final inner = error.error;
+      if (inner is ApiException) return inner.message;
+      // Some endpoints return the message in response.data.message
+      // directly; fall back to that before giving up.
+      final data = error.response?.data;
+      if (data is Map) {
+        final msg = data['message'] ?? data['error'];
+        if (msg is String && msg.isNotEmpty) return msg;
+      }
+    }
+    // 3. ApiService.uploadFile's `Exception('Upload error: $cause')`
+    //    string-wraps the DioException, so the friendly message is
+    //    GONE by the time we catch it here. Best we can do is strip
+    //    the noisy prefix and unhelpful tail, then ask the admin to
+    //    retry.
+    final raw = error.toString();
+    if (raw.contains('DioException') ||
+        raw.contains('Upload error') ||
+        raw.contains('[unknown]')) {
+      return 'Gagal menyimpan pembayaran. Periksa koneksi atau coba '
+          'lagi beberapa saat lagi.';
+    }
+    return raw;
   }
 
   Future<void> submitPaymentData(
@@ -113,34 +187,44 @@ mixin ClassFinancePaymentMixin on State<ClassFinanceReportScreen> {
   }
 
   /// Processes manual payment (mark as paid or cancel).
+  ///
+  /// Note on navigator scoping: `showDialog` defaults to
+  /// `useRootNavigator: true` so the spinner is pushed on the app's
+  /// ROOT navigator. The pop below must therefore also target the
+  /// root navigator — using `Navigator.pop(context)` (or
+  /// `AppNavigator.pop`) would walk up to the Keuangan tab's nested
+  /// navigator (`_TabBranch`) and pop the wrong route, dropping the
+  /// admin onto the class list with the spinner stuck on root.
   Future<void> processManualPayment(dynamic bill, bool markAsPaid) async {
-    try {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (c) => const Center(child: CircularProgressIndicator()),
-      );
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => const Center(child: CircularProgressIndicator()),
+    );
 
+    try {
       if (markAsPaid) {
         await handleMarkAsPaid(bill);
       } else {
         await handleCancelPayment(bill);
       }
+      // Cancel flow mutates payments + bills — flush finance caches so
+      // the report's post-success reload sees the new state.
+      await CacheInvalidationService.onFinanceChanged();
 
-      if (mounted) AppNavigator.pop(context);
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // root dialog
       onPaymentSuccess();
-
-      if (mounted) {
-        final message = markAsPaid
-            ? AppLocalizations.paymentRecordedSuccessfully.tr
-            : AppLocalizations.paymentCancelled.tr;
-        SnackBarUtils.showInfo(context, message);
-      }
+      final message = markAsPaid
+          ? AppLocalizations.paymentRecordedSuccessfully.tr
+          : AppLocalizations.paymentCancelled.tr;
+      // ignore: use_build_context_synchronously
+      SnackBarUtils.showInfo(context, message);
     } catch (e) {
-      if (mounted) {
-        AppNavigator.pop(context);
-        SnackBarUtils.showError(context, '${AppLocalizations.error.tr}: $e');
-      }
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      // ignore: use_build_context_synchronously
+      SnackBarUtils.showError(context, '${AppLocalizations.error.tr}: $e');
     }
   }
 
@@ -226,10 +310,12 @@ mixin ClassFinancePaymentMixin on State<ClassFinanceReportScreen> {
   String formatCurrency(dynamic amount);
 
   /// Must be implemented by State to get file type text.
+  ///
+  /// Kept on the mixin contract because `ClassFinanceUtilsMixin` provides
+  /// the implementation and other parts of the report still use it for
+  /// inline file-type labels. The manual-payment sheet now owns its own
+  /// labelling so the abstract `pickFile(StateSetter)` was retired.
   String getFileTypeText(String filePath);
-
-  /// Must be implemented by State to pick file.
-  Future<void> pickFile(StateSetter setDialogState);
 
   /// Must be implemented by State to show detail dialog.
   void showDetailDialog(dynamic bill);

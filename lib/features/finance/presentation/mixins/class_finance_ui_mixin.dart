@@ -103,11 +103,11 @@ mixin ClassFinanceUIMixin on State<ClassFinanceReportScreen> {
   }
 
   List<Widget> buildDetailRows(dynamic bill) {
+    final status = (bill['status'] ?? '').toString();
+    final isPaid =
+        status == 'paid' || status == 'verified' || status == 'success';
     return [
-      buildDetailRow(
-        'Status',
-        bill['status'] == 'verified' ? 'Lunas' : 'Belum Lunas',
-      ),
+      buildDetailRow('Status', isPaid ? 'Lunas' : 'Belum Lunas'),
       buildDetailRow(
         'Jumlah',
         formatRupiah(
