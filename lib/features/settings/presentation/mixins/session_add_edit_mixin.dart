@@ -138,11 +138,12 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
   }
 
   Widget _buildDialogHeader(bool isEdit) {
+    final adminColor = ColorUtils.getRoleColor('admin');
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        gradient: ColorUtils.headerFadeGradient(ColorUtils.brandAzure),
+        color: adminColor,
       ),
       child: Row(
         children: [
@@ -150,7 +151,7 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
             child: Icon(
@@ -176,8 +177,8 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
                 Text(
                   'Atur jam pelajaran untuk hari ini',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -197,18 +198,12 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
     TimeOfDay endTime,
     StateSetter setModalState,
   ) {
+    final adminColor = ColorUtils.getRoleColor('admin');
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: ColorUtils.slate200)),
-        boxShadow: [
-          BoxShadow(
-            color: ColorUtils.slate900.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
       ),
       child: SafeArea(
         top: false,
@@ -222,13 +217,14 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: BorderSide(color: ColorUtils.slate300),
+                  side: BorderSide(color: ColorUtils.slate300, width: 1.5),
                 ),
                 child: Text(
                   AppLocalizations.cancel.tr,
                   style: TextStyle(
                     color: ColorUtils.slate700,
                     fontWeight: FontWeight.w600,
+                    fontSize: 15,
                   ),
                 ),
               ),
@@ -247,15 +243,14 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
                         setModalState,
                       ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: ColorUtils.corporateBlue600,
-                  disabledBackgroundColor: ColorUtils.corporateBlue600
-                      .withValues(alpha: 0.6),
+                  backgroundColor: adminColor,
+                  disabledBackgroundColor: adminColor.withValues(alpha: 0.6),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
-                  elevation: 2,
+                  elevation: 0,
                 ),
                 child: isSaving
                     ? const SizedBox(
