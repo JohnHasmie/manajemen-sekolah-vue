@@ -1012,14 +1012,19 @@ class _ParentBillCheckoutScreenState
 
       if (!mounted) return;
 
-      // Extract the just-stored proof URL from the upload response
+      // Extract the just-stored proof URL and payment ID from the upload response
       // so the success screen can wire its "Unduh Bukti" / "Bagikan"
       // actions to it without an extra network round-trip.
       String? proofUrl;
+      String? paymentId;
       if (response is Map) {
         final data = response['data'];
         if (data is Map) {
           proofUrl = data['payment_proof_url']?.toString();
+          final payment = data['payment'];
+          if (payment is Map) {
+            paymentId = payment['id']?.toString();
+          }
         }
       }
 
@@ -1034,7 +1039,7 @@ class _ParentBillCheckoutScreenState
       // confirmation (timeline + bukti actions). Once they tap
       // Selesai (or back out), we pop the checkout with `true` so
       // the billing list refreshes and shows the new pending row.
-      await AppNavigator.push<bool>(
+      final successResult = await AppNavigator.push<bool>(
         context,
         ParentPaymentSuccessScreen(
           billName: billName,
@@ -1044,11 +1049,14 @@ class _ParentBillCheckoutScreenState
           adminFee: _session.adminFeeFor(_method),
           isManualPending: true,
           paymentProofUrl: proofUrl,
+          paymentId: paymentId,
         ),
       );
 
       if (!mounted) return;
-      AppNavigator.pop(context, true);
+      if (successResult == true) {
+        AppNavigator.pop(context, true);
+      }
     } catch (e) {
       AppLogger.error('parent-bill-upload', e);
       if (!mounted) return;
@@ -1258,6 +1266,7 @@ class _ParentBillCheckoutScreenState
         // success screen's Unduh / Bagikan actions stay live even
         // when the parent re-enters the checkout from the list.
         paymentProofUrl: widget.bill['payment_proof_url']?.toString(),
+        paymentId: widget.bill['latest_payment_relation']?['id']?.toString(),
         schoolName: widget.bill['school']?['school_name']?.toString(),
         className: className,
         period: periodStr != null && periodStr.isNotEmpty

@@ -41,20 +41,86 @@ class ApiAcademicServices {
     return result is Map<String, dynamic> ? result : null;
   }
 
+  /// One-shot summary powering the Kelola Tahun Ajaran KPI strip.
+  /// Returns `{ total, current_count, active_count, inactive_count,
+  /// archived_count }`. Backed by GET /academic-years/kpi-summary
+  /// which counts each bucket in a single GROUP BY query.
+  Future<Map<String, dynamic>> getAcademicYearKpiSummary() async {
+    final response = await dioClient.get('/academic-years/kpi-summary');
+    final result = response.data;
+    return result is Map<String, dynamic> ? result : <String, dynamic>{};
+  }
+
   /// Creates a new academic year record.
   /// Like `AcademicYear::create()` in Laravel or dispatching a Vuex `createAcademicYear` action.
   /// [year] - The academic year label (e.g. "2024/2025").
+  /// [semester] - 'ganjil' or 'genap' (nullable for legacy callers).
   /// [current] - Whether this should be the current year.
   /// [status] - 'active' or 'inactive'.
   Future<dynamic> createAcademicYear(
     String year, {
+    String? semester,
     bool current = false,
     String status = 'inactive',
+    String? startDate,
+    String? endDate,
   }) async {
     final response = await dioClient.post(
       '/academic-years',
-      data: {'year': year, 'current': current, 'status': status},
+      data: {
+        'year': year,
+        if (semester != null) 'semester': semester,
+        'current': current,
+        'status': status,
+        if (startDate != null) 'start_date': startDate,
+        if (endDate != null) 'end_date': endDate,
+      },
     );
+    return response.data;
+  }
+
+  /// Updates an academic year record.
+  Future<dynamic> updateAcademicYear(
+    String id, {
+    String? year,
+    String? semester,
+    bool? current,
+    String? status,
+    String? startDate,
+    String? endDate,
+  }) async {
+    final response = await dioClient.put(
+      '/academic-years/$id',
+      data: {
+        if (year != null) 'year': year,
+        if (semester != null) 'semester': semester,
+        if (current != null) 'current': current,
+        if (status != null) 'status': status,
+        if (startDate != null) 'start_date': startDate,
+        if (endDate != null) 'end_date': endDate,
+      },
+    );
+    return response.data;
+  }
+
+  /// Moves an academic year to `status = 'archived'`. Backend refuses
+  /// if the year is the canonical `current` — admin must transfer
+  /// current first. Errors surface as Dio 422 with a friendly message.
+  Future<dynamic> archiveAcademicYear(String id) async {
+    final response = await dioClient.post('/academic-years/$id/archive');
+    return response.data;
+  }
+
+  /// Reverse of [archiveAcademicYear]. Brings the year back to
+  /// `status = 'inactive'` so it can be edited or re-activated.
+  Future<dynamic> unarchiveAcademicYear(String id) async {
+    final response = await dioClient.post('/academic-years/$id/unarchive');
+    return response.data;
+  }
+
+  /// Deletes an academic year record.
+  Future<dynamic> deleteAcademicYear(String id) async {
+    final response = await dioClient.delete('/academic-years/$id');
     return response.data;
   }
 

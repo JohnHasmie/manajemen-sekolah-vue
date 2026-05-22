@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/'
     'embedded_activity_list_screen.dart';
+import 'package:manajemensekolah/features/grades/presentation/screens/'
+    'teacher_grade_input_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/'
     'teacher_material_screen.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
@@ -100,6 +102,25 @@ mixin ScheduleCardModalMixin {
     ).then((_) => onRefresh?.call());
   }
 
+  /// Opens the grade book (Buku Nilai) for the current class and
+  /// subject. Pushes the GradePage screen with initial class and
+  /// subject pre-selected so the teacher can immediately start
+  /// entering or viewing grades. Refreshes the schedule summary
+  /// when the page pops.
+  void openGradeBook(BuildContext ctx) {
+    Navigator.of(ctx)
+        .push<void>(
+          MaterialPageRoute(
+            builder: (_) => GradePage(
+              teacher: {'id': teacherId, 'nama': teacherNama},
+              initialClassId: classId,
+              initialSubjectId: subjectId,
+            ),
+          ),
+        )
+        .then((_) => onRefresh?.call());
+  }
+
   /// Pushes the full-page session detail screen — Frame E of the
   /// Jadwal redesign. Replaces the legacy modal-bottom-sheet summary
   /// (`ScheduleCardSummarySheet`) so the BrandPageHeader gets its full
@@ -110,8 +131,9 @@ mixin ScheduleCardModalMixin {
   /// popped the sheet first because the sheet otherwise covered the
   /// schedule list underneath; with the full-page detail screen we
   /// want the user to land BACK on the detail screen when they close
-  /// the attendance / activity / material modal — popping here would
-  /// silently dump them to the hub, which is what bug #1 reported.
+  /// the attendance / activity / material / grade-book modal — popping
+  /// here would silently dump them to the hub, which is what bug #1
+  /// reported.
   void showSummarySheet(BuildContext ctx, Map<String, dynamic>? summary) {
     TeacherScheduleSessionDetailScreen.push(
       ctx,
@@ -121,6 +143,7 @@ mixin ScheduleCardModalMixin {
       onAttendanceTap: () => openAttendance(ctx, hasAttendance(summary)),
       onMaterialTap: () => openMaterial(ctx),
       onActivityTap: () => openClassActivity(ctx),
+      onGradeBookTap: () => openGradeBook(ctx),
     );
   }
 }

@@ -79,7 +79,10 @@ mixin AttendanceDialogFilterMixin
             tSubjectId,
             isHomeroomView: isHomeroomView,
           );
-          final rosterSubjects = roster.subjectsForClass(tClassId);
+          final rosterSubjects = roster.subjectsForClass(
+            tClassId,
+            isHomeroomView: isHomeroomView,
+          );
           final classes = rosterClasses
               .map(
                 (c) => FilterOption<String>(
@@ -144,7 +147,10 @@ mixin AttendanceDialogFilterMixin
                           // class doesn't teach it.
                           if (tSubjectId != null && v != null) {
                             final allowed = roster
-                                .subjectsForClass(v)
+                                .subjectsForClass(
+                                  v,
+                                  isHomeroomView: isHomeroomView,
+                                )
                                 .map((s) => (s as Map)['id']?.toString());
                             if (!allowed.contains(tSubjectId)) {
                               tSubjectId = null;
@@ -153,7 +159,10 @@ mixin AttendanceDialogFilterMixin
                           // Auto-select-on-single — if only one
                           // subject for this class, pick it.
                           if (v != null && tSubjectId == null) {
-                            final only = roster.subjectsForClass(v);
+                            final only = roster.subjectsForClass(
+                              v,
+                              isHomeroomView: isHomeroomView,
+                            );
                             if (only.length == 1 && only.first is Map) {
                               tSubjectId = (only.first as Map)['id']
                                   ?.toString();

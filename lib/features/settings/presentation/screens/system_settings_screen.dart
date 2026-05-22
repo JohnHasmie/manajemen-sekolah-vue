@@ -1,10 +1,10 @@
-// Admin Pengaturan ("Sistem") hub.
+// Admin Profil Pengguna (User Profile) hub.
 //
 // Visual contract — matches the parent Akademik hub / admin People +
 // Academic hubs so every dashboard list-menu surface reads as the same
 // brand:
 //
-//   1. Navy `ShellTabHeader` — title "Sistem" + descriptive subtitle,
+//   1. Navy `ShellTabHeader` — title "Profil" + descriptive subtitle,
 //      no back button (shell handles back via PopScope).
 //   2. Vertical list of `DashboardListTile` cards — one per settings
 //      sub-module (Tahun Ajaran, Waktu Pembelajaran, Manajemen Data,
@@ -32,9 +32,9 @@ import 'package:manajemensekolah/core/widgets/admin_settings_components.dart'
     show AuditLogPin;
 import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/settings/data/system_settings_service.dart';
+import 'package:manajemensekolah/features/account/presentation/screens/profile_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/school_level_settings_screen.dart';
-import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/time_settings_screen.dart';
 
 class SystemSettingsScreen extends ConsumerWidget {
@@ -48,13 +48,14 @@ class SystemSettingsScreen extends ConsumerWidget {
 
   /// Subtitle previously surfaced under the school name. The
   /// `ShellTabHeader`'s subtitle now describes the section instead.
+  /// Retained for backward compatibility but no longer used.
   final String subtitle;
 
   const SystemSettingsScreen({
     super.key,
     this.schoolName,
     this.schoolLogoUrl,
-    this.subtitle = 'Admin sekolah',
+    this.subtitle = 'Pengaturan akun, bahasa, dan sistem',
   });
 
   @override
@@ -62,24 +63,27 @@ class SystemSettingsScreen extends ConsumerWidget {
     final accent = ColorUtils.getRoleColor('admin');
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
-      body: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            ShellTabHeader(
-              title: 'Sistem',
-              subtitle: 'Konfigurasi · sinkron sehat',
-              accentColor: accent,
+      body: Column(
+        children: [
+          ShellTabHeader(
+            title: 'Sistem',
+            subtitle: 'Pengaturan akun, bahasa, dan sistem',
+            accentColor: accent,
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
+              children: [
+                ..._buildTiles(context, ref),
+                const SizedBox(height: AppSpacing.md),
+                const _AuditLogPinConsumer(),
+                SizedBox(
+                  height: AppSpacing.xl + MediaQuery.of(context).padding.bottom,
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            ..._buildTiles(context, ref),
-            const SizedBox(height: AppSpacing.md),
-            _AuditLogPinConsumer(),
-            SizedBox(
-              height: AppSpacing.xl + MediaQuery.of(context).padding.bottom,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -92,8 +96,8 @@ class SystemSettingsScreen extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
-          title: 'Tahun Ajaran',
-          subtitle: 'Periode aktif & arsip · profil sekolah',
+          title: 'Pengaturan Umum',
+          subtitle: 'Identitas sekolah & tahun ajaran aktif',
           icon: DashboardModules.tahunAjaran.icon,
           color: DashboardModules.tahunAjaran.color,
           onTap: () =>
@@ -124,11 +128,11 @@ class SystemSettingsScreen extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
-          title: 'Bahasa',
-          subtitle: 'Antarmuka & laporan · Indonesia',
+          title: 'Profil',
+          subtitle: 'Nama, email, kontak & akses',
           icon: DashboardModules.bahasa.icon,
           color: DashboardModules.bahasa.color,
-          onTap: () => AppNavigator.push(context, const SettingsScreen()),
+          onTap: () => AppNavigator.push(context, const ProfileScreen()),
         ),
       ),
       Padding(

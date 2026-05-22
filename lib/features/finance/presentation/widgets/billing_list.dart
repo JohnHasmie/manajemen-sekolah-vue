@@ -593,6 +593,7 @@ class _BillingRow extends ConsumerWidget {
           adminFee: double.tryParse((data['admin_fee'] ?? '0').toString()) ?? 0,
           isManualPending: isPending,
           paymentProofUrl: data['payment_proof_url']?.toString(),
+          paymentId: latestPayment['id']?.toString(),
           schoolName: data['school']?['school_name']?.toString(),
           className: className,
           period: periodStr != null ? _humanMonth(periodStr) : null,

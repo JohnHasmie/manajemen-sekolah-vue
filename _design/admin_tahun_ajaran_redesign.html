@@ -4,46 +4,51 @@
 <meta charset="utf-8">
 <title>Tahun Ajaran · Admin · Pengaturan Umum + Kelola Tahun Ajaran + Edit sheets</title>
 <style>
+  /* ──────────────────────────────────────────────────────────────────
+     Design tokens pinned to lib/core/utils/color_utils.dart +
+     lib/core/widgets/* exact values (audited 2026-05-20).
+     ────────────────────────────────────────────────────────────────── */
   :root {
     --bg: #f1f5f9;
     --surface: #ffffff;
-    --slate-50: #f8fafc;
-    --slate-100: #f1f5f9;
-    --slate-200: #e2e8f0;
-    --slate-300: #cbd5e1;
-    --slate-400: #94a3b8;
-    --slate-500: #64748b;
+
+    /* Slate scale (ColorUtils) */
+    --slate-50: #F8FAFC;
+    --slate-100: #F1F5F9;
+    --slate-200: #E2E8F0;
+    --slate-300: #CBD5E1;
+    --slate-400: #94A3B8;
+    --slate-500: #64748B;
     --slate-600: #475569;
     --slate-700: #334155;
-    --slate-800: #1e293b;
-    --slate-900: #0f172a;
-    --brand-dark: #143068;
-    --brand-cobalt: #1B6FB8;
+    --slate-800: #1E293B;
+    --slate-900: #0F172A;
+
+    /* Brand */
+    --brand-dark: #143068;       /* ColorUtils.brandDarkBlue — admin */
+    --brand-dark-deep: #1F4A8F;
+    --brand-cobalt: #1B6FB8;     /* ColorUtils.brandCobalt — teacher / accent */
     --brand-azure: #21AFE6;
+
+    /* Status tokens (ColorUtils.green/amber/red/success/warning/error) */
     --green-50: #DCFCE7;
     --green-100: #BBF7D0;
+    --green-400: #4ADE80;        /* realtime-fresh dot */
     --green-600: #16A34A;
     --green-700: #15803D;
     --amber-50: #FEF3C7;
     --amber-100: #FDE68A;
-    --amber-600: #D97706;
+    --amber-600: #D97706;        /* warning600 */
     --amber-700: #B45309;
     --red-50: #FEE2E2;
     --red-100: #FECACA;
-    --red-600: #DC2626;
+    --red-500: #EF4444;
+    --red-600: #DC2626;          /* error600 */
     --red-700: #B91C1C;
     --blue-50: #DBEAFE;
     --blue-100: #BFDBFE;
-    --blue-600: #1D4ED8;
-    --blue-700: #1E40AF;
-    --indigo-50: #E0E7FF;
-    --indigo-100: #C7D2FE;
-    --indigo-600: #4F46E5;
     --violet-50: #EDE9FE;
-    --violet-100: #DDD6FE;
     --violet-600: #7C3AED;
-    --teal-50: #CCFBF1;
-    --teal-600: #0D9488;
   }
   * { box-sizing: border-box; }
   body {
@@ -55,6 +60,11 @@
   h1 { font-size: 24px; margin: 0 0 6px; color: var(--brand-dark); letter-spacing: -0.4px; }
   h2 { font-size: 16px; margin: 36px 0 14px; color: var(--brand-dark); letter-spacing: -0.2px; }
   .subtitle { color: var(--slate-500); font-size: 13px; margin: 0 0 18px; max-width: 920px; line-height: 1.55; }
+  code {
+    background: var(--slate-100); color: var(--slate-700);
+    padding: 1px 5px; border-radius: 4px; font-size: 11.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
   .legend {
     display: flex; flex-wrap: wrap; gap: 14px;
     margin: 0 0 24px; padding: 12px 16px;
@@ -94,194 +104,248 @@
     display: flex; flex-direction: column;
   }
 
-  /* Header — admin navy gradient */
+  /* ─── BrandPageHeader (admin navy) ────────────────────────────────── */
+  /* gradient: ColorUtils.brandGradient('admin') = #143068 → #1F4A8F  */
+  /* radius 28dp bottom corners, shadow brand@18% blur 18 offset (0,6) */
   .hero {
-    background: linear-gradient(180deg, var(--brand-dark) 0%, #1d4493 100%);
-    padding: 38px 16px 18px;
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-dark-deep) 100%);
+    border-radius: 0 0 28px 28px;
+    padding: 8px 12px 12px;
     color: white;
     position: relative;
+    box-shadow: 0 6px 18px rgba(20,48,104,.18);
   }
   .hero.with-overlap { padding-bottom: 45px; }
+  /* tapered hairline above bottomSlot */
+  .hero .hairline {
+    height: 1px; margin: 6px 0 10px;
+    background: linear-gradient(90deg,
+      transparent 0%, rgba(255,255,255,.32) 32%,
+      rgba(255,255,255,.32) 68%, transparent 100%);
+  }
   .hero .top-row {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
   }
-  .hero .back-btn {
-    width: 32px; height: 32px; border-radius: 10px;
-    background: rgba(255,255,255,.16);
-    display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 16px; font-weight: 700;
-  }
+  .hero .back-btn,
   .hero .action-btn {
     width: 32px; height: 32px; border-radius: 10px;
-    background: rgba(255,255,255,.16);
+    background: rgba(255,255,255,.18);
     display: flex; align-items: center; justify-content: center;
-    color: white;
+    color: white; flex-shrink: 0;
   }
-  .hero .title-block { text-align: center; flex: 1; }
+  .hero .title-block {
+    flex: 1; text-align: center; min-width: 0;
+  }
   .hero .pre {
-    font-size: 9.5px; font-weight: 800; letter-spacing: 1.1px;
-    color: rgba(255,255,255,.7); text-transform: uppercase;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.4px;
+    color: rgba(255,255,255,.72); text-transform: uppercase;
   }
-  .hero .title { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; margin-top: 2px; }
+  .hero .title {
+    font-size: 19px; font-weight: 700; letter-spacing: -0.1px;
+    line-height: 1.15; color: white; margin-top: 3px;
+  }
+  .hero .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green-400);
+    display: inline-block; vertical-align: 2px;
+    margin-left: 6px;
+  }
 
   /* Body */
   .body {
-    flex: 1; padding: 14px 14px 80px; overflow: auto;
+    flex: 1; padding: 12px 12px 80px; overflow: auto;
     background: var(--slate-50);
   }
   .body.with-fab { padding-bottom: 92px; }
+  .body.no-bottom-nav { padding-bottom: 16px; }
 
-  /* Section header */
+  /* ─── Section header (icon + lbl + optional link) ─────────────────── */
   .sec-head {
     display: flex; align-items: center; justify-content: space-between;
-    margin: 6px 2px 10px;
+    margin: 8px 4px 10px;
   }
   .sec-head .left { display: flex; align-items: center; gap: 10px; }
   .sec-head .ico {
     width: 32px; height: 32px; border-radius: 10px;
-    background: var(--blue-50);
+    background: rgba(27,111,184,.10);  /* brand-cobalt @ 10% */
     display: flex; align-items: center; justify-content: center;
     color: var(--brand-cobalt);
   }
+  .sec-head .ico.green { background: rgba(22,163,74,.10); color: var(--green-600); }
   .sec-head .lbl { font-size: 13px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.1px; }
-  .sec-head .sub { font-size: 11px; color: var(--slate-500); margin-top: 1px; }
+  .sec-head .sub { font-size: 11px; color: var(--slate-500); margin-top: 1px; font-weight: 500; }
   .sec-head .link {
     font-size: 11px; font-weight: 700;
     color: var(--brand-cobalt);
     display: flex; align-items: center; gap: 2px;
   }
 
-  /* Section card — group of rows in one rounded container */
-  .sect-card {
+  /* ─── DashboardListTile pattern ──────────────────────────────────── */
+  /* 44x44 icon @ 11dp radius, color @ 10% alpha bg                    */
+  /* title 14/w700/slate900, subtitle 11/w500/slate600                 */
+  /* chevron 20px slate400                                              */
+  .tile-card {
     background: white; border-radius: 14px;
-    border: 1px solid var(--slate-200);
-    overflow: hidden; margin-bottom: 14px;
+    border: 0.75px solid var(--slate-200);
+    overflow: hidden; margin-bottom: 12px;
   }
-  .sect-row {
-    padding: 12px 14px;
-    display: flex; align-items: center; gap: 12px;
+  .tile {
+    padding: 10px 14px 10px 12px;
+    display: flex; align-items: center; gap: 14px;
     border-bottom: 1px solid var(--slate-100);
   }
-  .sect-row:last-child { border-bottom: none; }
-  .sect-row .ico-wrap {
-    width: 38px; height: 38px; border-radius: 10px;
-    background: var(--blue-50);
+  .tile:last-child { border-bottom: none; }
+  .tile .ico-wrap {
+    width: 44px; height: 44px; border-radius: 11px;
+    background: rgba(27,111,184,.10);
     display: flex; align-items: center; justify-content: center;
     color: var(--brand-cobalt); flex-shrink: 0;
   }
-  .sect-row.violet .ico-wrap { background: var(--violet-50); color: var(--violet-600); }
-  .sect-row.green .ico-wrap { background: var(--green-50); color: var(--green-600); }
-  .sect-row.amber .ico-wrap { background: var(--amber-50); color: var(--amber-600); }
-  .sect-row .content { flex: 1; min-width: 0; }
-  .sect-row .label {
-    font-size: 10.5px; color: var(--slate-500); font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.4px;
+  .tile.violet .ico-wrap { background: rgba(124,58,237,.10); color: var(--violet-600); }
+  .tile.green .ico-wrap { background: rgba(22,163,74,.10); color: var(--green-600); }
+  .tile.amber .ico-wrap { background: rgba(217,119,6,.10); color: var(--amber-600); }
+  .tile.slate .ico-wrap { background: var(--slate-100); color: var(--slate-500); }
+  .tile .content { flex: 1; min-width: 0; }
+  .tile .label {
+    font-size: 11px; color: var(--slate-500); font-weight: 500;
   }
-  .sect-row .value {
-    font-size: 13.5px; color: var(--slate-900); font-weight: 800; margin-top: 2px;
-    line-height: 1.32;
+  .tile .value {
+    font-size: 14px; color: var(--slate-900); font-weight: 700;
+    margin-top: 2px; line-height: 1.32;
   }
-  .sect-row .chev { color: var(--slate-300); }
+  .tile .chev { color: var(--slate-400); flex-shrink: 0; }
 
-  /* Tahun Ajaran active hero card */
+  /* ─── Tahun Ajaran active hero card (gradient) ─────────────────────── */
   .ay-hero {
     background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-cobalt) 100%);
     color: white; border-radius: 16px;
-    padding: 14px 14px 16px; margin-bottom: 14px;
+    padding: 14px 14px 14px;
+    margin-bottom: 12px;
     position: relative; overflow: hidden;
+    box-shadow: 0 6px 18px rgba(20,48,104,.18);
   }
   .ay-hero .topline {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
   }
   .ay-hero .pill {
-    background: rgba(255,255,255,.18);
-    border-radius: 999px; padding: 3px 10px;
-    font-size: 9.5px; font-weight: 800; letter-spacing: 0.8px;
+    background: rgba(255,255,255,.20);
+    border-radius: 999px; padding: 3px 9px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
     text-transform: uppercase;
     display: inline-flex; align-items: center; gap: 4px;
   }
-  .ay-hero .pill.live { background: #16A34A; }
-  .ay-hero .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ADE80; }
-  .ay-hero h3 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.4px; }
-  .ay-hero .semester { font-size: 12.5px; color: rgba(255,255,255,.82); font-weight: 600; margin-top: 2px; }
+  .ay-hero .pill.live { background: var(--green-600); }
+  .ay-hero .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-400); }
+  .ay-hero h3 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.3px; line-height: 1; }
+  .ay-hero .semester { font-size: 12.5px; color: rgba(255,255,255,.82); font-weight: 500; margin-top: 4px; }
   .ay-hero .meta-row {
-    display: flex; gap: 16px; margin-top: 12px;
-    padding-top: 12px; border-top: 1px solid rgba(255,255,255,.18);
+    display: flex; gap: 14px; margin-top: 12px;
+    padding-top: 12px; border-top: 1px solid rgba(255,255,255,.20);
   }
   .ay-hero .meta { flex: 1; }
-  .ay-hero .meta .k { font-size: 9.5px; color: rgba(255,255,255,.7); font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; }
-  .ay-hero .meta .v { font-size: 14px; color: white; font-weight: 800; margin-top: 2px; }
-
-  /* KPI overlay strip */
-  .kpi-card {
-    background: white; border-radius: 14px;
-    border: 1px solid var(--slate-200);
-    box-shadow: 0 6px 18px rgba(15,23,42,.06);
-    padding: 12px 14px; margin: -32px 4px 14px;
-    display: flex; align-items: stretch; position: relative;
+  .ay-hero .meta .k {
+    font-size: 9.5px; color: rgba(255,255,255,.72); font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase;
   }
-  .kpi-card .cell { flex: 1; text-align: center; }
-  .kpi-card .cell .v { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; color: var(--brand-dark); }
+  .ay-hero .meta .v {
+    font-size: 16px; color: white; font-weight: 800; margin-top: 3px;
+    letter-spacing: -0.2px;
+  }
+
+  /* ─── BrandKpiStrip ───────────────────────────────────────────────── */
+  /* card padding 14v/4h, radius 16, border slate200, shadow black@4%   */
+  /* separator slate100 1px, 4dp vertical margin                        */
+  /* value 22/w800/letter-spacing -0.3, label 11/w500/slate500          */
+  .kpi-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 4px 12px rgba(0,0,0,.04);
+    padding: 14px 4px;
+    margin: -32px 16px 14px;
+    display: flex; align-items: stretch;
+  }
+  .kpi-card .cell { flex: 1; text-align: center; padding: 0 4px; }
+  .kpi-card .cell .v {
+    font-size: 22px; font-weight: 800; letter-spacing: -0.3px;
+    line-height: 1; color: var(--slate-900);
+  }
+  .kpi-card .cell .v.brand { color: var(--brand-dark); }
   .kpi-card .cell .v.green { color: var(--green-600); }
   .kpi-card .cell .v.amber { color: var(--amber-600); }
   .kpi-card .cell .v.slate { color: var(--slate-500); }
-  .kpi-card .cell .k { font-size: 10.5px; color: var(--slate-500); font-weight: 600; margin-top: 2px; }
+  .kpi-card .cell .k {
+    font-size: 11px; color: var(--slate-500); font-weight: 500; margin-top: 6px;
+  }
   .kpi-card .sep {
-    width: 1px; background: var(--slate-200); margin: 4px 0;
+    width: 1px; background: var(--slate-100); margin: 4px 0;
   }
 
-  /* Tahun ajaran row cards */
+  /* ─── Tahun ajaran row cards (riwayat list) ───────────────────────── */
   .ay-row {
     background: white; border-radius: 14px;
-    border: 1px solid var(--slate-200);
-    padding: 12px 14px; margin-bottom: 10px;
+    border: 0.75px solid var(--slate-200);
+    padding: 12px 12px 12px 12px;
+    margin-bottom: 10px;
     display: flex; align-items: center; gap: 12px;
   }
   .ay-row.current {
-    border: 2px solid var(--brand-cobalt);
-    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 60%);
+    border: 1.5px solid var(--brand-cobalt);
+    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 70%);
+    box-shadow: 0 4px 12px rgba(27,111,184,.10);
   }
-  .ay-row.archived { opacity: 0.85; }
+  .ay-row.archived { opacity: 0.92; }
   .ay-row .yr-badge {
     width: 48px; height: 48px; border-radius: 12px;
     background: var(--slate-100);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     flex-shrink: 0;
+    color: var(--slate-700);
   }
-  .ay-row.current .yr-badge { background: var(--brand-cobalt); color: white; }
-  .ay-row .yr-badge .y1 { font-size: 13px; font-weight: 800; letter-spacing: -0.3px; line-height: 1; }
-  .ay-row .yr-badge .slash { font-size: 9px; opacity: 0.7; }
-  .ay-row .yr-badge .y2 { font-size: 13px; font-weight: 800; letter-spacing: -0.3px; line-height: 1; }
-  .ay-row .yr-badge.archived { background: var(--slate-200); color: var(--slate-600); }
+  .ay-row.current .yr-badge {
+    background: var(--brand-cobalt);
+    color: white;
+    box-shadow: 0 2px 8px rgba(27,111,184,.30);
+  }
+  .ay-row .yr-badge .y1,
+  .ay-row .yr-badge .y2 {
+    font-size: 13px; font-weight: 800; letter-spacing: -0.3px; line-height: 1;
+  }
+  .ay-row .yr-badge .slash { font-size: 9px; opacity: 0.65; }
+  .ay-row.archived .yr-badge { background: var(--slate-200); color: var(--slate-600); }
   .ay-row .info { flex: 1; min-width: 0; }
   .ay-row .info .ttl {
-    font-size: 13.5px; font-weight: 800; color: var(--slate-900);
+    font-size: 14px; font-weight: 700; color: var(--slate-900);
     display: flex; align-items: center; gap: 6px;
   }
   .ay-row .info .sub {
-    font-size: 11px; color: var(--slate-500); margin-top: 2px;
+    font-size: 11px; color: var(--slate-500); margin-top: 3px; font-weight: 500;
   }
   .ay-row .info .meta {
-    display: flex; gap: 10px; margin-top: 6px; font-size: 10.5px; color: var(--slate-500);
+    display: flex; gap: 8px; margin-top: 6px;
+    font-size: 10.5px; color: var(--slate-500); font-weight: 500;
   }
-  .ay-row .info .meta .it { display: flex; align-items: center; gap: 3px; }
-  .ay-row .actions {
-    display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
+  .ay-row .info .meta .it {
+    display: flex; align-items: center; gap: 3px;
+    color: var(--slate-600);
   }
+  .ay-row .info .meta .it svg { color: var(--slate-400); }
+  .ay-row .info .meta .it .sep { color: var(--slate-300); }
+  .ay-row .actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
   .ay-row .actions .more {
     width: 28px; height: 28px; border-radius: 8px;
-    background: var(--slate-50); border: 1px solid var(--slate-200);
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
     display: flex; align-items: center; justify-content: center;
     color: var(--slate-500);
   }
 
-  /* Status pills */
+  /* ─── Status pills ───────────────────────────────────────────────── */
   .pill {
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 2px 9px; border-radius: 999px;
-    font-size: 9.5px; font-weight: 800; letter-spacing: 0.4px;
+    padding: 3px 9px; border-radius: 999px;
+    font-size: 9.5px; font-weight: 800; letter-spacing: 0.5px;
     text-transform: uppercase;
   }
   .pill.aktif { background: var(--green-50); color: var(--green-700); }
@@ -289,35 +353,20 @@
   .pill.arsip { background: var(--slate-100); color: var(--slate-600); }
   .pill.draft { background: var(--amber-50); color: var(--amber-700); }
   .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-600); }
-  .pill.aktif .dot { background: var(--green-600); }
-  .pill.saat-ini .dot { background: white; }
+  .pill.saat-ini .dot { background: var(--green-400); }
 
-  /* Section header in body */
+  /* ─── Section title rows above lists ──────────────────────────────── */
   .sec-title-row {
     display: flex; align-items: center; justify-content: space-between;
-    margin: 18px 4px 10px;
+    margin: 18px 4px 8px;
   }
   .sec-title-row .ttl {
-    font-size: 12px; font-weight: 800; color: var(--slate-700);
-    letter-spacing: 0.4px; text-transform: uppercase;
+    font-size: 11px; font-weight: 800; color: var(--slate-700);
+    letter-spacing: 0.6px; text-transform: uppercase;
   }
   .sec-title-row .ttl .count { color: var(--slate-400); font-weight: 700; margin-left: 4px; }
 
-  /* CTA button */
-  .cta {
-    width: 100%; padding: 12px;
-    background: var(--brand-cobalt); color: white;
-    border-radius: 12px; border: none;
-    font-size: 13px; font-weight: 800;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    cursor: pointer;
-  }
-  .cta.ghost {
-    background: white; color: var(--brand-cobalt);
-    border: 1.5px solid var(--brand-cobalt);
-  }
-
-  /* Bottom nav (just a strip) */
+  /* ─── Bottom nav ─────────────────────────────────────────────────── */
   .bottom-nav {
     position: absolute; bottom: 0; left: 0; right: 0;
     height: 56px; background: white;
@@ -328,17 +377,23 @@
   .bottom-nav .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .bottom-nav .nav-item.active { color: var(--brand-dark); }
 
-  /* FAB */
+  /* ─── FAB ────────────────────────────────────────────────────────── */
   .fab {
     position: absolute; bottom: 72px; right: 16px;
     background: var(--brand-cobalt); color: white;
     height: 48px; padding: 0 18px; border-radius: 999px;
     display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12.5px; font-weight: 800;
-    box-shadow: 0 6px 18px rgba(27,111,184,.32);
+    font-size: 13px; font-weight: 700;
+    box-shadow: 0 8px 20px rgba(27,111,184,.32);
   }
 
-  /* Bottom sheet */
+  /* ──────────────────────────────────────────────────────────────────
+     AppBottomSheet — header is GRADIENT, not white.
+     Header gradient: primaryColor → primaryColor @ 85% (topLeft→bottomRight)
+     Sheet radius 24dp top corners. Drag handle white @ 35%.
+     Title 18/w700/letter-spacing -0.2 white.  Subtitle 12/w400 white@80%.
+     Icon container 40x40 white@20% with 20px white icon.
+     ────────────────────────────────────────────────────────────────── */
   .sheet-overlay {
     position: absolute; inset: 0;
     background: rgba(15,23,42,.45);
@@ -346,180 +401,277 @@
   .sheet {
     position: absolute; left: 0; right: 0; bottom: 0;
     background: white;
-    border-radius: 22px 22px 0 0;
-    padding: 12px 0 0;
+    border-radius: 24px 24px 0 0;
     box-shadow: 0 -8px 24px rgba(15,23,42,.18);
+    overflow: hidden;
+  }
+  .sheet .gradient-head {
+    /* gradient: primaryColor → primaryColor @ 85%, topLeft→bottomRight */
+    background: linear-gradient(135deg, var(--brand-cobalt) 0%, rgba(27,111,184,.85) 100%);
+    color: white;
+    padding: 12px 18px 20px;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(27,111,184,.20);
+  }
+  .sheet .gradient-head.green {
+    background: linear-gradient(135deg, var(--green-600) 0%, rgba(22,163,74,.85) 100%);
+    box-shadow: 0 4px 10px rgba(22,163,74,.20);
+  }
+  .sheet .gradient-head.amber {
+    background: linear-gradient(135deg, var(--amber-600) 0%, rgba(217,119,6,.85) 100%);
+    box-shadow: 0 4px 10px rgba(217,119,6,.20);
   }
   .sheet .handle {
-    width: 38px; height: 4px; background: var(--slate-300);
-    border-radius: 2px; margin: 0 auto 8px;
+    width: 40px; height: 4px;
+    background: rgba(255,255,255,.35);
+    border-radius: 2px;
+    margin: 0 auto 16px;
   }
-  .sheet .head {
-    display: flex; gap: 12px; padding: 8px 18px 14px;
-    border-bottom: 1px solid var(--slate-100);
+  .sheet .head-row {
+    display: flex; align-items: flex-start; gap: 14px;
   }
-  .sheet .head .ico {
-    width: 40px; height: 40px; border-radius: 12px;
-    background: var(--blue-50); color: var(--brand-cobalt);
+  .sheet .head-row .ico-frame {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(255,255,255,.20);
     display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+    color: white; flex-shrink: 0;
   }
-  .sheet .head .ttl { font-size: 14.5px; font-weight: 800; color: var(--slate-900); }
-  .sheet .head .sub { font-size: 11.5px; color: var(--slate-500); margin-top: 2px; }
-  .sheet .body-sheet {
-    padding: 14px 18px 18px;
+  .sheet .head-row .text-wrap { flex: 1; min-width: 0; padding-top: 2px; }
+  .sheet .head-row .ttl {
+    font-size: 18px; font-weight: 700; letter-spacing: -0.2px; color: white;
   }
-  .field { margin-bottom: 12px; }
+  .sheet .head-row .sub {
+    font-size: 12px; color: rgba(255,255,255,.80); font-weight: 400; margin-top: 2px;
+  }
+  .sheet .head-row .close-btn {
+    width: 26px; height: 26px; border-radius: 999px;
+    background: rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex-shrink: 0;
+  }
+  .sheet .body-sheet { padding: 16px 18px 18px; }
+
+  /* ─── Form fields ────────────────────────────────────────────────── */
+  .field { margin-bottom: 14px; }
   .field .lbl {
-    font-size: 10.5px; font-weight: 700; color: var(--slate-600);
-    letter-spacing: 0.3px; text-transform: uppercase; margin-bottom: 6px;
+    font-size: 11px; font-weight: 700; color: var(--slate-600);
+    letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 6px;
   }
   .field .input {
     display: flex; align-items: center; gap: 10px;
     background: var(--slate-50);
     border: 1.5px solid var(--slate-200);
-    border-radius: 12px; padding: 10px 12px;
+    border-radius: 12px; padding: 11px 12px;
   }
   .field .input.focus { border-color: var(--brand-cobalt); background: white; }
-  .field .input .prefix { color: var(--brand-cobalt); }
+  .field .input .prefix { color: var(--brand-cobalt); display: inline-flex; }
   .field .input .text {
-    flex: 1; font-size: 13px; color: var(--slate-900); font-weight: 600;
+    flex: 1; font-size: 14px; color: var(--slate-900); font-weight: 600;
   }
   .field .input .text.placeholder { color: var(--slate-400); font-weight: 500; }
   .field .input .caret { color: var(--slate-400); }
   .field .input.textarea { align-items: flex-start; padding: 12px; }
-  .field .input.textarea .text { line-height: 1.5; }
+  .field .input.textarea .text { line-height: 1.45; }
 
-  /* Chip select grid */
-  .chip-grid {
-    display: flex; flex-wrap: wrap; gap: 6px;
-  }
+  /* ─── FilterChipGrid pattern (chip select for form choices) ────────── */
+  .chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 7px 11px; border-radius: 10px;
-    background: white; border: 1.5px solid var(--slate-200);
-    font-size: 11.5px; font-weight: 700; color: var(--slate-700);
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 12px; border-radius: 12px;
+    background: white;
+    border: 1.5px solid var(--slate-200);
+    font-size: 12px; font-weight: 700; color: var(--slate-700);
+    cursor: pointer;
   }
   .chip.selected {
-    background: var(--brand-cobalt); border-color: var(--brand-cobalt); color: white;
+    background: var(--brand-cobalt);
+    border-color: var(--brand-cobalt);
+    color: white;
+    box-shadow: 0 2px 6px rgba(27,111,184,.20);
   }
-  .chip .ico { font-size: 12px; }
+  .chip svg { width: 14px; height: 14px; }
 
-  /* Toggle row */
+  /* ─── Toggle row (high-stakes flag) ──────────────────────────────── */
   .toggle-row {
-    background: var(--amber-50); border: 1px solid var(--amber-100);
+    background: var(--amber-50);
+    border: 1px solid var(--amber-100);
     border-radius: 12px; padding: 12px 14px;
     display: flex; align-items: center; gap: 12px;
-    margin: 6px 0 12px;
+    margin: 6px 0 8px;
   }
   .toggle-row .ico { color: var(--amber-600); flex-shrink: 0; }
   .toggle-row .copy { flex: 1; }
-  .toggle-row .copy .t { font-size: 12px; font-weight: 800; color: var(--slate-900); }
-  .toggle-row .copy .s { font-size: 10.5px; color: var(--slate-600); margin-top: 1px; line-height: 1.4; }
+  .toggle-row .copy .t { font-size: 13px; font-weight: 700; color: var(--slate-900); }
+  .toggle-row .copy .s { font-size: 11px; color: var(--amber-700); margin-top: 2px; line-height: 1.4; }
   .toggle-row .switch {
     width: 38px; height: 22px; background: var(--slate-300);
-    border-radius: 999px; position: relative;
-    flex-shrink: 0;
+    border-radius: 999px; position: relative; flex-shrink: 0;
   }
   .toggle-row .switch.on { background: var(--green-600); }
   .toggle-row .switch::after {
     content: ''; position: absolute; top: 2px; left: 2px;
     width: 18px; height: 18px; background: white; border-radius: 50%;
-    transition: left 0.15s;
   }
   .toggle-row .switch.on::after { left: 18px; }
 
-  /* Footer */
+  /* ─── BottomSheetFooter (audited) ────────────────────────────────── */
+  /* padding xl/sm (20/8). border-top slate-200 1px. button radius 12 */
+  /* button height ~48 (14 vertical padding). font 14/w600.            */
+  /* Primary flex 2, secondary flex 1, gap md (12).                    */
   .sheet-footer {
-    display: flex; gap: 10px; padding: 12px 18px;
-    border-top: 1px solid var(--slate-100); background: white;
+    display: flex; gap: 12px; padding: 8px 20px 14px;
+    border-top: 1px solid var(--slate-200);
+    background: white;
   }
   .sheet-footer .btn {
-    flex: 1; padding: 11px 0; border-radius: 12px;
-    font-size: 13px; font-weight: 800; border: none;
+    padding: 14px 0; border-radius: 12px;
+    font-size: 14px; font-weight: 600; border: none;
     display: flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer;
   }
   .sheet-footer .btn.cancel {
+    flex: 1;
     background: white; color: var(--slate-700);
-    border: 1.5px solid var(--slate-200);
+    border: 1px solid var(--slate-300);
   }
   .sheet-footer .btn.primary {
+    flex: 2;
     background: var(--brand-cobalt); color: white;
   }
+  .sheet-footer .btn.primary.green { background: var(--green-600); }
+  .sheet-footer .btn.primary.amber { background: var(--amber-600); }
   .sheet-footer .btn.danger {
+    flex: 2;
     background: var(--red-600); color: white;
   }
 
-  /* Confirm dialog */
+  /* ─── ConfirmationDialog (audited) ───────────────────────────────── */
+  /* Dialog corner radius 20dp, header gradient with icon 32x32         */
+  /* Content text 14 slate700 height 1.4 center.                        */
+  /* Buttons radius 12, padding 12 vertical, gap 12.                    */
   .confirm-dialog {
     position: absolute; left: 16px; right: 16px;
     top: 50%; transform: translateY(-50%);
-    background: white; border-radius: 18px;
-    padding: 20px 18px 14px;
+    background: white; border-radius: 20px;
     box-shadow: 0 16px 40px rgba(15,23,42,.24);
+    overflow: hidden;
   }
-  .confirm-dialog .ico-wrap {
-    width: 48px; height: 48px; border-radius: 14px;
-    background: var(--amber-50); color: var(--amber-600);
+  .confirm-dialog .ch-head {
+    background: linear-gradient(135deg, var(--amber-600) 0%, rgba(217,119,6,.80) 100%);
+    padding: 20px;
+    display: flex; align-items: center; gap: 12px;
+    color: white;
+  }
+  .confirm-dialog .ch-head .ico-frame {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(255,255,255,.20);
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 12px;
+    color: white; flex-shrink: 0;
   }
-  .confirm-dialog .ttl {
-    font-size: 16px; font-weight: 800; color: var(--slate-900);
-    text-align: center; margin-bottom: 6px;
+  .confirm-dialog .ch-head .ttl {
+    font-size: 16px; font-weight: 700; color: white;
   }
-  .confirm-dialog .msg {
-    font-size: 12.5px; color: var(--slate-600);
-    text-align: center; line-height: 1.55; margin-bottom: 14px;
+  .confirm-dialog .ch-body { padding: 20px; }
+  .confirm-dialog .ch-msg {
+    font-size: 14px; color: var(--slate-700); line-height: 1.4;
+    text-align: center; margin-bottom: 14px;
   }
-  .confirm-dialog .impact {
-    background: var(--amber-50); border: 1px solid var(--amber-100);
-    border-radius: 10px; padding: 10px 12px; margin-bottom: 14px;
-    font-size: 11px; color: var(--amber-700); line-height: 1.5;
+  .confirm-dialog .ch-msg strong { color: var(--slate-900); font-weight: 700; }
+  .confirm-dialog .ch-impact {
+    background: var(--amber-50);
+    border: 1px solid var(--amber-100);
+    border-radius: 12px; padding: 12px 14px;
+    font-size: 12px; color: var(--amber-700); line-height: 1.5;
+    text-align: left;
   }
-  .confirm-dialog .impact strong { color: var(--amber-700); }
-  .confirm-dialog .impact ul { margin: 4px 0 0 16px; padding: 0; }
-  .confirm-dialog .impact li { margin: 2px 0; }
-  .confirm-dialog .actions {
-    display: flex; gap: 8px;
+  .confirm-dialog .ch-impact strong { color: var(--amber-700); font-weight: 700; }
+  .confirm-dialog .ch-impact ul { margin: 6px 0 0 16px; padding: 0; }
+  .confirm-dialog .ch-impact li { margin: 2px 0; }
+  .confirm-dialog .ch-actions {
+    display: flex; gap: 12px;
+    padding: 0 16px 16px;
   }
-  .confirm-dialog .actions .btn {
-    flex: 1; padding: 10px 0; border-radius: 12px;
-    font-size: 13px; font-weight: 800; border: none;
+  .confirm-dialog .ch-actions .btn {
+    flex: 1; padding: 12px 0; border-radius: 12px;
+    font-size: 14px; font-weight: 600; border: none;
+    cursor: pointer;
   }
-  .confirm-dialog .actions .btn.cancel {
+  .confirm-dialog .ch-actions .btn.cancel {
     background: var(--slate-100); color: var(--slate-700);
   }
-  .confirm-dialog .actions .btn.primary {
-    background: var(--brand-cobalt); color: white;
+  .confirm-dialog .ch-actions .btn.primary {
+    background: var(--amber-600); color: white;
   }
 
-  /* SVG icon helper */
-  .icn { width: 16px; height: 16px; stroke-width: 2; }
-  .icn-sm { width: 13px; height: 13px; stroke-width: 2.2; }
-  .icn-lg { width: 20px; height: 20px; stroke-width: 2; }
+  /* SVG icon helpers — match Flutter Icons * size */
+  .icn      { width: 18px; height: 18px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .icn-sm   { width: 13px; height: 13px; stroke-width: 2.2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .icn-md   { width: 16px; height: 16px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .icn-lg   { width: 20px; height: 20px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .icn-xl   { width: 22px; height: 22px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-  /* Notes */
+  /* Notes panel */
   .frame-notes {
-    padding: 10px 14px; background: #fffbeb;
+    padding: 12px 14px; background: #fffbeb;
     border-top: 1px solid var(--amber-100);
-    font-size: 10.5px; color: var(--amber-700); line-height: 1.55;
+    font-size: 11px; color: var(--amber-700); line-height: 1.55;
   }
   .frame-notes strong { color: var(--amber-700); }
+
+  /* Backend section */
+  .backend-section {
+    margin-top: 36px; padding: 22px 24px; background: white;
+    border-radius: 18px; border: 1px solid var(--slate-200);
+    max-width: 920px;
+  }
+  .backend-section h3 {
+    margin: 0 0 6px; font-size: 17px; color: var(--brand-dark);
+    letter-spacing: -0.2px;
+  }
+  .backend-section .lead {
+    color: var(--slate-500); font-size: 13px; margin: 0 0 18px; line-height: 1.55;
+  }
+  .backend-section h4 {
+    margin: 18px 0 8px; font-size: 13px; color: var(--brand-cobalt);
+    letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .backend-section pre {
+    background: var(--slate-50); border: 1px solid var(--slate-200);
+    border-radius: 10px; padding: 12px 14px; font-size: 12px;
+    color: var(--slate-800); overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    line-height: 1.6;
+  }
+  .backend-section table {
+    width: 100%; border-collapse: collapse; font-size: 12.5px;
+  }
+  .backend-section th, .backend-section td {
+    text-align: left; padding: 8px 10px;
+    border-bottom: 1px solid var(--slate-100);
+  }
+  .backend-section th {
+    background: var(--slate-50); color: var(--slate-700);
+    font-weight: 700; font-size: 11px; letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.2px; }
+  .tag.new   { background: var(--green-50); color: var(--green-700); }
+  .tag.add   { background: var(--blue-50); color: var(--brand-cobalt); }
+  .tag.alter { background: var(--amber-50); color: var(--amber-700); }
 </style>
 </head>
 <body>
   <h1>Tahun Ajaran &amp; Pengaturan Umum — Admin Redesign</h1>
   <p class="subtitle">
-    Five frames covering the cleanup of the "Pengaturan Umum / Tahun Ajaran" surface. Today the menu entry says <em>Tahun Ajaran</em> but the screen only renders <em>Informasi Sekolah</em>, the edit dialog is a hand-rolled AlertDialog, and there is no actual list of academic years. This redesign (a) renames the hub correctly, (b) adds a dedicated <em>Kelola Tahun Ajaran</em> screen with current-year hero + archive list + FAB, (c) replaces both edit dialogs with brand AppBottomSheet, and (d) adds a confirmation dialog for the high-stakes "Aktifkan" action.
+    Five frames + backend changes. The current "Tahun Ajaran" entry on the Sistem hub routes to a screen titled "Pengaturan Umum" that only renders <em>Informasi Sekolah</em>, with no actual academic-year management surface and an old hand-rolled <code>AlertDialog</code> for editing. This redesign (a) renames the hub correctly, (b) adds a dedicated <em>Kelola Tahun Ajaran</em> screen with current-year hero + arsip list + FAB, (c) replaces the Edit dialog with brand <code>AppBottomSheet</code>, (d) adds a Tambah/Edit Tahun Ajaran sheet wired to the existing backend, and (e) adds a high-stakes <code>ConfirmationDialog</code> for the "Aktifkan" cascade. Every dimension below matches the audited Flutter brand components verbatim.
   </p>
 
   <div class="legend">
-    <span><span class="swatch" style="background:#143068"></span>Admin navy</span>
+    <span><span class="swatch" style="background:#143068"></span>Admin navy (brandDarkBlue)</span>
     <span><span class="swatch" style="background:#1B6FB8"></span>Cobalt accent</span>
-    <span><span class="swatch" style="background:#16A34A"></span>Aktif</span>
-    <span><span class="swatch" style="background:#94a3b8"></span>Arsip</span>
-    <span><span class="swatch" style="background:#D97706"></span>High-stakes warning</span>
+    <span><span class="swatch" style="background:#16A34A"></span>Aktif (green600)</span>
+    <span><span class="swatch" style="background:#94a3b8"></span>Arsip (slate400)</span>
+    <span><span class="swatch" style="background:#D97706"></span>High-stakes (warning600)</span>
   </div>
 
   <h2>Frames</h2>
@@ -529,20 +681,23 @@
     <div class="frame">
       <div class="frame-label">
         <span class="num">A.</span><span class="role">ADMIN</span> Pengaturan Umum hub
-        <span class="desc">Fixed title mismatch — both sections rendered, edit affordances surfaced.</span>
+        <span class="desc">Title fix + Tahun Ajaran section + per-section Edit affordance.</span>
       </div>
       <div class="phone">
         <div class="hero">
           <div class="top-row">
-            <div class="back-btn">‹</div>
+            <div class="back-btn">
+              <svg class="icn" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
             <div class="title-block">
               <div class="pre">SISTEM · KONFIGURASI</div>
               <div class="title">Pengaturan Umum</div>
             </div>
             <div class="action-btn">
-              <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg class="icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </div>
           </div>
+          <div class="hairline"></div>
         </div>
 
         <div class="body">
@@ -550,87 +705,93 @@
           <div class="sec-head">
             <div class="left">
               <div class="ico">
-                <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h.01M15 17h.01"/></svg>
+                <svg class="icn-md" viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h.01M15 17h.01"/></svg>
               </div>
               <div>
                 <div class="lbl">Informasi Sekolah</div>
                 <div class="sub">Identitas &amp; profil sekolah Anda</div>
               </div>
             </div>
-            <a class="link">Edit ›</a>
+            <a class="link">
+              <svg class="icn-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </a>
           </div>
 
-          <div class="sect-card">
-            <div class="sect-row">
+          <div class="tile-card">
+            <div class="tile">
               <div class="ico-wrap">
-                <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                <svg class="icn-xl" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
               </div>
               <div class="content">
                 <div class="label">Nama Sekolah</div>
                 <div class="value">SMP Kamil Edu A</div>
               </div>
-              <div class="chev">›</div>
+              <svg class="icn-lg chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <div class="sect-row violet">
+            <div class="tile violet">
               <div class="ico-wrap">
-                <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <svg class="icn-xl" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               </div>
               <div class="content">
                 <div class="label">Alamat Sekolah</div>
                 <div class="value">Jl. Pendidikan No. 1, Jakarta Selatan</div>
               </div>
-              <div class="chev">›</div>
+              <svg class="icn-lg chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <div class="sect-row">
+            <div class="tile">
               <div class="ico-wrap">
-                <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 19V5h12v14H6zm3-9h6m-6 4h6"/></svg>
+                <svg class="icn-xl" viewBox="0 0 24 24"><path d="M3 18l5-5 4 4 9-9M14 8h7v7"/></svg>
               </div>
               <div class="content">
                 <div class="label">Jenjang Pendidikan</div>
                 <div class="value">SMP · Sekolah Menengah Pertama</div>
               </div>
-              <div class="chev">›</div>
+              <svg class="icn-lg chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           </div>
 
           <!-- Tahun Ajaran section -->
           <div class="sec-head">
             <div class="left">
-              <div class="ico" style="background:var(--green-50); color:var(--green-600)">
-                <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <div class="ico green">
+                <svg class="icn-md" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               </div>
               <div>
                 <div class="lbl">Tahun Ajaran</div>
                 <div class="sub">Periode aktif &amp; arsip</div>
               </div>
             </div>
-            <a class="link">Kelola ›</a>
+            <a class="link">
+              Kelola
+              <svg class="icn-sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
           </div>
 
-          <!-- Active year card (compact, points to Kelola screen) -->
-          <div class="ay-hero" style="margin-bottom:8px">
+          <div class="ay-hero">
             <div class="topline">
               <span class="pill live"><span class="dot"></span>Saat Ini</span>
-              <span class="pill" style="background:rgba(255,255,255,.18)">Ganjil</span>
+              <span class="pill">Ganjil</span>
             </div>
             <h3>2025/2026</h3>
-            <div class="semester">Jul 2025 — Des 2025</div>
+            <div class="semester">15 Jul 2025 — 23 Des 2025</div>
             <div class="meta-row">
               <div class="meta"><div class="k">Siswa</div><div class="v">468</div></div>
               <div class="meta"><div class="k">Kelas</div><div class="v">18</div></div>
               <div class="meta"><div class="k">Guru</div><div class="v">42</div></div>
             </div>
           </div>
-          <div class="sect-card" style="margin-top:8px">
-            <div class="sect-row">
-              <div class="ico-wrap" style="background:var(--slate-100); color:var(--slate-500)">
-                <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>
+
+          <div class="tile-card">
+            <div class="tile slate">
+              <div class="ico-wrap">
+                <svg class="icn-xl" viewBox="0 0 24 24"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/></svg>
               </div>
               <div class="content">
                 <div class="label">Arsip</div>
-                <div class="value">2 tahun ajaran sebelumnya</div>
+                <div class="value">3 tahun ajaran sebelumnya</div>
               </div>
-              <div class="chev">›</div>
+              <svg class="icn-lg chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           </div>
         </div>
@@ -644,7 +805,7 @@
         </div>
       </div>
       <div class="frame-notes">
-        <strong>Changes from current build.</strong> Title pre-line is now <code>SISTEM · KONFIGURASI</code> (was <code>TAHUN AJARAN · SEKOLAH</code>, which made the hub sound like a tahun ajaran detail page). Hub now actually <em>contains</em> a Tahun Ajaran section — compact active-year hero + arsip drill-down — instead of being all school info with the wrong heading. Edit affordance moves from a separate pencil in the AppBar to per-section "Edit ›" links so admin knows what they're editing.
+        <strong>Title fix.</strong> Pre-line changed from <code>TAHUN AJARAN · SEKOLAH</code> (which made the screen sound like a tahun ajaran detail page) to <code>SISTEM · KONFIGURASI</code>. Tile rows use exact <code>DashboardListTile</code> dimensions: 44×44 icon at 11dp radius with color@10% bg, title 14px/w700, label 11px/w500 slate500. Active-year hero card uses <code>linear-gradient(135deg, brandDark, brandCobalt)</code> with 16dp radius. Per-section "Edit ›" / "Kelola ›" links replace the lone AppBar pencil.
       </div>
     </div>
 
@@ -652,156 +813,194 @@
     <div class="frame">
       <div class="frame-label">
         <span class="num">B.</span><span class="role">ADMIN</span> Kelola Tahun Ajaran
-        <span class="desc">Brand-new screen: current-year hero + arsip list + Tambah FAB.</span>
+        <span class="desc">New screen: BrandPageLayout + KPI overlap + current hero + arsip list + FAB.</span>
       </div>
       <div class="phone">
         <div class="hero with-overlap">
           <div class="top-row">
-            <div class="back-btn">‹</div>
+            <div class="back-btn">
+              <svg class="icn" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
             <div class="title-block">
               <div class="pre">SISTEM · KONFIGURASI</div>
               <div class="title">Tahun Ajaran</div>
             </div>
             <div class="action-btn">
-              <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"/></svg>
+              <svg class="icn" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
           </div>
+          <div class="hairline"></div>
         </div>
 
         <div class="body with-fab">
-          <!-- KPI overlay (3 cells) -->
+          <!-- KPI overlay strip — exact BrandKpiStrip spec -->
           <div class="kpi-card">
-            <div class="cell"><div class="v">5</div><div class="k">Total</div></div>
+            <div class="cell">
+              <div class="v brand">5</div>
+              <div class="k">Total</div>
+            </div>
             <div class="sep"></div>
-            <div class="cell"><div class="v green">1</div><div class="k">Saat Ini</div></div>
+            <div class="cell">
+              <div class="v green">1</div>
+              <div class="k">Saat Ini</div>
+            </div>
             <div class="sep"></div>
-            <div class="cell"><div class="v slate">3</div><div class="k">Arsip</div></div>
+            <div class="cell">
+              <div class="v slate">3</div>
+              <div class="k">Arsip</div>
+            </div>
           </div>
 
-          <!-- Current year card -->
+          <!-- Current year (current variant of ay-row) -->
           <div class="sec-title-row">
             <div class="ttl">Tahun Ajaran Saat Ini</div>
           </div>
           <div class="ay-row current">
-            <div class="yr-badge"><div class="y1">25</div><div class="slash">/</div><div class="y2">26</div></div>
+            <div class="yr-badge">
+              <div class="y1">25</div><div class="slash">/</div><div class="y2">26</div>
+            </div>
             <div class="info">
-              <div class="ttl">2025/2026 <span class="pill saat-ini"><span class="dot"></span>Saat Ini</span></div>
-              <div class="sub">Semester Ganjil · Jul 2025 — Des 2025</div>
+              <div class="ttl">
+                2025/2026
+                <span class="pill saat-ini"><span class="dot"></span>Saat Ini</span>
+              </div>
+              <div class="sub">Semester Ganjil · 15 Jul — 23 Des 2025</div>
               <div class="meta">
-                <div class="it"><svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>468 siswa</div>
-                <div class="it"><svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>18 kelas</div>
-                <div class="it"><svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/></svg>42 guru</div>
+                <span class="it">
+                  <svg class="icn-sm" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4"/><circle cx="17" cy="9" r="3"/></svg>
+                  468 siswa
+                </span>
+                <span class="sep">·</span>
+                <span class="it">
+                  <svg class="icn-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>
+                  18 kelas
+                </span>
+                <span class="sep">·</span>
+                <span class="it">
+                  <svg class="icn-sm" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/></svg>
+                  42 guru
+                </span>
               </div>
             </div>
             <div class="actions">
               <div class="more">
-                <svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                <svg class="icn-sm" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
               </div>
             </div>
           </div>
 
-          <!-- Archived years -->
+          <!-- Riwayat list -->
           <div class="sec-title-row">
-            <div class="ttl">Riwayat <span class="count">· 3</span></div>
-            <div class="link" style="font-size:11px; color:var(--brand-cobalt); font-weight:700">Urutkan ›</div>
+            <div class="ttl">Riwayat<span class="count">· 3</span></div>
+            <div style="font-size:11px; color:var(--brand-cobalt); font-weight:700; display:inline-flex; align-items:center; gap:3px">
+              <svg class="icn-sm" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+              Urutkan
+            </div>
           </div>
 
           <div class="ay-row archived">
-            <div class="yr-badge archived"><div class="y1">24</div><div class="slash">/</div><div class="y2">25</div></div>
+            <div class="yr-badge"><div class="y1">24</div><div class="slash">/</div><div class="y2">25</div></div>
             <div class="info">
               <div class="ttl">2024/2025 <span class="pill arsip">Arsip</span></div>
               <div class="sub">Genap · Jan — Jun 2025</div>
               <div class="meta">
-                <div class="it">456 siswa</div>
-                <div class="it">·</div>
-                <div class="it">17 kelas</div>
+                <span class="it">456 siswa</span><span class="sep">·</span>
+                <span class="it">17 kelas</span><span class="sep">·</span>
+                <span class="it">41 guru</span>
               </div>
             </div>
             <div class="actions">
               <div class="more">
-                <svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                <svg class="icn-sm" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
               </div>
             </div>
           </div>
 
           <div class="ay-row archived">
-            <div class="yr-badge archived"><div class="y1">24</div><div class="slash">/</div><div class="y2">25</div></div>
+            <div class="yr-badge"><div class="y1">24</div><div class="slash">/</div><div class="y2">25</div></div>
             <div class="info">
               <div class="ttl">2024/2025 <span class="pill arsip">Arsip</span></div>
               <div class="sub">Ganjil · Jul — Des 2024</div>
               <div class="meta">
-                <div class="it">442 siswa</div>
-                <div class="it">·</div>
-                <div class="it">17 kelas</div>
+                <span class="it">442 siswa</span><span class="sep">·</span>
+                <span class="it">17 kelas</span><span class="sep">·</span>
+                <span class="it">40 guru</span>
               </div>
             </div>
             <div class="actions">
               <div class="more">
-                <svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                <svg class="icn-sm" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
               </div>
             </div>
           </div>
 
           <div class="ay-row archived">
-            <div class="yr-badge archived"><div class="y1">23</div><div class="slash">/</div><div class="y2">24</div></div>
+            <div class="yr-badge"><div class="y1">23</div><div class="slash">/</div><div class="y2">24</div></div>
             <div class="info">
               <div class="ttl">2023/2024 <span class="pill arsip">Arsip</span></div>
               <div class="sub">Genap · Jan — Jun 2024</div>
               <div class="meta">
-                <div class="it">418 siswa</div>
-                <div class="it">·</div>
-                <div class="it">15 kelas</div>
+                <span class="it">418 siswa</span><span class="sep">·</span>
+                <span class="it">15 kelas</span><span class="sep">·</span>
+                <span class="it">38 guru</span>
               </div>
             </div>
             <div class="actions">
               <div class="more">
-                <svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                <svg class="icn-sm" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
               </div>
             </div>
           </div>
         </div>
 
         <div class="fab">
-          <svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg class="icn" viewBox="0 0 24 24" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Tahun Ajaran Baru
         </div>
       </div>
       <div class="frame-notes">
-        <strong>Brand-new screen.</strong> Today there is no UI for managing the list of academic years even though the backend supports create/archive/activate. KPI strip overlaps the navy header (admin convention). Current-year card uses cobalt-bordered emphasis + meta-stat row (siswa / kelas / guru). Archived rows are visually muted (slate-200 year badge, lighter pill). Three-dot more menu opens an AppBottomSheet quick-action sheet: Aktifkan (if not current), Edit, Lihat Detail, Arsipkan/Pulihkan, Hapus.
+        <strong>New screen.</strong> Today no UI exists to manage academic years even though the backend supports create / archive / activate / set-current. <code>BrandKpiStrip</code> overlaps the navy gradient by 45dp (admin convention) — value 22px/w800/letter-spacing −0.3, label 11px/w500 slate500, separator slate100 1px. Current-year card has cobalt 1.5px border + cobalt year badge. Archived rows use slate-200 badge. Three-dot button opens an AppBottomSheet quick-action sheet (Aktifkan / Edit / Lihat Detail / Arsipkan).
       </div>
     </div>
 
     <!-- ─── Frame C · Edit Informasi Sekolah sheet ───────────────────── -->
     <div class="frame">
       <div class="frame-label">
-        <span class="num">C.</span><span class="role">ADMIN</span> Edit Informasi Sekolah (AppBottomSheet)
-        <span class="desc">Replaces the hand-rolled AlertDialog from school_level_dialog_mixin.dart.</span>
+        <span class="num">C.</span><span class="role">ADMIN</span> Edit Informasi Sekolah
+        <span class="desc">AppBottomSheet with cobalt gradient header — replaces hand-rolled AlertDialog.</span>
       </div>
       <div class="phone">
-        <!-- background hub (dimmed) -->
         <div class="hero">
           <div class="top-row">
-            <div class="back-btn">‹</div>
+            <div class="back-btn">
+              <svg class="icn" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
             <div class="title-block">
               <div class="pre">SISTEM · KONFIGURASI</div>
               <div class="title">Pengaturan Umum</div>
             </div>
             <div class="action-btn"></div>
           </div>
+          <div class="hairline"></div>
         </div>
-        <div class="body" style="opacity:0.35"></div>
+        <div class="body" style="opacity:0.32"></div>
 
         <div class="sheet-overlay"></div>
 
         <div class="sheet">
-          <div class="handle"></div>
-          <div class="head">
-            <div class="ico">
-              <svg class="icn-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h.01M15 17h.01"/></svg>
-            </div>
-            <div>
-              <div class="ttl">Edit Informasi Sekolah</div>
-              <div class="sub">Perbarui identitas &amp; profil sekolah</div>
+          <div class="gradient-head">
+            <div class="handle"></div>
+            <div class="head-row">
+              <div class="ico-frame">
+                <svg class="icn-lg" viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h.01M15 17h.01"/></svg>
+              </div>
+              <div class="text-wrap">
+                <div class="ttl">Edit Informasi Sekolah</div>
+                <div class="sub">Perbarui identitas &amp; profil sekolah</div>
+              </div>
+              <div class="close-btn">
+                <svg class="icn-md" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
             </div>
           </div>
 
@@ -809,7 +1008,9 @@
             <div class="field">
               <div class="lbl">Nama Sekolah</div>
               <div class="input focus">
-                <span class="prefix"><svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
+                <span class="prefix">
+                  <svg class="icn-md" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                </span>
                 <span class="text">SMP Kamil Edu A</span>
               </div>
             </div>
@@ -817,7 +1018,9 @@
             <div class="field">
               <div class="lbl">Alamat Sekolah</div>
               <div class="input textarea">
-                <span class="prefix" style="margin-top:2px"><svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                <span class="prefix" style="margin-top:2px">
+                  <svg class="icn-md" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </span>
                 <span class="text">Jl. Pendidikan No. 1<br>Jakarta Selatan, DKI Jakarta 12345</span>
               </div>
             </div>
@@ -825,10 +1028,22 @@
             <div class="field">
               <div class="lbl">Jenjang Pendidikan</div>
               <div class="chip-grid">
-                <span class="chip"><span class="ico">🎒</span>SD</span>
-                <span class="chip selected"><span class="ico">📘</span>SMP</span>
-                <span class="chip"><span class="ico">🎓</span>SMA</span>
-                <span class="chip"><span class="ico">🔧</span>SMK</span>
+                <span class="chip">
+                  <svg class="icn-sm" viewBox="0 0 24 24"><path d="M4 17l4-4 4 4 8-8"/><polyline points="14 9 20 9 20 15"/></svg>
+                  SD
+                </span>
+                <span class="chip selected">
+                  <svg class="icn-sm" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zm20 0h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  SMP
+                </span>
+                <span class="chip">
+                  <svg class="icn-sm" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                  SMA
+                </span>
+                <span class="chip">
+                  <svg class="icn-sm" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                  SMK
+                </span>
               </div>
             </div>
           </div>
@@ -836,47 +1051,55 @@
           <div class="sheet-footer">
             <button class="btn cancel">Batal</button>
             <button class="btn primary">
-              <svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg class="icn-md" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
               Simpan
             </button>
           </div>
         </div>
       </div>
       <div class="frame-notes">
-        <strong>Migration.</strong> <code>school_level_dialog_mixin.dart</code> currently uses <code>showDialog</code> with a hand-rolled Dialog widget (gradient header, plain TextFields, footer in a separate white container). Replace with <code>AppBottomSheet.show()</code> + <code>BottomSheetFooter</code>. Jenjang picker swaps the <code>DropdownButtonFormField</code> for a <code>FilterChipGrid</code> (matches Materi / Mapel pattern) — better thumb target on mobile + visual emoji prefixes. Address field becomes a 2-line input.
+        <strong>AppBottomSheet migration.</strong> Replaces <code>school_level_dialog_mixin.dart</code>'s hand-rolled <code>showDialog</code>. Gradient head: <code>linear-gradient(135deg, brandCobalt, brandCobalt@85%)</code> with 24dp top radius, 40×4 white@35% drag handle, 40×40 white@20% icon frame holding 20px white school icon. Title 18/w700/-0.2, subtitle 12/w400 white@80%. Body uses <code>FilterChipGrid</code> for Jenjang (SD/SMP/SMA/SMK) replacing the old <code>DropdownButtonFormField</code>. Footer follows <code>BottomSheetFooter</code> spec: 14px button text/w600, secondary flex 1, primary flex 2, gap 12, padding 20h/8v.
       </div>
     </div>
 
-    <!-- ─── Frame D · Tambah/Edit Tahun Ajaran sheet ─────────────────── -->
+    <!-- ─── Frame D · Tambah Tahun Ajaran sheet ──────────────────────── -->
     <div class="frame">
       <div class="frame-label">
-        <span class="num">D.</span><span class="role">ADMIN</span> Tambah Tahun Ajaran (AppBottomSheet)
-        <span class="desc">New form: tahun + semester + periode + flag "Set sebagai Saat Ini".</span>
+        <span class="num">D.</span><span class="role">ADMIN</span> Tambah Tahun Ajaran
+        <span class="desc">New form wired to existing POST /academic-years backend endpoint.</span>
       </div>
       <div class="phone">
         <div class="hero">
           <div class="top-row">
-            <div class="back-btn">‹</div>
+            <div class="back-btn">
+              <svg class="icn" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
             <div class="title-block">
               <div class="pre">SISTEM · KONFIGURASI</div>
               <div class="title">Tahun Ajaran</div>
             </div>
             <div class="action-btn"></div>
           </div>
+          <div class="hairline"></div>
         </div>
-        <div class="body" style="opacity:0.35"></div>
+        <div class="body" style="opacity:0.32"></div>
 
         <div class="sheet-overlay"></div>
 
         <div class="sheet">
-          <div class="handle"></div>
-          <div class="head">
-            <div class="ico" style="background:var(--green-50); color:var(--green-600)">
-              <svg class="icn-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </div>
-            <div>
-              <div class="ttl">Tahun Ajaran Baru</div>
-              <div class="sub">Tambahkan periode akademik baru</div>
+          <div class="gradient-head green">
+            <div class="handle"></div>
+            <div class="head-row">
+              <div class="ico-frame">
+                <svg class="icn-lg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/></svg>
+              </div>
+              <div class="text-wrap">
+                <div class="ttl">Tahun Ajaran Baru</div>
+                <div class="sub">Tambahkan periode akademik baru</div>
+              </div>
+              <div class="close-btn">
+                <svg class="icn-md" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
             </div>
           </div>
 
@@ -884,32 +1107,46 @@
             <div class="field">
               <div class="lbl">Periode Tahun</div>
               <div class="input focus">
-                <span class="prefix"><svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></span>
+                <span class="prefix">
+                  <svg class="icn-md" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </span>
                 <span class="text">2026/2027</span>
-                <span class="caret">▾</span>
+                <span class="caret">
+                  <svg class="icn-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </span>
               </div>
             </div>
 
             <div class="field">
               <div class="lbl">Semester</div>
               <div class="chip-grid">
-                <span class="chip selected"><span class="ico">🌱</span>Ganjil</span>
-                <span class="chip"><span class="ico">🌾</span>Genap</span>
+                <span class="chip selected">
+                  <svg class="icn-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                  Ganjil
+                </span>
+                <span class="chip">
+                  <svg class="icn-sm" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                  Genap
+                </span>
               </div>
             </div>
 
-            <div class="field" style="display:flex; gap:10px">
+            <div class="field" style="display:flex; gap:10px; margin-bottom:14px">
               <div style="flex:1">
                 <div class="lbl">Tanggal Mulai</div>
                 <div class="input">
-                  <span class="prefix"><svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></span>
+                  <span class="prefix">
+                    <svg class="icn-md" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  </span>
                   <span class="text">15 Jul 2026</span>
                 </div>
               </div>
               <div style="flex:1">
                 <div class="lbl">Tanggal Selesai</div>
                 <div class="input">
-                  <span class="prefix"><svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg></span>
+                  <span class="prefix">
+                    <svg class="icn-md" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                  </span>
                   <span class="text">23 Des 2026</span>
                 </div>
               </div>
@@ -917,11 +1154,11 @@
 
             <div class="toggle-row">
               <div class="ico">
-                <svg class="icn-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                <svg class="icn-lg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               </div>
               <div class="copy">
                 <div class="t">Set sebagai "Saat Ini"</div>
-                <div class="s">Akan mengganti tahun ajaran aktif. Data lama otomatis diarsipkan.</div>
+                <div class="s">Mengganti tahun ajaran aktif. Data lama otomatis diarsipkan.</div>
               </div>
               <div class="switch"></div>
             </div>
@@ -929,15 +1166,15 @@
 
           <div class="sheet-footer">
             <button class="btn cancel">Batal</button>
-            <button class="btn primary">
-              <svg class="icn-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+            <button class="btn primary green">
+              <svg class="icn-md" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
               Simpan
             </button>
           </div>
         </div>
       </div>
       <div class="frame-notes">
-        <strong>Brand-new sheet.</strong> Backend already supports <code>createAcademicYear()</code> but no UI is wired. Periode field is a single dropdown showing "YYYY/YYYY+1" (auto-suggest from current year). Semester uses two chips (Ganjil 🌱 / Genap 🌾) matching the Materi setup-sheet pattern. Date range fields use <code>ModernDatePicker</code> shared component. <em>Set sebagai "Saat Ini"</em> toggle is amber-warned because it's high-stakes — flipping it triggers Frame E confirmation before save.
+        <strong>New sheet.</strong> Wires backend's <code>POST /academic-years</code> + <code>PUT /academic-years/{id}/set-current</code>. Gradient head switches to green (Tambah-positive). Periode is a single dropdown auto-suggesting next year. Semester uses 2-chip <code>FilterChipGrid</code> with SVG sun/moon. Date range fields use shared <code>ModernDatePicker</code>. The amber toggle-row is the high-stakes flag — flipping it on save will trigger Frame E confirmation before commit.
       </div>
     </div>
 
@@ -945,56 +1182,161 @@
     <div class="frame">
       <div class="frame-label">
         <span class="num">E.</span><span class="role">ADMIN</span> Aktifkan confirmation
-        <span class="desc">High-stakes dialog before swapping the current academic year.</span>
+        <span class="desc">ConfirmationDialog with amber gradient head + impact list.</span>
       </div>
       <div class="phone">
         <div class="hero">
           <div class="top-row">
-            <div class="back-btn">‹</div>
+            <div class="back-btn">
+              <svg class="icn" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
             <div class="title-block">
               <div class="pre">SISTEM · KONFIGURASI</div>
               <div class="title">Tahun Ajaran</div>
             </div>
             <div class="action-btn"></div>
           </div>
+          <div class="hairline"></div>
         </div>
-        <div class="body" style="opacity:0.35"></div>
+        <div class="body" style="opacity:0.32"></div>
 
         <div class="sheet-overlay"></div>
 
         <div class="confirm-dialog">
-          <div class="ico-wrap">
-            <svg class="icn-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div class="ch-head">
+            <div class="ico-frame">
+              <svg class="icn" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="ttl">Aktifkan 2026/2027?</div>
           </div>
-          <div class="ttl">Aktifkan 2026/2027?</div>
-          <div class="msg">
-            Tahun ajaran <strong>2025/2026 Ganjil</strong> akan otomatis diarsipkan dan tidak bisa diubah lagi.
+          <div class="ch-body">
+            <div class="ch-msg">
+              Tahun ajaran <strong>2025/2026 Ganjil</strong> akan otomatis diarsipkan dan tidak bisa diubah lagi.
+            </div>
+            <div class="ch-impact">
+              <strong>Yang berubah saat ini juga:</strong>
+              <ul>
+                <li>Filter "Tahun Ajaran" di semua modul beralih ke 2026/2027</li>
+                <li>Modul Akademik &amp; Keuangan jadi read-only untuk 2025/2026</li>
+                <li>Notifikasi otomatis dikirim ke seluruh guru &amp; wali</li>
+              </ul>
+            </div>
           </div>
-          <div class="impact">
-            <strong>Yang berubah saat ini juga:</strong>
-            <ul>
-              <li>Filter "Tahun Ajaran" di semua modul beralih ke 2026/2027</li>
-              <li>Modul Akademik &amp; Keuangan jadi read-only untuk 2025/2026</li>
-              <li>Notifikasi otomatis dikirim ke seluruh guru &amp; wali</li>
-            </ul>
-          </div>
-          <div class="actions">
+          <div class="ch-actions">
             <button class="btn cancel">Batal</button>
             <button class="btn primary">Aktifkan</button>
           </div>
         </div>
       </div>
       <div class="frame-notes">
-        <strong>New ConfirmationDialog variant.</strong> Switching the active year cascades into every other module (filter scope, read-only locks, notifications). Today the action would happen silently with no confirmation. Uses shared <code>ConfirmationDialog</code> with an amber warning icon + bulleted impact list to make consequences explicit. Same dialog reused from Frame D when the toggle is flipped, and from Frame B's overflow menu's "Aktifkan" action.
+        <strong>New ConfirmationDialog variant.</strong> Uses the shared component's amber gradient head (warning600) — 32×32 white@20% icon frame, 16px/w700 title, 14px/slate700 body. Bulleted impact list explains the cascade (filter scope flip, read-only locks, notifications). Same dialog reused from Frame D's toggle and Frame B's overflow-menu "Aktifkan" action.
       </div>
     </div>
 
   </div>
 
-  <h2>Implementation map</h2>
-  <p class="subtitle">
-    Six files touched. Three new files: <code>kelola_tahun_ajaran_screen.dart</code> (Frame B), <code>tahun_ajaran_edit_sheet.dart</code> (Frame D), <code>tahun_ajaran_activate_dialog.dart</code> (Frame E). Two updated: <code>school_level_settings_screen.dart</code> (Frame A — add Tahun Ajaran section + fix subtitle), <code>school_level_dialog_mixin.dart</code> (Frame C — replace AlertDialog with AppBottomSheet). One routing change: <code>system_settings_screen.dart</code> entry for "Tahun Ajaran" routes to the new screen (Frame B) instead of the hub (Frame A); the hub becomes the route under a different label or stays addressable from the cog action.
-  </p>
+  <!-- ────────────────────────────────────────────────────────────────────
+       Backend changes
+       ──────────────────────────────────────────────────────────────────── -->
+  <div class="backend-section">
+    <h3>Backend changes</h3>
+    <p class="lead">
+      Most of the redesign reuses existing endpoints. Three gaps need backend work to fully wire the mockup: (1) a semester field per academic year so the hub can show "Ganjil/Genap" without parsing the year string, (2) a status enum that supports an explicit <code>archived</code> value to match the UI's three-state pill, and (3) a single bulk KPI endpoint so Frame B's KPI strip + per-row counts come from one round-trip instead of N.
+    </p>
+
+    <h4>1. Migration — extend <code>academic_years</code> schema <span class="tag alter">ALTER</span></h4>
+    <p style="font-size:12.5px; color:var(--slate-600); margin:0 0 8px">
+      File: <code>database/migrations/2026_05_22_000001_extend_academic_years_with_semester.php</code>. Already exists: <code>id</code>, <code>school_id</code>, <code>year</code>, <code>current</code>, <code>status</code>, <code>start_date</code>, <code>end_date</code>, timestamps.
+    </p>
+<pre>Schema::table('academic_years', function (Blueprint $table) {
+    // Embedded semester so the UI does not have to parse the year string.
+    // Values: 'ganjil' | 'genap'. Nullable for legacy rows.
+    $table-&gt;string('semester', 10)-&gt;nullable()-&gt;after('year');
+
+    // Promote status to a 3-state enum: active | inactive | archived
+    // (today only active/inactive are used). Existing 'inactive' rows
+    // remain 'inactive'; the controller's archive endpoint flips to
+    // 'archived' explicitly.
+    $table-&gt;index(['school_id', 'status'], 'ay_school_status_idx');
+});</pre>
+
+    <h4>2. Model — <code>AcademicYear.php</code> <span class="tag alter">ALTER</span></h4>
+<pre>protected $fillable = [
+    'school_id', 'year', 'semester',  // ← new
+    'current', 'status', 'start_date', 'end_date',
+];
+
+public function isArchived(): bool
+{
+    return $this-&gt;status === 'archived';
+}
+
+public function scopeActive($q)   { return $q-&gt;where('status', 'active'); }
+public function scopeArchived($q) { return $q-&gt;where('status', 'archived'); }</pre>
+
+    <h4>3. Controller — new + extended endpoints <span class="tag new">NEW</span> <span class="tag add">EXTEND</span></h4>
+    <table>
+      <thead>
+        <tr><th>Method</th><th>Route</th><th>Status</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>GET</td><td><code>/academic-years</code></td><td><span class="tag add">EXTEND</span></td>
+          <td>Already returns rows + counts. Add <code>semester</code> field to response payload. Sort by <code>start_date DESC, year DESC</code>.</td>
+        </tr>
+        <tr>
+          <td>GET</td><td><code>/academic-years/kpi-summary</code></td><td><span class="tag new">NEW</span></td>
+          <td>One-shot summary for Frame B. Returns <code>{ total, current_count, archived_count }</code> so the KPI strip doesn't need to count client-side.</td>
+        </tr>
+        <tr>
+          <td>POST</td><td><code>/academic-years</code></td><td><span class="tag add">EXTEND</span></td>
+          <td>Accept <code>semester</code> in payload. Validate enum: <code>ganjil|genap</code>. Auto-default <code>status</code> to <code>inactive</code>.</td>
+        </tr>
+        <tr>
+          <td>PUT</td><td><code>/academic-years/{id}</code></td><td><span class="tag add">EXTEND</span></td>
+          <td>Accept <code>semester</code>. Reject if year is archived (return 422 "Tahun ajaran arsip tidak bisa diubah").</td>
+        </tr>
+        <tr>
+          <td>POST</td><td><code>/academic-years/{id}/archive</code></td><td><span class="tag new">NEW</span></td>
+          <td>Sets <code>status = archived</code>. Reject if <code>current = true</code> (must transfer current first). Triggers notification job to guru &amp; wali.</td>
+        </tr>
+        <tr>
+          <td>POST</td><td><code>/academic-years/{id}/unarchive</code></td><td><span class="tag new">NEW</span></td>
+          <td>Sets <code>status = inactive</code>. For the "Pulihkan" overflow action.</td>
+        </tr>
+        <tr>
+          <td>PUT</td><td><code>/academic-years/{id}/set-current</code></td><td><span class="tag add">EXTEND</span></td>
+          <td>Already exists. Extend to auto-archive the previously-current year and dispatch the cascade notification job that Frame E warns about.</td>
+        </tr>
+        <tr>
+          <td>DELETE</td><td><code>/academic-years/{id}</code></td><td><span class="tag add">EXTEND</span></td>
+          <td>Reject if any FK rows reference this academic_year_id (classes, student_classes, bills, etc.). Return 422 with a friendly message — admin must archive instead.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>4. Repository / Action layer <span class="tag new">NEW</span></h4>
+    <p style="font-size:12.5px; color:var(--slate-600); margin:0 0 8px">
+      Wire the new routes through the existing <code>AcademicYearRepository</code> + add two Action classes for the high-stakes mutations:
+    </p>
+<pre>app/Modules/Academic/Actions/
+├── ArchiveAcademicYearAction.php    // assert not current; transition status
+├── SetCurrentAcademicYearAction.php // existing, extend with cascade dispatch
+└── Repositories/AcademicYearRepository.php
+    + getKpiSummary(string $schoolId): array
+    + archive(AcademicYear): void
+    + unarchive(AcademicYear): void</pre>
+
+    <h4>5. Notification job <span class="tag new">NEW</span></h4>
+    <p style="font-size:12.5px; color:var(--slate-600); margin:0 0 8px">
+      <code>DispatchAcademicYearSwitchNotificationJob</code> — queued job triggered by <code>SetCurrent</code>. Sends a push + in-app notification to all teachers and parents in that school: "Tahun ajaran aktif berubah ke 2026/2027 Ganjil. Modul Akademik untuk 2025/2026 sekarang read-only."
+    </p>
+
+    <h4>6. Frontend wiring (companion)</h4>
+    <p style="font-size:12.5px; color:var(--slate-600); margin:0">
+      The Flutter side adds: <code>AcademicYearService</code> methods <code>create</code>, <code>archive</code>, <code>unarchive</code>, <code>setCurrent</code>, <code>getKpiSummary</code>; <code>kelola_tahun_ajaran_screen.dart</code> (Frame B); <code>tahun_ajaran_edit_sheet.dart</code> (Frame D); <code>tahun_ajaran_activate_dialog.dart</code> (Frame E); refactor of <code>school_level_dialog_mixin.dart</code> to <code>AppBottomSheet</code> (Frame C); fix of <code>school_level_settings_screen.dart</code> subtitle + add Tahun Ajaran section (Frame A); routing change in <code>system_settings_screen.dart</code> so "Tahun Ajaran" tile routes to the new screen, not the hub.
+    </p>
+  </div>
 
 </body>
 </html>

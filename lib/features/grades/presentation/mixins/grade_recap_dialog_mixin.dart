@@ -200,7 +200,10 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
       _subjectId,
       isHomeroomView: widget.isHomeroomView,
     );
-    final rosterSubjects = roster.subjectsForClass(_classId);
+    final rosterSubjects = roster.subjectsForClass(
+      _classId,
+      isHomeroomView: widget.isHomeroomView,
+    );
     // Cold-open fallback: provider hasn't hydrated yet.
     final fallbackClasses = rosterClasses.isNotEmpty
         ? rosterClasses
@@ -265,7 +268,10 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
                       // doesn't teach it.
                       if (_subjectId != null && nextId != null) {
                         final allowed = roster
-                            .subjectsForClass(nextId)
+                            .subjectsForClass(
+                              nextId,
+                              isHomeroomView: widget.isHomeroomView,
+                            )
                             .map((s) => (s as Map)['id']?.toString());
                         if (!allowed.contains(_subjectId)) {
                           _subjectId = null;
@@ -274,7 +280,10 @@ class _GradeRecapFilterSheetState extends State<_GradeRecapFilterSheet> {
                       }
                       // Auto-select-on-single.
                       if (nextId != null && _subjectId == null) {
-                        final only = roster.subjectsForClass(nextId);
+                        final only = roster.subjectsForClass(
+                          nextId,
+                          isHomeroomView: widget.isHomeroomView,
+                        );
                         if (only.length == 1 && only.first is Map) {
                           _subjectId = (only.first as Map)['id']?.toString();
                           _subjectName =
