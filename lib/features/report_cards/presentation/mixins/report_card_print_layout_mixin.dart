@@ -60,15 +60,52 @@ mixin ReportCardPrintLayoutMixin {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
+          // Flexible so the label gets a hard cap when the row is rendered
+          // inside a narrow Expanded(flex:1) (e.g. the E. KETIDAKHADIRAN
+          // half-column), preventing 120px from eating the entire column
+          // and forcing the value to wrap character-by-character.
+          Flexible(
+            flex: 5,
             child: Text(
               label,
               style: const TextStyle(fontWeight: FontWeight.w500),
+              softWrap: true,
             ),
           ),
           const Text(' : '),
-          Expanded(child: Text(value)),
+          Expanded(flex: 4, child: Text(value, softWrap: true)),
+        ],
+      ),
+    );
+  }
+
+  /// Compact label-value row tuned for the attendance breakdown inside
+  /// the narrow E. KETIDAKHADIRAN column. Drops the fixed 120px label
+  /// width and lets both sides flex so "Tanpa Keterangan : 5 hari" fits
+  /// without character-by-character wrapping.
+  Widget buildCompactRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 6,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
+              softWrap: true,
+            ),
+          ),
+          const Text(': ', style: TextStyle(fontSize: 11)),
+          Expanded(
+            flex: 4,
+            child: Text(
+              value,
+              softWrap: true,
+              style: const TextStyle(fontSize: 11),
+            ),
+          ),
         ],
       ),
     );
@@ -286,15 +323,15 @@ mixin ReportCardPrintLayoutMixin {
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     child: Column(
                       children: [
-                        buildHeaderRow(
+                        buildCompactRow(
                           'Sakit',
                           '${reportCardData['attendance_sick'] ?? 0} hari',
                         ),
-                        buildHeaderRow(
+                        buildCompactRow(
                           'Izin',
                           '${reportCardData['attendance_permit'] ?? 0} hari',
                         ),
-                        buildHeaderRow(
+                        buildCompactRow(
                           'Tanpa Keterangan',
                           '${reportCardData['attendance_absent'] ?? 0} hari',
                         ),
@@ -350,32 +387,29 @@ mixin ReportCardPrintLayoutMixin {
   }
 
   Widget buildSignatures() {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          children: [
-            Text('Mengetahui,'),
-            Text('Orang Tua/Wali'),
-            SizedBox(height: 60),
-            Text('...........................'),
-          ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Expanded(
+          child: _SignatureBlock(
+            lineOne: 'Mengetahui,',
+            lineTwo: 'Orang Tua/Wali',
+          ),
         ),
-        Column(
-          children: [
-            Text('Mengetahui,'),
-            Text('Kepala Sekolah'),
-            SizedBox(height: 60),
-            Text('...........................'),
-          ],
+        SizedBox(width: 8),
+        Expanded(
+          child: _SignatureBlock(
+            lineOne: 'Mengetahui,',
+            lineTwo: 'Kepala Sekolah',
+          ),
         ),
-        Column(
-          children: [
-            Text('Kota, .. ............. 20..'),
-            Text('Wali Kelas'),
-            SizedBox(height: 60),
-            Text('...........................'),
-          ],
+        SizedBox(width: 8),
+        Expanded(
+          child: _SignatureBlock(
+            lineOne: 'Kota, .. ........... 20..',
+            lineTwo: 'Wali Kelas',
+          ),
         ),
       ],
     );
@@ -394,7 +428,46 @@ mixin ReportCardPrintLayoutMixin {
           fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
         ),
         textAlign: center || isHeader ? TextAlign.center : TextAlign.left,
+        softWrap: true,
       ),
+    );
+  }
+}
+
+/// One column of the signatures footer (Orang Tua / Kepala Sekolah /
+/// Wali Kelas). Wrapped in Expanded by the caller so the three blocks
+/// share row width equally and don't overflow on narrow viewports.
+class _SignatureBlock extends StatelessWidget {
+  const _SignatureBlock({required this.lineOne, required this.lineTwo});
+
+  final String lineOne;
+  final String lineTwo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          lineOne,
+          textAlign: TextAlign.center,
+          softWrap: true,
+          style: const TextStyle(fontSize: 12),
+        ),
+        Text(
+          lineTwo,
+          textAlign: TextAlign.center,
+          softWrap: true,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 60),
+        const Text(
+          '(....................)',
+          textAlign: TextAlign.center,
+          softWrap: false,
+          overflow: TextOverflow.fade,
+          style: TextStyle(fontSize: 11),
+        ),
+      ],
     );
   }
 }

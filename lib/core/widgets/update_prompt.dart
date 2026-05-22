@@ -1,5 +1,6 @@
 import 'dart:io' show Platform, exit;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/update_provider.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -51,7 +52,7 @@ class UpdatePromptWrapper extends ConsumerWidget {
       context: context,
       title: 'Update Tersedia',
       subtitle:
-          'Versi terbaru telah diunduh. Tutup aplikasi dan buka kembali '
+          'Versi terbaru telah diunduh. Aplikasi akan dimuat ulang '
           'untuk menerapkan perubahan.',
       icon: Icons.auto_fix_high_rounded,
       primaryColor: const Color(0xFF143068), // Brand dark blue
@@ -62,9 +63,8 @@ class UpdatePromptWrapper extends ConsumerWidget {
         children: [
           Text(
             'Kami telah melakukan perbaikan kecil dan peningkatan '
-            'performa. Tap "Tutup Aplikasi" lalu buka kembali dari '
-            'layar utama — pembaruan akan otomatis aktif saat aplikasi '
-            'mulai ulang.',
+            'performa. Tap "Muat Ulang Aplikasi" — pembaruan akan '
+            'otomatis aktif saat aplikasi terbuka kembali.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.black87,
@@ -74,7 +74,7 @@ class UpdatePromptWrapper extends ConsumerWidget {
         ],
       ),
       footer: BottomSheetFooter(
-        primaryLabel: 'Tutup Aplikasi',
+        primaryLabel: 'Muat Ulang Aplikasi',
         secondaryLabel: 'Nanti Saja',
         primaryColor: const Color(0xFF143068),
         onPrimary: () async {
@@ -92,31 +92,19 @@ class UpdatePromptWrapper extends ConsumerWidget {
           if (context.mounted) {
             SnackBarUtils.showInfo(
               context,
-              'Menutup aplikasi… buka kembali dari layar utama untuk '
-              'menerapkan pembaruan.',
+              'Memuat ulang aplikasi untuk menerapkan pembaruan...',
             );
           }
-          // Why exit(0) instead of Restart.restartApp(mode: process):
-          // restart_app's "process" mode launches a new MainActivity
-          // via Intent BEFORE killing the old process. Android then
-          // keeps that warm-started activity running with the same
-          // Flutter engine the old process had — Shorebird's native
-          // bootloader only swaps the staged patch in during a true
-          // cold start, so the auto-relaunched activity boots
-          // pre-patch code and the user sees no changes. Closing the
-          // app outright (no relaunch) forces the user back to home;
-          // when they tap the launcher icon, Android starts a fully
-          // fresh process and Shorebird applies the staged patch
-          // during engine init. The 1.5 s delay lets the snackbar
-          // render + any pending FS writes for the staged patch
-          // settle before the JVM dies.
-          //
-          // iOS: restart_app shows its own native restart dialog
-          // because programmatic exit is forbidden by App Store
-          // review — keep that path.
-          await Future.delayed(const Duration(milliseconds: 1500));
+          
+          await Future.delayed(const Duration(milliseconds: 1000));
           if (Platform.isAndroid) {
-            exit(0);
+            try {
+              const platform = MethodChannel('com.kamillabs.kamiledu/restart');
+              await platform.invokeMethod('restartApp');
+            } catch (e) {
+              AppLogger.error('update', 'Failed to invoke native restart: $e');
+              exit(0); // Fallback to manual close just in case
+            }
           } else {
             await Restart.restartApp(mode: RestartMode.process);
           }

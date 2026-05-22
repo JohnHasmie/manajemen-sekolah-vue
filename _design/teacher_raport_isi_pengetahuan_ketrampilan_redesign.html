@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Isi Raport · Nilai Tab · Pengetahuan (KI 3) + Keterampilan (KI 4)</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #F8FAFC;
+    --slate-100: #F1F5F9;
+    --slate-200: #E2E8F0;
+    --slate-300: #CBD5E1;
+    --slate-400: #94A3B8;
+    --slate-500: #64748B;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1E293B;
+    --slate-900: #0F172A;
+    --brand-dark: #143068;
+    --brand-dark-deep: #1F4A8F;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --green-50: #DCFCE7;
+    --green-100: #BBF7D0;
+    --green-400: #4ADE80;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-100: #FDE68A;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50: #FEE2E2;
+    --red-100: #FECACA;
+    --red-500: #EF4444;
+    --red-600: #DC2626;
+    --blue-50: #DBEAFE;
+    --blue-100: #BFDBFE;
+    --violet-50: #EDE9FE;
+    --violet-100: #DDD6FE;
+    --violet-600: #7C3AED;
+    --teal-50: #CCFBF1;
+    --teal-100: #99F6E4;
+    --teal-600: #0D9488;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0; padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  h2 { font-size: 16px; margin: 36px 0 14px; color: var(--brand-dark); letter-spacing: -0.2px; }
+  .subtitle { color: var(--slate-500); font-size: 13px; margin: 0 0 18px; max-width: 920px; line-height: 1.55; }
+  code {
+    background: var(--slate-100); color: var(--slate-700);
+    padding: 1px 5px; border-radius: 4px; font-size: 11.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin: 0 0 24px; padding: 12px 16px;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    font-size: 12px; color: var(--slate-700); font-weight: 600;
+    max-width: 920px;
+  }
+  .legend .swatch { width: 12px; height: 12px; border-radius: 4px; display: inline-block; vertical-align: -1px; margin-right: 5px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 28px; align-items: start;
+  }
+  .frame {
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 13px 16px 11px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px; text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100); background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-cobalt); margin-right: 6px; }
+  .frame-label .role { color: var(--brand-dark); margin-right: 8px; font-weight: 800; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%; aspect-ratio: 380 / 770;
+    position: relative; overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+
+  /* ─── BrandPageHeader (teacher cobalt gradient — wali kelas role) ── */
+  .hero {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-azure) 100%);
+    border-radius: 0 0 28px 28px;
+    padding: 8px 12px 12px;
+    color: white;
+    position: relative;
+  }
+  .hero .top-row { display: flex; align-items: center; gap: 6px; }
+  .hero .back-btn {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex-shrink: 0;
+  }
+  .hero .title-block { flex: 1; text-align: center; }
+  .hero .pre {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.4px;
+    color: rgba(255,255,255,.72); text-transform: uppercase;
+  }
+  .hero .title { font-size: 19px; font-weight: 700; letter-spacing: -0.1px; line-height: 1.15; }
+  .hero .action-btn {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex-shrink: 0;
+  }
+
+  /* Student hero card (the "Surya Utama / Kelas 9A / RERATA / 0/8 KKM" card) */
+  .stu-hero {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    margin: -36px 12px 0;
+    padding: 12px 12px 12px;
+    box-shadow: 0 4px 12px rgba(15,23,42,.06);
+    display: flex; gap: 12px; align-items: center;
+    position: relative;
+  }
+  .stu-hero .avatar {
+    width: 52px; height: 52px; border-radius: 999px;
+    background: var(--blue-50);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--brand-cobalt); font-weight: 800; font-size: 16px;
+    flex-shrink: 0;
+  }
+  .stu-hero .info { flex: 1; }
+  .stu-hero .nama {
+    font-size: 15px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.2px;
+  }
+  .stu-hero .kelas {
+    font-size: 12px; color: var(--slate-500); font-weight: 500; margin-top: 1px;
+  }
+  .stu-hero .kkm-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--amber-50);
+    color: var(--amber-700);
+    padding: 3px 8px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 800;
+    letter-spacing: 0.3px; margin-top: 6px;
+  }
+  .stu-hero .rerata {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 6px 12px;
+    text-align: center;
+    min-width: 58px;
+  }
+  .stu-hero .rerata .v {
+    font-size: 18px; font-weight: 800; color: var(--slate-900);
+    letter-spacing: -0.3px;
+  }
+  .stu-hero .rerata .k {
+    font-size: 9.5px; color: var(--slate-500); font-weight: 700;
+    letter-spacing: 0.4px; text-transform: uppercase;
+  }
+
+  /* Tab strip (Sikap / Nilai / Tambahan / Info) */
+  .tab-strip {
+    background: var(--slate-50);
+    border-radius: 14px;
+    padding: 6px;
+    margin: 14px 12px 12px;
+    display: flex; gap: 4px;
+  }
+  .tab-strip .tab {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 12px; font-weight: 700;
+    color: var(--slate-500);
+  }
+  .tab-strip .tab.active {
+    background: white;
+    color: var(--brand-cobalt);
+    box-shadow: 0 2px 6px rgba(15,23,42,.06);
+  }
+
+  /* Section title for Daftar Mapel */
+  .sec-title {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 4px 16px 8px;
+  }
+  .sec-title .ttl {
+    font-size: 11px; font-weight: 800; color: var(--slate-700);
+    letter-spacing: 0.6px; text-transform: uppercase;
+  }
+  .sec-title .badge {
+    background: var(--amber-50);
+    color: var(--amber-700);
+    font-size: 10.5px; font-weight: 800;
+    padding: 3px 9px; border-radius: 999px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Mapel row card — NEW dual-score layout */
+  .mapel-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    margin: 0 12px 10px;
+    padding: 12px;
+  }
+  .mapel-card.complete {
+    border-color: rgba(22,163,74,.3);
+    background: linear-gradient(135deg, rgba(22,163,74,.03) 0%, white 60%);
+  }
+  .mapel-card .top {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .mapel-card .ico {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--teal-50);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--teal-600);
+    flex-shrink: 0;
+  }
+  .mapel-card.violet .ico { background: var(--violet-50); color: var(--violet-600); }
+  .mapel-card.amber .ico { background: var(--amber-50); color: var(--amber-700); }
+  .mapel-card .name {
+    font-size: 14px; font-weight: 800; color: var(--slate-900);
+    flex: 1; letter-spacing: -0.1px;
+  }
+  .mapel-card .name .sub {
+    font-size: 11px; color: var(--slate-500); font-weight: 500;
+    margin-top: 1px;
+  }
+  .mapel-card .chev {
+    color: var(--slate-300);
+    margin-left: 4px;
+  }
+  /* Score badges row */
+  .score-row {
+    display: flex; gap: 8px; margin-top: 10px;
+  }
+  .score-cell {
+    flex: 1;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .score-cell.filled {
+    background: white;
+    border-color: rgba(27,111,184,.30);
+  }
+  .score-cell .label {
+    font-size: 9.5px; font-weight: 800;
+    color: var(--slate-500);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    flex: 1;
+    line-height: 1.2;
+  }
+  .score-cell .label .ki {
+    color: var(--slate-400); font-weight: 700; margin-left: 3px;
+  }
+  .score-cell .val {
+    font-size: 16px; font-weight: 800; color: var(--slate-900);
+    letter-spacing: -0.3px; min-width: 28px; text-align: right;
+  }
+  .score-cell .val.empty { color: var(--slate-300); }
+  .score-cell .predikat {
+    background: var(--brand-cobalt);
+    color: white;
+    font-size: 10px; font-weight: 800;
+    padding: 2px 6px; border-radius: 6px;
+    margin-left: 6px;
+    letter-spacing: 0.2px;
+  }
+  .score-cell .predikat.b { background: var(--brand-cobalt); }
+  .score-cell .predikat.a { background: var(--green-600); }
+  .score-cell .predikat.c { background: var(--amber-600); }
+
+  /* Footer with Simpan Draft / Selesaikan */
+  .footer-bar {
+    position: absolute; bottom: 56px; left: 0; right: 0;
+    display: flex; gap: 10px; padding: 10px 16px 14px;
+    background: white;
+    border-top: 1px solid var(--slate-200);
+  }
+  .footer-bar .btn {
+    padding: 13px 0; border-radius: 12px;
+    font-size: 13px; font-weight: 700;
+    text-align: center;
+    border: none;
+  }
+  .footer-bar .btn.draft {
+    flex: 1;
+    background: white; color: var(--slate-700);
+    border: 1.5px solid var(--slate-300);
+  }
+  .footer-bar .btn.done {
+    flex: 2;
+    background: var(--brand-cobalt); color: white;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 56px; background: white;
+    border-top: 1px solid var(--slate-200);
+    display: flex; align-items: center; justify-content: space-around;
+    font-size: 9.5px; color: var(--slate-500); font-weight: 700;
+  }
+  .bottom-nav .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .bottom-nav .nav-item.active { color: var(--brand-cobalt); }
+
+  /* ─── AppBottomSheet — edit sheet ─── */
+  .sheet-overlay {
+    position: absolute; inset: 0;
+    background: rgba(15,23,42,.45);
+  }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -8px 24px rgba(15,23,42,.18);
+    overflow: hidden;
+  }
+  .sheet .grad-head {
+    background: linear-gradient(135deg, var(--brand-cobalt) 0%, rgba(27,111,184,.85) 100%);
+    color: white;
+    padding: 12px 18px 18px;
+    box-shadow: 0 4px 10px rgba(27,111,184,.20);
+  }
+  .sheet .handle {
+    width: 40px; height: 4px;
+    background: rgba(255,255,255,.35);
+    border-radius: 2px;
+    margin: 0 auto 14px;
+  }
+  .sheet .head-row {
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .sheet .head-row .ico-frame {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(255,255,255,.20);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex-shrink: 0;
+  }
+  .sheet .head-row .text-wrap { flex: 1; padding-top: 2px; }
+  .sheet .head-row .ttl {
+    font-size: 18px; font-weight: 700; letter-spacing: -0.2px; color: white;
+  }
+  .sheet .head-row .sub {
+    font-size: 12px; color: rgba(255,255,255,.80); font-weight: 400; margin-top: 2px;
+  }
+  .sheet .head-row .close-btn {
+    width: 26px; height: 26px; border-radius: 999px;
+    background: rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex-shrink: 0;
+  }
+  .sheet .body-sheet { padding: 14px 18px 14px; }
+
+  /* Dual section card */
+  .nilai-section {
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+  .nilai-section .head {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .nilai-section .head .ico {
+    width: 28px; height: 28px; border-radius: 8px;
+    background: rgba(27,111,184,.10);
+    color: var(--brand-cobalt);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nilai-section .head .lbl {
+    flex: 1;
+    font-size: 13px; font-weight: 800;
+    color: var(--slate-900); letter-spacing: -0.1px;
+  }
+  .nilai-section .head .ki {
+    background: var(--brand-cobalt);
+    color: white; font-size: 9.5px; font-weight: 800;
+    padding: 2px 7px; border-radius: 999px;
+    letter-spacing: 0.3px;
+  }
+  .nilai-section .head .ki.k4 { background: var(--violet-600); }
+  .nilai-section.k4 .head .ico { background: rgba(124,58,237,.10); color: var(--violet-600); }
+
+  /* Form field */
+  .field { margin-bottom: 10px; }
+  .field .lbl {
+    font-size: 11px; font-weight: 700; color: var(--slate-600);
+    letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 5px;
+  }
+  .field .input {
+    display: flex; align-items: center; gap: 10px;
+    background: white;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .field .input.focus { border-color: var(--brand-cobalt); }
+  .field .input .pre { color: var(--slate-500); display: inline-flex; }
+  .field .input .text {
+    flex: 1; font-size: 14px; color: var(--slate-900); font-weight: 600;
+  }
+  .field .input .text.placeholder { color: var(--slate-400); font-weight: 500; }
+  .field .input .auto {
+    background: var(--green-50);
+    color: var(--green-700);
+    font-size: 10px; font-weight: 800;
+    padding: 2px 7px; border-radius: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Score + Predikat in one row */
+  .score-line {
+    display: flex; gap: 8px;
+  }
+  .score-line .score-input { flex: 1; }
+  .score-line .predikat-input { flex: 0.6; }
+
+  /* Predikat chips */
+  .pred-chips {
+    display: flex; gap: 6px;
+  }
+  .pred-chip {
+    padding: 7px 10px;
+    background: white;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 10px;
+    font-size: 12px; font-weight: 800;
+    color: var(--slate-700);
+    text-align: center;
+    flex: 1;
+  }
+  .pred-chip.selected {
+    background: var(--brand-cobalt);
+    color: white; border-color: var(--brand-cobalt);
+  }
+  .pred-chip.disabled { opacity: 0.5; }
+
+  /* Textarea */
+  .field .textarea {
+    background: white;
+    border: 1.5px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-height: 60px;
+    font-size: 13px; font-weight: 500;
+    color: var(--slate-900);
+    line-height: 1.5;
+  }
+  .field .textarea.placeholder {
+    color: var(--slate-400);
+    font-weight: 500;
+  }
+
+  /* Footer */
+  .sheet-footer {
+    display: flex; gap: 12px; padding: 8px 20px 14px;
+    border-top: 1px solid var(--slate-200);
+    background: white;
+  }
+  .sheet-footer .btn {
+    padding: 13px 0; border-radius: 12px;
+    font-size: 14px; font-weight: 700; border: none;
+    text-align: center;
+  }
+  .sheet-footer .btn.cancel {
+    flex: 1; background: white;
+    border: 1px solid var(--slate-300);
+    color: var(--slate-700);
+  }
+  .sheet-footer .btn.primary {
+    flex: 2; background: var(--brand-cobalt); color: white;
+  }
+
+  .icn      { width: 18px; height: 18px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .icn-sm   { width: 13px; height: 13px; stroke-width: 2.2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .icn-md   { width: 16px; height: 16px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .icn-lg   { width: 20px; height: 20px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  .frame-notes {
+    padding: 12px 14px; background: #fffbeb;
+    border-top: 1px solid var(--amber-100);
+    font-size: 11px; color: var(--amber-700); line-height: 1.55;
+  }
+  .frame-notes strong { color: var(--amber-700); }
+
+  /* Backend block */
+  .backend-section {
+    margin-top: 36px; padding: 22px 24px; background: white;
+    border-radius: 18px; border: 1px solid var(--slate-200);
+    max-width: 920px;
+  }
+  .backend-section h3 {
+    margin: 0 0 6px; font-size: 17px; color: var(--brand-dark);
+    letter-spacing: -0.2px;
+  }
+  .backend-section .lead {
+    color: var(--slate-500); font-size: 13px; margin: 0 0 18px; line-height: 1.55;
+  }
+  .backend-section h4 {
+    margin: 16px 0 8px; font-size: 13px; color: var(--brand-cobalt);
+    letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.2px; }
+  .tag.zero { background: var(--green-50); color: var(--green-700); }
+  .tag.fe { background: var(--blue-50); color: var(--brand-cobalt); }
+</style>
+</head>
+<body>
+  <h1>Isi Raport · Nilai Tab — Pengetahuan (KI 3) + Keterampilan (KI 4)</h1>
+  <p class="subtitle">
+    The Nilai tab in the wali kelas Isi Raport flow today exposes only ONE score per mata pelajaran, even though the paper raport (and the backend schema) require two separate scores: <strong>Pengetahuan (KI 3)</strong> and <strong>Keterampilan (KI 4)</strong>. The backend's <code>raport_subjects</code> table already has <code>knowledge_score</code>, <code>knowledge_predicate</code>, <code>knowledge_description</code>, <code>skill_score</code>, <code>skill_predicate</code>, <code>skill_description</code> columns and the controller already persists all six — only the frontend renders/edits a single side. This redesign extends the mapel row card to show both scores side-by-side and rewires the edit sheet into two stacked sections (one per KI). <strong>No backend or database work required.</strong>
+  </p>
+
+  <div class="legend">
+    <span><span class="swatch" style="background:#1B6FB8"></span>Pengetahuan (KI 3) · cobalt</span>
+    <span><span class="swatch" style="background:#7C3AED"></span>Keterampilan (KI 4) · violet</span>
+    <span><span class="swatch" style="background:#16A34A"></span>Auto-predikat ≥ KKM</span>
+    <span><span class="swatch" style="background:#D97706"></span>Auto-predikat &lt; KKM</span>
+  </div>
+
+  <h2>Frames</h2>
+  <div class="grid">
+
+    <!-- ── Frame A · Nilai tab — dual-score list ── -->
+    <div class="frame">
+      <div class="frame-label">
+        <span class="num">A.</span><span class="role">GURU / WALI</span> Nilai tab — dual-score list
+        <span class="desc">Daftar mapel with Pengetahuan + Keterampilan badges per row.</span>
+      </div>
+      <div class="phone">
+        <div class="hero">
+          <div class="top-row">
+            <div class="back-btn">
+              <svg class="icn" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+            <div class="title-block">
+              <div class="pre">KELAS 9A · ISI RAPORT</div>
+              <div class="title">Surya Utama</div>
+            </div>
+            <div class="action-btn">
+              <svg class="icn" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student hero -->
+        <div class="stu-hero">
+          <div class="avatar">SU</div>
+          <div class="info">
+            <div class="nama">Surya Utama</div>
+            <div class="kelas">Kelas 9A</div>
+            <span class="kkm-pill">0/8 KKM</span>
+          </div>
+          <div class="rerata">
+            <div class="v">—</div>
+            <div class="k">Rerata</div>
+          </div>
+        </div>
+
+        <!-- Tab strip -->
+        <div class="tab-strip">
+          <div class="tab">Sikap</div>
+          <div class="tab active">Nilai</div>
+          <div class="tab">Tambahan</div>
+          <div class="tab">Info</div>
+        </div>
+
+        <!-- Daftar Mapel section title -->
+        <div class="sec-title">
+          <span class="ttl">Daftar Mapel · 8 mapel</span>
+          <span class="badge">0 / 8 KKM</span>
+        </div>
+
+        <!-- Mapel cards with dual scores -->
+        <div class="mapel-card complete">
+          <div class="top">
+            <div class="ico">
+              <svg class="icn-md" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M9 3v18M3 9h18"/></svg>
+            </div>
+            <div class="name">
+              IPS
+              <div class="sub">KKM 75 · Drs. Andi</div>
+            </div>
+            <svg class="icn-sm chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="score-row">
+            <div class="score-cell filled">
+              <div class="label">Pengetahuan<span class="ki">KI 3</span></div>
+              <div class="val">85</div>
+              <span class="predikat a">B</span>
+            </div>
+            <div class="score-cell filled">
+              <div class="label">Keterampilan<span class="ki">KI 4</span></div>
+              <div class="val">82</div>
+              <span class="predikat b">B</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mapel-card violet">
+          <div class="top">
+            <div class="ico">
+              <svg class="icn-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="name">
+              PJOK
+              <div class="sub">KKM 75 · Sutar Sutaryo</div>
+            </div>
+            <svg class="icn-sm chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="score-row">
+            <div class="score-cell">
+              <div class="label">Pengetahuan<span class="ki">KI 3</span></div>
+              <div class="val empty">—</div>
+            </div>
+            <div class="score-cell">
+              <div class="label">Keterampilan<span class="ki">KI 4</span></div>
+              <div class="val empty">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mapel-card">
+          <div class="top">
+            <div class="ico">
+              <svg class="icn-md" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M9 3v18M3 9h18"/></svg>
+            </div>
+            <div class="name">
+              Bahasa Indonesia
+              <div class="sub">KKM 75 · Wati Suparti</div>
+            </div>
+            <svg class="icn-sm chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="score-row">
+            <div class="score-cell filled">
+              <div class="label">Pengetahuan<span class="ki">KI 3</span></div>
+              <div class="val">78</div>
+              <span class="predikat b">B</span>
+            </div>
+            <div class="score-cell">
+              <div class="label">Keterampilan<span class="ki">KI 4</span></div>
+              <div class="val empty">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bar">
+          <div class="btn draft">Simpan Draft</div>
+          <div class="btn done">Selesaikan</div>
+        </div>
+
+        <div class="bottom-nav">
+          <div class="nav-item">Beranda</div>
+          <div class="nav-item">Mengajar</div>
+          <div class="nav-item active">Nilai</div>
+          <div class="nav-item">Lainnya</div>
+        </div>
+      </div>
+      <div class="frame-notes">
+        <strong>Changes vs current build.</strong> Each mapel card grows from one stacked input to two side-by-side score cells. Label uses 9.5px caps "PENGETAHUAN" + tiny "KI 3" tag for the curriculum reference. Filled cells gain a cobalt-tinted bg + auto-predikat pill (computed from score: ≥90 A · 75–89 B · 60–74 C · &lt;60 D). Empty cells render an "—" in slate-300. "Complete" cards (both KI filled) get a faint green left-border tint so the teacher can scan progress without counting. The KKM strip stays — it now tracks how many mapel have BOTH scores filled, not just one.
+      </div>
+    </div>
+
+    <!-- ── Frame B · Edit sheet — dual KI sections ── -->
+    <div class="frame">
+      <div class="frame-label">
+        <span class="num">B.</span><span class="role">GURU / WALI</span> Edit Nilai Mapel sheet
+        <span class="desc">Two stacked sections — Pengetahuan + Keterampilan.</span>
+      </div>
+      <div class="phone">
+        <div class="hero">
+          <div class="top-row">
+            <div class="back-btn">
+              <svg class="icn" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+            <div class="title-block">
+              <div class="pre">KELAS 9A · ISI RAPORT</div>
+              <div class="title">Surya Utama</div>
+            </div>
+            <div class="action-btn"></div>
+          </div>
+        </div>
+        <div style="opacity:.35; height:160px"></div>
+
+        <div class="sheet-overlay"></div>
+
+        <div class="sheet">
+          <div class="grad-head">
+            <div class="handle"></div>
+            <div class="head-row">
+              <div class="ico-frame">
+                <svg class="icn-lg" viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M9 3v18M3 9h18"/></svg>
+              </div>
+              <div class="text-wrap">
+                <div class="ttl">Bahasa Indonesia</div>
+                <div class="sub">KKM 75 · Wati Suparti</div>
+              </div>
+              <div class="close-btn">
+                <svg class="icn-md" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="body-sheet">
+            <!-- Section 1 · Pengetahuan -->
+            <div class="nilai-section">
+              <div class="head">
+                <div class="ico">
+                  <svg class="icn-md" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zm20 0h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </div>
+                <div class="lbl">Pengetahuan</div>
+                <div class="ki">KI 3</div>
+              </div>
+
+              <div class="score-line">
+                <div class="field score-input">
+                  <div class="lbl">Nilai</div>
+                  <div class="input focus">
+                    <span class="text">78</span>
+                    <span class="auto">≥ KKM</span>
+                  </div>
+                </div>
+                <div class="field predikat-input">
+                  <div class="lbl">Predikat</div>
+                  <div class="pred-chips">
+                    <div class="pred-chip">A</div>
+                    <div class="pred-chip selected">B</div>
+                    <div class="pred-chip">C</div>
+                    <div class="pred-chip">D</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field" style="margin-bottom:0">
+                <div class="lbl">Deskripsi</div>
+                <div class="textarea">
+                  Menunjukkan pemahaman yang baik terhadap struktur teks naratif dan eksposisi.
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2 · Keterampilan -->
+            <div class="nilai-section k4">
+              <div class="head">
+                <div class="ico">
+                  <svg class="icn-md" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                </div>
+                <div class="lbl">Keterampilan</div>
+                <div class="ki k4">KI 4</div>
+              </div>
+
+              <div class="score-line">
+                <div class="field score-input">
+                  <div class="lbl">Nilai</div>
+                  <div class="input">
+                    <span class="text placeholder">0–100</span>
+                  </div>
+                </div>
+                <div class="field predikat-input">
+                  <div class="lbl">Predikat</div>
+                  <div class="pred-chips">
+                    <div class="pred-chip disabled">A</div>
+                    <div class="pred-chip disabled">B</div>
+                    <div class="pred-chip disabled">C</div>
+                    <div class="pred-chip disabled">D</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field" style="margin-bottom:0">
+                <div class="lbl">Deskripsi</div>
+                <div class="textarea placeholder">
+                  Catatan kompetensi keterampilan…
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sheet-footer">
+            <button class="btn cancel">Batal</button>
+            <button class="btn primary">
+              <svg class="icn-sm" viewBox="0 0 24 24" style="vertical-align:-1px"><polyline points="20 6 9 17 4 12"/></svg>
+              Simpan
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="frame-notes">
+        <strong>Dual-section edit sheet.</strong> Same gradient head + drag handle pattern as every other sheet. Inside the body, two `.nilai-section` cards stack vertically: cobalt-tinted icon frame for <strong>Pengetahuan (KI 3)</strong>, violet for <strong>Keterampilan (KI 4)</strong>. Each section has: (1) Nilai numeric input with an "≥ KKM" / "&lt; KKM" auto-badge that turns green/amber based on score, (2) Predikat chip-row auto-selected from score (admin can override by tapping), (3) Deskripsi textarea pre-filled with the per-predikat template the wali kelas can edit. Footer Batal/Simpan via shared <code>BottomSheetFooter</code>.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ────────────────────────────────────────────────────────────────────
+       Backend & implementation map
+       ──────────────────────────────────────────────────────────────────── -->
+  <div class="backend-section">
+    <h3>Backend changes — none required <span class="tag zero">0 migrations</span></h3>
+    <p class="lead">
+      The Laravel side is already complete. The <code>raport_subjects</code> table holds both score families and the controller's bulk-upsert already maps all six fields from the payload. The fix is entirely frontend: render the second score, plumb the second set of callbacks, and let the existing save mutation carry the new fields.
+    </p>
+
+    <h4>Frontend files touched <span class="tag fe">FRONTEND</span></h4>
+    <table style="width:100%; border-collapse: collapse; font-size: 12.5px">
+      <thead>
+        <tr style="background: var(--slate-50)">
+          <th style="text-align:left; padding:8px 10px; font-size:11px; letter-spacing:0.3px; text-transform:uppercase">File</th>
+          <th style="text-align:left; padding:8px 10px; font-size:11px; letter-spacing:0.3px; text-transform:uppercase">Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid var(--slate-100)">
+          <td style="padding:8px 10px"><code>report_card_grade_tab.dart</code></td>
+          <td style="padding:8px 10px">Replace single <code>_NilaiRow</code> badge with two side-by-side score cells. KKM strip counts both-filled.</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--slate-100)">
+          <td style="padding:8px 10px"><code>_RaportNilaiEditSheet</code> (inside grade tab)</td>
+          <td style="padding:8px 10px">Rebuild as two <code>_NilaiSection</code> cards — one per KI — each with score / predikat-chips / deskripsi.</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--slate-100)">
+          <td style="padding:8px 10px"><code>report_card_detail_screen.dart</code></td>
+          <td style="padding:8px 10px"><code>onSubjectChanged</code> already accepts arbitrary field names; just add <code>skill_score</code> / <code>skill_predicate</code> / <code>skill_description</code> handling.</td>
+        </tr>
+        <tr style="border-bottom: 1px solid var(--slate-100)">
+          <td style="padding:8px 10px"><code>report_card_service.dart</code></td>
+          <td style="padding:8px 10px">No change — payload already passes through any field on the subject map.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>Auto-predikat helper (shared)</h4>
+    <pre style="background:var(--slate-50); border:1px solid var(--slate-200); border-radius:10px; padding:12px 14px; font-size:12px; color:var(--slate-800); overflow-x:auto; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; line-height:1.6">String predikatFromScore(num? score) {
+  if (score == null) return '';
+  if (score >= 90) return 'A';
+  if (score >= 75) return 'B';
+  if (score >= 60) return 'C';
+  return 'D';
+}</pre>
+
+    <p style="font-size:12.5px; color:var(--slate-600); margin:14px 0 0">
+      Auto-fill rules: when the teacher edits the score field, the predikat chip flips to the matching letter. If they tap a different predikat afterwards, the explicit choice wins and a small "Manual" hint appears under the chip-row so they know it's no longer auto. Same logic for both Pengetahuan and Keterampilan independently.
+    </p>
+  </div>
+
+</body>
+</html>

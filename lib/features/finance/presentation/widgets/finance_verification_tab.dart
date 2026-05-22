@@ -8,7 +8,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/widgets/empty_state.dart';
+import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 
 class FinanceVerificationTab extends StatelessWidget {
   const FinanceVerificationTab({
@@ -42,10 +42,11 @@ class FinanceVerificationTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (pendingPaymentList.isEmpty) {
-      return const EmptyState(
+      return const BrandEmptyState(
+        icon: Icons.verified_user_outlined,
+        tone: BrandEmptyStateTone.success,
         title: 'Tidak ada pembayaran menunggu verifikasi',
-        subtitle: 'Semua pembayaran telah diverifikasi',
-        icon: Icons.verified_user,
+        message: 'Semua pembayaran telah diverifikasi',
       );
     }
     return CustomScrollView(

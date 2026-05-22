@@ -26,6 +26,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
@@ -96,6 +97,18 @@ class _ParentReportCardDetailScreenState
     return DateTime.tryParse(raw);
   }
 
+  /// True when the rapor has been formally published. Backed by
+  /// `reportCardData['status']` (the same field the parent-side list
+  /// already filters on with `status == 'published'`). When false, the
+  /// backend export endpoint will 404 (or 403 for parents), so the UI
+  /// disables all Cetak affordances upstream.
+  bool get _isPublished {
+    final status = (reportCardData['status'] ?? '').toString().toLowerCase();
+    return status == 'published';
+  }
+
+  bool get _isAdmin => userRole == 'admin' || userRole == 'administrator';
+
   List<dynamic> get _subjects =>
       (reportCardData['raportSubjects'] ??
               reportCardData['raport_subjects'] ??
@@ -141,7 +154,13 @@ class _ParentReportCardDetailScreenState
                 ..._subjects.map(
                   (s) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: ParentRaporSubjectCard(subject: s as Map),
+                    child: Builder(
+                      builder: (ctx) => ParentRaporSubjectCard(
+                        subject: s as Map,
+                        onTap: () =>
+                            showParentRaporDeskripsiSheet(ctx, subject: s),
+                      ),
+                    ),
                   ),
                 ),
                 if (_subjects.isEmpty)
@@ -204,8 +223,12 @@ class _ParentReportCardDetailScreenState
       bottomNavigationBar: SafeArea(
         top: false,
         child: ParentRaporBottomActionBar(
+          role: userRole,
+          isPublished: _isPublished,
           onShare: () => _share(context),
-          onPrint: () => _downloadPdf(context),
+          onPrintRaport: () => _downloadPdf(context, variant: 'raport'),
+          onPrintCertificate: () =>
+              _downloadPdf(context, variant: 'certificate'),
         ),
       ),
     );
@@ -222,8 +245,10 @@ class _ParentReportCardDetailScreenState
       title: 'Rapor $studentName',
       actionIcons: [
         BrandHeaderIconButton(
-          icon: Icons.file_download_outlined,
-          onTap: () => _downloadPdf(context),
+          icon: _isPublished
+              ? Icons.file_download_outlined
+              : Icons.file_download_off_outlined,
+          onTap: () => _onHeroDownloadTap(context),
         ),
       ],
       isRealtimeFresh: published != null,
@@ -381,22 +406,62 @@ class _ParentReportCardDetailScreenState
 
   // ---- Actions ---------------------------------------------------------
 
-  Future<void> _downloadPdf(BuildContext context) async {
+  /// Triggers a PDF download. [variant] selects the Blade template on
+  /// the backend:
+  ///
+  /// * `'raport'` → `/raports/export-pdf` → `raport.pdf` (the official
+  ///   single-document layout with KI 3 + KI 4 columns and the
+  ///   B.1 Deskripsi Capaian section).
+  /// * `'certificate'` → `/raports/export-certificate-pdf` →
+  ///   `raport.certificate` (the modern certificate layout used by the
+  ///   parent download icon).
+  ///
+  /// When the rapor is still in draft state the upstream UI disables
+  /// the affordance, so this method assumes [_isPublished] is true by
+  /// the time it runs. We still keep a defensive guard in case the
+  /// caller bypasses it.
+  Future<void> _downloadPdf(
+    BuildContext context, {
+    required String variant,
+  }) async {
+    if (!_isPublished) {
+      SnackBarUtils.showInfo(
+        context,
+        'Rapor masih draft — cetak PDF belum tersedia.',
+      );
+      return;
+    }
+
+    final studentClassId = (reportCardData['student_class_id'] ?? '')
+        .toString();
+    final academicYearId = (reportCardData['academic_year_id'] ?? '')
+        .toString();
+    final semesterId = (reportCardData['semester_id'] ?? '').toString();
+    if (studentClassId.isEmpty ||
+        academicYearId.isEmpty ||
+        semesterId.isEmpty) {
+      SnackBarUtils.showError(
+        context,
+        'Data raport belum lengkap untuk dicetak.',
+      );
+      return;
+    }
+
     SnackBarUtils.showInfo(context, 'Menyiapkan file PDF...');
     try {
-      if (userRole == 'wali') {
+      if (variant == 'certificate') {
         await ExcelReportCardService.exportCertificateRaportPdf(
-          studentClassId: reportCardData['student_class_id'].toString(),
-          academicYearId: reportCardData['academic_year_id'].toString(),
-          semesterId: reportCardData['semester_id'].toString(),
+          studentClassId: studentClassId,
+          academicYearId: academicYearId,
+          semesterId: semesterId,
           studentName: studentName,
           context: context,
         );
       } else {
         await ExcelReportCardService.exportSingleRaportPdf(
-          studentClassId: reportCardData['student_class_id'].toString(),
-          academicYearId: reportCardData['academic_year_id'].toString(),
-          semesterId: reportCardData['semester_id'].toString(),
+          studentClassId: studentClassId,
+          academicYearId: academicYearId,
+          semesterId: semesterId,
           studentName: studentName,
           context: context,
         );
@@ -408,10 +473,165 @@ class _ParentReportCardDetailScreenState
     }
   }
 
+  /// For admin: opens an AppBottomSheet chooser when the hero
+  /// download icon is tapped, so admin can pick between the two
+  /// PDF formats. For guru/wali the icon downloads the role-default
+  /// format directly.
+  void _onHeroDownloadTap(BuildContext context) {
+    if (!_isPublished) {
+      SnackBarUtils.showInfo(
+        context,
+        'Rapor masih draft — cetak PDF belum tersedia.',
+      );
+      return;
+    }
+    if (_isAdmin) {
+      _showAdminDownloadChooser(context);
+      return;
+    }
+    // wali → certificate; guru → single raport.
+    _downloadPdf(
+      context,
+      variant: userRole == 'wali' ? 'certificate' : 'raport',
+    );
+  }
+
+  void _showAdminDownloadChooser(BuildContext context) {
+    AppBottomSheet.show<void>(
+      context: context,
+      title: 'Pilih format PDF',
+      subtitle: 'Pilih format dokumen yang ingin dicetak',
+      icon: Icons.picture_as_pdf_outlined,
+      primaryColor: ColorUtils.getRoleColor(userRole),
+      contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _AdminPdfChoiceTile(
+            title: 'Raport (Format Guru)',
+            subtitle:
+                'Dokumen resmi lengkap — KI 3 + KI 4, sikap, kehadiran, deskripsi capaian.',
+            icon: Icons.description_outlined,
+            accent: ColorUtils.brandCobalt,
+            onTap: () {
+              AppNavigator.pop(context);
+              _downloadPdf(context, variant: 'raport');
+            },
+          ),
+          const SizedBox(height: 10),
+          _AdminPdfChoiceTile(
+            title: 'E-Raport (Format Wali)',
+            subtitle:
+                'Sertifikat ringkas — rata-rata, badge, dan layout modern untuk orang tua.',
+            icon: Icons.workspace_premium_outlined,
+            accent: const Color(0xFF7C3AED),
+            onTap: () {
+              AppNavigator.pop(context);
+              _downloadPdf(context, variant: 'certificate');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _share(BuildContext context) async {
     SnackBarUtils.showInfo(
       context,
       'Bagikan rapor — fitur ini akan tersedia setelah PDF tersimpan.',
+    );
+  }
+}
+
+/// Tappable list-tile used inside the admin "Pilih format PDF" sheet.
+/// Renders a leading colored square icon (accent), title + subtitle, and
+/// a trailing chevron. Wraps the row in [Material] + [InkWell] so it
+/// behaves like a button (ripple on press).
+class _AdminPdfChoiceTile extends StatelessWidget {
+  const _AdminPdfChoiceTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: const BorderRadius.all(Radius.circular(14)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.all(Radius.circular(14)),
+            border: Border.all(color: accent.withValues(alpha: 0.22), width: 1),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [accent.withValues(alpha: 0.05), Colors.white],
+              stops: const [0.0, 0.7],
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 22, color: accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: ColorUtils.slate900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: ColorUtils.slate600,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 22,
+                color: ColorUtils.slate300,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
