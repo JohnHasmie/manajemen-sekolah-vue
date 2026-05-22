@@ -138,6 +138,54 @@ class ApiSettingsService {
     }
   }
 
+  /// Bulk deletes a list of lesson sessions by ID in a single
+  /// round-trip. Used by the long-press multi-select flow in
+  /// Sistem → Waktu Pembelajaran.
+  ///
+  /// Returns the parsed response so the caller can show a precise
+  /// toast — typically `{ deleted_count, blocked: [{id, reason}] }`.
+  Future<Map<String, dynamic>> bulkDeleteLessonHours(List<String> ids) async {
+    try {
+      final response = await dioClient.post(
+        '/lesson-hour-settings/bulk-delete',
+        data: {'ids': ids},
+      );
+      final data = response.data;
+      if (data is Map<String, dynamic>) return data;
+      return <String, dynamic>{};
+    } catch (e) {
+      AppLogger.error('settings', e);
+      rethrow;
+    }
+  }
+
+  /// Copies all lesson sessions from one day to another. When
+  /// [replaceExisting] is true, any sessions already on the target day
+  /// are cleared first (rows tied to active teaching schedules are
+  /// skipped and reported in the response's `blocked` list).
+  Future<Map<String, dynamic>> copyLessonHoursToDay({
+    required String fromDayId,
+    required String toDayId,
+    bool replaceExisting = false,
+  }) async {
+    try {
+      final response = await dioClient.post(
+        '/lesson-hour-settings/copy',
+        data: {
+          'from_day_id': fromDayId,
+          'to_day_id': toDayId,
+          'replace_existing': replaceExisting,
+        },
+      );
+      final data = response.data;
+      if (data is Map<String, dynamic>) return data;
+      return <String, dynamic>{};
+    } catch (e) {
+      AppLogger.error('settings', e);
+      rethrow;
+    }
+  }
+
   /// Fetches the school's general settings (name, address, jenjang/level).
   /// Like `School::find($schoolId)->settings` in Laravel.
   Future<Map<String, dynamic>> getSchoolSettings() async {

@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Teacher · Materi · Bab & Sub-Bab card v3</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --green-50: #DCFCE7;
+    --green-600: #16A34A;
+    --amber-50: #FEF3C7;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-600: #DC2626;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  .lede { font-size: 14px; color: var(--slate-600); max-width: 760px; margin: 0 0 28px; line-height: 1.55; }
+
+  .frame-row { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+  .frame {
+    width: 380px;
+    background: var(--surface);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(15,23,42,0.10);
+    border: 1px solid var(--slate-200);
+  }
+  .frame-label {
+    font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--brand-cobalt);
+    text-transform: uppercase; margin: 0 0 8px;
+  }
+  .frame-title { font-size: 16px; font-weight: 800; color: var(--slate-900); margin: 0 0 6px; letter-spacing: -0.2px; }
+  .frame-sub { font-size: 12px; color: var(--slate-500); margin: 0 0 14px; line-height: 1.45; }
+  .frame-meta { display: flex; flex-direction: column; max-width: 380px; }
+
+  /* Phone shell */
+  .phone {
+    width: 380px;
+    background: var(--bg);
+  }
+  .phone-status {
+    height: 38px; padding: 0 22px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, #21afe6 0%, #1b6fb8 100%);
+    color: white; font-size: 13px; font-weight: 700;
+  }
+  .phone-status .dots { letter-spacing: 1px; opacity: 0.85; }
+  .phone-status .right { display: flex; gap: 6px; opacity: 0.95; font-size: 12px; }
+
+  /* Header */
+  .hdr {
+    padding: 4px 16px 36px;
+    background: linear-gradient(135deg, #21afe6 0%, #1b6fb8 60%, #143068 100%);
+    color: white;
+    position: relative;
+  }
+  .hdr-top { display: flex; align-items: center; gap: 10px; }
+  .hdr-back {
+    width: 36px; height: 36px; border-radius: 12px;
+    background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .hdr-title-block { flex: 1; text-align: center; }
+  .hdr-kicker { font-size: 11px; opacity: 0.85; font-weight: 600; letter-spacing: 0.3px; }
+  .hdr-title { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; display: inline-flex; align-items: center; gap: 6px; }
+  .hdr-title .dot { width: 7px; height: 7px; border-radius: 99px; background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,0.25); }
+  .hdr-actions { display: flex; gap: 6px; }
+  .hdr-btn {
+    width: 36px; height: 36px; border-radius: 12px;
+    background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  /* KPI strip (overlaps header) */
+  .kpi {
+    margin: -28px 16px 12px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(15,23,42,0.08);
+    padding: 14px 6px;
+    display: flex;
+    align-items: stretch;
+  }
+  .kpi-cell { flex: 1; text-align: center; }
+  .kpi-cell .v { font-size: 22px; font-weight: 900; letter-spacing: -0.4px; line-height: 1; }
+  .kpi-cell .l { font-size: 10px; font-weight: 800; color: var(--slate-500); letter-spacing: 0.6px; margin-top: 6px; text-transform: uppercase; }
+  .kpi-cell.bab .v { color: var(--brand-cobalt); }
+  .kpi-cell.sub .v { color: var(--slate-800); }
+  .kpi-cell.tercatat .v { color: var(--green-600); }
+  .kpi-cell.ai .v { color: var(--violet-600); }
+  .kpi-divider { width: 1px; background: var(--slate-200); margin: 6px 0; }
+
+  /* Body */
+  .body { padding: 4px 16px 24px; }
+
+  /* Card v1 (current) */
+  .card {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .card-head { display: flex; align-items: center; gap: 12px; }
+  .ring { width: 50px; height: 50px; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+  .ring .arc {
+    width: 100%; height: 100%; border-radius: 50%;
+  }
+  .ring .inner {
+    position: absolute; inset: 5px;
+    background: white; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+  }
+  .ring.cobalt .arc { background: conic-gradient(var(--brand-cobalt) calc(var(--p) * 1%), var(--slate-100) 0); }
+  .ring.cobalt .inner { color: var(--brand-cobalt); }
+  .ring.green .arc { background: conic-gradient(var(--green-600) calc(var(--p) * 1%), var(--slate-100) 0); }
+  .ring.green .inner { color: var(--green-600); }
+  .ring.amber .arc { background: conic-gradient(var(--amber-600) calc(var(--p) * 1%), var(--slate-100) 0); }
+  .ring.amber .inner { color: var(--amber-700); }
+
+  .head-title { flex: 1; min-width: 0; }
+  .head-kicker { font-size: 10px; font-weight: 800; color: var(--brand-cobalt); letter-spacing: 0.4px; }
+  .head-name { font-size: 14px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.2px; line-height: 1.2; margin-top: 1px; }
+  .head-meta { font-size: 11px; font-weight: 600; color: var(--slate-500); margin-top: 4px; }
+  .head-chev { color: var(--slate-400); font-size: 18px; }
+
+  .stats { display: flex; gap: 6px; margin-top: 12px; }
+  .stat {
+    flex: 1;
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    border: 1px solid var(--slate-200);
+  }
+  .stat .v { font-size: 18px; font-weight: 800; line-height: 1; letter-spacing: -0.3px; }
+  .stat .l { font-size: 9px; font-weight: 800; letter-spacing: 0.6px; margin-top: 5px; text-transform: uppercase; color: var(--slate-500); }
+  .stat.tercatat { background: rgba(27,111,184,0.06); border-color: rgba(27,111,184,0.14); }
+  .stat.tercatat .v { color: var(--brand-cobalt); }
+  .stat.belum { background: var(--surface); }
+  .stat.belum .v { color: var(--amber-600); }
+  .stat.belum.zero .v { color: var(--slate-500); }
+  .stat.ai { background: var(--violet-50); border-color: rgba(124,58,237,0.18); }
+  .stat.ai .v { color: var(--violet-600); }
+
+  .bar {
+    height: 5px; background: var(--slate-100); border-radius: 99px; overflow: hidden; margin-top: 12px;
+  }
+  .bar > div {
+    height: 100%; border-radius: 99px;
+  }
+  .bar.cobalt > div { background: linear-gradient(90deg, var(--brand-cobalt), var(--brand-azure)); }
+  .bar.green > div { background: var(--green-600); }
+  .bar.amber > div { background: var(--amber-600); }
+
+  /* annotation pills */
+  .badge {
+    position: absolute; transform: translate(0, -50%);
+    background: var(--red-600); color: white;
+    font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 99px;
+    letter-spacing: 0.4px;
+  }
+  .anno-wrap { position: relative; }
+  .anno-pill {
+    position: absolute; right: -180px; top: 0;
+    background: white; border: 1px solid var(--slate-200);
+    border-radius: 12px; padding: 8px 10px; font-size: 11px; color: var(--slate-700);
+    line-height: 1.45; width: 160px;
+    box-shadow: 0 4px 12px rgba(15,23,42,0.08);
+  }
+  .anno-pill::before {
+    content: ''; position: absolute; left: -8px; top: 14px;
+    width: 0; height: 0; border-style: solid; border-width: 6px 8px 6px 0;
+    border-color: transparent var(--slate-200) transparent transparent;
+  }
+  .anno-pill b { color: var(--red-600); font-weight: 800; }
+
+  /* Card v2 — Option A: ring-led, drop bar, 2 stat tiles */
+  .v2 .stats .stat { padding: 12px 10px; }
+  .v2 .stats .stat .v { font-size: 20px; }
+  .v2 .stats .stat .l { font-size: 10px; }
+
+  /* Card v3 — Option B: meta-row primary, no ring, inline bar */
+  .v3 {
+    background: white;
+    border: 1px solid var(--slate-200);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .v3-head { display: flex; align-items: center; gap: 12px; }
+  .v3-head .lead { flex: 1; min-width: 0; }
+  .v3-head .lead .kk { font-size: 10px; font-weight: 800; color: var(--brand-cobalt); letter-spacing: 0.4px; }
+  .v3-head .lead .nm { font-size: 14px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.2px; line-height: 1.2; margin-top: 1px; }
+  .v3-head .lead .mt { font-size: 11px; font-weight: 600; color: var(--slate-500); margin-top: 4px; }
+  .v3-head .pct {
+    font-size: 22px; font-weight: 900; color: var(--brand-cobalt); letter-spacing: -0.5px; line-height: 1;
+    display: flex; align-items: baseline; gap: 2px;
+  }
+  .v3-head .pct .small { font-size: 12px; font-weight: 800; opacity: 0.7; }
+  .v3-head.amber .pct { color: var(--amber-700); }
+  .v3-head.green .pct { color: var(--green-600); }
+  .v3-head .chev { color: var(--slate-400); font-size: 18px; }
+  .v3-bar {
+    height: 6px; background: var(--slate-100); border-radius: 99px;
+    margin: 12px 0 10px; overflow: hidden;
+  }
+  .v3-bar > div { height: 100%; border-radius: 99px; }
+  .v3-bar.cobalt > div { background: linear-gradient(90deg, var(--brand-cobalt), var(--brand-azure)); }
+  .v3-bar.amber > div { background: var(--amber-600); }
+  .v3-bar.green > div { background: var(--green-600); }
+  .v3-foot {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    font-size: 11px; font-weight: 700;
+  }
+  .v3-foot .seg {
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .v3-foot .seg .dot { width: 6px; height: 6px; border-radius: 99px; }
+  .v3-foot .seg.tercatat { color: var(--brand-cobalt); }
+  .v3-foot .seg.tercatat .dot { background: var(--brand-cobalt); }
+  .v3-foot .seg.belum { color: var(--amber-700); }
+  .v3-foot .seg.belum .dot { background: var(--amber-600); }
+  .v3-foot .sep { width: 3px; height: 3px; border-radius: 99px; background: var(--slate-300); }
+
+  /* bottom-nav fake */
+  .navbar {
+    margin-top: 8px;
+    padding: 10px 0;
+    background: white;
+    border-top: 1px solid var(--slate-200);
+    display: flex; justify-content: space-around;
+    font-size: 10px; color: var(--slate-500);
+  }
+  .navbar div { text-align: center; }
+  .navbar .ic { font-size: 16px; display: block; margin-bottom: 3px; }
+  .navbar .active { color: var(--brand-cobalt); font-weight: 800; }
+
+  .legend { display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap; }
+  .legend .lg {
+    background: white; border: 1px solid var(--slate-200); border-radius: 10px;
+    padding: 8px 10px; font-size: 11px; color: var(--slate-700); display: flex; gap: 8px; align-items: center;
+  }
+  .legend .lg b { color: var(--slate-900); font-weight: 800; }
+
+  .changes {
+    margin-top: 18px;
+    background: white; border: 1px solid var(--slate-200); border-radius: 12px;
+    padding: 12px 14px; font-size: 12px; color: var(--slate-700);
+    line-height: 1.6;
+  }
+  .changes h3 { font-size: 12px; font-weight: 800; margin: 0 0 6px; color: var(--brand-cobalt); letter-spacing: 0.4px; text-transform: uppercase; }
+  .changes .row { display: flex; gap: 6px; align-items: flex-start; }
+  .changes .row::before { content: '✓'; color: var(--green-600); font-weight: 800; }
+  .changes .row.drop::before { content: '✗'; color: var(--red-600); }
+</style>
+</head>
+<body>
+
+<h1>Teacher · Materi · Bab & Sub-Bab card v3</h1>
+<p class="lede">
+  Two redesign options for the Materi hub card. Both drop the AI count (per-card tile + KPI strip "AI SIAP") and resolve
+  the "two progress bars" duplication. Pick one to apply.
+</p>
+
+<div class="frame-row">
+
+  <!-- ============= FRAME A1 — CURRENT ============= -->
+  <div class="frame-meta">
+    <p class="frame-label">A1 · current</p>
+    <p class="frame-title">What ships today</p>
+    <p class="frame-sub">Ring + 3 stat tiles + bottom bar. Three different views of the same progress fact + a violet AI tile that the user wants gone.</p>
+
+    <div class="frame phone">
+      <div class="phone-status"><span>15.01</span><span class="right">···  ◍  ▮</span></div>
+      <div class="hdr">
+        <div class="hdr-top">
+          <div class="hdr-back">‹</div>
+          <div class="hdr-title-block">
+            <div class="hdr-kicker">Materi Pembelajaran</div>
+            <div class="hdr-title">Bab & Sub-Bab <span class="dot"></span></div>
+          </div>
+          <div class="hdr-actions">
+            <div class="hdr-btn">▤</div>
+            <div class="hdr-btn">⫶</div>
+          </div>
+        </div>
+      </div>
+      <div class="kpi" style="position: relative;">
+        <div class="kpi-cell bab"><div class="v">32</div><div class="l">Bab</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell sub"><div class="v">96</div><div class="l">Sub-Bab</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell tercatat"><div class="v">61</div><div class="l">Tercatat</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell ai" style="position: relative;">
+          <div class="v">9</div><div class="l">AI Siap</div>
+          <span class="badge" style="top: 12px; right: -16px;">DROP</span>
+        </div>
+      </div>
+      <div class="body">
+        <div class="card" style="--p:44; position: relative;">
+          <div class="card-head">
+            <div class="ring cobalt" style="--p:44;">
+              <div class="arc"></div>
+              <div class="inner">44%</div>
+            </div>
+            <div class="head-title">
+              <div class="head-kicker">7A</div>
+              <div class="head-name">B. Arab</div>
+              <div class="head-meta">8 bab · 24 sub-bab</div>
+            </div>
+            <div class="head-chev">›</div>
+          </div>
+          <div class="stats">
+            <div class="stat tercatat"><div class="v">14</div><div class="l">Tercatat</div></div>
+            <div class="stat belum"><div class="v">18</div><div class="l">Belum</div></div>
+            <div class="stat ai" style="position: relative;">
+              <div class="v">1</div><div class="l">AI</div>
+              <span class="badge" style="top: 0; right: -10px;">DROP</span>
+            </div>
+          </div>
+          <div class="bar cobalt" style="position: relative;">
+            <div style="width: 44%;"></div>
+            <span class="badge" style="top: 50%; right: -12px;">DROP</span>
+          </div>
+        </div>
+
+        <div class="card" style="--p:63;">
+          <div class="card-head">
+            <div class="ring cobalt" style="--p:63;">
+              <div class="arc"></div>
+              <div class="inner">63%</div>
+            </div>
+            <div class="head-title">
+              <div class="head-kicker">7B</div>
+              <div class="head-name">B. Arab</div>
+              <div class="head-meta">8 bab · 24 sub-bab</div>
+            </div>
+            <div class="head-chev">›</div>
+          </div>
+          <div class="stats">
+            <div class="stat tercatat"><div class="v">20</div><div class="l">Tercatat</div></div>
+            <div class="stat belum"><div class="v">12</div><div class="l">Belum</div></div>
+            <div class="stat ai"><div class="v">2</div><div class="l">AI</div></div>
+          </div>
+          <div class="bar cobalt"><div style="width: 63%;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="changes">
+      <h3>Issues called out</h3>
+      <div class="row drop">AI count surfaces twice — KPI strip "9 AI SIAP" + per-card violet tile. Teachers said it crowds the card.</div>
+      <div class="row drop">Progress shown three times — ring (%), 3-tile counts, bottom bar. The ring + bar are pure duplication.</div>
+    </div>
+  </div>
+
+  <!-- ============= FRAME A2 — OPTION A ============= -->
+  <div class="frame-meta">
+    <p class="frame-label">A2 · option A · ring-led</p>
+    <p class="frame-title">Keep the ring, drop the bar</p>
+    <p class="frame-sub">Ring stays as the primary visual. The two remaining stat tiles (Tercatat + Belum) widen to fill the row. Bottom bar removed — the ring already encodes the same %.</p>
+
+    <div class="frame phone">
+      <div class="phone-status"><span>15.01</span><span class="right">···  ◍  ▮</span></div>
+      <div class="hdr">
+        <div class="hdr-top">
+          <div class="hdr-back">‹</div>
+          <div class="hdr-title-block">
+            <div class="hdr-kicker">Materi Pembelajaran</div>
+            <div class="hdr-title">Bab & Sub-Bab <span class="dot"></span></div>
+          </div>
+          <div class="hdr-actions">
+            <div class="hdr-btn">▤</div>
+            <div class="hdr-btn">⫶</div>
+          </div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-cell bab"><div class="v">32</div><div class="l">Bab</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell sub"><div class="v">96</div><div class="l">Sub-Bab</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell tercatat"><div class="v">61</div><div class="l">Tercatat</div></div>
+      </div>
+      <div class="body">
+        <div class="card v2" style="--p:44;">
+          <div class="card-head">
+            <div class="ring amber" style="--p:44;">
+              <div class="arc"></div>
+              <div class="inner">44%</div>
+            </div>
+            <div class="head-title">
+              <div class="head-kicker">7A</div>
+              <div class="head-name">B. Arab</div>
+              <div class="head-meta">8 bab · 24 sub-bab</div>
+            </div>
+            <div class="head-chev">›</div>
+          </div>
+          <div class="stats">
+            <div class="stat tercatat"><div class="v">14</div><div class="l">Tercatat</div></div>
+            <div class="stat belum"><div class="v">18</div><div class="l">Belum</div></div>
+          </div>
+        </div>
+
+        <div class="card v2" style="--p:63;">
+          <div class="card-head">
+            <div class="ring cobalt" style="--p:63;">
+              <div class="arc"></div>
+              <div class="inner">63%</div>
+            </div>
+            <div class="head-title">
+              <div class="head-kicker">7B</div>
+              <div class="head-name">B. Arab</div>
+              <div class="head-meta">8 bab · 24 sub-bab</div>
+            </div>
+            <div class="head-chev">›</div>
+          </div>
+          <div class="stats">
+            <div class="stat tercatat"><div class="v">20</div><div class="l">Tercatat</div></div>
+            <div class="stat belum"><div class="v">12</div><div class="l">Belum</div></div>
+          </div>
+        </div>
+
+        <div class="card v2" style="--p:34;">
+          <div class="card-head">
+            <div class="ring amber" style="--p:34;">
+              <div class="arc"></div>
+              <div class="inner">34%</div>
+            </div>
+            <div class="head-title">
+              <div class="head-kicker">8A</div>
+              <div class="head-name">B. Arab</div>
+              <div class="head-meta">8 bab · 24 sub-bab</div>
+            </div>
+            <div class="head-chev">›</div>
+          </div>
+          <div class="stats">
+            <div class="stat tercatat"><div class="v">11</div><div class="l">Tercatat</div></div>
+            <div class="stat belum"><div class="v">21</div><div class="l">Belum</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="changes">
+      <h3>What changes</h3>
+      <div class="row drop">KPI strip: drop "9 AI Siap" → 3 cells (Bab / Sub-Bab / Tercatat).</div>
+      <div class="row drop">Card: drop violet "AI" stat tile → 2 cells (Tercatat / Belum), each wider, larger value.</div>
+      <div class="row drop">Card: drop bottom progress bar → ring is sole progress visual.</div>
+      <div class="row">Ring tint shifts amber when % &lt; 40 so "below target" classes pop without needing a second bar.</div>
+    </div>
+  </div>
+
+  <!-- ============= FRAME A3 — OPTION B ============= -->
+  <div class="frame-meta">
+    <p class="frame-label">A3 · option B · bar-led</p>
+    <p class="frame-title">Drop the ring, keep one slim bar</p>
+    <p class="frame-sub">Ring removed, percent moves to a bold number on the right. One progress bar with an inline Tercatat / Belum legend. Most compact option — card height shrinks ~24dp.</p>
+
+    <div class="frame phone">
+      <div class="phone-status"><span>15.01</span><span class="right">···  ◍  ▮</span></div>
+      <div class="hdr">
+        <div class="hdr-top">
+          <div class="hdr-back">‹</div>
+          <div class="hdr-title-block">
+            <div class="hdr-kicker">Materi Pembelajaran</div>
+            <div class="hdr-title">Bab & Sub-Bab <span class="dot"></span></div>
+          </div>
+          <div class="hdr-actions">
+            <div class="hdr-btn">▤</div>
+            <div class="hdr-btn">⫶</div>
+          </div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-cell bab"><div class="v">32</div><div class="l">Bab</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell sub"><div class="v">96</div><div class="l">Sub-Bab</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell tercatat"><div class="v">61</div><div class="l">Tercatat</div></div>
+      </div>
+      <div class="body">
+        <div class="v3">
+          <div class="v3-head amber">
+            <div class="lead">
+              <div class="kk">7A</div>
+              <div class="nm">B. Arab</div>
+              <div class="mt">8 bab · 24 sub-bab</div>
+            </div>
+            <div class="pct">44<span class="small">%</span></div>
+            <div class="chev" style="margin-left: 8px;">›</div>
+          </div>
+          <div class="v3-bar amber"><div style="width: 44%;"></div></div>
+          <div class="v3-foot">
+            <span class="seg tercatat"><span class="dot"></span>14 tercatat</span>
+            <span class="sep"></span>
+            <span class="seg belum"><span class="dot"></span>18 belum</span>
+          </div>
+        </div>
+
+        <div class="v3">
+          <div class="v3-head">
+            <div class="lead">
+              <div class="kk">7B</div>
+              <div class="nm">B. Arab</div>
+              <div class="mt">8 bab · 24 sub-bab</div>
+            </div>
+            <div class="pct">63<span class="small">%</span></div>
+            <div class="chev" style="margin-left: 8px;">›</div>
+          </div>
+          <div class="v3-bar cobalt"><div style="width: 63%;"></div></div>
+          <div class="v3-foot">
+            <span class="seg tercatat"><span class="dot"></span>20 tercatat</span>
+            <span class="sep"></span>
+            <span class="seg belum"><span class="dot"></span>12 belum</span>
+          </div>
+        </div>
+
+        <div class="v3">
+          <div class="v3-head amber">
+            <div class="lead">
+              <div class="kk">8A</div>
+              <div class="nm">B. Arab</div>
+              <div class="mt">8 bab · 24 sub-bab</div>
+            </div>
+            <div class="pct">34<span class="small">%</span></div>
+            <div class="chev" style="margin-left: 8px;">›</div>
+          </div>
+          <div class="v3-bar amber"><div style="width: 34%;"></div></div>
+          <div class="v3-foot">
+            <span class="seg tercatat"><span class="dot"></span>11 tercatat</span>
+            <span class="sep"></span>
+            <span class="seg belum"><span class="dot"></span>21 belum</span>
+          </div>
+        </div>
+
+        <div class="v3">
+          <div class="v3-head green">
+            <div class="lead">
+              <div class="kk">8B</div>
+              <div class="nm">B. Arab</div>
+              <div class="mt">8 bab · 24 sub-bab</div>
+            </div>
+            <div class="pct">88<span class="small">%</span></div>
+            <div class="chev" style="margin-left: 8px;">›</div>
+          </div>
+          <div class="v3-bar green"><div style="width: 88%;"></div></div>
+          <div class="v3-foot">
+            <span class="seg tercatat"><span class="dot"></span>28 tercatat</span>
+            <span class="sep"></span>
+            <span class="seg belum"><span class="dot"></span>4 belum</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="changes">
+      <h3>What changes</h3>
+      <div class="row drop">KPI strip: drop "9 AI Siap" → 3 cells.</div>
+      <div class="row drop">Card: drop ring + stat tiles + bottom bar.</div>
+      <div class="row">Replace with title block · large % · slim bar · inline "14 tercatat · 18 belum" legend.</div>
+      <div class="row">Tint set by bucket — amber &lt; 40, cobalt 40–79, green ≥ 80.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <div class="lg"><b>Amber</b> · &lt; 40% (below target)</div>
+  <div class="lg"><b>Cobalt</b> · 40–79% (on track)</div>
+  <div class="lg"><b>Green</b> · ≥ 80% (near complete)</div>
+  <div class="lg"><b>Slate</b> · 0% (not started)</div>
+</div>
+
+<div class="changes" style="max-width: 900px; margin-top: 24px;">
+  <h3>Recommendation</h3>
+  <p style="margin: 6px 0 0; color: var(--slate-700); line-height: 1.55;">
+    <b>Option A</b> is the smallest visual change — same card silhouette, just two cleaner halves
+    (ring + 2 tiles) instead of three. Safe pick if you want the rebuild to feel familiar.
+  </p>
+  <p style="margin: 8px 0 0; color: var(--slate-700); line-height: 1.55;">
+    <b>Option B</b> is the cleaner, more density-friendly layout — ~24dp shorter per card, no
+    stacked stat tiles, more rows on screen. Pick this if "proper UI" means trimming the card to
+    just the facts that matter.
+  </p>
+</div>
+
+</body>
+</html>

@@ -1,30 +1,40 @@
-// Time/lesson hour settings screen - configure lesson sessions per day.
+// Admin Sistem → Waktu Pembelajaran (Frame A hub).
 //
-// Like `pages/admin/settings/time.vue` - manages lesson hour schedules
-// for each school day (e.g., Monday has 8 sessions from 07:00 to 14:00).
-// Each day can have different session configurations.
+// Rebuilt from scratch in WP.7 to match
+// `_design/admin_waktu_pembelajaran_redesign.html` Frame A:
 //
-// In Laravel terms, this consumes `GET /api/settings/lesson-hours` and
-// `PUT /api/settings/lesson-hours` with per-day session definitions.
+//   * BrandPageLayout (admin) + BrandPageHeader navy gradient
+//   * KPI strip overlap (Hari aktif / Total jam / Durasi rata-rata)
+//     computed client-side from the grouped `_sessionsByDay` map so
+//     no backend changes are needed at this layer.
+//   * Section header (32 dp icon tile + dual-line text), matching the
+//     pattern used across Sistem screens.
+//   * Day rows — single tap opens `DaySessionManagementSheet` (the
+//     Frame B sheet rebuilt in WP.8). Each row carries a colored
+//     calendar avatar (per-day from a deterministic palette), the
+//     day name, a "N jam · 07:00 – 13:45" sub-line, a status pill
+//     (AKTIF / KOSONG), and a trailing chevron.
+//
+// Backend touchpoints are unchanged: the screen still consumes
+//   - `ApiScheduleService.getDays()` for the 7 weekdays
+//   - `ApiSettingsService.getLessonHourSettings()` for all sessions
+// and groups them by `day_id` client-side.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
+import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/settings/data/settings_service.dart';
-import 'package:manajemensekolah/core/di/service_locator.dart';
-import 'package:manajemensekolah/core/utils/color_utils.dart';
-import 'package:manajemensekolah/core/utils/error_utils.dart';
-import 'package:manajemensekolah/core/utils/app_logger.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
-import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/settings/presentation/widgets/day_session_management_sheet.dart';
 
-/// Time settings screen - configure lesson hour sessions for each school day.
-///
-/// This is a [StatefulWidget] with local state for days and their sessions.
-/// Shows a list of day cards; tapping a day opens a bottom sheet to manage sessions.
 class TimeSettingsScreen extends StatefulWidget {
   const TimeSettingsScreen({super.key});
 
@@ -32,31 +42,19 @@ class TimeSettingsScreen extends StatefulWidget {
   State<TimeSettingsScreen> createState() => _TimeSettingsScreenState();
 }
 
-/// Mutable state for [TimeSettingsScreen].
-///
-/// Key state (like Vue `data()`):
-/// - [_days] - list of school days (Monday-Saturday)
-/// - [_sessionsByDay] - map of day_id -> list of lesson hour sessions
-/// - [_isLoadingTime] - loading state
-///
-/// setState() triggers re-render like Vue's reactivity system.
 class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
-  List<dynamic> _days = [];
-  Map<String, List<dynamic>> _sessionsByDay = {};
-  bool _isLoadingTime = true;
+  List<dynamic> _days = const [];
+  Map<String, List<dynamic>> _sessionsByDay = const {};
+  bool _isLoading = true;
 
-  /// Like Vue's `mounted()` - loads days and their lesson hour sessions.
   @override
   void initState() {
     super.initState();
     _loadInitialData();
   }
 
-  /// Fetches school days and all lesson hour settings in parallel.
-  /// Uses `Future.wait` for concurrent API calls - like `Promise.all()` in JavaScript.
-  /// Groups sessions by day_id for display.
   Future<void> _loadInitialData() async {
-    setState(() => _isLoadingTime = true);
+    setState(() => _isLoading = true);
     try {
       final futures = await Future.wait([
         getIt<ApiScheduleService>().getDays(),
@@ -64,124 +62,452 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       ]);
 
       final allSessions = futures[1];
-      final Map<String, List<dynamic>> grouped = {};
+      final grouped = <String, List<dynamic>>{};
       for (final session in allSessions) {
         final dayId = session['day_id'].toString();
         grouped.putIfAbsent(dayId, () => []).add(session);
       }
+      // Keep sessions within each day sorted by hour_number so the
+      // hub sub-line range ("07:00 – 13:45") is deterministic.
+      for (final entry in grouped.values) {
+        entry.sort((a, b) {
+          final aHour = (a as Map)['hour_number'];
+          final bHour = (b as Map)['hour_number'];
+          final aInt = aHour is int ? aHour : int.tryParse('$aHour') ?? 0;
+          final bInt = bHour is int ? bHour : int.tryParse('$bHour') ?? 0;
+          return aInt.compareTo(bInt);
+        });
+      }
 
+      if (!mounted) return;
       setState(() {
         _days = futures[0];
         _sessionsByDay = grouped;
-        _isLoadingTime = false;
+        _isLoading = false;
       });
     } catch (e) {
       AppLogger.error('settings', e);
-      if (mounted) {
-        setState(() => _isLoadingTime = false);
-        SnackBarUtils.showError(
-          context,
-          'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
-        );
-      }
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      SnackBarUtils.showError(
+        context,
+        'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
+      );
     }
   }
 
-  /// Opens a bottom sheet to manage lesson sessions for a specific day.
-  /// Like clicking a day card to open a Vue modal/drawer with session CRUD.
-  void _openDaySettings(dynamic day) {
-    final dayId = day['id'].toString();
-    final sessions = _sessionsByDay[dayId] ?? [];
+  // ── KPI helpers ──────────────────────────────────────────────────
 
-    showModalBottomSheet(
+  int get _activeDayCount {
+    var count = 0;
+    for (final list in _sessionsByDay.values) {
+      if (list.isNotEmpty) count++;
+    }
+    return count;
+  }
+
+  int get _totalSessionCount {
+    var total = 0;
+    for (final list in _sessionsByDay.values) {
+      total += list.length;
+    }
+    return total;
+  }
+
+  /// Average session duration in minutes across every configured row.
+  /// Falls back to 0 when no sessions exist.
+  int get _averageDurationMinutes {
+    var totalMinutes = 0;
+    var count = 0;
+    for (final list in _sessionsByDay.values) {
+      for (final raw in list) {
+        final s = raw as Map;
+        final mins = _durationMinutes(
+          s['start_time']?.toString() ?? '',
+          s['end_time']?.toString() ?? '',
+        );
+        if (mins > 0) {
+          totalMinutes += mins;
+          count++;
+        }
+      }
+    }
+    if (count == 0) return 0;
+    return (totalMinutes / count).round();
+  }
+
+  int _durationMinutes(String start, String end) {
+    final s = _parseClock(start);
+    final e = _parseClock(end);
+    if (s == null || e == null) return 0;
+    return e - s;
+  }
+
+  /// Returns minutes-from-midnight or null when the string isn't a
+  /// valid clock value.
+  int? _parseClock(String hms) {
+    if (hms.isEmpty) return null;
+    final parts = hms.split(':');
+    if (parts.length < 2) return null;
+    final h = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    if (h == null || m == null) return null;
+    return h * 60 + m;
+  }
+
+  // ── Build ────────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: ColorUtils.slate50,
+      body: BrandPageLayout(
+        role: 'admin',
+        header: BrandPageHeader(
+          role: 'admin',
+          kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
+          showBackButton: true,
+          onBackPressed: () => AppNavigator.pop(context),
+          subtitle: 'WAKTU PEMBELAJARAN',
+          title: 'Pengaturan Waktu',
+        ),
+        kpiCard: _isLoading ? null : _kpiCard(),
+        onRefresh: _loadInitialData,
+        bodyChildren: [
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              // `shrinkWrap: true` is required because BrandPageLayout
+              // already provides the outer scroll; nesting a default
+              // (non-shrunk) ListView inside it crashes with
+              // "Vertical viewport was given unbounded height".
+              child: SkeletonListLoading(
+                itemCount: 7,
+                infoTagCount: 1,
+                shrinkWrap: true,
+              ),
+            )
+          else ...[
+            _sectionHeader(),
+            const SizedBox(height: 4),
+            ...List.generate(_days.length, (index) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: _DayRow(
+                  day: _days[index],
+                  index: index,
+                  sessions:
+                      _sessionsByDay[_days[index]['id'].toString()] ?? const [],
+                  onTap: () => _openDaySheet(_days[index]),
+                ),
+              );
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
+          border: Border.all(color: ColorUtils.slate200, width: 0.75),
+          boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+        child: Row(
+          children: [
+            Expanded(
+              child: _kpiCell(
+                label: 'Hari aktif',
+                value: '$_activeDayCount',
+                pillLabel: 'dari ${_days.length}',
+                pillBg: const Color(0xFFDCFCE7),
+                pillFg: const Color(0xFF15803D),
+              ),
+            ),
+            Container(width: 1, height: 36, color: ColorUtils.slate100),
+            Expanded(
+              child: _kpiCell(
+                label: 'Total jam',
+                value: '$_totalSessionCount',
+                pillLabel: 'sesi/minggu',
+                pillBg: ColorUtils.brandCobalt.withValues(alpha: 0.10),
+                pillFg: ColorUtils.brandCobalt,
+              ),
+            ),
+            Container(width: 1, height: 36, color: ColorUtils.slate100),
+            Expanded(
+              child: _kpiCell(
+                label: 'Durasi',
+                value: _averageDurationMinutes == 0
+                    ? '–'
+                    : "$_averageDurationMinutes'",
+                pillLabel: 'rata-rata',
+                pillBg: const Color(0xFFFEF3C7),
+                pillFg: const Color(0xFFB45309),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kpiCell({
+    required String label,
+    required String value,
+    required String pillLabel,
+    required Color pillBg,
+    required Color pillFg,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: ColorUtils.slate500,
+            letterSpacing: 0.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: ColorUtils.slate900,
+            letterSpacing: -0.4,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: pillBg,
+            borderRadius: const BorderRadius.all(Radius.circular(9)),
+          ),
+          child: Text(
+            pillLabel,
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+              color: pillFg,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _sectionHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: ColorUtils.brandDarkBlue.withValues(alpha: 0.10),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.calendar_today_rounded,
+              size: 16,
+              color: ColorUtils.brandDarkBlue,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Jam Aktif Harian',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.slate900,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  'Pilih hari untuk mengatur jam pelajaran.',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                    color: ColorUtils.slate500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openDaySheet(dynamic day) async {
+    final dayId = day['id'].toString();
+    final sessions = _sessionsByDay[dayId] ?? const [];
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DaySessionManagementSheet(
+      builder: (_) => DaySessionManagementSheet(
         day: day,
-        sessions: sessions,
+        sessions: List<dynamic>.from(sessions),
         allSessionsByDay: _sessionsByDay,
         allDays: _days,
         onSave: _loadInitialData,
       ),
     );
   }
+}
 
-  Widget _buildDayCard(dynamic day, int index) {
-    final dayId = day['id'].toString();
-    final sessions = _sessionsByDay[dayId] ?? [];
-    final color = ColorUtils.getColorForIndex(index);
+// ─────────────────────────────────────────────────────────────────
+// Day row — Frame A row pattern. Inline (not DashboardListTile)
+// because the layout needs a trailing status pill which the shared
+// tile doesn't expose. Visual identity stays consistent: 42dp
+// colored calendar avatar (palette-keyed by day index for variety),
+// title row 14pt bold, sub-line with "N jam · range" or muted hint.
+// ─────────────────────────────────────────────────────────────────
+
+class _DayRow extends StatelessWidget {
+  const _DayRow({
+    required this.day,
+    required this.index,
+    required this.sessions,
+    required this.onTap,
+  });
+
+  final dynamic day;
+  final int index;
+  final List<dynamic> sessions;
+  final VoidCallback onTap;
+
+  // Per-day palette — deterministic by row index so Senin always reads
+  // indigo, Selasa green, Rabu orange, etc.
+  static const _palette = <({Color bg, Color fg})>[
+    (bg: Color(0xFFEEF2FF), fg: Color(0xFF4F46E5)), // Senin
+    (bg: Color(0xFFDCFCE7), fg: Color(0xFF16A34A)), // Selasa
+    (bg: Color(0xFFFFF7ED), fg: Color(0xFFEA580C)), // Rabu
+    (bg: Color(0xFFFEE2E2), fg: Color(0xFFDC2626)), // Kamis
+    (bg: Color(0xFFEDE9FE), fg: Color(0xFF7C3AED)), // Jumat
+    (bg: Color(0xFFCCFBF1), fg: Color(0xFF0D9488)), // Sabtu
+    (bg: Color(0xFFEEF2FF), fg: Color(0xFF4F46E5)), // Minggu (loops)
+  ];
+
+  String _trim(String hms) {
+    if (hms.length >= 5) return hms.substring(0, 5);
+    return hms;
+  }
+
+  String _rangeLabel() {
+    if (sessions.isEmpty) return '';
+    final first = sessions.first as Map;
+    final last = sessions.last as Map;
+    final start = _trim(first['start_time']?.toString() ?? '');
+    final end = _trim(last['end_time']?.toString() ?? '');
+    if (start.isEmpty || end.isEmpty) return '';
+    return '$start – $end';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = _palette[index % _palette.length];
+    final empty = sessions.isEmpty;
+    final dayName = dayNameToIndonesian(day['name']?.toString() ?? 'Hari');
+    final range = _rangeLabel();
 
     return Material(
-      color: Colors.transparent,
+      color: Colors.white,
+      borderRadius: const BorderRadius.all(Radius.circular(14)),
       child: InkWell(
-        onTap: () => _openDaySettings(day),
         borderRadius: const BorderRadius.all(Radius.circular(14)),
+        onTap: onTap,
         child: Container(
-          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white,
+            border: Border.all(color: ColorUtils.slate200, width: 0.75),
             borderRadius: const BorderRadius.all(Radius.circular(14)),
-            border: Border.all(color: ColorUtils.slate200),
             boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
           ),
-          padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  border: Border.all(color: color.withValues(alpha: 0.2)),
-                ),
-                child: Icon(
-                  Icons.calendar_today_rounded,
-                  color: color,
-                  size: 20,
+              Opacity(
+                opacity: empty ? 0.55 : 1.0,
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: palette.bg,
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.calendar_today_rounded,
+                    size: 18,
+                    color: palette.fg,
+                  ),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      dayNameToIndonesian(day['name'] ?? 'Hari'),
+                      dayName,
                       style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: ColorUtils.slate900,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: empty
+                            ? ColorUtils.slate500
+                            : ColorUtils.slate900,
+                        letterSpacing: -0.1,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
-                      sessions.isEmpty
-                          ? 'Belum ada sesi'
-                          : '${sessions.length} Jam Pelajaran',
+                      empty
+                          ? 'Belum diatur · ketuk untuk menambah sesi'
+                          : '${sessions.length} jam · $range',
                       style: TextStyle(
-                        fontSize: 12,
-                        color: sessions.isEmpty
+                        fontSize: 11.5,
+                        fontWeight: empty ? FontWeight.w500 : FontWeight.w600,
+                        color: empty
                             ? ColorUtils.slate400
-                            : ColorUtils.slate500,
+                            : ColorUtils.slate600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: ColorUtils.slate100,
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
-                ),
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  color: ColorUtils.slate500,
-                  size: 18,
-                ),
+              const SizedBox(width: 8),
+              _StatusPill(active: !empty),
+              const SizedBox(width: 4),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: ColorUtils.slate300,
               ),
             ],
           ),
@@ -189,87 +515,30 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       ),
     );
   }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.active});
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ColorUtils.slate50,
-      body: Column(
-        children: [
-          BrandPageHeader(
-            role: 'admin',
-            subtitle: 'WAKTU PEMBELAJARAN',
-            title: 'Pengaturan Waktu',
-          ),
-          // Body
-          Expanded(
-            child: MediaQuery.removePadding(
-              context: context,
-              removeTop: true,
-              child: _isLoadingTime
-                  ? const SkeletonListLoading(itemCount: 6, infoTagCount: 1)
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: ColorUtils.corporateBlue600
-                                        .withValues(alpha: 0.1),
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(8),
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    Icons.calendar_today_outlined,
-                                    color: ColorUtils.corporateBlue600,
-                                    size: 17,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Jam Aktif Harian',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: ColorUtils.slate800,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Pilih hari untuk mengatur jam pelajaran.',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: ColorUtils.slate500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _days.length,
-                            itemBuilder: (context, index) =>
-                                _buildDayCard(_days[index], index),
-                          ),
-                        ],
-                      ),
-                    ),
-            ),
-          ),
-        ],
+    final bg = active ? const Color(0xFFDCFCE7) : ColorUtils.slate100;
+    final fg = active ? const Color(0xFF15803D) : ColorUtils.slate500;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: const BorderRadius.all(Radius.circular(999)),
+      ),
+      child: Text(
+        active ? 'AKTIF' : 'KOSONG',
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.4,
+        ),
       ),
     );
   }

@@ -50,6 +50,21 @@ class AttendanceSummaryHelper {
       final endOfMonth = DateTime(now.year, now.month + 1, 0);
       filterDateStart = DateFormat('yyyy-MM-dd').format(startOfMonth);
       filterDateEnd = DateFormat('yyyy-MM-dd').format(endOfMonth);
+    } else if (selectedDateFilter == 'semester') {
+      // Fix-DD — last 6 months (rolling) through today.
+      final now = DateTime.now();
+      final start = DateTime(now.year, now.month - 6, now.day);
+      filterDateStart = DateFormat('yyyy-MM-dd').format(start);
+      filterDateEnd = DateFormat('yyyy-MM-dd').format(now);
+    } else if (selectedDateFilter == 'year') {
+      // Fix-DD — full current calendar year.
+      final now = DateTime.now();
+      filterDateStart = DateFormat(
+        'yyyy-MM-dd',
+      ).format(DateTime(now.year, 1, 1));
+      filterDateEnd = DateFormat(
+        'yyyy-MM-dd',
+      ).format(DateTime(now.year, 12, 31));
     }
 
     final academicYearId = ref

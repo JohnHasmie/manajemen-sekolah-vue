@@ -77,6 +77,23 @@ mixin AttendanceFilterUiMixin implements _FilterSheetStateGetter {
           'id': 'Bulan Ini',
         }),
       ),
+      // Fix-DD — Semester (6 bulan) + Tahunan options. Date ranges
+      // computed in `attendance_table_helper.dart` and
+      // `attendance_summary_helper.dart`.
+      FilterOption<String>(
+        value: 'semester',
+        label: filterLang.getTranslatedText({
+          'en': 'Last 6 Months',
+          'id': 'Semester (6 Bulan)',
+        }),
+      ),
+      FilterOption<String>(
+        value: 'year',
+        label: filterLang.getTranslatedText({
+          'en': 'This Year',
+          'id': 'Tahunan',
+        }),
+      ),
     ];
 
     return FilterChipGrid<String>(

@@ -10,12 +10,16 @@
 // header + title + close + Samsung-safe footer) comes for free.
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_material_selector.dart';
+import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 
 class ActivityFormResult {
   final Map<String, dynamic> payload;
@@ -82,6 +86,17 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
   late TimeOfDay? _time;
   bool _saving = false;
 
+  // Fix-AA — Bab + Sub-bab pickers. Optional; if subject picked, we
+  // fetch the chapter list once and the sub-chapter list on chapter
+  // tap. Both fields are nullable in the payload so legacy activities
+  // without chapter linkage continue to save unchanged.
+  String? _chapterId;
+  String? _subChapterId;
+  List<dynamic> _chapters = const [];
+  List<dynamic> _subChapters = const [];
+  bool _loadingChapters = false;
+  bool _loadingSubChapters = false;
+
   static const _types = <_TypeOption>[
     _TypeOption(
       'tugas',
@@ -121,6 +136,117 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
     _date = d;
     final t = (i['time'] ?? i['jam'] ?? '').toString();
     _time = _parseTime(t);
+
+    // Hydrate chapter / sub-chapter from initial payload (edit mode).
+    _chapterId = (i['chapter_id'] ?? i['bab_id'])?.toString();
+    _subChapterId = (i['sub_chapter_id'] ?? i['sub_bab_id'])?.toString();
+    if (_subjectId != null && _subjectId!.isNotEmpty) {
+      // Schedule the first fetch after build so setState is safe.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadChapters());
+    }
+  }
+
+  /// Fetches chapters for the currently selected subject. Single-shot;
+  /// re-runs whenever `_subjectId` changes via `_pickSubject`. Resets
+  /// the selected chapter/sub-chapter when called for a new subject.
+  Future<void> _loadChapters() async {
+    final subjectId = _subjectId;
+    if (subjectId == null || subjectId.isEmpty) return;
+    setState(() => _loadingChapters = true);
+    try {
+      final chapters = await getIt<ApiSubjectService>().getChapterMaterials(
+        subjectId: subjectId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _chapters = chapters;
+        _loadingChapters = false;
+      });
+      // If edit mode preselected a chapter, fetch its sub-chapter list.
+      if (_chapterId != null && _chapterId!.isNotEmpty) {
+        _loadSubChapters();
+      }
+    } catch (e) {
+      AppLogger.error('class_activity', 'load chapters: $e');
+      if (!mounted) return;
+      setState(() {
+        _chapters = const [];
+        _loadingChapters = false;
+      });
+    }
+  }
+
+  /// Fetches sub-chapters for the currently selected chapter. Triggered
+  /// by `_onChapterSelected` and by post-load in edit mode.
+  Future<void> _loadSubChapters() async {
+    final chapterId = _chapterId;
+    if (chapterId == null || chapterId.isEmpty) {
+      setState(() => _subChapters = const []);
+      return;
+    }
+    setState(() => _loadingSubChapters = true);
+    try {
+      final subs = await getIt<ApiSubjectService>().getSubChapterMaterials(
+        chapterId: chapterId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _subChapters = subs;
+        _loadingSubChapters = false;
+      });
+    } catch (e) {
+      AppLogger.error('class_activity', 'load sub-chapters: $e');
+      if (!mounted) return;
+      setState(() {
+        _subChapters = const [];
+        _loadingSubChapters = false;
+      });
+    }
+  }
+
+  void _onChapterSelected(String id) {
+    if (id == _chapterId) return;
+    setState(() {
+      _chapterId = id;
+      _subChapterId = null;
+      _subChapters = const [];
+    });
+    _loadSubChapters();
+  }
+
+  void _onSubChapterSelected(String id) {
+    setState(() {
+      _subChapterId = (id == _subChapterId) ? null : id;
+    });
+  }
+
+  /// Backend returns chapters under various legacy keys depending on
+  /// the calling endpoint (`/bab-material` uses `chapter_title` /
+  /// `judul_bab`; older callers fell back to `judul` / `title` /
+  /// `name`). Match the canonical extractor in
+  /// `activity_name_helper_mixin.dart` so labels never come back empty.
+  String _chapterLabel(dynamic c) {
+    final raw = c as Map;
+    return (raw['chapter_title'] ??
+            raw['judul_bab'] ??
+            raw['nama'] ??
+            raw['judul'] ??
+            raw['title'] ??
+            raw['name'] ??
+            '-')
+        .toString();
+  }
+
+  String _subChapterLabel(dynamic s) {
+    final raw = s as Map;
+    return (raw['sub_chapter_title'] ??
+            raw['judul_sub_bab'] ??
+            raw['nama'] ??
+            raw['judul'] ??
+            raw['title'] ??
+            raw['name'] ??
+            '-')
+        .toString();
   }
 
   /// Maps the various legacy/EN type labels the backend may store
@@ -222,6 +348,110 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
                 children: _types.map((t) => _typeTile(t, primary)).toList(),
               ),
               const SizedBox(height: 12),
+              // Bab + Sub-bab pickers — only shown when a Mapel has been
+              // picked (otherwise the chapter list has nothing to query).
+              // Both fields are optional in the payload.
+              if (_subjectId != null && _subjectId!.isNotEmpty) ...[
+                _label('Bab Materi (opsional)'),
+                ActivityChapterSelector(
+                  chapters: _chapters,
+                  isLoading: _loadingChapters,
+                  selectedChapterId: _chapterId,
+                  onChapterSelected: _onChapterSelected,
+                  getChapterName: _chapterLabel,
+                ),
+                if (_chapterId != null) ...[
+                  const SizedBox(height: 10),
+                  _label('Sub-bab (opsional)'),
+                  if (_loadingSubChapters)
+                    Container(
+                      height: 32,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: List.generate(
+                          3,
+                          (_) => Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            width: 72,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: ColorUtils.slate100,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else if (_subChapters.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ColorUtils.slate50,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            size: 14,
+                            color: ColorUtils.slate400,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Tidak ada sub-bab tersedia',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: ColorUtils.slate500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: _subChapters.map((sub) {
+                        final id = (sub as Map)['id'].toString();
+                        final isOn = id == _subChapterId;
+                        return ChoiceChip(
+                          label: Text(_subChapterLabel(sub)),
+                          selected: isOn,
+                          onSelected: (_) => _onSubChapterSelected(id),
+                          showCheckmark: false,
+                          selectedColor: primary.withValues(alpha: 0.12),
+                          labelStyle: TextStyle(
+                            fontSize: 12,
+                            color: isOn ? primary : ColorUtils.slate600,
+                            fontWeight: isOn
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                          side: BorderSide(
+                            color: isOn
+                                ? primary.withValues(alpha: 0.3)
+                                : ColorUtils.slate200,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 0,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                ],
+                const SizedBox(height: 12),
+              ],
               _label('Judul'),
               _textField(_titleCtrl, hint: 'Mis. Tugas Trigonometri'),
               const SizedBox(height: 12),
@@ -495,7 +725,19 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
       title: 'Pilih mapel',
       options: widget.subjects,
     );
-    if (picked != null) setState(() => _subjectId = picked);
+    if (picked != null && picked != _subjectId) {
+      setState(() {
+        _subjectId = picked;
+        // Reset Bab + Sub-bab whenever the subject changes — the
+        // chapter list is subject-scoped so the previous selection
+        // is no longer valid.
+        _chapterId = null;
+        _subChapterId = null;
+        _chapters = const [];
+        _subChapters = const [];
+      });
+      _loadChapters();
+    }
   }
 
   Future<String?> _showOptionSheet({
@@ -603,6 +845,10 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
       if (_time != null)
         'time':
             '${_time!.hour.toString().padLeft(2, '0')}:${_time!.minute.toString().padLeft(2, '0')}',
+      // Bab + Sub-bab are optional. Send `null` when cleared so the
+      // backend treats it as "remove the link" on update.
+      'chapter_id': _chapterId,
+      'sub_chapter_id': _subChapterId,
     };
     try {
       await widget.onSave(payload);

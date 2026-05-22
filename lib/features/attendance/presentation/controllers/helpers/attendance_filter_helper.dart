@@ -44,20 +44,40 @@ class AttendanceFilterHelper {
     final List<ActiveFilter> filterChips = [];
 
     if (selectedDateFilter != null) {
-      final label = selectedDateFilter == 'today'
-          ? languageProvider.getTranslatedText({
-              'en': 'Today',
-              'id': 'Hari Ini',
-            })
-          : selectedDateFilter == 'week'
-          ? languageProvider.getTranslatedText({
-              'en': 'This Week',
-              'id': 'Minggu Ini',
-            })
-          : languageProvider.getTranslatedText({
-              'en': 'This Month',
-              'id': 'Bulan Ini',
-            });
+      // Fix-DD — keep this aligned with `buildDateRangeChips` in
+      // `attendance_filter_ui_mixin.dart`.
+      String label;
+      switch (selectedDateFilter) {
+        case 'today':
+          label = languageProvider.getTranslatedText({
+            'en': 'Today',
+            'id': 'Hari Ini',
+          });
+          break;
+        case 'week':
+          label = languageProvider.getTranslatedText({
+            'en': 'This Week',
+            'id': 'Minggu Ini',
+          });
+          break;
+        case 'semester':
+          label = languageProvider.getTranslatedText({
+            'en': 'Last 6 Months',
+            'id': 'Semester (6 Bulan)',
+          });
+          break;
+        case 'year':
+          label = languageProvider.getTranslatedText({
+            'en': 'This Year',
+            'id': 'Tahunan',
+          });
+          break;
+        default:
+          label = languageProvider.getTranslatedText({
+            'en': 'This Month',
+            'id': 'Bulan Ini',
+          });
+      }
       filterChips.add(
         ActiveFilter(
           label:
@@ -142,6 +162,10 @@ class AttendanceFilterHelper {
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
     final startOfMonth = DateTime(now.year, now.month, 1);
     final endOfMonth = DateTime(now.year, now.month + 1, 0);
+    // Fix-DD — semester (rolling 6 months) and yearly (current year) bounds.
+    final startOfSemester = DateTime(now.year, now.month - 6, now.day);
+    final startOfYear = DateTime(now.year, 1, 1);
+    final endOfYear = DateTime(now.year, 12, 31);
 
     return summaryList.where((summary) {
       final matchesSearch =
@@ -165,6 +189,18 @@ class AttendanceFilterHelper {
                 startOfMonth.subtract(const Duration(days: 1)),
               ) &&
               summary.date.isBefore(endOfMonth.add(const Duration(days: 1)));
+        } else if (selectedDateFilter == 'semester') {
+          matchesDateFilter =
+              summary.date.isAfter(
+                startOfSemester.subtract(const Duration(days: 1)),
+              ) &&
+              summary.date.isBefore(now.add(const Duration(days: 1)));
+        } else if (selectedDateFilter == 'year') {
+          matchesDateFilter =
+              summary.date.isAfter(
+                startOfYear.subtract(const Duration(days: 1)),
+              ) &&
+              summary.date.isBefore(endOfYear.add(const Duration(days: 1)));
         }
       }
 
