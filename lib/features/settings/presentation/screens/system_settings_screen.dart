@@ -68,7 +68,7 @@ class SystemSettingsScreen extends ConsumerWidget {
           padding: EdgeInsets.zero,
           children: [
             ShellTabHeader(
-              title: 'Profil',
+              title: 'Sistem',
               subtitle: 'Pengaturan akun, bahasa, dan sistem',
               accentColor: accent,
             ),
