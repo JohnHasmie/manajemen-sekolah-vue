@@ -17,14 +17,20 @@
 // PDFs (`.pdf` files) can't be rendered with `Image.network`. For
 // those we show a centered "Buka PDF" CTA that launches the file in
 // the OS's external PDF viewer via `url_launcher`.
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class PaymentProofDialog extends StatelessWidget {
   /// Raw payment record from the API, already enriched by the caller
@@ -503,15 +509,51 @@ class _ProofMetaCell extends StatelessWidget {
   }
 }
 
-/// Inline image preview for JPG/PNG/etc. proofs. Falls back to a
-/// retry-friendly error block that shows the URL + a "Buka di browser"
-/// CTA so the admin can still get to the file when the inline render
-/// fails (typically because the OS can't resolve the storage host).
-class _ImageProofView extends StatelessWidget {
+/// Inline image preview for JPG/PNG/etc. proofs. Downloads the file
+/// through the authenticated API endpoint so MinIO authorization works,
+/// then displays it locally. Falls back to an error block if the download
+/// fails, with a "Download & Open" CTA to view via the OS handler.
+class _ImageProofView extends StatefulWidget {
   final String url;
   final Map<String, String>? headers;
 
   const _ImageProofView({required this.url, this.headers});
+
+  @override
+  State<_ImageProofView> createState() => _ImageProofViewState();
+}
+
+class _ImageProofViewState extends State<_ImageProofView> {
+  late Future<Uint8List> _downloadFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _downloadFuture = _downloadProof();
+  }
+
+  Future<Uint8List> _downloadProof() async {
+    try {
+      // Extract payment ID from the URL path
+      final uri = Uri.tryParse(widget.url);
+      if (uri == null) throw Exception('Invalid URL');
+      final paymentId = _extractPaymentId(uri.path);
+      if (paymentId == null) throw Exception('Cannot extract payment ID');
+      return await ApiService.downloadFile('/payment/$paymentId/receipt');
+    } catch (e) {
+      AppLogger.error('payment-proof-download', e);
+      rethrow;
+    }
+  }
+
+  String? _extractPaymentId(String path) {
+    // Handle paths like /payments/abc123/receipt or similar
+    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+    if (segments.length >= 2 && segments.first.contains('payment')) {
+      return segments[1];
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -520,75 +562,167 @@ class _ImageProofView extends StatelessWidget {
       child: Container(
         color: ColorUtils.slate100,
         width: double.infinity,
-        child: Image.network(
-          url,
-          // Forward auth headers so the Laravel-side proxy route
-          // (behind `auth:sanctum`) accepts the request. Without
-          // these the GET returns 401 and Image.network reports a
-          // load failure → "Gagal Memuat Gambar".
-          headers: headers,
-          width: double.infinity,
-          fit: BoxFit.contain,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                    : null,
-              ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.broken_image_outlined,
-                    color: ColorUtils.error600,
-                    size: 44,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    AppLocalizations.failedToLoadImage.tr,
-                    style: TextStyle(
+        child: FutureBuilder<Uint8List>(
+          future: _downloadFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(
+                  color: ColorUtils.slate600,
+                ),
+              );
+            }
+            if (snapshot.hasError) {
+              return Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.broken_image_outlined,
                       color: ColorUtils.error600,
-                      fontWeight: FontWeight.w700,
+                      size: 44,
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Pratinjau gagal dimuat. Coba buka di browser.',
-                    style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  OutlinedButton.icon(
-                    onPressed: () => _openExternally(context, url),
-                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                    label: const Text('Buka di browser'),
-                  ),
-                ],
-              ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Gagal memuat pratinjau',
+                      style: TextStyle(
+                        color: ColorUtils.error600,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Download file untuk melihat.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: ColorUtils.slate500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    ElevatedButton.icon(
+                      onPressed: () => _downloadAndOpen(context),
+                      icon: const Icon(Icons.download_rounded, size: 16),
+                      label: const Text('Download & Buka'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            if (!snapshot.hasData) {
+              return Center(
+                child: Text(
+                  'Tidak ada data',
+                  style: TextStyle(color: ColorUtils.slate500),
+                ),
+              );
+            }
+            return Image.memory(
+              snapshot.data!,
+              width: double.infinity,
+              fit: BoxFit.contain,
             );
           },
         ),
       ),
     );
   }
+
+  Future<void> _downloadAndOpen(BuildContext context) async {
+    if (!context.mounted) return;
+    try {
+      SnackBarUtils.showInfo(context, 'Mengunduh file...');
+      final bytes = await _downloadFuture;
+
+      // Determine file extension
+      String ext = 'jpg';
+      if (widget.url.contains('.png')) {
+        ext = 'png';
+      } else if (widget.url.contains('.pdf')) {
+        ext = 'pdf';
+      } else if (widget.url.contains('.webp')) {
+        ext = 'webp';
+      }
+
+      final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final fileName = 'Bukti_Pembayaran_$ts.$ext';
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes, flush: true);
+
+      if (!context.mounted) return;
+      SnackBarUtils.showSuccess(context, 'File berhasil diunduh');
+
+      await OpenFile.open(file.path);
+    } catch (e) {
+      AppLogger.error('payment-proof-download-open', e);
+      if (context.mounted) {
+        SnackBarUtils.showError(context, 'Gagal membuka file');
+      }
+    }
+  }
 }
 
-/// PDF proofs can't render with `Image.network` — show a CTA that
-/// hands off to the OS PDF viewer via `url_launcher`. Same path the
-/// parent success screen uses for its Unduh Bukti button, so admin
-/// and parent share one rendering strategy for PDFs.
-class _PdfProofView extends StatelessWidget {
+/// PDF proofs — download through authenticated API endpoint and open
+/// via the OS PDF viewer. Matches the parent success screen pattern.
+class _PdfProofView extends StatefulWidget {
   final String url;
 
   const _PdfProofView({required this.url});
+
+  @override
+  State<_PdfProofView> createState() => _PdfProofViewState();
+}
+
+class _PdfProofViewState extends State<_PdfProofView> {
+  bool _isDownloading = false;
+
+  String? _extractPaymentId(String path) {
+    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+    if (segments.length >= 2 && segments.first.contains('payment')) {
+      return segments[1];
+    }
+    return null;
+  }
+
+  Future<void> _downloadAndOpen() async {
+    if (!mounted) return;
+    if (_isDownloading) return;
+
+    setState(() => _isDownloading = true);
+    try {
+      SnackBarUtils.showInfo(context, 'Mengunduh PDF...');
+      final uri = Uri.tryParse(widget.url);
+      if (uri == null) throw Exception('Invalid URL');
+      final paymentId = _extractPaymentId(uri.path);
+      if (paymentId == null) throw Exception('Cannot extract payment ID');
+
+      final bytes =
+          await ApiService.downloadFile('/payment/$paymentId/receipt');
+      if (!mounted) return;
+
+      final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final fileName = 'Bukti_Pembayaran_$ts.pdf';
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes, flush: true);
+
+      if (!mounted) return;
+      SnackBarUtils.showSuccess(context, 'PDF berhasil diunduh');
+
+      await OpenFile.open(file.path);
+    } catch (e) {
+      AppLogger.error('payment-proof-pdf-download', e);
+      if (mounted) {
+        SnackBarUtils.showError(context, 'Gagal membuka PDF');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDownloading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -615,16 +749,26 @@ class _PdfProofView extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Buka di aplikasi PDF untuk melihat detail.',
+            'Download file untuk melihat di aplikasi PDF.',
             style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
           ),
           const SizedBox(height: AppSpacing.lg),
           ElevatedButton.icon(
-            onPressed: () => _openExternally(context, url),
-            icon: const Icon(Icons.open_in_new_rounded, size: 16),
-            label: const Text('Buka PDF'),
+            onPressed:
+                _isDownloading ? null : _downloadAndOpen,
+            icon: const Icon(Icons.download_rounded, size: 16),
+            label: _isDownloading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Download & Buka PDF'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 12,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -633,27 +777,5 @@ class _PdfProofView extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-/// Launch the proof URL in the OS's default handler (browser / PDF
-/// viewer). Used by both the image-error fallback and the PDF view
-/// so we have a single error path.
-Future<void> _openExternally(BuildContext context, String url) async {
-  final uri = Uri.tryParse(url);
-  if (uri == null) {
-    SnackBarUtils.showError(context, 'URL bukti tidak valid.');
-    return;
-  }
-  try {
-    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!ok && context.mounted) {
-      SnackBarUtils.showError(context, 'Tidak dapat membuka file.');
-    }
-  } catch (e) {
-    AppLogger.error('payment-proof-open', e);
-    if (context.mounted) {
-      SnackBarUtils.showError(context, 'Gagal membuka file.');
-    }
   }
 }
