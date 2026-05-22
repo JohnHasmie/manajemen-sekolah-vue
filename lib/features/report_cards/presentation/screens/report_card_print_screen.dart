@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/report_card_print_layout_mixin.dart';
 
 /// Print preview for a student's report card.
@@ -20,6 +22,45 @@ class ReportCardPrintScreen extends StatelessWidget {
     required this.studentName,
     required this.className,
   });
+
+  /// Generates and downloads the official Blade-rendered PDF
+  /// (`raport.single` template) via the backend export endpoint.
+  /// This is the same template the parent-side download uses, so the
+  /// teacher and parent share one source of truth for the printed
+  /// raport including KI 3 + KI 4 columns and the B.1 Deskripsi
+  /// Capaian section.
+  Future<void> _downloadPdf(BuildContext context) async {
+    final studentClassId = (reportCardData['student_class_id'] ?? '')
+        .toString();
+    final academicYearId = (reportCardData['academic_year_id'] ?? '')
+        .toString();
+    final semesterId = (reportCardData['semester_id'] ?? '').toString();
+
+    if (studentClassId.isEmpty ||
+        academicYearId.isEmpty ||
+        semesterId.isEmpty) {
+      SnackBarUtils.showError(
+        context,
+        'Data raport belum lengkap untuk dicetak. Coba muat ulang halaman.',
+      );
+      return;
+    }
+
+    SnackBarUtils.showInfo(context, 'Menyiapkan file PDF...');
+    try {
+      await ExcelReportCardService.exportSingleRaportPdf(
+        studentClassId: studentClassId,
+        academicYearId: academicYearId,
+        semesterId: semesterId,
+        studentName: studentName,
+        context: context,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showError(context, ErrorUtils.getFriendlyMessage(e));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,13 +137,7 @@ class ReportCardPrintScreen extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    SnackBarUtils.showInfo(
-                      context,
-                      'Fungsi cetak PDF menggunakan Syncfusion akan '
-                      'segera diimplementasikan.',
-                    );
-                  },
+                  onTap: () => _downloadPdf(context),
                   child: Container(
                     width: 40,
                     height: 40,

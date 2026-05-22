@@ -16,7 +16,9 @@
 // internal — this file is not a shared design-system surface.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 
 // =====================================================================
 // Hero chip — used in the BrandPageHeader bottomSlot
@@ -524,15 +526,80 @@ class ParentRaporSikapCard extends StatelessWidget {
 }
 
 // =====================================================================
-// Subject card with knowledge/skill split + KKM verdict
+// Subject card with knowledge (KI 3) / skill (KI 4) dual cells + KKM verdict
+// =====================================================================
+//
+// Layout — matches _design/parent_raport_pengetahuan_ketrampilan_redesign.html
+// (Frame 1) 100%. Two score cells side-by-side, each with its own KI tag,
+// auto-predikat pill (A/B/C/D), value 22pt, and gradient-tinted background.
+// The whole card frame shifts tone based on tuntas / partial / fail.
 // =====================================================================
 
+// Brand tokens used across both score cells. Hoisted so they're shared with
+// the optional Deskripsi sheet at the bottom of this file.
+const Color _kKi3 = Color(0xFF1B6FB8); // brandCobalt — Pengetahuan
+const Color _kKi4 = Color(0xFF7C3AED); // violet600 — Keterampilan
+const Color _kFailBg = Color(0xFFFEE2E2);
+const Color _kFailFg = Color(0xFFB91C1C);
+const Color _kFailBorder = Color(0x3FDC2626);
+const Color _kPassBg = Color(0xFFDCFCE7);
+const Color _kPassFg = Color(0xFF15803D);
+const Color _kPassBorder = Color(0x3F16A34A);
+const Color _kPartialBg = Color(0xFFFEF3C7);
+const Color _kPartialFg = Color(0xFFB45309);
+const Color _kPartialBorder = Color(0x3FD97706);
+
+// Predikat → pill colors. Letter band derived from score using ≥90/≥80/≥70/<70.
+({Color bg, Color fg}) _kPredikatPill(String letter) {
+  switch (letter) {
+    case 'A':
+      return (bg: const Color(0xFF16A34A), fg: Colors.white);
+    case 'B':
+      return (bg: _kKi3, fg: Colors.white);
+    case 'C':
+      return (bg: const Color(0xFFD97706), fg: Colors.white);
+    case 'D':
+    case 'E':
+      return (bg: const Color(0xFFDC2626), fg: Colors.white);
+    default:
+      return (bg: ColorUtils.slate200, fg: ColorUtils.slate500);
+  }
+}
+
+String _kBandLetter(double v) {
+  if (v >= 90) return 'A';
+  if (v >= 80) return 'B';
+  if (v >= 70) return 'C';
+  if (v >= 60) return 'D';
+  return 'E';
+}
+
+({Color bg, Color fg}) _kLetterBadge(String letter) {
+  switch (letter) {
+    case 'A':
+      return (bg: const Color(0xFFDCFCE7), fg: const Color(0xFF15803D));
+    case 'B':
+      return (bg: const Color(0xFFDBEAFE), fg: const Color(0xFF1D4ED8));
+    case 'C':
+      return (bg: const Color(0xFFFEF3C7), fg: const Color(0xFFB45309));
+    case 'D':
+      return (bg: const Color(0xFFFEE2E2), fg: const Color(0xFFB91C1C));
+    default:
+      return (bg: ColorUtils.slate100, fg: ColorUtils.slate500);
+  }
+}
+
 class ParentRaporSubjectCard extends StatelessWidget {
-  const ParentRaporSubjectCard({super.key, required this.subject});
+  const ParentRaporSubjectCard({super.key, required this.subject, this.onTap});
 
   final Map subject;
 
-  double? _toDouble(dynamic v) {
+  /// Optional tap handler — when set, the whole card becomes tappable and
+  /// will typically open [showParentRaporDeskripsiSheet] in the parent
+  /// detail screen. Left null on screens that don't want the affordance.
+  final VoidCallback? onTap;
+
+  static double? _toDouble(dynamic v) {
     if (v == null) return null;
     if (v is num) return v.toDouble();
     return double.tryParse(v.toString());
@@ -550,26 +617,69 @@ class ParentRaporSubjectCard extends StatelessWidget {
                     : null) ??
                 '')
             .toString();
-    final predikat =
-        (subject['knowledge_predicate'] ?? subject['skill_predicate'] ?? '–')
-            .toString();
 
     final knowledge = _toDouble(subject['knowledge_score']);
     final skill = _toDouble(subject['skill_score']);
     final kkm = _toDouble(subject['kkm']) ?? 75;
 
-    final letter = _bandLetter(_avgOf(knowledge, skill));
-    final palette = _letterPalette(letter);
+    // Predikat — prefer backend-stored letter if present, else compute from
+    // the score itself so empty rows still render gracefully.
+    final knowledgePredikat = _predikat(
+      subject['knowledge_predicate'],
+      knowledge,
+    );
+    final skillPredikat = _predikat(subject['skill_predicate'], skill);
 
     final knowledgeFailing = knowledge != null && knowledge < kkm;
     final skillFailing = skill != null && skill < kkm;
     final allFailing = knowledgeFailing && skillFailing;
     final partialFailing = !allFailing && (knowledgeFailing || skillFailing);
 
-    return ParentRaporCardShell(
+    // Letter badge averages whatever we have (or falls back to dash).
+    final avg = _avgOf(knowledge, skill);
+    final letter = avg == null ? '–' : _kBandLetter(avg);
+    final letterPalette = letter == '–'
+        ? (bg: ColorUtils.slate100, fg: ColorUtils.slate400)
+        : _kLetterBadge(letter);
+
+    // Card frame tone shifts: tuntas → green-tinted, partial/fail → red-tinted.
+    final hasAnyScore = knowledge != null || skill != null;
+    final Color cardBorder;
+    final Gradient? cardGradient;
+    if (!hasAnyScore) {
+      cardBorder = ColorUtils.slate200;
+      cardGradient = null;
+    } else if (allFailing || partialFailing) {
+      cardBorder = const Color(0x47DC2626);
+      cardGradient = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [const Color(0xFFDC2626).withValues(alpha: 0.03), Colors.white],
+        stops: const [0.0, 0.6],
+      );
+    } else {
+      cardBorder = const Color(0x4016A34A);
+      cardGradient = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [const Color(0xFF16A34A).withValues(alpha: 0.03), Colors.white],
+        stops: const [0.0, 0.65],
+      );
+    }
+
+    final card = Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cardGradient == null ? Colors.white : null,
+        gradient: cardGradient,
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        border: Border.all(color: cardBorder, width: 0.75),
+        boxShadow: ColorUtils.corporateShadow(elevation: 1.0),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Top row: letter badge + name + meta ──────────────────────
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -577,16 +687,16 @@ class ParentRaporSubjectCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: palette.bg,
+                  color: letterPalette.bg,
                   borderRadius: const BorderRadius.all(Radius.circular(12)),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   letter,
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: palette.fg,
+                    color: letterPalette.fg,
                   ),
                 ),
               ),
@@ -595,23 +705,23 @@ class ParentRaporSubjectCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      subjectName,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: ColorUtils.slate900,
+                    Padding(
+                      padding: const EdgeInsets.only(top: 1),
+                      child: Text(
+                        subjectName,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: ColorUtils.slate900,
+                          letterSpacing: -0.1,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      [
-                        if (teacher.isNotEmpty) teacher,
-                        if (predikat.trim().isNotEmpty && predikat != '–')
-                          predikat,
-                      ].join(' · '),
+                      _metaLine(teacher, knowledgePredikat, skillPredikat),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -626,115 +736,332 @@ class ParentRaporSubjectCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
+          // ── Score split: KI 3 (cobalt) | KI 4 (violet) ───────────────
           Row(
             children: [
               Expanded(
-                child: _scoreCell(
+                child: _ParentRaporScoreCell(
+                  ki: 'KI 3',
                   label: 'Pengetahuan',
+                  accent: _kKi3,
                   score: knowledge,
+                  predikat: knowledgePredikat,
                   failing: knowledgeFailing,
+                  kkm: kkm,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _scoreCell(
+                child: _ParentRaporScoreCell(
+                  ki: 'KI 4',
                   label: 'Keterampilan',
+                  accent: _kKi4,
                   score: skill,
+                  predikat: skillPredikat,
                   failing: skillFailing,
+                  kkm: kkm,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+          // ── Verdict bar: pass / partial / fail / empty ──────────────
+          _ParentRaporVerdictBar(
+            kkm: kkm,
+            knowledgeFailing: knowledgeFailing,
+            skillFailing: skillFailing,
+            allFailing: allFailing,
+            partialFailing: partialFailing,
+            hasAnyScore: hasAnyScore,
+          ),
+        ],
+      ),
+    );
+
+    if (onTap == null) return card;
+    return Material(
+      color: Colors.transparent,
+      borderRadius: const BorderRadius.all(Radius.circular(16)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        child: card,
+      ),
+    );
+  }
+
+  String _predikat(dynamic raw, double? score) {
+    final stored = (raw ?? '').toString().trim();
+    if (stored.isNotEmpty && stored != '–') return stored;
+    if (score == null) return '';
+    return _kBandLetter(score);
+  }
+
+  String _metaLine(String teacher, String kPred, String sPred) {
+    // "Pak Andi · Sangat Baik" style. If both predikats present and equal,
+    // collapse to one; otherwise show whichever exists.
+    final parts = <String>[];
+    if (teacher.isNotEmpty) parts.add(teacher);
+    final friendly = _friendlyPredikat(kPred, sPred);
+    if (friendly.isNotEmpty) parts.add(friendly);
+    return parts.join(' · ');
+  }
+
+  String _friendlyPredikat(String k, String s) {
+    String label(String letter) {
+      switch (letter) {
+        case 'A':
+          return 'Sangat Baik';
+        case 'B':
+          return 'Baik';
+        case 'C':
+          return 'Cukup';
+        case 'D':
+        case 'E':
+          return 'Perlu dukungan';
+        default:
+          return letter; // pass through stored Indonesian phrase
+      }
+    }
+
+    final kk = k.trim();
+    final ss = s.trim();
+    if (kk.isEmpty && ss.isEmpty) return '';
+    if (kk == ss) return label(kk);
+    if (kk.isNotEmpty && ss.isNotEmpty) {
+      return '${label(kk)} / ${label(ss)}';
+    }
+    return label(kk.isEmpty ? ss : kk);
+  }
+
+  double? _avgOf(double? a, double? b) {
+    if (a != null && b != null) return (a + b) / 2;
+    return a ?? b;
+  }
+}
+
+class _ParentRaporScoreCell extends StatelessWidget {
+  const _ParentRaporScoreCell({
+    required this.ki,
+    required this.label,
+    required this.accent,
+    required this.score,
+    required this.predikat,
+    required this.failing,
+    required this.kkm,
+  });
+
+  final String ki;
+  final String label;
+  final Color accent;
+  final double? score;
+  final String predikat;
+  final bool failing;
+  final double kkm;
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveAccent = failing ? const Color(0xFFDC2626) : accent;
+    final valueColor = score == null
+        ? ColorUtils.slate300
+        : (failing ? _kFailFg : ColorUtils.slate900);
+    final pillLetter =
+        predikat.isNotEmpty &&
+            const ['A', 'B', 'C', 'D', 'E'].contains(predikat.toUpperCase())
+        ? predikat.toUpperCase()
+        : (score == null ? '' : _kBandLetter(score!));
+    final pill = pillLetter.isEmpty
+        ? null
+        : (failing ? _kPredikatPill('D') : _kPredikatPill(pillLetter));
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 9),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [effectiveAccent.withValues(alpha: 0.06), Colors.white],
+          stops: const [0.0, 0.6],
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+        border: Border.all(
+          color: effectiveAccent.withValues(alpha: 0.20),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // KI tag + predikat pill row
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: effectiveAccent,
+                  borderRadius: const BorderRadius.all(Radius.circular(999)),
+                ),
+                child: Text(
+                  ki,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              if (pill != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: pill.bg,
+                    borderRadius: const BorderRadius.all(Radius.circular(999)),
+                  ),
+                  child: Text(
+                    pillLetter,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: pill.fg,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // Label
           Text(
-            allFailing
-                ? 'KKM ${kkm.toStringAsFixed(0)} · Belum tuntas'
-                : partialFailing
-                ? 'KKM ${kkm.toStringAsFixed(0)} · Belum tuntas '
-                      '(${knowledgeFailing ? 'pengetahuan' : 'keterampilan'})'
-                : 'KKM ${kkm.toStringAsFixed(0)} · Tuntas',
+            label,
             style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-              color: (allFailing || partialFailing)
-                  ? const Color(0xFFB91C1C)
-                  : ColorUtils.slate400,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate600,
+              letterSpacing: 0.2,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          // Score row: value + "/ 100"
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                score == null ? '–' : score!.toStringAsFixed(0),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: valueColor,
+                  height: 1.0,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              if (score != null) ...[
+                const SizedBox(width: 4),
+                Text(
+                  '/ 100',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: ColorUtils.slate400,
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _scoreCell({
-    required String label,
-    required double? score,
-    required bool failing,
-  }) {
-    final text = score == null ? '–' : score.toStringAsFixed(0);
-    final fg = failing
-        ? const Color(0xFFB91C1C)
-        : (score == null ? ColorUtils.slate500 : _bandFg(_bandLetter(score)));
+class _ParentRaporVerdictBar extends StatelessWidget {
+  const _ParentRaporVerdictBar({
+    required this.kkm,
+    required this.knowledgeFailing,
+    required this.skillFailing,
+    required this.allFailing,
+    required this.partialFailing,
+    required this.hasAnyScore,
+  });
+
+  final double kkm;
+  final bool knowledgeFailing;
+  final bool skillFailing;
+  final bool allFailing;
+  final bool partialFailing;
+  final bool hasAnyScore;
+
+  @override
+  Widget build(BuildContext context) {
+    Color bg;
+    Color fg;
+    Color border;
+    IconData icon;
+    String text;
+    if (!hasAnyScore) {
+      bg = ColorUtils.slate50;
+      fg = ColorUtils.slate500;
+      border = ColorUtils.slate100;
+      icon = Icons.schedule_rounded;
+      text = 'Menunggu input guru mapel';
+    } else if (allFailing) {
+      bg = _kFailBg;
+      fg = _kFailFg;
+      border = _kFailBorder;
+      icon = Icons.error_outline_rounded;
+      text = 'KKM ${kkm.toStringAsFixed(0)} · Belum tuntas pada kedua aspek';
+    } else if (partialFailing) {
+      bg = _kPartialBg;
+      fg = _kPartialFg;
+      border = _kPartialBorder;
+      icon = Icons.info_outline_rounded;
+      text =
+          'KKM ${kkm.toStringAsFixed(0)} · Belum tuntas pada '
+          '${knowledgeFailing ? 'pengetahuan' : 'keterampilan'}';
+    } else {
+      bg = _kPassBg;
+      fg = _kPassFg;
+      border = _kPassBorder;
+      icon = Icons.check_circle_outline_rounded;
+      text = 'KKM ${kkm.toStringAsFixed(0)} · Tuntas';
+    }
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: ColorUtils.slate50,
-        borderRadius: const BorderRadius.all(Radius.circular(8)),
+        color: bg,
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        border: Border.all(color: border, width: 0.75),
       ),
       child: Row(
         children: [
+          Icon(icon, size: 14, color: fg),
+          const SizedBox(width: 6),
           Expanded(
             child: Text(
-              label,
+              text,
               style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: ColorUtils.slate500,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: fg,
+                letterSpacing: 0.1,
               ),
-            ),
-          ),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: fg,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
       ),
     );
   }
-
-  double _avgOf(double? a, double? b) {
-    if (a != null && b != null) return (a + b) / 2;
-    return a ?? b ?? 0;
-  }
-
-  String _bandLetter(double v) {
-    if (v >= 90) return 'A';
-    if (v >= 80) return 'B';
-    if (v >= 70) return 'C';
-    if (v >= 60) return 'D';
-    return 'E';
-  }
-
-  ({Color bg, Color fg}) _letterPalette(String letter) {
-    switch (letter) {
-      case 'A':
-        return (bg: const Color(0xFFDCFCE7), fg: const Color(0xFF15803D));
-      case 'B':
-        return (bg: const Color(0xFFDBEAFE), fg: const Color(0xFF1D4ED8));
-      case 'C':
-        return (bg: const Color(0xFFFEF3C7), fg: const Color(0xFFB45309));
-      case 'D':
-        return (bg: const Color(0xFFFEE2E2), fg: const Color(0xFFB91C1C));
-      default:
-        return (bg: ColorUtils.slate100, fg: ColorUtils.slate500);
-    }
-  }
-
-  Color _bandFg(String letter) => _letterPalette(letter).fg;
 }
 
 // =====================================================================
@@ -1284,15 +1611,49 @@ class ParentRaporExportNote extends StatelessWidget {
 // Bottom action bar
 // =====================================================================
 
+/// Sticky bottom bar with print/share affordances for the rapor detail
+/// screen. Layout adapts to role:
+///
+/// * **wali / guru** — [Bagikan] [Cetak PDF]. Cetak calls `onPrintRaport`
+///   (or `onPrintCertificate` for wali; controlled by the caller via
+///   `defaultVariant`).
+/// * **admin** — [Cetak Raport] [Cetak E-Raport]. Both formats are
+///   exposed side-by-side; admin doesn't share via the bottom bar.
+///
+/// When [isPublished] is false (rapor still a draft), both Cetak buttons
+/// render disabled with a `'Belum tersedia (draft)'` hint and don't fire
+/// their handlers.
 class ParentRaporBottomActionBar extends StatelessWidget {
   const ParentRaporBottomActionBar({
     super.key,
-    required this.onShare,
-    required this.onPrint,
+    required this.role,
+    required this.isPublished,
+    this.onShare,
+    this.onPrintRaport,
+    this.onPrintCertificate,
   });
 
-  final VoidCallback onShare;
-  final VoidCallback onPrint;
+  /// One of `'wali' | 'guru' | 'admin'`. Drives layout + accent color.
+  final String role;
+
+  /// True when the rapor has been published. Disables both Cetak CTAs
+  /// when false because the backend export endpoint will 404.
+  final bool isPublished;
+
+  /// Share callback — only used in the wali/guru layout.
+  final VoidCallback? onShare;
+
+  /// Print using the official `raport.pdf` Blade template (full doc).
+  /// Used by the "Cetak PDF" CTA on guru, by "Cetak Raport" on admin.
+  final VoidCallback? onPrintRaport;
+
+  /// Print using the `raport.certificate` Blade template (modern style).
+  /// Used by the "Cetak PDF" CTA on wali, by "Cetak E-Raport" on admin.
+  final VoidCallback? onPrintCertificate;
+
+  bool get _isAdmin => role == 'admin' || role == 'administrator';
+
+  Color get _accent => ColorUtils.getRoleColor(role);
 
   @override
   Widget build(BuildContext context) {
@@ -1302,62 +1663,490 @@ class ParentRaporBottomActionBar extends StatelessWidget {
         color: Colors.white,
         border: Border(top: BorderSide(color: ColorUtils.slate200, width: 1)),
       ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!isPublished) ...[
+            _DraftHintRow(accent: _accent),
+            const SizedBox(height: 8),
+          ],
+          _isAdmin ? _buildAdminRow() : _buildDefaultRow(),
+        ],
+      ),
+    );
+  }
+
+  // ── wali / guru variant ─────────────────────────────────────────────
+  Widget _buildDefaultRow() {
+    final printHandler = role == 'wali' ? onPrintCertificate : onPrintRaport;
+    return Row(
+      children: [
+        Expanded(
+          child: _ghostButton(
+            label: 'Bagikan',
+            icon: Icons.ios_share_rounded,
+            onTap: onShare,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _primaryButton(
+            label: 'Cetak PDF',
+            icon: Icons.picture_as_pdf_outlined,
+            onTap: isPublished ? printHandler : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── admin variant ───────────────────────────────────────────────────
+  Widget _buildAdminRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: _outlinedAccentButton(
+            label: 'Cetak Raport',
+            icon: Icons.description_outlined,
+            onTap: isPublished ? onPrintRaport : null,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _primaryButton(
+            label: 'Cetak E-Raport',
+            icon: Icons.picture_as_pdf_outlined,
+            onTap: isPublished ? onPrintCertificate : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _ghostButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback? onTap,
+  }) {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 18, color: ColorUtils.slate700),
+        label: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: ColorUtils.slate900,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: ColorUtils.slate200),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _primaryButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback? onTap,
+  }) {
+    final enabled = onTap != null;
+    return SizedBox(
+      height: 48,
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 18, color: Colors.white),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: enabled ? _accent : ColorUtils.slate200,
+          disabledBackgroundColor: ColorUtils.slate200,
+          disabledForegroundColor: ColorUtils.slate500,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+          elevation: 0,
+        ),
+      ),
+    );
+  }
+
+  Widget _outlinedAccentButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback? onTap,
+  }) {
+    final enabled = onTap != null;
+    final fg = enabled ? _accent : ColorUtils.slate400;
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 18, color: fg),
+        label: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: fg,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(
+            color: enabled
+                ? _accent.withValues(alpha: 0.45)
+                : ColorUtils.slate200,
+          ),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DraftHintRow extends StatelessWidget {
+  const _DraftHintRow({required this.accent});
+
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        border: Border.all(color: const Color(0xFFFDE68A), width: 0.75),
+      ),
       child: Row(
         children: [
+          Icon(
+            Icons.lock_outline_rounded,
+            size: 14,
+            color: const Color(0xFFB45309),
+          ),
+          const SizedBox(width: 6),
           Expanded(
-            child: SizedBox(
-              height: 48,
-              child: OutlinedButton.icon(
-                onPressed: onShare,
-                icon: Icon(
-                  Icons.ios_share_rounded,
-                  size: 18,
-                  color: ColorUtils.slate700,
+            child: Text(
+              'Rapor masih draft — cetak PDF belum tersedia',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF92400E),
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =====================================================================
+// Deskripsi Capaian sheet (Frame 2 of the parent rapor redesign)
+// =====================================================================
+//
+// Surfaces knowledge_description + skill_description for one mata pelajaran.
+// Backend already populates both fields (wali kelas redesign TA.22–26); this
+// is the parent-facing read-only view that mirrors the wali kelas KI 3/KI 4
+// section. Triggered by tapping a [ParentRaporSubjectCard].
+
+/// Opens the per-mapel deskripsi capaian sheet. Returns when dismissed.
+Future<void> showParentRaporDeskripsiSheet(
+  BuildContext context, {
+  required Map subject,
+}) {
+  return AppBottomSheet.show<void>(
+    context: context,
+    title: _readSubjectName(subject),
+    subtitle: 'Deskripsi capaian belajar',
+    icon: Icons.menu_book_rounded,
+    primaryColor: ColorUtils.brandCobalt,
+    contentPadding: EdgeInsets.zero,
+    content: _ParentRaporDeskripsiBody(subject: subject),
+  );
+}
+
+String _readSubjectName(Map subject) {
+  if (subject['subject'] is Map) {
+    return ((subject['subject'] as Map)['name'] ?? 'Mata Pelajaran').toString();
+  }
+  return 'Mata Pelajaran';
+}
+
+class _ParentRaporDeskripsiBody extends StatelessWidget {
+  const _ParentRaporDeskripsiBody({required this.subject});
+
+  final Map subject;
+
+  double? _toDouble(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString());
+  }
+
+  String _predikat(dynamic raw, double? score) {
+    final stored = (raw ?? '').toString().trim();
+    if (stored.isNotEmpty && stored != '–') return stored;
+    if (score == null) return '';
+    return _kBandLetter(score);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final teacher =
+        (subject['teacher_name'] ??
+                (subject['subject'] is Map
+                    ? (subject['subject'] as Map)['teacher_name']
+                    : null) ??
+                '')
+            .toString();
+    final knowledge = _toDouble(subject['knowledge_score']);
+    final skill = _toDouble(subject['skill_score']);
+    final kkm = _toDouble(subject['kkm']) ?? 75;
+
+    final knowledgeDesc = (subject['knowledge_description'] ?? '')
+        .toString()
+        .trim();
+    final skillDesc = (subject['skill_description'] ?? '').toString().trim();
+
+    final knowledgePred = _predikat(subject['knowledge_predicate'], knowledge);
+    final skillPred = _predikat(subject['skill_predicate'], skill);
+
+    final knowledgeFailing = knowledge != null && knowledge < kkm;
+    final skillFailing = skill != null && skill < kkm;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (teacher.isNotEmpty) ...[
+            Row(
+              children: [
+                Icon(
+                  Icons.person_outline_rounded,
+                  size: 14,
+                  color: ColorUtils.slate500,
                 ),
-                label: Text(
-                  'Bagikan',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: ColorUtils.slate900,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Guru mapel: $teacher',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: ColorUtils.slate600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: ColorUtils.slate200),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
+          ],
+          // KI 3 block
+          _ParentRaporDeskripsiBlock(
+            ki: 'KI 3',
+            label: 'Pengetahuan',
+            accent: _kKi3,
+            score: knowledge,
+            predikat: knowledgePred,
+            description: knowledgeDesc,
+            failing: knowledgeFailing,
+          ),
+          const SizedBox(height: 12),
+          // KI 4 block
+          _ParentRaporDeskripsiBlock(
+            ki: 'KI 4',
+            label: 'Keterampilan',
+            accent: _kKi4,
+            score: skill,
+            predikat: skillPred,
+            description: skillDesc,
+            failing: skillFailing,
+          ),
+          if (knowledgeDesc.isEmpty && skillDesc.isEmpty) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: ColorUtils.brandAzure.withValues(alpha: 0.08),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
+                border: Border.all(
+                  color: ColorUtils.brandAzure.withValues(alpha: 0.20),
+                  width: 0.75,
                 ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.lightbulb_outline_rounded,
+                    size: 16,
+                    color: ColorUtils.brandAzureDeep,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Wali kelas belum menulis deskripsi capaian untuk '
+                      'mata pelajaran ini. Hubungi wali kelas via menu '
+                      'Pesan jika dibutuhkan.',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: ColorUtils.brandAzureDeep,
+                        height: 1.45,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: ColorUtils.slate100,
+                foregroundColor: ColorUtils.slate700,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
+              ),
+              onPressed: () => AppNavigator.pop(context),
+              child: const Text(
+                'Tutup',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: SizedBox(
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: onPrint,
-                icon: const Icon(
-                  Icons.picture_as_pdf_outlined,
-                  size: 18,
-                  color: Colors.white,
+        ],
+      ),
+    );
+  }
+}
+
+class _ParentRaporDeskripsiBlock extends StatelessWidget {
+  const _ParentRaporDeskripsiBlock({
+    required this.ki,
+    required this.label,
+    required this.accent,
+    required this.score,
+    required this.predikat,
+    required this.description,
+    required this.failing,
+  });
+
+  final String ki;
+  final String label;
+  final Color accent;
+  final double? score;
+  final String predikat;
+  final String description;
+  final bool failing;
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveAccent = failing ? const Color(0xFFDC2626) : accent;
+    final hasScore = score != null;
+    final pillLetter =
+        predikat.isNotEmpty &&
+            const ['A', 'B', 'C', 'D', 'E'].contains(predikat.toUpperCase())
+        ? predikat.toUpperCase()
+        : (hasScore ? _kBandLetter(score!) : '');
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [effectiveAccent.withValues(alpha: 0.05), Colors.white],
+          stops: const [0.0, 0.7],
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        border: Border.all(
+          color: effectiveAccent.withValues(alpha: 0.18),
+          width: 0.75,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: effectiveAccent,
+                  borderRadius: const BorderRadius.all(Radius.circular(999)),
                 ),
-                label: const Text(
-                  'Cetak PDF',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                child: Text(
+                  ki,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
+                    letterSpacing: 0.4,
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ColorUtils.brandAzureDeep,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                  elevation: 0,
                 ),
               ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '$label · ${hasScore ? score!.toStringAsFixed(0) : '–'} / 100',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: ColorUtils.slate700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (pillLetter.isNotEmpty)
+                Text(
+                  'Predikat $pillLetter',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: failing ? _kFailFg : effectiveAccent,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description.isEmpty
+                ? '— Belum ada deskripsi capaian dari wali kelas.'
+                : description,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: description.isEmpty
+                  ? ColorUtils.slate400
+                  : ColorUtils.slate700,
+              height: 1.55,
             ),
           ),
         ],

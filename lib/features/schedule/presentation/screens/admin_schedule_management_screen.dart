@@ -1808,9 +1808,7 @@ class TeachingScheduleManagementScreenState
                   onTap: _openPrintPdfSheet,
                 ),
                 BrandHeaderIconButton(
-                  icon: _hasActiveFilter
-                      ? Icons.filter_alt_rounded
-                      : Icons.tune_rounded,
+                  icon: Icons.tune_rounded,
                   onTap: _openFilterSheet,
                   badgeCount: _hasActiveFilter ? 1 : null,
                   badgeBorderColor: primaryColor,

@@ -36,6 +36,9 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/report_cards/'
     'presentation/screens/'
     'parent_report_card_detail_screen.dart';
+import 'package:manajemensekolah/features/report_cards/'
+    'presentation/widgets/'
+    'parent_report_card_detail_widgets.dart';
 
 /// Mixin for UI builder methods (header, filter, content states).
 mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
@@ -234,7 +237,10 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
           ...subjects.map(
             (s) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: _SubjectMiniCard(subject: s as Map),
+              child: _SubjectMiniCard(
+                subject: s as Map,
+                onTap: () => showParentRaporDeskripsiSheet(context, subject: s),
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -751,15 +757,28 @@ class _SubjectRow {
   final double? score;
 }
 
-/// Per-subject mini card for the inline rapor body. Single big score
-/// (max of knowledge + skill, since the list screen is a quick
-/// summary), letter-grade avatar tinted by score band, KKM verdict
-/// below. Tap-target-sized so it can be tapped to navigate to the
-/// detail drill-down later.
+/// Per-subject mini card for the inline rapor body — Option C layout
+/// from `_design/parent_raport_inline_summary_dual_score_redesign.html`.
+///
+/// One-row card: letter badge (40dp) + subject name + meta line +
+/// two compact KI badges side-by-side at the right (KI 3 cobalt,
+/// KI 4 violet, each with a small tag label and a 15pt bold value).
+/// Failing cell (score < KKM) shifts to red tone. Empty (no score
+/// yet) renders "–" in slate-300.
+///
+/// Tap opens the per-mapel Deskripsi Capaian sheet (KI 3 + KI 4
+/// narration) so the parent can read context without leaving the
+/// summary screen. Tap target is the entire card (~64dp tall).
 class _SubjectMiniCard extends StatelessWidget {
-  const _SubjectMiniCard({required this.subject});
+  const _SubjectMiniCard({required this.subject, this.onTap});
 
   final Map subject;
+  final VoidCallback? onTap;
+
+  // ── Brand tokens (mirrored from parent_report_card_detail_widgets.dart)
+  static const Color _kKi3 = Color(0xFF1B6FB8); // brandCobalt
+  static const Color _kKi4 = Color(0xFF7C3AED); // violet600
+  static const Color _kFailFg = Color(0xFFB91C1C);
 
   double? _toDouble(dynamic v) {
     if (v == null) return null;
@@ -790,19 +809,31 @@ class _SubjectMiniCard extends StatelessWidget {
     }
   }
 
-  String _predikatLabel(String letter) {
-    switch (letter) {
-      case 'A':
-        return 'Sangat Baik';
-      case 'B':
-        return 'Baik';
-      case 'C':
-        return 'Cukup';
-      case 'D':
-        return 'Perlu Dukungan';
-      default:
-        return '–';
+  String _friendlyPredikat(String knowledgeRaw, String skillRaw) {
+    String label(String letter) {
+      switch (letter) {
+        case 'A':
+          return 'Sangat Baik';
+        case 'B':
+          return 'Baik';
+        case 'C':
+          return 'Cukup';
+        case 'D':
+        case 'E':
+          return 'Perlu dukungan';
+        default:
+          return letter;
+      }
     }
+
+    final k = knowledgeRaw.trim();
+    final s = skillRaw.trim();
+    if (k.isEmpty && s.isEmpty) return '';
+    if (k == s) return label(k);
+    if (k.isNotEmpty && s.isNotEmpty) {
+      return '${label(k)} / ${label(s)}';
+    }
+    return label(k.isEmpty ? s : k);
   }
 
   @override
@@ -819,21 +850,35 @@ class _SubjectMiniCard extends StatelessWidget {
             .toString();
     final knowledge = _toDouble(subject['knowledge_score']);
     final skill = _toDouble(subject['skill_score']);
-    final headline = (knowledge != null && skill != null)
-        ? (knowledge + skill) / 2
-        : (knowledge ?? skill ?? 0);
-    final letter = _bandLetter(headline);
-    final palette = _letterPalette(letter);
-    final predikat =
-        (subject['knowledge_predicate'] ??
-                subject['skill_predicate'] ??
-                _predikatLabel(letter))
-            .toString();
     final kkm = _toDouble(subject['kkm']) ?? 75;
-    final tuntas = headline >= kkm;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 14, 10),
+    // Predikat: prefer backend-stored letter, else derive from score.
+    final kPredStored = (subject['knowledge_predicate'] ?? '')
+        .toString()
+        .trim();
+    final sPredStored = (subject['skill_predicate'] ?? '').toString().trim();
+    final kPredLetter = kPredStored.isNotEmpty && kPredStored != '–'
+        ? kPredStored
+        : (knowledge != null ? _bandLetter(knowledge) : '');
+    final sPredLetter = sPredStored.isNotEmpty && sPredStored != '–'
+        ? sPredStored
+        : (skill != null ? _bandLetter(skill) : '');
+
+    // Letter badge: derived from the average of whatever scores exist.
+    final hasAnyScore = knowledge != null || skill != null;
+    final avg = (knowledge != null && skill != null)
+        ? (knowledge + skill) / 2
+        : (knowledge ?? skill);
+    final letter = avg == null ? '–' : _bandLetter(avg);
+    final letterPalette = letter == '–'
+        ? (bg: ColorUtils.slate100, fg: ColorUtils.slate400)
+        : _letterPalette(letter);
+
+    final knowledgeFailing = knowledge != null && knowledge < kkm;
+    final skillFailing = skill != null && skill < kkm;
+
+    final card = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(14)),
@@ -843,24 +888,26 @@ class _SubjectMiniCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Letter badge (left)
           Container(
-            width: 40,
-            height: 40,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: palette.bg,
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              color: letterPalette.bg,
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
             ),
             alignment: Alignment.center,
             child: Text(
               letter,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 17,
                 fontWeight: FontWeight.w800,
-                color: palette.fg,
+                color: letterPalette.fg,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
+          // Subject name + meta (center)
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -871,18 +918,21 @@ class _SubjectMiniCard extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: ColorUtils.slate900,
+                    letterSpacing: -0.1,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
-                  [
-                    if (teacher.isNotEmpty) teacher,
-                    if (predikat.trim().isNotEmpty && predikat != '–') predikat,
-                  ].join(' · '),
+                  _composeMeta(
+                    teacher: teacher,
+                    knowledgePred: kPredLetter,
+                    skillPred: sPredLetter,
+                    hasAnyScore: hasAnyScore,
+                  ),
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w500,
                     color: ColorUtils.slate500,
                   ),
@@ -893,29 +943,103 @@ class _SubjectMiniCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                headline > 0 ? headline.toStringAsFixed(0) : '–',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: tuntas ? palette.fg : const Color(0xFFB91C1C),
-                  height: 1.0,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'KKM ${kkm.toStringAsFixed(0)}',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color: ColorUtils.slate400,
-                ),
-              ),
-            ],
+          // Two compact KI badges side-by-side (right)
+          _kiBadge(
+            tag: 'KI 3',
+            accent: _kKi3,
+            score: knowledge,
+            failing: knowledgeFailing,
+          ),
+          const SizedBox(width: 5),
+          _kiBadge(
+            tag: 'KI 4',
+            accent: _kKi4,
+            score: skill,
+            failing: skillFailing,
+          ),
+        ],
+      ),
+    );
+
+    if (onTap == null) return card;
+    return Material(
+      color: Colors.transparent,
+      borderRadius: const BorderRadius.all(Radius.circular(14)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        child: card,
+      ),
+    );
+  }
+
+  String _composeMeta({
+    required String teacher,
+    required String knowledgePred,
+    required String skillPred,
+    required bool hasAnyScore,
+  }) {
+    final parts = <String>[];
+    if (teacher.isNotEmpty) parts.add(teacher);
+    final friendly = _friendlyPredikat(knowledgePred, skillPred);
+    if (friendly.isNotEmpty) {
+      parts.add(friendly);
+    } else if (!hasAnyScore) {
+      parts.add('Belum dinilai');
+    }
+    return parts.join(' · ');
+  }
+
+  Widget _kiBadge({
+    required String tag,
+    required Color accent,
+    required double? score,
+    required bool failing,
+  }) {
+    final effectiveAccent = failing ? _kFailFg : accent;
+    final hasScore = score != null;
+    final valueColor = !hasScore
+        ? ColorUtils.slate300
+        : (failing ? _kFailFg : ColorUtils.slate900);
+    return Container(
+      constraints: const BoxConstraints(minWidth: 50),
+      padding: const EdgeInsets.fromLTRB(9, 5, 9, 6),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [effectiveAccent.withValues(alpha: 0.08), Colors.white],
+          stops: const [0.0, 0.70],
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
+        border: Border.all(
+          color: effectiveAccent.withValues(alpha: failing ? 0.25 : 0.20),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            tag,
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.w800,
+              color: effectiveAccent,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            hasScore ? score.toStringAsFixed(0) : '–',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: valueColor,
+              height: 1.0,
+              letterSpacing: -0.3,
+            ),
           ),
         ],
       ),

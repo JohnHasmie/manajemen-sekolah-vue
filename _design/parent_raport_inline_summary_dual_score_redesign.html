@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Parent E-Raport · Inline Summary — KI 3 + KI 4 dual-score</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --slate-50: #F8FAFC;
+    --slate-100: #F1F5F9;
+    --slate-200: #E2E8F0;
+    --slate-300: #CBD5E1;
+    --slate-400: #94A3B8;
+    --slate-500: #64748B;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1E293B;
+    --slate-900: #0F172A;
+    --brand-dark: #143068;
+    --brand-cobalt: #1B6FB8;
+    --brand-azure: #21AFE6;
+    --brand-azure-deep: #0E89B8;
+    --green-50: #DCFCE7;
+    --green-600: #16A34A;
+    --green-700: #15803D;
+    --amber-50: #FEF3C7;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --red-50:   #FEE2E2;
+    --red-600:  #DC2626;
+    --red-700:  #B91C1C;
+    --blue-50:  #DBEAFE;
+    --blue-700: #1D4ED8;
+    --violet-50: #EDE9FE;
+    --violet-600: #7C3AED;
+    --violet-700: #6D28D9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0; padding: 32px 24px 64px;
+    color: var(--slate-900);
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; color: var(--brand-dark); letter-spacing: -0.4px; }
+  h2 { font-size: 16px; margin: 36px 0 14px; color: var(--brand-dark); letter-spacing: -0.2px; }
+  .subtitle { color: var(--slate-500); font-size: 13px; margin: 0 0 18px; max-width: 920px; line-height: 1.55; }
+  code {
+    background: var(--slate-100); color: var(--slate-700);
+    padding: 1px 5px; border-radius: 4px; font-size: 11.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 28px; align-items: start;
+  }
+  .frame {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+    overflow: hidden;
+  }
+  .frame-label {
+    padding: 13px 16px 11px;
+    font-size: 11px; font-weight: 800;
+    color: var(--slate-500); letter-spacing: 0.6px; text-transform: uppercase;
+    border-bottom: 1px solid var(--slate-100); background: var(--slate-50);
+  }
+  .frame-label .num { color: var(--brand-azure-deep); margin-right: 6px; }
+  .frame-label .role { color: var(--brand-dark); margin-right: 8px; font-weight: 800; }
+  .frame-label .desc {
+    color: var(--slate-400); font-weight: 600;
+    text-transform: none; letter-spacing: 0.2px; margin-left: 10px;
+  }
+  .phone {
+    width: 100%; aspect-ratio: 380 / 760;
+    position: relative; overflow: hidden;
+    background: var(--slate-50);
+    display: flex; flex-direction: column;
+  }
+
+  /* Compact hero - same parent gradient */
+  .hero {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-azure) 100%);
+    border-radius: 0 0 28px 28px;
+    padding: 8px 12px 12px;
+    color: white;
+    position: relative;
+  }
+  .hero .top-row { display: flex; align-items: center; gap: 6px; }
+  .hero .icon-btn {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: rgba(255,255,255,.18);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex-shrink: 0;
+  }
+  .hero .title-block { flex: 1; text-align: center; padding-top: 2px; }
+  .hero .pre {
+    font-size: 9.5px; font-weight: 800; letter-spacing: 1.4px;
+    color: rgba(255,255,255,.72); text-transform: uppercase;
+  }
+  .hero .title { font-size: 18px; font-weight: 700; letter-spacing: -0.1px; }
+  .hero .fresh-dot { position: absolute; right: 56px; top: 22px; width: 7px; height: 7px; background: #4ADE80; border-radius: 50%; }
+
+  /* Child selector chips */
+  .child-chips {
+    display: flex; gap: 6px; margin-top: 10px;
+    overflow-x: auto;
+  }
+  .child-chip {
+    flex: 1; min-width: 100px; height: 36px;
+    background: rgba(255,255,255,.22);
+    border-radius: 12px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 10px;
+    color: white;
+  }
+  .child-chip.unsel { background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.20); }
+  .child-chip .avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: white; color: var(--brand-cobalt);
+    font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .child-chip .name {
+    font-size: 10.5px; font-weight: 700;
+    color: white; flex: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .child-chip .kls {
+    font-size: 9px; font-weight: 600;
+    color: rgba(255,255,255,.7);
+  }
+
+  /* Semester chip */
+  .sem-chip {
+    margin-top: 10px;
+    width: 120px;
+    height: 32px;
+    background: rgba(255,255,255,.22);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    color: white;
+    font-size: 12px; font-weight: 700;
+  }
+
+  /* KPI strip */
+  .kpi-shell {
+    background: white;
+    margin: 0 16px;
+    border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 4px 12px rgba(15,23,42,.06);
+    padding: 12px 6px;
+    display: flex;
+    margin-top: 12px;
+  }
+  .kpi-cell {
+    flex: 1; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .kpi-cell .val {
+    font-size: 20px; font-weight: 800; letter-spacing: -0.4px; line-height: 1.1;
+  }
+  .kpi-cell .lbl { font-size: 10px; color: var(--slate-500); font-weight: 500; }
+  .kpi-divider { width: 1px; background: var(--slate-200); margin: 4px 0; }
+  .kpi-val-green { color: var(--green-700); }
+  .kpi-val-amber { color: var(--amber-700); }
+  .kpi-val-blue  { color: var(--blue-700);  }
+
+  /* Section header */
+  .sec-hdr {
+    margin: 16px 16px 8px;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .sec-hdr .ttl { font-size: 13px; font-weight: 700; color: var(--slate-900); }
+  .sec-hdr .meta { font-size: 11px; font-weight: 500; color: var(--slate-500); }
+
+  /* ────────────────────────────────────────────────────────────
+     OPTION A — Stacked mini pills (vertical)
+     ──────────────────────────────────────────────────────────── */
+  .mini-card {
+    margin: 0 16px 8px;
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 1px 2px rgba(15,23,42,.03);
+  }
+  .mini-card .letter {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .letter.A { background: var(--green-50); color: var(--green-700); }
+  .letter.B { background: var(--blue-50);  color: var(--blue-700);  }
+  .letter.C { background: var(--amber-50); color: var(--amber-700); }
+  .letter.D { background: var(--red-50);   color: var(--red-700);   }
+
+  .mini-card .name-block { flex: 1; min-width: 0; }
+  .mini-card .nm {
+    font-size: 13px; font-weight: 700; color: var(--slate-900);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    letter-spacing: -0.1px;
+  }
+  .mini-card .meta {
+    margin-top: 1px;
+    font-size: 10.5px; font-weight: 500; color: var(--slate-500);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* OPTION A — score block stacked vertically */
+  .ki-stack {
+    display: flex; flex-direction: column; gap: 4px;
+    align-items: flex-end;
+  }
+  .ki-row {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .ki-tag {
+    font-size: 8.5px; font-weight: 800;
+    padding: 1px 5px; border-radius: 999px;
+    color: white;
+    letter-spacing: 0.3px;
+  }
+  .ki-tag.k3 { background: var(--brand-cobalt); }
+  .ki-tag.k4 { background: var(--violet-600); }
+  .ki-tag.fail { background: var(--red-600); }
+  .ki-val {
+    font-size: 15px; font-weight: 800;
+    color: var(--slate-900);
+    letter-spacing: -0.3px;
+    min-width: 24px; text-align: right;
+  }
+  .ki-val.fail { color: var(--red-700); }
+  .ki-val.empty { color: var(--slate-300); }
+
+  /* ────────────────────────────────────────────────────────────
+     OPTION B — Two-column score strip below row
+     ──────────────────────────────────────────────────────────── */
+  .mini-card-b {
+    margin: 0 16px 8px;
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    padding: 10px 12px;
+    box-shadow: 0 1px 2px rgba(15,23,42,.03);
+  }
+  .mini-card-b .top {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .mini-card-b .top .letter { width: 36px; height: 36px; border-radius: 10px; font-size: 16px; }
+  .mini-card-b .name-block { flex: 1; min-width: 0; }
+  .mini-card-b .nm {
+    font-size: 13px; font-weight: 700; color: var(--slate-900);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mini-card-b .meta {
+    margin-top: 1px;
+    font-size: 10.5px; font-weight: 500; color: var(--slate-500);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mini-card-b .chev { color: var(--slate-300); }
+
+  .ki-strip {
+    margin-top: 8px;
+    display: flex; gap: 6px;
+  }
+  .ki-cell {
+    flex: 1;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    padding: 5px 8px 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ki-cell.k3 {
+    background: linear-gradient(135deg, rgba(27,111,184,.06) 0%, white 60%);
+    border-color: rgba(27,111,184,.20);
+  }
+  .ki-cell.k4 {
+    background: linear-gradient(135deg, rgba(124,58,237,.06) 0%, white 60%);
+    border-color: rgba(124,58,237,.20);
+  }
+  .ki-cell.failing {
+    background: linear-gradient(135deg, rgba(220,38,38,.06) 0%, white 60%);
+    border-color: rgba(220,38,38,.25);
+  }
+  .ki-cell .lbl-row {
+    flex: 1; display: flex; flex-direction: column; gap: 1px;
+  }
+  .ki-cell .lbl {
+    font-size: 9px; font-weight: 700; color: var(--slate-500);
+    letter-spacing: 0.3px;
+  }
+  .ki-cell .ki-tag { align-self: flex-start; }
+  .ki-cell .val {
+    font-size: 17px; font-weight: 800;
+    color: var(--slate-900);
+    letter-spacing: -0.4px;
+  }
+  .ki-cell .val.fail { color: var(--red-700); }
+  .ki-cell .val.empty { color: var(--slate-300); }
+
+  /* ────────────────────────────────────────────────────────────
+     OPTION C — Inline KI badges (most compact, one row)
+     ──────────────────────────────────────────────────────────── */
+  .mini-card-c {
+    margin: 0 16px 8px;
+    background: white;
+    border-radius: 14px;
+    border: 1px solid var(--slate-200);
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 1px 2px rgba(15,23,42,.03);
+  }
+  .mini-card-c .letter { width: 38px; height: 38px; border-radius: 10px; font-size: 17px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; }
+  .mini-card-c .name-block { flex: 1; min-width: 0; }
+  .mini-card-c .nm {
+    font-size: 13px; font-weight: 700; color: var(--slate-900);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mini-card-c .meta-line {
+    margin-top: 1px;
+    font-size: 10.5px; font-weight: 500; color: var(--slate-500);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* Compact score badges side-by-side */
+  .ki-badges {
+    display: flex; gap: 5px; flex-shrink: 0; align-items: center;
+  }
+  .ki-badge {
+    border-radius: 10px;
+    padding: 5px 9px 6px;
+    text-align: center;
+    min-width: 50px;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+  }
+  .ki-badge.k3 {
+    background: linear-gradient(135deg, rgba(27,111,184,.08) 0%, white 70%);
+    border-color: rgba(27,111,184,.20);
+  }
+  .ki-badge.k4 {
+    background: linear-gradient(135deg, rgba(124,58,237,.08) 0%, white 70%);
+    border-color: rgba(124,58,237,.20);
+  }
+  .ki-badge.failing {
+    background: linear-gradient(135deg, rgba(220,38,38,.06) 0%, white 60%);
+    border-color: rgba(220,38,38,.25);
+  }
+  .ki-badge .tag {
+    font-size: 8px; font-weight: 800;
+    letter-spacing: 0.4px;
+    color: var(--brand-cobalt);
+    margin-bottom: 1px;
+  }
+  .ki-badge.k4 .tag { color: var(--violet-600); }
+  .ki-badge.failing .tag { color: var(--red-600); }
+  .ki-badge .val {
+    font-size: 15px; font-weight: 800;
+    color: var(--slate-900);
+    line-height: 1.0;
+    letter-spacing: -0.3px;
+  }
+  .ki-badge .val.fail { color: var(--red-700); }
+  .ki-badge .val.empty { color: var(--slate-300); }
+
+  /* CTA card */
+  .cta-card {
+    margin: 12px 16px 0;
+    height: 48px; border-radius: 14px;
+    background: linear-gradient(135deg, rgba(33,175,230,.10) 0%, rgba(33,175,230,.04) 100%);
+    border: 1px solid rgba(33,175,230,.30);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    color: var(--brand-azure-deep);
+    font-size: 13px; font-weight: 800;
+  }
+
+  /* Bottom nav placeholder */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 60px; background: white;
+    border-top: 1px solid var(--slate-200);
+  }
+
+  .icn { width: 16px; height: 16px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .icn-sm { width: 12px; height: 12px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  .notes {
+    margin-top: 26px; padding: 20px 22px;
+    background: white; border-radius: 16px;
+    border: 1px solid var(--slate-200);
+    max-width: 920px;
+  }
+  .notes h3 { margin: 0 0 8px; font-size: 13px; color: var(--brand-dark); letter-spacing: 0.3px; text-transform: uppercase; }
+  .notes ul { margin: 0 0 14px; padding-left: 20px; }
+  .notes li { font-size: 13px; color: var(--slate-700); line-height: 1.6; margin-bottom: 4px; }
+  .notes li strong { color: var(--slate-900); }
+  .pick {
+    display: inline-block;
+    background: var(--green-50); color: var(--green-700);
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 800;
+    letter-spacing: 0.3px; margin-left: 6px;
+  }
+  .pros { color: var(--green-700); font-weight: 700; }
+  .cons { color: var(--red-700); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>E-Raport · Inline Summary — KI 3 + KI 4 (3 opsi)</h1>
+<p class="subtitle">
+  Layar yang ditampilkan saat user buka E-Raport dari dashboard (yaitu
+  <code>parent_report_card_screen.dart</code> &rarr; <code>report_card_ui_builder_mixin._buildInlineRapor</code>).
+  Saat ini setiap mapel masih ditampilkan sebagai satu skor (rata-rata KI 3+KI 4) sehingga
+  user tidak melihat sisi <em>Keterampilan</em> sama sekali. Berikut tiga opsi layout untuk
+  card mapel kompak yang menampilkan kedua sisi.
+</p>
+
+<div class="grid">
+
+  <!-- ============================================================ -->
+  <!-- OPTION A — Stacked mini pills (vertical) -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">A</span>
+      <span class="role">WALI / ORANG TUA</span>
+      Stacked KI rows (paling kompak)
+      <span class="desc">tetap one-row card, dua angka di kanan</span>
+    </div>
+    <div class="phone">
+      <div class="hero">
+        <div class="top-row">
+          <div class="icon-btn"><svg class="icn" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="title-block">
+            <div class="pre">AKADEMIK · ANAK</div>
+            <div class="title">E-Raport</div>
+          </div>
+          <div class="icon-btn"><svg class="icn" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg></div>
+        </div>
+        <div class="fresh-dot"></div>
+        <div class="child-chips">
+          <div class="child-chip"><div class="avatar">SU</div><div><div class="name">Surya U.</div><div class="kls">Kelas 7A</div></div></div>
+          <div class="child-chip unsel"><div class="avatar">RA</div><div><div class="name">Rania A.</div><div class="kls">Kelas 5B</div></div></div>
+          <div class="child-chip unsel"><div class="avatar">FT</div><div><div class="name">Fathan</div><div class="kls">Kelas 3A</div></div></div>
+        </div>
+        <div class="sem-chip">Genap 25/26 <svg class="icn-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+
+      <div class="kpi-shell">
+        <div class="kpi-cell"><div class="val kpi-val-green">88,3</div><div class="lbl">Rata-rata</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="val kpi-val-amber">94%</div><div class="lbl">Kehadiran</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="val kpi-val-blue">10</div><div class="lbl">Mapel</div></div>
+      </div>
+
+      <div class="sec-hdr">
+        <div class="ttl">Nilai per mata pelajaran</div>
+        <div class="meta">10 mapel</div>
+      </div>
+
+      <!-- Tuntas A/A -->
+      <div class="mini-card">
+        <div class="letter A">A</div>
+        <div class="name-block">
+          <div class="nm">Matematika</div>
+          <div class="meta">Pak Andi · Sangat Baik</div>
+        </div>
+        <div class="ki-stack">
+          <div class="ki-row"><span class="ki-tag k3">KI 3</span><span class="ki-val">92</span></div>
+          <div class="ki-row"><span class="ki-tag k4">KI 4</span><span class="ki-val">90</span></div>
+        </div>
+      </div>
+
+      <!-- Tuntas B/B -->
+      <div class="mini-card">
+        <div class="letter B">B</div>
+        <div class="name-block">
+          <div class="nm">Bahasa Indonesia</div>
+          <div class="meta">Bu Siska · Baik</div>
+        </div>
+        <div class="ki-stack">
+          <div class="ki-row"><span class="ki-tag k3">KI 3</span><span class="ki-val">84</span></div>
+          <div class="ki-row"><span class="ki-tag k4">KI 4</span><span class="ki-val">86</span></div>
+        </div>
+      </div>
+
+      <!-- Partial — KI 4 fail -->
+      <div class="mini-card">
+        <div class="letter C">C</div>
+        <div class="name-block">
+          <div class="nm">IPA Terpadu</div>
+          <div class="meta">Pak Hadi · Cukup</div>
+        </div>
+        <div class="ki-stack">
+          <div class="ki-row"><span class="ki-tag k3">KI 3</span><span class="ki-val">82</span></div>
+          <div class="ki-row"><span class="ki-tag fail">KI 4</span><span class="ki-val fail">68</span></div>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div class="mini-card">
+        <div class="letter" style="background:#F1F5F9;color:#94A3B8;">–</div>
+        <div class="name-block">
+          <div class="nm">Seni Budaya</div>
+          <div class="meta">Bu Wina · Belum dinilai</div>
+        </div>
+        <div class="ki-stack">
+          <div class="ki-row"><span class="ki-tag k3">KI 3</span><span class="ki-val empty">–</span></div>
+          <div class="ki-row"><span class="ki-tag k4">KI 4</span><span class="ki-val empty">–</span></div>
+        </div>
+      </div>
+
+      <div class="cta-card">
+        <svg class="icn" viewBox="0 0 24 24" style="stroke: var(--brand-azure-deep)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Lihat rapor lengkap (10 mapel)
+      </div>
+
+      <div class="bottom-nav"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- OPTION B — Two-column score strip below -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">B</span>
+      <span class="role">WALI / ORANG TUA</span>
+      KI strip di bawah (mirip detail)
+      <span class="desc">card lebih tinggi, dua cell sejajar</span>
+    </div>
+    <div class="phone">
+      <div class="hero">
+        <div class="top-row">
+          <div class="icon-btn"><svg class="icn" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="title-block">
+            <div class="pre">AKADEMIK · ANAK</div>
+            <div class="title">E-Raport</div>
+          </div>
+          <div class="icon-btn"><svg class="icn" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg></div>
+        </div>
+        <div class="child-chips">
+          <div class="child-chip"><div class="avatar">SU</div><div><div class="name">Surya U.</div><div class="kls">Kelas 7A</div></div></div>
+          <div class="child-chip unsel"><div class="avatar">RA</div><div><div class="name">Rania A.</div><div class="kls">Kelas 5B</div></div></div>
+          <div class="child-chip unsel"><div class="avatar">FT</div><div><div class="name">Fathan</div><div class="kls">Kelas 3A</div></div></div>
+        </div>
+        <div class="sem-chip">Genap 25/26 <svg class="icn-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+
+      <div class="kpi-shell">
+        <div class="kpi-cell"><div class="val kpi-val-green">88,3</div><div class="lbl">Rata-rata</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="val kpi-val-amber">94%</div><div class="lbl">Kehadiran</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="val kpi-val-blue">10</div><div class="lbl">Mapel</div></div>
+      </div>
+
+      <div class="sec-hdr">
+        <div class="ttl">Nilai per mata pelajaran</div>
+        <div class="meta">10 mapel</div>
+      </div>
+
+      <!-- Tuntas A/A -->
+      <div class="mini-card-b">
+        <div class="top">
+          <div class="letter A">A</div>
+          <div class="name-block">
+            <div class="nm">Matematika</div>
+            <div class="meta">Pak Andi · Sangat Baik</div>
+          </div>
+          <div class="chev"><svg class="icn" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="ki-strip">
+          <div class="ki-cell k3">
+            <div class="lbl-row">
+              <span class="ki-tag k3">KI 3</span>
+              <span class="lbl">Pengetahuan</span>
+            </div>
+            <span class="val">92</span>
+          </div>
+          <div class="ki-cell k4">
+            <div class="lbl-row">
+              <span class="ki-tag k4">KI 4</span>
+              <span class="lbl">Keterampilan</span>
+            </div>
+            <span class="val">90</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Partial — KI 4 fail -->
+      <div class="mini-card-b">
+        <div class="top">
+          <div class="letter C">C</div>
+          <div class="name-block">
+            <div class="nm">IPA Terpadu</div>
+            <div class="meta">Pak Hadi · Cukup</div>
+          </div>
+          <div class="chev"><svg class="icn" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="ki-strip">
+          <div class="ki-cell k3">
+            <div class="lbl-row">
+              <span class="ki-tag k3">KI 3</span>
+              <span class="lbl">Pengetahuan</span>
+            </div>
+            <span class="val">82</span>
+          </div>
+          <div class="ki-cell failing">
+            <div class="lbl-row">
+              <span class="ki-tag fail">KI 4</span>
+              <span class="lbl" style="color:var(--red-700);">Keterampilan</span>
+            </div>
+            <span class="val fail">68</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div class="mini-card-b">
+        <div class="top">
+          <div class="letter" style="background:#F1F5F9;color:#94A3B8; width: 36px; height: 36px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 16px; font-weight: 800;">–</div>
+          <div class="name-block">
+            <div class="nm">Seni Budaya</div>
+            <div class="meta">Bu Wina · Belum dinilai</div>
+          </div>
+          <div class="chev"><svg class="icn" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="ki-strip">
+          <div class="ki-cell k3">
+            <div class="lbl-row">
+              <span class="ki-tag k3">KI 3</span>
+              <span class="lbl">Pengetahuan</span>
+            </div>
+            <span class="val empty">–</span>
+          </div>
+          <div class="ki-cell k4">
+            <div class="lbl-row">
+              <span class="ki-tag k4">KI 4</span>
+              <span class="lbl">Keterampilan</span>
+            </div>
+            <span class="val empty">–</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-card">
+        <svg class="icn" viewBox="0 0 24 24" style="stroke: var(--brand-azure-deep)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Lihat rapor lengkap (10 mapel)
+      </div>
+
+      <div class="bottom-nav"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- OPTION C — Two compact badges (one row) -->
+  <!-- ============================================================ -->
+  <div class="frame">
+    <div class="frame-label">
+      <span class="num">C</span>
+      <span class="role">WALI / ORANG TUA</span>
+      Two badges horizontal (kompak + ramah)
+      <span class="desc">one-row card, badge side-by-side di kanan</span>
+    </div>
+    <div class="phone">
+      <div class="hero">
+        <div class="top-row">
+          <div class="icon-btn"><svg class="icn" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></div>
+          <div class="title-block">
+            <div class="pre">AKADEMIK · ANAK</div>
+            <div class="title">E-Raport</div>
+          </div>
+          <div class="icon-btn"><svg class="icn" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg></div>
+        </div>
+        <div class="child-chips">
+          <div class="child-chip"><div class="avatar">SU</div><div><div class="name">Surya U.</div><div class="kls">Kelas 7A</div></div></div>
+          <div class="child-chip unsel"><div class="avatar">RA</div><div><div class="name">Rania A.</div><div class="kls">Kelas 5B</div></div></div>
+          <div class="child-chip unsel"><div class="avatar">FT</div><div><div class="name">Fathan</div><div class="kls">Kelas 3A</div></div></div>
+        </div>
+        <div class="sem-chip">Genap 25/26 <svg class="icn-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+
+      <div class="kpi-shell">
+        <div class="kpi-cell"><div class="val kpi-val-green">88,3</div><div class="lbl">Rata-rata</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="val kpi-val-amber">94%</div><div class="lbl">Kehadiran</div></div>
+        <div class="kpi-divider"></div>
+        <div class="kpi-cell"><div class="val kpi-val-blue">10</div><div class="lbl">Mapel</div></div>
+      </div>
+
+      <div class="sec-hdr">
+        <div class="ttl">Nilai per mata pelajaran</div>
+        <div class="meta">10 mapel</div>
+      </div>
+
+      <!-- Tuntas A/A -->
+      <div class="mini-card-c">
+        <div class="letter A">A</div>
+        <div class="name-block">
+          <div class="nm">Matematika</div>
+          <div class="meta-line">Pak Andi · Sangat Baik</div>
+        </div>
+        <div class="ki-badges">
+          <div class="ki-badge k3"><div class="tag">KI 3</div><div class="val">92</div></div>
+          <div class="ki-badge k4"><div class="tag">KI 4</div><div class="val">90</div></div>
+        </div>
+      </div>
+
+      <!-- Tuntas B/B -->
+      <div class="mini-card-c">
+        <div class="letter B">B</div>
+        <div class="name-block">
+          <div class="nm">Bahasa Indonesia</div>
+          <div class="meta-line">Bu Siska · Baik</div>
+        </div>
+        <div class="ki-badges">
+          <div class="ki-badge k3"><div class="tag">KI 3</div><div class="val">84</div></div>
+          <div class="ki-badge k4"><div class="tag">KI 4</div><div class="val">86</div></div>
+        </div>
+      </div>
+
+      <!-- Partial — KI 4 fail -->
+      <div class="mini-card-c">
+        <div class="letter C">C</div>
+        <div class="name-block">
+          <div class="nm">IPA Terpadu</div>
+          <div class="meta-line">Pak Hadi · Cukup</div>
+        </div>
+        <div class="ki-badges">
+          <div class="ki-badge k3"><div class="tag">KI 3</div><div class="val">82</div></div>
+          <div class="ki-badge failing"><div class="tag">KI 4</div><div class="val fail">68</div></div>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div class="mini-card-c">
+        <div class="letter" style="background:#F1F5F9;color:#94A3B8;">–</div>
+        <div class="name-block">
+          <div class="nm">Seni Budaya</div>
+          <div class="meta-line">Bu Wina · Belum dinilai</div>
+        </div>
+        <div class="ki-badges">
+          <div class="ki-badge k3"><div class="tag">KI 3</div><div class="val empty">–</div></div>
+          <div class="ki-badge k4"><div class="tag">KI 4</div><div class="val empty">–</div></div>
+        </div>
+      </div>
+
+      <div class="cta-card">
+        <svg class="icn" viewBox="0 0 24 24" style="stroke: var(--brand-azure-deep)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Lihat rapor lengkap (10 mapel)
+      </div>
+
+      <div class="bottom-nav"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes">
+  <h3>Trade-off setiap opsi</h3>
+  <ul>
+    <li><strong>Opsi A · Stacked KI rows</strong> <span class="pick">paling kompak</span><br>
+      Card tetap satu baris, dua angka di kanan disusun vertikal (KI 3 di atas, KI 4 di bawah).
+      <span class="pros">Pro:</span> tinggi card hampir sama dengan UI lama (~64dp).
+      <span class="cons">Con:</span> angka jadi lebih kecil (15pt vs 22pt di detail); kalau partial-fail, perlu warna merah pada angka KI 4.
+    </li>
+    <li><strong>Opsi B · KI strip di bawah</strong><br>
+      Top row letter+nama+chevron, lalu di bawahnya dua cell sejajar (mirip card detail TA.29 tapi padding lebih ketat).
+      <span class="pros">Pro:</span> konsisten 100% dengan card detail page. <span class="cons">Con:</span> card ~30% lebih tinggi → list jadi panjang kalau mapel banyak.
+    </li>
+    <li><strong>Opsi C · Two badges horizontal</strong> <span class="pick">rekomendasi</span><br>
+      One-row card; di kanan ada dua pill mini (KI 3 cobalt + KI 4 violet), masing-masing label tag di atas + angka di bawah.
+      <span class="pros">Pro:</span> tetap kompak, dua angka readable, warna brand jelas, mudah skim 10 mapel.
+      <span class="cons">Con:</span> butuh ~95px lebar untuk dua badge → mungkin perlu trim guru/predikat line jadi 1 line saja (sudah).
+    </li>
+  </ul>
+
+  <h3>Konvensi visual (sama untuk semua opsi)</h3>
+  <ul>
+    <li>KI 3 = <strong>cobalt #1B6FB8</strong>, KI 4 = <strong>violet #7C3AED</strong>.</li>
+    <li>Cell <em>failing</em> (skor &lt; KKM) override jadi merah (border + angka).</li>
+    <li>Letter badge tetap di kiri, ukuran 38–40dp, palette tone (A=green, B=blue, C=amber, D=red) — di-derive dari rata-rata KI 3 &amp; KI 4.</li>
+    <li>Card tetap tappable → buka <code>showParentRaporDeskripsiSheet()</code> yang sudah kita bangun di TA.30 (deskripsi capaian per mapel).</li>
+    <li>Hero gradient parent (<code>brandDarkBlue → brandAzure</code>), KPI strip (Rata-rata / Kehadiran / Mapel) <strong>tidak berubah</strong>.</li>
+  </ul>
+
+  <h3>Backend &amp; database</h3>
+  <ul>
+    <li><strong>0 migration</strong> — semua data (<code>knowledge_score</code>, <code>knowledge_predicate</code>,
+        <code>skill_score</code>, <code>skill_predicate</code>, <code>kkm</code>) sudah ada di payload
+        <code>/parent/raports</code>. UI lama cuma <em>tidak menampilkannya</em>.</li>
+    <li>PDF tidak terdampak — output cetak dari list maupun detail tetap pakai template yang sama yang
+        sudah dual-column sejak TA.25.</li>
+  </ul>
+
+  <h3>Pilihan saya</h3>
+  <ul>
+    <li>Rekomendasi: <strong>Opsi C</strong> — paling seimbang antara densitas info, kompaksitas
+        (~64dp tinggi card), dan konsistensi brand. Skim 10 mapel masih cepat.</li>
+    <li>Alternatif: <strong>Opsi A</strong> kalau prefer angka tersusun vertikal & label tersembunyi
+        di tag pill (paling minimal).</li>
+    <li>Hindari: <strong>Opsi B</strong> kecuali jumlah mapel umumnya &lt; 6 — kalau 10 mapel ditampilkan dengan
+        layout B, halaman akan jadi 1.5× lebih panjang dari Opsi C dan user perlu scroll lebih banyak
+        sebelum sampai ke CTA "Lihat rapor lengkap".</li>
+  </ul>
+</div>
+
+</body>
+</html>
