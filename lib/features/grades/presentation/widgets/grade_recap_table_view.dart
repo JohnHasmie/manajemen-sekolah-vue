@@ -168,15 +168,16 @@ class GradeRecapTableView extends StatelessWidget {
         header: _plainHeader(labels['finalLabel'] ?? 'Final'),
         cellBuilder: _buildFinalScoreCell,
       ),
-      // Skill score — editable.
-      FrozenTableColumn(
+      // Skill score — editable. Header is tappable: Fix-EE wires it to
+      // the column source picker so the teacher can pull per-student
+      // scores from existing Buku Nilai assessments (praktek /
+      // portofolio / proyek / tugas / uh / kuis), matching the UTS +
+      // UAS columns.
+      _summaryColumn(
+        label: labels['skillLabel'] ?? 'Skill',
         width: _finalScoreWidth,
-        header: _plainHeader(labels['skillLabel'] ?? 'Skill'),
-        cellBuilder: (i) => cellBuilder(
-          tableData[i]['student_class_id'] as String,
-          'skill_score',
-          null,
-        ),
+        onHeaderTap: () => onBulkSelect('skill_score', null),
+        cellType: 'skill_score',
       ),
       // Predikat — text field.
       FrozenTableColumn(
