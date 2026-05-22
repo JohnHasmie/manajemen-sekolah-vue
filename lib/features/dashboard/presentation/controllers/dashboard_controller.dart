@@ -92,6 +92,8 @@ class DashboardNotifier extends AsyncNotifier<DashboardState> {
   late DashboardDataFetcher _dataFetcher;
   late DashboardAuthHandler _authHandler;
   late DashboardInitializer _initializer;
+  Future<Map<String, dynamic>>? _activeSwitchFuture;
+  DashboardState? _previousState;
 
   @override
   Future<DashboardState> build() async {
@@ -141,6 +143,15 @@ class DashboardNotifier extends AsyncNotifier<DashboardState> {
     state = const AsyncValue.loading();
 
     try {
+      if (_activeSwitchFuture != null) {
+        try {
+          await _activeSwitchFuture;
+        } catch (_) {
+          // Re-throw so state becomes error and we abort fetching
+          rethrow;
+        }
+      }
+
       await _initializer.ensureAcademicYearLoaded();
       final initialState = await _initializer.prepareInitialState(role);
       state = AsyncValue.data(initialState);
@@ -149,7 +160,6 @@ class DashboardNotifier extends AsyncNotifier<DashboardState> {
       _isInitializing = false;
     }
   }
-
   Future<void> _fetchFreshData(String role) async {
     try {
       final normalizedRole = DashboardStateTransformer.normalizeRole(role);
@@ -311,6 +321,36 @@ class DashboardNotifier extends AsyncNotifier<DashboardState> {
     String? role,
   }) async {
     return _authHandler.switchSchool(schoolId, role: role);
+  }
+
+  /// Switch to a different school with immediate loading state.
+  Future<Map<String, dynamic>> switchSchoolWithLoading(
+    String schoolId, {
+    String? role,
+  }) async {
+    _previousState = state.value;
+    state = const AsyncValue.loading();
+    final future = _authHandler.switchSchool(schoolId, role: role);
+    _activeSwitchFuture = future;
+    try {
+      final result = await future;
+      return result;
+    } catch (e) {
+      restorePreviousState();
+      rethrow;
+    } finally {
+      if (_activeSwitchFuture == future) {
+        _activeSwitchFuture = null;
+      }
+    }
+  }
+
+  /// Restore the dashboard state back to cached previous state.
+  void restorePreviousState() {
+    if (_previousState != null) {
+      state = AsyncValue.data(_previousState!);
+      _previousState = null;
+    }
   }
 }
 

@@ -200,13 +200,17 @@ class _SchoolSwitcherSheet extends StatelessWidget {
       }
       final result = await ref
           .read(dashboardProvider.notifier)
-          .switchSchool(schoolId);
+          .switchSchoolWithLoading(schoolId);
 
       if (!ref.context.mounted) return;
 
       if (result['needsRoleSelection'] == true) {
         final roleList = List<String>.from(result['role_list'] ?? []);
         if (roleList.isEmpty) return;
+        
+        // Restore previous dashboard state since switch has not completed
+        ref.read(dashboardProvider.notifier).restorePreviousState();
+        
         // ignore: use_build_context_synchronously
         onNeedsRoleSelection(parentContext, schoolId, roleList);
         return;
@@ -355,28 +359,33 @@ class _RoleSwitcherSheet extends StatelessWidget {
     AppNavigator.pop(sheetContext);
     final router = GoRouter.of(parentContext);
     try {
-      final result = await ref
+      // 1. Start switch with loading state
+      final switchFuture = ref
           .read(dashboardProvider.notifier)
-          .switchSchool(schoolId, role: role);
-      if (!ref.context.mounted) return;
-      final newRole = result['user']?['role']?.toString() ?? role;
+          .switchSchoolWithLoading(schoolId, role: role);
+
+      // 2. Clear local cache
       await LocalCacheService.clearAll();
-      if (ref.context.mounted) {
-        final newKey = shellRoleKey(newRole);
-        final currentKey = shellRoleKey(currentRole);
-        if (newKey == currentKey) {
-          // Same role → reset Navigator GlobalKeys + bump epoch so the
-          // IndexedStack subtree fully rebuilds with fresh per-tab
-          // state. (Matches the same logic from school-switch.)
-          ref.read(shellProvider(newKey).notifier).resetNavigatorStacks();
-          bumpSchoolEpoch(ref);
-          await ref.read(dashboardProvider.notifier).reinitialize(newRole);
-        } else {
-          ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
-          bumpSchoolEpoch(ref);
-          router.go('/$newRole');
-        }
+
+      if (!ref.context.mounted) return;
+
+      final newKey = shellRoleKey(role);
+      final currentKey = shellRoleKey(currentRole);
+
+      // 3. Immediately transition/navigate to the target role
+      if (newKey == currentKey) {
+        // Same role -> reset Navigator GlobalKeys + bump epoch
+        ref.read(shellProvider(newKey).notifier).resetNavigatorStacks();
+        bumpSchoolEpoch(ref);
+        ref.read(dashboardProvider.notifier).reinitialize(role);
+      } else {
+        ref.read(dashboardProvider.notifier).resetForSchoolSwitch();
+        bumpSchoolEpoch(ref);
+        router.go('/$role');
       }
+
+      // 4. Await switchFuture to catch any errors
+      await switchFuture;
     } catch (e) {
       if (ref.context.mounted) {
         // ignore: use_build_context_synchronously
@@ -384,6 +393,15 @@ class _RoleSwitcherSheet extends StatelessWidget {
           parentContext,
           e.toString().replaceAll('Exception: ', ''),
         );
+
+        // Revert to old role/screen on error
+        final newKey = shellRoleKey(role);
+        final currentKey = shellRoleKey(currentRole);
+        if (newKey != currentKey) {
+          router.go('/$currentRole');
+        } else {
+          ref.read(dashboardProvider.notifier).reinitialize(currentRole);
+        }
       }
     }
   }
