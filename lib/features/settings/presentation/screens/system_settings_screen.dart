@@ -32,9 +32,9 @@ import 'package:manajemensekolah/core/widgets/admin_settings_components.dart'
     show AuditLogPin;
 import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/settings/data/system_settings_service.dart';
+import 'package:manajemensekolah/features/account/presentation/screens/profile_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/school_level_settings_screen.dart';
-import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/time_settings_screen.dart';
 
 class SystemSettingsScreen extends ConsumerWidget {
@@ -125,11 +125,11 @@ class SystemSettingsScreen extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
-          title: 'Bahasa',
-          subtitle: 'Antarmuka & laporan · Indonesia',
+          title: 'Profil',
+          subtitle: 'Nama, email, kontak & akses',
           icon: DashboardModules.bahasa.icon,
           color: DashboardModules.bahasa.color,
-          onTap: () => AppNavigator.push(context, const SettingsScreen()),
+          onTap: () => AppNavigator.push(context, const ProfileScreen()),
         ),
       ),
       Padding(
