@@ -406,7 +406,14 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
     return n;
   }
 
-  /// Build the 4-cell KPI strip (Bab / Tercatat / Belum / AI Siap).
+  /// Build the 3-cell KPI strip (Bab / Sub-Bab / Tercatat).
+  ///
+  /// Dropped "AI Siap" (M3.3) — the AI count was deemed noise in the
+  /// header strip; teachers care about chapter coverage at a glance,
+  /// not how many bab have AI-generated material ready. The
+  /// `generated` field still ships in `_computeKpiStats()` because
+  /// other surfaces (FAB pendingCount, generate sheet) read it.
+  ///
   /// Computes totals client-side from `overviewSummary` (or from the
   /// chapter content + checked maps when a subject is selected).
   Widget buildKpiStrip(LanguageProvider lp) {
@@ -437,8 +444,6 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
             ),
             _kpiDivider(),
             _kpiCell('${stats.checked}', 'TERCATAT', ColorUtils.success600),
-            _kpiDivider(),
-            _kpiCell('${stats.generated}', 'AI SIAP', const Color(0xFF7C3AED)),
           ],
         ),
       ),

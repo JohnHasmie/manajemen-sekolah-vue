@@ -45,8 +45,17 @@ class AttendanceTableHelper {
       final endOfWeek = startOfWeek.add(const Duration(days: 6));
       startDate = DateFormat('yyyy-MM-dd').format(startOfWeek);
       endDate = DateFormat('yyyy-MM-dd').format(endOfWeek);
+    } else if (selectedDateFilter == 'semester') {
+      // Fix-DD — last 6 months (rolling) up to today.
+      final start = DateTime(now.year, now.month - 6, now.day);
+      startDate = DateFormat('yyyy-MM-dd').format(start);
+      endDate = DateFormat('yyyy-MM-dd').format(now);
+    } else if (selectedDateFilter == 'year') {
+      // Fix-DD — full current calendar year (Jan 1 – Dec 31).
+      startDate = DateFormat('yyyy-MM-dd').format(DateTime(now.year, 1, 1));
+      endDate = DateFormat('yyyy-MM-dd').format(DateTime(now.year, 12, 31));
     } else {
-      // Default to current month
+      // Default to current month ("month" or null).
       final startOfMonth = DateTime(now.year, now.month, 1);
       final endOfMonth = DateTime(now.year, now.month + 1, 0);
       startDate = DateFormat('yyyy-MM-dd').format(startOfMonth);

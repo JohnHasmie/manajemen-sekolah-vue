@@ -76,6 +76,10 @@ variables:
   before_script:
     - unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
     - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$HOME/.shorebird/bin:$PATH"
+    # Stop Gradle daemons and release file locks before cleaning caches
+    - (cd android && ./gradlew --stop) || true
+    - pkill -f 'GradleDaemon' || true
+    - pkill -f 'gradle' || true
     # Clean Gradle cache to prevent "Could not read workspace metadata"
     # errors. Gradle cache can get corrupted on long-running CI runners.
     - rm -rf ~/.gradle/caches || true

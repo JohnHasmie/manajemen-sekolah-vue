@@ -14,6 +14,7 @@ import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_data_ops_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/mixins/grade_recap_ui_mixin.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/add_chapter_sheet.dart';
+import 'package:manajemensekolah/features/grades/presentation/widgets/column_source_picker_sheet.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_recap_save_bar.dart';
@@ -317,12 +318,19 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
 
   @override
   void showBulkDialog(String type, [int? chapterIndex]) {
+    // Fix-EE — UTS / UAS / Keterampilan columns now route to a
+    // single-step source picker so teachers can pull per-student
+    // scores from existing Buku Nilai assessments, matching the bab
+    // column behaviour. Bab columns keep using the 2-step
+    // `showAddChapterSheet` (materi → source).
+    if (type == 'uts' || type == 'uas' || type == 'skill_score') {
+      _showFixedColumnSourcePicker(type);
+      return;
+    }
+
     // SS3-HH — long-press "Edit bab" lands here. Re-uses the same
     // `showAddChapterSheet` the "+" add flow uses, but in edit mode
     // (initialName prefilled, label flipped to "Simpan").
-    //
-    // For non-bab types this stays a no-op — the bulk-grade picker for
-    // tugas / uh columns hasn't been built yet (separate TODO).
     if (type != 'bab' || chapterIndex == null) return;
     if (chapterIndex < 0 || chapterIndex >= chapters.length) return;
 
@@ -400,6 +408,103 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
         hasUnsavedChanges = true;
       });
     });
+  }
+
+  /// Fix-EE — opens the source picker for one of the three fixed
+  /// columns (UTS / UAS / skill_score) and applies the result.
+  ///
+  /// On "Input Manual" the column is cleared for every row. On
+  /// picking an assessment, per-student scores are pulled from
+  /// `rawGrades` and written into the matching column. Either path
+  /// triggers a full row recalculation so the Predikat + final score
+  /// reflect the new values and the Simpan button enables.
+  void _showFixedColumnSourcePicker(String type) async {
+    final assessments = GradeRecapTableBuilder.deriveAvailableAssessments(
+      rawGrades,
+    );
+
+    final result = await showColumnSourcePickerSheet(
+      context: context,
+      primaryColor: getPrimaryColor(),
+      columnType: type,
+      allAssessments: assessments,
+    );
+
+    if (!mounted || result == null) return;
+
+    setState(() {
+      if (result.assessment == null) {
+        // Input Manual — clear the column for every row.
+        for (final row in tableData) {
+          final scId = row['student_class_id'].toString();
+          _setFixedColumnValue(row, type, null);
+          final key = '$scId|$type|null';
+          scoreControllers[key]?.text = '';
+          recalculateRowInternal(row);
+        }
+      } else {
+        // Pull per-student scores matching the picked assessment.
+        final pickTitle = (result.assessment!['title'] ?? '').toString();
+        final pickType = (result.assessment!['type'] ?? '').toString();
+        final pickDate = (result.assessment!['date'] ?? '').toString();
+
+        final perStudentScore = <String, double>{};
+        for (final g in rawGrades) {
+          if (g is! Map) continue;
+          final title = (g['title'] ?? g['judul'] ?? '').toString();
+          final gType = (g['type'] ?? g['grade_type'] ?? '')
+              .toString()
+              .toLowerCase();
+          final date = (g['date'] ?? g['tanggal'] ?? '').toString();
+          if (title != pickTitle || gType != pickType || date != pickDate) {
+            continue;
+          }
+          final scId = (g['student_class_id'] ?? '').toString();
+          final score = g['score'] ?? g['nilai'];
+          if (scId.isEmpty || score == null) continue;
+          final parsed = score is num
+              ? score.toDouble()
+              : double.tryParse(score.toString());
+          if (parsed != null) perStudentScore[scId] = parsed;
+        }
+
+        for (final row in tableData) {
+          final scId = row['student_class_id'].toString();
+          final pulled = perStudentScore[scId];
+          _setFixedColumnValue(row, type, pulled);
+          final key = '$scId|$type|null';
+          scoreControllers[key]?.text = pulled != null
+              ? (pulled == pulled.roundToDouble()
+                    ? pulled.toInt().toString()
+                    : pulled.toStringAsFixed(1))
+              : '';
+          recalculateRowInternal(row);
+        }
+      }
+      hasUnsavedChanges = true;
+    });
+  }
+
+  /// Writes [value] (or `null` to clear) into the appropriate fixed-
+  /// column slot of [row]. Pulled out so both the "manual" branch and
+  /// the "pull from assessment" branch share one place that knows the
+  /// row schema.
+  void _setFixedColumnValue(
+    Map<String, dynamic> row,
+    String type,
+    double? value,
+  ) {
+    switch (type) {
+      case 'uts':
+        row['uts'] = value;
+        break;
+      case 'uas':
+        row['uas'] = value;
+        break;
+      case 'skill_score':
+        row['skill_score'] = value;
+        break;
+    }
   }
 
   @override
