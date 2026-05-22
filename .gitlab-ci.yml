@@ -399,7 +399,7 @@ promote_to_prod:
   stage: deploy
   needs: []
   variables:
-    PROMOTE_FROM_TRACK: beta
+    PROMOTE_FROM_TRACK: alpha
     # Staged rollout fraction (0.0–1.0). Default 0.1 = 10% of users get
     # the new release; the rest stay on the previous prod version. Keep
     # this low for the first push; raise to 1.0 once Vitals look clean.
