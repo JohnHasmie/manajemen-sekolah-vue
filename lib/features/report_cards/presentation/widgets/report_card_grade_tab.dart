@@ -221,7 +221,7 @@ class _NilaiRow extends StatelessWidget {
     final kFilled = kScore != null && kScore > 0;
     final sFilled = sScore != null && sScore > 0;
     final bothFilled = kFilled && sFilled;
-    final bothPass = bothFilled && (kScore!) >= kkm && (sScore!) >= kkm;
+    final bothPass = bothFilled && kScore >= kkm && sScore >= kkm;
 
     return Material(
       color: Colors.transparent,
