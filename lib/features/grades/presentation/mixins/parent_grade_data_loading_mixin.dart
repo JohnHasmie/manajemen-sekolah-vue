@@ -192,8 +192,16 @@ mixin ParentGradeDataLoadingMixin
       }
     }
 
-    // Reset pagination and load page 1
-    if (!hadCacheHit) resetPagination();
+    // Reset pagination and load page 1.
+    // When useCache=false (filter applied), clear old data first so
+    // the loading state shows while fetching filtered results.
+    if (!hadCacheHit) {
+      resetPagination();
+      if (!useCache) {
+        // Clear old data when applying a new filter
+        gradeList = [];
+      }
+    }
     if (!hadCacheHit && gradeList.isEmpty && mounted) {
       setState(() => isLoading = true);
     }
