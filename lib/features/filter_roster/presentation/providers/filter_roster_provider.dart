@@ -44,6 +44,8 @@ class FilterRosterProvider extends ChangeNotifier {
   List<dynamic> _teachingClasses = const [];
   List<dynamic> _homeroomClasses = const [];
   List<dynamic> _subjects = const [];
+  List<dynamic> _teachingSubjects = const [];
+  List<dynamic> _homeroomSubjects = const [];
   List<dynamic> _teachers = const [];
   List<dynamic> _days = const [];
   List<dynamic> _semesters = const [];
@@ -51,9 +53,13 @@ class FilterRosterProvider extends ChangeNotifier {
 
   // class_id → [subject_id, ...] direct map from the backend.
   Map<String, List<String>> _classSubjectsByClass = const {};
+  Map<String, List<String>> _teachingClassSubjects = const {};
+  Map<String, List<String>> _homeroomClassSubjects = const {};
   // subject_id → [class_id, ...] inverse, computed once on hydrate
   // so the FE doesn't recompute on every chip render.
   Map<String, List<String>> _classesBySubject = const {};
+  Map<String, List<String>> _teachingClassesBySubject = const {};
+  Map<String, List<String>> _homeroomClassesBySubject = const {};
 
   bool _isLoaded = false;
   bool _isLoading = false;
@@ -113,17 +119,33 @@ class FilterRosterProvider extends ChangeNotifier {
   /// Replaces the on-tap `GET /teacher/{id}/subjects?class_id=X`
   /// round-trip every filter mixin used to fire on chip select. The
   /// chip set updates synchronously inside the same `setSS`.
-  List<dynamic> subjectsForClass(String? classId) {
-    if (classId == null || classId.isEmpty) return _subjects;
-    final allowed = _classSubjectsByClass[classId];
+  List<dynamic> subjectsForClass(
+    String? classId, {
+    bool isHomeroomView = false,
+  }) {
+    final useTeaching = (_role == 'guru' && !isHomeroomView);
+    final subjectsSource = useTeaching
+        ? (_teachingSubjects.isNotEmpty ? _teachingSubjects : _subjects)
+        : (_role == 'guru' && isHomeroomView && _homeroomSubjects.isNotEmpty
+            ? _homeroomSubjects
+            : _subjects);
+
+    final mapSource = useTeaching
+        ? (_teachingClassSubjects.isNotEmpty ? _teachingClassSubjects : _classSubjectsByClass)
+        : (_role == 'guru' && isHomeroomView && _homeroomClassSubjects.isNotEmpty
+            ? _homeroomClassSubjects
+            : _classSubjectsByClass);
+
+    if (classId == null || classId.isEmpty) return subjectsSource;
+    final allowed = mapSource[classId];
     if (allowed == null || allowed.isEmpty) {
       // No mapping for this class — fall back to the global roster
       // so the sheet isn't empty (e.g. a class that doesn't yet
       // appear in the map because of a cold-state edge case).
-      return _subjects;
+      return subjectsSource;
     }
     final allowedSet = allowed.toSet();
-    return _subjects
+    return subjectsSource
         .where((s) {
           if (s is! Map) return false;
           return allowedSet.contains(s['id']?.toString());
@@ -146,7 +168,15 @@ class FilterRosterProvider extends ChangeNotifier {
   }) {
     final base = classesForView(isHomeroomView: isHomeroomView);
     if (subjectId == null || subjectId.isEmpty) return base;
-    final allowed = _classesBySubject[subjectId];
+
+    final useTeaching = (_role == 'guru' && !isHomeroomView);
+    final mapSource = useTeaching
+        ? (_teachingClassesBySubject.isNotEmpty ? _teachingClassesBySubject : _classesBySubject)
+        : (_role == 'guru' && isHomeroomView && _homeroomClassesBySubject.isNotEmpty
+            ? _homeroomClassesBySubject
+            : _classesBySubject);
+
+    final allowed = mapSource[subjectId];
     if (allowed == null || allowed.isEmpty) return base;
     final allowedSet = allowed.toSet();
     return base
@@ -193,12 +223,18 @@ class FilterRosterProvider extends ChangeNotifier {
     _teachingClasses = const [];
     _homeroomClasses = const [];
     _subjects = const [];
+    _teachingSubjects = const [];
+    _homeroomSubjects = const [];
     _teachers = const [];
     _days = const [];
     _semesters = const [];
     _academicYears = const [];
     _classSubjectsByClass = const {};
+    _teachingClassSubjects = const {};
+    _homeroomClassSubjects = const {};
     _classesBySubject = const {};
+    _teachingClassesBySubject = const {};
+    _homeroomClassesBySubject = const {};
     _isLoaded = false;
     _isLoading = false;
     _lastError = null;

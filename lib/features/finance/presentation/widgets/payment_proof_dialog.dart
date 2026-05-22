@@ -64,6 +64,9 @@ class PaymentProofDialog extends StatelessWidget {
     this.imageHeaders,
   });
 
+  /// Get the payment ID from the payment object.
+  String? _getPaymentId() => payment['id']?.toString();
+
   /// Read the absolute proof URL. We deliberately don't reconstruct
   /// it on the client — that worked for the local `/storage/...`
   /// path but always 404'd against MinIO/S3 because the bucket URL
@@ -93,6 +96,7 @@ class PaymentProofDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final url = _resolveProofUrl();
+    final paymentId = _getPaymentId();
 
     if (url == null) {
       SnackBarUtils.showWarning(context, AppLocalizations.noPaymentProof.tr);
@@ -139,8 +143,12 @@ class PaymentProofDialog extends StatelessWidget {
                   AppSpacing.sm,
                 ),
                 child: isPdf
-                    ? _PdfProofView(url: url)
-                    : _ImageProofView(url: url, headers: imageHeaders),
+                    ? _PdfProofView(url: url, paymentId: paymentId)
+                    : _ImageProofView(
+                        url: url,
+                        headers: imageHeaders,
+                        paymentId: paymentId,
+                      ),
               ),
             ),
             _ProofInfoCard(
@@ -516,8 +524,13 @@ class _ProofMetaCell extends StatelessWidget {
 class _ImageProofView extends StatefulWidget {
   final String url;
   final Map<String, String>? headers;
+  final String? paymentId;
 
-  const _ImageProofView({required this.url, this.headers});
+  const _ImageProofView({
+    required this.url,
+    this.headers,
+    this.paymentId,
+  });
 
   @override
   State<_ImageProofView> createState() => _ImageProofViewState();
@@ -534,25 +547,16 @@ class _ImageProofViewState extends State<_ImageProofView> {
 
   Future<Uint8List> _downloadProof() async {
     try {
-      // Extract payment ID from the URL path
-      final uri = Uri.tryParse(widget.url);
-      if (uri == null) throw Exception('Invalid URL');
-      final paymentId = _extractPaymentId(uri.path);
-      if (paymentId == null) throw Exception('Cannot extract payment ID');
-      return await ApiService.downloadFile('/payment/$paymentId/receipt');
+      if (widget.paymentId == null || widget.paymentId!.isEmpty) {
+        throw Exception('Payment ID not available');
+      }
+      return await ApiService.downloadFile(
+        '/payment/${widget.paymentId}/receipt',
+      );
     } catch (e) {
       AppLogger.error('payment-proof-download', e);
       rethrow;
     }
-  }
-
-  String? _extractPaymentId(String path) {
-    // Handle paths like /payments/abc123/receipt or similar
-    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
-    if (segments.length >= 2 && segments.first.contains('payment')) {
-      return segments[1];
-    }
-    return null;
   }
 
   @override
@@ -668,8 +672,9 @@ class _ImageProofViewState extends State<_ImageProofView> {
 /// via the OS PDF viewer. Matches the parent success screen pattern.
 class _PdfProofView extends StatefulWidget {
   final String url;
+  final String? paymentId;
 
-  const _PdfProofView({required this.url});
+  const _PdfProofView({required this.url, this.paymentId});
 
   @override
   State<_PdfProofView> createState() => _PdfProofViewState();
@@ -678,28 +683,20 @@ class _PdfProofView extends StatefulWidget {
 class _PdfProofViewState extends State<_PdfProofView> {
   bool _isDownloading = false;
 
-  String? _extractPaymentId(String path) {
-    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
-    if (segments.length >= 2 && segments.first.contains('payment')) {
-      return segments[1];
-    }
-    return null;
-  }
-
   Future<void> _downloadAndOpen() async {
     if (!mounted) return;
     if (_isDownloading) return;
+    if (widget.paymentId == null || widget.paymentId!.isEmpty) {
+      SnackBarUtils.showError(context, 'Payment ID tidak valid');
+      return;
+    }
 
     setState(() => _isDownloading = true);
     try {
       SnackBarUtils.showInfo(context, 'Mengunduh PDF...');
-      final uri = Uri.tryParse(widget.url);
-      if (uri == null) throw Exception('Invalid URL');
-      final paymentId = _extractPaymentId(uri.path);
-      if (paymentId == null) throw Exception('Cannot extract payment ID');
-
-      final bytes =
-          await ApiService.downloadFile('/payment/$paymentId/receipt');
+      final bytes = await ApiService.downloadFile(
+        '/payment/${widget.paymentId}/receipt',
+      );
       if (!mounted) return;
 
       final ts = DateTime.now().millisecondsSinceEpoch ~/ 1000;
