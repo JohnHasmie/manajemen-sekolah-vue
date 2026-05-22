@@ -18,13 +18,16 @@
 // timeline ends at step 2. Same widget — same call site, just one
 // flag.
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ParentPaymentSuccessScreen extends StatelessWidget {
@@ -45,6 +48,10 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
   /// wired up; when null the row is hidden because there's nothing
   /// to download or share yet.
   final String? paymentProofUrl;
+
+  /// Dynamic payment ID from the database, used to construct device-reachable
+  /// authenticated proxy endpoints for the receipt image/PDF.
+  final String? paymentId;
 
   // ─── Receipt-mode fields (used only when isManualPending=false) ─
   //
@@ -87,6 +94,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
     required this.adminFee,
     this.isManualPending = false,
     this.paymentProofUrl,
+    this.paymentId,
     this.schoolName,
     this.className,
     this.period,
@@ -591,14 +599,61 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
   /// doesn't require a download-manager package; the browser handles
   /// the save-to-device gesture from there.
   Future<void> _onDownloadProof(BuildContext context) async {
+    final id = paymentId;
+    if (id != null && id.isNotEmpty) {
+      SnackBarUtils.showInfo(context, 'Mengunduh bukti pembayaran…');
+      try {
+        final bytes = await ApiService.downloadFile('/payment/$id/receipt');
+        
+        String ext = 'jpg';
+        if (paymentProofUrl != null) {
+          final cleanUrl = paymentProofUrl!.split('?').first.toLowerCase();
+          if (cleanUrl.endsWith('.pdf')) {
+            ext = 'pdf';
+          } else if (cleanUrl.endsWith('.png')) {
+            ext = 'png';
+          } else if (cleanUrl.endsWith('.webp')) {
+            ext = 'webp';
+          }
+        }
+        
+        final fileName = 'Bukti_Pembayaran_${id.substring(0, 8)}.$ext';
+        final dir = await getTemporaryDirectory();
+        final localFile = File('${dir.path}/$fileName');
+        await localFile.writeAsBytes(bytes, flush: true);
+        
+        if (!context.mounted) return;
+        SnackBarUtils.showSuccess(
+          context,
+          'Bukti pembayaran berhasil diunduh.',
+        );
+        
+        final result = await OpenFile.open(localFile.path);
+        if (result.type != ResultType.done && context.mounted) {
+          SnackBarUtils.showError(
+            context,
+            'Gagal membuka file: ${result.message}',
+          );
+        }
+        return;
+      } catch (e) {
+        AppLogger.error('parent-success-download-proxy', e);
+        // Fall back to direct url launch
+      }
+    }
+
     final raw = paymentProofUrl;
     if (raw == null || raw.isEmpty) {
-      SnackBarUtils.showInfo(context, 'Bukti belum tersedia.');
+      if (context.mounted) {
+        SnackBarUtils.showInfo(context, 'Bukti belum tersedia.');
+      }
       return;
     }
     final uri = Uri.tryParse(raw);
     if (uri == null) {
-      SnackBarUtils.showError(context, 'URL bukti tidak valid.');
+      if (context.mounted) {
+        SnackBarUtils.showError(context, 'URL bukti tidak valid.');
+      }
       return;
     }
     try {
@@ -653,7 +708,10 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
-        onPressed: () => AppNavigator.pop(context, true),
+        onPressed: () {
+          // Let the caller handle the pop to avoid double-pop race conditions
+          Navigator.of(context).pop(true);
+        },
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorUtils.brandAzureDeep,
           elevation: 0,

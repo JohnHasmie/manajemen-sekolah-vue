@@ -63,10 +63,8 @@ class AdminDataManagementScreen extends StatelessWidget {
           subtitle: 'Daftar siswa · NIS · kelas aktif',
           icon: DashboardModules.siswa.icon,
           color: DashboardModules.siswa.color,
-          onTap: () => AppNavigator.push(
-            context,
-            const StudentManagementScreen(),
-          ),
+          onTap: () =>
+              AppNavigator.push(context, const StudentManagementScreen()),
         ),
       ),
       Padding(
@@ -76,8 +74,7 @@ class AdminDataManagementScreen extends StatelessWidget {
           subtitle: 'Profil guru · mapel diampu · kontak',
           icon: DashboardModules.guru.icon,
           color: DashboardModules.guru.color,
-          onTap: () =>
-              AppNavigator.push(context, const TeacherAdminScreen()),
+          onTap: () => AppNavigator.push(context, const TeacherAdminScreen()),
         ),
       ),
       Padding(
@@ -87,10 +84,8 @@ class AdminDataManagementScreen extends StatelessWidget {
           subtitle: 'Rombel · wali kelas · tingkat',
           icon: DashboardModules.kelas.icon,
           color: DashboardModules.kelas.color,
-          onTap: () => AppNavigator.push(
-            context,
-            const AdminClassManagementScreen(),
-          ),
+          onTap: () =>
+              AppNavigator.push(context, const AdminClassManagementScreen()),
         ),
       ),
       Padding(
@@ -100,10 +95,8 @@ class AdminDataManagementScreen extends StatelessWidget {
           subtitle: 'Mapel · KKM · kelas penerima',
           icon: DashboardModules.mataPelajaran.icon,
           color: DashboardModules.mataPelajaran.color,
-          onTap: () => AppNavigator.push(
-            context,
-            const AdminSubjectManagementScreen(),
-          ),
+          onTap: () =>
+              AppNavigator.push(context, const AdminSubjectManagementScreen()),
         ),
       ),
     ];

@@ -191,10 +191,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
         primaryLabel: _isLoading
             ? lang.getTranslatedText({'en': 'Saving...', 'id': 'Menyimpan...'})
             : lang.getTranslatedText({'en': 'Save', 'id': 'Simpan'}),
-        secondaryLabel: lang.getTranslatedText({
-          'en': 'Cancel',
-          'id': 'Batal',
-        }),
+        secondaryLabel: lang.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
         primaryColor: widget.primaryColor,
         primaryEnabled: !_isLoading,
         onPrimary: _updatePassword,
@@ -218,8 +215,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
         'id': 'Kata sandi harus minimal 8 karakter',
       });
     }
-    if (!val.contains(RegExp(r'[a-z]')) ||
-        !val.contains(RegExp(r'[A-Z]'))) {
+    if (!val.contains(RegExp(r'[a-z]')) || !val.contains(RegExp(r'[A-Z]'))) {
       return lang.getTranslatedText({
         'en': 'Password must contain uppercase and lowercase letters',
         'id': 'Kata sandi harus mengandung huruf besar dan kecil',
@@ -234,8 +230,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
     if (!val.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
       return lang.getTranslatedText({
         'en': 'Password must contain at least one special character',
-        'id':
-            'Kata sandi harus mengandung minimal satu karakter khusus',
+        'id': 'Kata sandi harus mengandung minimal satu karakter khusus',
       });
     }
     return null;

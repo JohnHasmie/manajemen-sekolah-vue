@@ -92,8 +92,8 @@ class SystemSettingsScreen extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
-          title: 'Tahun Ajaran',
-          subtitle: 'Periode aktif & arsip · profil sekolah',
+          title: 'Pengaturan Umum',
+          subtitle: 'Identitas sekolah & tahun ajaran aktif',
           icon: DashboardModules.tahunAjaran.icon,
           color: DashboardModules.tahunAjaran.color,
           onTap: () =>

@@ -94,42 +94,44 @@ mixin SessionAddEditMixin on State<DaySessionManagementSheet> {
             maxHeight: MediaQuery.of(context).size.height * 0.85,
           ),
           child: Container(
-            margin: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 20),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDialogHeader(isEdit),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: Column(
-                      children: [
-                        buildHourField(hourController),
-                        const SizedBox(height: AppSpacing.md),
-                        buildTimeFields(startTime, endTime, pickTime),
-                      ],
+            margin: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 20,
+            ),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildDialogHeader(isEdit),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      child: Column(
+                        children: [
+                          buildHourField(hourController),
+                          const SizedBox(height: AppSpacing.md),
+                          buildTimeFields(startTime, endTime, pickTime),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              _buildDialogFooter(
-                isEdit,
-                isSaving,
-                hourController,
-                session,
-                startTime,
-                endTime,
-                setModalState,
-              ),
-            ],
+                _buildDialogFooter(
+                  isEdit,
+                  isSaving,
+                  hourController,
+                  session,
+                  startTime,
+                  endTime,
+                  setModalState,
+                ),
+              ],
+            ),
           ),
-        ),
         );
       },
     );
