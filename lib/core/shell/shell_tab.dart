@@ -88,7 +88,7 @@ extension ShellTabMeta on ShellTab {
       case ShellTab.finance:
         return 'Keuangan';
       case ShellTab.system:
-        return 'Sistem';
+        return 'Profil';
       case ShellTab.teaching:
         return 'Mengajar';
       case ShellTab.grades:

@@ -1,10 +1,10 @@
-// Admin Pengaturan ("Sistem") hub.
+// Admin Profil Pengguna (User Profile) hub.
 //
 // Visual contract — matches the parent Akademik hub / admin People +
 // Academic hubs so every dashboard list-menu surface reads as the same
 // brand:
 //
-//   1. Navy `ShellTabHeader` — title "Sistem" + descriptive subtitle,
+//   1. Navy `ShellTabHeader` — title "Profil" + descriptive subtitle,
 //      no back button (shell handles back via PopScope).
 //   2. Vertical list of `DashboardListTile` cards — one per settings
 //      sub-module (Tahun Ajaran, Waktu Pembelajaran, Manajemen Data,
@@ -48,13 +48,14 @@ class SystemSettingsScreen extends ConsumerWidget {
 
   /// Subtitle previously surfaced under the school name. The
   /// `ShellTabHeader`'s subtitle now describes the section instead.
+  /// Retained for backward compatibility but no longer used.
   final String subtitle;
 
   const SystemSettingsScreen({
     super.key,
     this.schoolName,
     this.schoolLogoUrl,
-    this.subtitle = 'Admin sekolah',
+    this.subtitle = 'Pengaturan akun, bahasa, dan sistem',
   });
 
   @override
@@ -67,8 +68,8 @@ class SystemSettingsScreen extends ConsumerWidget {
           padding: EdgeInsets.zero,
           children: [
             ShellTabHeader(
-              title: 'Sistem',
-              subtitle: 'Konfigurasi · sinkron sehat',
+              title: 'Profil',
+              subtitle: 'Pengaturan akun, bahasa, dan sistem',
               accentColor: accent,
             ),
             const SizedBox(height: AppSpacing.md),

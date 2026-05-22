@@ -1,8 +1,8 @@
-// Admin "System" tab root.
+// Admin "Profil" (Profile/Settings) tab root.
 //
 // Existing `SystemSettingsScreen` (built in Phase 4 / T4.5) is already a
 // hub for school profile, time settings, master-data, and account
-// management — it slots in as the System tab without modification.
+// management — it slots in as the Profil tab without modification.
 //
 // The screen takes optional `schoolName` / `schoolLogoUrl` parameters
 // for the SchoolPill in its hero. We don't have access to them at this
