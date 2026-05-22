@@ -41,7 +41,14 @@ mixin ParentGradeDataLoadingMixin
   /// Build cache key for grades list.
   String buildGradesCacheKey() {
     final yearId = academicYearId ?? 'default';
-    return 'parent_grade_list_${selectedStudentId}_$yearId';
+    // Include the active grade-type filter in the cache key so two
+    // filter states (e.g. "all" vs "Tugas") don't collide and pollute
+    // each other's view. Reading the filter via `as dynamic` keeps the
+    // mixin loosely coupled to ParentGradeFilterMixin (which hasn't been
+    // mixed in at this point in the inheritance chain).
+    final type = (this as dynamic).selectedGradeTypeFilter as String?;
+    final typeKey = (type == null || type.isEmpty) ? 'all' : type;
+    return 'parent_grade_list_${selectedStudentId}_${yearId}_$typeKey';
   }
 
   /// Load user data (students) with optional cache.
@@ -156,7 +163,9 @@ mixin ParentGradeDataLoadingMixin
 
     bool hadCacheHit = false;
 
-    // Try cache for instant display
+    // Try cache for instant display only if useCache is true.
+    // When useCache=false (e.g. after applying a filter), skip cache
+    // entirely to ensure fresh filtered data is loaded from API.
     if (useCache) {
       final cached = await LocalCacheService.load(
         cacheKey,
@@ -177,7 +186,9 @@ mixin ParentGradeDataLoadingMixin
         hasMoreData = false;
         WidgetsBinding.instance.addPostFrameCallback((_) {});
         hadCacheHit = true;
-        // Don't return — continue fetching fresh data from API
+        // Return early when cache hit and useCache=true to avoid
+        // redundant API call. API fetch only happens below on manual refresh.
+        return;
       }
     }
 
