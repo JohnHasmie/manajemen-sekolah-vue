@@ -76,7 +76,10 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
           );
           // Cross-axis Mapel: narrow to subjects of the picked class
           // when one is set; otherwise the global subjects roster.
-          final rosterSubjects = roster.subjectsForClass(tClassId);
+          final rosterSubjects = roster.subjectsForClass(
+            tClassId,
+            isHomeroomView: isHomeroomView,
+          );
 
           final classes = rosterClasses.map((c) {
             final id = (c is Map ? c['id'] : null)?.toString() ?? '';
@@ -126,7 +129,10 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
                           // subject selection.
                           if (tSubjectId != null && v != null) {
                             final allowed = roster
-                                .subjectsForClass(v)
+                                .subjectsForClass(
+                                  v,
+                                  isHomeroomView: isHomeroomView,
+                                )
                                 .map((s) => (s as Map)['id']?.toString());
                             if (!allowed.contains(tSubjectId)) {
                               tSubjectId = null;
@@ -136,7 +142,10 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
                           // Auto-select-on-single — if there's exactly
                           // one subject for this class, pick it.
                           if (v != null && tSubjectId == null) {
-                            final only = roster.subjectsForClass(v);
+                            final only = roster.subjectsForClass(
+                              v,
+                              isHomeroomView: isHomeroomView,
+                            );
                             if (only.length == 1 && only.first is Map) {
                               tSubjectId = (only.first as Map)['id']
                                   ?.toString();

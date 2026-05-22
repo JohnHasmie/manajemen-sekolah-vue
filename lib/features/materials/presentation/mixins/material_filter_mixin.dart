@@ -68,7 +68,10 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
         // screen's downstream `applyFilter` (which still stores
         // `subjectList` for non-filter UI) gets the right subset.
         final roster = ref.read(filterRosterRiverpod);
-        final resolvedSubjects = roster.subjectsForClass(tClassId);
+        final resolvedSubjects = roster.subjectsForClass(
+          tClassId,
+          isHomeroomView: isHomeroomView,
+        );
         _applyFilter(
           context,
           tClassId,
@@ -87,7 +90,10 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
             tSubjectId,
             isHomeroomView: isHomeroomView,
           );
-          final rosterSubjects = roster.subjectsForClass(tClassId);
+          final rosterSubjects = roster.subjectsForClass(
+            tClassId,
+            isHomeroomView: isHomeroomView,
+          );
           final classes = rosterClasses
               .map(
                 (c) => FilterOption<String>(
@@ -138,7 +144,10 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
                           // doesn't teach it.
                           if (tSubjectId != null && v != null) {
                             final allowed = roster
-                                .subjectsForClass(v)
+                                .subjectsForClass(
+                                  v,
+                                  isHomeroomView: isHomeroomView,
+                                )
                                 .map((s) => (s as Map)['id']?.toString());
                             if (!allowed.contains(tSubjectId)) {
                               tSubjectId = null;
@@ -146,7 +155,10 @@ mixin MaterialFilterMixin on ConsumerState<TeacherMaterialScreen> {
                           }
                           // Auto-select-on-single.
                           if (v != null && tSubjectId == null) {
-                            final only = roster.subjectsForClass(v);
+                            final only = roster.subjectsForClass(
+                              v,
+                              isHomeroomView: isHomeroomView,
+                            );
                             if (only.length == 1 && only.first is Map) {
                               tSubjectId = (only.first as Map)['id']
                                   ?.toString();

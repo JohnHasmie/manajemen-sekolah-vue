@@ -131,7 +131,10 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
       _subjectId,
       isHomeroomView: widget.isHomeroomView,
     );
-    final rosterSubjects = roster.subjectsForClass(_classId);
+    final rosterSubjects = roster.subjectsForClass(
+      _classId,
+      isHomeroomView: widget.isHomeroomView,
+    );
 
     return AppFilterBottomSheet(
       title: _lp.getTranslatedText({
@@ -186,15 +189,21 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
                       // doesn't teach it.
                       if (_subjectId != null && newId != null) {
                         final allowed = roster
-                            .subjectsForClass(newId)
+                            .subjectsForClass(
+                              newId,
+                              isHomeroomView: widget.isHomeroomView,
+                            )
                             .map((s) => (s as Map)['id']?.toString());
                         if (!allowed.contains(_subjectId)) {
-                          _subjectId = null;
+                           _subjectId = null;
                         }
                       }
                       // Auto-select-on-single.
                       if (newId != null && _subjectId == null) {
-                        final only = roster.subjectsForClass(newId);
+                        final only = roster.subjectsForClass(
+                          newId,
+                          isHomeroomView: widget.isHomeroomView,
+                        );
                         if (only.length == 1 && only.first is Map) {
                           _subjectId = (only.first as Map)['id']?.toString();
                         }

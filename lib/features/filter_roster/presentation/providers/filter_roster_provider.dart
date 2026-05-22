@@ -123,7 +123,7 @@ class FilterRosterProvider extends ChangeNotifier {
     String? classId, {
     bool isHomeroomView = false,
   }) {
-    final useTeaching = (_role == 'guru' && !isHomeroomView);
+    final useTeaching = _role == 'guru' && !isHomeroomView;
     final subjectsSource = useTeaching
         ? (_teachingSubjects.isNotEmpty ? _teachingSubjects : _subjects)
         : (_role == 'guru' && isHomeroomView && _homeroomSubjects.isNotEmpty
@@ -169,7 +169,7 @@ class FilterRosterProvider extends ChangeNotifier {
     final base = classesForView(isHomeroomView: isHomeroomView);
     if (subjectId == null || subjectId.isEmpty) return base;
 
-    final useTeaching = (_role == 'guru' && !isHomeroomView);
+    final useTeaching = _role == 'guru' && !isHomeroomView;
     final mapSource = useTeaching
         ? (_teachingClassesBySubject.isNotEmpty ? _teachingClassesBySubject : _classesBySubject)
         : (_role == 'guru' && isHomeroomView && _homeroomClassesBySubject.isNotEmpty
@@ -266,12 +266,18 @@ class FilterRosterProvider extends ChangeNotifier {
       _teachingClasses = _asList(data['teaching_classes']);
       _homeroomClasses = _asList(data['homeroom_classes']);
       _subjects = _asList(data['subjects']);
+      _teachingSubjects = _asList(data['teaching_subjects']);
+      _homeroomSubjects = _asList(data['homeroom_subjects']);
       _teachers = _asList(data['teachers']);
       _days = _asList(data['days']);
       _semesters = _asList(data['semesters']);
       _academicYears = _asList(data['academic_years']);
       _classSubjectsByClass = _asStringListMap(data['class_subjects']);
+      _teachingClassSubjects = _asStringListMap(data['teaching_class_subjects']);
+      _homeroomClassSubjects = _asStringListMap(data['homeroom_class_subjects']);
       _classesBySubject = _invertMap(_classSubjectsByClass);
+      _teachingClassesBySubject = _invertMap(_teachingClassSubjects);
+      _homeroomClassesBySubject = _invertMap(_homeroomClassSubjects);
       _isLoaded = true;
     } catch (e, st) {
       AppLogger.error('filter-roster', 'hydrate failed: $e\n$st');
