@@ -1,0 +1,138 @@
+/*
+ * Global stylesheet — Tailwind base + project-wide resets.
+ *
+ * Poppins is imported via @fontsource/poppins in src/main.ts (regular 400 +
+ * bold 700, matching the Flutter app's font setup). The .font-sans default
+ * in tailwind.config.ts picks it up everywhere.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+
+  /* Hide native number-input spinners (matches Flutter input look). */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  /* Brand-gradient hero band used on the login screen. */
+  .brand-band {
+    @apply bg-brand-gradient text-white;
+  }
+
+  /* Form-card that overlaps the brand band by -24px on the login screen. */
+  .form-card {
+    @apply rounded-card bg-white shadow-card;
+  }
+
+  /*
+   * `.rpp-prose` — typographic defaults for rendering stored
+   * lesson-plan HTML (originally produced by flutter_quill /
+   * AppRichTextEditor). Without these, the saved markup falls back
+   * to Tailwind's reset and looks like a flat blob of text.
+   *
+   * Scoped to .rpp-prose so it only kicks in inside section cards
+   * and editor modals — keeps the rest of the app free of stray
+   * heading defaults.
+   */
+  .rpp-prose {
+    @apply text-[12.5px] text-slate-700 leading-relaxed;
+  }
+  .rpp-prose > * + * {
+    @apply mt-2.5;
+  }
+  .rpp-prose h1 {
+    @apply text-[16px] font-black text-slate-900 mt-4 mb-1.5;
+  }
+  .rpp-prose h2 {
+    @apply text-[14px] font-bold text-slate-900 mt-3 mb-1;
+  }
+  .rpp-prose h3 {
+    @apply text-[13px] font-bold text-slate-900 mt-3 mb-1;
+  }
+  .rpp-prose p {
+    @apply text-[12.5px] leading-relaxed;
+  }
+  .rpp-prose strong {
+    @apply font-bold text-slate-900;
+  }
+  .rpp-prose em {
+    @apply italic;
+  }
+  .rpp-prose a {
+    @apply text-brand-cobalt underline;
+  }
+  .rpp-prose ul {
+    @apply list-disc pl-5 space-y-1;
+  }
+  .rpp-prose ol {
+    @apply list-decimal pl-5 space-y-1;
+  }
+  .rpp-prose li {
+    @apply text-[12.5px] leading-relaxed;
+  }
+  .rpp-prose li > ul,
+  .rpp-prose li > ol {
+    @apply mt-1;
+  }
+  .rpp-prose blockquote {
+    @apply border-l-2 border-slate-300 pl-3 italic text-slate-600;
+  }
+  .rpp-prose code {
+    @apply px-1 py-0.5 rounded bg-slate-100 text-[11.5px] font-mono;
+  }
+  .rpp-prose pre {
+    @apply p-3 rounded-lg bg-slate-900 text-slate-100 text-[11.5px] font-mono overflow-x-auto;
+  }
+  .rpp-prose pre code {
+    @apply bg-transparent text-inherit p-0;
+  }
+  .rpp-prose hr {
+    @apply border-slate-200 my-3;
+  }
+  .rpp-prose table {
+    @apply w-full text-[12px] border-collapse my-2;
+  }
+  .rpp-prose th,
+  .rpp-prose td {
+    @apply border border-slate-200 px-2.5 py-1.5 text-left align-top;
+  }
+  .rpp-prose th {
+    @apply bg-slate-50 font-bold text-slate-900;
+  }
+  /* Quill-emitted alignment classes. */
+  .rpp-prose .ql-align-center {
+    text-align: center;
+  }
+  .rpp-prose .ql-align-right {
+    text-align: right;
+  }
+  .rpp-prose .ql-align-justify {
+    text-align: justify;
+  }
+  /* Compact variant for inline previews (list cards / banners). */
+  .rpp-prose-compact > * + * {
+    @apply mt-1;
+  }
+  .rpp-prose-compact h1,
+  .rpp-prose-compact h2,
+  .rpp-prose-compact h3 {
+    @apply mt-1 mb-0.5 text-[12.5px];
+  }
+}

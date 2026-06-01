@@ -1,0 +1,45 @@
+/**
+ * Thin wrapper over localStorage. SSR-safe (no-ops when window is undefined)
+ * even though Vite/Vue 3 is CSR by default — keeps future SSR refactor easy.
+ *
+ * Mirrors Flutter's SharedPreferences usage in token_service.dart.
+ */
+
+const isBrowser = typeof window !== 'undefined';
+
+export const storage = {
+  get<T = string>(key: string): T | null {
+    if (!isBrowser) return null;
+    const raw = window.localStorage.getItem(key);
+    if (raw === null) return null;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return raw as unknown as T;
+    }
+  },
+
+  set(key: string, value: unknown): void {
+    if (!isBrowser) return;
+    const payload = typeof value === 'string' ? value : JSON.stringify(value);
+    window.localStorage.setItem(key, payload);
+  },
+
+  remove(key: string): void {
+    if (!isBrowser) return;
+    window.localStorage.removeItem(key);
+  },
+
+  clear(): void {
+    if (!isBrowser) return;
+    window.localStorage.clear();
+  },
+};
+
+export const StorageKeys = {
+  token: 'kamiledu.token',
+  user: 'kamiledu.user',
+  schoolId: 'kamiledu.school_id',
+  role: 'kamiledu.role',
+  language: 'kamiledu.lang',
+} as const;
