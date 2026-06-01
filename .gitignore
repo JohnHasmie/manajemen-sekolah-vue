@@ -45,5 +45,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Sibling Vue project — not part of the Flutter app.
-web-vue/
+# Sibling Vue project — tracked in this same repo. Its own
+# .gitignore (under web-vue/) already excludes node_modules, dist,
+# .env files, IDE state, and build caches.
+play-store-key.json

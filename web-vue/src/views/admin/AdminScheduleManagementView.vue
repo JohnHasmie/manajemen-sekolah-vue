@@ -1,0 +1,1239 @@
+<!--
+  AdminScheduleManagementView.vue — Admin Jadwal hub.
+
+  Web port of Flutter's `TeachingScheduleManagementScreen` (admin role).
+
+  Layout:
+    1. BrandPageHeader (admin) — kicker + title + actions
+    2. KpiStripCards — Total / Hari Ini / Bentrok / Guru
+    3. PageFilterToolbar — chips for Guru / Mapel / Hari / Kelas / Jam + search
+    4. View toggle (List / Matrix)
+    5. Body — sticky-day list OR week × hour matrix
+    6. Floating "Tambah" + bulk-mode CTAs (Phase 3+ wires them)
+
+  Endpoints:
+    GET /teaching-schedule         — paginated list (with filters)
+    GET /teaching-schedule/all     — non-paginated (for matrix)
+    GET /teaching-schedule/stats   — KPI
+    GET /teaching-schedule/filter-options — dropdown options
+-->
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue';
+import { ScheduleService } from '@/services/schedule.service';
+import { LessonHourService } from '@/services/lesson-hour.service';
+import type {
+  AdminScheduleFilters,
+} from '@/services/schedule.service';
+import {
+  DAY_LABELS,
+  DAY_ORDER,
+  type DayKey,
+  type LessonHour,
+  type ScheduleConflict,
+  type ScheduleFilterOptions,
+  type ScheduleRow,
+  type ScheduleStats,
+} from '@/types/schedule';
+import { useAcademicYearStore } from '@/stores/academic-year';
+import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import KpiStripCards, {
+  type KpiCard,
+} from '@/components/feature/KpiStripCards.vue';
+import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import SegmentedControl from '@/components/filters/SegmentedControl.vue';
+import Modal from '@/components/ui/Modal.vue';
+import Button from '@/components/ui/Button.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
+import Toast from '@/components/ui/Toast.vue';
+import ScheduleFormModal from '@/components/feature/ScheduleFormModal.vue';
+import ScheduleDetailModal from '@/components/feature/ScheduleDetailModal.vue';
+import SingleRescheduleModal from '@/components/feature/SingleRescheduleModal.vue';
+import ChangeTeacherModal from '@/components/feature/ChangeTeacherModal.vue';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
+import BulkDayPickerModal from '@/components/feature/BulkDayPickerModal.vue';
+import BulkTeacherPickerModal from '@/components/feature/BulkTeacherPickerModal.vue';
+import SchedulePrintScopeModal from '@/components/feature/SchedulePrintScopeModal.vue';
+import ScheduleImportModal from '@/components/feature/ScheduleImportModal.vue';
+import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useRouter } from 'vue-router';
+
+const ayStore = useAcademicYearStore();
+const router = useRouter();
+
+// ── Data ────────────────────────────────────────────────────────────
+const rows = ref<ScheduleRow[]>([]);
+const stats = ref<ScheduleStats | null>(null);
+const filterOptions = ref<ScheduleFilterOptions | null>(null);
+const lessonHours = ref<LessonHour[]>([]);
+const isLoading = ref(true);
+const error = ref<string | null>(null);
+const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
+
+// ── Filters ─────────────────────────────────────────────────────────
+const filterTeacherId = ref<string>('');
+const filterClassId = ref<string>('');
+const filterDayId = ref<string>('');
+const filterSubjectId = ref<string>('');
+const filterHourNumber = ref<number | ''>('');
+const search = ref<string>('');
+
+const showTeacherSheet = ref(false);
+const showClassSheet = ref(false);
+const showDaySheet = ref(false);
+const showSubjectSheet = ref(false);
+const showHourSheet = ref(false);
+
+// View mode: list (sticky-day grouped) | matrix (week grid)
+type ViewMode = 'list' | 'matrix';
+const viewMode = ref<ViewMode>('list');
+
+// ── Loaders ─────────────────────────────────────────────────────────
+function activeFilters(): AdminScheduleFilters {
+  return {
+    teacher_id: filterTeacherId.value || undefined,
+    class_id: filterClassId.value || undefined,
+    day_id: filterDayId.value || undefined,
+    subject_id: filterSubjectId.value || undefined,
+    hour_number: filterHourNumber.value === '' ? undefined : filterHourNumber.value,
+    search: search.value.trim() || undefined,
+  };
+}
+
+async function loadFilterOptions() {
+  filterOptions.value = await ScheduleService.getFilterOptions({
+    academic_year_id: ayStore.selectedYearId ?? undefined,
+  });
+}
+
+async function loadLessonHours() {
+  // One-shot — lesson hours don't change often. Used as the lookup
+  // table for matrix drag-drop targets (day_id × hour_number → uuid).
+  try {
+    lessonHours.value = await LessonHourService.list();
+  } catch {
+    lessonHours.value = [];
+  }
+}
+
+async function loadStats() {
+  try {
+    stats.value = await ScheduleService.getStats(activeFilters());
+  } catch {
+    stats.value = null;
+  }
+}
+
+async function loadRows() {
+  isLoading.value = true;
+  error.value = null;
+  try {
+    if (viewMode.value === 'matrix') {
+      rows.value = await ScheduleService.listAll(activeFilters());
+    } else {
+      const res = await ScheduleService.list(activeFilters());
+      rows.value = res.items;
+    }
+  } catch (e) {
+    error.value = (e as Error).message;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function reload() {
+  await Promise.all([loadRows(), loadStats()]);
+}
+
+onMounted(async () => {
+  await Promise.all([loadFilterOptions(), loadLessonHours()]);
+  await reload();
+});
+
+useAcademicYearWatcher(async () => {
+  await Promise.all([loadFilterOptions(), loadLessonHours()]);
+  await reload();
+});
+
+// Watch filters + viewMode → reload rows. Stats reload sync with rows.
+watch(
+  [filterTeacherId, filterClassId, filterDayId, filterSubjectId, filterHourNumber, viewMode],
+  () => void reload(),
+);
+
+// Debounced search
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
+watch(search, () => {
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => void reload(), 300);
+});
+
+// ── Filter chip values ──────────────────────────────────────────────
+const teacherChipValue = computed(() => {
+  if (!filterTeacherId.value) return 'Semua guru';
+  return filterOptions.value?.teachers.find((t) => t.id === filterTeacherId.value)?.name ?? '—';
+});
+const classChipValue = computed(() => {
+  if (!filterClassId.value) return 'Semua kelas';
+  return filterOptions.value?.classes.find((c) => c.id === filterClassId.value)?.name ?? '—';
+});
+const dayChipValue = computed(() => {
+  if (!filterDayId.value) return 'Semua hari';
+  return filterOptions.value?.days.find((d) => d.id === filterDayId.value)?.name ?? '—';
+});
+const subjectChipValue = computed(() => {
+  if (!filterSubjectId.value) return 'Semua mapel';
+  // Derive subject name from rows since /filter-options doesn't return subjects.
+  const found = rows.value.find((r) => r.subject_id === filterSubjectId.value);
+  return found?.subject_name ?? '—';
+});
+const hourChipValue = computed(() => {
+  if (filterHourNumber.value === '') return 'Semua jam';
+  return `Jam ke-${filterHourNumber.value}`;
+});
+
+// Subject options derived from current rows + dedup
+const subjectOptions = computed(() => {
+  const seen = new Map<string, { id: string; name: string }>();
+  for (const r of rows.value) {
+    if (!seen.has(r.subject_id)) {
+      seen.set(r.subject_id, { id: r.subject_id, name: r.subject_name });
+    }
+  }
+  return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name, 'id'));
+});
+
+// Hour options derived from rows (or from /filter-options once we expose them).
+const hourOptions = computed(() => {
+  const seen = new Set<number>();
+  for (const r of rows.value) {
+    if (r.hour_number > 0) seen.add(r.hour_number);
+  }
+  return Array.from(seen).sort((a, b) => a - b);
+});
+
+// ── KPI cards ───────────────────────────────────────────────────────
+const kpiCards = computed<KpiCard[]>(() => {
+  const s = stats.value;
+  return [
+    {
+      icon: 'calendar',
+      label: 'Total Sesi',
+      value: s?.total ?? rows.value.length,
+      tone: 'brand',
+    },
+    {
+      icon: 'sun',
+      label: 'Hari Ini',
+      value: s?.today ?? 0,
+      tone: 'amber',
+      accented: (s?.today ?? 0) > 0,
+    },
+    {
+      icon: 'alert-triangle',
+      label: 'Bentrok',
+      value: s?.conflicts ?? 0,
+      tone: (s?.conflicts ?? 0) > 0 ? 'red' : 'slate',
+      accented: (s?.conflicts ?? 0) > 0,
+    },
+    {
+      icon: 'users',
+      label: 'Guru Aktif',
+      value: s?.total_teachers ?? 0,
+      tone: 'violet',
+    },
+  ];
+});
+
+// ── List grouping (sticky day) ──────────────────────────────────────
+const rowsByDay = computed<Record<DayKey, ScheduleRow[]>>(() => {
+  const out: Record<DayKey, ScheduleRow[]> = {
+    mon: [], tue: [], wed: [], thu: [], fri: [], sat: [],
+  };
+  for (const r of rows.value) out[r.day].push(r);
+  for (const k of DAY_ORDER) {
+    out[k].sort((a, b) => {
+      if (a.hour_number !== b.hour_number) return a.hour_number - b.hour_number;
+      return a.start_time.localeCompare(b.start_time);
+    });
+  }
+  return out;
+});
+
+// ── Matrix view computation ─────────────────────────────────────────
+const hourSlots = computed(() => {
+  const set = new Map<number, { hour_number: number; start: string; end: string }>();
+  for (const r of rows.value) {
+    if (!set.has(r.hour_number)) {
+      set.set(r.hour_number, {
+        hour_number: r.hour_number,
+        start: r.start_time,
+        end: r.end_time,
+      });
+    }
+  }
+  return Array.from(set.values()).sort((a, b) => a.hour_number - b.hour_number);
+});
+
+function cellFor(day: DayKey, hourNumber: number): ScheduleRow[] {
+  return rows.value.filter((r) => r.day === day && r.hour_number === hourNumber);
+}
+
+// ── Drag-and-drop reschedule (matrix only) ──────────────────────────
+//
+// Cells are draggable; dropping on an empty slot calls /reschedule.
+// We resolve the target `lesson_hour_days_id` by matching the source
+// row's hour_number against the target day's lesson_hour row.
+//
+// On 409 conflict the modal opens with the conflicts list + Paksa
+// Simpan checkbox. The hub keeps a small inline "reschedule banner"
+// at the top of the matrix while the API is in flight.
+
+const draggingRow = ref<ScheduleRow | null>(null);
+const dropTargetKey = ref<string>(''); // `${day}-${hour}` of the cell being hovered
+const isRescheduling = ref(false);
+const dragBanner = ref<{ kind: 'loading' | 'success' | 'error'; message: string } | null>(null);
+const dragConflictRow = ref<ScheduleRow | null>(null);
+const dragTargetHourId = ref<string>('');
+const dragConflicts = ref<ScheduleConflict[]>([]);
+const dragForceSave = ref(false);
+
+// Map DayKey → UUID via filterOptions.days (the backend stores day
+// names like "Monday"/"Senin" — normalizeDayKey handles both).
+const dayKeyToId = computed<Record<DayKey, string>>(() => {
+  const out: Partial<Record<DayKey, string>> = {};
+  for (const d of filterOptions.value?.days ?? []) {
+    const k = normaliseFromName(d.name);
+    if (k) out[k] = d.id;
+  }
+  return out as Record<DayKey, string>;
+});
+
+function normaliseFromName(name: string): DayKey | null {
+  const s = name.toLowerCase();
+  if (s.startsWith('sen') || s.startsWith('mon')) return 'mon';
+  if (s.startsWith('sel') || s.startsWith('tue')) return 'tue';
+  if (s.startsWith('rab') || s.startsWith('wed')) return 'wed';
+  if (s.startsWith('kam') || s.startsWith('thu')) return 'thu';
+  if (s.startsWith('jum') || s.startsWith('fri')) return 'fri';
+  if (s.startsWith('sab') || s.startsWith('sat')) return 'sat';
+  return null;
+}
+
+function findLessonHourId(targetDayKey: DayKey, hourNumber: number): string | null {
+  const targetDayId = dayKeyToId.value[targetDayKey];
+  if (!targetDayId) return null;
+  const match = lessonHours.value.find(
+    (h) => h.day_id === targetDayId && h.hour_number === hourNumber,
+  );
+  return match?.id ?? null;
+}
+
+function onDragStart(e: DragEvent, row: ScheduleRow) {
+  if (!e.dataTransfer) return;
+  draggingRow.value = row;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', row.id);
+}
+
+function onDragEnd() {
+  draggingRow.value = null;
+  dropTargetKey.value = '';
+}
+
+function onCellDragOver(e: DragEvent, day: DayKey, hourNumber: number) {
+  if (!draggingRow.value) return;
+  // Disallow dropping on the source cell itself.
+  const sourceSameSlot =
+    draggingRow.value.day === day && draggingRow.value.hour_number === hourNumber;
+  if (sourceSameSlot) return;
+  // Disallow dropping when target slot already occupied (force-save
+  // flow on top of an occupied cell would silently overwrite — for
+  // safety we make the user delete first or pick an empty slot).
+  if (cellFor(day, hourNumber).length > 0) return;
+  e.preventDefault();
+  e.dataTransfer!.dropEffect = 'move';
+  dropTargetKey.value = `${day}-${hourNumber}`;
+}
+
+function onCellDragLeave() {
+  dropTargetKey.value = '';
+}
+
+async function onCellDrop(_e: DragEvent, day: DayKey, hourNumber: number) {
+  const src = draggingRow.value;
+  draggingRow.value = null;
+  dropTargetKey.value = '';
+  if (!src) return;
+  const targetHourId = findLessonHourId(day, hourNumber);
+  if (!targetHourId) {
+    toast.value = {
+      message: `Slot tujuan (${DAY_LABELS[day]} jam ke-${hourNumber}) belum ada di matriks jam pelajaran.`,
+      tone: 'error',
+    };
+    return;
+  }
+  if (targetHourId === src.lesson_hour_days_id) return; // no-op
+  await doReschedule(src, targetHourId, false);
+}
+
+async function doReschedule(
+  src: ScheduleRow,
+  targetHourId: string,
+  force: boolean,
+) {
+  isRescheduling.value = true;
+  dragBanner.value = { kind: 'loading', message: 'Memindahkan slot...' };
+  try {
+    await ScheduleService.reschedule(src.id, {
+      lesson_hour_days_id: targetHourId,
+      force: force || undefined,
+    });
+    dragBanner.value = { kind: 'success', message: 'Slot dipindahkan.' };
+    toast.value = { message: 'Slot dipindahkan.', tone: 'success' };
+    dragConflictRow.value = null;
+    dragConflicts.value = [];
+    dragForceSave.value = false;
+    await reload();
+    setTimeout(() => {
+      dragBanner.value = null;
+    }, 1500);
+  } catch (e) {
+    const annotated = e as Error & { conflicts?: ScheduleConflict[] };
+    if (annotated.conflicts && annotated.conflicts.length > 0) {
+      dragBanner.value = null;
+      dragConflictRow.value = src;
+      dragTargetHourId.value = targetHourId;
+      dragConflicts.value = annotated.conflicts;
+      dragForceSave.value = false;
+    } else {
+      dragBanner.value = { kind: 'error', message: annotated.message };
+      toast.value = { message: annotated.message, tone: 'error' };
+      setTimeout(() => {
+        dragBanner.value = null;
+      }, 3000);
+    }
+  } finally {
+    isRescheduling.value = false;
+  }
+}
+
+async function confirmForceReschedule() {
+  if (!dragConflictRow.value) return;
+  await doReschedule(dragConflictRow.value, dragTargetHourId.value, true);
+}
+
+function cancelConflict() {
+  dragConflictRow.value = null;
+  dragConflicts.value = [];
+  dragForceSave.value = false;
+  dragTargetHourId.value = '';
+}
+
+const listState = computed<AsyncState<ScheduleRow[]>>(() => {
+  if (isLoading.value && rows.value.length === 0) return { status: 'loading' };
+  if (error.value) return { status: 'error', error: error.value };
+  if (rows.value.length === 0) return { status: 'empty' };
+  return { status: 'content', data: rows.value };
+});
+
+// ── Active filter count for the clear-all chip ──────────────────────
+const activeFilterCount = computed(() => {
+  let n = 0;
+  if (filterTeacherId.value) n++;
+  if (filterClassId.value) n++;
+  if (filterDayId.value) n++;
+  if (filterSubjectId.value) n++;
+  if (filterHourNumber.value !== '') n++;
+  if (search.value.trim()) n++;
+  return n;
+});
+
+function clearFilters() {
+  filterTeacherId.value = '';
+  filterClassId.value = '';
+  filterDayId.value = '';
+  filterSubjectId.value = '';
+  filterHourNumber.value = '';
+  search.value = '';
+}
+
+const headerMeta = computed(() => {
+  const total = stats.value?.total ?? rows.value.length;
+  const conflicts = stats.value?.conflicts ?? 0;
+  const ay = ayStore.yearLabel;
+  return `${total} sesi · ${conflicts} bentrok · TP ${ay}`;
+});
+
+// CRUD modal state
+const showForm = ref(false);
+const editingRow = ref<ScheduleRow | null>(null);
+
+// Detail sheet + per-row action modals
+const detailRow = ref<ScheduleRow | null>(null);
+const rescheduleRow = ref<ScheduleRow | null>(null);
+const changeTeacherRow = ref<ScheduleRow | null>(null);
+const deleteRow = ref<ScheduleRow | null>(null);
+const isDeleting = ref(false);
+
+function onAddClick() {
+  editingRow.value = null;
+  showForm.value = true;
+}
+function onRowClick(row: ScheduleRow) {
+  detailRow.value = row;
+}
+function onSaved(rows: ScheduleRow[]) {
+  toast.value = {
+    message: editingRow.value
+      ? 'Jadwal diperbarui.'
+      : `${rows.length} jadwal dibuat.`,
+    tone: 'success',
+  };
+  void reload();
+}
+
+// Detail action handlers
+function detailEdit() {
+  if (!detailRow.value) return;
+  editingRow.value = detailRow.value;
+  detailRow.value = null;
+  showForm.value = true;
+}
+function detailReschedule() {
+  rescheduleRow.value = detailRow.value;
+  detailRow.value = null;
+}
+function detailChangeTeacher() {
+  changeTeacherRow.value = detailRow.value;
+  detailRow.value = null;
+}
+async function detailDuplicate() {
+  if (!detailRow.value) return;
+  // "Duplikat" = clone with same teacher/subject/class/day/hour but
+  // server-side dedupe will reject identical row. Easiest is to open
+  // the form pre-filled and let the admin tweak day/hour before save.
+  editingRow.value = { ...detailRow.value, id: '' };
+  detailRow.value = null;
+  showForm.value = true;
+}
+function detailDelete() {
+  deleteRow.value = detailRow.value;
+  detailRow.value = null;
+}
+
+async function confirmDelete() {
+  if (!deleteRow.value) return;
+  isDeleting.value = true;
+  try {
+    await ScheduleService.destroy(deleteRow.value.id);
+    toast.value = { message: 'Jadwal dihapus.', tone: 'success' };
+    await reload();
+  } catch (e) {
+    toast.value = { message: (e as Error).message, tone: 'error' };
+  } finally {
+    isDeleting.value = false;
+    deleteRow.value = null;
+  }
+}
+
+function onRescheduled(_: ScheduleRow) {
+  toast.value = { message: 'Slot dipindahkan.', tone: 'success' };
+  void reload();
+}
+function onTeacherChanged(_: ScheduleRow) {
+  toast.value = { message: 'Guru diganti.', tone: 'success' };
+  void reload();
+}
+
+// ── Bulk select state ──────────────────────────────────────────────
+const bulkMode = ref(false);
+const selectedIds = ref<Set<string>>(new Set());
+const showBulkDay = ref(false);
+const showBulkTeacher = ref(false);
+const showBulkDelete = ref(false);
+const isBulkDeleting = ref(false);
+
+function enterBulkMode() {
+  bulkMode.value = true;
+  selectedIds.value = new Set();
+}
+function exitBulkMode() {
+  bulkMode.value = false;
+  selectedIds.value = new Set();
+}
+function toggleSelect(id: string) {
+  const set = new Set(selectedIds.value);
+  if (set.has(id)) set.delete(id);
+  else set.add(id);
+  selectedIds.value = set;
+}
+function selectAllVisible() {
+  if (selectedIds.value.size === rows.value.length) {
+    selectedIds.value = new Set();
+  } else {
+    selectedIds.value = new Set(rows.value.map((r) => r.id));
+  }
+}
+const selectedRows = computed(() =>
+  rows.value.filter((r) => selectedIds.value.has(r.id)),
+);
+
+function onBulkMoved(result: { moved: number; skipped: number }) {
+  const skipNote = result.skipped > 0 ? ` · ${result.skipped} dilewati` : '';
+  toast.value = {
+    message: `${result.moved} jadwal dipindahkan${skipNote}.`,
+    tone: 'success',
+  };
+  exitBulkMode();
+  void reload();
+}
+function onBulkTeacherChanged(result: { changed: number; skipped: number }) {
+  const skipNote = result.skipped > 0 ? ` · ${result.skipped} dilewati` : '';
+  toast.value = {
+    message: `${result.changed} jadwal diganti guru${skipNote}.`,
+    tone: 'success',
+  };
+  exitBulkMode();
+  void reload();
+}
+// Print + Import modal state
+const showPrint = ref(false);
+const showImport = ref(false);
+
+function onImportDone(res: { created: number; skipped: number }) {
+  const skipNote = res.skipped > 0 ? ` · ${res.skipped} dilewati` : '';
+  toast.value = {
+    message: `${res.created} jadwal diimpor${skipNote}.`,
+    tone: 'success',
+  };
+  void reload();
+}
+
+async function bulkDelete() {
+  if (selectedIds.value.size === 0) return;
+  isBulkDeleting.value = true;
+  try {
+    const res = await ScheduleService.bulkDestroy(Array.from(selectedIds.value));
+    toast.value = {
+      message: `${res.deleted_count} jadwal dihapus.`,
+      tone: 'success',
+    };
+    exitBulkMode();
+    await reload();
+  } catch (e) {
+    toast.value = { message: (e as Error).message, tone: 'error' };
+  } finally {
+    isBulkDeleting.value = false;
+    showBulkDelete.value = false;
+  }
+}
+</script>
+
+<template>
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="admin"
+      kicker="Admin · Jadwal"
+      title="Manajemen Jadwal Sekolah"
+      :meta="headerMeta"
+    >
+      <div class="flex items-center gap-2 flex-wrap">
+        <SegmentedControl
+          v-model="viewMode"
+          :options="[
+            { key: 'list', label: 'List' },
+            { key: 'matrix', label: 'Matrix' },
+          ]"
+        />
+        <button
+          type="button"
+          class="text-[11px] font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          @click="showPrint = true"
+        >
+          <NavIcon name="download" :size="11" class="inline" />
+          Cetak
+        </button>
+        <button
+          type="button"
+          class="text-[11px] font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          @click="showImport = true"
+        >
+          <NavIcon name="upload" :size="11" class="inline" />
+          Import
+        </button>
+        <button
+          type="button"
+          class="text-[11px] font-bold text-white/90 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          @click="router.push({ name: 'admin.schedule.lesson-hours' })"
+        >
+          <NavIcon name="clock" :size="11" class="inline" />
+          Jam Pelajaran
+        </button>
+      </div>
+    </BrandPageHeader>
+
+    <KpiStripCards :cards="kpiCards" />
+
+    <PageFilterToolbar
+      v-model:search="search"
+      search-placeholder="Cari guru / mapel / kelas..."
+      :search-min-width="240"
+    >
+      <template #chips>
+        <AppFilterChip
+          icon-name="user"
+          label="Guru"
+          :value="teacherChipValue"
+          tone="violet"
+          @click="showTeacherSheet = true"
+        />
+        <AppFilterChip
+          icon-name="book-open"
+          label="Mapel"
+          :value="subjectChipValue"
+          tone="brand"
+          @click="showSubjectSheet = true"
+        />
+        <AppFilterChip
+          icon-name="calendar"
+          label="Hari"
+          :value="dayChipValue"
+          tone="amber"
+          @click="showDaySheet = true"
+        />
+        <AppFilterChip
+          icon-name="layers"
+          label="Kelas"
+          :value="classChipValue"
+          tone="green"
+          @click="showClassSheet = true"
+        />
+        <AppFilterChip
+          icon-name="clock"
+          label="Jam"
+          :value="hourChipValue"
+          tone="red"
+          @click="showHourSheet = true"
+        />
+        <button
+          v-if="activeFilterCount > 0"
+          type="button"
+          class="text-[11px] font-bold text-slate-500 hover:text-role-admin px-2"
+          @click="clearFilters"
+        >
+          Bersihkan ({{ activeFilterCount }})
+        </button>
+        <button
+          type="button"
+          class="text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-colors"
+          :class="
+            bulkMode
+              ? 'bg-role-admin text-white border-role-admin'
+              : 'bg-white text-slate-700 border-slate-200 hover:border-role-admin/40'
+          "
+          @click="bulkMode ? exitBulkMode() : enterBulkMode()"
+        >
+          <NavIcon name="check-square" :size="11" class="inline" />
+          {{ bulkMode ? 'Selesai' : 'Pilih' }}
+        </button>
+      </template>
+    </PageFilterToolbar>
+
+    <AsyncView
+      :state="listState"
+      empty-title="Belum ada jadwal"
+      empty-description="Tambahkan jadwal manual atau import dari Excel."
+      empty-icon="calendar"
+      @retry="reload"
+    >
+      <template #default>
+        <!-- LIST VIEW — sticky day groups -->
+        <div v-if="viewMode === 'list'" class="space-y-4">
+          <section
+            v-for="d in DAY_ORDER"
+            :key="d"
+            v-show="rowsByDay[d].length > 0"
+            class="space-y-2"
+          >
+            <header class="flex items-center justify-between sticky top-0 z-10 bg-slate-50 py-2 px-1 rounded-lg">
+              <h3 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">
+                {{ DAY_LABELS[d] }}
+              </h3>
+              <span class="text-[10px] font-bold text-slate-400">
+                {{ rowsByDay[d].length }} sesi
+              </span>
+            </header>
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+              <div
+                v-for="(r, idx) in rowsByDay[d]"
+                :key="r.id"
+                class="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors cursor-pointer"
+                :class="[
+                  idx > 0 ? 'border-t border-slate-100' : '',
+                  r.conflict_with && r.conflict_with.length > 0 ? 'bg-red-50/40' : '',
+                  bulkMode && selectedIds.has(r.id) ? 'bg-role-admin/5' : '',
+                ]"
+                @click="bulkMode ? toggleSelect(r.id) : onRowClick(r)"
+              >
+                <input
+                  v-if="bulkMode"
+                  type="checkbox"
+                  class="w-4 h-4 accent-role-admin flex-shrink-0"
+                  :checked="selectedIds.has(r.id)"
+                  @click.stop="toggleSelect(r.id)"
+                />
+                <div class="w-12 text-center flex-shrink-0">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">JP</p>
+                  <p class="text-[15px] font-black text-role-admin">{{ r.hour_number }}</p>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[13px] font-bold text-slate-900 truncate">
+                    {{ r.subject_name }}
+                    <span v-if="r.conflict_with && r.conflict_with.length > 0" class="text-red-600 ml-1">⚠ Bentrok</span>
+                  </p>
+                  <p class="text-[11px] text-slate-500 truncate">
+                    {{ r.class_name }} · {{ r.teacher_name ?? 'Tanpa guru' }}
+                    <span v-if="r.room"> · {{ r.room }}</span>
+                  </p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-[12px] font-bold text-slate-900 tabular-nums">
+                    {{ r.start_time }}–{{ r.end_time }}
+                  </p>
+                </div>
+                <NavIcon name="chevron-right" :size="14" class="text-slate-300 ml-1" />
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- MATRIX VIEW — week × hour grid, with drag-drop reschedule -->
+        <section v-else class="space-y-2">
+          <!-- Reschedule banner (loading/success/error) -->
+          <div
+            v-if="dragBanner"
+            class="rounded-xl px-3 py-2 text-[11px] font-bold flex items-center gap-2"
+            :class="{
+              'bg-slate-100 text-slate-700': dragBanner.kind === 'loading',
+              'bg-emerald-100 text-emerald-800': dragBanner.kind === 'success',
+              'bg-red-100 text-red-800': dragBanner.kind === 'error',
+            }"
+          >
+            <NavIcon
+              :name="
+                dragBanner.kind === 'loading'
+                  ? 'clock'
+                  : dragBanner.kind === 'success'
+                    ? 'check-circle'
+                    : 'alert-triangle'
+              "
+              :size="12"
+            />
+            {{ dragBanner.message }}
+          </div>
+          <!-- Hint -->
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+            <NavIcon name="move" :size="10" class="inline" />
+            Tarik & lepas sel untuk memindahkan slot
+          </p>
+          <div class="bg-white border border-slate-200 rounded-2xl overflow-x-auto">
+            <table class="w-full text-[11px] border-collapse">
+              <thead>
+                <tr class="bg-slate-50">
+                  <th class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-3 py-3 text-left min-w-[90px] sticky left-0 bg-slate-50 z-10">
+                    Jam
+                  </th>
+                  <th
+                    v-for="d in DAY_ORDER"
+                    :key="d"
+                    class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 py-3 min-w-[140px]"
+                  >
+                    {{ DAY_LABELS[d] }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="slot in hourSlots"
+                  :key="slot.hour_number"
+                  class="border-t border-slate-100"
+                >
+                  <td class="px-3 py-2 align-top sticky left-0 bg-white z-10 border-r border-slate-100">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      JP{{ slot.hour_number }}
+                    </p>
+                    <p class="text-[11px] font-bold text-slate-900 tabular-nums">{{ slot.start }}</p>
+                    <p class="text-[9px] text-slate-400 tabular-nums">{{ slot.end }}</p>
+                  </td>
+                  <td
+                    v-for="d in DAY_ORDER"
+                    :key="`${d}-${slot.hour_number}`"
+                    class="p-1 align-top transition-colors"
+                    :class="
+                      dropTargetKey === `${d}-${slot.hour_number}`
+                        ? 'bg-role-admin/10'
+                        : ''
+                    "
+                    @dragover="onCellDragOver($event, d, slot.hour_number)"
+                    @dragleave="onCellDragLeave"
+                    @drop="onCellDrop($event, d, slot.hour_number)"
+                  >
+                    <div class="space-y-1">
+                      <div
+                        v-for="cell in cellFor(d, slot.hour_number)"
+                        :key="cell.id"
+                        draggable="true"
+                        class="w-full text-left rounded-lg p-2 transition-all cursor-grab active:cursor-grabbing select-none"
+                        :class="[
+                          cell.conflict_with && cell.conflict_with.length > 0
+                            ? 'bg-red-50 border border-red-300 hover:bg-red-100'
+                            : 'bg-role-admin/5 border border-role-admin/20 hover:bg-role-admin/10',
+                          draggingRow?.id === cell.id ? 'opacity-50 ring-2 ring-role-admin' : '',
+                          isRescheduling ? 'opacity-60 pointer-events-none' : '',
+                        ]"
+                        @dragstart="onDragStart($event, cell)"
+                        @dragend="onDragEnd"
+                        @click="onRowClick(cell)"
+                      >
+                        <p class="text-[10px] font-bold text-slate-900 truncate">{{ cell.subject_name }}</p>
+                        <p class="text-[9px] text-slate-500 truncate">{{ cell.class_name }}</p>
+                        <p class="text-[9px] text-slate-400 truncate">{{ cell.teacher_name ?? '—' }}</p>
+                      </div>
+                      <button
+                        v-if="cellFor(d, slot.hour_number).length === 0"
+                        type="button"
+                        class="w-full h-10 rounded-lg border border-dashed transition-colors text-xs"
+                        :class="
+                          dropTargetKey === `${d}-${slot.hour_number}`
+                            ? 'border-role-admin bg-role-admin/10 text-role-admin font-bold'
+                            : 'border-slate-200 hover:border-role-admin hover:bg-role-admin/5 text-slate-300 hover:text-role-admin'
+                        "
+                        @click="onAddClick"
+                      >
+                        {{ dropTargetKey === `${d}-${slot.hour_number}` ? 'Lepas di sini' : '+' }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </template>
+    </AsyncView>
+
+    <!-- Floating Tambah CTA — hidden when in bulk mode -->
+    <Button
+      v-if="!bulkMode"
+      variant="primary"
+      class="fixed bottom-6 right-6 z-30 shadow-lg shadow-role-admin/30"
+      @click="onAddClick"
+    >
+      <NavIcon name="plus" :size="14" />
+      Tambah Sesi
+    </Button>
+
+    <!-- Bulk action bar — sticky bottom when rows selected -->
+    <section
+      v-if="bulkMode"
+      class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white border border-slate-200 rounded-2xl shadow-lg p-3 flex items-center gap-2 max-w-2xl w-[calc(100%-2rem)]"
+    >
+      <button
+        type="button"
+        class="text-[11px] font-bold text-slate-600 hover:text-role-admin px-2"
+        @click="selectAllVisible"
+      >
+        {{ selectedIds.size === rows.length ? 'Batal pilih' : 'Pilih semua' }}
+      </button>
+      <span class="text-[11px] text-slate-400">·</span>
+      <p class="text-[11px] font-bold text-slate-700 flex-1">
+        {{ selectedIds.size }} dipilih
+      </p>
+      <Button variant="secondary" size="sm" :disabled="selectedIds.size === 0" @click="showBulkDay = true">
+        <NavIcon name="move" :size="12" />
+        Pindah Hari
+      </Button>
+      <Button variant="secondary" size="sm" :disabled="selectedIds.size === 0" @click="showBulkTeacher = true">
+        <NavIcon name="user" :size="12" />
+        Ganti Guru
+      </Button>
+      <Button variant="danger" size="sm" :disabled="selectedIds.size === 0" @click="showBulkDelete = true">
+        <NavIcon name="trash-2" :size="12" />
+        Hapus ({{ selectedIds.size }})
+      </Button>
+    </section>
+
+    <!-- Filter sheets -->
+    <Modal
+      v-if="showTeacherSheet"
+      title="Filter Guru"
+      size="sm"
+      @close="showTeacherSheet = false"
+    >
+      <div class="space-y-1 max-h-[60vh] overflow-y-auto">
+        <button
+          type="button"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          :class="!filterTeacherId ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterTeacherId = ''; showTeacherSheet = false"
+        >
+          Semua guru
+        </button>
+        <button
+          v-for="t in filterOptions?.teachers ?? []"
+          :key="t.id"
+          type="button"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          :class="filterTeacherId === t.id ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterTeacherId = t.id; showTeacherSheet = false"
+        >
+          {{ t.name }}
+        </button>
+      </div>
+    </Modal>
+
+    <Modal
+      v-if="showClassSheet"
+      title="Filter Kelas"
+      size="sm"
+      @close="showClassSheet = false"
+    >
+      <div class="space-y-1 max-h-[60vh] overflow-y-auto">
+        <button
+          type="button"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          :class="!filterClassId ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterClassId = ''; showClassSheet = false"
+        >
+          Semua kelas
+        </button>
+        <button
+          v-for="c in filterOptions?.classes ?? []"
+          :key="c.id"
+          type="button"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          :class="filterClassId === c.id ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterClassId = c.id; showClassSheet = false"
+        >
+          {{ c.name }}
+          <span v-if="c.grade_level" class="text-[10px] text-slate-500 font-medium ml-2">Tingkat {{ c.grade_level }}</span>
+        </button>
+      </div>
+    </Modal>
+
+    <Modal
+      v-if="showDaySheet"
+      title="Filter Hari"
+      size="sm"
+      @close="showDaySheet = false"
+    >
+      <div class="space-y-1">
+        <button
+          type="button"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          :class="!filterDayId ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterDayId = ''; showDaySheet = false"
+        >
+          Semua hari
+        </button>
+        <button
+          v-for="d in filterOptions?.days ?? []"
+          :key="d.id"
+          type="button"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          :class="filterDayId === d.id ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterDayId = d.id; showDaySheet = false"
+        >
+          {{ d.name }}
+        </button>
+      </div>
+    </Modal>
+
+    <Modal
+      v-if="showSubjectSheet"
+      title="Filter Mata Pelajaran"
+      size="sm"
+      @close="showSubjectSheet = false"
+    >
+      <div class="space-y-1 max-h-[60vh] overflow-y-auto">
+        <button
+          type="button"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          :class="!filterSubjectId ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterSubjectId = ''; showSubjectSheet = false"
+        >
+          Semua mapel
+        </button>
+        <button
+          v-for="s in subjectOptions"
+          :key="s.id"
+          type="button"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          :class="filterSubjectId === s.id ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterSubjectId = s.id; showSubjectSheet = false"
+        >
+          {{ s.name }}
+        </button>
+      </div>
+    </Modal>
+
+    <Modal
+      v-if="showHourSheet"
+      title="Filter Jam ke-"
+      size="sm"
+      @close="showHourSheet = false"
+    >
+      <div class="space-y-1 max-h-[60vh] overflow-y-auto">
+        <button
+          type="button"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          :class="filterHourNumber === '' ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterHourNumber = ''; showHourSheet = false"
+        >
+          Semua jam
+        </button>
+        <button
+          v-for="h in hourOptions"
+          :key="h"
+          type="button"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          :class="filterHourNumber === h ? 'bg-role-admin/10 text-role-admin' : 'text-slate-700 hover:bg-slate-50'"
+          @click="filterHourNumber = h; showHourSheet = false"
+        >
+          Jam ke-{{ h }}
+        </button>
+      </div>
+    </Modal>
+
+    <ScheduleFormModal
+      v-if="showForm"
+      :row="editingRow"
+      :filter-options="filterOptions"
+      :default-semester-id="filterOptions?.semesters?.[0]?.id"
+      @close="showForm = false"
+      @saved="onSaved"
+    />
+
+    <ScheduleDetailModal
+      v-if="detailRow"
+      :row="detailRow"
+      @close="detailRow = null"
+      @edit="detailEdit"
+      @reschedule="detailReschedule"
+      @change-teacher="detailChangeTeacher"
+      @duplicate="detailDuplicate"
+      @delete="detailDelete"
+    />
+
+    <SingleRescheduleModal
+      v-if="rescheduleRow"
+      :row="rescheduleRow"
+      :filter-options="filterOptions"
+      @close="rescheduleRow = null"
+      @done="onRescheduled"
+    />
+
+    <ChangeTeacherModal
+      v-if="changeTeacherRow"
+      :row="changeTeacherRow"
+      :filter-options="filterOptions"
+      @close="changeTeacherRow = null"
+      @done="onTeacherChanged"
+    />
+
+    <ConfirmationDialog
+      v-if="deleteRow"
+      title="Hapus Jadwal"
+      :message="`Hapus ${deleteRow.subject_name} (${deleteRow.class_name}) di ${deleteRow.start_time}? Tindakan ini dapat di-undo dari trash.`"
+      confirm-label="Hapus"
+      danger
+      :loading="isDeleting"
+      @close="deleteRow = null"
+      @confirm="confirmDelete"
+    />
+
+    <BulkDayPickerModal
+      v-if="showBulkDay"
+      :rows="selectedRows"
+      :filter-options="filterOptions"
+      @close="showBulkDay = false"
+      @done="onBulkMoved"
+    />
+
+    <BulkTeacherPickerModal
+      v-if="showBulkTeacher"
+      :rows="selectedRows"
+      :filter-options="filterOptions"
+      @close="showBulkTeacher = false"
+      @done="onBulkTeacherChanged"
+    />
+
+    <ConfirmationDialog
+      v-if="showBulkDelete"
+      title="Hapus Jadwal Massal"
+      :message="`Hapus ${selectedIds.size} jadwal terpilih? Tindakan ini akan men-soft-delete semua rownya.`"
+      confirm-label="Hapus semua"
+      danger
+      :loading="isBulkDeleting"
+      @close="showBulkDelete = false"
+      @confirm="bulkDelete"
+    />
+
+    <SchedulePrintScopeModal
+      v-if="showPrint"
+      :filter-options="filterOptions"
+      @close="showPrint = false"
+      @done="toast = { message: 'PDF terdownload.', tone: 'success' }"
+    />
+
+    <ScheduleImportModal
+      v-if="showImport"
+      @close="showImport = false"
+      @done="onImportDone"
+    />
+
+    <!-- Drag-drop conflict modal (409 from reschedule) -->
+    <Modal
+      v-if="dragConflictRow"
+      title="Slot Tujuan Bentrok"
+      :subtitle="`${dragConflictRow.subject_name} · ${dragConflictRow.class_name}`"
+      size="md"
+      @close="cancelConflict"
+    >
+      <div class="space-y-3">
+        <p class="text-[12px] text-slate-600">
+          Slot tujuan punya {{ dragConflicts.length }} jadwal lain yang bentrok dengan guru
+          atau kelas ini.
+        </p>
+        <ul class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3 space-y-1 max-h-40 overflow-y-auto">
+          <li v-for="c in dragConflicts" :key="c.id">
+            <strong>{{ c.day_name }} · {{ c.start_time }}–{{ c.end_time }}</strong>:
+            {{ c.subject_name ?? 'Mapel' }}
+            <span v-if="c.teacher_name"> · {{ c.teacher_name }}</span>
+            <span v-if="c.class_name"> · {{ c.class_name }}</span>
+          </li>
+        </ul>
+        <label class="flex items-center gap-2 text-[11px] text-red-800 font-bold cursor-pointer">
+          <input v-model="dragForceSave" type="checkbox" class="accent-red-600" />
+          Paksa simpan meski bentrok
+        </label>
+        <div class="grid grid-cols-2 gap-2 pt-2">
+          <Button variant="secondary" block @click="cancelConflict">Batal</Button>
+          <Button
+            variant="danger"
+            block
+            :loading="isRescheduling"
+            :disabled="!dragForceSave || isRescheduling"
+            @click="confirmForceReschedule"
+          >
+            Paksa Pindah
+          </Button>
+        </div>
+      </div>
+    </Modal>
+
+    <Toast v-if="toast" :message="toast.message" :tone="toast.tone" @close="toast = null" />
+  </div>
+</template>

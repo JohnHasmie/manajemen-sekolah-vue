@@ -1,0 +1,509 @@
+<!--
+  ProfileMenu.vue — topbar profile dropdown.
+  Shows avatar/initial, role, plus Ganti Sekolah / Ganti Peran / Profil /
+  Bahasa / Keluar actions. Switch flows reuse the auth store's
+  selectSchool / selectRole pipeline (same as the login wizard).
+-->
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import { useI18n } from 'vue-i18n';
+import { usePreferencesStore } from '@/stores/preferences';
+import Modal from '@/components/ui/Modal.vue';
+import Toast from '@/components/ui/Toast.vue';
+import Spinner from '@/components/ui/Spinner.vue';
+import type { Role, School } from '@/types/auth';
+
+const auth = useAuthStore();
+const prefs = usePreferencesStore();
+const router = useRouter();
+const { t } = useI18n();
+
+const open = ref(false);
+const showSchoolPicker = ref(false);
+const showRolePicker = ref(false);
+const switching = ref<'school' | 'role' | null>(null);
+const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
+
+/**
+ * Schools / roles available to the user — derived live from
+ * `auth.user` so any hydrate that fires after mount (the AppShell
+ * triggers `auth.hydrateSchoolsRoles()` on its own onMounted) flows
+ * straight into the menu without needing a manual refresh.
+ *
+ * The fallback ensures single-school / single-role users still see
+ * the Ganti option (with their current school/role highlighted as
+ * "Aktif" inside the modal).
+ */
+const availableSchools = computed<School[]>(() => {
+  const fromUser = auth.user?.schools ?? [];
+  if (fromUser.length > 0) return fromUser;
+  const sid = auth.schoolId ?? auth.user?.school_id;
+  if (sid) {
+    return [
+      {
+        id: sid,
+        name: auth.user?.school_name ?? 'Sekolah Aktif',
+      } as School,
+    ];
+  }
+  return [];
+});
+
+const availableRoles = computed<Role[]>(() => {
+  if (auth.step === 'role' && auth.roles && auth.roles.length > 0) {
+    return auth.roles;
+  }
+  const fromUser = auth.user?.roles ?? [];
+  if (fromUser.length > 0) return fromUser;
+  return auth.activeRole ? [auth.activeRole] : [];
+});
+
+const refsLoaded = ref(false);
+
+const initials = computed(() => {
+  const name = auth.user?.name?.trim() ?? '';
+  if (!name) return '?';
+  const parts = name.split(/\s+/);
+  return (parts[0][0] + (parts[1]?.[0] ?? '')).toUpperCase();
+});
+
+const roleLabel = computed(() => {
+  const r = auth.activeRole as Role | null;
+  return r ? t(`role.${r}`) : '';
+});
+
+const activeSchool = computed<School | null>(() => {
+  const sid = auth.schoolId;
+  if (!sid) return null;
+  const fromList =
+    availableSchools.value.find((s) => (s.id ?? s.school_id) === sid) ?? null;
+  // Prefer the resolved entry from availableSchools so we get any
+  // address/city metadata. Fall back to a synthetic record using the
+  // user's cached `school_name`.
+  if (fromList) return fromList;
+  if (auth.user?.school_name) {
+    return { id: sid, name: auth.user.school_name } as School;
+  }
+  return null;
+});
+
+const activeSchoolName = computed<string>(
+  () =>
+    activeSchool.value?.name ??
+    activeSchool.value?.school_name ??
+    auth.user?.school_name ??
+    'Sekolah Aktif',
+);
+
+// Hide the "Ganti …" entries if the user only has one option available.
+const canSwitchSchool = computed(() => availableSchools.value.length > 1);
+const canSwitchRole = computed(() => availableRoles.value.length > 1);
+
+function schoolKey(s: School): string {
+  return String(s.id ?? s.school_id ?? '');
+}
+
+function schoolDisplayName(s: School): string {
+  return s.name ?? s.school_name ?? '—';
+}
+
+function roleDisplayLabel(r: Role): string {
+  // Map raw backend enums to the keys used in id.json translations
+  let key = r as string;
+  if (key === 'teacher') key = 'guru';
+  if (key === 'parent') key = 'wali';
+  
+  try {
+    return t(`role.${key}`);
+  } catch {
+    return r;
+  }
+}
+
+async function loadRefs() {
+  if (refsLoaded.value) return;
+  refsLoaded.value = true;
+  // Delegate to the auth store. It writes the result into auth.user,
+  // which our computed `availableSchools` / `availableRoles` react to.
+  await auth.hydrateSchoolsRoles();
+}
+
+function close(e: MouseEvent) {
+  const target = e.target as HTMLElement;
+  if (!target.closest('[data-profile-menu]')) open.value = false;
+}
+
+function toggle() {
+  open.value = !open.value;
+  if (open.value) {
+    loadRefs();
+    setTimeout(() => document.addEventListener('click', close), 0);
+  } else {
+    document.removeEventListener('click', close);
+  }
+}
+
+async function handleLogout() {
+  open.value = false;
+  await auth.logout();
+  router.replace('/login');
+}
+
+function goToProfile() {
+  open.value = false;
+  router.push('/profile');
+}
+
+function toggleLocale() {
+  prefs.toggleLocale();
+}
+
+function openSchoolPicker() {
+  open.value = false;
+  showSchoolPicker.value = true;
+}
+
+function openRolePicker() {
+  open.value = false;
+  showRolePicker.value = true;
+}
+
+function roleHome(role: Role): string {
+  switch (role) {
+    case 'admin':
+      return '/admin';
+    case 'guru':
+    case 'wali_kelas':
+      return '/teacher';
+    case 'wali':
+      return '/parent';
+    case 'staff':
+      return '/staff';
+    default:
+      return '/';
+  }
+}
+
+async function pickSchool(s: School) {
+  const sid = schoolKey(s);
+  if (!sid || sid === auth.schoolId) {
+    showSchoolPicker.value = false;
+    return;
+  }
+  switching.value = 'school';
+  try {
+    await auth.selectSchool(sid);
+    // The auth store may transition to 'role' if the new school has
+    // multiple roles for this user. If so, surface the role picker.
+    if (auth.step === 'role') {
+      showSchoolPicker.value = false;
+      showRolePicker.value = true;
+    } else if (auth.step === 'done') {
+      showSchoolPicker.value = false;
+      toast.value = {
+        message: `Beralih ke ${schoolDisplayName(s)}.`,
+        tone: 'success',
+      };
+      const role = auth.activeRole;
+      if (role) router.replace(roleHome(role));
+    }
+  } catch (e) {
+    toast.value = {
+      message: (e as Error).message ?? 'Gagal mengganti sekolah.',
+      tone: 'error',
+    };
+  } finally {
+    switching.value = null;
+  }
+}
+
+async function pickRole(role: Role) {
+  if (!auth.schoolId) {
+    toast.value = {
+      message: 'School ID tidak ditemukan. Silakan pilih sekolah ulang.',
+      tone: 'error',
+    };
+    return;
+  }
+  if (role === auth.activeRole) {
+    showRolePicker.value = false;
+    return;
+  }
+  switching.value = 'role';
+  try {
+    await auth.selectRole(role);
+    if (auth.step === 'done') {
+      showRolePicker.value = false;
+      toast.value = {
+        message: `Beralih ke peran ${roleDisplayLabel(role)}.`,
+        tone: 'success',
+      };
+      router.replace(roleHome(role));
+    }
+  } catch (e) {
+    toast.value = {
+      message: (e as Error).message ?? 'Gagal mengganti peran.',
+      tone: 'error',
+    };
+  } finally {
+    switching.value = null;
+  }
+}
+
+onMounted(() => {
+  // Pre-warm the school/role list so the chips appear instantly
+  // when the user opens the menu.
+  loadRefs();
+});
+
+onBeforeUnmount(() => document.removeEventListener('click', close));
+</script>
+
+<template>
+  <div data-profile-menu class="relative">
+    <button
+      type="button"
+      class="inline-flex items-center gap-2 rounded-full bg-white/15 hover:bg-white/25 py-1 pl-1 pr-3 text-sm font-medium text-white"
+      :aria-expanded="open"
+      @click="toggle"
+    >
+      <span
+        class="w-7 h-7 rounded-full bg-white/25 grid place-items-center text-xs font-bold"
+      >
+        {{ initials }}
+      </span>
+      <span class="hidden sm:inline truncate max-w-[6rem]">{{ auth.user?.name ?? '—' }}</span>
+    </button>
+
+    <Transition
+      enter-active-class="transition duration-100 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-75 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="open"
+        class="absolute right-0 mt-2 w-72 form-card p-1 z-50 origin-top-right"
+      >
+        <!-- Identity card -->
+        <div class="px-md py-sm border-b border-slate-100">
+          <p class="text-sm font-semibold text-slate-900 truncate">
+            {{ auth.user?.name }}
+          </p>
+          <p class="text-xs text-slate-500 truncate">{{ auth.user?.email }}</p>
+          <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full">
+              {{ roleLabel }}
+            </span>
+            <span
+              v-if="auth.schoolId"
+              class="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full truncate max-w-[10rem]"
+              :title="activeSchoolName"
+            >
+              {{ activeSchoolName }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Profile -->
+        <button
+          type="button"
+          class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
+          @click="goToProfile"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          {{ t('common.profile') }}
+        </button>
+
+        <!-- Switch school (only when user has multiple schools) -->
+        <button
+          v-if="canSwitchSchool"
+          type="button"
+          class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
+          @click="openSchoolPicker"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          <span class="flex-1">Ganti Sekolah</span>
+          <span class="text-[10px] font-bold text-slate-400 tabular-nums">{{ availableSchools.length }}</span>
+        </button>
+
+        <!-- Switch role (only when user has multiple roles) -->
+        <button
+          v-if="canSwitchRole"
+          type="button"
+          class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
+          @click="openRolePicker"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span class="flex-1">Ganti Peran</span>
+          <span class="text-[10px] font-bold text-slate-400 tabular-nums">{{ availableRoles.length }}</span>
+        </button>
+
+        <!-- Language -->
+        <button
+          type="button"
+          class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
+          @click="toggleLocale"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          <span class="flex-1">{{ prefs.locale === 'id' ? 'English' : 'Bahasa Indonesia' }}</span>
+          <span class="text-xs text-slate-400 uppercase">{{ prefs.locale }}</span>
+        </button>
+
+        <!-- Logout -->
+        <div class="border-t border-slate-100 mt-1 pt-1">
+          <button
+            type="button"
+            class="w-full text-left px-md py-sm rounded-lg hover:bg-status-danger-soft hover:text-status-danger flex items-center gap-2 text-sm text-slate-700"
+            @click="handleLogout"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            {{ t('common.logout') }}
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- ── School picker modal ── -->
+    <Modal
+      v-if="showSchoolPicker"
+      title="Ganti Sekolah"
+      subtitle="Pilih sekolah yang akan diakses. Anda akan tetap masuk."
+      @close="switching ? null : (showSchoolPicker = false)"
+    >
+      <div v-if="availableSchools.length === 0" class="py-6 text-center text-slate-400 text-sm">
+        Tidak ada sekolah lain yang tertaut dengan akun Anda.
+      </div>
+      <ul v-else class="space-y-1 max-h-[400px] overflow-y-auto -mx-1">
+        <li v-for="s in availableSchools" :key="schoolKey(s)">
+          <button
+            type="button"
+            class="w-full text-left px-3 py-3 rounded-xl flex items-start gap-3 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            :class="
+              schoolKey(s) === auth.schoolId
+                ? 'bg-brand-cobalt/5 border border-brand-cobalt/20'
+                : 'hover:bg-slate-50 border border-transparent'
+            "
+            :disabled="switching === 'school'"
+            @click="pickSchool(s)"
+          >
+            <span
+              class="w-10 h-10 rounded-xl bg-brand-cobalt/10 text-brand-cobalt grid place-items-center font-black text-sm flex-shrink-0"
+            >
+              {{ schoolDisplayName(s).slice(0, 1).toUpperCase() }}
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold text-slate-900 truncate">
+                {{ schoolDisplayName(s) }}
+              </p>
+              <p v-if="s.city || s.address" class="text-[11px] text-slate-500 truncate">
+                {{ s.city ?? s.address }}
+              </p>
+              <p v-if="s.roles && s.roles.length > 0" class="text-[10px] text-slate-400 mt-0.5">
+                {{ s.roles.map((r) => roleDisplayLabel(r)).join(' · ') }}
+              </p>
+            </div>
+            <span
+              v-if="schoolKey(s) === auth.schoolId"
+              class="text-[10px] font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
+            >
+              Aktif
+            </span>
+            <Spinner v-else-if="switching === 'school'" size="sm" />
+          </button>
+        </li>
+      </ul>
+    </Modal>
+
+    <!-- ── Role picker modal ── -->
+    <Modal
+      v-if="showRolePicker"
+      title="Ganti Peran"
+      subtitle="Pilih peran untuk sekolah yang sedang aktif."
+      @close="switching ? null : (showRolePicker = false)"
+    >
+      <div v-if="availableRoles.length === 0" class="py-6 text-center text-slate-400 text-sm">
+        Tidak ada peran tambahan untuk sekolah ini.
+      </div>
+      <ul v-else class="space-y-1 max-h-[400px] overflow-y-auto -mx-1">
+        <li v-for="role in availableRoles" :key="role">
+          <button
+            type="button"
+            class="w-full text-left px-3 py-3 rounded-xl flex items-center gap-3 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            :class="
+              role === auth.activeRole
+                ? 'bg-brand-cobalt/5 border border-brand-cobalt/20'
+                : 'hover:bg-slate-50 border border-transparent'
+            "
+            :disabled="switching === 'role'"
+            @click="pickRole(role)"
+          >
+            <span class="w-10 h-10 rounded-xl bg-violet-100 text-violet-700 grid place-items-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold text-slate-900 truncate">
+                {{ roleDisplayLabel(role) }}
+              </p>
+              <p class="text-[11px] text-slate-500">
+                {{
+                  role === 'admin'
+                    ? 'Akses kelola sekolah & pengguna'
+                    : role === 'guru'
+                      ? 'Mengajar & input nilai'
+                      : role === 'wali_kelas'
+                        ? 'Wali kelas — kelola homeroom & rapor'
+                        : role === 'wali'
+                          ? 'Wali murid — pantau anak'
+                          : role === 'staff'
+                            ? 'Staf tata usaha'
+                            : ''
+                }}
+              </p>
+            </div>
+            <span
+              v-if="role === auth.activeRole"
+              class="text-[10px] font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
+            >
+              Aktif
+            </span>
+            <Spinner v-else-if="switching === 'role'" size="sm" />
+          </button>
+        </li>
+      </ul>
+    </Modal>
+
+    <Toast
+      v-if="toast"
+      :message="toast.message"
+      :tone="toast.tone"
+      @close="toast = null"
+    />
+  </div>
+</template>

@@ -1,0 +1,144 @@
+{
+  "app": {
+    "name": "KamilEdu",
+    "tagline": "Manajemen sekolah modern untuk admin, guru, dan wali murid."
+  },
+  "common": {
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "edit": "Ubah",
+    "add": "Tambah",
+    "close": "Tutup",
+    "back": "Kembali",
+    "next": "Selanjutnya",
+    "previous": "Sebelumnya",
+    "search": "Cari",
+    "filter": "Filter",
+    "reset": "Atur ulang",
+    "apply": "Terapkan",
+    "loading": "Memuat…",
+    "empty": "Belum ada data",
+    "error": "Terjadi kesalahan",
+    "retry": "Coba lagi",
+    "yes": "Ya",
+    "no": "Tidak",
+    "all": "Semua",
+    "none": "Tidak ada",
+    "submit": "Kirim",
+    "confirm": "Konfirmasi",
+    "logout": "Keluar",
+    "settings": "Pengaturan",
+    "profile": "Profil",
+    "notifications": "Notifikasi",
+    "unread": "Belum dibaca",
+    "read": "Sudah dibaca",
+    "markAllRead": "Tandai semua dibaca"
+  },
+  "auth": {
+    "signIn": "Masuk",
+    "signInTitle": "Masuk",
+    "signInSubtitle": "Gunakan akun KamilEdu Anda untuk melanjutkan.",
+    "email": "Email",
+    "emailPlaceholder": "nama@sekolah.sch.id",
+    "password": "Kata sandi",
+    "forgotPassword": "Lupa kata sandi?",
+    "rememberMe": "Ingat saya",
+    "or": "atau",
+    "continueWithGoogle": "Lanjut dengan Google",
+    "needHelp": "Butuh bantuan masuk?",
+    "contactAdmin": "Hubungi admin",
+    "whatsappAdmin": "Chat WhatsApp admin",
+    "otp": {
+      "title": "Verifikasi OTP",
+      "subtitle": "Masukkan 6 digit kode yang dikirim ke {email}.",
+      "submit": "Verifikasi",
+      "submitting": "Memverifikasi…",
+      "resend": "Kirim ulang kode",
+      "resendCountdown": "Kirim ulang ({seconds}s)"
+    },
+    "school": {
+      "title": "Pilih sekolah",
+      "subtitle": "Anda terdaftar di lebih dari satu sekolah. Pilih sekolah aktif untuk sesi ini."
+    },
+    "role": {
+      "title": "Pilih peran",
+      "subtitle": "Anda memiliki beberapa peran di sekolah ini. Pilih peran aktif."
+    },
+    "forgot": {
+      "title": "Lupa kata sandi",
+      "subtitle": "Masukkan email akun Anda. Kami akan mengirimkan tautan untuk mengatur ulang kata sandi.",
+      "submit": "Kirim tautan",
+      "submitting": "Mengirim…"
+    },
+    "help": {
+      "title": "Hubungi admin",
+      "subtitle": "Tim KamilEdu akan membalas permintaan Anda melalui email.",
+      "fullName": "Nama lengkap",
+      "schoolName": "Nama sekolah",
+      "schoolNameOptional": "(opsional)",
+      "message": "Pesan",
+      "messagePlaceholder": "Jelaskan kendala yang Anda alami…",
+      "submit": "Kirim permintaan"
+    },
+    "errors": {
+      "emailRequired": "Email wajib diisi.",
+      "emailInvalid": "Format email tidak valid.",
+      "passwordRequired": "Kata sandi wajib diisi.",
+      "googleNotConfigured": "Login Google belum dikonfigurasi. Silakan gunakan email & kata sandi.",
+      "serverOffline": "Server tidak dapat dijangkau. Periksa koneksi Anda lalu coba lagi.",
+      "sessionExpired": "Sesi Anda telah berakhir. Silakan masuk kembali."
+    }
+  },
+  "role": {
+    "admin": "Admin",
+    "guru": "Guru",
+    "wali_kelas": "Wali Kelas",
+    "wali": "Wali Murid",
+    "staff": "Staf"
+  },
+  "status": {
+    "Pending": "Menunggu",
+    "Approved": "Disetujui",
+    "Rejected": "Ditolak",
+    "Active": "Aktif",
+    "Inactive": "Nonaktif",
+    "Draft": "Draf",
+    "Published": "Terbit",
+    "Archived": "Diarsipkan"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "students": "Siswa",
+    "teachers": "Guru",
+    "classes": "Kelas",
+    "subjects": "Mata Pelajaran",
+    "schedule": "Jadwal",
+    "attendance": "Kehadiran",
+    "grades": "Nilai",
+    "gradeRecap": "Rekap Nilai",
+    "lessonPlans": "RPP",
+    "materials": "Materi",
+    "classActivity": "Kegiatan Kelas",
+    "announcements": "Pengumuman",
+    "reportCards": "Rapor",
+    "finance": "Keuangan",
+    "billing": "Tagihan",
+    "recommendations": "Rekomendasi AI",
+    "reports": "Laporan",
+    "settings": "Pengaturan",
+    "schoolSettings": "Pengaturan Sekolah",
+    "levelSettings": "Tingkat",
+    "timeSettings": "Jam Pelajaran",
+    "systemSettings": "Sistem",
+    "dataManagement": "Manajemen Data"
+  },
+  "profile": {
+    "title": "Profil",
+    "language": "Bahasa",
+    "school": "Sekolah",
+    "role": "Peran",
+    "languageId": "Bahasa Indonesia",
+    "languageEn": "English"
+  }
+}

@@ -240,10 +240,20 @@ class _AdminGradeOverviewScreenState
       onRefresh: () => _loadData(useCache: false),
       role: 'admin',
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
         children: [
-          _buildSchoolStatsCard(),
-          const SizedBox(height: 18),
+          // Fix-FF — lightweight KPI strip overlapping the navy header,
+          // replacing the old heavy gradient card. Same chrome as the
+          // new Rekap Nilai screen (Frame C).
+          Transform.translate(
+            offset: const Offset(0, -22),
+            child: _buildKpiStrip(),
+          ),
+          // Dedicated "Sebaran Nilai" card pulled out of the old KPI
+          // block — distribution gets to breathe instead of fighting
+          // the KPI tiles for attention.
+          _buildSebaranCard(),
+          const SizedBox(height: 16),
           _buildSectionHeader(lp, filtered.length),
           const SizedBox(height: 10),
           ...filtered.map(_buildTeacherCard),
@@ -253,23 +263,106 @@ class _AdminGradeOverviewScreenState
   }
 
   // =====================================================================
-  // School-wide KPI hero card
-  //
-  // Replaces the prior lopsided layout (two small badges left + one giant
-  // "550" floating right) with a balanced 3-up tile strip in the same
-  // visual language as `MoneyFlowStrip` on Keuangan: each tile holds an
-  // uppercase kicker, a heavy value, and a faint footer caption. The
-  // distribution bar moves *underneath* the strip with a flat 1px legend
-  // row instead of competing with the strip for real estate. The "X guru
-  // · Y siswa" meta stays as a faint footer line so it doesn't dominate.
+  // Lightweight KPI strip (Fix-FF — replaces the heavy navy gradient
+  // card that previously hosted both the KPIs AND the distribution bar
+  // in one block). Matches the new Rekap Nilai screen and every other
+  // brand surface that overlaps a 3-cell white KPI card onto the navy
+  // header.
   // =====================================================================
 
-  Widget _buildSchoolStatsCard() {
-    final total = _schoolStats['total_grades'] ?? 0;
-    final avg = _schoolStats['avg_score'] ?? 0;
-    final passRate = _schoolStats['pass_rate'] ?? 0;
-    final totalTeachers = _schoolStats['total_teachers'] ?? 0;
-    final totalStudents = _schoolStats['total_students'] ?? 0;
+  Widget _buildKpiStrip() {
+    final total = (_schoolStats['total_grades'] as num?)?.toInt() ?? 0;
+    final avg = (_schoolStats['avg_score'] as num?)?.toDouble() ?? 0.0;
+    final passRate = (_schoolStats['pass_rate'] as num?)?.toDouble() ?? 0.0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColorUtils.slate200),
+        boxShadow: [
+          BoxShadow(
+            color: ColorUtils.slate900.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            _kpiCell(value: '$total', label: 'NILAI', color: _adminColor),
+            _kpiDivider(),
+            _kpiCell(
+              value: avg.toStringAsFixed(1),
+              label: 'RATA-RATA',
+              color: ColorUtils.slate800,
+            ),
+            _kpiDivider(),
+            _kpiCell(
+              value: '${passRate.toStringAsFixed(0)}%',
+              label: 'LULUS ≥75',
+              color: ColorUtils.success600,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kpiCell({
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: color,
+              letterSpacing: -0.5,
+              height: 1.0,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate500,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _kpiDivider() {
+    return Container(
+      width: 1,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      color: ColorUtils.slate200,
+    );
+  }
+
+  // =====================================================================
+  // Sebaran Nilai — moves the distribusi bar + legend out of the KPI
+  // block and gives each bucket its own tinted pill (green Tuntas, amber
+  // Perlu Perhatian, red Remedial). Footer chip row carries "N guru · N
+  // siswa · update timestamp" so the meta stays available but doesn't
+  // shout.
+  // =====================================================================
+
+  Widget _buildSebaranCard() {
+    final total = (_schoolStats['total_grades'] as num?)?.toInt() ?? 0;
     final dist = _schoolStats['distribution'] is Map
         ? Map<String, dynamic>.from(_schoolStats['distribution'])
         : <String, dynamic>{};
@@ -277,172 +370,127 @@ class _AdminGradeOverviewScreenState
     final mid = (dist['mid'] as num?)?.toInt() ?? 0;
     final low = (dist['low'] as num?)?.toInt() ?? 0;
     final distTotal = high + mid + low;
+    final totalTeachers =
+        (_schoolStats['total_teachers'] as num?)?.toInt() ?? 0;
+    final totalStudents =
+        (_schoolStats['total_students'] as num?)?.toInt() ?? 0;
+
+    String pct(int n) {
+      if (distTotal == 0) return '0%';
+      return '${((n / distTotal) * 100).round()}%';
+    }
 
     return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: ColorUtils.headerFadeGradient(
-          _adminColor,
-          endOpacity: 0.82,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: _adminColor.withValues(alpha: 0.28),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: ColorUtils.slate200),
       ),
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 3-up KPI tile strip
           Row(
             children: [
               Expanded(
-                child: _StatTile(
-                  kicker: 'TOTAL',
-                  value: '$total',
-                  caption: 'Nilai',
+                child: Text(
+                  'Sebaran Nilai',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: ColorUtils.slate700,
+                    letterSpacing: -0.2,
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _StatTile(
-                  kicker: 'RATA-RATA',
-                  value: (avg as num).toStringAsFixed(1),
-                  caption: 'dari 100',
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _StatTile(
-                  kicker: 'LULUS',
-                  value: '${(passRate as num).toStringAsFixed(1)}%',
-                  caption: 'KKM ≥ 75',
+              Text(
+                '$total nilai · KKM 75',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: ColorUtils.slate500,
+                  letterSpacing: 0.2,
                 ),
               ),
             ],
           ),
-
-          // Distribution band — only if we actually have data
-          if (distTotal > 0) ...[
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Icon(
-                  Icons.donut_small_rounded,
-                  size: 12,
-                  color: Colors.white.withValues(alpha: 0.85),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'DISTRIBUSI',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '· $distTotal NILAI',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                    color: Colors.white.withValues(alpha: 0.55),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 12),
+          // Stacked bar — flat 10dp band so each segment reads.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: SizedBox(
+              height: 10,
+              child: distTotal == 0
+                  ? Container(color: ColorUtils.slate100)
+                  : Row(
+                      children: [
+                        Expanded(
+                          flex: high.clamp(0, 1 << 31).toInt() == 0 ? 0 : high,
+                          child: Container(color: ColorUtils.success600),
+                        ),
+                        Expanded(
+                          flex: mid.clamp(0, 1 << 31).toInt() == 0 ? 0 : mid,
+                          child: Container(color: ColorUtils.warning600),
+                        ),
+                        Expanded(
+                          flex: low.clamp(0, 1 << 31).toInt() == 0 ? 0 : low,
+                          child: Container(color: ColorUtils.error600),
+                        ),
+                      ],
+                    ),
             ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: Row(
-                children: [
-                  _buildDistBar(high / distTotal, ColorUtils.success600),
-                  _buildDistBar(mid / distTotal, ColorUtils.warning600),
-                  _buildDistBar(low / distTotal, ColorUtils.error600),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _DistLegend(
-                    range: '≥80',
-                    count: high,
-                    color: ColorUtils.success600,
-                  ),
-                ),
-                Expanded(
-                  child: _DistLegend(
-                    range: '60–79',
-                    count: mid,
-                    color: ColorUtils.warning600,
-                  ),
-                ),
-                Expanded(
-                  child: _DistLegend(
-                    range: '<60',
-                    count: low,
-                    color: ColorUtils.error600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-
-          // Hairline + footer counts
-          const SizedBox(height: 14),
-          Container(height: 1, color: Colors.white.withValues(alpha: 0.16)),
-          const SizedBox(height: 10),
+          ),
+          const SizedBox(height: 12),
+          // 3 tinted pills.
           Row(
             children: [
-              Icon(
-                Icons.person_rounded,
-                size: 13,
-                color: Colors.white.withValues(alpha: 0.85),
-              ),
-              const SizedBox(width: 5),
-              Text(
-                '$totalTeachers guru',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white.withValues(alpha: 0.85),
+              Expanded(
+                child: _SebaranPill(
+                  label: 'TUNTAS · ≥80',
+                  value: '$high',
+                  pct: pct(high),
+                  tone: _SebaranTone.green,
                 ),
               ),
-              const SizedBox(width: 14),
-              Icon(
-                Icons.school_rounded,
-                size: 13,
-                color: Colors.white.withValues(alpha: 0.85),
-              ),
-              const SizedBox(width: 5),
-              Text(
-                '$totalStudents siswa',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white.withValues(alpha: 0.85),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SebaranPill(
+                  label: 'PERLU · 60–79',
+                  value: '$mid',
+                  pct: pct(mid),
+                  tone: _SebaranTone.amber,
                 ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SebaranPill(
+                  label: 'REMEDIAL · <60',
+                  value: '$low',
+                  pct: pct(low),
+                  tone: _SebaranTone.red,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Footer chips: guru · siswa.
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _MetaChip(
+                icon: Icons.person_rounded,
+                label: '$totalTeachers guru',
+              ),
+              _MetaChip(
+                icon: Icons.school_rounded,
+                label: '$totalStudents siswa',
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDistBar(double fraction, Color color) {
-    return Expanded(
-      flex: (fraction * 100).round().clamp(1, 100),
-      child: Container(height: 6, color: color),
     );
   }
 
@@ -692,103 +740,6 @@ class _AdminGradeOverviewScreenState
 // state class composes into the larger surface.
 // =======================================================================
 
-class _StatTile extends StatelessWidget {
-  final String kicker;
-  final String value;
-  final String caption;
-  const _StatTile({
-    required this.kicker,
-    required this.value,
-    required this.caption,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            kicker,
-            style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.6,
-              color: Colors.white.withValues(alpha: 0.78),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              height: 1.05,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            caption,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.68),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DistLegend extends StatelessWidget {
-  final String range;
-  final int count;
-  final Color color;
-  const _DistLegend({
-    required this.range,
-    required this.count,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 7,
-          height: 7,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 5),
-        Flexible(
-          child: Text(
-            '$range · $count',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Colors.white.withValues(alpha: 0.85),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _AvgPill extends StatelessWidget {
   final double value;
   const _AvgPill({required this.value});
@@ -882,6 +833,142 @@ class _SubjectChip extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Sebaran helpers (Fix-FF) ──────────────────────────────────────
+
+enum _SebaranTone { green, amber, red }
+
+class _SebaranPill extends StatelessWidget {
+  final String label;
+  final String value;
+  final String pct;
+  final _SebaranTone tone;
+
+  const _SebaranPill({
+    required this.label,
+    required this.value,
+    required this.pct,
+    required this.tone,
+  });
+
+  ({Color bg, Color border, Color dot, Color value}) _palette() {
+    switch (tone) {
+      case _SebaranTone.green:
+        return (
+          bg: const Color(0xFFF0FDF4),
+          border: const Color(0xFFBBF7D0),
+          dot: ColorUtils.success600,
+          value: ColorUtils.success700,
+        );
+      case _SebaranTone.amber:
+        return (
+          bg: const Color(0xFFFFFBEB),
+          border: const Color(0xFFFDE68A),
+          dot: ColorUtils.warning600,
+          value: ColorUtils.warning700,
+        );
+      case _SebaranTone.red:
+        return (
+          bg: const Color(0xFFFEF2F2),
+          border: const Color(0xFFFECACA),
+          dot: ColorUtils.error600,
+          value: const Color(0xFFB91C1C),
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = _palette();
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+      decoration: BoxDecoration(
+        color: p.bg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: p.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(color: p.dot, shape: BoxShape.circle),
+              ),
+              const Spacer(),
+              Text(
+                pct,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: ColorUtils.slate500,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              color: ColorUtils.slate600,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: p.value,
+              letterSpacing: -0.4,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _MetaChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: ColorUtils.slate500),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: ColorUtils.slate700,
+            ),
+          ),
         ],
       ),
     );

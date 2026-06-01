@@ -1,0 +1,33 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+# Vite build artefak dengan suffix unik (dist-322-XXXX, dist-rpp-final,
+# dist_stale_NNNN, dst.). Sandbox build pipeline kadang membuat snapshot
+# per-phase untuk QA — jangan di-track.
+dist-*
+dist_stale_*
+.vite
+# Vite memutar konfig dengan suffix timestamp saat HMR — jangan track.
+vite.config.ts.timestamp-*
+vite.config.js.timestamp-*
+*.local
+.env
+.env.local
+.env.*.local
+# Build / type-check cache
+*.tsbuildinfo
+.eslintcache
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build cache
+node_modules/.tmp

@@ -74,6 +74,7 @@ import 'package:manajemensekolah/features/dashboard/presentation/widgets/academi
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/dashboard_app_bar.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/admin_finance_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_overview_screen.dart';
+import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_recap_overview_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_lesson_plan_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_rpp_review_hub_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_raport_hub_screen.dart';
@@ -827,6 +828,13 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   void _openNilai() =>
       AppNavigator.push(context, const AdminGradeOverviewScreen());
 
+  /// Fix-FF — admin Rekap Nilai aggregator (Frame C). Split out from
+  /// the Buku Nilai tile because the previous "Nilai" menu was the
+  /// only entry and it actually opened Buku Nilai; admins still need
+  /// a real Rekap surface.
+  void _openRekapNilai() =>
+      AppNavigator.push(context, const AdminGradeRecapOverviewScreen());
+
   // Mockup #11 v3 dashboard — ring + KPI strip + per-tingkat trend.
   // Tap a tingkat row → drills into per-student CalendarHeatmap
   // (Mockup #12). Legacy class-list AdminAttendanceReportScreen
@@ -839,9 +847,13 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
 
   Widget _buildModulLain() {
     ref.watch(languageRiverpod);
+    // Fix-FF — split the single "Nilai" tile into "Buku Nilai" + "Rekap
+    // Nilai" so admins can reach the new aggregator screen. Total goes
+    // from 8 → 9; Rekap rides into the overflow row to keep the visible
+    // strip at 4 tiles.
     return ModulLainStrip(
       title: AppLocalizations.dbOtherModules.tr,
-      totalLabel: '8 ${AppLocalizations.dbOtherModules.tr.toLowerCase()}',
+      totalLabel: '9 ${AppLocalizations.dbOtherModules.tr.toLowerCase()}',
       accentColor: _adminNavy,
       visibleItems: [
         ModulLainStripItem(
@@ -850,22 +862,30 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
           onTap: _openJadwal,
         ),
         ModulLainStripItem(
-          label: DashboardModules.nilai.defaultLabel,
-          icon: DashboardModules.nilai.icon,
+          label: DashboardModules.bukuNilai.defaultLabel,
+          icon: DashboardModules.bukuNilai.icon,
           onTap: _openNilai,
+        ),
+        // Fix-FF.7 — Rekap Nilai promoted to visible row so the new
+        // aggregator screen is one tap from the dashboard. Rapor moves
+        // to overflow.
+        ModulLainStripItem(
+          label: DashboardModules.rekapNilai.defaultLabel,
+          icon: DashboardModules.rekapNilai.icon,
+          onTap: _openRekapNilai,
         ),
         ModulLainStripItem(
           label: 'Presensi',
           icon: DashboardModules.kehadiran.icon,
           onTap: _openPresensi,
         ),
+      ],
+      overflowItems: [
         ModulLainStripItem(
           label: 'Rapor',
           icon: DashboardModules.raport.icon,
           onTap: _openLaporanRaport,
         ),
-      ],
-      overflowItems: [
         ModulLainStripItem(
           label: DashboardModules.pengumuman.defaultLabel,
           icon: DashboardModules.pengumuman.icon,

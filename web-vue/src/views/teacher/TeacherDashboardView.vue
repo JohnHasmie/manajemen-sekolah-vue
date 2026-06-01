@@ -1,0 +1,619 @@
+<!--
+  TeacherDashboardView.vue - teacher home.
+  Mirrors Flutter's `teacher_dashboard_body.dart`:
+    - stats.slices[] carousel with _GuruSlice schema
+    - HeroStatsCard captions: sessions / attendance / RPP / grades
+    - PriorityInbox from stats.priority_inbox + priority_inbox_total
+    - stats.todays_schedule[] for the Jadwal hari ini strip
+
+  Layout follows the redesign mockup:
+    1. Compact greeting row + tahun-pelajaran chip
+    2. Inline KPI strip (no overlapping hero)
+    3. Jadwal hari ini (3-card strip, next session highlighted)
+    4. 2-column main:
+       - Left (8/12): Perlu Perhatian
+       - Right (4/12): Aksi Cepat 2x2 + Modul Lainnya
+-->
+<script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useAuthStore } from '@/stores/auth';
+import { DashboardService, type InboxResponse } from '@/services/dashboard.service';
+import { formatNumber, formatTime } from '@/lib/format';
+import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import StatSummaryCard, { type StatTrend } from '@/components/feature/StatSummaryCard.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
+import PriorityInbox, { type PriorityItem } from '@/components/feature/PriorityInbox.vue';
+import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
+import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
+import { usePriorityInbox } from '@/composables/usePriorityInbox';
+
+type StatsPayload = Record<string, any>;
+type Slice = Record<string, any>;
+
+interface ScheduleEntry {
+  id?: string;
+  subject_name?: string;
+  subject?: string;
+  class_name?: string;
+  kelas?: string;
+  start_time?: string;
+  end_time?: string;
+  room?: string;
+  is_active?: boolean;
+}
+
+const auth = useAuthStore();
+const router = useRouter();
+const { t } = useI18n();
+
+const showYearPicker = ref(false);
+
+const stats = ref<StatsPayload>({});
+const inbox = ref<InboxResponse>({ items: [], counts: {} });
+const state = ref<AsyncState<StatsPayload>>({ status: 'loading' });
+const lastSync = ref(new Date());
+
+// Carousel state
+const activeSlice = ref(0);
+const sliceProgress = ref(0);
+const isPaused = ref(false);
+const SLICE_DURATION_MS = 5000;
+const STEP_MS = 50;
+
+let progressTimer: ReturnType<typeof setInterval> | null = null;
+
+const slices = computed<Slice[]>(() => {
+  const raw = stats.value.slices;
+  return Array.isArray(raw) && raw.length > 0 ? (raw as Slice[]) : [synthAggregateSlice()];
+});
+
+const sliceCount = computed(() => slices.value.length);
+const current = computed<Slice>(() => slices.value[Math.min(activeSlice.value, sliceCount.value - 1)] ?? {});
+
+function synthAggregateSlice(): Slice {
+  return {
+    key: 'mengajar',
+    label: 'Mengajar',
+    is_aggregate: true,
+    sessions_today: asInt(stats.value.classes_today ?? stats.value.sessions_today),
+    sessions_today_done: 0,
+    attendance_rate_window: 0,
+    attendance_delta: 0,
+    lesson_plans_approved: asInt(stats.value.rpp_approved),
+    lesson_plans_pending: asInt(stats.value.rpp_pending),
+    lesson_plans_revision: asInt(stats.value.rpp_rejected),
+    grades_pending_sessions: 0,
+  };
+}
+
+function asInt(v: unknown): number {
+  if (typeof v === 'number') return Math.round(v);
+  if (typeof v === 'string') return Number.parseInt(v, 10) || 0;
+  return 0;
+}
+
+function num(key: string): number {
+  return asInt(current.value[key]);
+}
+
+const sliceLabel = computed<string>(() => String(current.value.label ?? ''));
+const sliceLabelMuted = computed<boolean>(() => Boolean(current.value.is_aggregate));
+
+// Carousel timer (Stories style)
+function startSlices() {
+  stopSlices();
+  progressTimer = setInterval(() => {
+    if (isPaused.value) return;
+    if (sliceCount.value <= 1) return;
+    sliceProgress.value += STEP_MS / SLICE_DURATION_MS;
+    if (sliceProgress.value >= 1) {
+      sliceProgress.value = 0;
+      activeSlice.value = (activeSlice.value + 1) % sliceCount.value;
+    }
+  }, STEP_MS);
+}
+
+function stopSlices() {
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = null;
+  }
+}
+
+function goToSlice(idx: number) {
+  activeSlice.value = Math.max(0, Math.min(idx, sliceCount.value - 1));
+  sliceProgress.value = 0;
+}
+
+function togglePause() {
+  isPaused.value = !isPaused.value;
+}
+
+// Captions mirror Flutter's _buildGuruSliceCards
+const sessionsCaption = computed(() => {
+  const total = num('sessions_today');
+  const done = num('sessions_today_done');
+  if (total > 0) return `${done} selesai · ${total - done} belum`;
+  return 'Tidak ada sesi hari ini';
+});
+
+const attendanceTrend = computed<StatTrend | null>(() => {
+  const delta = num('attendance_delta');
+  if (delta === 0) return null;
+  return {
+    direction: delta > 0 ? 'up' : 'down',
+    label: `${delta > 0 ? '+' : ''}${delta}%`,
+  };
+});
+
+const rppNeedsAttention = computed(
+  () => num('lesson_plans_pending') + num('lesson_plans_revision'),
+);
+
+const rppCaption = computed(() => {
+  if (rppNeedsAttention.value > 0) {
+    return `${num('lesson_plans_pending')} menunggu · ${num('lesson_plans_revision')} revisi`;
+  }
+  return `${num('lesson_plans_approved')} disetujui`;
+});
+
+const rppTone = computed<'warning' | 'success'>(() =>
+  rppNeedsAttention.value > 0 ? 'warning' : 'success',
+);
+
+const gradesCaption = computed(() =>
+  num('grades_pending_sessions') > 0 ? 'Butuh input nilai' : 'Semua nilai masuk',
+);
+
+const gradesTone = computed<'brand' | 'success'>(() =>
+  num('grades_pending_sessions') > 0 ? 'brand' : 'success',
+);
+
+// Priority inbox — parser + tap router come from the shared composable
+// so admin + parent + teacher use the same route resolution logic.
+const { mapToPriorityItems, handlePriorityTap, priorityCountLabel } =
+  usePriorityInbox('teacher');
+
+const priorityItems = computed<PriorityItem[]>(() =>
+  mapToPriorityItems(stats.value.priority_inbox),
+);
+
+const priorityTotal = computed(() => {
+  const total = stats.value.priority_inbox_total;
+  if (typeof total === 'number') return total;
+  if (typeof total === 'string')
+    return Number.parseInt(total, 10) || priorityItems.value.length;
+  return priorityItems.value.length;
+});
+
+const priorityHeaderLabel = computed(() =>
+  priorityCountLabel(priorityItems.value.length, priorityTotal.value),
+);
+
+// Today's schedule (stats.todays_schedule[] from the Flutter dashboard state transformer)
+const todaysSchedule = computed<ScheduleEntry[]>(() => {
+  const raw = stats.value.todays_schedule;
+  return Array.isArray(raw) ? (raw as ScheduleEntry[]) : [];
+});
+
+function fmtTime(t?: string): string {
+  if (!t) return '--:--';
+  // Accept "HH:mm:ss", "HH:mm" or ISO. Strip seconds.
+  const m = t.match(/(\d{1,2}):(\d{2})/);
+  return m ? `${m[1].padStart(2, '0')}.${m[2]}` : t;
+}
+
+// Greeting based on time of day
+const greeting = computed(() => {
+  const h = new Date().getHours();
+  if (h < 11) return 'Selamat pagi';
+  if (h < 15) return 'Selamat siang';
+  if (h < 18) return 'Selamat sore';
+  return 'Selamat malam';
+});
+
+const today = computed(() => {
+  return new Date().toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+});
+
+// Data load
+async function load() {
+  state.value = { status: 'loading' };
+  try {
+    const role = auth.activeRole ?? 'guru';
+    const [statsData, inboxData] = await Promise.all([
+      DashboardService.getStats(role),
+      DashboardService.teacherPriorityInbox(20),
+    ]);
+    stats.value = statsData;
+    inbox.value = inboxData;
+    lastSync.value = new Date();
+    state.value = { status: 'content', data: statsData };
+    activeSlice.value = 0;
+    sliceProgress.value = 0;
+  } catch (e) {
+    state.value = { status: 'error', error: (e as Error).message };
+  }
+}
+
+onMounted(() => {
+  load();
+  startSlices();
+});
+
+onUnmounted(stopSlices);
+
+// Refetch when the active academic year changes via the chip.
+useAcademicYearWatcher(() => load());
+
+interface QuickAction {
+  label: string;
+  icon: string;
+  to: string;
+  hint?: string;
+}
+
+const quickActions = computed<QuickAction[]>(() => [
+  {
+    label: 'Jadwal',
+    icon: 'calendar',
+    to: '/teacher/schedule',
+    hint: `${todaysSchedule.value.length} sesi hari ini`,
+  },
+  {
+    label: 'Absensi',
+    icon: 'check-square',
+    to: '/teacher/attendance',
+    hint:
+      num('sessions_today') > 0
+        ? `${num('sessions_today') - num('sessions_today_done')} tertunda`
+        : 'Lihat presensi',
+  },
+  {
+    label: 'Aktivitas',
+    icon: 'activity',
+    to: '/teacher/class-activity',
+    hint: 'Catat kegiatan',
+  },
+  {
+    label: 'Input Nilai',
+    icon: 'edit',
+    to: '/teacher/grades',
+    hint:
+      num('grades_pending_sessions') > 0
+        ? `${num('grades_pending_sessions')} kelas siap`
+        : 'Semua tuntas',
+  },
+]);
+
+const secondaryActions: { label: string; icon: string; to: string }[] = [
+  { label: 'Materi', icon: 'book', to: '/teacher/materials' },
+  { label: 'Draft RPP', icon: 'file-text', to: '/teacher/lesson-plans' },
+  { label: 'AI Rekomendasi', icon: 'sparkles', to: '/teacher/recommendations' },
+  { label: 'E-Rapor', icon: 'file-plus', to: '/teacher/report-cards' },
+];
+
+// handlePriorityTap supplied by usePriorityInbox('teacher') above.
+</script>
+
+<template>
+  <div class="space-y-6 pb-12">
+    <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
+      <template #default>
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 space-y-6">
+
+          <!-- 1. Compact greeting row -->
+          <section class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4 min-w-0">
+              <div class="w-11 h-11 rounded-2xl bg-brand-cobalt/10 grid place-items-center text-brand-cobalt flex-shrink-0">
+                <NavIcon name="sparkles" :size="22" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-[11px] font-bold text-slate-400 tracking-widest uppercase leading-none">
+                  {{ greeting }}
+                </p>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight mt-1 truncate">
+                  Halo, <span class="text-brand-cobalt">{{ auth.user?.name ?? 'Guru' }}</span>
+                </h1>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Realtime · {{ formatTime(lastSync) }}
+              </span>
+              <AcademicYearChip
+                variant="light"
+                :min-width="140"
+                @open="showYearPicker = true"
+              />
+            </div>
+          </section>
+
+          <!-- 2. KPI strip (inline, no hero) with slice carousel -->
+          <section
+            class="space-y-3"
+            @mouseenter="isPaused = true"
+            @mouseleave="isPaused = false"
+          >
+            <div v-if="sliceCount > 1" class="flex items-center justify-between gap-3 px-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <button
+                  v-for="(s, idx) in slices"
+                  :key="(s.key ?? idx) + ''"
+                  type="button"
+                  class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                  :class="
+                    idx === activeSlice
+                      ? 'bg-brand-cobalt text-white shadow-sm'
+                      : 'bg-white text-slate-500 hover:text-slate-900 border border-slate-200'
+                  "
+                  @click="goToSlice(idx)"
+                >
+                  {{ s.label || `Slice ${idx + 1}` }}
+                </button>
+              </div>
+              <button
+                type="button"
+                class="w-8 h-8 rounded-lg bg-white border border-slate-200 hover:border-slate-300 text-slate-500 hover:text-slate-900 grid place-items-center"
+                :aria-label="isPaused ? 'Lanjutkan otomatis' : 'Jeda otomatis'"
+                @click="togglePause"
+              >
+                <span class="text-[10px]">{{ isPaused ? '▶' : '▮▮' }}</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <StatSummaryCard
+                label="Sesi Hari Ini"
+                :value="formatNumber(num('sessions_today'))"
+                tone="brand"
+                icon-name="calendar"
+                :sublabel="sessionsCaption"
+                :slices="sliceCount"
+                :active-slice="activeSlice"
+                :slice-progress="sliceProgress"
+                :slice-label="sliceLabel"
+                :slice-label-muted="sliceLabelMuted"
+                @click="router.push('/teacher/schedule')"
+              />
+              <StatSummaryCard
+                label="Kehadiran"
+                :value="`${num('attendance_rate_window')}%`"
+                tone="success"
+                icon-name="check-circle"
+                sublabel="rata-rata periode"
+                :trend="attendanceTrend"
+                :slices="sliceCount"
+                :active-slice="activeSlice"
+                :slice-progress="sliceProgress"
+                :slice-label="sliceLabel"
+                :slice-label-muted="sliceLabelMuted"
+                @click="router.push('/teacher/attendance')"
+              />
+              <StatSummaryCard
+                label="RPP"
+                :value="formatNumber(num('lesson_plans_approved'))"
+                :tone="rppTone"
+                icon-name="clipboard-list"
+                :sublabel="rppCaption"
+                :slices="sliceCount"
+                :active-slice="activeSlice"
+                :slice-progress="sliceProgress"
+                :slice-label="sliceLabel"
+                :slice-label-muted="sliceLabelMuted"
+                @click="router.push('/teacher/lesson-plans')"
+              />
+              <StatSummaryCard
+                label="Nilai Belum Input"
+                :value="formatNumber(num('grades_pending_sessions'))"
+                :tone="gradesTone"
+                icon-name="edit"
+                :sublabel="gradesCaption"
+                :slices="sliceCount"
+                :active-slice="activeSlice"
+                :slice-progress="sliceProgress"
+                :slice-label="sliceLabel"
+                :slice-label-muted="sliceLabelMuted"
+                @click="router.push('/teacher/grades')"
+              />
+            </div>
+          </section>
+
+          <!-- 3. Jadwal hari ini (real schedule strip) -->
+          <section class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
+            <header class="flex items-center justify-between mb-4 px-1">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-brand-cobalt/10 text-brand-cobalt grid place-items-center">
+                  <NavIcon name="calendar" :size="16" />
+                </div>
+                <div>
+                  <h3 class="text-sm font-black text-slate-900 tracking-tight leading-none">
+                    Jadwal Hari Ini
+                  </h3>
+                  <p class="text-[11px] text-slate-400 font-bold mt-0.5">
+                    {{ today }} · {{ todaysSchedule.length }} sesi
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="text-[11px] font-black text-brand-cobalt hover:text-brand-azure uppercase tracking-widest"
+                @click="router.push('/teacher/schedule')"
+              >
+                Lihat Semua →
+              </button>
+            </header>
+
+            <div v-if="todaysSchedule.length === 0" class="py-8 text-center text-slate-400">
+              <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-50 grid place-items-center mb-3">
+                <NavIcon name="activity" :size="28" />
+              </div>
+              <p class="text-sm font-bold text-slate-600">Tidak ada jadwal hari ini</p>
+              <p class="text-xs text-slate-400 mt-1">Jadwal Anda untuk hari ini sudah selesai atau belum dimulai.</p>
+            </div>
+
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              <div
+                v-for="(s, idx) in todaysSchedule.slice(0, 3)"
+                :key="s.id ?? idx"
+                class="rounded-2xl px-4 py-3.5 border transition-all cursor-pointer hover:-translate-y-0.5"
+                :class="
+                  s.is_active
+                    ? 'bg-brand-cobalt/5 border-brand-cobalt/30 shadow-md shadow-brand-cobalt/10'
+                    : 'bg-slate-50 border-slate-100 hover:border-slate-200'
+                "
+                @click="router.push('/teacher/schedule')"
+              >
+                <p
+                  class="text-[10px] font-black uppercase tracking-widest"
+                  :class="s.is_active ? 'text-brand-cobalt' : 'text-slate-400'"
+                >
+                  {{ fmtTime(s.start_time) }} <span v-if="s.end_time">– {{ fmtTime(s.end_time) }}</span>
+                </p>
+                <p class="text-sm font-black text-slate-900 truncate mt-1">
+                  {{ s.subject_name ?? s.subject ?? 'Mata Pelajaran' }}
+                </p>
+                <p class="text-[11px] font-bold text-slate-500 truncate mt-0.5">
+                  {{ s.class_name ?? s.kelas ?? '' }}<span v-if="s.room"> · {{ s.room }}</span>
+                </p>
+                <span
+                  v-if="s.is_active"
+                  class="mt-2 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-brand-cobalt text-white"
+                >
+                  <span class="w-1 h-1 rounded-full bg-white animate-pulse"></span>
+                  Sedang Berlangsung
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. Two-column main: Perlu Perhatian (left) + Aksi Cepat & Modul (right) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Left: Perlu Perhatian -->
+            <section class="lg:col-span-8">
+              <div class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
+                <header class="flex items-center justify-between mb-4 px-1">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 grid place-items-center">
+                      <NavIcon name="bell" :size="16" />
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-sm font-black text-slate-900 tracking-tight leading-none">
+                        Perlu Perhatian
+                      </h3>
+                      <span
+                        v-if="priorityItems.length > 0"
+                        class="px-2 py-0.5 rounded-full bg-brand-cobalt text-white text-[10px] font-black"
+                      >
+                        {{ priorityHeaderLabel }}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    v-if="priorityItems.length > 0"
+                    type="button"
+                    class="text-[11px] font-black text-brand-cobalt hover:text-brand-azure uppercase tracking-widest"
+                    @click="router.push({ name: 'teacher.inbox' })"
+                  >
+                    Lihat Semua →
+                  </button>
+                </header>
+
+                <PriorityInbox
+                  :items="priorityItems"
+                  :show-header="false"
+                  @item-tap="handlePriorityTap"
+                />
+              </div>
+            </section>
+
+            <!-- Right: Aksi Cepat + Modul Lainnya -->
+            <section class="lg:col-span-4 space-y-6">
+              <!-- Aksi Cepat 2x2 -->
+              <div class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
+                <header class="flex items-center gap-2.5 mb-4 px-1">
+                  <div class="w-8 h-8 rounded-xl bg-brand-cobalt/10 text-brand-cobalt grid place-items-center">
+                    <NavIcon name="sparkles" :size="16" />
+                  </div>
+                  <h3 class="text-sm font-black text-slate-900 tracking-tight leading-none">
+                    Aksi Cepat
+                  </h3>
+                </header>
+                <div class="grid grid-cols-2 gap-2.5">
+                  <button
+                    v-for="a in quickActions"
+                    :key="a.label"
+                    type="button"
+                    class="text-left p-4 rounded-2xl bg-slate-50 hover:bg-brand-cobalt/5 border border-transparent hover:border-brand-cobalt/20 transition-all group"
+                    @click="router.push({ path: a.to, query: { from: 'quick-action' } })"
+                  >
+                    <div class="w-9 h-9 rounded-xl bg-white border border-slate-100 group-hover:bg-brand-cobalt group-hover:border-brand-cobalt grid place-items-center text-brand-cobalt group-hover:text-white transition-colors mb-2.5">
+                      <NavIcon :name="a.icon" :size="18" />
+                    </div>
+                    <p class="text-sm font-black text-slate-900 tracking-tight leading-none">
+                      {{ a.label }}
+                    </p>
+                    <p v-if="a.hint" class="text-[10px] font-bold text-slate-400 mt-1.5 truncate">
+                      {{ a.hint }}
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Modul Lainnya - clean list, no gradient -->
+              <div class="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
+                <header class="flex items-center gap-2.5 mb-4 px-1">
+                  <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-500 grid place-items-center">
+                    <NavIcon name="book" :size="16" />
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-black text-slate-900 tracking-tight leading-none">
+                      Modul Lainnya
+                    </h3>
+                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">
+                      Akses laporan, materi, dan alat bantu lainnya
+                    </p>
+                  </div>
+                </header>
+                <div class="space-y-1.5">
+                  <button
+                    v-for="a in secondaryActions"
+                    :key="a.label"
+                    type="button"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors group text-left"
+                    @click="router.push(a.to)"
+                  >
+                    <div class="w-7 h-7 rounded-lg bg-slate-50 text-brand-cobalt group-hover:bg-brand-cobalt group-hover:text-white grid place-items-center transition-colors">
+                      <NavIcon :name="a.icon" :size="14" />
+                    </div>
+                    <span class="flex-1 text-sm font-bold text-slate-700 group-hover:text-slate-900">
+                      {{ a.label }}
+                    </span>
+                    <span class="text-slate-300 group-hover:text-brand-cobalt transition-colors">→</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+
+        </div>
+      </template>
+    </AsyncView>
+
+    <AcademicYearPickerModal
+      v-if="showYearPicker"
+      role="guru"
+      @close="showYearPicker = false"
+    />
+  </div>
+</template>
