@@ -1,0 +1,440 @@
+<!--
+  AdminDashboardView.vue - admin home.
+  Mirrors Flutter's `admin_dashboard_body.dart` + mockup #1.
+
+  Layout (no floating KPI overlap):
+    1. Compact greeting + tingkat tabs (slice carousel)
+    2. KPI strip (4 cards, inline) with progress strip per card
+    3. Two-column: Heatmap kelas x hari (left), Finance snapshot (right)
+    4. Quick-actions grid
+-->
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useAuthStore } from '@/stores/auth';
+import { DashboardService } from '@/services/dashboard.service';
+import { formatNumber, formatRupiah } from '@/lib/format';
+import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import StatSummaryCard from '@/components/feature/StatSummaryCard.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
+import SegmentedControl from '@/components/filters/SegmentedControl.vue';
+import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
+import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
+import PriorityInbox from '@/components/feature/PriorityInbox.vue';
+import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { usePriorityInbox } from '@/composables/usePriorityInbox';
+
+type StatsPayload = Record<string, any>;
+type Slice = Record<string, any>;
+
+const auth = useAuthStore();
+const router = useRouter();
+const { t } = useI18n();
+
+const showYearPicker = ref(false);
+const { mapToPriorityItems, handlePriorityTap, priorityCountLabel } =
+  usePriorityInbox('admin');
+
+const stats = ref<StatsPayload>({});
+const state = ref<AsyncState<StatsPayload>>({ status: 'loading' });
+const priorityRaw = ref<unknown>([]);
+const priorityTotal = ref<number>(0);
+
+const priorityItems = computed(() => mapToPriorityItems(priorityRaw.value));
+const priorityHeaderLabel = computed(() =>
+  priorityCountLabel(priorityItems.value.length, priorityTotal.value),
+);
+
+function gotoAdminInbox() {
+  router.push({ name: 'admin.inbox' });
+}
+
+// Slice (tingkat) carousel
+const sliceKey = ref<string>('all');
+
+const slices = computed<Slice[]>(() => {
+  const raw = stats.value.slices;
+  if (Array.isArray(raw) && raw.length > 0) return raw as Slice[];
+  return [
+    {
+      key: 'all',
+      label: 'Semua tingkat',
+      is_aggregate: true,
+      total_students: asInt(stats.value.total_students),
+      total_teachers: asInt(stats.value.total_teachers),
+      total_classes: asInt(stats.value.total_classes),
+      attendance_rate: asInt(stats.value.attendance_rate_today),
+      attendance_delta: 0,
+      pending_lesson_plans: asInt(stats.value.pending_lesson_plans),
+    },
+  ];
+});
+
+const sliceOptions = computed(() =>
+  slices.value.map((s) => ({
+    key: String(s.key ?? s.label),
+    label: String(s.label ?? 'Slice'),
+  })),
+);
+
+const current = computed<Slice>(() => {
+  return (
+    slices.value.find((s) => String(s.key ?? s.label) === sliceKey.value) ??
+    slices.value[0] ??
+    {}
+  );
+});
+
+function asInt(v: unknown): number {
+  if (typeof v === 'number') return Math.round(v);
+  if (typeof v === 'string') return Number.parseInt(v, 10) || 0;
+  return 0;
+}
+
+function num(key: string): number {
+  return asInt(current.value[key]);
+}
+
+function topLevelNum(key: string): number {
+  return asInt(stats.value[key]);
+}
+
+const sliceLabel = computed(() => String(current.value.label ?? ''));
+const sliceLabelMuted = computed(() => Boolean(current.value.is_aggregate));
+
+const greeting = computed(() => {
+  const h = new Date().getHours();
+  if (h < 11) return 'Selamat pagi';
+  if (h < 15) return 'Selamat siang';
+  if (h < 18) return 'Selamat sore';
+  return 'Selamat malam';
+});
+
+async function load() {
+  state.value = { status: 'loading' };
+  try {
+    const [data, inbox] = await Promise.all([
+      DashboardService.getStats('admin'),
+      DashboardService.adminPriorityInbox(),
+    ]);
+    stats.value = data;
+    priorityRaw.value = inbox.items;
+    priorityTotal.value = inbox.total;
+    state.value = { status: 'content', data };
+    if (sliceOptions.value.length > 0 && !sliceOptions.value.find((o) => o.key === sliceKey.value)) {
+      sliceKey.value = sliceOptions.value[0].key;
+    }
+  } catch (e) {
+    state.value = { status: 'error', error: (e as Error).message };
+  }
+}
+
+onMounted(load);
+
+// Refetch when the active academic year changes via the chip.
+useAcademicYearWatcher(() => load());
+
+interface QuickAction {
+  labelKey: string;
+  icon: string;
+  to: string;
+}
+
+const quickActions: QuickAction[] = [
+  { labelKey: 'nav.students', icon: 'users', to: '/admin/students' },
+  { labelKey: 'nav.teachers', icon: 'user-check', to: '/admin/teachers' },
+  { labelKey: 'nav.classes', icon: 'layers', to: '/admin/classes' },
+  { labelKey: 'nav.subjects', icon: 'book', to: '/admin/subjects' },
+  { labelKey: 'nav.schedule', icon: 'calendar', to: '/admin/schedule' },
+  { labelKey: 'nav.attendance', icon: 'check-square', to: '/admin/attendance' },
+  { labelKey: 'nav.lessonPlans', icon: 'file-text', to: '/admin/lesson-plans' },
+  { labelKey: 'nav.finance', icon: 'wallet', to: '/admin/finance' },
+  { labelKey: 'nav.grades', icon: 'edit-3', to: '/admin/grades' },
+  { labelKey: 'nav.gradeRecap', icon: 'bar-chart', to: '/admin/grade-recap' },
+  { labelKey: 'nav.reportCards', icon: 'file-plus', to: '/admin/report-cards' },
+  { labelKey: 'nav.announcements', icon: 'megaphone', to: '/admin/announcements' },
+];
+
+// Heatmap data - reads stats.attendance_heatmap[] when backend supplies it,
+// otherwise synthesises a placeholder grid so the section is never empty.
+interface HeatmapRow { class_name: string; cells: number[] }
+const heatmap = computed<HeatmapRow[]>(() => {
+  const raw = stats.value.attendance_heatmap;
+  if (Array.isArray(raw)) return raw as HeatmapRow[];
+  // Synthesized placeholder so admin sees the shape on first connect.
+  const sample = ['7A', '7B', '8A', '8B', '9A'];
+  return sample.map((cls) => ({
+    class_name: cls,
+    cells: Array.from({ length: 10 }, () => 80 + Math.floor(Math.random() * 20)),
+  }));
+});
+
+function heatCellClass(pct: number): string {
+  if (pct < 75) return 'bg-red-200';
+  if (pct < 80) return 'bg-emerald-100';
+  if (pct < 90) return 'bg-emerald-300';
+  if (pct < 95) return 'bg-emerald-500';
+  return 'bg-emerald-700';
+}
+
+const financeReceived = computed(() => topLevelNum('finance_received'));
+const financeOutstanding = computed(() => topLevelNum('finance_outstanding'));
+const financeTotal = computed(() => financeReceived.value + financeOutstanding.value);
+const financePct = computed(() =>
+  financeTotal.value > 0
+    ? Math.round((financeReceived.value / financeTotal.value) * 100)
+    : 0,
+);
+</script>
+
+<template>
+  <div class="space-y-md">
+    <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
+      <template #default>
+        <div class="max-w-[1600px] mx-auto space-y-md">
+
+          <!-- 1. Compact greeting + slice tabs -->
+          <section class="flex items-center justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-2xl bg-role-admin/10 grid place-items-center text-role-admin flex-shrink-0">
+                <NavIcon name="sparkles" :size="20" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">{{ greeting }}</p>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  Halo, <span class="text-role-admin">{{ auth.user?.name }}</span>
+                </h1>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <SegmentedControl
+                v-if="sliceOptions.length > 1"
+                v-model="sliceKey"
+                :options="sliceOptions"
+                size="sm"
+              />
+              <AcademicYearChip
+                variant="light"
+                :min-width="140"
+                @open="showYearPicker = true"
+              />
+              <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-widest">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Realtime
+              </span>
+            </div>
+          </section>
+
+          <!-- 2. KPI strip (inline, no floating) -->
+          <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <StatSummaryCard
+              label="Total siswa"
+              :value="formatNumber(num('total_students') || topLevelNum('total_students'))"
+              tone="brand"
+              icon-name="users"
+              :sublabel="`${num('total_classes') || topLevelNum('total_classes')} kelas`"
+              :slices="sliceOptions.length"
+              :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
+              :slice-progress="1"
+              :slice-label="sliceLabel"
+              :slice-label-muted="sliceLabelMuted"
+              @click="router.push('/admin/students')"
+            />
+            <StatSummaryCard
+              label="Total guru"
+              :value="formatNumber(num('total_teachers') || topLevelNum('total_teachers'))"
+              tone="info"
+              icon-name="user-check"
+              sublabel="Lihat daftar guru →"
+              :slices="sliceOptions.length"
+              :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
+              :slice-progress="1"
+              :slice-label="sliceLabel"
+              :slice-label-muted="sliceLabelMuted"
+              @click="router.push('/admin/teachers')"
+            />
+            <StatSummaryCard
+              label="Kehadiran hari ini"
+              :value="`${num('attendance_rate') || topLevelNum('attendance_rate')}%`"
+              tone="success"
+              icon-name="check-circle"
+              :trend="
+                num('attendance_delta')
+                  ? {
+                      direction: num('attendance_delta') > 0 ? 'up' : 'down',
+                      label: `${num('attendance_delta') > 0 ? '+' : ''}${num('attendance_delta')}%`,
+                    }
+                  : null
+              "
+              sublabel="vs kemarin"
+              :slices="sliceOptions.length"
+              :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
+              :slice-progress="1"
+              :slice-label="sliceLabel"
+              :slice-label-muted="sliceLabelMuted"
+              @click="router.push('/admin/attendance')"
+            />
+            <StatSummaryCard
+              label="RPP menunggu"
+              :value="formatNumber(num('pending_lesson_plans') || topLevelNum('pending_lesson_plans'))"
+              tone="warning"
+              icon-name="clipboard-list"
+              :sublabel="`${topLevelNum('rpp_rejected')} perlu revisi`"
+              :slices="sliceOptions.length"
+              :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
+              :slice-progress="1"
+              :slice-label="sliceLabel"
+              :slice-label-muted="sliceLabelMuted"
+              @click="router.push('/admin/lesson-plans')"
+            />
+          </section>
+
+          <!-- 3. Heatmap + Finance -->
+          <section class="grid grid-cols-1 lg:grid-cols-3 gap-md">
+            <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4">
+              <header class="flex items-center justify-between mb-3 px-1">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center">
+                    <NavIcon name="activity" :size="16" />
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-black text-slate-900 leading-none">
+                      Kehadiran per hari × kelas
+                    </h3>
+                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">10 hari terakhir</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="text-[11px] font-bold text-role-admin hover:underline"
+                  @click="router.push('/admin/attendance')"
+                >
+                  Detail →
+                </button>
+              </header>
+              <div class="grid gap-1.5" style="grid-template-columns: 60px repeat(10, 1fr);">
+                <template v-for="(row, ri) in heatmap" :key="`${row.class_name}-${ri}`">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider self-center">{{ row.class_name }}</span>
+                  <span
+                    v-for="(pct, ci) in row.cells"
+                    :key="`${ri}-${ci}`"
+                    class="h-5 rounded"
+                    :class="heatCellClass(pct)"
+                    :title="`${row.class_name}: ${pct}%`"
+                  ></span>
+                </template>
+              </div>
+              <div class="flex items-center gap-3 mt-3 text-[10px] text-slate-500 flex-wrap">
+                <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-emerald-100"></span>80%</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-emerald-500"></span>90%</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-emerald-700"></span>95%+</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-3 h-2 rounded bg-red-200"></span>&lt;75%</span>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-4">
+              <header class="flex items-center justify-between mb-3 px-1">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center">
+                    <NavIcon name="wallet" :size="16" />
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-black text-slate-900 leading-none">Keuangan bulan ini</h3>
+                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">Diterima vs tunggakan</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="text-[11px] font-bold text-role-admin hover:underline"
+                  @click="router.push('/admin/finance')"
+                >
+                  Detail →
+                </button>
+              </header>
+              <div class="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Diterima</p>
+                  <p class="text-base font-black text-emerald-700">{{ formatRupiah(financeReceived) }}</p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tunggakan</p>
+                  <p class="text-base font-black text-red-700">{{ formatRupiah(financeOutstanding) }}</p>
+                </div>
+              </div>
+              <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-emerald-500 transition-all"
+                  :style="{ width: `${financePct}%` }"
+                ></div>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-2">
+                <b class="text-slate-900">{{ financePct }}%</b> target tercapai
+              </p>
+            </div>
+          </section>
+
+          <!-- 3b. Perlu Perhatian — admin priority inbox -->
+          <section>
+            <header class="flex items-center justify-between gap-3 mb-3 px-1">
+              <div class="flex items-center gap-2">
+                <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest">
+                  Perlu Perhatian
+                </h3>
+                <span
+                  v-if="priorityItems.length > 0"
+                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-role-admin/10 text-role-admin"
+                >
+                  {{ priorityHeaderLabel }}
+                </span>
+              </div>
+              <button
+                v-if="priorityItems.length > 0"
+                type="button"
+                class="text-[11px] font-bold text-role-admin hover:underline inline-flex items-center gap-1"
+                @click="gotoAdminInbox"
+              >
+                Lihat semua
+                <NavIcon name="chevron-right" :size="12" />
+              </button>
+            </header>
+            <PriorityInbox
+              :items="priorityItems"
+              :show-header="false"
+              @item-tap="handlePriorityTap"
+              @see-all="gotoAdminInbox"
+            />
+          </section>
+
+          <!-- 4. Quick actions -->
+          <section>
+            <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest mb-3 px-1">
+              Manajemen sekolah
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+              <button
+                v-for="a in quickActions"
+                :key="a.to"
+                type="button"
+                class="flex flex-col items-center gap-2.5 rounded-2xl border border-slate-200 bg-white hover:border-role-admin hover:shadow-md p-4 text-xs font-bold text-slate-600 transition-all group"
+                @click="router.push(a.to)"
+              >
+                <span class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-role-admin group-hover:text-white grid place-items-center transition-colors">
+                  <NavIcon :name="a.icon" :size="18" />
+                </span>
+                <span class="text-center leading-tight uppercase tracking-tight">{{ t(a.labelKey) }}</span>
+              </button>
+            </div>
+          </section>
+
+        </div>
+      </template>
+    </AsyncView>
+
+    <AcademicYearPickerModal
+      v-if="showYearPicker"
+      role="admin"
+      @close="showYearPicker = false"
+    />
+  </div>
+</template>

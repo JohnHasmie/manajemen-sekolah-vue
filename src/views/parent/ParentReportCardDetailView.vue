@@ -1,0 +1,693 @@
+<!--
+  ParentReportCardDetailView.vue — full E-Raport for one child.
+
+  Web port of Flutter's `parent_report_card_detail_screen.dart`.
+  Route: /parent/report-cards/:studentClassId
+
+  Sections (per the mobile Frame):
+    1. Back chevron + sticky header download icon
+    2. ParentPageHeader (wali) — kicker, title "Rapor {nama}",
+       status pill in #actions
+    3. Hero chip row (Kelas · Sem · UTS/UAS toggles)
+    4. KPI overlap card (Rata-rata · Peringkat · Kehadiran)
+    5. Sikap (Spiritual + Sosial) with "Wali kelas" trailing
+    6. Nilai per mata pelajaran — per-subject ParentRaporSubjectCard
+       (tap → Deskripsi sheet)
+    7. Ekstrakurikuler (auto-hidden when empty)
+    8. Prestasi (auto-hidden when empty)
+    9. Kehadiran 4-cell (Hadir / Sakit / Izin / Alpa)
+   10. Catatan Wali Kelas (auto-hidden when empty)
+   11. Promotion banner — Genap only; Ganjil shows a soft slate note
+   12. Export note ("File PDF akan tersimpan…")
+   13. Sticky bottom: Bagikan + Cetak E-Raport (wali → certificate)
+-->
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ReportCardService } from '@/services/report-card.service';
+import {
+  STATUS_LABELS,
+  type ParentRaportRow,
+  type RaportSubject,
+} from '@/types/report-card';
+import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import ParentPageHeader from '@/components/layout/ParentPageHeader.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
+import Button from '@/components/ui/Button.vue';
+import Modal from '@/components/ui/Modal.vue';
+import Toast from '@/components/ui/Toast.vue';
+import ParentRaporSubjectCard from '@/components/feature/ParentRaporSubjectCard.vue';
+import ParentRaporDeskripsiSheet from '@/components/feature/ParentRaporDeskripsiSheet.vue';
+
+const route = useRoute();
+const router = useRouter();
+
+const studentClassId = computed(() => String(route.params.studentClassId ?? ''));
+
+const row = ref<ParentRaportRow | null>(null);
+const isLoading = ref(true);
+const loadError = ref<string | null>(null);
+const isPrinting = ref(false);
+const toast = ref<{ message: string; tone: 'success' | 'error' | 'info' } | null>(null);
+const detailSubject = ref<RaportSubject | null>(null);
+// Visual-only filter chip — rapor payload is already UTS+UAS, so this
+// just nudges a snackbar reminder. Matches mobile parity.
+const assessmentFilter = ref<'uts' | 'uas' | null>(null);
+
+// Semester carried from the list view's query string ('1' = Ganjil,
+// '2' = Genap). When absent we default to the current half-year so a
+// deep-link still resolves. If the first fetch returns no matching row
+// we fall back to the other semester before giving up — the same
+// student_class_id can live in either window.
+type SemesterId = '1' | '2';
+const initialSemester: SemesterId =
+  String(route.query.semester ?? '') === '1' ||
+  String(route.query.semester ?? '') === '2'
+    ? (String(route.query.semester) as SemesterId)
+    : new Date().getMonth() + 1 >= 7
+      ? '1'
+      : '2';
+
+async function load() {
+  isLoading.value = true;
+  loadError.value = null;
+  try {
+    // Try the scoped semester first.
+    let rows = await ReportCardService.parentRaports({
+      semester_id: initialSemester,
+    });
+    let found = rows.find((r) => r.student_class_id === studentClassId.value);
+    if (!found) {
+      // Fall back to the other semester — handles cross-link deep-
+      // links and the rare case where the URL was bookmarked under
+      // the wrong window.
+      const other: SemesterId = initialSemester === '1' ? '2' : '1';
+      rows = await ReportCardService.parentRaports({ semester_id: other });
+      found = rows.find((r) => r.student_class_id === studentClassId.value);
+    }
+    row.value = found ?? null;
+    if (!row.value) {
+      loadError.value = 'Rapor tidak ditemukan atau belum diterbitkan.';
+    }
+  } catch (e) {
+    loadError.value = (e as Error).message;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(load);
+
+const isPublished = computed(
+  () =>
+    row.value?.reportCard.status === 'published' ||
+    row.value?.reportCard.status === 'distributed',
+);
+
+const isGenap = computed(
+  () =>
+    (row.value?.reportCard.semester ?? '').toLowerCase().includes('genap') ||
+    (row.value?.reportCard.semester ?? '').toLowerCase() === '2',
+);
+
+const isNaikKelas = computed(() =>
+  (row.value?.reportCard.promotion_decision ?? '')
+    .toLowerCase()
+    .includes('naik'),
+);
+
+const className = computed(() => row.value?.student.class_name ?? '');
+const semesterLabel = computed(() => {
+  const raw = row.value?.reportCard.semester ?? '';
+  if (raw.toLowerCase().includes('genap') || raw === '2') return 'Sem. Genap';
+  if (raw.toLowerCase().includes('ganjil') || raw === '1') return 'Sem. Ganjil';
+  return raw || 'Semester';
+});
+const academicYear = computed(() => row.value?.reportCard.academic_year ?? '');
+
+const publishedAt = computed(() => row.value?.reportCard.published_at ?? null);
+const publishedLabel = computed(() => {
+  if (!publishedAt.value) return null;
+  const d = new Date(publishedAt.value);
+  if (!Number.isFinite(d.getTime())) return null;
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  return `Diterbitkan · ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+});
+
+const attendanceTotal = computed(() => {
+  if (!row.value) return 0;
+  const r = row.value.reportCard;
+  const present = Number(r.attendance_present ?? 0);
+  const sick = Number(r.attendance_sick ?? 0);
+  const permit = Number(r.attendance_permit ?? 0);
+  const absent = Number(r.attendance_absent ?? 0);
+  return present + sick + permit + absent;
+});
+
+async function downloadPdf(variant: 'certificate' | 'raport' = 'certificate') {
+  if (!row.value || !isPublished.value) {
+    toast.value = {
+      message: 'Rapor masih draft — cetak PDF belum tersedia.',
+      tone: 'info',
+    };
+    return;
+  }
+  isPrinting.value = true;
+  try {
+    // Scope the PDF render to the same semester the row was loaded
+    // from. Falling back to '' would let the backend pick "current"
+    // and could mismatch the visible rapor.
+    const args = {
+      student_class_id: row.value.student_class_id,
+      academic_year_id: '',
+      semester_id: initialSemester,
+      filename: `${variant === 'certificate' ? 'e-rapor' : 'rapor'}-${row.value.student.name}.pdf`,
+    };
+    if (variant === 'certificate') {
+      await ReportCardService.exportCertificatePdf(args);
+    } else {
+      await ReportCardService.exportSinglePdf(args);
+    }
+    toast.value = { message: 'PDF terdownload.', tone: 'success' };
+  } catch (e) {
+    toast.value = { message: (e as Error).message, tone: 'error' };
+  } finally {
+    isPrinting.value = false;
+  }
+}
+
+function share() {
+  if (typeof window !== 'undefined' && row.value) {
+    const url = window.location.href;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        toast.value = {
+          message: 'Tautan rapor disalin ke clipboard.',
+          tone: 'success',
+        };
+      });
+    } else {
+      toast.value = { message: url, tone: 'success' };
+    }
+  }
+}
+
+function toggleAssessment(which: 'uts' | 'uas') {
+  assessmentFilter.value = assessmentFilter.value === which ? null : which;
+  const label = which === 'uts' ? 'UTS' : 'UAS';
+  toast.value = {
+    message: `Rapor ini sudah merangkum capaian UTS + UAS. Untuk skor per ujian ${label}, buka Buku Nilai.`,
+    tone: 'info',
+  };
+}
+
+function goBack() {
+  router.push({ name: 'parent.report-cards' });
+}
+
+const semesterSheetOpen = ref(false);
+
+function returnToList() {
+  semesterSheetOpen.value = false;
+  router.push({ name: 'parent.report-cards' });
+}
+
+const state = computed<AsyncState<ParentRaportRow>>(() => {
+  if (isLoading.value) return { status: 'loading' };
+  if (loadError.value) return { status: 'error', error: loadError.value };
+  if (!row.value) return { status: 'empty' };
+  return { status: 'content', data: row.value };
+});
+
+const heroChipLabel = computed(() => {
+  if (!row.value) return semesterLabel.value;
+  return className.value
+    ? `Kelas ${className.value} · ${semesterLabel.value}${academicYear.value ? ' ' + academicYear.value : ''}`
+    : semesterLabel.value;
+});
+</script>
+
+<template>
+  <div class="space-y-4 pb-12">
+    <!-- Back -->
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 text-[12px] font-bold text-slate-600 hover:text-role-wali"
+        @click="goBack"
+      >
+        <NavIcon name="chevron-left" :size="14" />
+        Daftar Rapor
+      </button>
+    </div>
+
+    <AsyncView :state="state" empty-title="Rapor tidak ditemukan" @retry="load">
+      <template #default>
+        <div v-if="row" class="space-y-4">
+          <!-- HEADER -->
+          <ParentPageHeader
+            kicker="Akademik · Rapor"
+            :title="`Rapor ${row.student.name}`"
+            :interpolate-child="false"
+            :meta="
+              publishedLabel ?? (row.student.student_number
+                ? `NIS ${row.student.student_number}`
+                : 'E-Raport siswa')
+            "
+          >
+            <template #actions>
+              <span
+                class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white/15 text-white"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full"
+                  :class="isPublished ? 'bg-emerald-300' : 'bg-amber-300'"
+                />
+                {{ STATUS_LABELS[row.reportCard.status] }}
+              </span>
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition disabled:opacity-60"
+                :disabled="!isPublished || isPrinting"
+                :title="isPublished ? 'Cetak PDF' : 'Rapor belum diterbitkan'"
+                @click="downloadPdf('certificate')"
+              >
+                <NavIcon name="download" :size="12" />
+                PDF
+              </button>
+            </template>
+          </ParentPageHeader>
+
+          <!-- HERO CHIP ROW (Kelas · Sem + UTS/UAS toggles) -->
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="flex-1 inline-flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl bg-role-wali text-white text-[11px] font-bold shadow-sm shadow-role-wali/30"
+              @click="semesterSheetOpen = true"
+            >
+              <span class="truncate">{{ heroChipLabel }}</span>
+              <NavIcon name="chevron-down" :size="12" />
+            </button>
+            <button
+              type="button"
+              class="px-3 py-2 rounded-xl text-[11px] font-bold border transition"
+              :class="
+                assessmentFilter === 'uts'
+                  ? 'bg-role-wali text-white border-role-wali shadow-sm'
+                  : 'bg-white text-slate-700 border-slate-200 hover:border-role-wali/40'
+              "
+              @click="toggleAssessment('uts')"
+            >
+              UTS
+            </button>
+            <button
+              type="button"
+              class="px-3 py-2 rounded-xl text-[11px] font-bold border transition"
+              :class="
+                assessmentFilter === 'uas'
+                  ? 'bg-role-wali text-white border-role-wali shadow-sm'
+                  : 'bg-white text-slate-700 border-slate-200 hover:border-role-wali/40'
+              "
+              @click="toggleAssessment('uas')"
+            >
+              UAS
+            </button>
+          </div>
+
+          <!-- HERO KPI OVERLAP -->
+          <section
+            class="bg-white border border-slate-200 rounded-2xl shadow-sm grid grid-cols-3 divide-x divide-slate-100"
+          >
+            <div class="px-3 py-3 text-center">
+              <p
+                class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+              >
+                Rata-rata
+              </p>
+              <p class="text-lg font-black mt-1 text-role-wali tabular-nums">
+                {{ row.average_score ?? '—' }}
+              </p>
+            </div>
+            <div class="px-3 py-3 text-center">
+              <p
+                class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+              >
+                Peringkat
+              </p>
+              <p class="text-lg font-black mt-1 text-violet-700 tabular-nums">
+                <template
+                  v-if="row.rank !== null && row.total_in_class !== null"
+                >
+                  {{ row.rank
+                  }}<span class="text-slate-400 text-[12px]"
+                    >/{{ row.total_in_class }}</span
+                  >
+                </template>
+                <template v-else>—</template>
+              </p>
+            </div>
+            <div class="px-3 py-3 text-center">
+              <p
+                class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+              >
+                Kehadiran
+              </p>
+              <p class="text-lg font-black mt-1 text-emerald-700 tabular-nums">
+                <template v-if="row.attendance_pct !== null">
+                  {{ Math.round(row.attendance_pct)
+                  }}<span class="text-slate-400 text-[12px]">%</span>
+                </template>
+                <template v-else>—</template>
+              </p>
+            </div>
+          </section>
+
+          <!-- SIKAP -->
+          <section>
+            <header class="flex items-baseline justify-between mb-2 px-1">
+              <p
+                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+              >
+                Sikap
+              </p>
+              <p class="text-[10px] font-bold text-slate-400">Wali kelas</p>
+            </header>
+            <div
+              class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3"
+            >
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-[11.5px] font-bold text-slate-700">
+                    Spiritual
+                  </span>
+                  <span
+                    v-if="row.reportCard.spiritual_predicate"
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-role-wali/10 text-role-wali"
+                  >
+                    {{ row.reportCard.spiritual_predicate }}
+                  </span>
+                </div>
+                <p
+                  class="text-[12.5px] text-slate-600 leading-relaxed whitespace-pre-wrap"
+                >
+                  {{ row.reportCard.spiritual_description || '—' }}
+                </p>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-[11.5px] font-bold text-slate-700">
+                    Sosial
+                  </span>
+                  <span
+                    v-if="row.reportCard.social_predicate"
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-role-wali/10 text-role-wali"
+                  >
+                    {{ row.reportCard.social_predicate }}
+                  </span>
+                </div>
+                <p
+                  class="text-[12.5px] text-slate-600 leading-relaxed whitespace-pre-wrap"
+                >
+                  {{ row.reportCard.social_description || '—' }}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- NILAI PER MATA PELAJARAN -->
+          <section>
+            <header class="flex items-baseline justify-between mb-2 px-1">
+              <p
+                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+              >
+                Nilai per Mata Pelajaran
+              </p>
+              <p class="text-[10px] font-bold text-slate-400">
+                {{ row.reportCard.subjects.length }} mapel
+              </p>
+            </header>
+            <div class="space-y-2">
+              <ParentRaporSubjectCard
+                v-for="s in row.reportCard.subjects"
+                :key="s.subject_id"
+                :subject="s"
+                @open="detailSubject = $event"
+              />
+              <p
+                v-if="row.reportCard.subjects.length === 0"
+                class="text-[12px] text-slate-500 italic text-center py-4"
+              >
+                Belum ada nilai mata pelajaran.
+              </p>
+            </div>
+          </section>
+
+          <!-- EKSTRAKURIKULER -->
+          <section v-if="row.reportCard.extras.length > 0">
+            <header class="flex items-baseline justify-between mb-2 px-1">
+              <p
+                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+              >
+                Ekstrakurikuler
+              </p>
+              <p class="text-[10px] font-bold text-slate-400">
+                {{ row.reportCard.extras.length }} kegiatan
+              </p>
+            </header>
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
+              <div
+                v-for="(e, idx) in row.reportCard.extras"
+                :key="idx"
+                class="flex items-center gap-2 text-[12.5px]"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full bg-slate-400 flex-shrink-0"
+                />
+                <span class="font-semibold text-slate-900 flex-1 min-w-0 truncate">
+                  {{ e.name }}
+                </span>
+                <span
+                  v-if="e.score"
+                  class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-role-wali/10 text-role-wali"
+                >
+                  {{ e.score }}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- PRESTASI -->
+          <section v-if="row.reportCard.achievements.length > 0">
+            <header class="flex items-baseline justify-between mb-2 px-1">
+              <p
+                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+              >
+                Prestasi
+              </p>
+              <p class="text-[10px] font-bold text-slate-400">
+                {{ row.reportCard.achievements.length }} prestasi
+              </p>
+            </header>
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
+              <div
+                v-for="(a, idx) in row.reportCard.achievements"
+                :key="idx"
+                class="flex items-start gap-2 text-[12.5px]"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0 mt-2"
+                />
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-slate-900">{{ a.name }}</p>
+                  <p
+                    v-if="a.type || a.description"
+                    class="text-[11px] text-slate-500 mt-0.5"
+                  >
+                    <template v-if="a.type">{{ a.type }}</template>
+                    <template v-if="a.type && a.description"> · </template>
+                    <template v-if="a.description">{{ a.description }}</template>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- KEHADIRAN 4-cell -->
+          <section>
+            <header class="flex items-baseline justify-between mb-2 px-1">
+              <p
+                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+              >
+                Kehadiran
+              </p>
+              <p class="text-[10px] font-bold text-slate-400">
+                {{ attendanceTotal > 0 ? `${attendanceTotal} hari efektif` : 'Belum dihitung' }}
+              </p>
+            </header>
+            <div class="grid grid-cols-4 gap-2">
+              <div
+                class="bg-white border border-slate-200 rounded-2xl p-3 text-center"
+              >
+                <p
+                  class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                >
+                  Hadir
+                </p>
+                <p class="text-base font-black mt-1 tabular-nums text-emerald-700">
+                  {{ row.reportCard.attendance_present ?? 0 }}
+                </p>
+              </div>
+              <div
+                class="bg-white border border-slate-200 rounded-2xl p-3 text-center"
+              >
+                <p
+                  class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                >
+                  Sakit
+                </p>
+                <p class="text-base font-black mt-1 tabular-nums text-orange-700">
+                  {{ row.reportCard.attendance_sick ?? 0 }}
+                </p>
+              </div>
+              <div
+                class="bg-white border border-slate-200 rounded-2xl p-3 text-center"
+              >
+                <p
+                  class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                >
+                  Izin
+                </p>
+                <p class="text-base font-black mt-1 tabular-nums text-blue-700">
+                  {{ row.reportCard.attendance_permit ?? 0 }}
+                </p>
+              </div>
+              <div
+                class="bg-white border border-slate-200 rounded-2xl p-3 text-center"
+              >
+                <p
+                  class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
+                >
+                  Alpa
+                </p>
+                <p class="text-base font-black mt-1 tabular-nums text-red-700">
+                  {{ row.reportCard.attendance_absent ?? 0 }}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- CATATAN WALI KELAS -->
+          <section v-if="row.reportCard.homeroom_notes">
+            <header class="flex items-baseline justify-between mb-2 px-1">
+              <p
+                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
+              >
+                Catatan Wali Kelas
+              </p>
+              <p
+                v-if="row.reportCard.homeroom_teacher"
+                class="text-[10px] font-bold text-slate-400 truncate max-w-[50%]"
+              >
+                {{ row.reportCard.homeroom_teacher }}
+              </p>
+            </header>
+            <div
+              class="bg-white border border-slate-200 rounded-2xl p-4 border-l-[3px] border-l-role-wali"
+            >
+              <p
+                class="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-wrap"
+              >
+                {{ row.reportCard.homeroom_notes }}
+              </p>
+            </div>
+          </section>
+
+          <!-- PROMOTION BANNER (Genap only) -->
+          <section
+            v-if="isGenap && row.reportCard.promotion_decision"
+            class="rounded-2xl p-4 border-l-4"
+            :class="
+              isNaikKelas
+                ? 'bg-emerald-50 border-emerald-500'
+                : 'bg-red-50 border-red-500'
+            "
+          >
+            <p
+              class="text-[10px] font-bold uppercase tracking-widest mb-1"
+              :class="isNaikKelas ? 'text-emerald-700' : 'text-red-700'"
+            >
+              Keputusan Kenaikan Kelas
+            </p>
+            <p
+              class="text-[14px] font-black"
+              :class="isNaikKelas ? 'text-emerald-900' : 'text-red-900'"
+            >
+              {{ row.reportCard.promotion_decision }}
+            </p>
+          </section>
+          <section
+            v-else-if="!isGenap"
+            class="rounded-2xl p-4 bg-slate-50 border border-slate-200"
+          >
+            <p class="text-[11.5px] text-slate-600 leading-relaxed">
+              Keputusan kenaikan kelas akan diumumkan setelah
+              <strong>Semester Genap</strong>.
+            </p>
+          </section>
+
+          <!-- EXPORT NOTE -->
+          <p class="text-[10.5px] text-slate-400 italic px-1 leading-relaxed">
+            File PDF akan tersimpan di folder unduhan perangkat Anda. Hanya
+            rapor berstatus <em>Diterbitkan</em> yang dapat dicetak.
+          </p>
+
+          <!-- STICKY FOOTER -->
+          <div
+            class="grid grid-cols-2 gap-2 sticky bottom-2 bg-white/95 backdrop-blur rounded-2xl border border-slate-200 px-3 py-2 shadow-lg"
+          >
+            <Button variant="secondary" block @click="share">
+              <NavIcon name="send" :size="13" />
+              Bagikan
+            </Button>
+            <Button
+              variant="primary"
+              block
+              :loading="isPrinting"
+              :disabled="isPrinting || !isPublished"
+              @click="downloadPdf('certificate')"
+            >
+              <NavIcon name="download" :size="13" />
+              {{ isPublished ? 'Cetak E-Raport' : 'Belum Terbit' }}
+            </Button>
+          </div>
+        </div>
+      </template>
+    </AsyncView>
+
+    <!-- Per-subject deskripsi sheet -->
+    <ParentRaporDeskripsiSheet
+      v-if="detailSubject"
+      :subject="detailSubject"
+      @close="detailSubject = null"
+    />
+
+    <!-- Semester sheet (mirrors mobile — confirms back to list to change sem) -->
+    <Modal v-if="semesterSheetOpen" title="Pilih semester" @close="semesterSheetOpen = false">
+      <div class="space-y-3">
+        <p class="text-[12px] text-slate-600 leading-relaxed">
+          Untuk membuka rapor semester lain, kembali ke
+          <strong>Daftar E-Raport</strong> lalu ubah pilihan semester pada
+          filter di atas.
+        </p>
+        <Button block @click="returnToList">Kembali ke daftar E-Raport</Button>
+      </div>
+    </Modal>
+
+    <Toast
+      v-if="toast"
+      :message="toast.message"
+      :tone="toast.tone === 'info' ? 'success' : toast.tone"
+      @close="toast = null"
+    />
+  </div>
+</template>

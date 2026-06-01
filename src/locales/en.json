@@ -1,0 +1,144 @@
+{
+  "app": {
+    "name": "KamilEdu",
+    "tagline": "Modern school management for admins, teachers, and parents."
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "reset": "Reset",
+    "apply": "Apply",
+    "loading": "Loading…",
+    "empty": "No data yet",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "none": "None",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "logout": "Log out",
+    "settings": "Settings",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "unread": "Unread",
+    "read": "Read",
+    "markAllRead": "Mark all as read"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signInTitle": "Sign in",
+    "signInSubtitle": "Use your KamilEdu account to continue.",
+    "email": "Email",
+    "emailPlaceholder": "name@school.sch.id",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "rememberMe": "Remember me",
+    "or": "or",
+    "continueWithGoogle": "Continue with Google",
+    "needHelp": "Need help signing in?",
+    "contactAdmin": "Contact admin",
+    "whatsappAdmin": "Chat admin on WhatsApp",
+    "otp": {
+      "title": "Verify OTP",
+      "subtitle": "Enter the 6-digit code sent to {email}.",
+      "submit": "Verify",
+      "submitting": "Verifying…",
+      "resend": "Resend code",
+      "resendCountdown": "Resend ({seconds}s)"
+    },
+    "school": {
+      "title": "Choose a school",
+      "subtitle": "You belong to more than one school. Pick the active school for this session."
+    },
+    "role": {
+      "title": "Choose a role",
+      "subtitle": "You have multiple roles at this school. Pick the active role."
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "subtitle": "Enter the email of your account. We'll send you a reset link.",
+      "submit": "Send link",
+      "submitting": "Sending…"
+    },
+    "help": {
+      "title": "Contact admin",
+      "subtitle": "The KamilEdu team will reply to your request via email.",
+      "fullName": "Full name",
+      "schoolName": "School name",
+      "schoolNameOptional": "(optional)",
+      "message": "Message",
+      "messagePlaceholder": "Describe the issue you're facing…",
+      "submit": "Send request"
+    },
+    "errors": {
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Invalid email format.",
+      "passwordRequired": "Password is required.",
+      "googleNotConfigured": "Google sign-in isn't configured. Please use email & password.",
+      "serverOffline": "Server is unreachable. Check your connection and try again.",
+      "sessionExpired": "Your session has expired. Please sign in again."
+    }
+  },
+  "role": {
+    "admin": "Admin",
+    "guru": "Teacher",
+    "wali_kelas": "Homeroom",
+    "wali": "Parent",
+    "staff": "Staff"
+  },
+  "status": {
+    "Pending": "Pending",
+    "Approved": "Approved",
+    "Rejected": "Rejected",
+    "Active": "Active",
+    "Inactive": "Inactive",
+    "Draft": "Draft",
+    "Published": "Published",
+    "Archived": "Archived"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "students": "Students",
+    "teachers": "Teachers",
+    "classes": "Classes",
+    "subjects": "Subjects",
+    "schedule": "Schedule",
+    "attendance": "Attendance",
+    "grades": "Grades",
+    "gradeRecap": "Grade recap",
+    "lessonPlans": "Lesson plans",
+    "materials": "Materials",
+    "classActivity": "Class activity",
+    "announcements": "Announcements",
+    "reportCards": "Report cards",
+    "finance": "Finance",
+    "billing": "Billing",
+    "recommendations": "AI recommendations",
+    "reports": "Reports",
+    "settings": "Settings",
+    "schoolSettings": "School settings",
+    "levelSettings": "Levels",
+    "timeSettings": "Time periods",
+    "systemSettings": "System",
+    "dataManagement": "Data management"
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "Language",
+    "school": "School",
+    "role": "Role",
+    "languageId": "Bahasa Indonesia",
+    "languageEn": "English"
+  }
+}
