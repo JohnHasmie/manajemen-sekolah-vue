@@ -47,3 +47,4 @@ app.*.map.json
 
 # Sibling Vue project — not part of the Flutter app.
 web-vue/
+play-store-key.json

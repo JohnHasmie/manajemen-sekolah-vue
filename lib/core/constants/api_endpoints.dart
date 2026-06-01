@@ -97,6 +97,7 @@ class ApiEndpoints {
   static const grades = '/grades';
   static const gradesTeacherSummary = '/grades/teacher-summary';
   static const gradesAdminOverview = '/grades/admin-overview';
+  static const gradesAdminRecapOverview = '/grades/admin-recap-overview';
   static const gradeRecaps = '/grade-recaps';
   static const gradeRecapsTeacherSummary = '/grade-recaps/teacher-summary';
   static const gradeMarkRead = '/grade/mark-read';

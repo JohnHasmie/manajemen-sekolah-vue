@@ -155,6 +155,32 @@ class GradeService {
     return {};
   }
 
+  /// Fetches school-wide Rekap Nilai completeness for admin.
+  ///
+  /// Returns `{ summary: { total_slice, completed_slice, avg_progress },
+  /// rows: [{ class_id, class_name, subject_id, subject_name,
+  /// teacher_id, teacher_name, progress_pct, avg_final_score, pass_rate,
+  /// bab_filled, bab_total, uts_done, uas_done, is_complete }, …] }`.
+  ///
+  /// Backs Frame C of the admin Rekap Nilai screen.
+  static Future<Map<String, dynamic>> getAdminRecapOverview({
+    String? academicYearId,
+  }) async {
+    final queryParams = <String, dynamic>{};
+    if (academicYearId != null) {
+      queryParams['academic_year_id'] = academicYearId;
+    }
+
+    final response = await dioClient.get(
+      ApiEndpoints.gradesAdminRecapOverview,
+      queryParameters: queryParams,
+    );
+
+    final result = response.data;
+    if (result is Map<String, dynamic>) return result;
+    return {'summary': {}, 'rows': <dynamic>[]};
+  }
+
   /// Fetches grades filtered by subject, with optional academic year and limit.
   static Future<List<dynamic>> getGradesBySubject(
     String subjectId, {
