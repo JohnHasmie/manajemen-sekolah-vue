@@ -31,25 +31,51 @@ type RouteMap = Record<string, string>;
  * teacher RPP list). Falling through to the default does nothing,
  * matching Flutter's behaviour.
  */
+// Backend ships two identifiers per item — `target_route` (the
+// canonical destination) and `type` (the aggregator's category). We
+// register both as keys for every entry so a tap resolves regardless
+// of which one the backend emits. Anything new the backend adds also
+// needs to land here — silent no-op clicks are the failure mode.
 const ROUTE_MAPS: Record<PriorityRole, RouteMap> = {
   teacher: {
+    // target_route values from teacher aggregators
     teacher_attendance: '/teacher/attendance',
-    attendance: '/teacher/attendance',
     lesson_plan_detail: '/teacher/lesson-plans',
+    grade_book: '/teacher/grades',
+    recommendation_detail: '/teacher/recommendations',
+    report_card_class: '/teacher/report-cards',
+    // type values (aliases / fallbacks)
+    attendance: '/teacher/attendance',
     lesson_plan: '/teacher/lesson-plans',
     rpp: '/teacher/lesson-plans',
-    report_card_class: '/teacher/report-cards',
     report_card: '/teacher/report-cards',
-    grade_book: '/teacher/grades',
     grade_input: '/teacher/grades',
     grade: '/teacher/grades',
-    recommendation_detail: '/teacher/recommendations',
     recommendation: '/teacher/recommendations',
     material: '/teacher/materials',
     class_activity: '/teacher/class-activity',
     announcement: '/teacher/announcements',
   },
   admin: {
+    // target_route values from admin aggregators (the ones backend
+    // actually ships — without these the clicks were silent no-ops)
+    admin_schedule_conflicts: '/admin/schedules',
+    admin_schedule_management: '/admin/schedules',
+    admin_class_management: '/admin/classrooms',
+    admin_rpp_review: '/admin/lesson-plans',
+    admin_raport_hub: '/admin/report-cards',
+    admin_overdue_bills: '/admin/finance',
+    admin_payment_verification: '/admin/finance',
+    admin_announcement_drafts: '/admin/announcements',
+    // type values (PriorityInboxItem::TYPE_* — fallbacks when only
+    // type is shipped, or when target_route is unknown to the FE)
+    schedule_conflict: '/admin/schedules',
+    class_without_schedule: '/admin/schedules',
+    wali_kelas_missing: '/admin/classrooms',
+    rpp_review_queue: '/admin/lesson-plans',
+    raport_pipeline_lagging: '/admin/report-cards',
+    announcement_stale_draft: '/admin/announcements',
+    // legacy / generic aliases (kept for forward compat)
     lesson_plan_detail: '/admin/lesson-plans',
     lesson_plan: '/admin/lesson-plans',
     rpp: '/admin/lesson-plans',
@@ -60,6 +86,9 @@ const ROUTE_MAPS: Record<PriorityRole, RouteMap> = {
     schedule: '/admin/schedules',
     finance: '/admin/finance',
     payment_verification: '/admin/finance',
+    payment: '/admin/finance',
+    overdue_bills: '/admin/finance',
+    bills_overdue: '/admin/finance',
     announcement: '/admin/announcements',
     attendance: '/admin/attendance',
     class_activity: '/admin/class-activity',
@@ -69,6 +98,15 @@ const ROUTE_MAPS: Record<PriorityRole, RouteMap> = {
     settings: '/admin/settings',
   },
   parent: {
+    // target_route values from parent aggregators
+    parent_attendance: '/parent/attendance',
+    parent_recommendation_detail: '/parent/recommendations',
+    parent_billing: '/parent/billing',
+    parent_announcements: '/parent/announcements',
+    parent_grades: '/parent/grades',
+    parent_report_card: '/parent/report-cards',
+    parent_class_activity: '/parent/class-activity',
+    // type values + generic aliases
     billing: '/parent/billing',
     payment: '/parent/billing',
     tagihan: '/parent/billing',
