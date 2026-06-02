@@ -82,6 +82,15 @@ const showImport = ref(false);
 const deleteTarget = ref<Teacher | null>(null);
 const bulkDeleteOpen = ref(false);
 const isSaving = ref(false);
+/**
+ * Flipped to `true` when the backend rejects a teacher save because
+ * the new email already belongs to another user. Passed down to
+ * <TeacherEditSheet> so it can auto-enable the "Ganti akun terkait"
+ * toggle + show a callout telling the admin to click Save again to
+ * complete the migration. Cleared every time the sheet opens or the
+ * admin retries.
+ */
+const teacherEmailConflict = ref(false);
 
 // Picker visibility
 const showRolePicker = ref(false);
@@ -355,6 +364,10 @@ function detailDelete() {
 
 async function handleSave(payload: Record<string, unknown>) {
   isSaving.value = true;
+  // Clear any previous conflict hint so the sheet's callout
+  // doesn't linger across retries — it'll be re-set below only
+  // if the backend rejects this attempt with email_conflict.
+  teacherEmailConflict.value = false;
   try {
     if (editTarget.value && editTarget.value.id) {
       await TeacherService.update(editTarget.value.id, payload);
@@ -364,7 +377,34 @@ async function handleSave(payload: Record<string, unknown>) {
     editTarget.value = undefined;
     await reload(pagination.value?.current_page ?? 1);
   } catch (e) {
-    error.value = (e as Error).message;
+    // Detect the backend's "email already used by another user" signal.
+    // Backend returns either { code: 'email_conflict' } in a 422 envelope
+    // OR (legacy) throws an Exception whose message contains "sudah
+    // terdaftar" / "Ganti Akun". Either way, surface the hint to the
+    // sheet so it auto-enables the migration toggle.
+    const err = e as {
+      message?: string;
+      response?: { data?: { code?: string; message?: string } };
+    };
+    const code = err?.response?.data?.code;
+    const msg = String(err?.response?.data?.message ?? err?.message ?? '');
+    const looksLikeConflict =
+      code === 'email_conflict' ||
+      /sudah terdaftar/i.test(msg) ||
+      /ganti akun/i.test(msg);
+    if (looksLikeConflict && editTarget.value) {
+      // Keep the sheet open + flip the hint so the user can retry
+      // with the toggle on. Don't show the generic banner — the
+      // sheet's amber callout is the better surface.
+      teacherEmailConflict.value = true;
+      toast.value = {
+        message:
+          'Email sudah dipakai user lain. Aktifkan "Ganti akun terkait" lalu Simpan untuk migrasi.',
+        tone: 'error',
+      };
+    } else {
+      error.value = msg || 'Gagal menyimpan guru.';
+    }
   } finally {
     isSaving.value = false;
   }
@@ -594,7 +634,8 @@ function statusFor(t: Teacher) {
     :classes="classes"
     :subjects="subjects"
     :is-saving="isSaving"
-    @close="editTarget = undefined"
+    :email-conflict-hint="teacherEmailConflict"
+    @close="() => { editTarget = undefined; teacherEmailConflict = false; }"
     @save="handleSave"
   />
 
