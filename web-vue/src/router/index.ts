@@ -699,6 +699,12 @@ router.beforeEach((to) => {
   }
 
   const isPublic = to.meta.public === true;
+
+  // Already logged in → skip /login entirely and go to dashboard.
+  if (isPublic && to.path === '/login' && auth.isAuthenticated && auth.step === 'done') {
+    return { path: '/' };
+  }
+
   if (isPublic) return true;
 
   if (!auth.isAuthenticated) {

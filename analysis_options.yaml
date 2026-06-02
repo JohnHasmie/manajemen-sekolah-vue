@@ -45,6 +45,7 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    - "web-vue/**"
 
   errors:
     # Freezed 2.x generates @JsonKey on constructor params which

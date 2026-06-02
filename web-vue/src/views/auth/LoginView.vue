@@ -35,6 +35,17 @@ const isLoginStep = computed(() => auth.step === 'login');
 // Surface any initial error passed via the query string
 // (the 401 interceptor in http.ts redirects with ?reason=...).
 onMounted(async () => {
+  // If the user is already fully authenticated, redirect immediately
+  // instead of showing the "Menyiapkan Dashboard..." spinner forever.
+  if (auth.isAuthenticated && auth.step === 'done') {
+    router.replace('/');
+    return;
+  }
+  if (auth.step === 'register_demo') {
+    router.replace('/register-demo');
+    return;
+  }
+
   await auth.checkHealth();
   const reason = route.query.reason;
   if (typeof reason === 'string' && reason.length > 0) {
