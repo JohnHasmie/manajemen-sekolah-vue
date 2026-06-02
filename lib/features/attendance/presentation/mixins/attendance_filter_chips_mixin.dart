@@ -110,6 +110,16 @@ mixin AttendanceFilterChipsMixin on ConsumerState<AttendancePage> {
     if (filterDateOption == 'week') {
       return lp.getTranslatedText({'en': 'This Week', 'id': 'Minggu ini'});
     }
+    // Fix-DD.2 — keep aligned with attendance_dialog_filter_mixin options.
+    if (filterDateOption == 'semester') {
+      return lp.getTranslatedText({
+        'en': 'Last 6 Months',
+        'id': 'Semester (6 Bulan)',
+      });
+    }
+    if (filterDateOption == 'year') {
+      return lp.getTranslatedText({'en': 'This Year', 'id': 'Tahunan'});
+    }
     return lp.getTranslatedText({'en': 'This Month', 'id': 'Bulan ini'});
   }
 

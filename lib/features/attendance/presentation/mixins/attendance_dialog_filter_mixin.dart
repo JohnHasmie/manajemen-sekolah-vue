@@ -119,6 +119,20 @@ mixin AttendanceDialogFilterMixin
                 'id': 'Bulan Ini',
               }),
             ),
+            // Fix-DD.2 — Semester (6 bulan) + Tahunan options. Same
+            // values as the admin filter so date-range helpers can be
+            // shared.
+            FilterOption<String>(
+              value: 'semester',
+              label: lp.getTranslatedText({
+                'en': 'Last 6 Months',
+                'id': 'Semester (6 Bulan)',
+              }),
+            ),
+            FilterOption<String>(
+              value: 'year',
+              label: lp.getTranslatedText({'en': 'This Year', 'id': 'Tahunan'}),
+            ),
           ];
 
           return TeacherFilterContent(

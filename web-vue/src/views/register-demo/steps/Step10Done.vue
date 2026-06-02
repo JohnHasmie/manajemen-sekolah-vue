@@ -118,14 +118,33 @@ const roleIcon: Record<string, string> = {
         </div>
       </template>
 
-      <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-        Akun Anda
-      </p>
+      <div class="flex items-end justify-between mb-2">
+        <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase">
+          3 akun untuk 3 sudut pandang
+        </p>
+      </div>
+      <div
+        class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 flex items-start gap-2"
+      >
+        <NavIcon name="alert-circle" :size="14" class="text-amber-600 mt-0.5 flex-shrink-0" />
+        <p class="text-[11.5px] text-amber-900 leading-snug">
+          <strong>Akun Google Anda jadi ADMIN sekolah</strong> — dapat akses penuh ke semua
+          data demo. Untuk merasakan POV guru atau wali yang sebenarnya (lihat jadwal
+          mengajar / data anak), <strong>login dengan 2 akun di bawah di tab browser private</strong>.
+          Jangan ketik password manual; pakai tombol <NavIcon name="copy" :size="11" class="inline-block -mt-0.5" /> salin
+          supaya tidak salah karakter.
+        </p>
+      </div>
       <div class="grid gap-2 sm:grid-cols-3">
         <div
           v-for="cred in credentials"
           :key="cred.email"
-          class="bg-slate-50 rounded-lg p-3"
+          class="rounded-lg p-3 border"
+          :class="
+            cred.is_self
+              ? 'bg-role-admin/5 border-role-admin/30'
+              : 'bg-slate-50 border-slate-200'
+          "
         >
           <div class="flex items-center gap-2 mb-1.5">
             <NavIcon :name="roleIcon[cred.role] ?? 'user'" :size="16" class="text-role-admin" />
@@ -135,12 +154,16 @@ const roleIcon: Record<string, string> = {
             <span v-if="cred.is_self" class="ml-auto text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full font-bold">
               Anda
             </span>
+            <span v-else class="ml-auto text-[10px] text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded-full font-bold">
+              Demo
+            </span>
           </div>
           <div class="flex items-center gap-1 mb-1">
             <code class="font-mono text-[11px] text-slate-900 truncate flex-1">{{ cred.email }}</code>
             <button
               type="button"
-              class="text-slate-400 hover:text-role-admin"
+              class="text-slate-400 hover:text-role-admin shrink-0"
+              :title="'Salin email'"
               @click="copyValue(cred.email, 'Email')"
             >
               <NavIcon name="copy" :size="12" />
@@ -153,17 +176,27 @@ const roleIcon: Record<string, string> = {
             <button
               v-if="cred.password"
               type="button"
-              class="text-slate-400 hover:text-role-admin"
+              class="text-slate-400 hover:text-role-admin shrink-0"
+              :title="'Salin password'"
               @click="copyValue(cred.password!, 'Password')"
             >
               <NavIcon name="copy" :size="12" />
             </button>
           </div>
+          <p
+            v-if="!cred.is_self"
+            class="text-[10px] text-slate-500 mt-1.5 leading-snug"
+          >
+            Login dengan kartu ini untuk lihat sudut pandang
+            {{ cred.role === 'teacher' ? 'guru — jadwal mengajar, nilai, RPP' : 'wali — tagihan anak, nilai anak, kehadiran anak' }}.
+          </p>
         </div>
       </div>
 
-      <p class="text-[11.5px] text-slate-500 mt-4 text-center">
-        Tip: gunakan akun guru / wali dari browser private / device lain untuk merasakan 3 sudut pandang sekaligus.
+      <p class="text-[11.5px] text-slate-500 mt-4 text-center leading-snug">
+        Klik <strong>Masuk dashboard demo</strong> di bawah untuk masuk sebagai admin
+        dengan akun Google Anda. Jangan tutup tab — buka tab incognito baru untuk
+        login pakai akun guru / wali demo.
       </p>
     </div>
   </div>

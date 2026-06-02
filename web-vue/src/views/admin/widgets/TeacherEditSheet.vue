@@ -1,8 +1,16 @@
 <!--
   TeacherEditSheet.vue — port of `teacher_add_edit_dialog.dart`.
+
+  Includes "Ganti akun terkait" toggle (only in edit mode) — when ON,
+  submit payload carries `use_another_user: true` which tells the
+  backend `UpdateTeacherAction::swapUserAccount()` to migrate this
+  teacher row to a different user (matching by email). Required when
+  the typed email already belongs to another user — without the toggle
+  the backend rejects the save outright. Mirrors Flutter's
+  `isChangeUserMode` flag in `teacher_form_init_mixin.dart`.
 -->
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import Modal from '@/components/ui/Modal.vue';
 import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import type { Teacher, Classroom, Subject } from '@/types/entities';
@@ -12,6 +20,13 @@ const props = defineProps<{
   classes: Classroom[];
   subjects: Subject[];
   isSaving?: boolean;
+  /**
+   * When the parent catches an 'email_conflict' error from the
+   * backend, it flips this to `true` so the toggle pops open with
+   * a yellow callout, telling the admin to enable migration mode
+   * and click Save again.
+   */
+  emailConflictHint?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -34,6 +49,24 @@ const form = reactive({
 
 const isEdit = computed(() => Boolean(props.teacher?.id));
 const errors = reactive<Record<string, string>>({});
+
+/**
+ * "Ganti akun terkait" — only meaningful in edit mode. When ON, the
+ * submit handler sends `use_another_user: true` which triggers the
+ * backend's swapUserAccount() (migrates teacher row to another user
+ * by email, instead of trying to update the current user's email).
+ */
+const isChangeUserMode = ref(false);
+
+// Auto-flip the toggle on when the parent reports an email conflict
+// from a prior save attempt — admin shouldn't have to find the
+// toggle themselves to recover.
+watch(
+  () => props.emailConflictHint,
+  (hint) => {
+    if (hint) isChangeUserMode.value = true;
+  },
+);
 
 function toggleSubject(id: string) {
   const idx = form.subject_ids.indexOf(id);
@@ -63,6 +96,12 @@ function submit() {
     employment_status: form.employment_status || null,
     homeroom_class_id: form.homeroom_class_id || null,
     subject_ids: form.subject_ids,
+    // Only meaningful on edit. When true, backend swaps teacher.user_id
+    // to point at the user matching `email` (or creates that user
+    // first) instead of trying to update the current user's email.
+    ...(isEdit.value && isChangeUserMode.value
+      ? { use_another_user: true }
+      : {}),
   });
 }
 </script>
@@ -85,6 +124,50 @@ function submit() {
           :disabled="isSaving"
         />
         <p v-if="errors.name" class="text-xs text-status-danger mt-1">{{ errors.name }}</p>
+      </div>
+
+      <!-- "Ganti akun terkait" toggle — only in edit mode. -->
+      <div
+        v-if="isEdit"
+        class="rounded-xl border p-3"
+        :class="
+          isChangeUserMode
+            ? 'border-amber-300 bg-amber-50'
+            : 'border-slate-200 bg-slate-50'
+        "
+      >
+        <div class="flex items-start gap-3">
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="isChangeUserMode"
+            class="mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors"
+            :class="isChangeUserMode ? 'bg-amber-500' : 'bg-slate-300'"
+            :disabled="isSaving"
+            @click="isChangeUserMode = !isChangeUserMode"
+          >
+            <span
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition"
+              :class="isChangeUserMode ? 'translate-x-[18px]' : 'translate-x-0.5'"
+            ></span>
+          </button>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-900">Ganti akun terkait</p>
+            <p class="text-xs text-slate-600 mt-0.5 leading-snug">
+              Pindahkan guru ini ke akun lain berdasarkan email di
+              bawah. Pakai ini kalau email yang baru sudah dipakai user
+              lain di sistem.
+            </p>
+            <p
+              v-if="emailConflictHint"
+              class="text-xs text-amber-700 mt-1.5 font-medium leading-snug"
+            >
+              Email yang Anda masukkan sudah dipakai user lain. Toggle ini
+              telah diaktifkan otomatis — klik Simpan lagi untuk
+              memindahkan guru ke akun tersebut.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
