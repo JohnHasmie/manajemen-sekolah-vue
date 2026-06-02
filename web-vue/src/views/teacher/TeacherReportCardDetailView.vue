@@ -51,6 +51,17 @@ const academic = useAcademicYearStore();
 const classId = computed(() => String(route.params.classId ?? ''));
 const studentClassId = computed(() => String(route.params.studentClassId ?? ''));
 
+// Map canonical English predicate values to Indonesian display labels.
+function predicateLabel(p: string): string {
+  switch (p) {
+    case 'very_good': return 'Sangat Baik';
+    case 'good':      return 'Baik';
+    case 'fair':      return 'Cukup';
+    case 'poor':      return 'Kurang';
+    default:          return p;
+  }
+}
+
 // ── Tab state ──
 type TabKey = 'sikap' | 'nilai' | 'tambahan' | 'info';
 const activeTab = ref<TabKey>('sikap');
@@ -84,9 +95,9 @@ const form = reactive<{
   homeroom_notes: string;
   promotion_decision: string;
 }>({
-  spiritual_predicate: 'Baik',
+  spiritual_predicate: 'good',
   spiritual_description: '',
-  social_predicate: 'Baik',
+  social_predicate: 'good',
   social_description: '',
   subjects: [],
   extras: [],
@@ -95,7 +106,7 @@ const form = reactive<{
   attendance_permit: 0,
   attendance_absent: 0,
   homeroom_notes: '',
-  promotion_decision: 'Naik Kelas',
+  promotion_decision: 'promoted',
 });
 
 // ── Loader ──
@@ -150,9 +161,9 @@ async function load() {
           attendance_sick: seedRes.attendance_sick ?? 0,
           attendance_permit: seedRes.attendance_permit ?? 0,
           attendance_absent: seedRes.attendance_absent ?? 0,
-          spiritual_predicate: 'Baik',
-          social_predicate: 'Baik',
-          promotion_decision: 'Naik Kelas',
+          spiritual_predicate: 'good',
+          social_predicate: 'good',
+          promotion_decision: 'promoted',
           summary: seedRes.summary,
         };
       }
@@ -178,10 +189,11 @@ async function load() {
       return;
     }
     original.value = detail;
-    // Seed editable form.
-    form.spiritual_predicate = detail.spiritual_predicate ?? 'Baik';
+    // Seed editable form. Canonical English values post-rename — the
+    // service already normalises legacy Indonesian inputs on read.
+    form.spiritual_predicate = detail.spiritual_predicate ?? 'good';
     form.spiritual_description = detail.spiritual_description ?? '';
-    form.social_predicate = detail.social_predicate ?? 'Baik';
+    form.social_predicate = detail.social_predicate ?? 'good';
     form.social_description = detail.social_description ?? '';
     form.subjects = detail.subjects.map((s) => ({ ...s }));
     form.extras = detail.extras.map((e) => ({ ...e }));
@@ -190,7 +202,7 @@ async function load() {
     form.attendance_permit = detail.attendance_permit ?? 0;
     form.attendance_absent = detail.attendance_absent ?? 0;
     form.homeroom_notes = detail.homeroom_notes ?? '';
-    form.promotion_decision = detail.promotion_decision ?? 'Naik Kelas';
+    form.promotion_decision = detail.promotion_decision ?? 'promoted';
   } catch (e) {
     loadError.value = (e as Error).message;
   } finally {
@@ -416,7 +428,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   :disabled="isLocked || isSaving"
                   @click="form.spiritual_predicate = p"
                 >
-                  {{ p }}
+                  {{ predicateLabel(p) }}
                 </button>
               </div>
               <textarea
@@ -445,7 +457,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   :disabled="isLocked || isSaving"
                   @click="form.social_predicate = p"
                 >
-                  {{ p }}
+                  {{ predicateLabel(p) }}
                 </button>
               </div>
               <textarea
@@ -728,7 +740,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
                   :class="
                     form.promotion_decision === d
-                      ? d === 'Naik Kelas'
+                      ? d === 'promoted' || d === 'graduated'
                         ? 'bg-emerald-600 text-white border-emerald-600'
                         : 'bg-red-600 text-white border-red-600'
                       : 'bg-white text-slate-600 border-slate-200 hover:border-brand-cobalt/40'
@@ -736,7 +748,17 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   :disabled="isLocked || isSaving"
                   @click="form.promotion_decision = d"
                 >
-                  {{ d }}
+                  {{
+                    d === 'promoted'
+                      ? 'Naik Kelas'
+                      : d === 'not_promoted'
+                        ? 'Tinggal di Kelas'
+                        : d === 'graduated'
+                          ? 'Lulus'
+                          : d === 'not_graduated'
+                            ? 'Tidak Lulus'
+                            : d
+                  }}
                 </button>
               </div>
             </article>

@@ -81,7 +81,18 @@ abstract class Student with _$Student {
     mapped['phone_number'] ??= mapped['nomor_hp'];
     mapped['class_id'] ??= mapped['id_kelas'];
     mapped['student_class_id'] ??= mapped['id_siswa_kelas'];
-    mapped['gender'] ??= mapped['jenis_kelamin'];
+    // Backend rename: gender values `L`/`P` → `male`/`female`.
+    // Accept legacy codes in payloads and surface the canonical
+    // English value to the rest of the app.
+    final rawGender = mapped['gender'] ?? mapped['jenis_kelamin'];
+    if (rawGender != null) {
+      final g = rawGender.toString().toUpperCase();
+      mapped['gender'] = switch (g) {
+        'L' || 'M' || 'MALE' => 'male',
+        'P' || 'F' || 'FEMALE' => 'female',
+        _ => rawGender.toString(),
+      };
+    }
     mapped['date_of_birth'] ??= mapped['tanggal_lahir'] ?? mapped['tgl_lahir'];
     mapped['guardian_email'] ??= mapped['parent_email'] ?? mapped['email_wali'];
 

@@ -32,6 +32,8 @@ abstract class User with _$User {
 
     mapped['school_id'] =
         mapped['school_id']?.toString() ?? mapped['sekolah_id']?.toString();
+    // Backend renamed `schools.school_name` → `schools.name`. Auth payloads
+    // still expose the flat `school_name` (or legacy `nama_sekolah`).
     mapped['school_name'] = (mapped['school_name'] ?? mapped['nama_sekolah'])
         ?.toString();
     mapped['profile_picture_url'] =

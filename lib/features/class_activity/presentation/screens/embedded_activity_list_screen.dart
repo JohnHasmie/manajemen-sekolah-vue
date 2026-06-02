@@ -166,7 +166,8 @@ class EmbeddedActivityListScreenState
 
     // Initialize tabs
     tabController = TabController(length: 2, vsync: this);
-    currentTarget = 'umum';
+    // Backend canonical: `all` (was `umum`).
+    currentTarget = 'all';
 
     // Initialize material data
     chapterList = [];

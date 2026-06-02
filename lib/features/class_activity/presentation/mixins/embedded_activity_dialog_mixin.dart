@@ -45,7 +45,8 @@ mixin EmbeddedActivityDialogMixin on ConsumerState<EmbeddedActivityListScreen> {
         onSubjectSelected: loadMaterials,
         onChapterSelected: loadSubChapterContent,
         onActivityAdded: onActivityChanged,
-        initialTarget: currentTarget ?? 'umum',
+        // Backend canonical: `all` (was `umum`).
+        initialTarget: currentTarget ?? 'all',
         activityType: activityType,
         initialDate: widget.initialDate,
         initialSubjectId: widget.subjectId,
@@ -76,7 +77,8 @@ mixin EmbeddedActivityDialogMixin on ConsumerState<EmbeddedActivityListScreen> {
         onSubjectSelected: loadMaterials,
         onChapterSelected: loadSubChapterContent,
         onActivityAdded: onActivityChanged,
-        initialTarget: activity['target_role'] ?? 'umum',
+        // Backend canonical: `all` (was `umum`).
+        initialTarget: activity['target_role'] ?? 'all',
         activityType: resolveActivityType(activity),
         isEditMode: true,
         activityData: activity,

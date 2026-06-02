@@ -170,7 +170,11 @@ mixin ReportCardPrintLayoutMixin {
   }
 
   Widget buildGradeSection() {
-    final List<dynamic> subjects = reportCardData['raport_subjects'] ?? [];
+    // Backend rename: `raport_subjects` → `report_card_subjects`.
+    final List<dynamic> subjects =
+        reportCardData['report_card_subjects'] ??
+        reportCardData['raport_subjects'] ??
+        [];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -376,7 +380,15 @@ mixin ReportCardPrintLayoutMixin {
                 child: Text(
                   'Berdasarkan pencapaian seluruh kompetensi, '
                   'peserta didik dinyatakan: '
-                  '${reportCardData['promotion_decision']}',
+                  // Backend canonical: `promoted` / `not_promoted` /
+                  // `graduated` / `not_graduated` (was Indonesian).
+                  '${switch (reportCardData['promotion_decision'].toString().toLowerCase()) {
+                    'promoted' => 'Naik Kelas',
+                    'not_promoted' => 'Tinggal di Kelas',
+                    'graduated' => 'Lulus',
+                    'not_graduated' => 'Tidak Lulus',
+                    _ => reportCardData['promotion_decision'],
+                  }}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),

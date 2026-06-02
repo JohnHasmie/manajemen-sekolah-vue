@@ -176,7 +176,8 @@ mixin ClassPromotionDataMixin on ConsumerState<ClassPromotionWizard> {
       final settings = await getIt<ApiSettingsService>().getSchoolSettings();
       if (!mounted) return;
       setState(() {
-        schoolJenjang = settings['jenjang'];
+        // Backend rename: `jenjang` → `education_level`.
+        schoolJenjang = settings['education_level'] ?? settings['jenjang'];
         generateGradeLevels();
       });
     } catch (e) {

@@ -89,7 +89,8 @@ class _ActivityTypeContent extends StatelessWidget {
           }),
           color: ColorUtils.warning600,
           onTap: () {
-            onActivityTypeSelected('tugas');
+            // Backend canonical: `assignment` (was `tugas`).
+            onActivityTypeSelected('assignment');
           },
         ),
         const SizedBox(height: 16),
@@ -105,7 +106,8 @@ class _ActivityTypeContent extends StatelessWidget {
           }),
           color: ColorUtils.corporateBlue600,
           onTap: () {
-            onActivityTypeSelected('materi');
+            // Backend canonical: `material` (was `materi`).
+            onActivityTypeSelected('material');
           },
         ),
         const SizedBox(height: 32),

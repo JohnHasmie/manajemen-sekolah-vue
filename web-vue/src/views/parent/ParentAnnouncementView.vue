@@ -36,9 +36,9 @@ const isLoading = ref(true);
 const error = ref<string | null>(null);
 const detail = ref<Announcement | null>(null);
 
-// ── Filters (Flutter parity) ──
+// ── Filters (Flutter parity, canonical English post-rename) ──
 type PriorityFilter = 'all' | AnnouncementPriority;
-type StatusFilter = 'all' | 'aktif' | 'terjadwal' | 'kedaluwarsa';
+type StatusFilter = 'all' | 'active' | 'scheduled' | 'expired';
 
 const priorityFilter = ref<PriorityFilter>('all');
 const statusFilter = ref<StatusFilter>('all');
@@ -49,15 +49,17 @@ const showStatusPicker = ref(false);
 
 const PRIORITY_OPTIONS: { key: PriorityFilter; label: string }[] = [
   { key: 'all', label: 'Semua prioritas' },
-  { key: 'penting', label: 'Penting' },
-  { key: 'biasa', label: 'Biasa' },
+  { key: 'urgent', label: 'Mendesak' },
+  { key: 'high', label: 'Penting' },
+  { key: 'normal', label: 'Biasa' },
+  { key: 'low', label: 'Rendah' },
 ];
 
 const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
   { key: 'all', label: 'Semua status' },
-  { key: 'aktif', label: 'Aktif' },
-  { key: 'terjadwal', label: 'Terjadwal' },
-  { key: 'kedaluwarsa', label: 'Kedaluwarsa' },
+  { key: 'active', label: 'Aktif' },
+  { key: 'scheduled', label: 'Terjadwal' },
+  { key: 'expired', label: 'Kedaluwarsa' },
 ];
 
 const activePriority = computed(
@@ -153,21 +155,21 @@ function openEventDetail(ev: EventData) {
 
 // ── Filtering Logic (Client-side) ──
 function lifecycleOf(a: Announcement): StatusFilter {
-  if (a.status === 'terjadwal') return 'terjadwal';
-  if (a.status === 'kedaluwarsa') return 'kedaluwarsa';
+  if (a.status === 'scheduled') return 'scheduled';
+  if (a.status === 'expired') return 'expired';
   const now = Date.now();
   const sched = a.scheduled_at ? Date.parse(a.scheduled_at) : NaN;
   const expires = a.expires_at ? Date.parse(a.expires_at) : NaN;
-  if (!Number.isNaN(sched) && sched > now) return 'terjadwal';
-  if (!Number.isNaN(expires) && expires < now) return 'kedaluwarsa';
-  return 'aktif';
+  if (!Number.isNaN(sched) && sched > now) return 'scheduled';
+  if (!Number.isNaN(expires) && expires < now) return 'expired';
+  return 'active';
 }
 
 const filtered = computed<Announcement[]>(() => {
   const q = searchQuery.value.trim().toLowerCase();
   return items.value.filter((a) => {
     if (priorityFilter.value !== 'all') {
-      const ap = a.priority ?? (a.category === 'penting' ? 'penting' : 'biasa');
+      const ap = a.priority ?? 'normal';
       if (ap !== priorityFilter.value) return false;
     }
     if (statusFilter.value !== 'all') {
@@ -244,10 +246,10 @@ const unreadCount = computed(
   () => items.value.filter((a) => a.is_read === false).length,
 );
 const pentingCount = computed(
-  () => items.value.filter((a) => a.priority === 'penting' || a.category === 'penting').length,
+  () => items.value.filter((a) => a.priority === 'high' || a.priority === 'urgent').length,
 );
 const acaraCount = computed(
-  () => items.value.filter((a) => a.category === 'acara').length,
+  () => items.value.filter((a) => a.category === 'event').length,
 );
 
 const kpiCards = computed<KpiCard[]>(() => [
@@ -287,7 +289,7 @@ function fromParent(a: ParentAnnouncement): Announcement {
     id: a.id,
     title: a.title,
     body: a.body,
-    category: a.category ?? 'pengumuman',
+    category: a.category ?? 'announcement',
     source: a.source,
     is_read: !!a.read_at,
     read_at: a.read_at ?? null,

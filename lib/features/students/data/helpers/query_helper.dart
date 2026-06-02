@@ -29,9 +29,10 @@ class QueryHelper {
         'data': {
           'grade_levels': [],
           'kelas': [],
+          // Backend canonical: `male` / `female` (was `L` / `P`).
           'gender_options': [
-            {'value': 'L', 'label': 'Laki-laki'},
-            {'value': 'P', 'label': 'Perempuan'},
+            {'value': 'male', 'label': 'Laki-laki'},
+            {'value': 'female', 'label': 'Perempuan'},
           ],
           'status_options': [
             {'value': 'active', 'label': 'Aktif'},

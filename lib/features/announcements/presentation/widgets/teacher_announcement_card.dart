@@ -24,7 +24,11 @@ class TeacherAnnouncementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final model = Announcement.fromJson(announcementData);
     final event = AnnouncementEvent.fromJson(announcementData);
+    // Backend canonical priorities: `low` / `normal` / `high` / `urgent`.
+    // Legacy: `biasa` → normal, `penting` → high, `important`.
     final isImportant = [
+      'high',
+      'urgent',
       'penting',
       'important',
     ].contains((announcementData['priority'] ?? '').toString().toLowerCase());

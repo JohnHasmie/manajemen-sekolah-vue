@@ -98,14 +98,17 @@ interface DayCell {
 }
 
 function severityForItems(its: Array<Record<string, unknown>>): DayCell['severity'] {
-  // Mobile color rules: blue (pengumuman) / amber (peringatan/penting) /
-  // red (darurat). Pick the highest severity present on this day.
+  // Mobile color rules: blue (announcement/general) / amber (high/penting) /
+  // red (urgent/darurat). Pick the highest severity present on this day.
+  // Reads both the new English canonical values and the legacy Indonesian
+  // synonyms so the calendar still colour-codes events from older rows.
   let hasPenting = false;
   let hasDarurat = false;
   for (const it of its) {
-    const cat = String(it.category ?? it.priority ?? '').toLowerCase();
-    if (cat.includes('darurat') || cat.includes('urgent')) hasDarurat = true;
-    if (cat.includes('penting') || cat.includes('peringatan')) hasPenting = true;
+    const blob = String(it.priority ?? it.category ?? it.type ?? '').toLowerCase();
+    if (blob.includes('urgent') || blob.includes('darurat')) hasDarurat = true;
+    if (blob.includes('high') || blob.includes('penting') || blob.includes('peringatan'))
+      hasPenting = true;
   }
   if (hasDarurat) return 'darurat';
   if (hasPenting) return 'penting';
@@ -181,9 +184,10 @@ function eventTimeLabel(raw: unknown): string {
 }
 
 function eventCategoryLabel(it: Record<string, unknown>): string {
-  const c = String(it.category ?? it.priority ?? '').toLowerCase();
-  if (c.includes('darurat') || c.includes('urgent')) return 'DARURAT';
-  if (c.includes('penting') || c.includes('peringatan')) return 'PENTING';
+  const blob = String(it.priority ?? it.category ?? it.type ?? '').toLowerCase();
+  if (blob.includes('urgent') || blob.includes('darurat')) return 'DARURAT';
+  if (blob.includes('high') || blob.includes('penting') || blob.includes('peringatan'))
+    return 'PENTING';
   return 'PENGUMUMAN';
 }
 

@@ -76,9 +76,9 @@ async function load() {
           attendance_sick: seedRes.attendance_sick ?? 0,
           attendance_permit: seedRes.attendance_permit ?? 0,
           attendance_absent: seedRes.attendance_absent ?? 0,
-          spiritual_predicate: 'Baik',
-          social_predicate: 'Baik',
-          promotion_decision: 'Naik Kelas',
+          spiritual_predicate: 'good',
+          social_predicate: 'good',
+          promotion_decision: 'promoted',
           summary: seedRes.summary,
         };
       }

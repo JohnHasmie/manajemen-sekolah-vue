@@ -29,7 +29,7 @@ const PATTERN_DEFAULT: Record<'small' | 'medium' | 'large', number> = {
   large: 5,
 };
 
-const grades = computed(() => GRADE_LISTS[wizard.payload.school.jenjang] ?? GRADE_LISTS.SMP);
+const grades = computed(() => GRADE_LISTS[wizard.payload.school.education_level] ?? GRADE_LISTS.SMP);
 
 const pattern = computed({
   get: () => wizard.payload.classes.pattern,

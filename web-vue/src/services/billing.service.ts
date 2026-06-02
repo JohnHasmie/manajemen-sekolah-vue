@@ -49,11 +49,13 @@ function diffDays(due: string | null | undefined): number | null {
 
 function parsePaymentTypeMini(raw: any): Bill['payment_type'] {
   if (!raw || typeof raw !== 'object') return null;
+  // Canonical column is `payment_types.period` (was `periode`).
+  // Accept both on read for backward compat.
   return {
     id: asStr(raw.id),
     name: asStr(raw.name),
     description: raw.description ?? null,
-    periode: raw.periode ?? null,
+    period: raw.period ?? raw.periode ?? null,
   };
 }
 
@@ -95,11 +97,11 @@ function billTitle(raw: any, pt: Bill['payment_type']): string {
 
 function billSubtitle(raw: any, pt: Bill['payment_type'], stu: Bill['student']): string | null {
   const parts: string[] = [];
-  if (pt?.periode) {
-    const p = String(pt.periode).toLowerCase();
-    if (p === 'bulanan' || p === 'monthly') parts.push('Bulanan');
-    else if (p === 'tahunan' || p === 'yearly') parts.push('Tahunan');
-    else if (p === 'sekali' || p === 'once') parts.push('Sekali');
+  if (pt?.period) {
+    const p = String(pt.period).toLowerCase();
+    if (p === 'monthly' || p === 'bulanan') parts.push('Bulanan');
+    else if (p === 'yearly' || p === 'tahunan') parts.push('Tahunan');
+    else if (p === 'once' || p === 'sekali') parts.push('Sekali');
   }
   if (stu?.class_name) parts.push(stu.class_name);
   if (parts.length === 0) return null;
@@ -171,7 +173,8 @@ export interface ParentBillFilters {
   student_id?: string;
   status?: 'paid' | 'unpaid' | 'pending';
   payment_type_id?: string;
-  periode?: 'bulanan' | 'tahunan' | 'sekali';
+  /** Canonical English: monthly / yearly / once. */
+  period?: 'monthly' | 'yearly' | 'once';
   search?: string;
   due_date_from?: string;
   due_date_to?: string;
@@ -237,7 +240,8 @@ export const BillingService = {
     fd.append('payment_receipt', input.file);
     if (typeof input.amount === 'number') fd.append('amount', String(input.amount));
     if (input.payment_date) fd.append('payment_date', input.payment_date);
-    fd.append('payment_method', input.payment_method ?? 'manual_transfer');
+    // Canonical backend value: `bank_transfer` (was `manual_transfer`).
+    fd.append('payment_method', input.payment_method ?? 'bank_transfer');
     try {
       const res = await api.post(`/bill/${billId}/payment-proof`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },

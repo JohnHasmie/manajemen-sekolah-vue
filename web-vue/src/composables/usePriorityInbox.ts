@@ -68,12 +68,18 @@ const ROUTE_MAPS: Record<PriorityRole, RouteMap> = {
     admin_payment_verification: '/admin/finance',
     admin_announcement_drafts: '/admin/announcements',
     // type values (PriorityInboxItem::TYPE_* — fallbacks when only
-    // type is shipped, or when target_route is unknown to the FE)
+    // type is shipped, or when target_route is unknown to the FE).
+    // Canonical English values post-rename (with legacy fallbacks
+    // kept below).
     schedule_conflict: '/admin/schedules',
     class_without_schedule: '/admin/schedules',
-    wali_kelas_missing: '/admin/classrooms',
+    homeroom_missing: '/admin/classrooms',
+    wali_kelas_missing: '/admin/classrooms', // legacy alias
     rpp_review_queue: '/admin/lesson-plans',
-    raport_pipeline_lagging: '/admin/report-cards',
+    report_card_pipeline_lagging: '/admin/report-cards',
+    raport_pipeline_lagging: '/admin/report-cards', // legacy alias
+    report_card_draft_deadline: '/admin/report-cards',
+    raport_draft_deadline: '/admin/report-cards', // legacy alias
     announcement_stale_draft: '/admin/announcements',
     // legacy / generic aliases (kept for forward compat)
     lesson_plan_detail: '/admin/lesson-plans',
@@ -120,7 +126,7 @@ const ROUTE_MAPS: Record<PriorityRole, RouteMap> = {
     announcement: '/parent/announcements',
     pengumuman: '/parent/announcements',
     report_card: '/parent/report-cards',
-    raport: '/parent/report-cards',
+    raport: '/parent/report-cards', // legacy alias
     recommendation: '/parent/recommendations',
     rekomendasi: '/parent/recommendations',
   },

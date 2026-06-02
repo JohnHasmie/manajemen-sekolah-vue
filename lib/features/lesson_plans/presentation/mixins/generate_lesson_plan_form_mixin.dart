@@ -115,8 +115,12 @@ mixin GenerateLessonPlanFormMixin
   Future<Map<String, dynamic>> buildPollingMetadata() async {
     final userData = await TokenService().getUserData();
     final schoolObj = userData?['school'] as Map<String, dynamic>?;
+    // Backend renamed `schools.school_name` → `schools.name`.
     final schoolNameStr = schoolObj != null
-        ? (schoolObj['school_name'] ?? schoolObj['nama_sekolah'] ?? 'SD/MI')
+        ? (schoolObj['name'] ??
+              schoolObj['school_name'] ??
+              schoolObj['nama_sekolah'] ??
+              'SD/MI')
         : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
 
     final selectedSubject = subjectList.firstWhere(
@@ -176,8 +180,12 @@ mixin GenerateLessonPlanFormMixin
 
     final userData = await TokenService().getUserData();
     final schoolObj = userData?['school'] as Map<String, dynamic>?;
+    // Backend renamed `schools.school_name` → `schools.name`.
     final schoolNameStr = schoolObj != null
-        ? (schoolObj['school_name'] ?? schoolObj['nama_sekolah'] ?? 'SD/MI')
+        ? (schoolObj['name'] ??
+              schoolObj['school_name'] ??
+              schoolObj['nama_sekolah'] ??
+              'SD/MI')
         : (userData?['school_name'] ?? userData?['nama_sekolah'] ?? 'SD/MI');
 
     final selectedSubject = subjectList.firstWhere(

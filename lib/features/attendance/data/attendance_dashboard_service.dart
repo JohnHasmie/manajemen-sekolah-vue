@@ -65,7 +65,11 @@ class AttendanceDashboardService {
         present: (totals['present'] as num?)?.toInt() ?? 0,
         excused: (totals['excused'] as num?)?.toInt() ?? 0,
         sick: (totals['sick'] as num?)?.toInt() ?? 0,
-        alpha: (totals['alpha'] as num?)?.toInt() ?? 0,
+        // Backend canonical: `absent` (was `alpha`/`alpa`).
+        alpha:
+            (totals['absent'] as num?)?.toInt() ??
+            (totals['alpha'] as num?)?.toInt() ??
+            0,
         presentPct: (totals['present_pct'] as num?)?.toDouble() ?? 0,
       ),
       avgPct: (kpi['avg_pct'] as num?)?.toDouble() ?? 0,
@@ -136,6 +140,9 @@ class StudentHeatmapResult {
 }
 
 CellState _parseCellState(String? raw) {
+  // Backend canonical attendance statuses: `present` / `sick` /
+  // `excused` / `absent` / `late`. Legacy `alpha` / `alpa` still
+  // accepted for back-compat.
   switch (raw?.toLowerCase()) {
     case 'present':
       return CellState.present;
@@ -143,7 +150,9 @@ CellState _parseCellState(String? raw) {
       return CellState.excused;
     case 'sick':
       return CellState.sick;
+    case 'absent':
     case 'alpha':
+    case 'alpa':
       return CellState.alpha;
     case 'holiday':
       return CellState.holiday;

@@ -79,7 +79,9 @@ mixin AnnouncementFormFieldsMixin on State<AnnouncementFormSheet> {
             ),
           ),
           DropdownMenuItem(
-            value: 'important',
+            // Backend canonical priorities: `low` / `normal` / `high` /
+            // `urgent` (was `biasa` / `penting` / `important`).
+            value: 'high',
             child: Row(
               children: [
                 const Icon(Icons.warning, color: Colors.orange, size: 16),

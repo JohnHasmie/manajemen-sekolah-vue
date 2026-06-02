@@ -21,20 +21,27 @@ interface WizardStateResponse {
 export interface NpsnLookupResult {
   kind: 'registry';
   id: null;
+  /** Canonical column: `npsn_registry.name` (was `nama`). */
   name: string;
-  jenjang: string | null;
-  kota: string | null;
-  provinsi: string | null;
-  alamat: string | null;
+  /** Canonical column: `npsn_registry.education_level` (was `jenjang`). */
+  education_level: string | null;
+  /** Canonical column: `npsn_registry.city` (was `kota`). */
+  city: string | null;
+  /** Canonical column: `npsn_registry.province` (was `provinsi`). */
+  province: string | null;
+  /** Canonical column: `npsn_registry.address` (was `alamat`). */
+  address: string | null;
   npsn: string;
   is_demo: false;
-  status_resmi?: string;
+  /** Canonical column: `npsn_registry.official_status` (was `status_resmi`). */
+  official_status?: string;
   akreditasi?: string | null;
   email?: string | null;
   telepon?: string | null;
   /** Present when the NPSN is already claimed by a Kamiledu tenant. */
   kamiledu_school: {
     id: string;
+    /** Canonical column: `schools.name` (was `school_name`). */
     name: string;
     is_demo: boolean;
     demo_owner_user_id: string | null;
@@ -43,7 +50,8 @@ export interface NpsnLookupResult {
 
 interface ExpiryInfo {
   school_id: string;
-  school_name: string;
+  /** Canonical column: `schools.name` (was `school_name`). */
+  name: string;
   is_demo: true;
   expires_at: string | null;
   seconds_remaining: number;
@@ -55,18 +63,19 @@ export const DemoService = {
   /**
    * Live school search for the wizard's step 2.
    *
-   * @param q       partial school name; backend ignores < 2 chars
-   * @param jenjang optional filter (SD/SMP/etc.)
+   * @param q               partial school name; backend ignores < 2 chars
+   * @param education_level optional filter (SD/SMP/etc.) — backend
+   *                        param is now `education_level` (was `jenjang`)
    */
   async searchSchools(args: {
     q: string;
-    jenjang?: string | null;
+    education_level?: string | null;
     limit?: number;
   }): Promise<SchoolSearchHit[]> {
     const res = await api.get('/schools/search', {
       params: {
         q: args.q,
-        jenjang: args.jenjang ?? undefined,
+        education_level: args.education_level ?? undefined,
         limit: args.limit ?? 12,
       },
     });

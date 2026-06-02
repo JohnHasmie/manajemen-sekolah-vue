@@ -290,13 +290,20 @@ class TeacherAnnouncementScreenState
   }
 
   String _getPriorityLabel(String priority) {
+    // Backend canonical: `low` / `normal` / `high` / `urgent`.
+    // Legacy: `biasa` → normal, `penting` → high.
     switch (priority.toLowerCase()) {
+      case 'urgent':
+        return 'Mendesak';
+      case 'high':
       case 'penting':
       case 'important':
         return 'Penting';
       case 'biasa':
       case 'normal':
         return 'Biasa';
+      case 'low':
+        return 'Rendah';
       default:
         return priority;
     }
@@ -304,12 +311,16 @@ class TeacherAnnouncementScreenState
 
   Color _getPriorityColor(String priority) {
     switch (priority.toLowerCase()) {
+      case 'urgent':
+      case 'high':
       case 'penting':
       case 'important':
         return ColorUtils.warning600;
       case 'biasa':
       case 'normal':
         return ColorUtils.info600;
+      case 'low':
+        return ColorUtils.slate400;
       default:
         return ColorUtils.slate400;
     }
@@ -414,9 +425,7 @@ class TeacherAnnouncementScreenState
     // Index layout: 0 = upcoming-event banner strip; 1..N = cards;
     // N+1 = pagination spinner (when isLoadingMore).
     const bannerIndex = 0;
-    final itemCount = 1 +
-        _announcements.length +
-        (isLoadingMore ? 1 : 0);
+    final itemCount = 1 + _announcements.length + (isLoadingMore ? 1 : 0);
 
     return ListView.builder(
       controller: paginationScrollController,

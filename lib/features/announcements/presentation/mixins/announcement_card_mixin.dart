@@ -103,7 +103,14 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
   }
 
   bool _isImportant(Map<String, dynamic> data) {
-    return ['penting', 'important'].contains(data['priority']);
+    // Backend canonical priorities: `low` / `normal` / `high` / `urgent`.
+    // Legacy: `biasa` (→ normal), `penting` (→ high), `important`.
+    return [
+      'high',
+      'urgent',
+      'penting',
+      'important',
+    ].contains(data['priority']);
   }
 
   /// Round 36-px avatar tinted by source category. Penting items get a

@@ -280,7 +280,8 @@ class _SchoolPickerStepState extends State<_SchoolPickerStep> {
     if (_query.trim().isEmpty) return list;
     final q = _query.trim().toLowerCase();
     return list.where((s) {
-      final n = (s['school_name'] ?? '').toString().toLowerCase();
+      // Backend renamed `schools.school_name` → `schools.name`.
+      final n = (s['school_name'] ?? s['name'] ?? '').toString().toLowerCase();
       final a = (s['address'] ?? '').toString().toLowerCase();
       return n.contains(q) || a.contains(q);
     }).toList();
@@ -308,7 +309,7 @@ class _SchoolPickerStepState extends State<_SchoolPickerStep> {
         (s) => s['school_id']?.toString() == candidateId,
         orElse: () => const {},
       );
-      candidateName = hit['school_name']?.toString();
+      candidateName = (hit['school_name'] ?? hit['name'])?.toString();
     }
 
     return Column(
@@ -378,7 +379,8 @@ class _SchoolCard extends StatelessWidget {
 
   const _SchoolCard({required this.school, required this.active, this.onTap});
 
-  String get _name => (school['school_name'] ?? '-').toString();
+  String get _name =>
+      (school['school_name'] ?? school['name'] ?? '-').toString();
 
   String get _meta {
     final city = school['city']?.toString().trim();

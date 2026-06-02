@@ -112,7 +112,9 @@ mixin TableViewMixin on ConsumerState<ReportCardOverviewPage> {
 
   Widget _buildClassCell(dynamic classData) {
     final className = classData['class_name']?.toString() ?? '-';
-    final totalRaports = classData['total_raports'] ?? 0;
+    // Backend rename: `total_raports` → `total_report_cards`.
+    final totalRaports =
+        classData['total_report_cards'] ?? classData['total_raports'] ?? 0;
     final studentCount = classData['student_count'] ?? 0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -140,7 +142,9 @@ mixin TableViewMixin on ConsumerState<ReportCardOverviewPage> {
   }
 
   Widget _buildProgressCell(dynamic classData) {
-    final totalRaports = classData['total_raports'] ?? 0;
+    // Backend rename: `total_raports` → `total_report_cards`.
+    final totalRaports =
+        classData['total_report_cards'] ?? classData['total_raports'] ?? 0;
     final studentCount = classData['student_count'] ?? 0;
     final pctVal = _calculateProgress(totalRaports, studentCount);
     final pctColor = _progressColor(pctVal);

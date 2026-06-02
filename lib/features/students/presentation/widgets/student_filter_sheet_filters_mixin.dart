@@ -175,12 +175,13 @@ mixin StudentFilterSheetFiltersMixin on State<StudentFilterSheetContent> {
         FilterChipGrid<String?>(
           options: [
             FilterOption(value: null, label: t({'en': 'All', 'id': 'Semua'})),
+            // Backend canonical: `male` / `female` (was `L` / `P`).
             FilterOption(
-              value: 'L',
+              value: 'male',
               label: t({'en': 'Male', 'id': 'Laki-laki'}),
             ),
             FilterOption(
-              value: 'P',
+              value: 'female',
               label: t({'en': 'Female', 'id': 'Perempuan'}),
             ),
           ],

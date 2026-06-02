@@ -395,11 +395,18 @@ class _LessonPlanUploadSheetState
     if (id.isEmpty) {
       throw Exception('ID RPP tidak ditemukan');
     }
+    // Backend rename (rename guide §4): lesson_plans.semester canonical
+    // values are `odd` / `even` (was `Ganjil` / `Genap`).
+    final canonicalSemester = switch (_semester.toLowerCase()) {
+      'ganjil' || 'gasal' || 'odd' => 'odd',
+      'genap' || 'even' => 'even',
+      _ => _semester.toLowerCase(),
+    };
     final body = <String, dynamic>{
       'title': _titleController.text.trim(),
       'subject_id': _subjectId,
       'class_id': _classId,
-      'semester': _semester,
+      'semester': canonicalSemester,
       'academic_year': _academicYear,
     };
     final note = _notesController.text.trim();
@@ -668,7 +675,9 @@ class _LessonPlanUploadSheetState
 
   Widget _buildSubjectChips(Color accent) {
     if (_subjects.isEmpty) {
-      return const _ChipPlaceholder(text: 'Belum ada mata pelajaran ditugaskan');
+      return const _ChipPlaceholder(
+        text: 'Belum ada mata pelajaran ditugaskan',
+      );
     }
     return FilterChipGrid<String>(
       options: [
@@ -1162,10 +1171,7 @@ class _ExistingFileCard extends StatelessWidget {
               onTap: onReplace,
               borderRadius: BorderRadius.circular(8),
               child: const Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

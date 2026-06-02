@@ -67,7 +67,8 @@ const dragOver = ref(false);
 const title = ref<string>('');
 const classId = ref<string>(props.initialClassId);
 const subjectId = ref<string>(props.initialSubjectId);
-const semester = ref<string>('Ganjil');
+// Canonical backend value: `odd` / `even` (was `Ganjil` / `Genap`).
+const semester = ref<string>('odd');
 const notes = ref<string>('');
 const isSubmitting = ref(false);
 
@@ -345,19 +346,19 @@ const canSubmit = computed(
         </label>
         <div class="flex gap-1.5">
           <button
-            v-for="opt in ['Ganjil', 'Genap']"
-            :key="opt"
+            v-for="opt in [{ key: 'odd', label: 'Ganjil' }, { key: 'even', label: 'Genap' }]"
+            :key="opt.key"
             type="button"
             class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
             :class="
-              semester === opt
+              semester === opt.key
                 ? 'bg-brand-cobalt text-white border-brand-cobalt'
                 : 'bg-white text-slate-600 border-slate-200 hover:border-brand-cobalt/40'
             "
             :disabled="isSubmitting"
-            @click="semester = opt"
+            @click="semester = opt.key"
           >
-            {{ opt }}
+            {{ opt.label }}
           </button>
         </div>
       </div>

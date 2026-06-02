@@ -95,6 +95,7 @@
     "guru": "Teacher",
     "wali_kelas": "Homeroom",
     "wali": "Parent",
+    "siswa": "Student",
     "staff": "Staff"
   },
   "status": {

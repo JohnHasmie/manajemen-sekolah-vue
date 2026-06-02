@@ -102,15 +102,16 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
   List<DropdownMenuItem<String>> _buildGenderMenuItems(
     LanguageProvider languageProvider,
   ) {
+    // Backend canonical: `male` / `female` (was `L` / `P`).
     return [
       DropdownMenuItem(
-        value: 'L',
+        value: 'male',
         child: Text(
           languageProvider.getTranslatedText({'en': 'Male', 'id': 'Laki-laki'}),
         ),
       ),
       DropdownMenuItem(
-        value: 'P',
+        value: 'female',
         child: Text(
           languageProvider.getTranslatedText({
             'en': 'Female',
@@ -308,10 +309,17 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
           onChanged: (v) =>
               setState(() => selectedStatus = (selectedStatus == v) ? null : v),
           choices: [
+            // Backend canonical employment_status values: `permanent`
+            // / `contract` / `temporary` / `civil_servant`.
             AdminFormChoice(
               value: 'permanent',
               label: t(const {'en': 'Permanent', 'id': 'Tetap'}),
               icon: Icons.workspace_premium_rounded,
+            ),
+            AdminFormChoice(
+              value: 'civil_servant',
+              label: t(const {'en': 'Civil Servant', 'id': 'PNS'}),
+              icon: Icons.account_balance_rounded,
             ),
             AdminFormChoice(
               value: 'contract',

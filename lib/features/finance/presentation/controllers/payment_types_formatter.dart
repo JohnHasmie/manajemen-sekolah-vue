@@ -212,7 +212,9 @@ class PaymentTypesFormatter {
       final matchesStatus =
           expectedStatus == null || itemStatus == expectedStatus;
 
-      final itemPeriod = item['periode']?.toString().toLowerCase() ?? '';
+      // Backend rename: `payment_types.periode` → `payment_types.period`.
+      final itemPeriod =
+          (item['period'] ?? item['periode'])?.toString().toLowerCase() ?? '';
       final matchesPeriod =
           acceptedPeriods == null || acceptedPeriods.contains(itemPeriod);
 

@@ -163,9 +163,14 @@ class CacheInvalidationService {
   // ---------------------------------------------------------------------------
 
   /// After create / publish / update report cards.
+  /// Note: legacy `raport_*` cache prefixes are still cleared so any
+  /// data persisted before the backend rename also drops out.
   static Future<void> onReportCardChanged() async {
     _log('report_card');
     await Future.wait([
+      LocalCacheService.clearStartingWith('report_card_'),
+      LocalCacheService.clearStartingWith('report_card_students_'),
+      LocalCacheService.clearStartingWith('parent_report_card_'),
       LocalCacheService.clearStartingWith('raport_'),
       LocalCacheService.clearStartingWith('raport_students_'),
       LocalCacheService.clearStartingWith('parent_raport_'),
@@ -243,6 +248,7 @@ class CacheInvalidationService {
       LocalCacheService.clearStartingWith('announcement_'),
       LocalCacheService.clearStartingWith('finance_'),
       LocalCacheService.clearStartingWith('raport_'),
+      LocalCacheService.clearStartingWith('report_card_'),
       LocalCacheService.clearStartingWith('parent_'),
       LocalCacheService.clearStartingWith('teacher_classes_'),
       LocalCacheService.clearStartingWith('teacher_profile_'),

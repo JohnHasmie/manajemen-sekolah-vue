@@ -110,7 +110,10 @@ class _ParentReportCardDetailScreenState
   bool get _isAdmin => userRole == 'admin' || userRole == 'administrator';
 
   List<dynamic> get _subjects =>
-      (reportCardData['raportSubjects'] ??
+      // Backend rename: `raport_subjects` → `report_card_subjects`.
+      (reportCardData['reportCardSubjects'] ??
+              reportCardData['report_card_subjects'] ??
+              reportCardData['raportSubjects'] ??
               reportCardData['raport_subjects'] ??
               const [])
           as List<dynamic>;

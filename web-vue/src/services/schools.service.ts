@@ -13,7 +13,7 @@ import { api } from '@/lib/http';
 import type { School } from '@/types/auth';
 
 export const SchoolService = {
-  /** GET /school/settings — { school_name, address, jenjang, … }. */
+  /** GET /school/settings — { name, address, education_level, … }. */
   async getActiveSchool(): Promise<School | null> {
     try {
       const res = await api.get('/school/settings');
@@ -25,20 +25,24 @@ export const SchoolService = {
         body.uuid ??
         body.data?.id ??
         null;
+      // Canonical column is `schools.name`; older payloads used
+      // `school_name` / `nama_sekolah`. Accept any.
       const name =
-        body.school_name ??
         body.name ??
+        body.school_name ??
         body.nama_sekolah ??
         body.nama ??
         null;
       if (!id && !name) return null;
+      const educationLevel = body.education_level ?? body.jenjang ?? body.level;
       return {
         id: String(id ?? ''),
         name: String(name ?? 'Sekolah Aktif'),
         address: body.address ?? body.alamat ?? undefined,
         city: body.city ?? body.kota ?? undefined,
         academic_year: body.academic_year ?? body.tahun_ajaran ?? undefined,
-        level: body.jenjang ?? body.level ?? undefined,
+        education_level: educationLevel ?? undefined,
+        level: educationLevel ?? undefined,
         logo_url: body.logo_url ?? body.logo ?? undefined,
       };
     } catch {

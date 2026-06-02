@@ -1,8 +1,8 @@
 /**
- * ReportCardService — `/raport*` wrapper (main Laravel `api`).
+ * ReportCardService — `/report-cards*` wrapper (main Laravel `api`).
  *
  * Mirrors Flutter's `report_card_service.dart` + `ExcelReportCardService`
- * + `RaportController.php` end-to-end. All endpoints on the main
+ * + `ReportCardController.php` end-to-end. All endpoints on the main
  * Laravel API (no AI backend trap).
  *
  * Fixes 3 critical bugs the previous version shipped:
@@ -11,28 +11,30 @@
  *   2. `save()` now writes `attendance_sick/permit/absent` instead of
  *      `sick_days/permit_days/absent_days` — the legacy keys were
  *      silently dropped by the backend, so kehadiran never persisted.
- *   3. Adds `parentRaports()` to call `/parent/raports` (parent.service
- *      used to hit the teacher class-roster endpoint with an ignored
- *      `student_id` filter, always returning empty).
+ *   3. Adds `parentReportCards()` to call `/parent/report-cards`
+ *      (parent.service used to hit the teacher class-roster endpoint
+ *      with an ignored `student_id` filter, always returning empty).
  *
  * Plus the new admin pipeline + publish + PDF/Excel binary download
  * surface needed by the rewritten admin hub + parent detail views.
  */
 import { api } from '@/lib/http';
 import {
+  normalizePredicate,
+  normalizePromotionDecision,
   normalizeReportCardStatus,
-  type AdminRaportPipeline,
+  type AdminReportCardPipeline,
   type KelasMiniChip,
-  type ParentRaportRow,
+  type ParentReportCardRow,
   type PipelineKey,
   type PipelineNode,
-  type RaportAchievement,
-  type RaportClassSummary,
-  type RaportExtra,
-  type RaportInitialData,
-  type RaportSubject,
-  type RaportSummary,
-  type RaportSummaryRow,
+  type ReportCardAchievement,
+  type ReportCardClassSummary,
+  type ReportCardExtra,
+  type ReportCardInitialData,
+  type ReportCardSubject,
+  type ReportCardSummary,
+  type ReportCardSummaryRow,
   type ReportCardDetail,
   type ReportCardStatus,
   type TingkatGroup,
@@ -55,17 +57,21 @@ function strOrNull(v: unknown): string | null {
 
 // ── Row mappers ─────────────────────────────────────────────────────
 
-function subjectFromJson(raw: AnyRecord): RaportSubject {
-  // `/parent/raports` eager-loads `raportSubjects.subject`, so the
-  // raport_subject row carries a nested `subject` relation with the
-  // master subject's id / name / kkm. The flat `id` on the row is the
-  // raport_subject pivot id — useless to the UI. Prefer the nested
+function subjectFromJson(raw: AnyRecord): ReportCardSubject {
+  // `/parent/report-cards` eager-loads `reportCardSubjects.subject`, so
+  // the report_card_subject row carries a nested `subject` relation
+  // with the master subject's id / name / kkm. The flat `id` on the
+  // row is the pivot id — useless to the UI. Prefer the nested
   // subject's id and name when present.
   const subjectRel =
     (raw.subject as AnyRecord | undefined) ??
     (raw.master_subject as AnyRecord | undefined) ??
     undefined;
   const teacherRel = raw.teacher as AnyRecord | string | null | undefined;
+  const knowledgePred =
+    (raw.knowledge_predicate as string | undefined) ??
+    (raw.predicate as string | undefined) ??
+    (raw.predikat as string | undefined);
   return {
     subject_id: String(
       raw.subject_id ?? subjectRel?.id ?? raw.id ?? '',
@@ -99,16 +105,15 @@ function subjectFromJson(raw: AnyRecord): RaportSubject {
       (raw.nilai as number | string | null) ??
       (raw.score as number | string | null) ??
       null,
-    knowledge_predicate:
-      (raw.knowledge_predicate as string | undefined) ??
-      (raw.predikat as string | undefined) ??
-      (raw.predicate as string | undefined),
+    knowledge_predicate: knowledgePred ? normalizePredicate(knowledgePred) : undefined,
     knowledge_description:
       (raw.knowledge_description as string | undefined) ??
-      (raw.deskripsi as string | undefined) ??
-      (raw.description as string | undefined),
+      (raw.description as string | undefined) ??
+      (raw.deskripsi as string | undefined),
     skill_score: (raw.skill_score as number | string | null) ?? null,
-    skill_predicate: raw.skill_predicate as string | undefined,
+    skill_predicate: raw.skill_predicate
+      ? normalizePredicate(raw.skill_predicate)
+      : undefined,
     skill_description: raw.skill_description as string | undefined,
     recap_uh_avg:
       raw.recap_uh_avg !== undefined ? num(raw.recap_uh_avg) : null,
@@ -116,16 +121,20 @@ function subjectFromJson(raw: AnyRecord): RaportSubject {
     recap_uas: raw.recap_uas !== undefined ? num(raw.recap_uas) : null,
     recap_final_score:
       raw.recap_final_score !== undefined ? num(raw.recap_final_score) : null,
-    recap_bab_scores: Array.isArray(raw.recap_bab_scores)
-      ? (raw.recap_bab_scores as unknown[]).map((x) => num(x))
-      : undefined,
-    recap_bab_names: Array.isArray(raw.recap_bab_names)
-      ? (raw.recap_bab_names as unknown[]).map((x) => String(x))
-      : undefined,
+    recap_chapter_scores: Array.isArray(raw.recap_chapter_scores)
+      ? (raw.recap_chapter_scores as unknown[]).map((x) => num(x))
+      : Array.isArray(raw.recap_bab_scores)
+        ? (raw.recap_bab_scores as unknown[]).map((x) => num(x))
+        : undefined,
+    recap_chapter_names: Array.isArray(raw.recap_chapter_names)
+      ? (raw.recap_chapter_names as unknown[]).map((x) => String(x))
+      : Array.isArray(raw.recap_bab_names)
+        ? (raw.recap_bab_names as unknown[]).map((x) => String(x))
+        : undefined,
   };
 }
 
-function extraFromJson(raw: AnyRecord): RaportExtra {
+function extraFromJson(raw: AnyRecord): ReportCardExtra {
   return {
     id: raw.id ? String(raw.id) : undefined,
     name: String(raw.name ?? raw.nama ?? ''),
@@ -142,7 +151,7 @@ function extraFromJson(raw: AnyRecord): RaportExtra {
   };
 }
 
-function achievementFromJson(raw: AnyRecord): RaportAchievement {
+function achievementFromJson(raw: AnyRecord): ReportCardAchievement {
   return {
     id: raw.id ? String(raw.id) : undefined,
     name: String(raw.name ?? raw.nama ?? ''),
@@ -158,7 +167,7 @@ function achievementFromJson(raw: AnyRecord): RaportAchievement {
   };
 }
 
-function summaryFromJson(raw: AnyRecord | undefined | null): RaportSummary | undefined {
+function summaryFromJson(raw: AnyRecord | undefined | null): ReportCardSummary | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
   return {
     rerata: raw.rerata !== undefined ? num(raw.rerata) : null,
@@ -179,24 +188,31 @@ function detailFromJson(raw: AnyRecord): ReportCardDetail {
 
   // Backend ships subjects under different keys depending on endpoint
   // and serialiser config:
-  //   - `/raport/show` (camel-cased)   → `raportSubjects`
-  //   - `/parent/raports` (Eloquent)   → `raport_subjects` (Laravel
-  //                                       snake_cases relation keys
-  //                                       by default in toJson)
-  //   - `/raport/initial-data`         → `grades` (recap roll-up)
-  //   - legacy / form payloads         → `subjects`
-  const subjectsRaw = (Array.isArray(raw.raportSubjects)
-    ? raw.raportSubjects
-    : Array.isArray(raw.raport_subjects)
-      ? raw.raport_subjects
-      : Array.isArray(raw.grades)
-        ? raw.grades
-        : Array.isArray(raw.subjects)
-          ? raw.subjects
-          : []) as AnyRecord[];
+  //   - `/report-card/show` (camel-cased) → `reportCardSubjects`
+  //   - `/parent/report-cards` (Eloquent) → `report_card_subjects`
+  //                                       (Laravel snake_cases
+  //                                       relation keys by default
+  //                                       in toJson)
+  //   - `/report-card/initial-data`       → `grades` (recap roll-up)
+  //   - legacy / form payloads            → `subjects`
+  //   - legacy back-compat                → `raportSubjects` /
+  //                                       `raport_subjects`
+  const subjectsRaw = (Array.isArray(raw.reportCardSubjects)
+    ? raw.reportCardSubjects
+    : Array.isArray(raw.report_card_subjects)
+      ? raw.report_card_subjects
+      : Array.isArray(raw.raportSubjects)
+        ? raw.raportSubjects
+        : Array.isArray(raw.raport_subjects)
+          ? raw.raport_subjects
+          : Array.isArray(raw.grades)
+            ? raw.grades
+            : Array.isArray(raw.subjects)
+              ? raw.subjects
+              : []) as AnyRecord[];
 
-  // `extracurriculars` is the canonical key on `/raport/show`. Older
-  // form payloads used `extras` / `ekstrakurikuler`.
+  // `extracurriculars` is the canonical key on `/report-card/show`.
+  // Older form payloads used `extras` / `ekstrakurikuler`.
   const extrasRaw = (Array.isArray(raw.extracurriculars)
     ? raw.extracurriculars
     : Array.isArray(raw.extras)
@@ -260,18 +276,16 @@ function detailFromJson(raw: AnyRecord): ReportCardDetail {
       (raw.spiritual_description as string | undefined) ??
       (raw.deskripsi_spiritual as string | undefined) ??
       '',
-    spiritual_predicate:
-      (raw.spiritual_predicate as string | undefined) ??
-      (raw.predikat_spiritual as string | undefined) ??
-      'Baik',
+    spiritual_predicate: normalizePredicate(
+      raw.spiritual_predicate ?? raw.predikat_spiritual ?? 'good',
+    ),
     social_description:
       (raw.social_description as string | undefined) ??
       (raw.deskripsi_sosial as string | undefined) ??
       '',
-    social_predicate:
-      (raw.social_predicate as string | undefined) ??
-      (raw.predikat_sosial as string | undefined) ??
-      'Baik',
+    social_predicate: normalizePredicate(
+      raw.social_predicate ?? raw.predikat_sosial ?? 'good',
+    ),
 
     subjects,
     extras: extrasRaw.map(extraFromJson),
@@ -304,10 +318,9 @@ function detailFromJson(raw: AnyRecord): ReportCardDetail {
       (raw.notes as string | undefined) ??
       (raw.catatan_wali as string | undefined) ??
       '',
-    promotion_decision:
-      (raw.promotion_decision as string | undefined) ??
-      (raw.keputusan as string | undefined) ??
-      'Naik Kelas',
+    promotion_decision: normalizePromotionDecision(
+      raw.promotion_decision ?? raw.keputusan ?? 'promoted',
+    ),
 
     summary: summaryBlock,
     avg_grade: avg,
@@ -315,7 +328,7 @@ function detailFromJson(raw: AnyRecord): ReportCardDetail {
   };
 }
 
-function initialDataFromJson(raw: AnyRecord): RaportInitialData {
+function initialDataFromJson(raw: AnyRecord): ReportCardInitialData {
   // ── BUGFIX #1 ── backend ships `grades`, not `subjects`. The old
   // parser read `subjects` and silently returned an empty form on
   // the new-rapor path.
@@ -351,7 +364,21 @@ function initialDataFromJson(raw: AnyRecord): RaportInitialData {
   };
 }
 
-function summaryRowFromJson(raw: AnyRecord): RaportSummaryRow {
+function summaryRowFromJson(raw: AnyRecord): ReportCardSummaryRow {
+  const hasCard =
+    raw.has_report_card !== undefined
+      ? Boolean(raw.has_report_card)
+      : raw.has_raport !== undefined
+        ? Boolean(raw.has_raport)
+        : Boolean(
+            raw.report_card_id ||
+              raw.report_card_status ||
+              raw.raport_id ||
+              raw.raport_status,
+          );
+  const cardId = raw.report_card_id ?? raw.raport_id ?? null;
+  const cardStatus =
+    raw.report_card_status ?? raw.raport_status ?? raw.status ?? null;
   return {
     student_class_id: String(raw.student_class_id ?? raw.id ?? ''),
     student_id: strOrNull(raw.student_id ?? (raw.student as AnyRecord)?.id) ?? undefined,
@@ -362,23 +389,18 @@ function summaryRowFromJson(raw: AnyRecord): RaportSummaryRow {
       (raw.student_number as string | null | undefined) ??
       (raw.nis as string | null | undefined) ??
       null,
-    has_raport:
-      raw.has_raport !== undefined
-        ? Boolean(raw.has_raport)
-        : Boolean(raw.raport_id || raw.raport_status),
-    raport_id: raw.raport_id ? String(raw.raport_id) : null,
-    raport_status: raw.raport_status
-      ? normalizeReportCardStatus(raw.raport_status)
-      : raw.status
-        ? normalizeReportCardStatus(raw.status)
-        : null,
+    has_report_card: hasCard,
+    report_card_id: cardId ? String(cardId) : null,
+    report_card_status: cardStatus
+      ? normalizeReportCardStatus(cardStatus)
+      : null,
     avg_grade: (raw.avg_grade as number | null | undefined) ?? null,
     remed_count: num(raw.remed_count, 0),
     published_at: strOrNull(raw.published_at),
   };
 }
 
-function classSummaryFromJson(raw: AnyRecord): RaportClassSummary {
+function classSummaryFromJson(raw: AnyRecord): ReportCardClassSummary {
   return {
     class_id: String(raw.class_id ?? raw.id ?? ''),
     class_name: String(raw.class_name ?? raw.name ?? ''),
@@ -387,7 +409,7 @@ function classSummaryFromJson(raw: AnyRecord): RaportClassSummary {
       (raw.tingkat as string | number | null | undefined) ??
       null,
     student_count: num(raw.student_count ?? raw.students_count),
-    total_raports: num(raw.total_raports),
+    total_report_cards: num(raw.total_report_cards ?? raw.total_raports),
     draft_count: num(raw.draft_count),
     final_count: num(raw.final_count),
     published_count: num(raw.published_count),
@@ -451,7 +473,7 @@ function tingkatGroupFromJson(raw: AnyRecord): TingkatGroup {
   };
 }
 
-function adminPipelineFromJson(raw: AnyRecord): AdminRaportPipeline {
+function adminPipelineFromJson(raw: AnyRecord): AdminReportCardPipeline {
   const data = (raw.data as AnyRecord | undefined) ?? raw;
   const pipelineRaw = Array.isArray(data.pipeline) ? data.pipeline : [];
   const tingkatsRaw = Array.isArray(data.tingkats) ? data.tingkats : [];
@@ -465,14 +487,14 @@ function adminPipelineFromJson(raw: AnyRecord): AdminRaportPipeline {
       semester_id: strOrNull(period.semester_id),
       semester_label: strOrNull(period.semester_label),
     },
-    total_raports: num(data.total_raports),
+    total_report_cards: num(data.total_report_cards ?? data.total_raports),
     total_classes: num(data.total_classes),
   };
 }
 
 // ── Parent inbox mapper ─────────────────────────────────────────────
 
-function parentRaportRowFromJson(raw: AnyRecord): ParentRaportRow {
+function parentReportCardRowFromJson(raw: AnyRecord): ParentReportCardRow {
   const studentObj = (raw.student as AnyRecord | undefined) ?? {};
   const reportRaw = (raw.reportCard as AnyRecord | undefined) ?? {};
   return {
@@ -524,19 +546,20 @@ export interface SaveReportCardPayload {
   absent_days?: number;
   homeroom_notes?: string;
   promotion_decision?: string;
-  subjects?: RaportSubject[];
-  extras?: RaportExtra[];
-  achievements?: RaportAchievement[];
+  subjects?: ReportCardSubject[];
+  extras?: ReportCardExtra[];
+  achievements?: ReportCardAchievement[];
 }
 
 /**
  * Lazily-fetched current semester id.
  *
- * Backend `/raports` index + `/raport/initial-data` + `/raport/show`
- * + `/raport` POST all validate `semester_id` as required. The HTTP
- * interceptor auto-injects `academic_year_id` but NOT `semester_id`,
- * so a bare class_id call previously 400'd and the catch{} swallowed
- * it as "Belum ada siswa di kelas ini".
+ * Backend `/report-cards` index + `/report-card/initial-data` +
+ * `/report-card/show` + `/report-card` POST all validate
+ * `semester_id` as required. The HTTP interceptor auto-injects
+ * `academic_year_id` but NOT `semester_id`, so a bare class_id call
+ * previously 400'd and the catch{} swallowed it as "Belum ada siswa
+ * di kelas ini".
  *
  * We resolve the current semester id from `/semesters` (looking for
  * the row with `current=true`) and cache the promise so the
@@ -590,22 +613,22 @@ export const ReportCardService = {
   // ── Teacher hub: per-class roll-up ──────────────────────────────
 
   /**
-   * `GET /raports/teacher-summary` — per-homeroom-class stats for
-   * the Frame A hub. Returns one row per class with draft/final/
+   * `GET /report-cards/teacher-summary` — per-homeroom-class stats
+   * for the Frame A hub. Returns one row per class with draft/final/
    * published counts + completion percentage.
    *
    * Backend ships `class_id / class_name / grade_level / student_count
-   * / total_raports / draft_count / final_count / published_count /
-   * completion_pct`. Older Vue truncated this to "summary rows" with
-   * `student_class_id` (wrong axis).
+   * / total_report_cards / draft_count / final_count / published_count
+   * / completion_pct`. Older Vue truncated this to "summary rows"
+   * with `student_class_id` (wrong axis).
    */
   async getTeacherClassSummary(args: {
     teacher_id: string;
     academic_year_id?: string;
     semester_id?: string;
-  }): Promise<RaportClassSummary[]> {
+  }): Promise<ReportCardClassSummary[]> {
     try {
-      const res = await api.get('/raports/teacher-summary', {
+      const res = await api.get('/report-cards/teacher-summary', {
         params: {
           teacher_id: args.teacher_id,
           ...(args.academic_year_id
@@ -625,22 +648,23 @@ export const ReportCardService = {
   // ── Teacher: per-class student roster ───────────────────────────
 
   /**
-   * `GET /raports?class_id=…` — student roster + per-student status
-   * for the Frame B class screen. Response shape is light: no avg /
-   * extra fields, just `{student_class_id, student_name, student_number,
-   * has_raport, raport_status, raport_id}`.
+   * `GET /report-cards?class_id=…` — student roster + per-student
+   * status for the Frame B class screen. Response shape is light: no
+   * avg / extra fields, just `{student_class_id, student_name,
+   * student_number, has_report_card, report_card_status,
+   * report_card_id}`.
    */
   async getClassRoster(args: {
     class_id: string;
     academic_year_id?: string;
     semester_id?: string;
-  }): Promise<RaportSummaryRow[]> {
+  }): Promise<ReportCardSummaryRow[]> {
     try {
       // Backend validator requires semester_id — auto-resolve from
       // `/semesters` when not explicitly passed. academic_year_id is
       // auto-injected by the HTTP interceptor.
       const semesterId = await resolveSemesterId(args.semester_id);
-      const res = await api.get('/raports', {
+      const res = await api.get('/report-cards', {
         params: {
           class_id: args.class_id,
           ...(args.academic_year_id
@@ -666,7 +690,7 @@ export const ReportCardService = {
     teacher_id: string;
     academic_year_id?: string;
     semester_id?: string;
-  }): Promise<RaportSummaryRow[]> {
+  }): Promise<ReportCardSummaryRow[]> {
     // The legacy view called this expecting a flat student list; the
     // backend doesn't ship one keyed by teacher_id. Easiest stub: just
     // delegate to the class summary then return an empty roster (the
@@ -678,18 +702,18 @@ export const ReportCardService = {
   // ── Teacher form ────────────────────────────────────────────────
 
   /**
-   * `GET /raport/initial-data` — form seed for a brand-new raport.
-   * Returns subjects with KKM + teacher_name + recap fields, plus
-   * attendance pre-fill + class rank summary.
+   * `GET /report-card/initial-data` — form seed for a brand-new
+   * report card. Returns subjects with KKM + teacher_name + recap
+   * fields, plus attendance pre-fill + class rank summary.
    */
   async getInitialData(args: {
     student_class_id: string;
     academic_year_id: string;
     semester_id?: string;
-  }): Promise<RaportInitialData | null> {
+  }): Promise<ReportCardInitialData | null> {
     try {
       const semesterId = await resolveSemesterId(args.semester_id);
-      const res = await api.get('/raport/initial-data', {
+      const res = await api.get('/report-card/initial-data', {
         params: {
           student_class_id: args.student_class_id,
           academic_year_id: args.academic_year_id,
@@ -704,8 +728,9 @@ export const ReportCardService = {
   },
 
   /**
-   * `GET /raport/show` — hydrated existing raport. Returns null when
-   * the backend reports "no raport exists yet" (data === null).
+   * `GET /report-card/show` — hydrated existing report card. Returns
+   * null when the backend reports "no report card exists yet" (data
+   * === null).
    */
   async getDetail(args: {
     student_class_id: string;
@@ -714,7 +739,7 @@ export const ReportCardService = {
   }): Promise<ReportCardDetail | null> {
     try {
       const semesterId = await resolveSemesterId(args.semester_id);
-      const res = await api.get('/raport/show', {
+      const res = await api.get('/report-card/show', {
         params: {
           student_class_id: args.student_class_id,
           academic_year_id: args.academic_year_id,
@@ -729,8 +754,8 @@ export const ReportCardService = {
   },
 
   /**
-   * `POST /raport` — upsert. `status` can be 'draft' (Simpan Draf) or
-   * 'final' (Finalisasi).
+   * `POST /report-card` — upsert. `status` can be 'draft' (Simpan
+   * Draf) or 'final' (Finalisasi).
    *
    * ── BUGFIX #3 ── caller payload may use legacy `sick_days/permit_days/
    * absent_days` keys; backend writes `attendance_sick/permit/absent`.
@@ -776,7 +801,7 @@ export const ReportCardService = {
         ? { achievements: payload.achievements }
         : {}),
     };
-    const res = await api.post('/raport', body);
+    const res = await api.post('/report-card', body);
     const respBody = (res.data?.data ?? res.data ?? null) as AnyRecord | null;
     return respBody ? detailFromJson(respBody) : null;
   },
@@ -784,9 +809,10 @@ export const ReportCardService = {
   // ── Admin pipeline (Mockup #08) ─────────────────────────────────
 
   /**
-   * `GET /raports/admin-pipeline` — 4-node pipeline + tingkat tree
-   * for the admin Rapor hub. Backend already groups by tingkat with
-   * per-class status badges (`status_label`, `status_tone`, `counts`).
+   * `GET /report-cards/admin-pipeline` — 4-node pipeline + tingkat
+   * tree for the admin Rapor hub. Backend already groups by tingkat
+   * with per-class status badges (`status_label`, `status_tone`,
+   * `counts`).
    *
    * Note: requires X-School-ID header (already injected by the axios
    * interceptor on `api`); 400s without it.
@@ -794,9 +820,9 @@ export const ReportCardService = {
   async getAdminPipeline(args: {
     academic_year_id?: string;
     semester_id?: string;
-  } = {}): Promise<AdminRaportPipeline | null> {
+  } = {}): Promise<AdminReportCardPipeline | null> {
     try {
-      const res = await api.get('/raports/admin-pipeline', {
+      const res = await api.get('/report-cards/admin-pipeline', {
         params: {
           ...(args.academic_year_id
             ? { academic_year_id: args.academic_year_id }
@@ -811,8 +837,8 @@ export const ReportCardService = {
   },
 
   /**
-   * `POST /raports/publish` — bulk flip `final → published` for a
-   * class. Returns the number of rows promoted.
+   * `POST /report-cards/publish` — bulk flip `final → published` for
+   * a class. Returns the number of rows promoted.
    */
   async publishClass(args: {
     class_id: string;
@@ -820,7 +846,7 @@ export const ReportCardService = {
     semester_id?: string;
   }): Promise<{ published_count: number }> {
     const semesterId = await resolveSemesterId(args.semester_id);
-    const res = await api.post('/raports/publish', {
+    const res = await api.post('/report-cards/publish', {
       class_id: args.class_id,
       ...(args.academic_year_id
         ? { academic_year_id: args.academic_year_id }
@@ -834,20 +860,21 @@ export const ReportCardService = {
   // ── Parent inbox ────────────────────────────────────────────────
 
   /**
-   * ── BUGFIX #2 ── `GET /parent/raports` — parent's children with
-   * full hydrated raport. The old `parent.service.reportCards` hit
-   * `/raports?student_id=…` (teacher class-roster endpoint that
-   * ignores the filter) and always returned empty.
+   * ── BUGFIX #2 ── `GET /parent/report-cards` — parent's children
+   * with full hydrated report card. The old
+   * `parent.service.reportCards` hit `/report-cards?student_id=…`
+   * (teacher class-roster endpoint that ignores the filter) and
+   * always returned empty.
    *
    * Backend only ships rows with `status='published'` — empty state
    * copy should say "Sekolah belum menerbitkan rapor".
    */
-  async parentRaports(args: {
+  async parentReportCards(args: {
     academic_year_id?: string;
     semester_id?: string;
-  } = {}): Promise<ParentRaportRow[]> {
+  } = {}): Promise<ParentReportCardRow[]> {
     try {
-      const res = await api.get('/parent/raports', {
+      const res = await api.get('/parent/report-cards', {
         params: {
           ...(args.academic_year_id
             ? { academic_year_id: args.academic_year_id }
@@ -857,22 +884,31 @@ export const ReportCardService = {
       });
       const body = (res.data?.data ?? res.data ?? []) as unknown;
       const list = Array.isArray(body) ? (body as AnyRecord[]) : [];
-      return list.map(parentRaportRowFromJson);
+      return list.map(parentReportCardRowFromJson);
     } catch {
       return [];
     }
   },
 
+  /** Back-compat alias retained for callers not yet migrated. */
+  async parentRaports(args: {
+    academic_year_id?: string;
+    semester_id?: string;
+  } = {}): Promise<ParentReportCardRow[]> {
+    return this.parentReportCards(args);
+  },
+
   // ── PDF / Excel binary downloads ────────────────────────────────
 
   /**
-   * `GET /raports/export-pdf` — server-rendered Blade PDF (single
-   * raport). Replaces the legacy `window.print()` modal which only
-   * captured the current viewport, not the real A4 layout.
+   * `GET /report-cards/export-pdf` — server-rendered Blade PDF
+   * (single report card). Replaces the legacy `window.print()` modal
+   * which only captured the current viewport, not the real A4
+   * layout.
    *
    * Auth gates:
    *  - Teachers / admins always allowed.
-   *  - Parents only allowed when raport status is `published`.
+   *  - Parents only allowed when status is `published`.
    * Caller should check `status === 'published'` before showing the
    * Cetak button on the parent view.
    */
@@ -884,7 +920,7 @@ export const ReportCardService = {
     filename?: string;
   }): Promise<void> {
     const semesterId = await resolveSemesterId(args.semester_id);
-    const res = await api.get('/raports/export-pdf', {
+    const res = await api.get('/report-cards/export-pdf', {
       params: {
         student_class_id: args.student_class_id,
         ...(args.academic_year_id
@@ -898,7 +934,7 @@ export const ReportCardService = {
     triggerDownload(blob, args.filename ?? 'rapor.pdf');
   },
 
-  /** `GET /raports/export-certificate-pdf` — certificate-style PDF. */
+  /** `GET /report-cards/export-certificate-pdf` — certificate-style PDF. */
   async exportCertificatePdf(args: {
     student_class_id: string;
     academic_year_id?: string;
@@ -906,7 +942,7 @@ export const ReportCardService = {
     filename?: string;
   }): Promise<void> {
     const semesterId = await resolveSemesterId(args.semester_id);
-    const res = await api.get('/raports/export-certificate-pdf', {
+    const res = await api.get('/report-cards/export-certificate-pdf', {
       params: {
         student_class_id: args.student_class_id,
         ...(args.academic_year_id
@@ -920,7 +956,7 @@ export const ReportCardService = {
     triggerDownload(blob, args.filename ?? 'sertifikat.pdf');
   },
 
-  /** `GET /raports/export` — class-wide Excel binary. */
+  /** `GET /report-cards/export` — class-wide Excel binary. */
   async exportClassExcel(args: {
     class_id: string;
     academic_year_id?: string;
@@ -928,7 +964,7 @@ export const ReportCardService = {
     filename?: string;
   }): Promise<void> {
     const semesterId = await resolveSemesterId(args.semester_id);
-    const res = await api.get('/raports/export', {
+    const res = await api.get('/report-cards/export', {
       params: {
         class_id: args.class_id,
         ...(args.academic_year_id

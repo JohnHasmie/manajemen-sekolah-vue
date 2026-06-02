@@ -17,7 +17,7 @@ import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan
 /// Similar to `Excel::download(new RppExport($data), 'Data_RPP.xlsx')` in Laravel.
 ///
 /// Handles field name mapping between frontend and backend conventions
-/// (e.g., 'catatan_admin' -> 'note_admin', 'learning_objectives' -> 'learning_objective').
+/// (e.g., 'catatan_admin' / 'note_admin' -> 'admin_note', 'learning_objectives' -> 'learning_objective').
 /// This is like defining `$appends` or custom attribute mappings on a Laravel Resource.
 ///
 /// Provides both server-side and local validation for RPP data, with status
@@ -141,9 +141,13 @@ class ExcelLessonPlanService {
       validatedLessonPlan['status'] = model.status;
       validatedLessonPlan['created_at'] = model.createdAt ?? '';
 
-      // Map keys to match backend expectation
-      validatedLessonPlan['note_admin'] =
-          lessonPlan['catatan_admin'] ?? lessonPlan['note_admin'] ?? '';
+      // Map keys to match backend expectation. Canonical: `admin_note`
+      // (singular). Legacy aliases: `note_admin`, `catatan_admin`.
+      validatedLessonPlan['admin_note'] =
+          lessonPlan['admin_note'] ??
+          lessonPlan['catatan_admin'] ??
+          lessonPlan['note_admin'] ??
+          '';
       validatedLessonPlan['basic_competence'] =
           lessonPlan['basic_competence'] ??
           lessonPlan['basic_competency'] ??

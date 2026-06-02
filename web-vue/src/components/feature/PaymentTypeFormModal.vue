@@ -25,7 +25,7 @@ const form = ref<PaymentTypePayload>({
   name: props.paymentType?.name ?? '',
   description: props.paymentType?.description ?? '',
   amount: props.paymentType?.amount ?? 0,
-  periode: String(props.paymentType?.periode ?? 'bulanan'),
+  period: String(props.paymentType?.period ?? 'monthly'),
   status: String(props.paymentType?.status ?? 'active'),
   goal: props.paymentType?.goal ?? null,
   start_date: props.paymentType?.start_date ?? null,
@@ -40,7 +40,7 @@ watch(
       name: pt.name,
       description: pt.description ?? '',
       amount: pt.amount,
-      periode: String(pt.periode),
+      period: String(pt.period),
       status: String(pt.status),
       goal: pt.goal ?? null,
       start_date: pt.start_date ?? null,
@@ -52,10 +52,12 @@ watch(
 const isSaving = ref(false);
 const err = ref<string | null>(null);
 
-const PERIODE_OPTS = [
-  { key: 'bulanan', label: 'Bulanan' },
-  { key: 'tahunan', label: 'Tahunan' },
-  { key: 'sekali', label: 'Sekali bayar' },
+// Backend stores `payment_types.period` as canonical English (monthly /
+// yearly / once). Labels stay Indonesian.
+const PERIOD_OPTS = [
+  { key: 'monthly', label: 'Bulanan' },
+  { key: 'yearly', label: 'Tahunan' },
+  { key: 'once', label: 'Sekali bayar' },
 ];
 
 async function save() {
@@ -139,10 +141,10 @@ async function save() {
             Periode
           </label>
           <select
-            v-model="form.periode"
+            v-model="form.period"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           >
-            <option v-for="o in PERIODE_OPTS" :key="o.key" :value="o.key">{{ o.label }}</option>
+            <option v-for="o in PERIOD_OPTS" :key="o.key" :value="o.key">{{ o.label }}</option>
           </select>
         </div>
       </div>

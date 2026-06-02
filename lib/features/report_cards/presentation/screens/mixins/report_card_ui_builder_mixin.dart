@@ -165,8 +165,11 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
     Map<String, dynamic> student,
     Map<String, dynamic> reportCard,
   ) {
+    // Backend rename: `raport_subjects` → `report_card_subjects`.
     final subjects =
-        (reportCard['raportSubjects'] ??
+        (reportCard['reportCardSubjects'] ??
+                reportCard['report_card_subjects'] ??
+                reportCard['raportSubjects'] ??
                 reportCard['raport_subjects'] ??
                 const [])
             as List<dynamic>;
@@ -306,8 +309,11 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
     final initials = _initials(studentName);
     final palette = _avatarPalette(studentName);
 
+    // Backend rename: `raport_subjects` → `report_card_subjects`.
     final subjects =
-        (reportCard['raportSubjects'] ??
+        (reportCard['reportCardSubjects'] ??
+                reportCard['report_card_subjects'] ??
+                reportCard['raportSubjects'] ??
                 reportCard['raport_subjects'] ??
                 const [])
             as List<dynamic>;

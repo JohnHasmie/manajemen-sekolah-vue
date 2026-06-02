@@ -38,9 +38,10 @@ mixin CardViewMixin on ConsumerState<ReportCardOverviewPage> {
       students += (c['student_count'] is num)
           ? (c['student_count'] as num).toInt()
           : 0;
-      filled += (c['total_raports'] is num)
-          ? (c['total_raports'] as num).toInt()
-          : 0;
+      // Backend rename: `total_raports` → `total_report_cards`. Accept
+      // both so older API responses still feed the wali-kelas summary.
+      final totalKey = c['total_report_cards'] ?? c['total_raports'];
+      filled += (totalKey is num) ? totalKey.toInt() : 0;
     }
     return Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 8),
@@ -76,9 +77,10 @@ mixin CardViewMixin on ConsumerState<ReportCardOverviewPage> {
     final studentCount = (classData['student_count'] is num)
         ? (classData['student_count'] as num).toInt()
         : 0;
-    final totalRaports = (classData['total_raports'] is num)
-        ? (classData['total_raports'] as num).toInt()
-        : 0;
+    // Backend rename: `total_raports` → `total_report_cards`.
+    final totalRaportsRaw =
+        classData['total_report_cards'] ?? classData['total_raports'];
+    final totalRaports = totalRaportsRaw is num ? totalRaportsRaw.toInt() : 0;
     final draftCount = (classData['draft_count'] is num)
         ? (classData['draft_count'] as num).toInt()
         : 0;

@@ -97,13 +97,14 @@ class _TeacherFormDialogState extends ConsumerState<TeacherFormDialog>
                   value: selectedGender,
                   onChanged: (v) => setState(() => selectedGender = v),
                   choices: [
+                    // Backend canonical: `male` / `female` (was `L` / `P`).
                     AdminFormChoice(
-                      value: 'L',
+                      value: 'male',
                       label: t(const {'en': 'Male', 'id': 'Laki-laki'}),
                       icon: Icons.male_rounded,
                     ),
                     AdminFormChoice(
-                      value: 'P',
+                      value: 'female',
                       label: t(const {'en': 'Female', 'id': 'Perempuan'}),
                       icon: Icons.female_rounded,
                     ),

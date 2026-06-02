@@ -12,7 +12,7 @@ part 'lesson_plan.g.dart';
 ///   title / judul, subject_name / mata_pelajaran_nama,
 ///   class_name / kelas_nama, teacher_name / guru_nama (or nested
 ///   `teacher.name`), academic_year / tahun_ajaran, notes /catatan,
-///   admin_notes / catatan_admin.
+///   admin_note / note_admin / catatan_admin (legacy).
 ///
 /// [LessonPlan.fromJson] normalizes all variations via [_standardizeJson].
 @freezed
@@ -29,7 +29,7 @@ abstract class LessonPlan with _$LessonPlan {
     @JsonKey(name: 'academic_year') String? academicYear,
     String? semester,
     String? notes,
-    @JsonKey(name: 'admin_notes') String? adminNotes,
+    @JsonKey(name: 'admin_note') String? adminNotes,
     @JsonKey(name: 'created_at') String? createdAt,
     // Format axis (k13 / rpp_1_halaman / modul_ajar / file). Defaults
     // to k13 for legacy rows where the column is empty.
@@ -92,7 +92,10 @@ abstract class LessonPlan with _$LessonPlan {
 
     // Notes (English + Indonesian)
     m['notes'] ??= m['catatan'];
-    m['admin_notes'] ??= m['catatan_admin'];
+    // Canonical key is `admin_note` (singular). Fall back to legacy
+    // `admin_notes` (older API) and `note_admin` / `catatan_admin`.
+    m['admin_note'] ??=
+        m['admin_notes'] ?? m['note_admin'] ?? m['catatan_admin'];
 
     // Required -> String coercion
     m['id'] = (m['id'] ?? '').toString();
@@ -107,7 +110,7 @@ abstract class LessonPlan with _$LessonPlan {
       'academic_year',
       'semester',
       'notes',
-      'admin_notes',
+      'admin_note',
       'created_at',
       'revision_requested_at',
     ]) {

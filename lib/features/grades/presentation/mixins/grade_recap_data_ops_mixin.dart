@@ -302,20 +302,24 @@ mixin GradeRecapDataOpsMixin {
         throw Exception('Academic Year is required.');
       }
 
+      // Backend rename (rename guide §3): grade_recaps columns renamed:
+      //   predikat → predicate, deskripsi → description,
+      //   bab_scores → chapter_scores, bab_names → chapter_names,
+      //   uts_score → midterm_score, uas_score → final_exam_score.
       final payload = tableData.map((row) {
         final scId = row['student_class_id'];
         return {
           'student_class_id': scId,
           'subject_id': selectedSubject!['id'].toString(),
           'academic_year_id': ayId,
-          'predikat': predikatControllers[scId]?.text,
-          'deskripsi': descriptionControllers[scId]?.text,
-          'bab_scores': row['bab_scores'],
-          'bab_names': chapters
+          'predicate': predikatControllers[scId]?.text,
+          'description': descriptionControllers[scId]?.text,
+          'chapter_scores': row['bab_scores'],
+          'chapter_names': chapters
               .map((c) => c['judul_bab'] ?? c['judul'] ?? c['title'] ?? 'Bab')
               .toList(),
-          'uts_score': row['uts'],
-          'uas_score': row['uas'],
+          'midterm_score': row['uts'],
+          'final_exam_score': row['uas'],
           'final_score': row['final_score'],
           'skill_score': row['skill_score'],
         };

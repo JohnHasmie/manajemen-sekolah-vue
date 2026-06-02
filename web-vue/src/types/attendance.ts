@@ -1,16 +1,51 @@
 /**
  * Attendance types - mirror the Flutter attendance model.
- * Backend uses lowercase status values: hadir, sakit, izin, alpa.
+ *
+ * Vue's *internal* canonical values stay Indonesian short-form
+ * (`hadir`/`sakit`/`izin`/`alpa`) because dozens of components hard-
+ * code those keys (picker modals, calendar grids, day rows…).
+ * Wire boundary translates to/from the backend's canonical English
+ * (`present`/`sick`/`excused`/`absent`) via
+ * `normalizeAttendanceStatus` on read and the inverse before POST.
  */
 
 export type AttendanceStatus = 'hadir' | 'sakit' | 'izin' | 'alpa' | null;
+
+/** Map any historical / mixed-case status (Indonesian or English) to the FE canonical Indonesian short-form. */
+export function normalizeAttendanceStatus(
+  raw: unknown,
+): NonNullable<AttendanceStatus> | null {
+  const v = String(raw ?? '').toLowerCase().trim();
+  if (!v) return null;
+  if (v === 'present' || v === 'hadir') return 'hadir';
+  if (v === 'sick' || v === 'sakit') return 'sakit';
+  if (v === 'excused' || v === 'izin' || v === 'permission') return 'izin';
+  if (v === 'absent' || v === 'alpa' || v === 'alfa' || v === 'alpha') return 'alpa';
+  return null;
+}
+
+/** Inverse — FE canonical → backend canonical English value. */
+export function denormalizeAttendanceStatus(
+  status: NonNullable<AttendanceStatus>,
+): 'present' | 'sick' | 'excused' | 'absent' {
+  switch (status) {
+    case 'hadir': return 'present';
+    case 'sakit': return 'sick';
+    case 'izin':  return 'excused';
+    case 'alpa':  return 'absent';
+  }
+}
 
 export interface AttendanceRow {
   student_id: string;
   student_name: string;
   student_number: string;
-  /** Optional gender L/P. */
-  gender?: 'L' | 'P' | null;
+  /**
+   * Backend canonical gender values are `male` | `female`. Vue still
+   * accepts legacy `L`/`P` during the rename rollout — auth + entity
+   * parsers map both onto English on read.
+   */
+  gender?: 'male' | 'female' | 'L' | 'P' | null;
   /** Cached "sakit kemarin" / "alpa 2x pekan ini" badge text from backend. */
   alert?: string | null;
   /** Severity of the alert badge - tinted avatar accordingly. */

@@ -217,8 +217,12 @@ class ReportCardScreenState extends ConsumerState<ReportCardScreen>
     int scoreCount = 0;
     for (final s in _students) {
       if (s is! Map) continue;
+      // Backend rename: `raport_status` → `report_card_status`.
       final status =
-          (s['raport_status'] ?? s['status'])?.toString().toLowerCase() ?? '';
+          (s['report_card_status'] ?? s['raport_status'] ?? s['status'])
+              ?.toString()
+              .toLowerCase() ??
+          '';
       if (status == 'published' || status == 'terbit') terbit++;
       if (status == 'draft') draft++;
       final rerata = s['rerata'] ?? s['average'] ?? s['avg_score'];

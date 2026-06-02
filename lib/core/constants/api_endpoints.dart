@@ -122,8 +122,10 @@ class ApiEndpoints {
       '/class-activities/teacher-summary';
 
   // ── Report Cards ──
-  static const reportCards = '/raport';
-  static const raportsTeacherSummary = '/raports/teacher-summary';
+  // Backend renamed `/raport*` → `/report-card*` / `/report-cards*`.
+  // Laravel still aliases the old paths for one transition cycle.
+  static const reportCards = '/report-card';
+  static const raportsTeacherSummary = '/report-cards/teacher-summary';
 
   // ── Finance / Billing ──
   static const bills = '/bills';

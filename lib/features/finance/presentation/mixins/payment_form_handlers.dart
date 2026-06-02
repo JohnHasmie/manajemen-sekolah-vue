@@ -15,7 +15,18 @@ mixin PaymentFormHandlersMixin on ConsumerState<PaymentTypeFormSheet> {
   // so the client rejects bad combinations *before* hitting the server.
   // Keep these in sync with:
   //   backendmanajemensekolah_laravel/app/Http/Requests/CreatePaymentTypeRequest.php
-  static const _allowedPeriodes = {'sekali', 'bulanan', 'semester', 'tahunan'};
+  // Backend rename: canonical English values are `once` / `monthly`
+  // / `yearly`. Keep `semester` (not in guide §4 mapping) and the
+  // legacy Indonesian aliases so existing forms continue to validate.
+  static const _allowedPeriodes = {
+    'sekali',
+    'bulanan',
+    'semester',
+    'tahunan',
+    'once',
+    'monthly',
+    'yearly',
+  };
   static const _allowedStatuses = {'active', 'inactive'};
 
   // Backend rules: name max:255, description nullable, amount numeric|min:1.
@@ -74,7 +85,8 @@ mixin PaymentFormHandlersMixin on ConsumerState<PaymentTypeFormSheet> {
         'name': nameController.text.trim(),
         'description': descriptionController.text.trim(),
         'amount': parsedAmount,
-        'periode': periodController.text,
+        // Backend rename: `payment_types.periode` → `payment_types.period`.
+        'period': periodController.text,
         'status': status == 'active' ? 'active' : 'inactive',
         'goal': goalData,
         // Activation flow — send ISO date so Laravel's `date` rule
@@ -203,7 +215,7 @@ mixin PaymentFormHandlersMixin on ConsumerState<PaymentTypeFormSheet> {
 
     // 7. Day-of-month — only relevant for monthly Jenis. Clamped 1-28
     //    to match the backend rule (avoids Feb-29 edge cases).
-    if (periode == 'bulanan' && dayOfMonth != null) {
+    if ((periode == 'monthly' || periode == 'bulanan') && dayOfMonth != null) {
       if (dayOfMonth < 1 || dayOfMonth > 28) {
         return 'Tanggal jatuh tempo harus antara 1 dan 28';
       }

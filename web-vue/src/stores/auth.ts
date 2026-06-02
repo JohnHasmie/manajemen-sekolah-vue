@@ -29,8 +29,13 @@ import type {
 } from '@/types/auth';
 
 /**
- * Normalizes backend role strings to canonical keys used by the router.
- * English (backend) -> Indonesian (canonical/short).
+ * Normalizes backend role strings to canonical FE keys used by the
+ * router and components. Backend ships canonical English
+ * (`teacher` / `parent` / `student`); FE uses Indonesian short-form
+ * (`guru` / `wali` / `siswa`) as the *internal* canonical value
+ * because the components and router meta hard-code it.
+ *
+ * Convert at the wire boundary, never inside the app.
  */
 function normalizeRole(role: string | null | undefined): Role | null {
   // Defensive: backend sometimes returns a user payload without `role`
@@ -42,7 +47,15 @@ function normalizeRole(role: string | null | undefined): Role | null {
   const r = role.toLowerCase();
   if (r === 'admin' || r === 'administrator') return 'admin';
   if (r === 'guru' || r === 'teacher' || r === 'wali_kelas') return 'guru';
-  if (r === 'wali' || r === 'parent' || r === 'orang_tua' || r === 'wali_murid' || r === 'walimurid') return 'wali';
+  if (
+    r === 'wali' ||
+    r === 'parent' ||
+    r === 'orang_tua' ||
+    r === 'wali_murid' ||
+    r === 'walimurid'
+  )
+    return 'wali';
+  if (r === 'siswa' || r === 'student') return 'siswa';
   if (r === 'staff') return 'staff';
   return r as Role;
 }
@@ -485,8 +498,8 @@ export const useAuthStore = defineStore('auth', {
         //
         //    Normalize both sides before comparing because `this.roles`
         //    holds raw backend values ('admin'/'teacher'/'parent') while
-        //    the stored role may be either raw OR FE-normalized
-        //    ('admin'/'guru'/'wali') depending on which path wrote it.
+        //    the stored role may be either raw OR an older
+        //    Indonesian alias ('guru'/'wali') from a previous session.
         const stored = storage.get<Role>(StorageKeys.role);
         if (stored) {
           const normStored = normalizeRole(stored);

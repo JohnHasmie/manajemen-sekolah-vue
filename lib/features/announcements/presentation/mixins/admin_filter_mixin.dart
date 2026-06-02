@@ -120,8 +120,12 @@ mixin AdminFilterMixin on ConsumerState<AdminAnnouncementScreen> {
 
   String? mapPriorityFilter(String? value) {
     if (value == null) return null;
-    if (value == 'Penting' || value == 'Important') return 'important';
+    // Backend canonical priorities: `low` / `normal` / `high` / `urgent`
+    // (was `biasa` / `penting` / `important`).
+    if (value == 'Mendesak' || value == 'Urgent') return 'urgent';
+    if (value == 'Penting' || value == 'Important') return 'high';
     if (value == 'Biasa' || value == 'Normal') return 'normal';
+    if (value == 'Rendah' || value == 'Low') return 'low';
     return value.toLowerCase();
   }
 

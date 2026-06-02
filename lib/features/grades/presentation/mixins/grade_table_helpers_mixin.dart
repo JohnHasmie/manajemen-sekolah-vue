@@ -4,15 +4,24 @@ import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_table_widget.dart';
 
 mixin GradeTableHelpersMixin on State<GradeTableWidget> {
-  /// Converts grade type to short label (UH, Tgs, UTS, UAS, PTS, PAS)
+  /// Converts grade type to short label (UH, Tgs, UTS, UAS, PTS, PAS).
+  /// Backend rename: assessments.type now uses canonical English values
+  /// (`assignment` / `daily_test` / `midterm` / `final_exam` / `quiz`).
+  /// Legacy Indonesian aliases stay for back-compat.
   String short(String type) {
     const m = {
       'uh': 'UH',
+      'daily_test': 'UH',
       'tugas': 'Tgs',
+      'assignment': 'Tgs',
       'uts': 'UTS',
+      'midterm': 'UTS',
       'uas': 'UAS',
+      'final_exam': 'UAS',
       'pts': 'PTS',
       'pas': 'PAS',
+      'kuis': 'Kuis',
+      'quiz': 'Kuis',
     };
     return m[type] ?? type.toUpperCase();
   }

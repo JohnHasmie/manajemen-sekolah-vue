@@ -72,7 +72,7 @@ class AdminRaportService {
     if (semesterId != null) params.add('semester_id=$semesterId');
     final qs = params.isEmpty ? '' : '?${params.join('&')}';
 
-    final raw = await _api.get('/raports/admin-pipeline$qs');
+    final raw = await _api.get('/report-cards/admin-pipeline$qs');
     final data = (raw is Map && raw['data'] is Map)
         ? Map<String, dynamic>.from(raw['data'] as Map)
         : <String, dynamic>{};
@@ -128,7 +128,10 @@ class AdminRaportService {
     return AdminRaportPipeline(
       pipeline: pipeline,
       tingkats: tingkats,
-      totalRaports: (data['total_raports'] as num?)?.toInt() ?? 0,
+      totalRaports:
+          (data['total_report_cards'] as num?)?.toInt() ??
+          (data['total_raports'] as num?)?.toInt() ??
+          0,
       totalClasses: (data['total_classes'] as num?)?.toInt() ?? 0,
       periodAcademicYearId: (period['academic_year_id'] ?? '').toString(),
       periodSemesterId: (period['semester_id'] ?? '').toString(),
@@ -145,7 +148,7 @@ class AdminRaportService {
     required int academicYearId,
     required int semesterId,
   }) async {
-    final raw = await _api.post('/raports/publish', {
+    final raw = await _api.post('/report-cards/publish', {
       'class_id': classId,
       'academic_year_id': academicYearId,
       'semester_id': semesterId,

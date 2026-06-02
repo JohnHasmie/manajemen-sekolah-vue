@@ -25,23 +25,33 @@ enum AdminActivityType {
   ulangan,
   lainnya;
 
+  /// Backend rename (rename guide §4): class_activities.type now uses
+  /// canonical English values — `assignment` / `test` / `quiz` /
+  /// `activity` / `exam` / `material`. Legacy Indonesian aliases stay
+  /// here so older API payloads keep mapping correctly.
   static AdminActivityType fromRaw(String? raw) {
     final v = (raw ?? '').toLowerCase().trim();
     if (v.isEmpty) return AdminActivityType.lainnya;
     if (v == 'tugas' || v == 'assignment') return AdminActivityType.tugas;
     if (v == 'pr' || v == 'homework') return AdminActivityType.pr;
-    if (v == 'ulangan' || v == 'exam' || v == 'ujian' || v == 'kuis' ||
+    if (v == 'ulangan' ||
+        v == 'test' ||
+        v == 'exam' ||
+        v == 'ujian' ||
+        v == 'kuis' ||
         v == 'quiz') {
       return AdminActivityType.ulangan;
     }
     return AdminActivityType.lainnya;
   }
 
+  /// Outgoing API value uses the new canonical names so the backend
+  /// validation accepts the request.
   String get apiValue => switch (this) {
-    AdminActivityType.tugas => 'tugas',
+    AdminActivityType.tugas => 'assignment',
     AdminActivityType.pr => 'pr',
-    AdminActivityType.ulangan => 'ulangan',
-    AdminActivityType.lainnya => 'lainnya',
+    AdminActivityType.ulangan => 'test',
+    AdminActivityType.lainnya => 'activity',
   };
 
   String get labelId => switch (this) {

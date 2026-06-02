@@ -13,7 +13,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const wizard = useDemoWizardStore();
 
-const jenjang = computed<Jenjang>(() => wizard.payload.school.jenjang);
+const jenjang = computed<Jenjang>(() => wizard.payload.school.education_level);
 const names = computed({
   get: () => wizard.payload.subjects.names,
   set: (v: string[]) => wizard.patchPayload('subjects', { names: v }),

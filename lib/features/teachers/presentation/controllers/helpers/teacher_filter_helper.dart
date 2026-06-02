@@ -116,7 +116,8 @@ class TeacherFilterHelper {
     LanguageProvider lang,
     VoidCallback onRemove,
   ) {
-    final genderText = value == 'L'
+    // Backend canonical: `male` / `female`. Legacy: `L` / `P`.
+    final genderText = (value == 'male' || value == 'L')
         ? lang.getTranslatedText(const {'en': 'Male', 'id': 'Laki-laki'})
         : lang.getTranslatedText(const {'en': 'Female', 'id': 'Perempuan'});
     final genderLabel = lang.getTranslatedText(const {

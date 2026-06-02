@@ -69,15 +69,17 @@ const showAudiencePicker = ref(false);
 const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
   { key: 'all', label: 'Semua status' },
   { key: 'draft', label: 'Draft' },
-  { key: 'terjadwal', label: 'Terjadwal' },
-  { key: 'terkirim', label: 'Terkirim' },
-  { key: 'kedaluwarsa', label: 'Kedaluwarsa' },
+  { key: 'scheduled', label: 'Terjadwal' },
+  { key: 'published', label: 'Terkirim' },
+  { key: 'expired', label: 'Kedaluwarsa' },
   { key: 'archived', label: 'Arsip' },
 ];
 const PRIORITY_OPTIONS: { key: PriorityFilter; label: string }[] = [
   { key: 'all', label: 'Semua prioritas' },
-  { key: 'penting', label: 'Penting' },
-  { key: 'biasa', label: 'Biasa' },
+  { key: 'urgent', label: 'Mendesak' },
+  { key: 'high', label: 'Penting' },
+  { key: 'normal', label: 'Biasa' },
+  { key: 'low', label: 'Rendah' },
 ];
 const AUDIENCE_OPTIONS: { key: AudienceFilter; label: string }[] = [
   { key: 'all', label: 'Semua audiens' },
@@ -114,8 +116,9 @@ const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 const form = reactive({
   title: '',
   body: '',
-  category: 'pengumuman' as AnnouncementCategory,
-  priority: 'biasa' as AnnouncementPriority,
+  // Canonical column: `announcements.type` (was `category`).
+  category: 'announcement' as AnnouncementCategory,
+  priority: 'normal' as AnnouncementPriority,
   audience: 'all' as AnnouncementAudience,
   target_ids: [] as string[],
   scheduled_at: '' as string,
@@ -127,7 +130,7 @@ const filtered = computed<Announcement[]>(() => {
   const q = searchQuery.value.trim().toLowerCase();
   return items.value.filter((a) => {
     if (priorityFilter.value !== 'all') {
-      const ap = a.priority ?? (a.category === 'penting' ? 'penting' : 'biasa');
+      const ap = a.priority ?? 'normal';
       if (ap !== priorityFilter.value) return false;
     }
     if (statusFilter.value !== 'all' && a.status !== statusFilter.value)
@@ -157,7 +160,7 @@ const draftCount = computed(
 const scheduledCount = computed(
   () =>
     items.value.filter((a) => {
-      if (a.status === 'terjadwal') return true;
+      if (a.status === 'scheduled') return true;
       const ts = a.scheduled_at ? Date.parse(a.scheduled_at) : NaN;
       return !Number.isNaN(ts) && ts > Date.now();
     }).length,
@@ -167,7 +170,7 @@ const publishedCount = computed(
     items.value.length -
     draftCount.value -
     scheduledCount.value -
-    items.value.filter((a) => a.status === 'kedaluwarsa').length,
+    items.value.filter((a) => a.status === 'expired').length,
 );
 
 const kpiCards = computed<KpiCard[]>(() => [
@@ -249,8 +252,8 @@ function onSearchInput(v: string) {
 function resetForm() {
   form.title = '';
   form.body = '';
-  form.category = 'pengumuman';
-  form.priority = 'biasa';
+  form.category = 'announcement';
+  form.priority = 'normal';
   form.audience = 'all';
   form.target_ids = [];
   form.scheduled_at = '';
@@ -271,8 +274,7 @@ function openEdit(a: Announcement) {
   form.title = a.title;
   form.body = a.body;
   form.category = a.category;
-  form.priority =
-    a.priority ?? (a.category === 'penting' ? 'penting' : 'biasa');
+  form.priority = a.priority ?? 'normal';
   form.audience = a.audience ?? 'all';
   form.target_ids = a.target_ids ? [...a.target_ids] : [];
   form.scheduled_at = a.scheduled_at ?? '';
@@ -599,10 +601,10 @@ function pickAudience(k: AudienceFilter) {
           <SegmentedControl
             :model-value="form.category"
             :options="[
-              { key: 'pengumuman', label: 'Umum' },
-              { key: 'penting', label: 'Penting' },
-              { key: 'acara', label: 'Acara' },
-              { key: 'libur', label: 'Libur' },
+              { key: 'announcement', label: 'Pengumuman' },
+              { key: 'general', label: 'Umum' },
+              { key: 'event', label: 'Acara' },
+              { key: 'info', label: 'Info' },
             ]"
             size="sm"
             @update:model-value="(v) => (form.category = v as AnnouncementCategory)"
@@ -614,8 +616,10 @@ function pickAudience(k: AudienceFilter) {
           <SegmentedControl
             :model-value="form.priority"
             :options="[
-              { key: 'biasa', label: 'Biasa' },
-              { key: 'penting', label: 'Penting' },
+              { key: 'low', label: 'Rendah' },
+              { key: 'normal', label: 'Biasa' },
+              { key: 'high', label: 'Penting' },
+              { key: 'urgent', label: 'Mendesak' },
             ]"
             size="sm"
             @update:model-value="(v) => (form.priority = v as AnnouncementPriority)"

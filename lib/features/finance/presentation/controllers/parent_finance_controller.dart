@@ -231,8 +231,9 @@ class ParentFinanceController extends AsyncNotifier<ParentFinanceState> {
             'search': state.value?.searchQuery,
           if (state.value?.statusFilter != null)
             'status': state.value?.statusFilter,
+          // Backend rename: `payment_types.periode` → `payment_types.period`.
           if (state.value?.periodFilter != null)
-            'periode': state.value?.periodFilter,
+            'period': state.value?.periodFilter,
         },
       );
       final list = response is List ? response : [];

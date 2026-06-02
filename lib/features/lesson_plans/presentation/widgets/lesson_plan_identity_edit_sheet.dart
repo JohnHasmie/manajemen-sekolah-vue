@@ -202,11 +202,13 @@ class _IdentityEditContentState extends ConsumerState<_IdentityEditContent> {
         throw Exception('ID RPP tidak ditemukan');
       }
 
+      // Backend rename (rename guide §4): lesson_plans.semester canonical
+      // values are `odd` / `even` (was `Ganjil` / `Gasal` / `Genap`).
       final payload = <String, dynamic>{
         'title': _titleController.text.trim(),
         'subject_id': _subjectId,
         'class_id': _classId,
-        'semester': _semester,
+        'semester': _canonicalSemester(_semester),
         'academic_year': _academicYear,
       };
       // The backend ignores unknown keys (passes through Form Request
@@ -445,6 +447,22 @@ class _IdentityEditContentState extends ConsumerState<_IdentityEditContent> {
         ),
       ),
     );
+  }
+
+  /// Map a possibly-legacy semester label to the backend canonical
+  /// value. `Ganjil` / `Gasal` → `odd`, `Genap` → `even`.
+  String _canonicalSemester(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'ganjil':
+      case 'gasal':
+      case 'odd':
+        return 'odd';
+      case 'genap':
+      case 'even':
+        return 'even';
+      default:
+        return raw.toLowerCase();
+    }
   }
 }
 

@@ -144,12 +144,22 @@ class GradeRecapTableBuilder {
     required Map<String, TextEditingController> scoreControllers,
     required Map<String, FocusNode> scoreFocusNodes,
   }) {
+    // Backend rename (rename guide §3): grade_recaps columns renamed:
+    //   bab_scores → chapter_scores
+    //   bab_names  → chapter_names
+    //   uts_score  → midterm_score
+    //   uas_score  → final_exam_score
+    //   predikat   → predicate
+    //   deskripsi  → description
+    // Both old + new keys are read here so the screen keeps working
+    // whether the API responds with legacy or canonical payloads.
+    //
     // Determine chapters from the first student that has bab data.
     List<dynamic> babNames = [];
     int maxBabs = 0;
     for (final row in apiData) {
-      final scores = row['bab_scores'];
-      final names = row['bab_names'];
+      final scores = row['chapter_scores'] ?? row['bab_scores'];
+      final names = row['chapter_names'] ?? row['bab_names'];
       if (scores is List && scores.length > maxBabs) {
         maxBabs = scores.length;
         if (names is List && names.length == scores.length) {
@@ -200,25 +210,22 @@ class GradeRecapTableBuilder {
     final tableData = apiData.map<Map<String, dynamic>>((row) {
       final scId = row['student_class_id']?.toString() ?? '';
       // Use growable list — JSON decode returns fixed-length lists.
-      final babScores = row['bab_scores'] is List
+      final rawScores = row['chapter_scores'] ?? row['bab_scores'];
+      final babScores = rawScores is List
           ? List<double?>.from(
-              (row['bab_scores'] as List).map(
-                (v) => v is num ? v.toDouble() : null,
-              ),
+              rawScores.map((v) => v is num ? v.toDouble() : null),
             )
           : List<double?>.generate(maxBabs, (_) => null);
 
-      // Pad bab_scores to maxBabs.
+      // Pad chapter_scores to maxBabs.
       while (babScores.length < maxBabs) {
         babScores.add(null);
       }
 
-      final uts = row['uts_score'] is num
-          ? (row['uts_score'] as num).toDouble()
-          : null;
-      final uas = row['uas_score'] is num
-          ? (row['uas_score'] as num).toDouble()
-          : null;
+      final utsRaw = row['midterm_score'] ?? row['uts_score'];
+      final uts = utsRaw is num ? utsRaw.toDouble() : null;
+      final uasRaw = row['final_exam_score'] ?? row['uas_score'];
+      final uas = uasRaw is num ? uasRaw.toDouble() : null;
       final finalScore = row['final_score'] is num
           ? (row['final_score'] as num).toDouble()
           : null;
@@ -226,12 +233,13 @@ class GradeRecapTableBuilder {
           ? (row['skill_score'] as num).toDouble()
           : null;
 
-      // Predikat + deskripsi controllers.
+      // Predicate + description controllers. Backend rename:
+      // `predikat` → `predicate`, `deskripsi` → `description`.
       predikatControllers[scId] = TextEditingController(
-        text: row['predikat']?.toString() ?? '',
+        text: (row['predicate'] ?? row['predikat'])?.toString() ?? '',
       );
       descriptionControllers[scId] = TextEditingController(
-        text: row['deskripsi']?.toString() ?? '',
+        text: (row['description'] ?? row['deskripsi'])?.toString() ?? '',
       );
 
       // Score controllers + focus nodes keyed as "scId|type|chapterIndex".

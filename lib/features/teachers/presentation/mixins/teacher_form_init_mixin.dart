@@ -41,7 +41,14 @@ mixin TeacherFormInitMixin on ConsumerState<TeacherFormDialog> {
   }
 
   void _initializeGender() {
-    selectedGender = widget.teacher?['gender']?.toString();
+    // Backend canonical: `male` / `female` (was `L` / `P`). Normalise
+    // legacy codes so the dropdown shows the saved selection on edit.
+    final rawGender = widget.teacher?['gender']?.toString();
+    selectedGender = switch (rawGender?.toUpperCase()) {
+      'L' || 'M' => 'male',
+      'P' || 'F' => 'female',
+      _ => rawGender,
+    };
   }
 
   void _initializeHomeroomClass() {
@@ -73,16 +80,24 @@ mixin TeacherFormInitMixin on ConsumerState<TeacherFormDialog> {
   }
 
   void _initializeEmploymentStatus() {
-    // Normalize employment_status
+    // Normalize employment_status.
+    // Backend rename (rename guide §4): `tetap` / legacy `active`
+    // → `permanent`, `PNS` → `civil_servant`. Older payloads may
+    // still carry the legacy values.
     final String? rawStatus = widget.teacher?['employment_status']?.toString();
     if (rawStatus != null) {
       final statusMap = {
         'Tetap': 'permanent',
+        'tetap': 'permanent',
+        'active': 'permanent',
         'Kontrak': 'contract',
         'Honor': 'temporary',
+        'PNS': 'civil_servant',
+        'pns': 'civil_servant',
         'permanent': 'permanent',
         'contract': 'contract',
         'temporary': 'temporary',
+        'civil_servant': 'civil_servant',
       };
       selectedStatus = statusMap[rawStatus] ?? rawStatus;
     }

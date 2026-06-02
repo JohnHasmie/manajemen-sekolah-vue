@@ -357,9 +357,9 @@ class _ReportCardOverviewPageState extends ConsumerState<ReportCardOverviewPage>
       drafts += (c['draft_count'] is num)
           ? (c['draft_count'] as num).toInt()
           : 0;
-      totalFilled += (c['total_raports'] is num)
-          ? (c['total_raports'] as num).toInt()
-          : 0;
+      // Backend rename: `total_raports` → `total_report_cards`.
+      final totalKey = c['total_report_cards'] ?? c['total_raports'];
+      totalFilled += (totalKey is num) ? totalKey.toInt() : 0;
     }
     final belum = (students - totalFilled).clamp(0, 1 << 31);
     return (

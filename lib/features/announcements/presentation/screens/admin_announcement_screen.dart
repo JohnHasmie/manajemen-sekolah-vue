@@ -112,7 +112,8 @@ class AdminAnnouncementScreenState
             (a) => BulkDeleteItem(
               id: a['id'].toString(),
               title: (a['title'] ?? 'Tanpa Judul').toString(),
-              subtitle: 'Target: ${getTargetText(a, ref.read(languageRiverpod))}',
+              subtitle:
+                  'Target: ${getTargetText(a, ref.read(languageRiverpod))}',
             ),
           )
           .toList(),
@@ -195,9 +196,15 @@ class AdminAnnouncementScreenState
 
   String? _priorityValueLabel(LanguageProvider lang) {
     if (selectedPriorityFilter == null) return null;
+    // Backend canonical priorities: `low` / `normal` / `high` / `urgent`.
+    // Legacy: `biasa` → normal, `penting` → high.
     return lang.getTranslatedText(switch (selectedPriorityFilter) {
-      'important' || 'penting' => const {'en': 'Important', 'id': 'Penting'},
+      'urgent' => const {'en': 'Urgent', 'id': 'Mendesak'},
+      'high' ||
+      'important' ||
+      'penting' => const {'en': 'Important', 'id': 'Penting'},
       'normal' || 'biasa' => const {'en': 'Normal', 'id': 'Biasa'},
+      'low' => const {'en': 'Low', 'id': 'Rendah'},
       _ => {'en': selectedPriorityFilter!, 'id': selectedPriorityFilter!},
     });
   }
@@ -271,7 +278,7 @@ class AdminAnnouncementScreenState
       hasActiveFilter: hasActiveFilter,
       brandChips: brandChips,
       onClearAllFilters: clearAllFilters,
-      
+
       // Bulk Actions
       selectedCount: _selectedIds.length,
       onClearSelection: _clearSelection,
@@ -287,7 +294,7 @@ class AdminAnnouncementScreenState
           isDestructive: true,
         ),
       ],
-      
+
       isLoading: isLoading && announcements.isEmpty,
       errorMessage: errorMessage,
       isEmpty: announcements.isEmpty && !isLoading && errorMessage == null,
