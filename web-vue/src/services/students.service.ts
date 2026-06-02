@@ -13,7 +13,13 @@ export interface StudentListParams {
   status?: string | null;
   class_ids?: string[];
   gender?: string | null;
-  guardian?: string | null;
+  /**
+   * Free-text search by guardian (wali) name. Backend StudentController
+   * accepts `?guardian_name=...` and does a case-insensitive LIKE on the
+   * `students.guardian_name` column. Mirrors the Flutter app's
+   * `guardian_name` filter (mobile already uses a typed search field).
+   */
+  guardian_name?: string | null;
 }
 
 interface ListResult {
@@ -53,7 +59,7 @@ export const StudentService = {
         ...(params.status ? { status: params.status } : {}),
         ...classFilter,
         ...(params.gender ? { gender: params.gender } : {}),
-        ...(params.guardian ? { guardian: params.guardian } : {}),
+        ...(params.guardian_name ? { guardian_name: params.guardian_name } : {}),
       },
     });
     const { data, pagination } = unwrap(res.data);
