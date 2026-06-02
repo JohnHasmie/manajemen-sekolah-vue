@@ -179,8 +179,32 @@ export const TeacherService = {
 
   /**
    * Full teacher-profile resolver. Returns the teacher_profile.id
-   * plus the eager-loaded `homeroom_classes` list so callers
-   * (auth store) can cache it and drive the wali-kelas role chips.
+   * plus the wali-kelas class list so callers (auth store) can drive
+   * the wali-kelas role chip strip.
+   *
+   * Two-step lookup, mirroring the Flutter app:
+   *
+   *   1. GET /teacher/{userId}             → resolves teacher_id and
+   *                                          may include eager-loaded
+   *                                          `homeroom_classes`.
+   *   2. GET /teacher/{userId}/classes     → fallback. Returns ALL of
+   *                                          the teacher's classes
+   *                                          (homeroom + teaching +
+   *                                          grade-authored) with an
+   *                                          `is_homeroom` flag per row
+   *                                          (set by TeacherRosterService).
+   *                                          Filter where `is_homeroom`
+   *                                          is true.
+   *
+   * Why the fallback exists: step (1) reads from the
+   * `Teacher::homeroomClasses` Eloquent relation, which has had
+   * shifting semantics over the past few backend refactors. Step (2)
+   * goes through TeacherRosterService, which fuses the pivot's
+   * first-row rule with teaching_schedules and grade-authored signals
+   * and is the canonical source for the mobile app. Using both gives
+   * us "matches the show endpoint when populated, otherwise matches
+   * mobile exactly" — so the chip strip lights up regardless of
+   * which relation flavour the deployed backend ships.
    */
   async resolveProfile(userId: string): Promise<{
     id: string;
@@ -205,7 +229,7 @@ export const TeacherService = {
         : Array.isArray(profile?.homeroom_class)
           ? profile.homeroom_class
           : [];
-      const homeroomClasses = rawHC
+      let homeroomClasses = rawHC
         .map((h: any) => ({
           id: String(h?.id ?? h?.class_id ?? h?.kelas_id ?? ''),
           name: String(
@@ -217,6 +241,44 @@ export const TeacherService = {
           ),
         }))
         .filter((h) => h.id);
+
+      // Fallback: when /teacher/{id} doesn't ship `homeroom_classes`
+      // (or ships an empty list because the relation didn't match
+      // anything for this deployment of the backend), reach for the
+      // /classes endpoint and filter is_homeroom — the same path the
+      // Flutter app uses.
+      if (homeroomClasses.length === 0) {
+        try {
+          const cRes = await api.get(`/teacher/${userId}/classes`);
+          const cBody = cRes.data?.data ?? cRes.data ?? null;
+          const classesArr: any[] = Array.isArray(cBody)
+            ? cBody
+            : Array.isArray(cBody?.classes)
+              ? cBody.classes
+              : Array.isArray(cBody?.kelas)
+                ? cBody.kelas
+                : [];
+          homeroomClasses = classesArr
+            .filter((c) => {
+              const flag = c?.is_homeroom;
+              return (
+                flag === true ||
+                flag === 1 ||
+                String(flag).toLowerCase() === 'true' ||
+                String(flag) === '1'
+              );
+            })
+            .map((c) => ({
+              id: String(c?.id ?? c?.class_id ?? ''),
+              name: String(c?.name ?? c?.nama ?? c?.class_name ?? ''),
+            }))
+            .filter((c) => c.id);
+        } catch {
+          // best-effort — leave homeroomClasses as the (empty) first
+          // pass; the chip strip just won't render the Wali chip.
+        }
+      }
+
       return { id: String(id), homeroomClasses };
     } catch {
       return null;
