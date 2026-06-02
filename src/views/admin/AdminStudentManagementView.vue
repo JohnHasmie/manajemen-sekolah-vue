@@ -23,6 +23,7 @@ import BrandListRow from '@/components/feature/BrandListRow.vue';
 import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import PaginationView from '@/components/data/Pagination.vue';
 import Button from '@/components/ui/Button.vue';
+import Modal from '@/components/ui/Modal.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import StudentEditSheet from './widgets/StudentEditSheet.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -57,13 +58,22 @@ const filters = reactive<{
   status: 'active' | 'inactive' | 'unverified' | null;
   class_ids: string[];
   gender: 'L' | 'P' | null;
-  guardian: 'with' | 'without' | null;
+  /**
+   * Free-text search by guardian (wali) name. Matches the mobile UX:
+   * admin types the wali's name and the list filters by case-insensitive
+   * LIKE. Replaces the prior with/without dropdown.
+   */
+  guardian_name: string | null;
 }>({
   status: null,
   class_ids: [],
   gender: null,
-  guardian: null,
+  guardian_name: null,
 });
+
+// Buffer for the guardian-name search modal (so reload() doesn't fire
+// on every keystroke until the user confirms / closes the modal).
+const guardianNameDraft = ref('');
 
 // ── Selection ──────────────────────────────────────────────────────
 const selectedIds = ref<Set<string>>(new Set());
@@ -98,10 +108,6 @@ const STATUS_OPTIONS: FacetOption[] = [
 const GENDER_OPTIONS: FacetOption[] = [
   { key: 'L', label: 'Laki-laki' },
   { key: 'P', label: 'Perempuan' },
-];
-const GUARDIAN_OPTIONS: FacetOption[] = [
-  { key: 'with', label: 'Ada wali' },
-  { key: 'without', label: 'Belum ada wali' },
 ];
 const classOptions = computed<FacetOption[]>(() =>
   classes.value.map((c) => ({
@@ -144,8 +150,8 @@ const genderChipValue = computed(() => {
   return filters.gender === 'L' ? 'Laki-laki' : 'Perempuan';
 });
 const guardianChipValue = computed(() => {
-  if (!filters.guardian) return 'Semua';
-  return filters.guardian === 'with' ? 'Ada wali' : 'Tanpa wali';
+  const v = filters.guardian_name?.trim();
+  return v ? v : 'Semua';
 });
 
 const activeFilterCount = computed(() => {
@@ -153,9 +159,27 @@ const activeFilterCount = computed(() => {
   if (filters.status) n++;
   if (filters.class_ids.length > 0) n++;
   if (filters.gender) n++;
-  if (filters.guardian) n++;
+  if (filters.guardian_name?.trim()) n++;
   return n;
 });
+
+// Modal open/close helpers for the guardian-name search input.
+function openGuardianPicker() {
+  guardianNameDraft.value = filters.guardian_name ?? '';
+  showGuardianPicker.value = true;
+}
+function applyGuardianFilter() {
+  const v = guardianNameDraft.value.trim();
+  filters.guardian_name = v.length > 0 ? v : null;
+  showGuardianPicker.value = false;
+  reload(1);
+}
+function clearGuardianFilter() {
+  guardianNameDraft.value = '';
+  filters.guardian_name = null;
+  showGuardianPicker.value = false;
+  reload(1);
+}
 
 // ── Loaders ────────────────────────────────────────────────────────
 async function reload(page = 1) {
@@ -169,7 +193,7 @@ async function reload(page = 1) {
       status: filters.status,
       class_ids: filters.class_ids,
       gender: filters.gender,
-      guardian: filters.guardian,
+      guardian_name: filters.guardian_name,
     });
     students.value = res.items;
     pagination.value = res.pagination ?? null;
@@ -212,7 +236,8 @@ function clearAll() {
   filters.status = null;
   filters.class_ids = [];
   filters.gender = null;
-  filters.guardian = null;
+  filters.guardian_name = null;
+  guardianNameDraft.value = '';
   search.value = '';
   reload(1);
 }
@@ -481,7 +506,7 @@ function topMeta(s: Student): string {
         label="Wali"
         :value="guardianChipValue"
         tone="amber"
-        @click="showGuardianPicker = true"
+        @click="openGuardianPicker"
       />
     </template>
 
@@ -569,15 +594,48 @@ function topMeta(s: Student): string {
     @close="showGenderPicker = false"
     @apply="(v) => { filters.gender = (v as 'L' | 'P' | '') || null; reload(1); }"
   />
-  <FilterFacetPickerModal
+  <!--
+    Guardian (wali) name search modal. Replaces the prior with/without
+    dropdown: admin types the wali's name and the list filters by
+    case-insensitive LIKE on `students.guardian_name`. Mirrors the
+    Flutter app, which already uses a typed search field for this
+    facet.
+  -->
+  <Modal
     v-if="showGuardianPicker"
-    title="Filter Status Wali"
-    :options="GUARDIAN_OPTIONS"
-    :selected="filters.guardian ?? ''"
-    all-label="Semua"
+    title="Cari Wali"
+    subtitle="Ketik nama wali murid untuk memfilter daftar siswa."
+    size="sm"
     @close="showGuardianPicker = false"
-    @apply="(v) => { filters.guardian = (v as 'with' | 'without' | '') || null; reload(1); }"
-  />
+  >
+    <form class="space-y-4" @submit.prevent="applyGuardianFilter">
+      <label class="block">
+        <span class="sr-only">Nama wali</span>
+        <input
+          v-model="guardianNameDraft"
+          type="search"
+          autofocus
+          placeholder="Mis. Ibu Ahmad"
+          class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-cobalt focus:outline-none focus:ring-2 focus:ring-brand-cobalt/20"
+        />
+      </label>
+      <div class="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          class="text-[11px] font-black uppercase tracking-wider text-slate-500 hover:text-slate-900"
+          @click="clearGuardianFilter"
+        >
+          Hapus filter
+        </button>
+        <div class="flex items-center gap-2">
+          <Button variant="ghost" type="button" @click="showGuardianPicker = false">
+            Batal
+          </Button>
+          <Button variant="primary" type="submit">Terapkan</Button>
+        </div>
+      </div>
+    </form>
+  </Modal>
 
   <!-- Sheets / dialogs -->
   <StudentEditSheet
