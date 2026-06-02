@@ -84,7 +84,7 @@ useAcademicYearWatcher(() => {
 function jenisOf(a: ClassActivity): 'tugas' | 'materi' {
   const raw = (a.raw_type ?? '').toLowerCase().trim();
   if (raw === 'materi' || raw === 'material' || raw === 'info') return 'materi';
-  if (a.type === 'tugas' || a.type === 'pr' || a.type === 'ulangan') {
+  if (a.type === 'assignment' || a.type === 'homework' || a.type === 'test') {
     return 'tugas';
   }
   return 'materi';

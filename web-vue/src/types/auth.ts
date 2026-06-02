@@ -11,7 +11,26 @@
  *   - token + user            → fully authenticated
  */
 
-export type Role = 'admin' | 'guru' | 'wali_kelas' | 'wali' | 'staff';
+/**
+ * Frontend canonical role keys — used for routing, theming, and
+ * role-based access gates throughout the Vue app.
+ *
+ * Vue retains the Indonesian short-form (`guru`/`wali`) as the
+ * canonical *internal* value because dozens of components hard-code
+ * it (e.g. `<BrandPageHeader role="guru">`, `meta: { role: 'guru' }`
+ * on routes, theme colour maps in `useRoleColor`).
+ *
+ * Wire boundaries convert to/from the backend's canonical English
+ * via `normalizeRoleString` / `denormalizeRole` in
+ * `auth.service.ts`:
+ *   FE 'guru'  ⇆ BE 'teacher'
+ *   FE 'wali'  ⇆ BE 'parent'
+ *   FE 'siswa' ⇆ BE 'student'
+ *
+ * `wali_kelas` is a derived homeroom-capability flag — not a stored
+ * users_roles.role value.
+ */
+export type Role = 'admin' | 'guru' | 'wali_kelas' | 'wali' | 'siswa' | 'staff';
 
 export type AuthStep =
   | 'login'
@@ -29,11 +48,14 @@ export interface School {
   id: string;
   school_id?: string; // flutter variant
   name: string;
-  school_name?: string; // flutter variant
+  /** @deprecated Backend now ships canonical `name`; kept for backward-compat. */
+  school_name?: string;
   address?: string;
   city?: string;
   academic_year?: string;
+  /** Education level (SD/SMP/SMA etc). Backend column: `education_level`. */
   level?: string;
+  education_level?: string;
   logo_url?: string | null;
   roles?: Role[];
 }

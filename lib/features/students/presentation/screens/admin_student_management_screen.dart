@@ -599,8 +599,9 @@ class StudentManagementScreenState
         value: _selectedGenderFilter == null
             ? null
             : lang.getTranslatedText(switch (_selectedGenderFilter) {
-                'L' => const {'en': 'Male', 'id': 'Laki-laki'},
-                'P' => const {'en': 'Female', 'id': 'Perempuan'},
+                // Backend canonical: `male` / `female`. Legacy: `L` / `P`.
+                'male' || 'L' => const {'en': 'Male', 'id': 'Laki-laki'},
+                'female' || 'P' => const {'en': 'Female', 'id': 'Perempuan'},
                 _ => {
                   'en': _selectedGenderFilter!,
                   'id': _selectedGenderFilter!,

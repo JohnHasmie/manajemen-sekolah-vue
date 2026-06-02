@@ -30,9 +30,12 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
       final dateBasedSemester = await getIt<ApiScheduleService>()
           .getDateBasedSemester();
       String semesterId = '1';
-      if (dateBasedSemester.containsKey('semester') &&
-          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-        semesterId = '2';
+      if (dateBasedSemester.containsKey('semester')) {
+        final sem = dateBasedSemester['semester'].toString().toLowerCase();
+        // Canonical: 'even' (English) / legacy 'genap' (Indonesian)
+        if (sem == 'even' || sem == 'genap') {
+          semesterId = '2';
+        }
       }
 
       if (academicYearId == null) {
@@ -86,13 +89,16 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
       final dateBasedSemester = await getIt<ApiScheduleService>()
           .getDateBasedSemester();
       String semesterId = '1';
-      if (dateBasedSemester.containsKey('semester') &&
-          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-        semesterId = '2';
+      if (dateBasedSemester.containsKey('semester')) {
+        final sem = dateBasedSemester['semester'].toString().toLowerCase();
+        // Canonical: 'even' (English) / legacy 'genap' (Indonesian)
+        if (sem == 'even' || sem == 'genap') {
+          semesterId = '2';
+        }
       }
 
       await dioClient.post(
-        '/raports/publish',
+        '/report-cards/publish',
         data: {
           'class_id': selectedClass!['id'],
           'academic_year_id': academicYearId,
@@ -135,9 +141,12 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
       final dateBasedSemester = await getIt<ApiScheduleService>()
           .getDateBasedSemester();
       String semesterId = '1';
-      if (dateBasedSemester.containsKey('semester') &&
-          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-        semesterId = '2';
+      if (dateBasedSemester.containsKey('semester')) {
+        final sem = dateBasedSemester['semester'].toString().toLowerCase();
+        // Canonical: 'even' (English) / legacy 'genap' (Indonesian)
+        if (sem == 'even' || sem == 'genap') {
+          semesterId = '2';
+        }
       }
 
       Map<String, dynamic>? detail = await getIt<ApiReportCardService>()
@@ -171,7 +180,8 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
             'social_description': null,
             'notes': null,
             'promotion_decision': null,
-            'raport_subjects':
+            // Backend rename: `raport_subjects` → `report_card_subjects`.
+            'report_card_subjects':
                 (initialData['grades'] as List?)?.map((g) {
                   return {
                     'subject_id': g['subject_id'],
@@ -225,7 +235,9 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
   }
 
   Future<void> downloadStudentPdf(Map<String, dynamic> student) async {
-    final status = student['raport_status'] ?? 'draft';
+    // Backend rename: `raport_status` → `report_card_status`.
+    final status =
+        student['report_card_status'] ?? student['raport_status'] ?? 'draft';
     if (status == 'draft') {
       SnackBarUtils.showInfo(context, 'Raport Draft belum bisa dicetak.');
       return;
@@ -242,9 +254,12 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
       final dateBasedSemester = await getIt<ApiScheduleService>()
           .getDateBasedSemester();
       String semesterId = '1';
-      if (dateBasedSemester.containsKey('semester') &&
-          dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
-        semesterId = '2';
+      if (dateBasedSemester.containsKey('semester')) {
+        final sem = dateBasedSemester['semester'].toString().toLowerCase();
+        // Canonical: 'even' (English) / legacy 'genap' (Indonesian)
+        if (sem == 'even' || sem == 'genap') {
+          semesterId = '2';
+        }
       }
 
       if (!mounted) return;

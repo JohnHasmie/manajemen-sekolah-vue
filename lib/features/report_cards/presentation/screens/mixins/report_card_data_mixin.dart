@@ -131,7 +131,7 @@ mixin ReportCardDataMixin<T extends StatefulWidget> on State<T> {
     }
 
     final response = await dioClient.get(
-      '/parent/raports',
+      '/parent/report-cards',
       queryParameters: {
         'academic_year_id': yearId,
         'semester_id': selectedTermId,

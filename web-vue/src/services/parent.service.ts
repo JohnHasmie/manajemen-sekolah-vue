@@ -419,17 +419,17 @@ export const ParentService = {
    * which is the teacher class-roster endpoint that *ignores*
    * student_id filtering, so this always returned empty.
    *
-   * Now delegates to `GET /parent/raports` (the canonical parent
-   * inbox endpoint) and filters client-side to the requested
+   * Now delegates to `GET /parent/report-cards` (the canonical
+   * parent inbox endpoint) and filters client-side to the requested
    * studentId. Backend only ships rows with `status='published'`.
    *
    * Phase 5 rewrites the parent rapor view to consume the richer
-   * `ParentRaportRow` shape directly; this wrapper just preserves
-   * the legacy `ReportCard[]` contract until then.
+   * `ParentReportCardRow` shape directly; this wrapper just
+   * preserves the legacy `ReportCard[]` contract until then.
    */
   async reportCards(studentId: string): Promise<ReportCard[]> {
     try {
-      const res = await api.get('/parent/raports');
+      const res = await api.get('/parent/report-cards');
       const body = res.data?.data ?? res.data ?? [];
       const list = Array.isArray(body) ? body : [];
       return list
@@ -439,9 +439,10 @@ export const ParentService = {
           return !sid || String(sid) === String(studentId);
         })
         .map((row: any) => {
-          // /parent/raports nests the raport under `reportCard`.
-          // Reshape so the legacy `reportCardFromJson` parser still
-          // finds the fields it expects (id, student_name, etc).
+          // /parent/report-cards nests the report card under
+          // `reportCard`. Reshape so the legacy `reportCardFromJson`
+          // parser still finds the fields it expects (id,
+          // student_name, etc).
           const inner = row.reportCard ?? row;
           return reportCardFromJson({
             ...inner,
@@ -463,10 +464,10 @@ export const ParentService = {
   },
 
   /**
-   * Fetch the hydrated raport. Flutter uses `/raport/show` with a
-   * (student_class_id, academic_year_id, semester_id) tuple, not a
-   * bare id. We don't always have those, so we fall back to the by-id
-   * route when it exists on the backend.
+   * Fetch the hydrated report card. Flutter uses `/report-card/show`
+   * with a (student_class_id, academic_year_id, semester_id) tuple,
+   * not a bare id. We don't always have those, so we fall back to
+   * the by-id route when it exists on the backend.
    */
   async reportCardDetail(
     idOrCtx:
@@ -480,10 +481,10 @@ export const ParentService = {
     try {
       const res =
         typeof idOrCtx === 'string'
-          ? await api.get(`/raport/${idOrCtx}`).catch(() =>
-              api.get(`/raports/${idOrCtx}`),
+          ? await api.get(`/report-card/${idOrCtx}`).catch(() =>
+              api.get(`/report-cards/${idOrCtx}`),
             )
-          : await api.get('/raport/show', { params: idOrCtx });
+          : await api.get('/report-card/show', { params: idOrCtx });
       const body = res.data?.data ?? res.data ?? null;
       if (!body) return null;
       const base = reportCardFromJson(body);

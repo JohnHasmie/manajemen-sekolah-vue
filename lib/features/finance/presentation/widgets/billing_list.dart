@@ -391,8 +391,19 @@ String _humanMonth(String yyyymm) {
     return yyyymm;
   }
   const months = [
-    '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    '',
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
   ];
   return '${months[month]} $year';
 }
@@ -557,17 +568,19 @@ class _BillingRow extends ConsumerWidget {
       final paymentType = data['payment_type'] is Map
           ? Map<String, dynamic>.from(data['payment_type'] as Map)
           : <String, dynamic>{};
-      final billName = (paymentType['name']
-              ?? data['name']
-              ?? data['title']
-              ?? data['type']
-              ?? 'Tagihan')
-          .toString();
-      final method = (latestPayment['payment_method']
-              ?? data['payment_method']
-              ?? data['method']
-              ?? '-')
-          .toString();
+      final billName =
+          (paymentType['name'] ??
+                  data['name'] ??
+                  data['title'] ??
+                  data['type'] ??
+                  'Tagihan')
+              .toString();
+      final method =
+          (latestPayment['payment_method'] ??
+                  data['payment_method'] ??
+                  data['method'] ??
+                  '-')
+              .toString();
       final classes = data['student']?['classes'];
       final className = classes is List && classes.isNotEmpty
           ? (classes.first is Map ? classes.first['name']?.toString() : null)
@@ -594,7 +607,9 @@ class _BillingRow extends ConsumerWidget {
           isManualPending: isPending,
           paymentProofUrl: data['payment_proof_url']?.toString(),
           paymentId: latestPayment['id']?.toString(),
-          schoolName: data['school']?['school_name']?.toString(),
+          schoolName:
+              (data['school']?['name'] ?? data['school']?['school_name'])
+                  ?.toString(),
           className: className,
           period: periodStr != null ? _humanMonth(periodStr) : null,
           paidAt: paidAt,

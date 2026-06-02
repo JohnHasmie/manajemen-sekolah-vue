@@ -198,9 +198,12 @@ class ApiSettingsService {
     }
   }
 
-  /// Updates school-level settings (jenjang, name, address).
+  /// Updates school-level settings (education_level, name, address).
   /// Like `School::find($id)->update($data)` in Laravel.
   /// Only provided fields are updated (partial update).
+  ///
+  /// Backend rename: `schools.jenjang` → `schools.education_level`,
+  /// `schools.school_name` → `schools.name`.
   Future<void> updateSchoolSettings({
     String? jenjang,
     String? schoolName,
@@ -208,8 +211,8 @@ class ApiSettingsService {
   }) async {
     try {
       final Map<String, dynamic> body = {};
-      if (jenjang != null) body['jenjang'] = jenjang;
-      if (schoolName != null) body['school_name'] = schoolName;
+      if (jenjang != null) body['education_level'] = jenjang;
+      if (schoolName != null) body['name'] = schoolName;
       if (address != null) body['address'] = address;
 
       await dioClient.post('/school/settings', data: body);

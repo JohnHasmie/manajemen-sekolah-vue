@@ -71,8 +71,10 @@ class PaymentTypeDetailSheet extends StatelessWidget {
     final navy = primaryColor;
     final name = (paymentType['name'] ?? '-').toString();
     final amount = formatCurrency(paymentType['amount']);
-    final periodRaw = (paymentType['periode'] ?? paymentType['type'])
-        ?.toString();
+    // Backend rename: `payment_types.periode` → `payment_types.period`.
+    final periodRaw =
+        (paymentType['period'] ?? paymentType['periode'] ?? paymentType['type'])
+            ?.toString();
     final periodLabel = getTranslatedPeriod(periodRaw);
     final status = (paymentType['status'] ?? 'active').toString().toLowerCase();
     final isActive = status == 'active';

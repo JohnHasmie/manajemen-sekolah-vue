@@ -10,18 +10,20 @@
  */
 import { api } from '@/lib/http';
 import { StudentService } from '@/services/students.service';
-import type {
-  AdminAttendanceSummary,
-  AttendanceDashboard,
-  AttendanceHistoryEntry,
-  AttendanceKpiSummary,
-  AttendanceRange,
-  AttendanceRow,
-  AttendanceStatus,
-  HeatmapCellState,
-  SessionReport,
-  StudentHeatmapResponse,
-  TingkatTrend,
+import {
+  denormalizeAttendanceStatus,
+  normalizeAttendanceStatus,
+  type AdminAttendanceSummary,
+  type AttendanceDashboard,
+  type AttendanceHistoryEntry,
+  type AttendanceKpiSummary,
+  type AttendanceRange,
+  type AttendanceRow,
+  type AttendanceStatus,
+  type HeatmapCellState,
+  type SessionReport,
+  type StudentHeatmapResponse,
+  type TingkatTrend,
 } from '@/types/attendance';
 
 interface RosterParams {
@@ -56,13 +58,16 @@ function attendanceFactsFromJson(raw: Record<string, any>): {
   alertTone: 'warning' | 'danger' | null;
   notes: string;
 } {
-  const status = raw.status ?? raw.attendance_status ?? null;
+  const rawStatus = raw.status ?? raw.attendance_status ?? null;
   return {
     studentId: String(
       raw.student_id ?? raw.id ?? raw.student?.id ?? '',
     ),
-    status: typeof status === 'string'
-      ? (status.toLowerCase() as AttendanceStatus)
+    // Normalise via the shared helper so backend English values
+    // (`present`/`sick`/`excused`/`absent`) get mapped onto the FE
+    // Indonesian short-form canonical the components branch on.
+    status: typeof rawStatus === 'string'
+      ? normalizeAttendanceStatus(rawStatus)
       : null,
     alert: (raw.alert as string | undefined) ?? null,
     alertTone:
@@ -148,9 +153,21 @@ export const AttendanceService = {
     });
   },
 
-  /** POST /attendance/bulk — saves all rows in one round-trip. */
+  /** POST /attendance/bulk — saves all rows in one round-trip.
+   *
+   * Translates FE Indonesian short-form (`hadir`/`sakit`/`izin`/`alpa`)
+   * to the backend's canonical English values
+   * (`present`/`sick`/`excused`/`absent`) before posting.
+   */
   async saveBulk(params: BulkParams): Promise<void> {
-    await api.post('/attendance/bulk', params);
+    const body: BulkParams = {
+      ...params,
+      attendances: params.attendances.map((a) => ({
+        ...a,
+        status: denormalizeAttendanceStatus(a.status) as unknown as NonNullable<AttendanceStatus>,
+      })),
+    };
+    await api.post('/attendance/bulk', body);
   },
 
   /**
@@ -844,9 +861,22 @@ function reportFromGroup(parent: any, rec: any): SessionReport {
 function historyFromJson(raw: any): AttendanceHistoryEntry {
   const rawStatus =
     String(raw.status ?? raw.attendance_status ?? 'hadir').toLowerCase();
-  const status = (
-    ['hadir', 'sakit', 'izin', 'alpa'].includes(rawStatus) ? rawStatus : 'hadir'
-  ) as NonNullable<AttendanceStatus>;
+  // Map backend canonical English + legacy spellings to the FE
+  // Indonesian short-form canonical (which components hard-code).
+  const status = ((): NonNullable<AttendanceStatus> => {
+    if (rawStatus === 'hadir' || rawStatus === 'present') return 'hadir';
+    if (rawStatus === 'sakit' || rawStatus === 'sick') return 'sakit';
+    if (rawStatus === 'izin' || rawStatus === 'excused' || rawStatus === 'permission')
+      return 'izin';
+    if (
+      rawStatus === 'alpa' ||
+      rawStatus === 'alfa' ||
+      rawStatus === 'alpha' ||
+      rawStatus === 'absent'
+    )
+      return 'alpa';
+    return 'hadir';
+  })();
   const subjectName =
     raw.subject_name ?? raw.subject?.name ?? raw.mata_pelajaran ?? null;
   const sessionLabel =

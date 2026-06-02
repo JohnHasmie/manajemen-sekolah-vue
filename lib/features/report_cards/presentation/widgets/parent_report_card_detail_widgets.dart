@@ -199,8 +199,11 @@ class ParentRaporKpiStrip extends StatelessWidget {
   final Map<String, dynamic> reportCardData;
 
   double? _avg() {
+    // Backend rename: `raport_subjects` → `report_card_subjects`.
     final subjects =
-        (reportCardData['raportSubjects'] ??
+        (reportCardData['reportCardSubjects'] ??
+                reportCardData['report_card_subjects'] ??
+                reportCardData['raportSubjects'] ??
                 reportCardData['raport_subjects'] ??
                 const [])
             as List<dynamic>;
@@ -1410,7 +1413,19 @@ class ParentRaporDecisionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final raw = (reportCardData['promotion_decision'] ?? '').toString().trim();
+    // Backend canonical: `promoted` / `not_promoted` / `graduated` /
+    // `not_graduated` (was `Naik Kelas` / `Tidak Naik` / `Lulus`).
+    // Map back to the Indonesian display strings the banner expects.
+    final rawDecision = (reportCardData['promotion_decision'] ?? '')
+        .toString()
+        .trim();
+    final raw = switch (rawDecision.toLowerCase()) {
+      'promoted' => 'Naik Kelas',
+      'not_promoted' => 'Tinggal di Kelas',
+      'graduated' => 'Lulus',
+      'not_graduated' => 'Tidak Lulus',
+      _ => rawDecision,
+    };
     if (raw.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(14),

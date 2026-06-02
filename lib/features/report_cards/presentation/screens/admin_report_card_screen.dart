@@ -103,7 +103,9 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
   int get _terbitCount {
     var c = 0;
     for (final s in _students) {
-      final st = (s as Map?)?['raport_status']?.toString();
+      // Backend rename: `raport_status` → `report_card_status`.
+      final m = s as Map?;
+      final st = (m?['report_card_status'] ?? m?['raport_status'])?.toString();
       if (st == 'published') c++;
     }
     return c;
@@ -112,7 +114,9 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
   int get _finalCount {
     var c = 0;
     for (final s in _students) {
-      final st = (s as Map?)?['raport_status']?.toString();
+      // Backend rename: `raport_status` → `report_card_status`.
+      final m = s as Map?;
+      final st = (m?['report_card_status'] ?? m?['raport_status'])?.toString();
       if (st == 'final') c++;
     }
     return c;

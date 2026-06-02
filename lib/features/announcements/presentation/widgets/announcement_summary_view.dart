@@ -88,7 +88,9 @@ class _AnnouncementSummaryViewState extends State<AnnouncementSummaryView> {
       final items = itemsByMonth[monthKey]!;
       final priorities = <String, int>{};
       for (final item in items) {
-        final p = (item['priority'] ?? 'biasa').toString().toLowerCase();
+        // Backend canonical: `low` / `normal` / `high` / `urgent`
+        // (was `biasa` / `penting`). Default to `normal`.
+        final p = (item['priority'] ?? 'normal').toString().toLowerCase();
         priorities[p] = (priorities[p] ?? 0) + 1;
       }
       groups.add(
@@ -431,7 +433,11 @@ class _AnnouncementItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Announcement.fromJson(item);
+    // Backend canonical priorities: `low` / `normal` / `high` / `urgent`.
+    // Legacy: `biasa` → normal, `penting` → high.
     final isImportant = [
+      'high',
+      'urgent',
       'penting',
       'important',
     ].contains((item['priority'] ?? '').toString().toLowerCase());

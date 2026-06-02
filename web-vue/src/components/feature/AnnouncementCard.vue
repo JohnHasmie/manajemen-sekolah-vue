@@ -94,14 +94,14 @@ const showReadCounter = computed(() => {
 
 const isScheduled = computed(() => {
   const a = props.announcement;
-  if (a.status === 'terjadwal') return true;
+  if (a.status === 'scheduled') return true;
   if (!a.scheduled_at) return false;
   return Date.parse(a.scheduled_at) > Date.now();
 });
 
 const isExpired = computed(() => {
   const a = props.announcement;
-  if (a.status === 'kedaluwarsa') return true;
+  if (a.status === 'expired') return true;
   if (!a.expires_at) return false;
   return Date.parse(a.expires_at) < Date.now();
 });

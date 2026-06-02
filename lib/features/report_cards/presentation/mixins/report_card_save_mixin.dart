@@ -27,15 +27,22 @@ mixin ReportCardSaveMixin on ConsumerState<ReportCardDetailScreen> {
         'student_class_id': widget.studentClassId,
         'academic_year_id': academicYearId,
         'semester_id': semesterId,
-        'spiritual_predicate': spiritualPredicate,
+        // Backend rename (rename guide §4): predicate columns now accept
+        // canonical English words `very_good` / `good` / `fair` / `poor`
+        // (plus the letter grades A/B/C/D). Map the Indonesian display
+        // labels the form uses to those before sending.
+        'spiritual_predicate': _toCanonicalPredicate(spiritualPredicate),
         'spiritual_description': spiritualDescCtrl.text,
-        'social_predicate': socialPredicate,
+        'social_predicate': _toCanonicalPredicate(socialPredicate),
         'social_description': socialDescCtrl.text,
         'attendance_sick': int.tryParse(sickCtrl.text) ?? 0,
         'attendance_permit': int.tryParse(permitCtrl.text) ?? 0,
         'attendance_absent': int.tryParse(absentCtrl.text) ?? 0,
         'homeroom_notes': notesCtrl.text,
-        'promotion_decision': promotionDecision,
+        // Backend rename (rename guide §4): canonical promotion_decision
+        // values are `promoted` / `not_promoted` / `graduated` /
+        // `not_graduated` (was `Naik Kelas` / `Tidak Naik` / `Lulus`).
+        'promotion_decision': _toCanonicalPromotionDecision(promotionDecision),
         'status': status,
         'subjects': subjects,
         'extracurriculars': extras,
@@ -89,13 +96,20 @@ mixin ReportCardSaveMixin on ConsumerState<ReportCardDetailScreen> {
   }
 
   Future<String> resolveAcademicTermForSave() async {
+    // Canonical lesson_plans.semester is `even` (was `genap`). Accept
+    // both so older cached values keep returning the correct id.
+    bool isEvenSemester(dynamic raw) {
+      final s = raw?.toString().toLowerCase();
+      return s == 'even' || s == 'genap';
+    }
+
     final cachedDayData = await LocalCacheService.load(
       'school_day_data',
       ttl: const Duration(hours: 24),
     );
     if (cachedDayData != null && cachedDayData is Map) {
       if (cachedDayData.containsKey('semester') &&
-          cachedDayData['semester'].toString().toLowerCase() == 'genap') {
+          isEvenSemester(cachedDayData['semester'])) {
         return '2';
       }
       return '1';
@@ -106,10 +120,61 @@ mixin ReportCardSaveMixin on ConsumerState<ReportCardDetailScreen> {
       await LocalCacheService.save('school_day_data', dateBasedSemester);
     }
     if (dateBasedSemester.containsKey('semester') &&
-        dateBasedSemester['semester'].toString().toLowerCase() == 'genap') {
+        isEvenSemester(dateBasedSemester['semester'])) {
       return '2';
     }
     return '1';
+  }
+
+  /// Map an Indonesian predicate label to the backend canonical English
+  /// value. `Sangat Baik` / `Baik Sekali` → `very_good`, `Baik` →
+  /// `good`, `Cukup` → `fair`, `Kurang` → `poor`. Letter grades and
+  /// already-canonical English values pass through.
+  String _toCanonicalPredicate(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return trimmed;
+    switch (trimmed.toLowerCase()) {
+      case 'sangat baik':
+      case 'baik sekali':
+      case 'very_good':
+        return 'very_good';
+      case 'baik':
+      case 'good':
+        return 'good';
+      case 'cukup':
+      case 'fair':
+        return 'fair';
+      case 'kurang':
+      case 'poor':
+        return 'poor';
+      default:
+        // Letter grades (A/B/C/D) and unknown values pass through.
+        return trimmed;
+    }
+  }
+
+  /// Map a possibly-legacy promotion_decision label to the backend
+  /// canonical value. `Naik Kelas` → `promoted`, `Tidak Naik` /
+  /// `Tinggal di Kelas` → `not_promoted`, `Lulus` → `graduated`,
+  /// `Tidak Lulus` → `not_graduated`.
+  String _toCanonicalPromotionDecision(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'naik kelas':
+      case 'promoted':
+        return 'promoted';
+      case 'tidak naik':
+      case 'tinggal di kelas':
+      case 'not_promoted':
+        return 'not_promoted';
+      case 'lulus':
+      case 'graduated':
+        return 'graduated';
+      case 'tidak lulus':
+      case 'not_graduated':
+        return 'not_graduated';
+      default:
+        return raw;
+    }
   }
 
   // Abstract declarations for state

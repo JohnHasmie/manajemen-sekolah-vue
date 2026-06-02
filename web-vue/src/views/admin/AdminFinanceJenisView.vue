@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { FinanceService } from '@/services/finance.service';
-import { periodeLabel, type PaymentType } from '@/types/billing';
+import { periodLabel, type PaymentType } from '@/types/billing';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -215,7 +215,7 @@ async function toggleStatus(pt: PaymentType) {
               <div class="flex-1 min-w-0">
                 <p class="text-[13px] font-bold text-slate-900 truncate">{{ pt.name }}</p>
                 <p class="text-[11px] text-slate-500 mt-0.5">
-                  {{ periodeLabel(pt.periode) }} · {{ formatRupiah(pt.amount) }}
+                  {{ periodLabel(pt.period) }} · {{ formatRupiah(pt.amount) }}
                 </p>
               </div>
               <span

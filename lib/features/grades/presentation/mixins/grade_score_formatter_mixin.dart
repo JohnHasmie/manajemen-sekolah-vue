@@ -12,14 +12,23 @@ mixin GradeScoreFormatterMixin {
   }
 
   /// Returns abbreviated type label (e.g., 'UH' for 'uh').
+  /// Backend rename (rename guide §4) — assessments.type now uses
+  /// canonical English values. Legacy Indonesian aliases stay here so
+  /// older payloads still render with the right short label.
   String shortTypeLabel(String type) {
     const labels = {
       'uh': 'UH',
+      'daily_test': 'UH',
       'tugas': 'Tgs',
+      'assignment': 'Tgs',
       'uts': 'UTS',
+      'midterm': 'UTS',
       'uas': 'UAS',
+      'final_exam': 'UAS',
       'pts': 'PTS',
       'pas': 'PAS',
+      'kuis': 'Kuis',
+      'quiz': 'Kuis',
     };
     return labels[type] ?? type.toUpperCase();
   }

@@ -81,8 +81,14 @@ mixin StudentListMixin {
         student['urutan']?.toString() ??
         student['no_urut']?.toString() ??
         student['order']?.toString();
-    final hasRaport = student['has_raport'] == true;
-    final rawStatus = (student['raport_status'] ?? '').toString().toLowerCase();
+    // Backend rename: `has_raport` / `raport_status` →
+    // `has_report_card` / `report_card_status`. Accept both shapes.
+    final hasRaport =
+        student['has_report_card'] == true || student['has_raport'] == true;
+    final rawStatus =
+        (student['report_card_status'] ?? student['raport_status'] ?? '')
+            .toString()
+            .toLowerCase();
     final rerata =
         student['rerata'] ?? student['average'] ?? student['avg_score'];
     final hasRerata = rerata is num && rerata > 0;

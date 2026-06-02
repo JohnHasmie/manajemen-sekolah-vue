@@ -22,7 +22,8 @@ mixin EmbeddedActivityScrollMixin on ConsumerState<EmbeddedActivityListScreen> {
   void handleTabSelection() {
     if (tabController.indexIsChanging) return;
     setState(() {
-      currentTarget = tabController.index == 0 ? 'umum' : 'khusus';
+      // Backend canonical: `all` / `specific` (was `umum` / `khusus`).
+      currentTarget = tabController.index == 0 ? 'all' : 'specific';
     });
     resetAndLoadActivities();
   }

@@ -65,9 +65,12 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
 
   String? _periodChipValue(LanguageProvider lp, String? period) {
     if (period == null) return null;
+    // Backend canonical: `monthly` / `yearly` / `once`. Accept legacy
+    // Indonesian aliases (`bulanan` / `tahunan`) for back-compat.
     return lp.getTranslatedText(switch (period) {
-      'bulanan' => {'en': 'Monthly', 'id': 'Bulanan'},
-      'tahunan' => {'en': 'Yearly', 'id': 'Tahunan'},
+      'monthly' || 'bulanan' => {'en': 'Monthly', 'id': 'Bulanan'},
+      'yearly' || 'tahunan' => {'en': 'Yearly', 'id': 'Tahunan'},
+      'once' || 'sekali' => {'en': 'Once', 'id': 'Sekali bayar'},
       _ => {'en': period, 'id': period},
     });
   }

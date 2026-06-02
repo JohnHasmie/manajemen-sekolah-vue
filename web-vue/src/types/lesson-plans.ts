@@ -482,11 +482,11 @@ export function lessonPlanFromJson(raw: AnyRecord): LessonPlan {
     semester: strOrNull(r.semester),
     notes: strOrNull(r.notes ?? r.catatan),
     admin_notes: strOrNull(
-      // Backend uses three different column names across endpoints:
-      //   - `note_admin` (column on lesson_plans)
-      //   - `rejection_reason` (admin-queue light projection)
-      //   - `admin_notes` / `revision_note` (legacy aliases)
-      r.admin_notes ??
+      // Canonical column post-rename is `lesson_plans.admin_note`.
+      // Older endpoints may still ship `note_admin` / `admin_notes` /
+      // `rejection_reason` / `revision_note`; accept all.
+      r.admin_note ??
+        r.admin_notes ??
         r.note_admin ??
         r.rejection_reason ??
         r.catatan_admin ??

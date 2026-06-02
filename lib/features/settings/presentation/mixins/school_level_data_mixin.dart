@@ -20,9 +20,15 @@ mixin SchoolLevelDataMixin on State<SchoolLevelSettingsScreen> {
       final settings = await getIt<ApiSettingsService>().getSchoolSettings();
       if (mounted) {
         setState(() {
-          onSchoolNameChanged(settings['school_name'] ?? '');
+          // Backend renamed `school_name`→`name`, `jenjang`→`education_level`.
+          onSchoolNameChanged(
+            (settings['name'] ?? settings['school_name'] ?? '').toString(),
+          );
           onAddressChanged(settings['address'] ?? '');
-          onJenjangChanged(settings['jenjang'] ?? 'SMA');
+          onJenjangChanged(
+            (settings['education_level'] ?? settings['jenjang'] ?? 'SMA')
+                .toString(),
+          );
           onLoadingChanged(false);
         });
       }

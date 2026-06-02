@@ -284,7 +284,13 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
           : _titleController.text.trim(),
       'format': widget.format.value,
       'format_data': formatData,
-      'semester': _semester,
+      // Backend rename (rename guide §4): lesson_plans.semester canonical
+      // values are `odd` / `even` (was `Ganjil` / `Genap`).
+      'semester': switch (_semester.toLowerCase()) {
+        'ganjil' || 'gasal' || 'odd' => 'odd',
+        'genap' || 'even' => 'even',
+        _ => _semester.toLowerCase(),
+      },
       'academic_year': _academicYear,
       'status': 'draft',
     };
@@ -629,7 +635,9 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
 
   Widget _buildSubjectChips(Color accent) {
     if (_subjects.isEmpty) {
-      return const _ChipPlaceholder(text: 'Belum ada mata pelajaran ditugaskan');
+      return const _ChipPlaceholder(
+        text: 'Belum ada mata pelajaran ditugaskan',
+      );
     }
     return FilterChipGrid<String>(
       options: [

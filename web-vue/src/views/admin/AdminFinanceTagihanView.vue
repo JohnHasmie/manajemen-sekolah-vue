@@ -314,7 +314,7 @@ function openGroup(g: BillGroup) {
         >
           {{ pt.name }}
           <span class="block text-[10px] text-slate-500 font-medium mt-0.5">
-            {{ pt.periode }} · {{ formatRupiah(pt.amount) }}
+            {{ pt.period }} · {{ formatRupiah(pt.amount) }}
           </span>
         </button>
       </div>

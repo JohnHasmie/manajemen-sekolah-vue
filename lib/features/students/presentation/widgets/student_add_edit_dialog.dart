@@ -120,7 +120,14 @@ class _StudentAddEditSheetContentState
     emailParentController = _emailParentController;
 
     selectedClassId = s?['class']?['id'] ?? s?['class_id'];
-    selectedGender = s?['gender'];
+    // Backend canonical: `male` / `female` (was `L` / `P`). Normalise
+    // legacy codes so the segmented control highlights correctly.
+    final rawGender = s?['gender']?.toString();
+    selectedGender = switch (rawGender?.toUpperCase()) {
+      'L' || 'M' => 'male',
+      'P' || 'F' => 'female',
+      _ => rawGender,
+    };
   }
 
   @override
@@ -184,9 +191,10 @@ class _StudentAddEditSheetContentState
     final title = _isEdit
         ? tLocal(const {'en': 'Edit Student', 'id': 'Edit Siswa'})
         : tLocal(const {'en': 'Add Student', 'id': 'Tambah Siswa'});
-        
+
     final subtitle = _isEdit
-        ? (editingContextLabel ?? tLocal(const {'en': 'EDIT DATA', 'id': 'EDIT DATA'}))
+        ? (editingContextLabel ??
+              tLocal(const {'en': 'EDIT DATA', 'id': 'EDIT DATA'}))
         : tLocal(const {'en': 'NEW ENTRY', 'id': 'TAMBAH BARU'});
 
     // Sheet sizes naturally to its content (capped at 88 % of screen so
@@ -213,236 +221,212 @@ class _StudentAddEditSheetContentState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-                          // ── DATA POKOK ─────────────────────────────
-                          AdminFormSection(
-                            label: tLocal(const {
-                              'en': 'BASIC DATA',
-                              'id': 'DATA POKOK',
-                            }),
-                            children: [
-                              StudentDialogTextField(
-                                primaryColor: widget.primaryColor,
-                                controller: _nameController,
-                                label: tLocal(const {
-                                  'en': 'Full name',
-                                  'id': 'Nama lengkap',
-                                }),
-                                icon: Icons.person,
-                              ),
-                              StudentDialogTextField(
-                                primaryColor: widget.primaryColor,
-                                controller: _nisController,
-                                label: 'NIS',
-                                icon: Icons.badge,
-                                keyboardType: TextInputType.number,
-                                // Inline error from a 422 duplicate-NIS
-                                // response (see student_form_save_mixin).
-                                // Clears as soon as the user edits.
-                                errorText: nisFieldError,
-                                onChanged: nisFieldError == null
-                                    ? null
-                                    : (_) => setState(() {
-                                        nisFieldError = null;
-                                      }),
-                              ),
-                              StudentDialogDropdown(
-                                primaryColor: widget.primaryColor,
-                                value: selectedClassId,
-                                label: tLocal(const {
-                                  'en': 'Class',
-                                  'id': 'Kelas',
-                                }),
-                                icon: Icons.school,
-                                items: widget.classList
-                                    .where((c) => c['id'] != null)
-                                    .map(
-                                      (c) => DropdownMenuItem<String>(
-                                        value: c['id'].toString(),
-                                        child: Text(
-                                          c['name'] ?? 'Unknown Class',
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (value) =>
-                                    setState(() => selectedClassId = value),
-                              ),
-                            ],
-                          ),
-                          // ── DATA PRIBADI ───────────────────────────
-                          AdminFormSection(
-                            label: tLocal(const {
-                              'en': 'PERSONAL DATA',
-                              'id': 'DATA PRIBADI',
-                            }),
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  AdminFormFieldLabel(
-                                    text: tLocal(const {
-                                      'en': 'Gender',
-                                      'id': 'Jenis kelamin',
-                                    }),
-                                  ),
-                                  AdminFormChoiceChips<String>(
-                                    value: selectedGender,
-                                    onChanged: (v) =>
-                                        setState(() => selectedGender = v),
-                                    choices: [
-                                      AdminFormChoice(
-                                        value: 'L',
-                                        label: tLocal(const {
-                                          'en': 'Male',
-                                          'id': 'Laki-laki',
-                                        }),
-                                        icon: Icons.male_rounded,
-                                      ),
-                                      AdminFormChoice(
-                                        value: 'P',
-                                        label: tLocal(const {
-                                          'en': 'Female',
-                                          'id': 'Perempuan',
-                                        }),
-                                        icon: Icons.female_rounded,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              StudentDialogTextField(
-                                primaryColor: widget.primaryColor,
-                                controller: _birthDateController,
-                                label: tLocal(const {
-                                  'en': 'Birth date',
-                                  'id': 'Tanggal lahir',
-                                }),
-                                icon: Icons.cake,
-                                hintText: 'YYYY-MM-DD',
-                                readOnly: true,
-                                onTap: () async {
-                                  final s = widget.student;
-                                  final initialDate =
-                                      s != null && s['date_of_birth'] != null
-                                      ? DateTime.parse(
-                                          s['date_of_birth'].toString(),
-                                        )
-                                      : DateTime.now();
-                                  final picked = await showModernDatePicker(
-                                    context: context,
-                                    initialDate: initialDate,
-                                    title: 'Pilih Tanggal Lahir',
-                                    firstDate: DateTime(1900),
-                                    lastDate: DateTime.now(),
-                                  );
-                                  if (picked != null) {
-                                    setState(() {
-                                      _birthDateController.text =
-                                          '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
-                                    });
-                                  }
-                                },
-                              ),
-                              StudentDialogTextField(
-                                primaryColor: widget.primaryColor,
-                                controller: _addressController,
-                                label: tLocal(const {
-                                  'en': 'Address',
-                                  'id': 'Alamat',
-                                }),
-                                icon: Icons.location_on,
-                                maxLines: 2,
-                              ),
-                            ],
-                          ),
-                          // ── WALI MURID ─────────────────────────────
-                          AdminFormSection(
-                            label: tLocal(const {
-                              'en': 'GUARDIAN',
-                              'id': 'WALI MURID',
-                            }),
-                            bottomGap: 4,
-                            children: [
-                              if (_isEdit)
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: ColorUtils.warning600.withValues(
-                                      alpha: 0.06,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: ColorUtils.warning600.withValues(
-                                        alpha: 0.25,
-                                      ),
-                                    ),
-                                  ),
-                                  child: SwitchListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    dense: true,
-                                    title: Text(
-                                      tLocal(const {
-                                        'en': 'Change guardian account',
-                                        'id': 'Ganti akun wali',
-                                      }),
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w800,
-                                        color: ColorUtils.warning600,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      tLocal(const {
-                                        'en':
-                                            'Move this student to a different user account based on the email below.',
-                                        'id':
-                                            'Pindahkan siswa ke akun wali lain berdasarkan email di bawah.',
-                                      }),
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        color: ColorUtils.slate600,
-                                      ),
-                                    ),
-                                    value: isChangeUserMode,
-                                    activeThumbColor: ColorUtils.warning600,
-                                    onChanged: (val) =>
-                                        setState(() => isChangeUserMode = val),
-                                  ),
-                                ),
-                              StudentDialogTextField(
-                                primaryColor: widget.primaryColor,
-                                controller: _parentNameController,
-                                label: tLocal(const {
-                                  'en': 'Guardian name',
-                                  'id': 'Nama wali',
-                                }),
-                                icon: Icons.family_restroom,
-                              ),
-                              StudentDialogTextField(
-                                primaryColor: widget.primaryColor,
-                                controller: _emailParentController,
-                                label: tLocal(const {
-                                  'en': 'Guardian email',
-                                  'id': 'Email wali',
-                                }),
-                                icon: Icons.email,
-                                keyboardType: TextInputType.emailAddress,
-                                hintText: 'wali@example.com',
-                              ),
-                              StudentDialogTextField(
-                                primaryColor: widget.primaryColor,
-                                controller: _phoneController,
-                                label: tLocal(const {
-                                  'en': 'Phone number',
-                                  'id': 'No. HP',
-                                }),
-                                icon: Icons.phone,
-                                keyboardType: TextInputType.phone,
-                              ),
-                            ],
-                          ),
+            // ── DATA POKOK ─────────────────────────────
+            AdminFormSection(
+              label: tLocal(const {'en': 'BASIC DATA', 'id': 'DATA POKOK'}),
+              children: [
+                StudentDialogTextField(
+                  primaryColor: widget.primaryColor,
+                  controller: _nameController,
+                  label: tLocal(const {
+                    'en': 'Full name',
+                    'id': 'Nama lengkap',
+                  }),
+                  icon: Icons.person,
+                ),
+                StudentDialogTextField(
+                  primaryColor: widget.primaryColor,
+                  controller: _nisController,
+                  label: 'NIS',
+                  icon: Icons.badge,
+                  keyboardType: TextInputType.number,
+                  // Inline error from a 422 duplicate-NIS
+                  // response (see student_form_save_mixin).
+                  // Clears as soon as the user edits.
+                  errorText: nisFieldError,
+                  onChanged: nisFieldError == null
+                      ? null
+                      : (_) => setState(() {
+                          nisFieldError = null;
+                        }),
+                ),
+                StudentDialogDropdown(
+                  primaryColor: widget.primaryColor,
+                  value: selectedClassId,
+                  label: tLocal(const {'en': 'Class', 'id': 'Kelas'}),
+                  icon: Icons.school,
+                  items: widget.classList
+                      .where((c) => c['id'] != null)
+                      .map(
+                        (c) => DropdownMenuItem<String>(
+                          value: c['id'].toString(),
+                          child: Text(c['name'] ?? 'Unknown Class'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => setState(() => selectedClassId = value),
+                ),
+              ],
+            ),
+            // ── DATA PRIBADI ───────────────────────────
+            AdminFormSection(
+              label: tLocal(const {
+                'en': 'PERSONAL DATA',
+                'id': 'DATA PRIBADI',
+              }),
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AdminFormFieldLabel(
+                      text: tLocal(const {
+                        'en': 'Gender',
+                        'id': 'Jenis kelamin',
+                      }),
+                    ),
+                    AdminFormChoiceChips<String>(
+                      value: selectedGender,
+                      onChanged: (v) => setState(() => selectedGender = v),
+                      choices: [
+                        // Backend canonical: `male` / `female`
+                        // (was `L` / `P`).
+                        AdminFormChoice(
+                          value: 'male',
+                          label: tLocal(const {
+                            'en': 'Male',
+                            'id': 'Laki-laki',
+                          }),
+                          icon: Icons.male_rounded,
+                        ),
+                        AdminFormChoice(
+                          value: 'female',
+                          label: tLocal(const {
+                            'en': 'Female',
+                            'id': 'Perempuan',
+                          }),
+                          icon: Icons.female_rounded,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                StudentDialogTextField(
+                  primaryColor: widget.primaryColor,
+                  controller: _birthDateController,
+                  label: tLocal(const {
+                    'en': 'Birth date',
+                    'id': 'Tanggal lahir',
+                  }),
+                  icon: Icons.cake,
+                  hintText: 'YYYY-MM-DD',
+                  readOnly: true,
+                  onTap: () async {
+                    final s = widget.student;
+                    final initialDate = s != null && s['date_of_birth'] != null
+                        ? DateTime.parse(s['date_of_birth'].toString())
+                        : DateTime.now();
+                    final picked = await showModernDatePicker(
+                      context: context,
+                      initialDate: initialDate,
+                      title: 'Pilih Tanggal Lahir',
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _birthDateController.text =
+                            '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                      });
+                    }
+                  },
+                ),
+                StudentDialogTextField(
+                  primaryColor: widget.primaryColor,
+                  controller: _addressController,
+                  label: tLocal(const {'en': 'Address', 'id': 'Alamat'}),
+                  icon: Icons.location_on,
+                  maxLines: 2,
+                ),
+              ],
+            ),
+            // ── WALI MURID ─────────────────────────────
+            AdminFormSection(
+              label: tLocal(const {'en': 'GUARDIAN', 'id': 'WALI MURID'}),
+              bottomGap: 4,
+              children: [
+                if (_isEdit)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: ColorUtils.warning600.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: ColorUtils.warning600.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
+                      dense: true,
+                      title: Text(
+                        tLocal(const {
+                          'en': 'Change guardian account',
+                          'id': 'Ganti akun wali',
+                        }),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: ColorUtils.warning600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        tLocal(const {
+                          'en':
+                              'Move this student to a different user account based on the email below.',
+                          'id':
+                              'Pindahkan siswa ke akun wali lain berdasarkan email di bawah.',
+                        }),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: ColorUtils.slate600,
+                        ),
+                      ),
+                      value: isChangeUserMode,
+                      activeThumbColor: ColorUtils.warning600,
+                      onChanged: (val) =>
+                          setState(() => isChangeUserMode = val),
+                    ),
+                  ),
+                StudentDialogTextField(
+                  primaryColor: widget.primaryColor,
+                  controller: _parentNameController,
+                  label: tLocal(const {
+                    'en': 'Guardian name',
+                    'id': 'Nama wali',
+                  }),
+                  icon: Icons.family_restroom,
+                ),
+                StudentDialogTextField(
+                  primaryColor: widget.primaryColor,
+                  controller: _emailParentController,
+                  label: tLocal(const {
+                    'en': 'Guardian email',
+                    'id': 'Email wali',
+                  }),
+                  icon: Icons.email,
+                  keyboardType: TextInputType.emailAddress,
+                  hintText: 'wali@example.com',
+                ),
+                StudentDialogTextField(
+                  primaryColor: widget.primaryColor,
+                  controller: _phoneController,
+                  label: tLocal(const {'en': 'Phone number', 'id': 'No. HP'}),
+                  icon: Icons.phone,
+                  keyboardType: TextInputType.phone,
+                ),
+              ],
+            ),
           ],
         ),
       ),

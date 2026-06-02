@@ -122,16 +122,17 @@ function fmtDeadlineShort(iso?: string | null): string {
 }
 
 // `kind` = mobile-app `jenis`. Returns 'tugas' for assignment-like
-// activities (tugas/pr/ulangan/raw 'tugas'/'assignment'/'homework')
-// and 'materi' for everything else. Matches the mobile filter
-// semantics so a "Materi" filter shows just material rows.
+// activities (assignment/homework/test + legacy raws like 'tugas'/
+// 'pr'/'ulangan') and 'materi' for everything else. Matches the
+// mobile filter semantics so a "Materi" filter shows just material
+// rows.
 function parentKind(a: ClassActivity): 'tugas' | 'materi' {
   const raw = (a.raw_type ?? '').toLowerCase().trim();
   if (raw === 'materi' || raw === 'material' || raw === 'info') return 'materi';
-  if (a.type === 'tugas' || a.type === 'pr' || a.type === 'ulangan') {
+  if (a.type === 'assignment' || a.type === 'homework' || a.type === 'test') {
     return 'tugas';
   }
-  // `lainnya` defaults to materi (no submission tracking).
+  // `other` defaults to materi (no submission tracking).
   return 'materi';
 }
 </script>

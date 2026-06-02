@@ -136,7 +136,7 @@ const yearOptions = computed(() => {
         >
           <option value="">— pilih —</option>
           <option v-for="pt in paymentTypes" :key="pt.id" :value="pt.id">
-            {{ pt.name }} ({{ pt.periode }})
+            {{ pt.name }} ({{ pt.period }})
           </option>
         </select>
       </div>
@@ -230,7 +230,7 @@ const yearOptions = computed(() => {
 
       <p v-if="selectedType" class="text-[11px] text-slate-500">
         <NavIcon name="info" :size="12" class="inline mr-1" />
-        Nominal per siswa: <strong>{{ selectedType.amount }}</strong> · Periode {{ selectedType.periode }}.
+        Nominal per siswa: <strong>{{ selectedType.amount }}</strong> · Periode {{ selectedType.period }}.
       </p>
 
       <div class="grid grid-cols-2 gap-2 pt-2">

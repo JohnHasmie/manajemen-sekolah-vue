@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LessonPlan {
 
- String get id; String get title; String get status;@JsonKey(name: 'subject_name') String? get subjectName;@JsonKey(name: 'class_name') String? get className;@JsonKey(name: 'teacher_name') String? get teacherName;@JsonKey(name: 'academic_year') String? get academicYear; String? get semester; String? get notes;@JsonKey(name: 'admin_notes') String? get adminNotes;@JsonKey(name: 'created_at') String? get createdAt;// Format axis (k13 / rpp_1_halaman / modul_ajar / file). Defaults
+ String get id; String get title; String get status;@JsonKey(name: 'subject_name') String? get subjectName;@JsonKey(name: 'class_name') String? get className;@JsonKey(name: 'teacher_name') String? get teacherName;@JsonKey(name: 'academic_year') String? get academicYear; String? get semester; String? get notes;@JsonKey(name: 'admin_note') String? get adminNotes;@JsonKey(name: 'created_at') String? get createdAt;// Format axis (k13 / rpp_1_halaman / modul_ajar / file). Defaults
 // to k13 for legacy rows where the column is empty.
  String get format;@JsonKey(name: 'ai_generated') bool get aiGenerated;// File upload metadata (only populated when format == 'file')
 @JsonKey(name: 'file_path') String? get filePath;@JsonKey(name: 'file_name') String? get fileName;@JsonKey(name: 'file_url') String? get fileUrl;@JsonKey(name: 'file_size') int? get fileSize;@JsonKey(name: 'file_mime') String? get fileMime;
@@ -51,7 +51,7 @@ abstract mixin class $LessonPlanCopyWith<$Res>  {
   factory $LessonPlanCopyWith(LessonPlan value, $Res Function(LessonPlan) _then) = _$LessonPlanCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String status,@JsonKey(name: 'subject_name') String? subjectName,@JsonKey(name: 'class_name') String? className,@JsonKey(name: 'teacher_name') String? teacherName,@JsonKey(name: 'academic_year') String? academicYear, String? semester, String? notes,@JsonKey(name: 'admin_notes') String? adminNotes,@JsonKey(name: 'created_at') String? createdAt, String format,@JsonKey(name: 'ai_generated') bool aiGenerated,@JsonKey(name: 'file_path') String? filePath,@JsonKey(name: 'file_name') String? fileName,@JsonKey(name: 'file_url') String? fileUrl,@JsonKey(name: 'file_size') int? fileSize,@JsonKey(name: 'file_mime') String? fileMime
+ String id, String title, String status,@JsonKey(name: 'subject_name') String? subjectName,@JsonKey(name: 'class_name') String? className,@JsonKey(name: 'teacher_name') String? teacherName,@JsonKey(name: 'academic_year') String? academicYear, String? semester, String? notes,@JsonKey(name: 'admin_note') String? adminNotes,@JsonKey(name: 'created_at') String? createdAt, String format,@JsonKey(name: 'ai_generated') bool aiGenerated,@JsonKey(name: 'file_path') String? filePath,@JsonKey(name: 'file_name') String? fileName,@JsonKey(name: 'file_url') String? fileUrl,@JsonKey(name: 'file_size') int? fileSize,@JsonKey(name: 'file_mime') String? fileMime
 });
 
 
@@ -173,7 +173,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String status, @JsonKey(name: 'subject_name')  String? subjectName, @JsonKey(name: 'class_name')  String? className, @JsonKey(name: 'teacher_name')  String? teacherName, @JsonKey(name: 'academic_year')  String? academicYear,  String? semester,  String? notes, @JsonKey(name: 'admin_notes')  String? adminNotes, @JsonKey(name: 'created_at')  String? createdAt,  String format, @JsonKey(name: 'ai_generated')  bool aiGenerated, @JsonKey(name: 'file_path')  String? filePath, @JsonKey(name: 'file_name')  String? fileName, @JsonKey(name: 'file_url')  String? fileUrl, @JsonKey(name: 'file_size')  int? fileSize, @JsonKey(name: 'file_mime')  String? fileMime)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String status, @JsonKey(name: 'subject_name')  String? subjectName, @JsonKey(name: 'class_name')  String? className, @JsonKey(name: 'teacher_name')  String? teacherName, @JsonKey(name: 'academic_year')  String? academicYear,  String? semester,  String? notes, @JsonKey(name: 'admin_note')  String? adminNotes, @JsonKey(name: 'created_at')  String? createdAt,  String format, @JsonKey(name: 'ai_generated')  bool aiGenerated, @JsonKey(name: 'file_path')  String? filePath, @JsonKey(name: 'file_name')  String? fileName, @JsonKey(name: 'file_url')  String? fileUrl, @JsonKey(name: 'file_size')  int? fileSize, @JsonKey(name: 'file_mime')  String? fileMime)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LessonPlan() when $default != null:
 return $default(_that.id,_that.title,_that.status,_that.subjectName,_that.className,_that.teacherName,_that.academicYear,_that.semester,_that.notes,_that.adminNotes,_that.createdAt,_that.format,_that.aiGenerated,_that.filePath,_that.fileName,_that.fileUrl,_that.fileSize,_that.fileMime);case _:
@@ -194,7 +194,7 @@ return $default(_that.id,_that.title,_that.status,_that.subjectName,_that.classN
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String status, @JsonKey(name: 'subject_name')  String? subjectName, @JsonKey(name: 'class_name')  String? className, @JsonKey(name: 'teacher_name')  String? teacherName, @JsonKey(name: 'academic_year')  String? academicYear,  String? semester,  String? notes, @JsonKey(name: 'admin_notes')  String? adminNotes, @JsonKey(name: 'created_at')  String? createdAt,  String format, @JsonKey(name: 'ai_generated')  bool aiGenerated, @JsonKey(name: 'file_path')  String? filePath, @JsonKey(name: 'file_name')  String? fileName, @JsonKey(name: 'file_url')  String? fileUrl, @JsonKey(name: 'file_size')  int? fileSize, @JsonKey(name: 'file_mime')  String? fileMime)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String status, @JsonKey(name: 'subject_name')  String? subjectName, @JsonKey(name: 'class_name')  String? className, @JsonKey(name: 'teacher_name')  String? teacherName, @JsonKey(name: 'academic_year')  String? academicYear,  String? semester,  String? notes, @JsonKey(name: 'admin_note')  String? adminNotes, @JsonKey(name: 'created_at')  String? createdAt,  String format, @JsonKey(name: 'ai_generated')  bool aiGenerated, @JsonKey(name: 'file_path')  String? filePath, @JsonKey(name: 'file_name')  String? fileName, @JsonKey(name: 'file_url')  String? fileUrl, @JsonKey(name: 'file_size')  int? fileSize, @JsonKey(name: 'file_mime')  String? fileMime)  $default,) {final _that = this;
 switch (_that) {
 case _LessonPlan():
 return $default(_that.id,_that.title,_that.status,_that.subjectName,_that.className,_that.teacherName,_that.academicYear,_that.semester,_that.notes,_that.adminNotes,_that.createdAt,_that.format,_that.aiGenerated,_that.filePath,_that.fileName,_that.fileUrl,_that.fileSize,_that.fileMime);case _:
@@ -214,7 +214,7 @@ return $default(_that.id,_that.title,_that.status,_that.subjectName,_that.classN
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String status, @JsonKey(name: 'subject_name')  String? subjectName, @JsonKey(name: 'class_name')  String? className, @JsonKey(name: 'teacher_name')  String? teacherName, @JsonKey(name: 'academic_year')  String? academicYear,  String? semester,  String? notes, @JsonKey(name: 'admin_notes')  String? adminNotes, @JsonKey(name: 'created_at')  String? createdAt,  String format, @JsonKey(name: 'ai_generated')  bool aiGenerated, @JsonKey(name: 'file_path')  String? filePath, @JsonKey(name: 'file_name')  String? fileName, @JsonKey(name: 'file_url')  String? fileUrl, @JsonKey(name: 'file_size')  int? fileSize, @JsonKey(name: 'file_mime')  String? fileMime)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String status, @JsonKey(name: 'subject_name')  String? subjectName, @JsonKey(name: 'class_name')  String? className, @JsonKey(name: 'teacher_name')  String? teacherName, @JsonKey(name: 'academic_year')  String? academicYear,  String? semester,  String? notes, @JsonKey(name: 'admin_note')  String? adminNotes, @JsonKey(name: 'created_at')  String? createdAt,  String format, @JsonKey(name: 'ai_generated')  bool aiGenerated, @JsonKey(name: 'file_path')  String? filePath, @JsonKey(name: 'file_name')  String? fileName, @JsonKey(name: 'file_url')  String? fileUrl, @JsonKey(name: 'file_size')  int? fileSize, @JsonKey(name: 'file_mime')  String? fileMime)?  $default,) {final _that = this;
 switch (_that) {
 case _LessonPlan() when $default != null:
 return $default(_that.id,_that.title,_that.status,_that.subjectName,_that.className,_that.teacherName,_that.academicYear,_that.semester,_that.notes,_that.adminNotes,_that.createdAt,_that.format,_that.aiGenerated,_that.filePath,_that.fileName,_that.fileUrl,_that.fileSize,_that.fileMime);case _:
@@ -229,7 +229,7 @@ return $default(_that.id,_that.title,_that.status,_that.subjectName,_that.classN
 @JsonSerializable()
 
 class _LessonPlan extends LessonPlan {
-  const _LessonPlan({required this.id, required this.title, this.status = '', @JsonKey(name: 'subject_name') this.subjectName, @JsonKey(name: 'class_name') this.className, @JsonKey(name: 'teacher_name') this.teacherName, @JsonKey(name: 'academic_year') this.academicYear, this.semester, this.notes, @JsonKey(name: 'admin_notes') this.adminNotes, @JsonKey(name: 'created_at') this.createdAt, this.format = 'k13', @JsonKey(name: 'ai_generated') this.aiGenerated = false, @JsonKey(name: 'file_path') this.filePath, @JsonKey(name: 'file_name') this.fileName, @JsonKey(name: 'file_url') this.fileUrl, @JsonKey(name: 'file_size') this.fileSize, @JsonKey(name: 'file_mime') this.fileMime}): super._();
+  const _LessonPlan({required this.id, required this.title, this.status = '', @JsonKey(name: 'subject_name') this.subjectName, @JsonKey(name: 'class_name') this.className, @JsonKey(name: 'teacher_name') this.teacherName, @JsonKey(name: 'academic_year') this.academicYear, this.semester, this.notes, @JsonKey(name: 'admin_note') this.adminNotes, @JsonKey(name: 'created_at') this.createdAt, this.format = 'k13', @JsonKey(name: 'ai_generated') this.aiGenerated = false, @JsonKey(name: 'file_path') this.filePath, @JsonKey(name: 'file_name') this.fileName, @JsonKey(name: 'file_url') this.fileUrl, @JsonKey(name: 'file_size') this.fileSize, @JsonKey(name: 'file_mime') this.fileMime}): super._();
   factory _LessonPlan.fromJson(Map<String, dynamic> json) => _$LessonPlanFromJson(json);
 
 @override final  String id;
@@ -241,7 +241,7 @@ class _LessonPlan extends LessonPlan {
 @override@JsonKey(name: 'academic_year') final  String? academicYear;
 @override final  String? semester;
 @override final  String? notes;
-@override@JsonKey(name: 'admin_notes') final  String? adminNotes;
+@override@JsonKey(name: 'admin_note') final  String? adminNotes;
 @override@JsonKey(name: 'created_at') final  String? createdAt;
 // Format axis (k13 / rpp_1_halaman / modul_ajar / file). Defaults
 // to k13 for legacy rows where the column is empty.
@@ -287,7 +287,7 @@ abstract mixin class _$LessonPlanCopyWith<$Res> implements $LessonPlanCopyWith<$
   factory _$LessonPlanCopyWith(_LessonPlan value, $Res Function(_LessonPlan) _then) = __$LessonPlanCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String status,@JsonKey(name: 'subject_name') String? subjectName,@JsonKey(name: 'class_name') String? className,@JsonKey(name: 'teacher_name') String? teacherName,@JsonKey(name: 'academic_year') String? academicYear, String? semester, String? notes,@JsonKey(name: 'admin_notes') String? adminNotes,@JsonKey(name: 'created_at') String? createdAt, String format,@JsonKey(name: 'ai_generated') bool aiGenerated,@JsonKey(name: 'file_path') String? filePath,@JsonKey(name: 'file_name') String? fileName,@JsonKey(name: 'file_url') String? fileUrl,@JsonKey(name: 'file_size') int? fileSize,@JsonKey(name: 'file_mime') String? fileMime
+ String id, String title, String status,@JsonKey(name: 'subject_name') String? subjectName,@JsonKey(name: 'class_name') String? className,@JsonKey(name: 'teacher_name') String? teacherName,@JsonKey(name: 'academic_year') String? academicYear, String? semester, String? notes,@JsonKey(name: 'admin_note') String? adminNotes,@JsonKey(name: 'created_at') String? createdAt, String format,@JsonKey(name: 'ai_generated') bool aiGenerated,@JsonKey(name: 'file_path') String? filePath,@JsonKey(name: 'file_name') String? fileName,@JsonKey(name: 'file_url') String? fileUrl,@JsonKey(name: 'file_size') int? fileSize,@JsonKey(name: 'file_mime') String? fileMime
 });
 
 

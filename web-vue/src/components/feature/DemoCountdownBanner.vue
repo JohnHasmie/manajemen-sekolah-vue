@@ -24,7 +24,8 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 const SESSION_KEY = 'demo_banner_dismissed_v1';
 
 interface BannerData {
-  school_name: string;
+  /** Canonical column: `schools.name` (was `school_name`). */
+  name: string;
   expires_at: string | null;
   seconds_remaining: number;
   severity: 'normal' | 'warning' | 'danger';
@@ -61,7 +62,7 @@ async function refresh() {
     return;
   }
   data.value = {
-    school_name: info.school_name,
+    name: info.name,
     expires_at: info.expires_at,
     seconds_remaining: info.seconds_remaining,
     severity: info.severity,
@@ -168,7 +169,7 @@ function handleUpgrade() {
         </div>
         <div class="flex-1 min-w-0">
           <h3 class="text-[15px] font-bold text-slate-900">Sekolah demo</h3>
-          <p class="text-[11px] text-slate-500 truncate">{{ data.school_name }}</p>
+          <p class="text-[11px] text-slate-500 truncate">{{ data.name }}</p>
         </div>
       </div>
 

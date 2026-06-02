@@ -24,8 +24,18 @@ class AnnouncementDetailSheet extends StatelessWidget {
   // ── Date helpers ──────────────────────────────────────────────────
 
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
   ];
 
   String _prettyDate(String? raw) {
@@ -71,7 +81,11 @@ class AnnouncementDetailSheet extends StatelessWidget {
             .map((m) => Map<String, dynamic>.from(m))
             .toList() ??
         const <Map<String, dynamic>>[];
+    // Backend canonical priorities: `low` / `normal` / `high` / `urgent`.
+    // Legacy: `biasa` → normal, `penting` → high.
     final isImportant = [
+      'high',
+      'urgent',
       'penting',
       'important',
     ].contains((announcementData['priority'] ?? '').toString().toLowerCase());
@@ -83,7 +97,10 @@ class AnnouncementDetailSheet extends StatelessWidget {
             : null) ??
         '-';
     final filePath =
-        (announcementData['file_path'] ?? announcementData['attachment_url'] ?? '').toString();
+        (announcementData['file_path'] ??
+                announcementData['attachment_url'] ??
+                '')
+            .toString();
     final fileName =
         announcementData['attachment_name']?.toString() ??
         announcementData['file_name']?.toString() ??
@@ -113,7 +130,11 @@ class AnnouncementDetailSheet extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             content.isNotEmpty ? content : 'Tidak ada isi.',
-            style: TextStyle(fontSize: 13.5, color: ColorUtils.slate700, height: 1.6),
+            style: TextStyle(
+              fontSize: 13.5,
+              color: ColorUtils.slate700,
+              height: 1.6,
+            ),
           ),
 
           // Event hero
@@ -143,7 +164,11 @@ class AnnouncementDetailSheet extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.description_outlined, size: 16, color: primaryColor),
+                  Icon(
+                    Icons.description_outlined,
+                    size: 16,
+                    color: primaryColor,
+                  ),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
@@ -196,7 +221,9 @@ class AnnouncementDetailSheet extends StatelessWidget {
               _InfoRow(
                 icon: Icons.access_time_rounded,
                 label: 'Dibuat pada',
-                value: _prettyDateTime(announcementData['created_at']?.toString()),
+                value: _prettyDateTime(
+                  announcementData['created_at']?.toString(),
+                ),
                 color: primaryColor,
               ),
             ],

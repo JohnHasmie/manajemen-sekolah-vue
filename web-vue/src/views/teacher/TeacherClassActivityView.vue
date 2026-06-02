@@ -263,7 +263,7 @@ const kpiCards = computed<KpiCard[]>(() => {
     serverKpi.value?.pending_action ??
     items.value.filter(
       (i) =>
-        (i.type === 'tugas' || i.type === 'ulangan') &&
+        (i.type === 'assignment' || i.type === 'test') &&
         i.submissions.total_students > 0 &&
         i.submissions.pending > 0,
     ).length;

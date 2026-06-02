@@ -153,8 +153,18 @@ class _AdminAnnouncementCalendarScreenState
 
   static String _formatMonthYear(DateTime d) {
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${months[(d.month - 1).clamp(0, 11)]} ${d.year}';
   }
@@ -232,10 +242,12 @@ class _MonthGrid extends StatelessWidget {
     if (day < 1 || day > daysInMonth) {
       return const SizedBox(height: 38);
     }
-    final isToday = today.year == month.year &&
+    final isToday =
+        today.year == month.year &&
         today.month == month.month &&
         today.day == day;
-    final isSelected = selected.year == month.year &&
+    final isSelected =
+        selected.year == month.year &&
         selected.month == month.month &&
         selected.day == day;
     final items = itemsByDay[day] ?? const [];
@@ -249,7 +261,9 @@ class _MonthGrid extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? ColorUtils.brandCobalt
-              : (isToday ? ColorUtils.brandCobalt.withValues(alpha: 0.08) : null),
+              : (isToday
+                    ? ColorUtils.brandCobalt.withValues(alpha: 0.08)
+                    : null),
           borderRadius: BorderRadius.circular(8),
           border: isToday && !isSelected
               ? Border.all(color: ColorUtils.brandCobalt, width: 1)
@@ -283,9 +297,7 @@ class _MonthGrid extends StatelessWidget {
                           height: 4,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: isSelected
-                                ? Colors.white
-                                : _dotColor(item),
+                            color: isSelected ? Colors.white : _dotColor(item),
                           ),
                         ),
                       ),
@@ -300,7 +312,11 @@ class _MonthGrid extends StatelessWidget {
 
   static Color _dotColor(Map<String, dynamic> item) {
     final priority = (item['priority'] ?? '').toString().toLowerCase();
-    if (priority == 'penting' || priority == 'important') {
+    // Backend canonical: `high` / `urgent` (was `penting` / `important`).
+    if (priority == 'high' ||
+        priority == 'urgent' ||
+        priority == 'penting' ||
+        priority == 'important') {
       return const Color(0xFFD97706); // amber-600
     }
     return const Color(0xFF1D4ED8); // blue-700
@@ -436,14 +452,30 @@ class _DayListSection extends StatelessWidget {
 
   static String _formatLongDay(DateTime d) {
     const days = [
-      'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu',
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
     ];
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${days[(d.weekday - 1).clamp(0, 6)].toUpperCase()}, '
-        '${d.day} ${months[(d.month - 1).clamp(0, 11)]}'
+            '${d.day} ${months[(d.month - 1).clamp(0, 11)]}'
         .toUpperCase();
   }
 }
@@ -460,11 +492,7 @@ class _EmptyState extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.event_busy_rounded,
-            size: 28,
-            color: ColorUtils.slate400,
-          ),
+          Icon(Icons.event_busy_rounded, size: 28, color: ColorUtils.slate400),
           const SizedBox(height: 6),
           Text(
             'Tidak ada acara di tanggal ini',

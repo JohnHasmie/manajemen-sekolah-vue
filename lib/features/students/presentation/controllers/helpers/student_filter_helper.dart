@@ -126,7 +126,8 @@ class StudentFilterHelper {
     LanguageProvider lang,
     VoidCallback onRemove,
   ) {
-    final genderText = selectedGender == 'L'
+    // Backend canonical: `male` / `female`. Legacy: `L` / `P`.
+    final genderText = (selectedGender == 'male' || selectedGender == 'L')
         ? lang.getTranslatedText(const {'en': 'Male', 'id': 'Laki-laki'})
         : lang.getTranslatedText(const {'en': 'Female', 'id': 'Perempuan'});
     final genderLabel = lang.getTranslatedText(const {
@@ -157,18 +158,21 @@ class StudentFilterHelper {
   }
 
   /// Returns translated gender display text for a gender code.
-  /// Accepts 'M'/'L' (male), 'F'/'P' (female), or returns 'Unknown'.
+  /// Backend canonical: `male` / `female` (was `L` / `P`).
+  /// Accepts legacy 'M'/'L' (male), 'F'/'P' (female), or returns 'Unknown'.
   static String getGenderText(
     String? gender,
     LanguageProvider languageProvider,
   ) {
     switch (gender) {
+      case 'male':
       case 'M':
       case 'L':
         return languageProvider.getTranslatedText(const {
           'en': 'Male',
           'id': 'Laki-laki',
         });
+      case 'female':
       case 'F':
       case 'P':
         return languageProvider.getTranslatedText(const {

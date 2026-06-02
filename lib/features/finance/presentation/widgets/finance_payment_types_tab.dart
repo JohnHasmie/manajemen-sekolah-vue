@@ -186,7 +186,9 @@ class _PaymentTypeRow extends StatelessWidget {
     final isActive = status == 'active';
     final name = (data['name'] ?? '-').toString();
     final amount = formatCurrency(data['amount']);
-    final periodRaw = (data['periode'] ?? data['type'])?.toString();
+    // Backend rename: `payment_types.periode` → `payment_types.period`.
+    final periodRaw = (data['period'] ?? data['periode'] ?? data['type'])
+        ?.toString();
     final periodLabel = getTranslatedPeriod(periodRaw);
 
     final edgeColor = isActive ? const Color(0xFF10B981) : ColorUtils.slate300;

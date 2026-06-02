@@ -53,8 +53,10 @@ export type DemoRole = 'admin' | 'teacher' | 'parent';
 
 export interface DemoSchoolPayload {
   name: string;
-  jenjang: Jenjang;
-  kota: string | null;
+  /** Canonical English column: `schools.education_level`. */
+  education_level: Jenjang;
+  /** Canonical English column: `schools.city`. */
+  city: string | null;
   npsn: string | null;
   academic_year_label: string;
 }
@@ -320,10 +322,11 @@ export const SCENARIO_DEFINITIONS: ReadonlyArray<{
 ];
 
 /**
- * Per-jenjang suggested mapel — mirrors backend JenjangTemplate.
- * Used to pre-fill the wizard's Subjects step when the user picks a
- * jenjang in step 2. Backend re-validates against the same template
- * so a tampered FE can't seed e.g. "ipa" for a TK school.
+ * Per-education-level suggested mapel — mirrors backend
+ * EducationLevelTemplate. Used to pre-fill the wizard's Subjects step
+ * when the user picks an education_level in step 2. Backend
+ * re-validates against the same template so a tampered FE can't seed
+ * e.g. "ipa" for a TK school.
  */
 export const SUBJECTS_TEMPLATE: Record<Jenjang, string[]> = {
   TK: [
@@ -376,8 +379,8 @@ export const SUBJECTS_TEMPLATE: Record<Jenjang, string[]> = {
   ],
 };
 
-export function defaultSubjectsFor(jenjang: Jenjang): string[] {
-  return [...(SUBJECTS_TEMPLATE[jenjang] ?? SUBJECTS_TEMPLATE.SMP)];
+export function defaultSubjectsFor(educationLevel: Jenjang): string[] {
+  return [...(SUBJECTS_TEMPLATE[educationLevel] ?? SUBJECTS_TEMPLATE.SMP)];
 }
 
 /* ─── Search step types ─── */
@@ -388,10 +391,14 @@ export interface SchoolSearchHit {
   kind: SearchKind;
   id: string | null;
   name: string;
-  jenjang: string | null;
-  kota: string | null;
-  provinsi?: string | null;
-  alamat?: string | null;
+  /** Canonical column: schools.education_level / npsn_registry.education_level */
+  education_level: string | null;
+  /** Canonical column: schools.city / npsn_registry.city */
+  city: string | null;
+  /** npsn_registry.province (only present for `registry` hits). */
+  province?: string | null;
+  /** npsn_registry.address (only present for `registry` hits). */
+  address?: string | null;
   npsn: string | null;
   is_demo: boolean;
   demo_owner_user_id?: string | null;
@@ -440,8 +447,10 @@ export interface DemoSummary {
 export interface DemoProvisionResponse {
   school: {
     id: string;
-    school_name: string;
-    jenjang: string;
+    /** Canonical column: schools.name (was `school_name`). */
+    name: string;
+    /** Canonical column: schools.education_level (was `jenjang`). */
+    education_level: string;
     is_demo: boolean;
     demo_expires_at: string | null;
   };
@@ -457,8 +466,8 @@ export function defaultWizardPayload(): DemoWizardPayload {
   return {
     school: {
       name: '',
-      jenjang: 'SMP',
-      kota: null,
+      education_level: 'SMP',
+      city: null,
       npsn: null,
       academic_year_label: `${currentYear} / ${nextYear}`,
     },

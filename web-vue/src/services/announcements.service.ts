@@ -49,10 +49,10 @@ export const AnnouncementService = {
   /**
    * Paginated `/announcement` listing.
    *
-   * Backend filter keys (Flutter parity):
-   *   priority    → 'penting' | 'biasa'
-   *   status      → 'draft' | 'terjadwal' | 'terkirim' | 'kedaluwarsa' | 'archived'
-   *   role_target → 'all' | 'teacher' | 'student' | 'parent'   (admin only)
+   * Backend filter keys (canonical English post-rename):
+   *   priority    → 'low' | 'normal' | 'high' | 'urgent'
+   *   status      → 'draft' | 'scheduled' | 'published' | 'expired' | 'archived'
+   *   role_target → 'all' | 'teacher' | 'student' | 'parent' | 'admin'
    *   search      → free-text
    */
   async list(params: ListParams = {}): Promise<ListResult> {
@@ -108,10 +108,14 @@ export const AnnouncementService = {
         status_options: map(body.status_options),
       };
     } catch {
+      // Canonical English values match the backend post-rename;
+      // labels stay Indonesian.
       return {
         priority_options: [
-          { value: 'penting', label: 'Penting' },
-          { value: 'biasa', label: 'Biasa' },
+          { value: 'urgent', label: 'Mendesak' },
+          { value: 'high', label: 'Penting' },
+          { value: 'normal', label: 'Biasa' },
+          { value: 'low', label: 'Rendah' },
         ],
         target_options: [
           { value: 'all', label: 'Semua' },
@@ -121,9 +125,9 @@ export const AnnouncementService = {
         ],
         status_options: [
           { value: 'draft', label: 'Draft' },
-          { value: 'terjadwal', label: 'Terjadwal' },
-          { value: 'terkirim', label: 'Terkirim' },
-          { value: 'kedaluwarsa', label: 'Kedaluwarsa' },
+          { value: 'scheduled', label: 'Terjadwal' },
+          { value: 'published', label: 'Terkirim' },
+          { value: 'expired', label: 'Kedaluwarsa' },
           { value: 'archived', label: 'Arsip' },
         ],
       };
@@ -133,26 +137,43 @@ export const AnnouncementService = {
   async create(payload: {
     title: string;
     body: string;
-    category: AnnouncementCategory;
+    /** Backend column is `announcements.type` (was `category`). */
+    type?: AnnouncementCategory;
+    /** Legacy alias — services map either onto `type` for the backend. */
+    category?: AnnouncementCategory;
     priority?: AnnouncementPriority;
+    /** Lifecycle status — draft/scheduled/published. */
+    status?: AnnouncementStatus;
     audience: AnnouncementAudience;
+    role_target?: string;
     target_ids?: string[];
     is_pinned?: boolean;
     scheduled_at?: string | null;
     expires_at?: string | null;
   }): Promise<Announcement> {
-    const res = await api.post('/announcement', payload);
-    const body = res.data?.data ?? res.data ?? {};
-    return announcementFromJson(body as Record<string, unknown>);
+    // The backend stores `type` (category-only) and `status` (lifecycle)
+    // as two separate columns post-rename. Map legacy `category` →
+    // `type` so older callers keep working.
+    const body: Record<string, unknown> = { ...payload };
+    if (payload.category && body.type === undefined) body.type = payload.category;
+    delete body.category;
+    const res = await api.post('/announcement', body);
+    const respBody = res.data?.data ?? res.data ?? {};
+    return announcementFromJson(respBody as Record<string, unknown>);
   },
 
   async update(
     id: string,
     payload: Partial<Announcement>,
   ): Promise<Announcement> {
-    const res = await api.put(`/announcement/${id}`, payload);
-    const body = res.data?.data ?? res.data ?? {};
-    return announcementFromJson(body as Record<string, unknown>);
+    // Same mapping as `create`: backend column is `type`, but legacy
+    // callers still set `category`. Forward whichever is present.
+    const body: Record<string, unknown> = { ...payload };
+    if (payload.category && body.type === undefined) body.type = payload.category;
+    delete body.category;
+    const res = await api.put(`/announcement/${id}`, body);
+    const respBody = res.data?.data ?? res.data ?? {};
+    return announcementFromJson(respBody as Record<string, unknown>);
   },
 
   async remove(id: string): Promise<void> {

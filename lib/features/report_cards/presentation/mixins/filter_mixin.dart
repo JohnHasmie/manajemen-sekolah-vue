@@ -29,7 +29,8 @@ mixin FilterMixin on ConsumerState<ReportCardOverviewPage> {
     }
     if (filterStatus != null) {
       list = list.where((c) {
-        final total = c['total_raports'] ?? 0;
+        // Backend rename: `total_raports` → `total_report_cards`.
+        final total = c['total_report_cards'] ?? c['total_raports'] ?? 0;
         final draft = c['draft_count'] ?? 0;
         final studentCount = c['student_count'] ?? 0;
         switch (filterStatus) {

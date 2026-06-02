@@ -22,7 +22,7 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 /// Flutter saves and opens the binary response. Uses query parameters (GET) rather
 /// than POST body since the data is just IDs/filters.
 class ExcelReportCardService {
-  static String get baseUrl => '/raports';
+  static String get baseUrl => '/report-cards';
 
   /// Export an entire class's raport data to Excel via GET `/raports/export`.
   /// [classId], [academicYearId], [semesterId] filter the data server-side.

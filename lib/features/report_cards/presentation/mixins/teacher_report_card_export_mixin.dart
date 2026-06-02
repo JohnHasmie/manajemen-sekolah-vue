@@ -43,7 +43,11 @@ mixin TeacherReportCardExportMixin on ConsumerState<ReportCardScreen> {
   }
 
   Future<void> downloadStudentPdf(Map<String, dynamic> student) async {
-    final status = student['raport_status'] ?? 'Belum ada';
+    // Backend rename: `raport_status` → `report_card_status`.
+    final status =
+        student['report_card_status'] ??
+        student['raport_status'] ??
+        'Belum ada';
     if (status.toLowerCase() != 'final' &&
         status.toLowerCase() != 'published') {
       SnackBarUtils.showInfo(

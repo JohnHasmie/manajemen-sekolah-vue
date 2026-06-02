@@ -64,15 +64,25 @@ mixin FinanceFilterMixin on ConsumerState<FinanceScreen> {
     }
 
     if (selectedPeriodFilter != null) {
-      final periodText = selectedPeriodFilter == 'bulanan'
+      // Backend canonical: `monthly` / `yearly` / `once`. Keep
+      // legacy Indonesian aliases for back-compat.
+      final p = selectedPeriodFilter;
+      final periodText = (p == 'monthly' || p == 'bulanan')
           ? languageProvider.getTranslatedText({
               'en': 'Monthly',
               'id': 'Bulanan',
             })
-          : languageProvider.getTranslatedText({
+          : (p == 'yearly' || p == 'tahunan')
+          ? languageProvider.getTranslatedText({
               'en': 'Yearly',
               'id': 'Tahunan',
-            });
+            })
+          : (p == 'once' || p == 'sekali')
+          ? languageProvider.getTranslatedText({
+              'en': 'Once',
+              'id': 'Sekali bayar',
+            })
+          : p;
       final periodLabel = languageProvider.getTranslatedText({
         'en': 'Period',
         'id': 'Periode',

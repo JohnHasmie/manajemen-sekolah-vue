@@ -99,13 +99,14 @@ function billGroupFromJson(raw: any): BillGroup {
 }
 
 function paymentTypeFromJson(raw: any): PaymentType {
+  // Canonical column is `payment_types.period` (was `periode`).
   return {
     id: asStr(raw.id),
     school_id: raw.school_id ?? undefined,
     name: asStr(raw.name),
     description: raw.description ?? null,
     amount: asNum(raw.amount),
-    periode: asStr(raw.periode ?? 'sekali'),
+    period: asStr(raw.period ?? raw.periode ?? 'once'),
     status: asStr(raw.status ?? 'active'),
     goal: raw.goal ?? null,
     start_date: raw.start_date ?? null,
@@ -427,7 +428,7 @@ export const FinanceService = {
   },
 
   // ── Jenis pembayaran ─────────────────────────────────────────────
-  async listPaymentTypes(filters: { status?: 'active' | 'inactive'; periode?: string; search?: string } = {}): Promise<PaymentType[]> {
+  async listPaymentTypes(filters: { status?: 'active' | 'inactive'; period?: string; search?: string } = {}): Promise<PaymentType[]> {
     try {
       const params = sanitize({ per_page: 100, ...filters });
       const res = await api.get('/payment-types', { params });

@@ -390,8 +390,11 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
 
     // Gender display
     final rawGender = (teacher['gender'] ?? '').toString();
+    // Backend canonical: `male` / `female` (was `L` / `P`).
     final genderDisplay = switch (rawGender) {
+      'male' ||
       'L' => lang.getTranslatedText(const {'en': 'Male', 'id': 'Laki-laki'}),
+      'female' ||
       'P' => lang.getTranslatedText(const {'en': 'Female', 'id': 'Perempuan'}),
       _ => '-',
     };
@@ -400,10 +403,16 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
     final rawStatus = (teacher['employment_status'] ?? '')
         .toString()
         .toLowerCase();
+    // Backend canonical: `permanent` / `civil_servant` (was `tetap`
+    // / `PNS`). Legacy aliases remain for back-compat.
     final statusDisplay = switch (rawStatus) {
-      'permanent' || 'tetap' => lang.getTranslatedText(const {
+      'permanent' || 'tetap' || 'active' => lang.getTranslatedText(const {
         'en': 'Permanent',
         'id': 'Tetap',
+      }),
+      'civil_servant' || 'pns' => lang.getTranslatedText(const {
+        'en': 'Civil Servant',
+        'id': 'PNS',
       }),
       'contract' || 'kontrak' || 'tidak_tetap' => lang.getTranslatedText(const {
         'en': 'Contract',

@@ -44,7 +44,7 @@ const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
 // Filters
 type StatusFilter = 'all' | 'unpaid' | 'paid' | 'pending';
-type PeriodeFilter = 'all' | 'bulanan' | 'tahunan' | 'sekali';
+type PeriodeFilter = 'all' | 'monthly' | 'yearly' | 'once';
 
 const statusFilter = ref<StatusFilter>('all');
 const periodeFilter = ref<PeriodeFilter>('all');
@@ -59,11 +59,12 @@ const STATUS_OPTS: { key: StatusFilter; label: string }[] = [
   { key: 'paid', label: 'Lunas' },
 ];
 
+// Backend `payment_types.period` values are canonical English.
 const PERIODE_OPTS: { key: PeriodeFilter; label: string }[] = [
   { key: 'all', label: 'Semua periode' },
-  { key: 'bulanan', label: 'Bulanan' },
-  { key: 'tahunan', label: 'Tahunan' },
-  { key: 'sekali', label: 'Sekali bayar' },
+  { key: 'monthly', label: 'Bulanan' },
+  { key: 'yearly', label: 'Tahunan' },
+  { key: 'once', label: 'Sekali bayar' },
 ];
 
 const childOptions = computed(() =>
@@ -85,7 +86,7 @@ async function load() {
     if (statusFilter.value === 'unpaid') filters.status = 'unpaid';
     else if (statusFilter.value === 'paid') filters.status = 'paid';
     else if (statusFilter.value === 'pending') filters.status = 'pending';
-    if (periodeFilter.value !== 'all') filters.periode = periodeFilter.value;
+    if (periodeFilter.value !== 'all') filters.period = periodeFilter.value;
     if (search.value.trim()) filters.search = search.value.trim();
     bills.value = await BillingService.listParent(filters);
   } catch (e) {

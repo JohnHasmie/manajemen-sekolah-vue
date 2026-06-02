@@ -130,7 +130,9 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet>
           : '',
     );
     _periodController = TextEditingController(
-      text: pt?['periode'] ?? 'bulanan',
+      // Backend rename: `payment_types.periode` → `payment_types.period`,
+      // canonical values: `monthly` / `yearly` / `once`.
+      text: pt?['period'] ?? pt?['periode'] ?? 'monthly',
     );
     _goalData = pt != null ? parseGoal(pt['goal']) : null;
     _status = (pt?['status'] == 'inactive') ? 'inactive' : 'active';

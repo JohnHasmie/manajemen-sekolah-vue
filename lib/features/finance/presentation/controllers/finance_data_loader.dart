@@ -94,18 +94,29 @@ class FinanceDataLoader {
           // Keep status as backend values ('active' / 'inactive').
           // UI widgets handle display translation to 'Aktif' / 'Nonaktif'.
 
-          // Normalise period → lowercase Indonesian
-          final period = newItem['periode']?.toString().toUpperCase();
-          if (period == 'MONTHLY') {
-            newItem['periode'] = 'bulanan';
-          } else if (period == 'YEARLY') {
-            newItem['periode'] = 'tahunan';
-          } else if (period == 'SEMESTER') {
-            newItem['periode'] = 'semester';
-          } else if (period == 'ONCE') {
-            newItem['periode'] = 'sekali bayar';
-          } else if (newItem['periode'] != null) {
-            newItem['periode'] = newItem['periode'].toString().toLowerCase();
+          // Backend rename: `payment_types.periode` → `payment_types.period`.
+          // Canonical values: `monthly` / `yearly` / `once`.
+          // Mirror the new value onto the legacy key so any older
+          // UI code that still reads `periode` keeps rendering.
+          final rawPeriod = newItem['period'] ?? newItem['periode'];
+          final periodUpper = rawPeriod?.toString().toUpperCase();
+          String? normalisedPeriod;
+          if (periodUpper == 'MONTHLY' || periodUpper == 'BULANAN') {
+            normalisedPeriod = 'monthly';
+          } else if (periodUpper == 'YEARLY' || periodUpper == 'TAHUNAN') {
+            normalisedPeriod = 'yearly';
+          } else if (periodUpper == 'SEMESTER') {
+            normalisedPeriod = 'semester';
+          } else if (periodUpper == 'ONCE' ||
+              periodUpper == 'SEKALI BAYAR' ||
+              periodUpper == 'SEKALI') {
+            normalisedPeriod = 'once';
+          } else if (rawPeriod != null) {
+            normalisedPeriod = rawPeriod.toString().toLowerCase();
+          }
+          if (normalisedPeriod != null) {
+            newItem['period'] = normalisedPeriod;
+            newItem['periode'] = normalisedPeriod;
           }
 
           return newItem;

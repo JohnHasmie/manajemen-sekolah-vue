@@ -86,7 +86,7 @@ const dirtyCount = computed(() => dirtyRows.value.length);
 // for non-scored types but rendering it for "lainnya" / "pr" would
 // confuse teachers, so we hide proactively.
 const showScoreColumn = computed(
-  () => props.activity.type === 'tugas' || props.activity.type === 'ulangan',
+  () => props.activity.type === 'assignment' || props.activity.type === 'test',
 );
 
 const statusCounts = computed(() => {

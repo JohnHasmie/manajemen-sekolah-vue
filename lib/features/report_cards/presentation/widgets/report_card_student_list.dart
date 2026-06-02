@@ -77,7 +77,12 @@ class _ReportCardStudentListState extends State<ReportCardStudentList>
     final filled = widget.students.where((s) => s['has_raport'] == true).length;
     final drafts = widget.students
         .where(
-          (s) => (s['raport_status'] ?? '').toString().toLowerCase() == 'draft',
+          // Backend rename: `raport_status` → `report_card_status`.
+          (s) =>
+              (s['report_card_status'] ?? s['raport_status'] ?? '')
+                  .toString()
+                  .toLowerCase() ==
+              'draft',
         )
         .length;
     final notFilled = total - filled;

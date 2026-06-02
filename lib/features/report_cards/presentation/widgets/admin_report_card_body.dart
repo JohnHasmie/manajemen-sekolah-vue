@@ -549,7 +549,10 @@ class _StudentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Student.fromJson(data);
-    final status = (data['raport_status'] ?? 'draft').toString();
+    // Backend rename: `raport_status` → `report_card_status`.
+    final status =
+        (data['report_card_status'] ?? data['raport_status'] ?? 'draft')
+            .toString();
 
     final Color edgeColor;
     final Color pillBg;

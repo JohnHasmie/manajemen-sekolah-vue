@@ -115,10 +115,14 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
     final id = paymentType['id']?.toString();
     if (id == null || id.isEmpty) return;
 
-    // Month picker — only for activating a Bulanan jenis.
+    // Month picker — only for activating a monthly jenis.
+    // Backend rename: `payment_types.periode` → `payment_types.period`,
+    // values `bulanan` → `monthly`.
     String? selectedMonth;
-    final periode = (paymentType['periode'] ?? '').toString().toLowerCase();
-    if (active && periode == 'bulanan') {
+    final periode = (paymentType['period'] ?? paymentType['periode'] ?? '')
+        .toString()
+        .toLowerCase();
+    if (active && (periode == 'monthly' || periode == 'bulanan')) {
       final name = (paymentType['name'] ?? 'Jenis pembayaran').toString();
       selectedMonth = await showActivateMonthPickerSheet(
         context: context,

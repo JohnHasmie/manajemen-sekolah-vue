@@ -23,7 +23,7 @@ class ApiReportCardService {
     if (semesterId != null) params['semester_id'] = semesterId;
 
     final response = await dioClient.get(
-      '/raports/teacher-summary',
+      '/report-cards/teacher-summary',
       queryParameters: params,
     );
     final result = response.data;
@@ -41,7 +41,7 @@ class ApiReportCardService {
     required String semesterId,
   }) async {
     final response = await dioClient.get(
-      '/raports',
+      '/report-cards',
       queryParameters: {
         'class_id': classId,
         'academic_year_id': academicYearId,
@@ -64,7 +64,7 @@ class ApiReportCardService {
     required String semesterId,
   }) async {
     final response = await dioClient.get(
-      '/raport/initial-data',
+      '/report-card/initial-data',
       queryParameters: {
         'student_class_id': studentClassId,
         'academic_year_id': academicYearId,
@@ -88,9 +88,9 @@ class ApiReportCardService {
     required String academicYearId,
     required String semesterId,
   }) async {
-    // Note: The backend route is /raport/show but we use show method in controller
+    // Note: The backend route is /report-card/show but we use show method in controller
     final response = await dioClient.get(
-      '/raport/show',
+      '/report-card/show',
       queryParameters: {
         'student_class_id': studentClassId,
         'academic_year_id': academicYearId,
@@ -112,7 +112,7 @@ class ApiReportCardService {
   Future<Map<String, dynamic>?> saveReportCard(
     Map<String, dynamic> data,
   ) async {
-    final response = await dioClient.post('/raport', data: data);
+    final response = await dioClient.post('/report-card', data: data);
 
     if (response.data != null && response.data['success'] == true) {
       await CacheInvalidationService.onReportCardChanged();

@@ -114,11 +114,19 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
             'file_name=$resolvedFileName',
       );
 
+      // Backend rename (rename guide §4): lesson_plans.semester canonical
+      // values are `odd` / `even` (was `Ganjil` / `Genap`).
+      final rawTerm = (selectedTerm ?? '').toString().toLowerCase();
+      final canonicalTerm = switch (rawTerm) {
+        'ganjil' || 'gasal' || 'odd' => 'odd',
+        'genap' || 'even' => 'even',
+        _ => rawTerm,
+      };
       final lessonPlanData = {
         'subject_id': selectedSubjectId,
         'class_id': selectedClassId,
         'title': titleController.text,
-        'semester': selectedTerm,
+        'semester': canonicalTerm,
         'academic_year': academicYearController.text,
         if (resolvedFilePath != null && resolvedFilePath.isNotEmpty)
           'file_path': resolvedFilePath,

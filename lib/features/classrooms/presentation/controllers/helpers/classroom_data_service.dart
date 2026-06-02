@@ -52,7 +52,9 @@ class ClassroomDataService {
         ttl: const Duration(hours: 24),
       );
       if (cached != null) {
-        final jenjang = cached['jenjang'] as String?;
+        // Backend rename: `schools.jenjang` → `schools.education_level`.
+        final jenjang =
+            (cached['education_level'] ?? cached['jenjang']) as String?;
         AppLogger.info('classroom', 'School settings loaded from cache');
         return SchoolSettingsResult(
           jenjang: jenjang,
@@ -65,7 +67,8 @@ class ClassroomDataService {
 
     try {
       final settings = await getIt<ApiSettingsService>().getSchoolSettings();
-      final jenjang = settings['jenjang'] as String?;
+      final jenjang =
+          (settings['education_level'] ?? settings['jenjang']) as String?;
       LocalCacheService.save(cacheKey, settings);
       return SchoolSettingsResult(
         jenjang: jenjang,

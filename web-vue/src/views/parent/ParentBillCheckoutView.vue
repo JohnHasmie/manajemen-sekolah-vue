@@ -103,7 +103,7 @@ async function submitProof() {
       file: file.value,
       amount: uploadAmount.value ?? session.value.amount,
       payment_date: paymentDate.value,
-      payment_method: 'manual_transfer',
+      payment_method: 'bank_transfer',
     });
     toast.value = {
       message: 'Bukti pembayaran terkirim. Menunggu verifikasi admin.',

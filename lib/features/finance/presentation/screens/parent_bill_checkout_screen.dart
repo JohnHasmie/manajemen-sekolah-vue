@@ -791,8 +791,9 @@ class _ParentBillCheckoutScreenState
                                   height: 20,
                                   margin: const EdgeInsets.only(top: 1),
                                   decoration: BoxDecoration(
-                                    color: ColorUtils.brandAzureDeep
-                                        .withValues(alpha: 0.1),
+                                    color: ColorUtils.brandAzureDeep.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   alignment: Alignment.center,
@@ -818,8 +819,7 @@ class _ParentBillCheckoutScreenState
                                 ),
                               ],
                             ),
-                            if (i < steps.length - 1)
-                              const SizedBox(height: 8),
+                            if (i < steps.length - 1) const SizedBox(height: 8),
                           ],
                         ],
                       )
@@ -964,7 +964,13 @@ class _ParentBillCheckoutScreenState
       picked = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: const [
-          'jpg', 'jpeg', 'png', 'pdf', 'heic', 'heif', 'webp',
+          'jpg',
+          'jpeg',
+          'png',
+          'pdf',
+          'heic',
+          'heif',
+          'webp',
         ],
         allowMultiple: false,
         withData: false,
@@ -1028,12 +1034,14 @@ class _ParentBillCheckoutScreenState
         }
       }
 
-      final billName = widget.bill['type']?.toString()
-          ?? widget.bill['name']?.toString()
-          ?? 'Tagihan';
-      final studentName = widget.bill['student_name']?.toString()
-          ?? widget.bill['student']?['name']?.toString()
-          ?? 'Anak';
+      final billName =
+          widget.bill['type']?.toString() ??
+          widget.bill['name']?.toString() ??
+          'Tagihan';
+      final studentName =
+          widget.bill['student_name']?.toString() ??
+          widget.bill['student']?['name']?.toString() ??
+          'Anak';
 
       // Push the success screen so the parent gets immediate visible
       // confirmation (timeline + bukti actions). Once they tap
@@ -1081,52 +1089,48 @@ class _ParentBillCheckoutScreenState
       ),
       builder: (ctx) {
         Widget bullet(IconData icon, String label, String body) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: ColorUtils.brandAzureDeep.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      icon,
-                      size: 14,
-                      color: ColorUtils.brandAzureDeep,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          label,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: ColorUtils.slate900,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          body,
-                          style: TextStyle(
-                            fontSize: 11,
-                            height: 1.4,
-                            color: ColorUtils.slate600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: ColorUtils.brandAzureDeep.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 14, color: ColorUtils.brandAzureDeep),
               ),
-            );
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: ColorUtils.slate900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      body,
+                      style: TextStyle(
+                        fontSize: 11,
+                        height: 1.4,
+                        color: ColorUtils.slate600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
 
         return SafeArea(
           top: false,
@@ -1267,7 +1271,10 @@ class _ParentBillCheckoutScreenState
         // when the parent re-enters the checkout from the list.
         paymentProofUrl: widget.bill['payment_proof_url']?.toString(),
         paymentId: widget.bill['latest_payment_relation']?['id']?.toString(),
-        schoolName: widget.bill['school']?['school_name']?.toString(),
+        schoolName:
+            (widget.bill['school']?['name'] ??
+                    widget.bill['school']?['school_name'])
+                ?.toString(),
         className: className,
         period: periodStr != null && periodStr.isNotEmpty
             ? _humanMonthFromBill(periodStr)
@@ -1395,8 +1402,19 @@ String _humanMonthFromBill(String yyyymm) {
     return yyyymm;
   }
   const months = [
-    '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    '',
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
   ];
   return '${months[month]} $year';
 }

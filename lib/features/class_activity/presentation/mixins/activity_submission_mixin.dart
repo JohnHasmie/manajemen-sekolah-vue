@@ -57,16 +57,26 @@ mixin ActivitySubmissionMixin on ConsumerState<AddActivityDialog> {
       final languageProvider = ref.read(languageRiverpod);
 
       final lessonHourId = widget.lessonHourId;
+      // Backend canonical enums (rename guide §4):
+      //   class_activities.type → assignment / test / quiz / activity /
+      //     exam / material (was tugas / ulangan / kuis / kegiatan / materi).
+      //   class_activities.target_role → student / all / specific
+      //     (was siswa / umum / khusus).
+      //   days.name → english lowercase (was senin/selasa/...).
+      final canonicalType = _toCanonicalActivityType(activityType);
+      final canonicalTarget = _toCanonicalTargetRole(initialTarget);
+      final canonicalDay = _toCanonicalDay(selectedDay);
+
       final Map<String, dynamic> data = {
         'teacher_id': teacherId,
         'subject_id': selectedSubjectId,
         'class_id': selectedClassId,
         'title': titleController.text,
         'description': descriptionController.text,
-        'type': activityType,
-        'target_role': initialTarget,
+        'type': canonicalType,
+        'target_role': canonicalTarget,
         'date': selectedDate!.toIso8601String().split('T')[0],
-        'day': selectedDay,
+        'day': canonicalDay,
         if (lessonHourId != null) 'lesson_hour_id': lessonHourId,
       };
 
@@ -121,13 +131,15 @@ mixin ActivitySubmissionMixin on ConsumerState<AddActivityDialog> {
         }
       }
 
-      if (deadline != null && activityType == 'tugas') {
+      if (deadline != null &&
+          (canonicalType == 'assignment' || activityType == 'tugas')) {
         data['batas_waktu'] = deadline!.toIso8601String();
       }
 
       // Add target students for specific activities
       final Map<String, dynamic> requestData = Map<String, dynamic>.from(data);
-      if (initialTarget == 'khusus' && selectedStudents.isNotEmpty) {
+      if ((canonicalTarget == 'specific' || initialTarget == 'khusus') &&
+          selectedStudents.isNotEmpty) {
         requestData['siswa_target'] = selectedStudents;
       }
 
@@ -237,5 +249,76 @@ mixin ActivitySubmissionMixin on ConsumerState<AddActivityDialog> {
   void _showError(String message) {
     if (!mounted) return;
     SnackBarUtils.showError(context, message);
+  }
+
+  /// Map a possibly-legacy class_activities.type to the canonical
+  /// English value the backend now expects.
+  /// Canonical: assignment / test / quiz / activity / exam / material.
+  String _toCanonicalActivityType(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'tugas':
+      case 'assignment':
+        return 'assignment';
+      case 'ulangan':
+      case 'test':
+        return 'test';
+      case 'kuis':
+      case 'quiz':
+        return 'quiz';
+      case 'kegiatan':
+      case 'activity':
+        return 'activity';
+      case 'ujian':
+      case 'exam':
+        return 'exam';
+      case 'materi':
+      case 'material':
+        return 'material';
+      default:
+        return raw.toLowerCase();
+    }
+  }
+
+  /// Map a possibly-legacy class_activities.target_role to the
+  /// canonical English value (student / all / specific).
+  String _toCanonicalTargetRole(String raw) {
+    switch (raw.toLowerCase()) {
+      case 'siswa':
+      case 'student':
+        return 'student';
+      case 'umum':
+      case 'all':
+        return 'all';
+      case 'khusus':
+      case 'specific':
+        return 'specific';
+      default:
+        return raw.toLowerCase();
+    }
+  }
+
+  /// Map an Indonesian day name to its English lowercase counterpart.
+  String? _toCanonicalDay(String? raw) {
+    if (raw == null) return null;
+    switch (raw.toLowerCase()) {
+      case 'senin':
+        return 'monday';
+      case 'selasa':
+        return 'tuesday';
+      case 'rabu':
+        return 'wednesday';
+      case 'kamis':
+        return 'thursday';
+      case 'jumat':
+      case "jum'at":
+        return 'friday';
+      case 'sabtu':
+        return 'saturday';
+      case 'minggu':
+      case 'ahad':
+        return 'sunday';
+      default:
+        return raw.toLowerCase();
+    }
   }
 }

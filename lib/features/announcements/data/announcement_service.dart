@@ -182,7 +182,9 @@ class ApiAnnouncementService {
 /// and acts as the concrete implementation of [ApiAnnouncementService].
 class AnnouncementService extends ApiAnnouncementService {
   /// Fetches announcement summary grouped by month + priority.
-  /// Returns list of { month_key, total, priorities: { biasa: N, penting: N } }.
+  /// Returns list of { month_key, total, priorities: { normal: N, high: N, ... } }.
+  /// Backend canonical priorities: `low` / `normal` / `high` / `urgent`
+  /// (was `biasa` / `penting`).
   static Future<List<Map<String, dynamic>>> getAnnouncementSummary({
     String? search,
   }) async {

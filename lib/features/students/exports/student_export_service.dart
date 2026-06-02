@@ -256,19 +256,22 @@ class ExcelService {
     }
   }
 
-  /// Convert gender code ('L'/'M' = male, 'P'/'F' = female) to localized text.
-  /// Like a Laravel accessor: `getGenderTextAttribute()`.
+  /// Convert canonical gender code to localized text.
+  /// Backend canonical: `male` / `female`. Legacy codes `L`/`M`/`P`/`F`
+  /// are still accepted for back-compat.
   static String _getGenderText(
     String? gender,
     LanguageProvider languageProvider,
   ) {
     switch (gender) {
+      case 'male':
       case 'L':
       case 'M':
         return languageProvider.getTranslatedText({
           'en': 'Male',
           'id': 'Laki-laki',
         });
+      case 'female':
       case 'P':
       case 'F':
         return languageProvider.getTranslatedText({

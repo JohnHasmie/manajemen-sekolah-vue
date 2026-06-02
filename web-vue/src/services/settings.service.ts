@@ -8,8 +8,10 @@
 import { api } from '@/lib/http';
 
 export interface SchoolSettings {
-  jenjang: string;          // SD | SMP | SMA | SMK
-  school_name: string;
+  /** Canonical column: `schools.education_level` (was `jenjang`). */
+  education_level: string; // SD | SMP | SMA | SMK
+  /** Canonical column: `schools.name` (was `school_name`). */
+  name: string;
   address: string;
 }
 
@@ -38,8 +40,8 @@ function humanError(e: unknown, fallback: string): string {
 
 function schoolFromJson(raw: any): SchoolSettings {
   return {
-    jenjang: String(raw?.jenjang ?? ''),
-    school_name: String(raw?.school_name ?? raw?.name ?? ''),
+    education_level: String(raw?.education_level ?? raw?.jenjang ?? ''),
+    name: String(raw?.name ?? raw?.school_name ?? ''),
     address: String(raw?.address ?? ''),
   };
 }
@@ -76,8 +78,8 @@ export const SettingsService = {
   ): Promise<SchoolSettings> {
     try {
       const body: Record<string, unknown> = {};
-      if (patch.jenjang !== undefined) body.jenjang = patch.jenjang;
-      if (patch.school_name !== undefined) body.school_name = patch.school_name;
+      if (patch.education_level !== undefined) body.education_level = patch.education_level;
+      if (patch.name !== undefined) body.name = patch.name;
       if (patch.address !== undefined) body.address = patch.address;
       const res = await api.post('/school/settings', body);
       return schoolFromJson(res.data ?? body);
