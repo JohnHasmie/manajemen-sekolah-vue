@@ -146,7 +146,12 @@ const attendancePct = computed(() => {
   return Math.max(0, Math.round(((schoolDays - absent) / schoolDays) * 100));
 });
 
-const isGenap = computed(() => (detail.value?.semester ?? '').toLowerCase().includes('genap'));
+// Canonical `semesters.name` is `even` post-migration; defensive read
+// for legacy `genap` rows still in the wild.
+const isGenap = computed(() => {
+  const raw = (detail.value?.semester ?? '').toLowerCase();
+  return raw === 'even' || raw.includes('genap');
+});
 const isNaikKelas = computed(() => (detail.value?.promotion_decision ?? '').toLowerCase().includes('naik'));
 
 const totalAttendance = computed(() => {
