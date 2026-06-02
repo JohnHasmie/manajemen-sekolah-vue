@@ -194,30 +194,16 @@ export const AuthService = {
   async submitHelpRequest(payload: {
     name: string;
     email: string;
-    /**
-     * Optional school the requester is asking about. Wire key is
-     * `requested_school_name` post the 2026_06_02 column rename
-     * (was `school_name` — backend FormRequest still accepts the
-     * legacy key for one release cycle).
-     */
-    requestedSchoolName?: string;
+    /** Optional school the requester is asking about. */
+    school?: string;
     message: string;
   }): Promise<{ message: string }> {
     try {
-      // Send both keys for the deploy-window where prod runs the old
-      // FormRequest (validates `school_name`) while staging runs the
-      // new one (validates `requested_school_name`). Both are safe to
-      // include — the loser of each Validator pass is silently dropped.
       const body = {
         name: payload.name,
         email: payload.email,
         message: payload.message,
-        ...(payload.requestedSchoolName
-          ? {
-              requested_school_name: payload.requestedSchoolName,
-              school_name: payload.requestedSchoolName,
-            }
-          : {}),
+        ...(payload.school ? { school_name: payload.school } : {}),
       };
       const res = await api.post(Endpoints.helpRequest, body);
       const data = normalize(res.data);
