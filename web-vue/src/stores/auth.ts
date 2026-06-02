@@ -447,12 +447,67 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    /**
+     * Auto-advance the picker step when there's no real choice to make:
+     *   - 1 school in the school picker → auto-select it
+     *   - 1 role in the role picker → auto-select it
+     *   - >1 role BUT the user picked one previously → re-pick the same
+     *     role from localStorage so multi-role users don't get bothered
+     *     by the picker every login (they can still switch from the
+     *     ProfileMenu).
+     *
+     * Called after every `_applyResponse(res)` that might land on a
+     * picker step. Recurses via `selectSchool`/`selectRole` which both
+     * call `_applyResponse` again — so a single-school + single-role
+     * user reaches step='done' in one chained roundtrip.
+     */
+    async _autoAdvancePicker() {
+      if (this.step === 'school' && this.schools.length === 1) {
+        const s = this.schools[0];
+        const id = String(s.id || s.school_id || '');
+        if (id) {
+          await this.selectSchool(id);
+        }
+        return;
+      }
+
+      if (this.step === 'role') {
+        // 1. Single role: pick it
+        if (this.roles.length === 1) {
+          await this.selectRole(this.roles[0]);
+          return;
+        }
+        // 2. Multi-role: respect the previous choice if still valid.
+        //    CRITICAL: only honor the cached role when it actually
+        //    appears in the picker — otherwise we'd send a role the
+        //    backend will 422 on (e.g. user lost the role since last
+        //    login).
+        //
+        //    Normalize both sides before comparing because `this.roles`
+        //    holds raw backend values ('admin'/'teacher'/'parent') while
+        //    the stored role may be either raw OR FE-normalized
+        //    ('admin'/'guru'/'wali') depending on which path wrote it.
+        const stored = storage.get<Role>(StorageKeys.role);
+        if (stored) {
+          const normStored = normalizeRole(stored);
+          const match = (this.roles as string[]).find(
+            (r) => normalizeRole(r) === normStored,
+          );
+          if (match) {
+            await this.selectRole(match as Role);
+            return;
+          }
+        }
+      }
+    },
+
     async login(email: string, password: string) {
       this._setLoading(true);
       this.pendingEmail = email;
       try {
         const res = await AuthService.login(email, password);
         this._applyResponse(res);
+        await this._autoAdvancePicker();
       } catch (e) {
         this._setError((e as Error).message);
         throw e;
@@ -469,6 +524,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const res = await AuthService.verifyOtp(this.pendingEmail, otp);
         this._applyResponse(res);
+        await this._autoAdvancePicker();
       } catch (e) {
         this._setError((e as Error).message);
         throw e;
@@ -496,6 +552,10 @@ export const useAuthStore = defineStore('auth', {
           .catch(() => {
             // non-fatal
           });
+        // If switchSchool returned a role picker (multi-role case),
+        // immediately try to auto-advance — either because there's
+        // really only one role or because we remember the last pick.
+        await this._autoAdvancePicker();
       } catch (e) {
         this._setError((e as Error).message);
         throw e;
@@ -538,6 +598,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const res = await AuthService.googleLogin(payload);
         this._applyResponse(res);
+        await this._autoAdvancePicker();
       } catch (e) {
         this._setError((e as Error).message);
         throw e;
