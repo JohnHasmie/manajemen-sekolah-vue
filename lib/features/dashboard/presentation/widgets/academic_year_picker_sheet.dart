@@ -293,6 +293,12 @@ class _ExpandedYearTile extends StatelessWidget {
   bool _isGanjil(String? raw) {
     if (raw == null) return true; // sensible default early in school year
     final l = raw.toLowerCase();
+    // `semester_label` from the backend is a free-form display string
+    // ("Semester Ganjil - 2025"). Be defensive: also accept the canonical
+    // `odd` / `even` encoding now used by `semesters.name` in case a
+    // future endpoint surfaces the raw value here.
+    if (l.contains('odd')) return true;
+    if (l.contains('even')) return false;
     return l.contains('ganjil') || l.contains('1');
   }
 }

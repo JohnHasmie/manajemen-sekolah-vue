@@ -30,7 +30,7 @@ async function handleSubmit() {
     const res = await AuthService.submitHelpRequest({
       name: name.value.trim(),
       email: email.value.trim(),
-      school: school.value.trim() || undefined,
+      requestedSchoolName: school.value.trim() || undefined,
       message: message.value.trim(),
     });
     successMessage.value = res.message;

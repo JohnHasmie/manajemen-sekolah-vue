@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/core/utils/academic_year_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
@@ -371,14 +372,19 @@ class _ActiveYearHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // ── Resolve semester label (Title-case for display) ──
-    final raw = (activeYear['semester'] ?? '').toString().toLowerCase();
-    final semesterName = raw == 'ganjil'
-        ? 'Ganjil'
-        : raw == 'genap'
-        ? 'Genap'
-        : (fallbackSemesterName?.toString().trim().isNotEmpty == true
-              ? fallbackSemesterName!
-              : null);
+    //
+    // The AY row's `semester` column still uses Indonesian (`ganjil` /
+    // `genap`) per backend convention. The fallback comes from the
+    // `/semesters` table, whose `name` was normalized to canonical
+    // `odd` / `even` in the follow-up rename. Defensively handle both
+    // encodings via [semesterDisplayLabel].
+    final activeYearSem = semesterDisplayLabel(activeYear['semester']?.toString());
+    final fallbackSem = semesterDisplayLabel(fallbackSemesterName);
+    final semesterName = activeYearSem ??
+        fallbackSem ??
+        (fallbackSemesterName?.toString().trim().isNotEmpty == true
+            ? fallbackSemesterName!
+            : null);
 
     // ── Period (start_date — end_date) with the same "belum diatur"
     //    guard the Kelola screen uses for legacy nulls.

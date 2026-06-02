@@ -44,3 +44,57 @@ List<String> academicYearChipOptions({
   }
   return years;
 }
+
+// ─── Semester label helpers ────────────────────────────────────────────
+//
+// Backend follow-up migration (2026-06-02) normalized `semesters.name`
+// stored values from Indonesian (`Ganjil` / `Gasal` / `Genap`) to
+// canonical English (`odd` / `even`). The UI keeps Indonesian display
+// labels for users; these helpers bridge the two.
+//
+// Note: `academic_years.semester` (a *separate* column) still uses the
+// legacy `ganjil` / `genap` values per backend convention — those call
+// sites are unaffected.
+// ───────────────────────────────────────────────────────────────────────
+
+/// Maps any of the known semester encodings (`odd`, `even`, `ganjil`,
+/// `gasal`, `genap`, or their Title-case variants) to the Indonesian
+/// display label used across the UI (`Ganjil` / `Genap`).
+///
+/// Returns null when [raw] is null/empty or doesn't match a known
+/// encoding — callers decide how to render the absence ("-", a fallback
+/// chip, etc.).
+String? semesterDisplayLabel(String? raw) {
+  if (raw == null) return null;
+  final s = raw.trim().toLowerCase();
+  if (s.isEmpty) return null;
+  switch (s) {
+    case 'odd':
+    case 'ganjil':
+    case 'gasal':
+      return 'Ganjil';
+    case 'even':
+    case 'genap':
+      return 'Genap';
+    default:
+      return null;
+  }
+}
+
+/// Maps any of the known semester encodings (Indonesian or canonical)
+/// to the backend canonical value (`odd` / `even`) used by the
+/// `semesters.name` column. Defaults to lowercased [raw] when nothing
+/// matches so the value still round-trips for unknown future values.
+String canonicalSemesterName(String raw) {
+  switch (raw.trim().toLowerCase()) {
+    case 'ganjil':
+    case 'gasal':
+    case 'odd':
+      return 'odd';
+    case 'genap':
+    case 'even':
+      return 'even';
+    default:
+      return raw.trim().toLowerCase();
+  }
+}

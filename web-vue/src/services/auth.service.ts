@@ -194,13 +194,34 @@ export const AuthService = {
   async submitHelpRequest(payload: {
     name: string;
     email: string;
-    school?: string;
+    /**
+     * Optional school the requester is asking about. Wire key is
+     * `requested_school_name` post the 2026_06_02 column rename
+     * (was `school_name` — backend FormRequest still accepts the
+     * legacy key for one release cycle).
+     */
+    requestedSchoolName?: string;
     message: string;
   }): Promise<{ message: string }> {
     try {
-      const res = await api.post(Endpoints.helpRequest, payload);
-      const body = normalize(res.data);
-      return { message: body.message ?? 'Permintaan bantuan terkirim.' };
+      // Send both keys for the deploy-window where prod runs the old
+      // FormRequest (validates `school_name`) while staging runs the
+      // new one (validates `requested_school_name`). Both are safe to
+      // include — the loser of each Validator pass is silently dropped.
+      const body = {
+        name: payload.name,
+        email: payload.email,
+        message: payload.message,
+        ...(payload.requestedSchoolName
+          ? {
+              requested_school_name: payload.requestedSchoolName,
+              school_name: payload.requestedSchoolName,
+            }
+          : {}),
+      };
+      const res = await api.post(Endpoints.helpRequest, body);
+      const data = normalize(res.data);
+      return { message: data.message ?? 'Permintaan bantuan terkirim.' };
     } catch (e) {
       throw pickErrorMessage(e, 'Gagal mengirim permintaan bantuan');
     }

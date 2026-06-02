@@ -12,6 +12,7 @@ import type {
   PrintScope,
   ScheduleFilterOptions,
 } from '@/types/schedule';
+import { semesterLabel } from '@/lib/labels';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -158,7 +159,7 @@ async function print() {
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
         >
           <option value="">— semua —</option>
-          <option v-for="s in filterOptions?.semesters ?? []" :key="s.id" :value="s.id">{{ s.name }}</option>
+          <option v-for="s in filterOptions?.semesters ?? []" :key="s.id" :value="s.id">{{ semesterLabel(s.name) }}</option>
         </select>
       </div>
 

@@ -26,6 +26,7 @@ import type {
   ScheduleRow,
 } from '@/types/schedule';
 import { useAcademicYearStore } from '@/stores/academic-year';
+import { semesterLabel } from '@/lib/labels';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -348,7 +349,7 @@ const filteredHours = computed(() => {
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           >
             <option value="">— pilih semester —</option>
-            <option v-for="s in semesters" :key="s.id" :value="s.id">{{ s.name }}</option>
+            <option v-for="s in semesters" :key="s.id" :value="s.id">{{ semesterLabel(s.name) }}</option>
           </select>
         </div>
       </div>

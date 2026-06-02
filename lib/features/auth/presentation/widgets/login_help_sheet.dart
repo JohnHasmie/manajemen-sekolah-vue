@@ -102,7 +102,7 @@ class _LoginHelpSheetBodyState extends State<_LoginHelpSheetBody> {
         name: _nameCtrl.text.trim(),
         email: _emailCtrl.text.trim(),
         phone: _phoneCtrl.text.trim(),
-        schoolName: _schoolCtrl.text.trim(),
+        requestedSchoolName: _schoolCtrl.text.trim(),
         message: _msgCtrl.text.trim(),
       );
       if (!mounted) return;

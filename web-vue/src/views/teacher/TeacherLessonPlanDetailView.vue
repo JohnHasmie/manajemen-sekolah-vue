@@ -44,6 +44,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { formatRelative } from '@/lib/format';
+import { semesterLabel } from '@/lib/labels';
 
 const route = useRoute();
 const router = useRouter();
@@ -244,7 +245,7 @@ const metaLine = computed(() => {
   if (!plan.value) return '';
   const parts: string[] = [];
   if (plan.value.academic_year) parts.push(`TP ${plan.value.academic_year}`);
-  if (plan.value.semester) parts.push(`Sem ${plan.value.semester}`);
+  if (plan.value.semester) parts.push(`Sem ${semesterLabel(plan.value.semester)}`);
   if (plan.value.revision > 1) parts.push(`Revisi ${plan.value.revision}`);
   if (plan.value.submitted_at) {
     parts.push(`dikirim ${formatRelative(plan.value.submitted_at)}`);

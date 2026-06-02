@@ -24,6 +24,7 @@ import { ScheduleService } from '@/services/schedule.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import type { DayKey, ScheduleSession, SessionSummary } from '@/types/schedule';
 import { DAY_LABELS, DAY_ORDER, sessionSummaryKey } from '@/types/schedule';
+import { semesterLabel } from '@/lib/labels';
 import type { Classroom } from '@/types/entities';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -466,7 +467,7 @@ function matLabel(s: ScheduleSession): string {
 
 function periodeLabel(s: ScheduleSession): string {
   const parts: string[] = [];
-  if (s.semester_name) parts.push(s.semester_name);
+  if (s.semester_name) parts.push(semesterLabel(s.semester_name));
   if (s.academic_year) parts.push(s.academic_year);
   return parts.join(' · ');
 }

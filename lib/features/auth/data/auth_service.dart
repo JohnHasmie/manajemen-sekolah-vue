@@ -255,18 +255,24 @@ class AuthService {
     required String name,
     required String email,
     String? phone,
-    String? schoolName,
+    String? requestedSchoolName,
     required String message,
   }) async {
     try {
+      // Backend follow-up migration renamed
+      // `login_help_requests.school_name` → `requested_school_name`
+      // (the table also has a `name` column for the requester's personal
+      // name, so the new column makes the "school being asked about"
+      // intent explicit). The FormRequest accepts both keys for one
+      // release cycle, so a clean switch here is safe.
       final response = await dioClient.post(
         ApiEndpoints.helpRequest,
         data: {
           'name': name,
           'email': email,
           if (phone != null && phone.isNotEmpty) 'phone': phone,
-          if (schoolName != null && schoolName.isNotEmpty)
-            'school_name': schoolName,
+          if (requestedSchoolName != null && requestedSchoolName.isNotEmpty)
+            'requested_school_name': requestedSchoolName,
           'message': message,
         },
       );
