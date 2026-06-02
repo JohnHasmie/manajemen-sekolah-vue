@@ -14,22 +14,27 @@
  */
 
 // ── Type enum ──
+//
+// Canonical English values match the backend `class_activities.type`
+// column: assignment | test | quiz | activity | exam | material.
+// Vue keeps a compact 4-value bucket: assignment / homework / test /
+// other — anything not in the first three maps to 'other'.
 
-export type ActivityType = 'tugas' | 'pr' | 'ulangan' | 'lainnya';
+export type ActivityType = 'assignment' | 'homework' | 'test' | 'other';
 
 export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
-  tugas: 'Tugas',
-  pr: 'PR',
-  ulangan: 'Ulangan',
-  lainnya: 'Lainnya',
+  assignment: 'Tugas',
+  homework: 'PR',
+  test: 'Ulangan',
+  other: 'Lainnya',
 };
 
 /** Per-type accent hex — drives card left bar + type pill. */
 export const ACTIVITY_TYPE_COLORS: Record<ActivityType, string> = {
-  tugas: '#B45309', // amber-700
-  pr: '#7C3AED', // violet-600
-  ulangan: '#DC2626', // red-600
-  lainnya: '#475569', // slate-600
+  assignment: '#B45309', // amber-700
+  homework: '#7C3AED', // violet-600
+  test: '#DC2626', // red-600
+  other: '#475569', // slate-600
 };
 
 /**
@@ -39,19 +44,20 @@ export const ACTIVITY_TYPE_COLORS: Record<ActivityType, string> = {
  */
 export function normalizeActivityType(raw: unknown): ActivityType {
   const v = String(raw ?? '').toLowerCase().trim();
-  if (!v) return 'lainnya';
-  if (v === 'tugas' || v === 'assignment') return 'tugas';
-  if (v === 'pr' || v === 'homework') return 'pr';
+  if (!v) return 'other';
+  if (v === 'assignment' || v === 'tugas') return 'assignment';
+  if (v === 'homework' || v === 'pr') return 'homework';
   if (
+    v === 'test' ||
     v === 'ulangan' ||
     v === 'exam' ||
     v === 'ujian' ||
-    v === 'kuis' ||
-    v === 'quiz'
+    v === 'quiz' ||
+    v === 'kuis'
   ) {
-    return 'ulangan';
+    return 'test';
   }
-  return 'lainnya';
+  return 'other';
 }
 
 // ── Period enum (admin hub filter chip) ──
@@ -355,6 +361,8 @@ export function classActivityFromJson(raw: AnyRecord): ClassActivity {
     is_specific_target: Boolean(
       raw.is_specific_target ??
         raw.target_specific ??
+        (raw.target_role === 'specific') ??
+        (raw.target === 'specific') ??
         (raw.target === 'khusus') ??
         false,
     ),

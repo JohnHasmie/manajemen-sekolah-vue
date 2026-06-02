@@ -25,19 +25,20 @@ export interface GradeRecapRow {
   nis: string | null;
   /** True when the backend already has a row for this (student, subject). */
   has_recap: boolean;
-  /** Predikat label (A / B / C / D / E or custom). */
-  predikat: string | null;
+  /** Predicate label (A / B / C / D or very_good/good/fair/poor). */
+  predicate: string | null;
   /** Narrative description shown on the raport. */
-  deskripsi: string | null;
+  description: string | null;
   /**
-   * Per-chapter scores. The array index aligns with `bab_names` and
-   * with the chapter columns in the matrix. `null` slots = unfilled.
+   * Per-chapter scores. The array index aligns with `chapter_names`
+   * and with the chapter columns in the matrix. `null` slots =
+   * unfilled.
    */
-  bab_scores: (number | null)[] | null;
-  /** Display names for each Bab column. */
-  bab_names: string[] | null;
-  uts_score: number | null;
-  uas_score: number | null;
+  chapter_scores: (number | null)[] | null;
+  /** Display names for each chapter column. */
+  chapter_names: string[] | null;
+  midterm_score: number | null;
+  final_exam_score: number | null;
   /** Auto-computed or teacher-overridden final. */
   final_score: number | null;
   /** Keterampilan / skill score (optional in many schools). */
@@ -51,14 +52,14 @@ export interface GradeRecapSavePayload {
   /** subject_schools.id (NOT the master subjects.id — backend maps it). */
   subject_id: string;
   academic_year_id: number;
-  predikat?: string | null;
-  deskripsi?: string | null;
+  predicate?: string | null;
+  description?: string | null;
   final_score?: number | null;
   skill_score?: number | null;
-  bab_scores?: (number | null)[] | null;
-  bab_names?: string[] | null;
-  uts_score?: number | null;
-  uas_score?: number | null;
+  chapter_scores?: (number | null)[] | null;
+  chapter_names?: string[] | null;
+  midterm_score?: number | null;
+  final_exam_score?: number | null;
 }
 
 export interface GradeRecapBatchResponse {
@@ -89,9 +90,9 @@ export interface TeacherGradeRecapSubject {
   completion_pct: number;
   /** Avg final score across recapped students; null when 0 recaps. */
   avg_final_score: number | null;
-  /** Number of Bab columns the matrix would render. */
-  bab_count: number;
-  /** Total numeric grade entries across all bab_scores arrays. */
+  /** Number of chapter columns the matrix would render. */
+  chapter_count: number;
+  /** Total numeric grade entries across all chapter_scores arrays. */
   entries_count?: number;
 }
 
@@ -149,11 +150,11 @@ export interface AdminRecapOverviewRow {
   avg_final_score: number | null;
   /** % of students whose final_score ≥ 75. */
   pass_rate: number;
-  bab_total: number;
-  bab_filled: number;
-  uts_done: number;
-  uas_done: number;
-  /** True when every student has every Bab + UTS + UAS filled. */
+  chapter_total: number;
+  chapter_filled: number;
+  midterm_done: number;
+  final_exam_done: number;
+  /** True when every student has every chapter + midterm + final_exam filled. */
   is_complete: boolean;
 }
 
@@ -194,24 +195,24 @@ function strOrNull(v: unknown): string | null {
 }
 
 export function gradeRecapRowFromJson(raw: AnyRecord): GradeRecapRow {
-  const babScoresRaw = raw.bab_scores;
-  const babNamesRaw = raw.bab_names;
+  const chapterScoresRaw = raw.chapter_scores ?? raw.bab_scores;
+  const chapterNamesRaw = raw.chapter_names ?? raw.bab_names;
   return {
     student_class_id: String(raw.student_class_id ?? ''),
     student_id: String(raw.student_id ?? ''),
     student_name: String(raw.student_name ?? '-'),
     nis: strOrNull(raw.nis),
     has_recap: Boolean(raw.has_recap),
-    predikat: strOrNull(raw.predikat),
-    deskripsi: strOrNull(raw.deskripsi),
-    bab_scores: Array.isArray(babScoresRaw)
-      ? babScoresRaw.map((v) => numOrNull(v))
+    predicate: strOrNull(raw.predicate ?? raw.predikat),
+    description: strOrNull(raw.description ?? raw.deskripsi),
+    chapter_scores: Array.isArray(chapterScoresRaw)
+      ? chapterScoresRaw.map((v) => numOrNull(v))
       : null,
-    bab_names: Array.isArray(babNamesRaw)
-      ? babNamesRaw.map((v) => String(v))
+    chapter_names: Array.isArray(chapterNamesRaw)
+      ? chapterNamesRaw.map((v) => String(v))
       : null,
-    uts_score: numOrNull(raw.uts_score),
-    uas_score: numOrNull(raw.uas_score),
+    midterm_score: numOrNull(raw.midterm_score ?? raw.uts_score),
+    final_exam_score: numOrNull(raw.final_exam_score ?? raw.uas_score),
     final_score: numOrNull(raw.final_score),
     skill_score: numOrNull(raw.skill_score),
   };
@@ -238,7 +239,7 @@ export function teacherGradeRecapResponseFromJson(
             total_students: num(s.total_students),
             completion_pct: num(s.completion_pct),
             avg_final_score: numOrNull(s.avg_final_score),
-            bab_count: num(s.bab_count),
+            chapter_count: num(s.chapter_count ?? s.bab_count),
             entries_count: num(s.entries_count),
           }))
         : [],
@@ -278,10 +279,10 @@ export function adminRecapOverviewFromJson(
       progress_pct: num(r.progress_pct),
       avg_final_score: numOrNull(r.avg_final_score),
       pass_rate: num(r.pass_rate),
-      bab_total: num(r.bab_total),
-      bab_filled: num(r.bab_filled),
-      uts_done: num(r.uts_done),
-      uas_done: num(r.uas_done),
+      chapter_total: num(r.chapter_total ?? r.bab_total),
+      chapter_filled: num(r.chapter_filled ?? r.bab_filled),
+      midterm_done: num(r.midterm_done ?? r.uts_done),
+      final_exam_done: num(r.final_exam_done ?? r.uas_done),
       is_complete: Boolean(r.is_complete),
     })),
   };

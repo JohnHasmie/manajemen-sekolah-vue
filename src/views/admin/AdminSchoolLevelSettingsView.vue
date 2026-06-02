@@ -30,8 +30,8 @@ const router = useRouter();
 const ayStore = useAcademicYearStore();
 
 const settings = ref<SchoolSettings>({
-  jenjang: 'SMA',
-  school_name: '',
+  education_level: 'SMA',
+  name: '',
   address: '',
 });
 const activeSemester = ref<Semester | null>(null);
@@ -74,9 +74,9 @@ const formJenjang = ref<string>('SMA');
 const isSaving = ref(false);
 
 function openEdit() {
-  formName.value = settings.value.school_name;
+  formName.value = settings.value.name;
   formAddress.value = settings.value.address;
-  formJenjang.value = settings.value.jenjang || 'SMA';
+  formJenjang.value = settings.value.education_level || 'SMA';
   showEditModal.value = true;
 }
 
@@ -88,9 +88,9 @@ async function saveEdit() {
   isSaving.value = true;
   try {
     const updated = await SettingsService.updateSchool({
-      school_name: formName.value.trim(),
+      name: formName.value.trim(),
       address: formAddress.value.trim(),
-      jenjang: formJenjang.value,
+      education_level: formJenjang.value,
     });
     settings.value = updated;
     showEditModal.value = false;
@@ -189,7 +189,7 @@ function goBack() {
           <div class="flex-1 min-w-0">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Sekolah</p>
             <p class="text-[13.5px] font-bold text-slate-900 truncate">
-              {{ settings.school_name || '—' }}
+              {{ settings.name || '—' }}
             </p>
           </div>
           <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
@@ -223,7 +223,7 @@ function goBack() {
           <div class="flex-1 min-w-0">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jenjang Pendidikan</p>
             <p class="text-[13.5px] font-bold text-slate-900 truncate">
-              {{ jenjangFullLabel(settings.jenjang) }}
+              {{ jenjangFullLabel(settings.education_level) }}
             </p>
           </div>
           <NavIcon name="chevron-right" :size="14" class="text-slate-300" />

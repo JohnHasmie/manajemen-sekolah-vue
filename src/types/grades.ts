@@ -5,7 +5,32 @@
  * is a Grade record keyed by (student_id, assessment_id).
  */
 
-export type AssessmentType = 'tugas' | 'uh' | 'uts' | 'uas' | 'lainnya';
+/**
+ * Canonical English assessment types match the backend
+ * `assessments.type` column:
+ *   assignment | daily_test | midterm | final_exam | quiz
+ *
+ * `other` is a Vue-only display bucket for any value not in that set.
+ */
+export type AssessmentType =
+  | 'assignment'
+  | 'daily_test'
+  | 'midterm'
+  | 'final_exam'
+  | 'quiz'
+  | 'other';
+
+/** Normalise legacy / mixed-case values to the canonical English keys. */
+export function normalizeAssessmentType(raw: unknown): AssessmentType {
+  const v = String(raw ?? '').toLowerCase().trim();
+  if (!v) return 'other';
+  if (v === 'assignment' || v === 'tugas' || v === 'tg' || v === 'pr') return 'assignment';
+  if (v === 'daily_test' || v === 'uh' || v === 'ulangan harian') return 'daily_test';
+  if (v === 'midterm' || v === 'uts' || v === 'pts') return 'midterm';
+  if (v === 'final_exam' || v === 'uas' || v === 'pas') return 'final_exam';
+  if (v === 'quiz' || v === 'kuis') return 'quiz';
+  return 'other';
+}
 
 export interface Assessment {
   id: string;
@@ -63,11 +88,12 @@ export interface GradeMatrix {
 }
 
 export const ASSESSMENT_LABELS: Record<AssessmentType, string> = {
-  tugas: 'Tugas',
-  uh: 'UH',
-  uts: 'UTS',
-  uas: 'UAS',
-  lainnya: 'Lainnya',
+  assignment: 'Tugas',
+  daily_test: 'UH',
+  midterm: 'UTS',
+  final_exam: 'UAS',
+  quiz: 'Kuis',
+  other: 'Lainnya',
 };
 
 // ── Teacher grade summary ──
@@ -287,16 +313,7 @@ export function teacherGradeSummaryFromJson(
               : Number(s.avg_score) || null,
         total_nilai: num(s.total_nilai),
         assessments: assessments.map((a) => {
-          const t = String(a.type ?? 'lainnya').toLowerCase();
-          const type: AssessmentType = (
-            ['tugas', 'uh', 'uts', 'uas', 'lainnya'].includes(t)
-              ? t
-              : t === 'tg'
-                ? 'tugas'
-                : t === 'pr'
-                  ? 'tugas'
-                  : 'lainnya'
-          ) as AssessmentType;
+          const type: AssessmentType = normalizeAssessmentType(a.type);
           // Distinguish between the BACKEND's literal title field and
           // the safe display label. The summary endpoint typically
           // ships `title` (echoes DB column) AND a fallback `label`.

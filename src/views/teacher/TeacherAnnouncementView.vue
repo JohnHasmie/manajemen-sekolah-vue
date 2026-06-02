@@ -42,9 +42,9 @@ const classes = ref<Classroom[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
-// ── Filters (Flutter parity) ──
+// ── Filters (Flutter parity, canonical English post-rename) ──
 type PriorityFilter = 'all' | AnnouncementPriority;
-type StatusFilter = 'all' | 'aktif' | 'terjadwal' | 'kedaluwarsa';
+type StatusFilter = 'all' | 'active' | 'scheduled' | 'expired';
 const priorityFilter = ref<PriorityFilter>('all');
 const statusFilter = ref<StatusFilter>('all');
 const searchQuery = ref('');
@@ -54,14 +54,16 @@ const showStatusPicker = ref(false);
 
 const PRIORITY_OPTIONS: { key: PriorityFilter; label: string }[] = [
   { key: 'all', label: 'Semua' },
-  { key: 'penting', label: 'Penting' },
-  { key: 'biasa', label: 'Biasa' },
+  { key: 'urgent', label: 'Mendesak' },
+  { key: 'high', label: 'Penting' },
+  { key: 'normal', label: 'Biasa' },
+  { key: 'low', label: 'Rendah' },
 ];
 const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
   { key: 'all', label: 'Semua' },
-  { key: 'aktif', label: 'Aktif' },
-  { key: 'terjadwal', label: 'Terjadwal' },
-  { key: 'kedaluwarsa', label: 'Kedaluwarsa' },
+  { key: 'active', label: 'Aktif' },
+  { key: 'scheduled', label: 'Terjadwal' },
+  { key: 'expired', label: 'Kedaluwarsa' },
 ];
 
 const activePriority = computed(
@@ -86,7 +88,7 @@ const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 const form = reactive({
   title: '',
   body: '',
-  category: 'pengumuman' as AnnouncementCategory,
+  category: 'announcement' as AnnouncementCategory,
   /**
    * Target class IDs — multi-select. Mobile parity: an empty selection
    * is rejected on publish, and the teacher can pick "Semua kelas saya"
@@ -100,7 +102,7 @@ const filtered = computed<Announcement[]>(() => {
   const q = searchQuery.value.trim().toLowerCase();
   return items.value.filter((a) => {
     if (priorityFilter.value !== 'all') {
-      const ap = a.priority ?? (a.category === 'penting' ? 'penting' : 'biasa');
+      const ap = a.priority ?? 'normal';
       if (ap !== priorityFilter.value) return false;
     }
     if (statusFilter.value !== 'all') {
@@ -116,14 +118,14 @@ const filtered = computed<Announcement[]>(() => {
 });
 
 function lifecycleOf(a: Announcement): StatusFilter {
-  if (a.status === 'terjadwal') return 'terjadwal';
-  if (a.status === 'kedaluwarsa') return 'kedaluwarsa';
+  if (a.status === 'scheduled') return 'scheduled';
+  if (a.status === 'expired') return 'expired';
   const now = Date.now();
   const sched = a.scheduled_at ? Date.parse(a.scheduled_at) : NaN;
   const expires = a.expires_at ? Date.parse(a.expires_at) : NaN;
-  if (!Number.isNaN(sched) && sched > now) return 'terjadwal';
-  if (!Number.isNaN(expires) && expires < now) return 'kedaluwarsa';
-  return 'aktif';
+  if (!Number.isNaN(sched) && sched > now) return 'scheduled';
+  if (!Number.isNaN(expires) && expires < now) return 'expired';
+  return 'active';
 }
 
 const state = computed<AsyncState<Announcement[]>>(() => {
@@ -197,8 +199,8 @@ async function reload() {
       status:
         statusFilter.value === 'all'
           ? null
-          : statusFilter.value === 'aktif'
-            ? 'terkirim'
+          : statusFilter.value === 'active'
+            ? 'published'
             : (statusFilter.value as AnnouncementStatus),
       search: searchQuery.value || undefined,
     });
@@ -243,7 +245,7 @@ function onSearchInput(v: string) {
 function resetForm() {
   form.title = '';
   form.body = '';
-  form.category = 'pengumuman';
+  form.category = 'announcement';
   form.class_ids = classes.value[0] ? [classes.value[0].id] : [];
   editingId.value = null;
 }
@@ -291,7 +293,7 @@ async function publish() {
         title: form.title.trim(),
         body: form.body.trim(),
         category: form.category,
-        priority: form.category === 'penting' ? 'penting' : 'biasa',
+        priority: form.category === 'announcement' ? 'high' : 'normal',
         audience: 'class',
         target_ids: [...form.class_ids],
       });
@@ -483,10 +485,10 @@ function pickStatus(k: StatusFilter) {
           <SegmentedControl
             :model-value="form.category"
             :options="[
-              { key: 'pengumuman', label: 'Umum' },
-              { key: 'penting', label: 'Penting' },
-              { key: 'acara', label: 'Acara' },
-              { key: 'libur', label: 'Libur' },
+              { key: 'announcement', label: 'Pengumuman' },
+              { key: 'general', label: 'Umum' },
+              { key: 'event', label: 'Acara' },
+              { key: 'info', label: 'Info' },
             ]"
             size="sm"
             @update:model-value="(v) => (form.category = v as AnnouncementCategory)"

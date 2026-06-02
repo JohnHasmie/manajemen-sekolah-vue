@@ -23,6 +23,23 @@ export interface Student {
 
 type AnyRecord = Record<string, unknown>;
 
+/**
+ * Normalise gender values to canonical English (`male` / `female`).
+ * Accepts legacy short-codes (`L`/`P`) and Indonesian
+ * (`laki-laki`/`perempuan`) so old payloads + cached data still
+ * resolve.
+ */
+export function normalizeGender(raw: unknown): 'male' | 'female' | null {
+  if (raw == null) return null;
+  const v = String(raw).toLowerCase().trim();
+  if (!v) return null;
+  if (v === 'male' || v === 'l' || v === 'laki-laki' || v === 'laki' || v === 'm')
+    return 'male';
+  if (v === 'female' || v === 'p' || v === 'perempuan' || v === 'f')
+    return 'female';
+  return null;
+}
+
 function pickClassName(json: AnyRecord): string {
   if (typeof json.class_name === 'string') return json.class_name;
   if (typeof json.kelas_nama === 'string') return json.kelas_nama;

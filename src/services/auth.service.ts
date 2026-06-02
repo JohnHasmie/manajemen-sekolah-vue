@@ -283,7 +283,9 @@ function normalizeSchool(raw: any): School {
     address: raw.address ?? raw.alamat,
     city: raw.city ?? raw.kota,
     academic_year: raw.academic_year ?? raw.tahun_ajaran,
-    level: raw.level ?? raw.jenjang,
+    // Backend column is now `schools.education_level` (was `jenjang`).
+    education_level: raw.education_level ?? raw.level ?? raw.jenjang,
+    level: raw.education_level ?? raw.level ?? raw.jenjang,
     logo_url: raw.logo_url ?? raw.logo ?? null,
     roles: Array.isArray(raw.roles)
       ? raw.roles.map((r: any) =>

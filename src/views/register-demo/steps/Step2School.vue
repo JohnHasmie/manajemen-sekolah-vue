@@ -36,8 +36,8 @@ const npsnError = ref<string | null>(null);
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 const selectedJenjang = computed({
-  get: () => wizard.payload.school.jenjang,
-  set: (v: Jenjang) => wizard.patchPayload('school', { jenjang: v }),
+  get: () => wizard.payload.school.education_level,
+  set: (v: Jenjang) => wizard.patchPayload('school', { education_level: v }),
 });
 
 onMounted(() => {
@@ -66,7 +66,7 @@ async function runSearch() {
   try {
     results.value = await DemoService.searchSchools({
       q: query.value.trim(),
-      jenjang: selectedJenjang.value,
+      education_level: selectedJenjang.value,
     });
   } catch {
     results.value = [];
@@ -90,12 +90,12 @@ function pickCreateNew() {
 
 function pickRegistryHit(hit: SchoolSearchHit) {
   // User adopted an NPSN row that isn't on Kamiledu yet. Prefill
-  // jenjang/kota/npsn from the registry hit.
+  // education_level / city / npsn from the registry hit.
   wizard.patchPayload('school', {
     name: hit.name,
     npsn: hit.npsn,
-    kota: hit.kota ?? wizard.payload.school.kota,
-    jenjang: (hit.jenjang as Jenjang) ?? selectedJenjang.value,
+    city: hit.city ?? wizard.payload.school.city,
+    education_level: (hit.education_level as Jenjang) ?? selectedJenjang.value,
   });
   toast.success('Sekolah diisi dari registri NPSN. Lanjut untuk klaim sebagai admin.');
   wizard.next();
@@ -156,8 +156,8 @@ function acceptNpsnHit() {
   wizard.patchPayload('school', {
     name: npsnHit.value.name,
     npsn: npsnHit.value.npsn,
-    kota: npsnHit.value.kota,
-    jenjang: (npsnHit.value.jenjang as Jenjang) ?? selectedJenjang.value,
+    city: npsnHit.value.city,
+    education_level: (npsnHit.value.education_level as Jenjang) ?? selectedJenjang.value,
   });
   query.value = npsnHit.value.name;
   toast.success('Data sekolah terisi dari Dapodik. Lanjut ke langkah berikutnya.');
@@ -324,11 +324,11 @@ async function requestAccessForKamilEduMatch() {
               {{ hit.name }}
             </p>
             <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 flex-wrap">
-              <template v-if="hit.kota">
+              <template v-if="hit.city">
                 <NavIcon name="database" :size="10" class="text-slate-400" />
-                <span>{{ hit.kota }}</span>
+                <span>{{ hit.city }}</span>
               </template>
-              <span v-if="hit.kota && hit.npsn" class="text-slate-300">·</span>
+              <span v-if="hit.city && hit.npsn" class="text-slate-300">·</span>
               <template v-if="hit.npsn">
                 <span class="font-mono text-[10.5px]">NPSN {{ hit.npsn }}</span>
               </template>
@@ -458,7 +458,7 @@ async function requestAccessForKamilEduMatch() {
         <div class="flex-1 min-w-0">
           <p class="text-[13px] font-bold text-slate-900 leading-tight">{{ npsnHit.name }}</p>
           <p class="text-[10.5px] text-slate-600 mt-0.5">
-            {{ [npsnHit.jenjang, npsnHit.kota, npsnHit.provinsi].filter(Boolean).join(' · ') }}
+            {{ [npsnHit.education_level, npsnHit.city, npsnHit.province].filter(Boolean).join(' · ') }}
             <span v-if="npsnHit.akreditasi" class="ml-1 px-1.5 py-0.5 bg-emerald-200 text-emerald-800 rounded text-[9px] font-bold">
               Akreditasi {{ npsnHit.akreditasi }}
             </span>

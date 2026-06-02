@@ -26,9 +26,9 @@ const isAssignment = computed(() => {
   const raw = (props.activity.raw_type ?? '').toLowerCase().trim();
   if (raw === 'materi' || raw === 'material' || raw === 'info') return false;
   return (
-    props.activity.type === 'tugas' ||
-    props.activity.type === 'pr' ||
-    props.activity.type === 'ulangan'
+    props.activity.type === 'assignment' ||
+    props.activity.type === 'homework' ||
+    props.activity.type === 'test'
   );
 });
 

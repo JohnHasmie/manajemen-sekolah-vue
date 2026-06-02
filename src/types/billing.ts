@@ -28,7 +28,8 @@ export interface PaymentTypeMini {
   id: string;
   name: string;
   description?: string | null;
-  periode?: string | null;
+  /** Canonical English value: monthly / yearly / once. */
+  period?: string | null;
 }
 
 export interface StudentMini {
@@ -203,7 +204,9 @@ export interface DashboardStats {
 // ───────────────────────────────────────────────────────────────────
 
 export type PaymentTypeStatus = 'active' | 'inactive';
-export type PaymentTypePeriode = 'sekali' | 'bulanan' | 'tahunan' | 'ONCE' | 'MONTHLY' | 'YEARLY';
+export type PaymentTypePeriod = 'once' | 'monthly' | 'yearly';
+/** @deprecated Use PaymentTypePeriod. */
+export type PaymentTypePeriode = PaymentTypePeriod;
 
 export interface PaymentType {
   id: string;
@@ -211,7 +214,8 @@ export interface PaymentType {
   name: string;
   description?: string | null;
   amount: number;
-  periode: PaymentTypePeriode | string;
+  /** Canonical English value: monthly / yearly / once. */
+  period: PaymentTypePeriod | string;
   status: PaymentTypeStatus | string;
   goal?: string | null;
   start_date?: string | null;
@@ -224,7 +228,8 @@ export interface PaymentTypePayload {
   name: string;
   description?: string | null;
   amount: number;
-  periode: string;
+  /** Canonical English value: monthly / yearly / once. */
+  period: string;
   status?: string;
   goal?: string | null;
   start_date?: string | null;
@@ -295,17 +300,34 @@ export const PAYMENT_STATUS_TONES: Record<PaymentStatus, { bg: string; text: str
   rejected: { bg: 'bg-red-100', text: 'text-red-700' },
 };
 
-export const PERIODE_LABELS: Record<string, string> = {
+export const PERIOD_LABELS: Record<string, string> = {
+  // Canonical English values
+  monthly: 'Bulanan',
+  yearly: 'Tahunan',
+  once: 'Sekali',
+  // Legacy Indonesian / upper-case fallbacks
   bulanan: 'Bulanan',
   MONTHLY: 'Bulanan',
-  monthly: 'Bulanan',
   tahunan: 'Tahunan',
   YEARLY: 'Tahunan',
-  yearly: 'Tahunan',
   sekali: 'Sekali',
   ONCE: 'Sekali',
-  once: 'Sekali',
 };
+
+/** @deprecated Use PERIOD_LABELS. */
+export const PERIODE_LABELS = PERIOD_LABELS;
+
+/** Normalise legacy values to canonical English. */
+export function normalizePaymentTypePeriod(
+  raw: string | null | undefined,
+): PaymentTypePeriod | string {
+  if (!raw) return 'monthly';
+  const v = String(raw).toLowerCase().trim();
+  if (v === 'monthly' || v === 'bulanan') return 'monthly';
+  if (v === 'yearly' || v === 'tahunan') return 'yearly';
+  if (v === 'once' || v === 'sekali') return 'once';
+  return v;
+}
 
 // ───────────────────────────────────────────────────────────────────
 // Normalisers
@@ -333,7 +355,10 @@ export function normalizePaymentStatus(raw: string | null | undefined): PaymentS
   return 'pending';
 }
 
-export function periodeLabel(raw: string | null | undefined): string {
+export function periodLabel(raw: string | null | undefined): string {
   if (!raw) return '—';
-  return PERIODE_LABELS[raw] ?? PERIODE_LABELS[String(raw).toLowerCase()] ?? String(raw);
+  return PERIOD_LABELS[raw] ?? PERIOD_LABELS[String(raw).toLowerCase()] ?? String(raw);
 }
+
+/** @deprecated Use periodLabel. */
+export const periodeLabel = periodLabel;
