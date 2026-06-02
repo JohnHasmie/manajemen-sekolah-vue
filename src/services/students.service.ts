@@ -33,15 +33,25 @@ function unwrap(body: unknown): { data: unknown[]; pagination?: Pagination } {
 
 export const StudentService = {
   async list(params: StudentListParams = {}): Promise<ListResult> {
+    // Backend StudentController previously only validated `class_id`
+    // (singular UUID) and silently ignored `class_ids` plural — so
+    // picking "7A" in the filter chip never applied. Send singular
+    // when exactly one class is selected (the common case via the
+    // chip), plural comma-list when 2+ are picked via the modal.
+    // Backend now accepts both shapes.
+    const classFilter: Record<string, string> = {};
+    if (params.class_ids && params.class_ids.length === 1) {
+      classFilter.class_id = params.class_ids[0];
+    } else if (params.class_ids && params.class_ids.length > 1) {
+      classFilter.class_ids = params.class_ids.join(',');
+    }
     const res = await api.get('/student', {
       params: {
         page: params.page ?? 1,
         per_page: params.per_page ?? 10,
         ...(params.search ? { search: params.search } : {}),
         ...(params.status ? { status: params.status } : {}),
-        ...(params.class_ids && params.class_ids.length
-          ? { class_ids: params.class_ids.join(',') }
-          : {}),
+        ...classFilter,
         ...(params.gender ? { gender: params.gender } : {}),
         ...(params.guardian ? { guardian: params.guardian } : {}),
       },
