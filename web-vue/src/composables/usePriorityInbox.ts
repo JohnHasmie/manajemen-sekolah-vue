@@ -58,10 +58,17 @@ const ROUTE_MAPS: Record<PriorityRole, RouteMap> = {
   },
   admin: {
     // target_route values from admin aggregators (the ones backend
-    // actually ships — without these the clicks were silent no-ops)
-    admin_schedule_conflicts: '/admin/schedules',
-    admin_schedule_management: '/admin/schedules',
-    admin_class_management: '/admin/classrooms',
+    // actually ships — these must match the actual Vue router paths
+    // declared in src/router/index.ts under the /admin namespace).
+    //
+    // The router uses SINGULAR + Indonesian-flavoured names for the
+    // historical paths: /admin/classes (not /admin/classrooms),
+    // /admin/schedule (not /admin/schedules), /admin/grades (not
+    // /admin/grade-overview). Get one wrong and the click silently
+    // no-ops because vue-router falls back to the not-found route.
+    admin_schedule_conflicts: '/admin/schedule',
+    admin_schedule_management: '/admin/schedule',
+    admin_class_management: '/admin/classes',
     admin_rpp_review: '/admin/lesson-plans',
     admin_raport_hub: '/admin/report-cards',
     admin_overdue_bills: '/admin/finance',
@@ -69,27 +76,25 @@ const ROUTE_MAPS: Record<PriorityRole, RouteMap> = {
     admin_announcement_drafts: '/admin/announcements',
     // type values (PriorityInboxItem::TYPE_* — fallbacks when only
     // type is shipped, or when target_route is unknown to the FE).
-    // Canonical English values post-rename (with legacy fallbacks
-    // kept below).
-    schedule_conflict: '/admin/schedules',
-    class_without_schedule: '/admin/schedules',
-    homeroom_missing: '/admin/classrooms',
-    wali_kelas_missing: '/admin/classrooms', // legacy alias
+    schedule_conflict: '/admin/schedule',
+    class_without_schedule: '/admin/schedule',
+    homeroom_missing: '/admin/classes',
+    wali_kelas_missing: '/admin/classes', // legacy alias
     rpp_review_queue: '/admin/lesson-plans',
     report_card_pipeline_lagging: '/admin/report-cards',
     raport_pipeline_lagging: '/admin/report-cards', // legacy alias
     report_card_draft_deadline: '/admin/report-cards',
     raport_draft_deadline: '/admin/report-cards', // legacy alias
     announcement_stale_draft: '/admin/announcements',
-    // legacy / generic aliases (kept for forward compat)
+    // generic aliases (kept for forward compat)
     lesson_plan_detail: '/admin/lesson-plans',
     lesson_plan: '/admin/lesson-plans',
     rpp: '/admin/lesson-plans',
     teacher: '/admin/teachers',
     student: '/admin/students',
-    classroom: '/admin/classrooms',
+    classroom: '/admin/classes',
     subject: '/admin/subjects',
-    schedule: '/admin/schedules',
+    schedule: '/admin/schedule',
     finance: '/admin/finance',
     payment_verification: '/admin/finance',
     payment: '/admin/finance',
@@ -98,7 +103,8 @@ const ROUTE_MAPS: Record<PriorityRole, RouteMap> = {
     announcement: '/admin/announcements',
     attendance: '/admin/attendance',
     class_activity: '/admin/class-activity',
-    grade: '/admin/grade-overview',
+    grade: '/admin/grades',
+    grade_overview: '/admin/grades',
     report_card: '/admin/report-cards',
     report_card_class: '/admin/report-cards',
     settings: '/admin/settings',

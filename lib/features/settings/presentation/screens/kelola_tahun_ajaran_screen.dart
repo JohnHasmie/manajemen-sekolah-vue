@@ -18,6 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
+import 'package:manajemensekolah/core/utils/academic_year_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
@@ -499,12 +500,12 @@ class _YearCard extends StatelessWidget {
         : null;
 
     // ── Semester label ──
-    final semesterRaw = (year['semester'] ?? '').toString().toLowerCase();
-    final semesterLabel = semesterRaw == 'ganjil'
-        ? 'Ganjil'
-        : semesterRaw == 'genap'
-        ? 'Genap'
-        : null;
+    //
+    // `academic_years.semester` still uses Indonesian (`ganjil` /
+    // `genap`) per backend convention; defensively also accept the
+    // canonical `odd` / `even` encoding used by `semesters.name`
+    // post-rename, in case any legacy code path writes those.
+    final semesterLabel = semesterDisplayLabel(year['semester']?.toString());
     final semesterPart = semesterLabel != null
         ? 'Semester $semesterLabel'
         : null;

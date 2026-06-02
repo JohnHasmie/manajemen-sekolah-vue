@@ -15,6 +15,7 @@ import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import type { ScheduleRow } from '@/types/schedule';
 import { DAY_LABELS } from '@/types/schedule';
+import { semesterLabel } from '@/lib/labels';
 
 defineProps<{
   row: ScheduleRow;
@@ -83,7 +84,7 @@ const emit = defineEmits<{
           </div>
           <div class="flex justify-between gap-2">
             <dt class="text-slate-500">Semester</dt>
-            <dd class="font-bold text-slate-900 text-right">{{ row.semester_name ?? '—' }}</dd>
+            <dd class="font-bold text-slate-900 text-right">{{ semesterLabel(row.semester_name, '—') }}</dd>
           </div>
           <div class="flex justify-between gap-2">
             <dt class="text-slate-500">Tahun Ajaran</dt>

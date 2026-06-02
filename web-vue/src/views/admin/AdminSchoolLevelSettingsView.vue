@@ -108,8 +108,13 @@ const semesterLabel = computed(() => {
   const fromAY = activeYear.value?.semester;
   const fromSem = activeSemester.value?.name;
   const raw = (fromAY || fromSem || '').toLowerCase();
-  if (raw === 'ganjil' || raw === '1' || raw === 'semester 1') return 'Semester Ganjil';
-  if (raw === 'genap' || raw === '2' || raw === 'semester 2') return 'Semester Genap';
+  // Canonical backend slugs: `odd` / `even`. Legacy values kept for
+  // defensive reads against un-migrated rows or older /current-period
+  // payloads. The `1` / `semester 1` matches handle the older
+  // `academic_years.semester` numeric form returned by some legacy
+  // endpoints.
+  if (raw === 'odd' || raw === 'ganjil' || raw === 'gasal' || raw === '1' || raw === 'semester 1') return 'Semester Ganjil';
+  if (raw === 'even' || raw === 'genap' || raw === '2' || raw === 'semester 2') return 'Semester Genap';
   return fromAY || fromSem || '—';
 });
 

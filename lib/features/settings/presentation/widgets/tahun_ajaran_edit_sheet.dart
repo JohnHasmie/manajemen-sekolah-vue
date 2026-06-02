@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/academic_year_utils.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
@@ -64,12 +65,14 @@ class TahunAjaranEditSheet {
 
     // Embedded semester from the AY row itself (post-migration source
     // of truth). Falls back to 'Ganjil' for create mode + legacy rows.
+    //
+    // `academic_years.semester` still uses Indonesian per backend
+    // convention, but [semesterDisplayLabel] also accepts the canonical
+    // `odd` / `even` encoding so the chip stays correct if a future code
+    // path leaks the canonical value in here.
     String selectedSemester = () {
-      final raw = academicYear?['semester'];
-      if (raw is String && raw.isNotEmpty) {
-        return raw.toLowerCase() == 'genap' ? 'Genap' : 'Ganjil';
-      }
-      return 'Ganjil';
+      final label = semesterDisplayLabel(academicYear?['semester']?.toString());
+      return label ?? 'Ganjil';
     }();
 
     // Both Tambah and Edit use the admin brand navy. The earlier draft
@@ -280,13 +283,25 @@ class TahunAjaranEditSheet {
                 // Best-effort: sync the legacy global "current semester"
                 // record so non-redesigned screens keep showing the right
                 // label. Failure is non-fatal.
+                //
+                // Backend follow-up migration normalized `semesters.name`
+                // stored values to canonical `odd` / `even`. The
+                // `academic_years.semester` column we just wrote (semLower
+                // = `ganjil`/`genap`) still uses Indonesian, so we
+                // canonicalize it before matching against the row in
+                // `/semesters`. We also defensively accept either encoding
+                // in case the row hasn't been migrated yet.
                 try {
                   final semList = (await dioClient.get('/semesters')).data;
                   if (semList is List) {
+                    final semCanonical = canonicalSemesterName(semLower);
                     final match = semList.firstWhere(
-                      (s) =>
-                          (s['name']?.toString().toLowerCase() ?? '') ==
-                          semLower,
+                      (s) {
+                        final name = (s['name']?.toString() ?? '')
+                            .trim()
+                            .toLowerCase();
+                        return name == semCanonical || name == semLower;
+                      },
                       orElse: () => null,
                     );
                     if (match != null) {

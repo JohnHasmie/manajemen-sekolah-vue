@@ -104,11 +104,13 @@ const isPublished = computed(
     row.value?.reportCard.status === 'distributed',
 );
 
-const isGenap = computed(
-  () =>
-    (row.value?.reportCard.semester ?? '').toLowerCase().includes('genap') ||
-    (row.value?.reportCard.semester ?? '').toLowerCase() === '2',
-);
+const isGenap = computed(() => {
+  // Canonical `semesters.name` value is `even` post-migration; we still
+  // accept the legacy `genap` substring and the numeric `2` form fed in
+  // from the list view's query string for back-compat.
+  const raw = (row.value?.reportCard.semester ?? '').toLowerCase();
+  return raw === 'even' || raw === '2' || raw.includes('genap');
+});
 
 const isNaikKelas = computed(() =>
   (row.value?.reportCard.promotion_decision ?? '')
@@ -118,10 +120,13 @@ const isNaikKelas = computed(() =>
 
 const className = computed(() => row.value?.student.class_name ?? '');
 const semesterLabel = computed(() => {
-  const raw = row.value?.reportCard.semester ?? '';
-  if (raw.toLowerCase().includes('genap') || raw === '2') return 'Sem. Genap';
-  if (raw.toLowerCase().includes('ganjil') || raw === '1') return 'Sem. Ganjil';
-  return raw || 'Semester';
+  // Backend may ship the canonical slug (`odd`/`even`), the legacy
+  // Indonesian label (`Ganjil`/`Gasal`/`Genap`), or — when carried from
+  // the list view's filter — a numeric id (`1`/`2`). Accept all three.
+  const raw = (row.value?.reportCard.semester ?? '').toLowerCase();
+  if (raw === 'even' || raw === '2' || raw.includes('genap')) return 'Sem. Genap';
+  if (raw === 'odd' || raw === '1' || raw.includes('ganjil') || raw.includes('gasal')) return 'Sem. Ganjil';
+  return row.value?.reportCard.semester || 'Semester';
 });
 const academicYear = computed(() => row.value?.reportCard.academic_year ?? '');
 

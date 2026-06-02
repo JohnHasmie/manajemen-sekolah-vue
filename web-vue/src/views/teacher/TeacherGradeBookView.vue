@@ -28,6 +28,7 @@ import {
   ref,
   watch,
 } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
@@ -62,6 +63,26 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const { fromQuickAction, queryString } = useQuickAction();
 const auth = useAuthStore();
+const route = useRoute();
+
+// ── Admin-view support ──
+// Admins can drill into a teacher's gradebook from
+// AdminGradeOverviewView. The route is /admin/grades/teacher/:teacherId
+// (with `?teacher_id=...` query alias). When that param is present,
+// every API call here must use it instead of the logged-in user's id
+// — otherwise the page loads the admin's own (empty) gradebook and
+// renders "Belum ada mapel terdaftar".
+const routeTeacherId = computed<string>(() => {
+  const fromParam = route.params.teacherId;
+  if (typeof fromParam === 'string' && fromParam.length > 0) return fromParam;
+  const fromQuery = route.query.teacher_id;
+  if (typeof fromQuery === 'string' && fromQuery.length > 0) return fromQuery;
+  return '';
+});
+const isAdminView = computed(() => routeTeacherId.value.length > 0);
+const effectiveTeacherId = computed<string>(
+  () => routeTeacherId.value || auth.teacherId || auth.user?.id || '',
+);
 
 // ── Role toggle (Mengajar / Wali) ──
 const selectedRoleId = ref<string>('mengajar');
@@ -371,7 +392,7 @@ async function loadReferences() {
 }
 
 async function loadSummary() {
-  const teacherId = auth.teacherId ?? auth.user?.id ?? '';
+  const teacherId = effectiveTeacherId.value;
   if (!teacherId) {
     isSummaryLoading.value = false;
     return;
@@ -400,7 +421,7 @@ async function loadMatrix() {
       class_id: matrixClass.value.id,
       subject_id: matrixSubject.value.id,
       semester: semester.value,
-      teacher_id: auth.teacherId ?? auth.user?.id,
+      teacher_id: effectiveTeacherId.value,
       assessments_seed: matrixAssessmentSeed.value,
     });
   } catch (e) {
@@ -767,6 +788,13 @@ async function save(opts: { silent?: boolean } = {}) {
         message: 'Tidak ada perubahan untuk disimpan.',
         tone: 'error',
       };
+    return;
+  }
+  if (isAdminView.value) {
+    toast.value = {
+      message: 'Mode admin — tampilan hanya-baca. Mintalah guru terkait untuk menyimpan perubahan.',
+      tone: 'error',
+    };
     return;
   }
   const teacherId = auth.teacherId ?? auth.user?.id ?? '';

@@ -194,13 +194,20 @@ export const AuthService = {
   async submitHelpRequest(payload: {
     name: string;
     email: string;
+    /** Optional school the requester is asking about. */
     school?: string;
     message: string;
   }): Promise<{ message: string }> {
     try {
-      const res = await api.post(Endpoints.helpRequest, payload);
-      const body = normalize(res.data);
-      return { message: body.message ?? 'Permintaan bantuan terkirim.' };
+      const body = {
+        name: payload.name,
+        email: payload.email,
+        message: payload.message,
+        ...(payload.school ? { school_name: payload.school } : {}),
+      };
+      const res = await api.post(Endpoints.helpRequest, body);
+      const data = normalize(res.data);
+      return { message: data.message ?? 'Permintaan bantuan terkirim.' };
     } catch (e) {
       throw pickErrorMessage(e, 'Gagal mengirim permintaan bantuan');
     }
