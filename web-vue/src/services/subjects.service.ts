@@ -59,6 +59,23 @@ export const SubjectService = {
     };
   },
 
+  /**
+   * Subjects taught by a specific teacher (GET /teacher/{id}/subjects).
+   * Used to scope teacher-facing pickers (e.g. Materi, RPP) to only the
+   * mapel the teacher actually teaches. The endpoint returns a bare array
+   * (no `data`/pagination envelope), so handle both shapes defensively.
+   */
+  async listForTeacher(teacherId: string): Promise<Subject[]> {
+    const res = await api.get(`/teacher/${teacherId}/subjects`);
+    const body = res.data as unknown;
+    const arr = Array.isArray(body)
+      ? body
+      : Array.isArray((body as Record<string, unknown>)?.data)
+        ? ((body as Record<string, unknown>).data as unknown[])
+        : [];
+    return arr.map((r) => subjectFromJson(r as Record<string, unknown>));
+  },
+
   async create(payload: Record<string, unknown>): Promise<Subject> {
     const res = await api.post('/subject', payload);
     const body = res.data as Record<string, unknown>;
