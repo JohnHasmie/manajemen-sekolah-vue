@@ -13,6 +13,7 @@
 // Like testing a Vue <RecommendationCard> — purely presentational.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_card.dart';
 
 // ---------------------------------------------------------------------------
@@ -49,30 +50,38 @@ Widget _build({Map<String, dynamic>? rec, Key? listKey}) => MaterialApp(
 
 void main() {
   group('RecommendationCard — priority badge', () {
-    testWidgets('shows "HIGH" badge for priority=high', (tester) async {
+    // Redesign: the priority pill now reads the uppercased Indonesian
+    // label ("PRIORITAS TINGGI/SEDANG/RENDAH") rather than HIGH/MEDIUM/LOW.
+    testWidgets('shows "PRIORITAS TINGGI" badge for priority=high', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(rec: _rec(priority: 'high')));
       await tester.pumpAndSettle();
-      expect(find.text('HIGH'), findsOneWidget);
+      expect(find.text('PRIORITAS TINGGI'), findsOneWidget);
     });
 
-    testWidgets('shows "MEDIUM" badge for priority=medium', (tester) async {
+    testWidgets('shows "PRIORITAS SEDANG" badge for priority=medium', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(rec: _rec(priority: 'medium')));
       await tester.pumpAndSettle();
-      expect(find.text('MEDIUM'), findsOneWidget);
+      expect(find.text('PRIORITAS SEDANG'), findsOneWidget);
     });
 
-    testWidgets('shows "LOW" badge for priority=low', (tester) async {
+    testWidgets('shows "PRIORITAS RENDAH" badge for priority=low', (
+      tester,
+    ) async {
       await tester.pumpWidget(_build(rec: _rec(priority: 'low')));
       await tester.pumpAndSettle();
-      expect(find.text('LOW'), findsOneWidget);
+      expect(find.text('PRIORITAS RENDAH'), findsOneWidget);
     });
 
-    testWidgets('fallback priority is "LOW" when priority absent', (
+    testWidgets('fallback priority is "PRIORITAS RENDAH" when absent', (
       tester,
     ) async {
       await tester.pumpWidget(_build(rec: {'type': 'video', 'title': 'Test'}));
       await tester.pumpAndSettle();
-      expect(find.text('LOW'), findsOneWidget);
+      expect(find.text('PRIORITAS RENDAH'), findsOneWidget);
     });
   });
 
@@ -115,18 +124,26 @@ void main() {
   });
 
   group('RecommendationCard — sections', () {
-    testWidgets('shows "REKOMENDASI:" section label', (tester) async {
-      await tester.pumpWidget(_build());
-      await tester.pumpAndSettle();
-      expect(find.text('REKOMENDASI:'), findsOneWidget);
-    });
-
-    testWidgets('shows "BERDASARKAN ANALISIS AI:" reasoning label', (
+    testWidgets('renders description via HtmlWidget, no REKOMENDASI label', (
       tester,
     ) async {
+      // Redesign: the description renders straight through an HtmlWidget
+      // (rich text, not a plain Text), so the old "REKOMENDASI:" section
+      // header was removed.
+      await tester.pumpWidget(
+        _build(rec: _rec(description: 'Kerjakan soal aljabar berikut.')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('REKOMENDASI:'), findsNothing);
+      final html = tester.widget<HtmlWidget>(find.byType(HtmlWidget));
+      expect(html.html, 'Kerjakan soal aljabar berikut.');
+    });
+
+    testWidgets('shows "ALASAN AI" reasoning label', (tester) async {
+      // Redesign: the reasoning block header is now "ALASAN AI".
       await tester.pumpWidget(_build());
       await tester.pumpAndSettle();
-      expect(find.text('BERDASARKAN ANALISIS AI:'), findsOneWidget);
+      expect(find.text('ALASAN AI'), findsOneWidget);
     });
 
     testWidgets('shows ai_reasoning text', (tester) async {
@@ -137,18 +154,21 @@ void main() {
       expect(find.text('Siswa lemah di aljabar.'), findsOneWidget);
     });
 
-    testWidgets('shows insights icon in reasoning section', (tester) async {
+    testWidgets('shows auto_awesome icon in reasoning section', (tester) async {
+      // Redesign: the reasoning icon is now Icons.auto_awesome_rounded.
       await tester.pumpWidget(_build());
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.insights_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.auto_awesome_rounded), findsOneWidget);
     });
   });
 
   group('RecommendationCard — materials section', () {
+    // Redesign: the materials header is now "Materi & Aktivitas" (title
+    // case, no trailing colon).
     testWidgets('hides materials section when materials=null', (tester) async {
       await tester.pumpWidget(_build(rec: _rec(materials: null)));
       await tester.pumpAndSettle();
-      expect(find.text('MATERI & AKTIVITAS:'), findsNothing);
+      expect(find.text('Materi & Aktivitas'), findsNothing);
     });
 
     testWidgets('hides materials section when materials is empty list', (
@@ -156,10 +176,10 @@ void main() {
     ) async {
       await tester.pumpWidget(_build(rec: _rec(materials: [])));
       await tester.pumpAndSettle();
-      expect(find.text('MATERI & AKTIVITAS:'), findsNothing);
+      expect(find.text('Materi & Aktivitas'), findsNothing);
     });
 
-    testWidgets('shows "MATERI & AKTIVITAS:" when materials has items', (
+    testWidgets('shows "Materi & Aktivitas" when materials has items', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -172,15 +192,20 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('MATERI & AKTIVITAS:'), findsOneWidget);
+      expect(find.text('Materi & Aktivitas'), findsOneWidget);
     });
   });
 
   group('RecommendationCard — misc', () {
-    testWidgets('shows more_horiz icon', (tester) async {
+    testWidgets('shows the BELUM DIKIRIM share pill by default', (
+      tester,
+    ) async {
+      // Redesign: there is no more_horiz icon. An un-shared rec shows the
+      // "BELUM DIKIRIM" share-state pill in the pill row.
       await tester.pumpWidget(_build());
       await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.more_horiz), findsOneWidget);
+      expect(find.byIcon(Icons.more_horiz), findsNothing);
+      expect(find.text('BELUM DIKIRIM'), findsOneWidget);
     });
 
     testWidgets('renders without crashing with empty rec map', (tester) async {

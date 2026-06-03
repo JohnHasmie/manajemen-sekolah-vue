@@ -14,6 +14,7 @@
 // callback.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_field_card.dart';
 
 // ---------------------------------------------------------------------------
@@ -68,21 +69,20 @@ void main() {
   });
 
   group('LessonPlanFieldCard — body content', () {
-    testWidgets('renders value via stripHtml in SelectableText', (
-      tester,
-    ) async {
+    // The body now renders the raw [value] through an HtmlWidget (which
+    // handles HTML formatting itself); it is no longer a plain/SelectableText
+    // and no longer pre-applies the [stripHtml] callback. Assert against the
+    // HtmlWidget's html input instead of a Text finder.
+    testWidgets('renders value through an HtmlWidget body', (tester) async {
       await tester.pumpWidget(_build(value: 'Peserta didik mampu berhitung'));
-      expect(find.text('Peserta didik mampu berhitung'), findsOneWidget);
+      final html = tester.widget<HtmlWidget>(find.byType(HtmlWidget));
+      expect(html.html, 'Peserta didik mampu berhitung');
     });
 
-    testWidgets('applies stripHtml transform to value', (tester) async {
-      await tester.pumpWidget(
-        _build(
-          value: '<p>Rich <b>text</b></p>',
-          stripHtml: (s) => s.replaceAll(RegExp(r'<[^>]*>'), ''),
-        ),
-      );
-      expect(find.text('Rich text'), findsOneWidget);
+    testWidgets('passes raw HTML value to the HtmlWidget body', (tester) async {
+      await tester.pumpWidget(_build(value: '<p>Rich <b>text</b></p>'));
+      final html = tester.widget<HtmlWidget>(find.byType(HtmlWidget));
+      expect(html.html, '<p>Rich <b>text</b></p>');
     });
   });
 

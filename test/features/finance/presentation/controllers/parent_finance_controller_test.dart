@@ -133,6 +133,9 @@ void main() {
         addTearDown(c.dispose);
 
         c.read(parentFinanceProvider.notifier).markItemVisible('b1', false);
+        // markItemVisible now defers the state mutation to a microtask;
+        // flush it before asserting.
+        await Future<void>.microtask(() {});
 
         final state = c.read(parentFinanceProvider).value!;
         expect(state.processedReadIds, contains('b1'));
@@ -144,6 +147,7 @@ void main() {
       addTearDown(c.dispose);
 
       c.read(parentFinanceProvider.notifier).markItemVisible('b1', false);
+      await Future<void>.microtask(() {});
 
       final state = c.read(parentFinanceProvider).value!;
       expect(state.pendingReadIds, contains('b1'));
@@ -182,6 +186,9 @@ void main() {
 
       notifier.markItemVisible('b1', false);
       notifier.markItemVisible('b2', false);
+      // Flush the per-call microtasks that apply the deferred mutations.
+      await Future<void>.microtask(() {});
+      await Future<void>.microtask(() {});
 
       final state = c.read(parentFinanceProvider).value!;
       expect(state.processedReadIds, containsAll(['b1', 'b2']));
@@ -196,7 +203,9 @@ void main() {
         final notifier = c.read(parentFinanceProvider.notifier);
 
         notifier.markItemVisible('b1', false);
+        await Future<void>.microtask(() {});
         notifier.markItemVisible('b1', false); // second call is a no-op
+        await Future<void>.microtask(() {});
 
         final state = c.read(parentFinanceProvider).value!;
         // Set semantics: still exactly one entry

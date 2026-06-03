@@ -43,10 +43,14 @@ void main() {
       expect(find.byIcon(Icons.menu_book_outlined), findsOneWidget);
     });
 
-    testWidgets('trailing arrow icon is present', (tester) async {
-      await tester.pumpWidget(buildSubject());
+    testWidgets('has no trailing arrow icon (redesigned tile)', (tester) async {
+      // The redesigned tile uses a left accent line + leading icon circle
+      // and dropped the trailing chevron. Only the provided leading icon
+      // is rendered.
+      await tester.pumpWidget(buildSubject(icon: Icons.assignment_outlined));
 
-      expect(find.byIcon(Icons.arrow_forward_ios_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_forward_ios_rounded), findsNothing);
+      expect(find.byIcon(Icons.assignment_outlined), findsOneWidget);
     });
 
     testWidgets('fires onTap callback when tapped', (tester) async {
