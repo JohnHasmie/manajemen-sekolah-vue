@@ -1,14 +1,16 @@
-/// Mixin for unread state detection logic.
-mixin NotificationReadStateMixin {
-  bool isUnread(dynamic n) {
-    if (n is! Map<String, dynamic>) return true;
-    if (n['is_read'] is bool) return !(n['is_read'] as bool);
-    if (n['is_read'] is int) return n['is_read'] != 1;
-    return true;
-  }
+import 'package:manajemensekolah/features/notifications/domain/models/notification_item.dart';
 
-  int unreadCount(List<dynamic> notifications) =>
+/// Mixin for unread state detection logic.
+///
+/// The heterogeneous `is_read` normalization (bool / int / missing) now lives
+/// in [NotificationItem._standardizeJson]; this mixin simply reads the derived
+/// [NotificationItem.isUnread] flag.
+mixin NotificationReadStateMixin {
+  bool isUnread(NotificationItem n) => n.isUnread;
+
+  int unreadCount(List<NotificationItem> notifications) =>
       notifications.where(isUnread).length;
 
-  bool hasUnread(List<dynamic> notifications) => notifications.any(isUnread);
+  bool hasUnread(List<NotificationItem> notifications) =>
+      notifications.any(isUnread);
 }

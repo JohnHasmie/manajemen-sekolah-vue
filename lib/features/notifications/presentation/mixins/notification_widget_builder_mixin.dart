@@ -3,6 +3,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
+import 'package:manajemensekolah/features/notifications/domain/models/notification_item.dart';
 import 'package:manajemensekolah/features/notifications/presentation/mixins/notification_type_mixin.dart';
 import 'package:manajemensekolah/features/notifications/presentation/mixins/notification_read_state_mixin.dart';
 import 'package:manajemensekolah/features/notifications/presentation/mixins/date_formatting_mixin.dart';
@@ -170,13 +171,13 @@ mixin NotificationWidgetBuilderMixin
     );
   }
 
-  Widget buildNotificationCard(Map<String, dynamic> notif) {
+  Widget buildNotificationCard(NotificationItem notif) {
     final isRead = !isUnread(notif);
-    final type = notif['type'] ?? 'general';
+    final type = notif.type ?? 'general';
     final color = isRead ? ColorUtils.slate400 : getColor(type);
 
     return Dismissible(
-      key: Key(notif['id'].toString()),
+      key: Key(notif.id),
       direction: DismissDirection.endToStart,
       background: Container(
         margin: const EdgeInsets.only(bottom: 10),
@@ -202,10 +203,10 @@ mixin NotificationWidgetBuilderMixin
           ],
         ),
       ),
-      onDismissed: (_) => deleteNotification(notif['id'].toString()),
+      onDismissed: (_) => deleteNotification(notif.id),
       child: GestureDetector(
         onTap: () {
-          if (!isRead) markAsRead(notif['id'].toString());
+          if (!isRead) markAsRead(notif.id);
           // Note: handleTap called in main build
         },
         child: Container(
@@ -275,7 +276,7 @@ mixin NotificationWidgetBuilderMixin
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        notif['title'] ?? '-',
+                                        notif.title ?? '-',
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: isRead
@@ -303,7 +304,7 @@ mixin NotificationWidgetBuilderMixin
                                 ),
                                 const SizedBox(height: AppSpacing.xs),
                                 Text(
-                                  notif['body'] ?? '-',
+                                  notif.body ?? '-',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: isRead
@@ -319,7 +320,7 @@ mixin NotificationWidgetBuilderMixin
                                   children: [
                                     buildInfoTag(
                                       Icons.access_time_rounded,
-                                      formatDate(notif['created_at']),
+                                      formatDate(notif.createdAt),
                                     ),
                                   ],
                                 ),
