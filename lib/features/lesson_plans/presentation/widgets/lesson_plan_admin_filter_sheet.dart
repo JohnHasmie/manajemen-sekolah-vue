@@ -109,7 +109,7 @@ class LessonPlanAdminFilter {
 }
 
 /// Sentinel for copyWith to distinguish "not passed" from "explicit
-/// null." Dart doesn't have an Optional<T> in the language proper.
+/// null." Dart doesn't have an `Optional<T>` in the language proper.
 const _unset = Object();
 
 /// Backend-facing status keys. Display labels stay short so chips

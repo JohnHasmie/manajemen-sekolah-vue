@@ -90,7 +90,6 @@ class TeachingScheduleManagementScreenState
   // Reference lists returned alongside schedules — used by the detail
   // dialog, form, and filter sheet.
   List<dynamic> _subjectList = [];
-  List<dynamic> _classList = [];
   List<dynamic> _dayList = [];
   List<dynamic> _termList = [];
   List<dynamic> _lessonHourList = [];
@@ -246,7 +245,6 @@ class TeachingScheduleManagementScreenState
     setState(() {
       _scheduleList = result.scheduleList;
       _subjectList = result.subjectList;
-      _classList = result.classList;
       _dayList = result.dayList;
       _termList = result.semesterList;
       _lessonHourList = result.lessonHourList;
@@ -371,7 +369,6 @@ class TeachingScheduleManagementScreenState
       setState(() {
         _scheduleList = result.scheduleList;
         _subjectList = result.subjectList;
-        _classList = result.classList;
         _dayList = result.dayList.isEmpty && _availableDays.isNotEmpty
             ? _availableDays
             : result.dayList;

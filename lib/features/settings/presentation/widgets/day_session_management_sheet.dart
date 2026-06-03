@@ -93,16 +93,6 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
 
   String _trim(String hms) => hms.length >= 5 ? hms.substring(0, 5) : hms;
 
-  String get _rangeLabel {
-    if (_sessions.isEmpty) return '';
-    final first = _sessions.first as Map;
-    final last = _sessions.last as Map;
-    final start = _trim(first['start_time']?.toString() ?? '');
-    final end = _trim(last['end_time']?.toString() ?? '');
-    if (start.isEmpty || end.isEmpty) return '';
-    return '$start – $end';
-  }
-
   // ── Mode transitions ─────────────────────────────────────────────
 
   void _enterBulk(String firstId) {

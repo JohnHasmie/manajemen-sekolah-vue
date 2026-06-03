@@ -44,7 +44,7 @@ class AdminFormSheetHeader extends StatelessWidget {
   /// `'TAMBAH BARU'` / `'EDIT DATA'` based on [isEditMode].
   final String? kicker;
 
-  /// Optional "MENGEDIT: <name>" context strip rendered below the header
+  /// Optional "MENGEDIT: `<name>`" context strip rendered below the header
   /// in edit mode. Pass `null` (the default) to hide it.
   final AdminFormContext? editingContext;
 

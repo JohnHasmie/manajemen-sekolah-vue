@@ -162,8 +162,6 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
   Future<void> onRefreshRequested() => forceRefresh();
 
   // Drives the realtime pill — bumped after every successful refresh.
-  DateTime _lastSync = DateTime.now();
-
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageRiverpod);
@@ -176,7 +174,7 @@ class ParentGradeScreenState extends ConsumerState<ParentGradeScreen>
         role: 'wali',
         onRefresh: () async {
           await onRefreshRequested();
-          if (mounted) setState(() => _lastSync = DateTime.now());
+          if (mounted) setState(() {});
         },
         bodyChildren: [_buildGradesBody(lang)],
       ),

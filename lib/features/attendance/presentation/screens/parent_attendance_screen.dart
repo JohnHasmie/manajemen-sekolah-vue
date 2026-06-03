@@ -95,12 +95,6 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
   /// [ChildSelectorChipRow]; loaded once on init and refreshed on
   /// pull-to-refresh.
   List<Student> _siblings = const [];
-
-  /// Track when the cached/fresh data was last loaded so the realtime
-  /// pill can show "Terhubung realtime · HH:MM" or
-  /// "Terakhir diperbarui N menit lalu".
-  DateTime _lastSync = DateTime.now();
-
   // ------- Data-mixin overrides for in-place child switching ------
 
   @override
@@ -181,7 +175,7 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
         onRefresh: () async {
           await forceRefresh();
           await _loadSiblings();
-          if (mounted) setState(() => _lastSync = DateTime.now());
+          if (mounted) setState(() {});
         },
         bodyChildren: _buildBodyChildren(lang),
       ),

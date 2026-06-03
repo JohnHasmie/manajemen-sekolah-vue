@@ -223,9 +223,6 @@ class _ExpandedSchoolPill extends StatelessWidget {
     final borderColor = onDarkSurface
         ? Colors.white.withValues(alpha: 0.14)
         : accentColor.withValues(alpha: 0.12);
-    final actionBg = onDarkSurface
-        ? Colors.white.withValues(alpha: 0.18)
-        : accentColor.withValues(alpha: 0.1);
 
     return Material(
       color: bg,

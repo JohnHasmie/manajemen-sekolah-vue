@@ -166,7 +166,7 @@ class _StudentAddEditSheetContentState
   @override
   bool get isEditMode => _isEdit;
 
-  /// "MENGEDIT: <Nama · Kelas>" context strip — only rendered in edit mode.
+  /// "MENGEDIT: `<Nama · Kelas>`" context strip — only rendered in edit mode.
   String? get editingContextLabel {
     if (!_isEdit) return null;
     final s = widget.student;

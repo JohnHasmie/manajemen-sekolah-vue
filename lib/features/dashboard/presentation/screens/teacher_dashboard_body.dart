@@ -513,7 +513,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   ///
   /// Slice axis (auto-cycles ~6 s, story-style progress strip):
   ///   • Mengajar      — all teaching classes, today scope
-  ///   • Wali <X>      — one slice per homeroom class held
+  ///   • Wali `<X>`      — one slice per homeroom class held
   ///   • Hari Ini      — time view, today
   ///   • Pekan Ini     — time view, current week
   ///

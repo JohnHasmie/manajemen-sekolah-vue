@@ -236,7 +236,7 @@ mixin StudentFormSaveMixin on StudentFormValidationMixin {
   }
 
   /// Pulls the first error message for any of [keys] from a Laravel
-  /// `errors` map shape (each value is a List<String> of messages).
+  /// `errors` map shape (each value is a `List<String>` of messages).
   String? _firstFieldError(Map<String, dynamic>? errors, List<String> keys) {
     if (errors == null) return null;
     for (final k in keys) {

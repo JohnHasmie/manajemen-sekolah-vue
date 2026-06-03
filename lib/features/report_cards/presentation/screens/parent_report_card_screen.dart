@@ -68,9 +68,6 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
   // Sibling selector state — mirrors the pattern from parent attendance.
   List<Student> _siblings = const [];
   String? _selectedChildId;
-
-  DateTime _lastSync = DateTime.now();
-
   @override
   void initState() {
     super.initState();
@@ -143,7 +140,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
         onRefresh: () async {
           await forceRefresh();
           await _loadSiblings();
-          if (mounted) setState(() => _lastSync = DateTime.now());
+          if (mounted) setState(() {});
         },
         bodyChildren: [buildContentArea(filteredData: _filteredStudents)],
       ),

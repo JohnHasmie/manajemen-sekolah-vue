@@ -35,7 +35,7 @@ String _initials(String name) {
 /// Returns a display-safe assessment title.
 ///
 /// Strips any embedded UUID and collapses leftover separators ("- ", " -"),
-/// so "UH - 019d9a76-..." becomes "UH" and "Judul Asli - <uuid>" becomes
+/// so "UH - 019d9a76-..." becomes "UH" and "Judul Asli - `<uuid>`" becomes
 /// "Judul Asli". If the title collapses to an empty string (e.g. the title
 /// was *just* a UUID), returns empty — callers fall back to the type label.
 String _sanitizeTitle(String rawTitle) {
