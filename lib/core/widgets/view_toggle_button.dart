@@ -26,7 +26,8 @@ enum ViewMode {
 /// ```dart
 /// ViewToggleButton(
 ///   currentMode: _isTableView ? ViewMode.table : ViewMode.card,
-///   onChanged: (mode) => setState(() => _isTableView = mode == ViewMode.table),
+///   onChanged: (mode) =>
+///       setState(() => _isTableView = mode == ViewMode.table),
 ///   availableModes: [ViewMode.card, ViewMode.table],
 /// )
 /// ```

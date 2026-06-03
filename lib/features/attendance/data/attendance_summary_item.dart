@@ -34,5 +34,6 @@ class AttendanceSummaryItem {
   });
 
   String get key =>
-      '$subjectId-${DateFormat('yyyy-MM-dd').format(date)}-$classId-$lessonHourId';
+      '$subjectId-${DateFormat('yyyy-MM-dd').format(date)}'
+      '-$classId-$lessonHourId';
 }

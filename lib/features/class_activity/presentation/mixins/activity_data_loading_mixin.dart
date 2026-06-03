@@ -138,7 +138,8 @@ mixin ActivityDataLoadingMixin on ConsumerState<AddActivityDialog> {
 
       AppLogger.debug(
         'class_activity',
-        'State updated - chapterMaterialList.length: ${chapterMaterialList.length}',
+        'State updated - chapterMaterialList.length: '
+            '${chapterMaterialList.length}',
       );
       AppLogger.debug('class_activity', '=============================');
     } catch (e) {
@@ -191,7 +192,8 @@ mixin ActivityDataLoadingMixin on ConsumerState<AddActivityDialog> {
 
       AppLogger.debug(
         'class_activity',
-        'State updated - subChapterMaterialList.length: ${subChapterMaterialList.length}',
+        'State updated - subChapterMaterialList.length: '
+            '${subChapterMaterialList.length}',
       );
       AppLogger.debug('class_activity', '==================================');
     } catch (e) {

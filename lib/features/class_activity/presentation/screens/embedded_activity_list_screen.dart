@@ -154,8 +154,9 @@ class EmbeddedActivityListScreenState
     // Apply initialDate if provided (e.g. from schedule card preselection)
     if (widget.initialDate != null) {
       final d = widget.initialDate!;
-      selectedDateFilter =
-          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      final month = d.month.toString().padLeft(2, '0');
+      final day = d.day.toString().padLeft(2, '0');
+      selectedDateFilter = '${d.year}-$month-$day';
       hasActiveFilter = true;
     } else {
       selectedDateFilter = null;

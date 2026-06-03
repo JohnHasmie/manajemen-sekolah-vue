@@ -175,7 +175,8 @@ class MetadataHelper {
             teacherId == null &&
             type == null &&
             (search == null || search.isEmpty))
-        ? 'activity_admin_summary_${academicYearId ?? 'all'}_${period ?? 'year'}'
+        ? 'activity_admin_summary_${academicYearId ?? 'all'}'
+              '_${period ?? 'year'}'
         : null;
 
     try {

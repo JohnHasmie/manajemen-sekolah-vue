@@ -486,6 +486,10 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
 
   Widget _nowBanner(Map<String, dynamic> s) {
     final cobalt = ColorUtils.brandCobalt;
+    final liveNow = widget.lp.getTranslatedText({
+      'en': 'Live now',
+      'id': 'Sesi sekarang',
+    });
     return Container(
       margin: const EdgeInsets.fromLTRB(2, 0, 2, 12),
       padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
@@ -525,7 +529,8 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${widget.lp.getTranslatedText({'en': 'Live now', 'id': 'Sesi sekarang'})} · ${s['lesson_hour_name'] ?? ''} · ${s['class_name'] ?? ''} · ${s['subject_name'] ?? ''}',
+                  '$liveNow · ${s['lesson_hour_name'] ?? ''} · '
+                  '${s['class_name'] ?? ''} · ${s['subject_name'] ?? ''}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -813,8 +818,11 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
       fg = Colors.white;
       icon = Icons.radio_button_checked;
     } else if (status == 'recorded') {
-      label =
-          '${widget.lp.getTranslatedText({'en': 'Done', 'id': 'Sudah'})} · $recordedCount hadir';
+      final doneWord = widget.lp.getTranslatedText({
+        'en': 'Done',
+        'id': 'Sudah',
+      });
+      label = '$doneWord · $recordedCount hadir';
       tint = ColorUtils.success600.withValues(alpha: 0.14);
       fg = ColorUtils.success600;
       icon = Icons.check_circle_rounded;
@@ -900,9 +908,11 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
                 Text(
                   widget.lp.getTranslatedText({
                     'en':
-                        "It's not a teaching day. You can still record attendance manually.",
+                        "It's not a teaching day. "
+                        'You can still record attendance manually.',
                     'id':
-                        'Tidak ada sesi mengajar terjadwal. Anda masih bisa mencatat presensi manual.',
+                        'Tidak ada sesi mengajar terjadwal. '
+                        'Anda masih bisa mencatat presensi manual.',
                   }),
                   textAlign: TextAlign.center,
                   style: TextStyle(

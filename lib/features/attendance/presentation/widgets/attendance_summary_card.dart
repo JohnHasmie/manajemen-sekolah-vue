@@ -134,7 +134,8 @@ class AttendanceSummaryCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            '${summary.className ?? '-'} · ${summary.subjectName}',
+                            '${summary.className ?? '-'} · '
+                            '${summary.subjectName}',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,

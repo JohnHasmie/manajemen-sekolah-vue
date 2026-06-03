@@ -260,7 +260,8 @@ class _PromotionCreateClassDialogState
         SnackBarUtils.showError(
           // ignore: use_build_context_synchronously
           context,
-          '${AppLocalizations.failedToSave.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToSave.tr}: '
+          '${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     }

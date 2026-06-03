@@ -183,10 +183,13 @@ class _ParentAttendanceCalendarScreenState
   Widget _buildHeader(LanguageProvider lang) {
     final monthLabel = DateFormat('MMMM y', 'id_ID').format(_viewMonth);
     final c = _counts;
+    final attendanceWord = lang.getTranslatedText({
+      'en': 'Attendance',
+      'id': 'Kehadiran',
+    });
     return BrandPageHeader(
       role: 'wali',
-      subtitle:
-          '${lang.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})} · ${widget.studentName}',
+      subtitle: '$attendanceWord · ${widget.studentName}',
       title: monthLabel,
       actionIcons: [
         BrandHeaderIconButton(
@@ -264,6 +267,7 @@ class _ParentAttendanceCalendarScreenState
           ..sort((a, b) => a.date.compareTo(b.date));
 
     final dayLabel = DateFormat('EEEE · d MMM', 'id_ID').format(selected);
+    final detailWord = lang.getTranslatedText({'en': 'DETAIL', 'id': 'DETAIL'});
 
     return Container(
       decoration: BoxDecoration(
@@ -277,7 +281,7 @@ class _ParentAttendanceCalendarScreenState
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '${lang.getTranslatedText({'en': 'DETAIL', 'id': 'DETAIL'})} ${dayLabel.toUpperCase()}',
+            '$detailWord ${dayLabel.toUpperCase()}',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,

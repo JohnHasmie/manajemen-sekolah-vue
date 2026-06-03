@@ -95,7 +95,8 @@ void main() {
       await binding.takeScreenshot('parent_fallback_dashboard');
 
       debugPrint(
-        '✅ TC089 PASSED - Dashboard verified (parent not available, admin fallback)',
+        '✅ TC089 PASSED - Dashboard verified '
+        '(parent not available, admin fallback)',
       );
     },
   );

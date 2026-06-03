@@ -504,12 +504,16 @@ class _ActivityCard extends StatelessWidget {
       );
     }
     if (_isAssignment && activity['batas_waktu'] != null) {
+      final dueDate = AppDateUtils.formatDateString(
+        activity['batas_waktu'].toString(),
+        format: 'dd MMM',
+      );
       chips.add(
         _chip(
           icon: Icons.access_time_rounded,
           label:
               '${lang.getTranslatedText({'en': 'Due', 'id': 'Batas'})}: '
-              '${AppDateUtils.formatDateString(activity['batas_waktu'].toString(), format: 'dd MMM')}',
+              '$dueDate',
           bg: const Color(0xFFFEE2E2),
           fg: const Color(0xFF991B1B),
         ),

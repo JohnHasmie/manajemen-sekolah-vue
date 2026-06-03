@@ -319,7 +319,8 @@ class LoggingInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     AppLogger.error(
       'dio',
-      '${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: ${err.message}',
+      '${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: '
+          '${err.message}',
     );
     handler.next(err);
   }

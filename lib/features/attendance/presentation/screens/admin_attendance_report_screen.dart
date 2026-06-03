@@ -61,7 +61,8 @@ class AttendanceSummary {
   });
 
   String get key =>
-      '$subjectId-$classId-${DateFormat('yyyy-MM-dd').format(date)}-$lessonHourId';
+      '$subjectId-$classId-${DateFormat('yyyy-MM-dd').format(date)}'
+      '-$lessonHourId';
 }
 
 /// Admin attendance report screen with list and table views, multi-filter

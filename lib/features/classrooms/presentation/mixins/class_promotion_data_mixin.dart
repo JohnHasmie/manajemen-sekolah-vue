@@ -84,7 +84,8 @@ mixin ClassPromotionDataMixin on ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          '${AppLocalizations.failedToLoadInitialData.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoadInitialData.tr}: '
+          '${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {
@@ -112,7 +113,8 @@ mixin ClassPromotionDataMixin on ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: '
+          '${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {
@@ -142,7 +144,8 @@ mixin ClassPromotionDataMixin on ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: '
+          '${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {
@@ -165,7 +168,8 @@ mixin ClassPromotionDataMixin on ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: '
+          '${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     }
@@ -187,7 +191,8 @@ mixin ClassPromotionDataMixin on ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          '${AppLocalizations.failedToLoad.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToLoad.tr}: '
+          '${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     }

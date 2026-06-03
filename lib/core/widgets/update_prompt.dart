@@ -139,7 +139,8 @@ class NativeUpdatePrompt {
       isDismissible: false,
       enableDrag: false,
       content: const Text(
-        'Pembaruan besar tersedia dengan fitur-fitur baru yang menarik. Segera perbarui aplikasi Anda untuk terus menggunakan layanan kami.',
+        'Pembaruan besar tersedia dengan fitur-fitur baru yang menarik. '
+        'Segera perbarui aplikasi Anda untuk terus menggunakan layanan kami.',
         style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
       ),
       footer: BottomSheetFooter(

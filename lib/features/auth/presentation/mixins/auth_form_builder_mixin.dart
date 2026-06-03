@@ -139,7 +139,8 @@ mixin AuthFormBuilderMixin on ConsumerState<LoginScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          '${AppLocalizations.otpSentToEmail.tr} ${authState.currentEmail ?? ''}',
+          '${AppLocalizations.otpSentToEmail.tr} '
+          '${authState.currentEmail ?? ''}',
           style: TextStyle(
             fontSize: 12,
             color: ColorUtils.slate500,

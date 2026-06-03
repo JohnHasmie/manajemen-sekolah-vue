@@ -103,7 +103,8 @@ class AdminDashboardRealtimePill extends StatelessWidget {
     }
     final mins = DateTime.now().difference(lastSync).inMinutes;
     if (mins <= 0) return AppLocalizations.dbConnecting.tr;
-    return '${AppLocalizations.dbLastUpdated.tr} $mins ${AppLocalizations.dbMinsAgo.tr}';
+    return '${AppLocalizations.dbLastUpdated.tr} $mins '
+        '${AppLocalizations.dbMinsAgo.tr}';
   }
 }
 

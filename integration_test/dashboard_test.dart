@@ -234,14 +234,16 @@ void main() {
         final hasBottomSheet = find.byType(BottomSheet).evaluate().isNotEmpty;
         final hasPopupMenu = find.byType(PopupMenuItem).evaluate().isNotEmpty;
         debugPrint(
-          '[TC009] Dialog: $hasDialog, BottomSheet: $hasBottomSheet, PopupMenu: $hasPopupMenu',
+          '[TC009] Dialog: $hasDialog, BottomSheet: $hasBottomSheet, '
+          'PopupMenu: $hasPopupMenu',
         );
 
         await tester.tapAt(const Offset(10, 10));
         await tester.pumpAndSettle();
       } else {
         debugPrint(
-          '[TC009] Academic year selector not found - checking for alternative UI',
+          '[TC009] Academic year selector not found - '
+          'checking for alternative UI',
         );
       }
 

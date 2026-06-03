@@ -2,7 +2,8 @@
 ///
 /// TC044-TC046: original Raport Siswa open/screenshot/back
 /// TC138:       Admin → select class → view student list → back back
-/// TC139:       Admin → select class → select student → view report card → back back back
+/// TC139:       Admin → select class → select student → view report card →
+///              back back back
 /// TC140:       Admin → report card — print/export button visible (if present)
 library;
 

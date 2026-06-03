@@ -92,9 +92,11 @@ const _kUnsavedChanges = {
 };
 const _kUnsavedChangesConfirm = {
   'en':
-      'You have unsaved changes. Are you sure you want to leave? Changes will be lost.',
+      'You have unsaved changes. Are you sure you want to leave? '
+      'Changes will be lost.',
   'id':
-      'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? Perubahan akan hilang.',
+      'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? '
+      'Perubahan akan hilang.',
 };
 const _kLeave = {'en': 'Leave', 'id': 'Keluar'};
 
@@ -104,9 +106,11 @@ const _kFinalizeReportCard = {
 };
 const _kFinalizeReportCardConfirm = {
   'en':
-      'The report card will be saved as final. Sending to parents will be done by the Admin later.',
+      'The report card will be saved as final. '
+      'Sending to parents will be done by the Admin later.',
   'id':
-      'Raport akan disimpan secara final. Pengiriman ke wali murid akan dilakukan oleh Admin nantinya.',
+      'Raport akan disimpan secara final. '
+      'Pengiriman ke wali murid akan dilakukan oleh Admin nantinya.',
 };
 const _kYesFinalize = {'en': 'Yes, Finalize', 'id': 'Ya, Selesaikan'};
 const _kAchievements = {'en': 'Achievements', 'id': 'Prestasi'};

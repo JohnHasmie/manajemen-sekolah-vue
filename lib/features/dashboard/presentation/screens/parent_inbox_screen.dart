@@ -98,7 +98,8 @@ class _ParentInboxScreenState extends ConsumerState<ParentInboxScreen> {
                     kicker: 'Tidak ada item',
                     title: 'Bersih untuk sekarang',
                     message: _category == 'all'
-                        ? 'Belum ada hal yang perlu perhatian Anda di sekolah ini.'
+                        ? 'Belum ada hal yang perlu perhatian Anda '
+                              'di sekolah ini.'
                         : 'Tidak ada item di kategori ini.',
                   ),
                 ),

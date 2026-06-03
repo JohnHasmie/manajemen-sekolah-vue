@@ -401,9 +401,11 @@ class _ActivitySubmissionPickerSheetState
                     // Header line — explains what "filter" means in this
                     // context. PopupMenu doesn't natively style this so
                     // we emit a disabled item.
+                    final statusLabel =
+                        _statusLabels[_statusFilter] ?? _statusFilter;
                     final scope = _statusFilter == null
                         ? 'semua siswa'
-                        : 'siswa "${_statusLabels[_statusFilter] ?? _statusFilter}"';
+                        : 'siswa "$statusLabel"';
                     return [
                       PopupMenuItem<String>(
                         enabled: false,
@@ -683,12 +685,13 @@ class _ActivitySubmissionPickerSheetState
     final visible = _visibleRows;
     if (visible.isEmpty) {
       // Filter or search produced no matches.
+      final statusLabel = _statusLabels[_statusFilter] ?? _statusFilter;
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
             _statusFilter != null
-                ? 'Tidak ada siswa berstatus "${_statusLabels[_statusFilter] ?? _statusFilter}".'
+                ? 'Tidak ada siswa berstatus "$statusLabel".'
                 : 'Tidak ada siswa cocok dengan pencarian.',
             textAlign: TextAlign.center,
             style: TextStyle(color: ColorUtils.slate500, fontSize: 13),

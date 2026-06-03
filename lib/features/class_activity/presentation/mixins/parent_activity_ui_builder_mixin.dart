@@ -131,7 +131,8 @@ class _ActivityDetailContent extends StatelessWidget {
             'id': 'Tanggal',
           }),
           value:
-              '${activity['day'] ?? activity['hari'] ?? '-'} • ${formatDate(activity['date'] ?? activity['tanggal'])}',
+              '${activity['day'] ?? activity['hari'] ?? '-'} • '
+              '${formatDate(activity['date'] ?? activity['tanggal'])}',
           primaryColor: primaryColor,
         ),
         if (isAssignment &&

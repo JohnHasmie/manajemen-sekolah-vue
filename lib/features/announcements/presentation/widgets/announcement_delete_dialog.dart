@@ -29,9 +29,11 @@ class AnnouncementDeleteDialog {
       }),
       message: languageProvider.getTranslatedText({
         'en':
-            'Are you sure you want to delete this announcement? All related data will be permanently removed.',
+            'Are you sure you want to delete this announcement? '
+            'All related data will be permanently removed.',
         'id':
-            'Yakin ingin menghapus pengumuman ini? Semua data terkait akan dihapus secara permanen.',
+            'Yakin ingin menghapus pengumuman ini? '
+            'Semua data terkait akan dihapus secara permanen.',
       }),
       confirmText: languageProvider.getTranslatedText({
         'en': 'Delete',

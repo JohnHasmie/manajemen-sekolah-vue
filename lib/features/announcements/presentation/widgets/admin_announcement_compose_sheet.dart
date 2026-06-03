@@ -477,7 +477,8 @@ class _AdminAnnouncementComposeSheetState
                       AdminFormToggle(
                         title: 'Tambahkan Acara',
                         subtitle:
-                            'Tanggal kejadian + reminder otomatis sebelum mulai',
+                            'Tanggal kejadian + reminder otomatis '
+                            'sebelum mulai',
                         value: _hasEvent,
                         onChanged: (v) => setState(() => _hasEvent = v),
                       ),

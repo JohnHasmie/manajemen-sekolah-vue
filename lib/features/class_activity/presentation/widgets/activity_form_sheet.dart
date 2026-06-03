@@ -844,7 +844,8 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
       'date': DateFormat('yyyy-MM-dd').format(_date),
       if (_time != null)
         'time':
-            '${_time!.hour.toString().padLeft(2, '0')}:${_time!.minute.toString().padLeft(2, '0')}',
+            '${_time!.hour.toString().padLeft(2, '0')}:'
+            '${_time!.minute.toString().padLeft(2, '0')}',
       // Bab + Sub-bab are optional. Send `null` when cleared so the
       // backend treats it as "remove the link" on update.
       'chapter_id': _chapterId,

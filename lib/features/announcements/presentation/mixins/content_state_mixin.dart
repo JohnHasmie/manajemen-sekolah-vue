@@ -94,7 +94,8 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
               'No announcements match "${searchController.text}". '
               'Clear the search to see everything again.',
           'id':
-              'Tidak ada pengumuman yang cocok dengan "${searchController.text}". '
+              'Tidak ada pengumuman yang cocok dengan '
+              '"${searchController.text}". '
               'Hapus pencarian untuk melihat semua kembali.',
         }),
         primaryAction: BrandEmptyStateAction(

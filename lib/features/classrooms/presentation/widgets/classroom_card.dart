@@ -45,13 +45,18 @@ class ClassroomCard extends ConsumerWidget {
     final teacherName = _resolveTeacherName(model, lang);
 
     final hasHomeroom = (model.homeroomTeacherName ?? '').isNotEmpty;
-    final topMeta =
-        '$gradeText · ${model.studentCount} ${lang.getTranslatedText(const {'en': 'students', 'id': 'siswa'})}';
+    final studentsWord = lang.getTranslatedText(const {
+      'en': 'students',
+      'id': 'siswa',
+    });
+    final topMeta = '$gradeText · ${model.studentCount} $studentsWord';
 
+    final homeroomWord = lang.getTranslatedText(const {
+      'en': 'Homeroom',
+      'id': 'Wali',
+    });
     final status = hasHomeroom
-        ? BrandRowStatus.success(
-            '${lang.getTranslatedText(const {'en': 'Homeroom', 'id': 'Wali'})}: $teacherName',
-          )
+        ? BrandRowStatus.success('$homeroomWord: $teacherName')
         : BrandRowStatus.warning(
             lang.getTranslatedText(const {
               'en': 'No homeroom yet',

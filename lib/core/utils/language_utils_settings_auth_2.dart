@@ -11,9 +11,11 @@ const _kClassNotAvailable = {
 };
 const _kNoStudentLinked = {
   'en':
-      'No student data linked to this parent account. Please contact the administrator.',
+      'No student data linked to this parent account. '
+      'Please contact the administrator.',
   'id':
-      'Tidak ada data siswa yang terhubung dengan akun wali murid ini. Silakan hubungi administrator.',
+      'Tidak ada data siswa yang terhubung dengan akun wali murid ini. '
+      'Silakan hubungi administrator.',
 };
 const _kErrorAdminIdNotFound = {
   'en': 'Error: Admin ID not found',
@@ -88,9 +90,11 @@ const _kNoClassesForSubject = {
 };
 const _kNoActiveClasses = {
   'en':
-      'No active classes at this time. You can fill in from lesson start time up to +23 hours.',
+      'No active classes at this time. '
+      'You can fill in from lesson start time up to +23 hours.',
   'id':
-      'Tidak ada kelas aktif saat ini. Anda dapat mengisi dari jam pelajaran mulai sampai +23 jam.',
+      'Tidak ada kelas aktif saat ini. '
+      'Anda dapat mengisi dari jam pelajaran mulai sampai +23 jam.',
 };
 const _kNoChapters = {'en': 'No chapters', 'id': 'Tidak ada bab'};
 const _kNoAnnouncementsMatchSearch = {
@@ -135,9 +139,13 @@ const _kFailedExceededLimit = {
 };
 const _kLessonPlanAiGeneratedDescription = {
   'en':
-      'RPP AI has been generated using the 10-Component AI format and mapped to the 3-Component K-13. You can adjust the text below before saving.',
+      'RPP AI has been generated using the 10-Component AI format and '
+      'mapped to the 3-Component K-13. '
+      'You can adjust the text below before saving.',
   'id':
-      'RPP berhasil di-generate menggunakan format 10 Komponen AI dan telah dipetakan ke 3 Komponen K-13. Anda bisa menyesuaikan teks di bawah ini sebelum menyimpan.',
+      'RPP berhasil di-generate menggunakan format 10 Komponen AI dan '
+      'telah dipetakan ke 3 Komponen K-13. '
+      'Anda bisa menyesuaikan teks di bawah ini sebelum menyimpan.',
 };
 const _kFailedToGenerateLessonPlan = {
   'en': 'Failed to Generate RPP',

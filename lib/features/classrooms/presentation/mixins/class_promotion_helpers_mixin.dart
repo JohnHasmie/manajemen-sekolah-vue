@@ -267,7 +267,8 @@ mixin ClassPromotionHelpersMixin on ConsumerState<ClassPromotionWizard> {
       if (mounted) {
         SnackBarUtils.showError(
           context,
-          '${AppLocalizations.failedToProcess.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${AppLocalizations.failedToProcess.tr}: '
+          '${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {

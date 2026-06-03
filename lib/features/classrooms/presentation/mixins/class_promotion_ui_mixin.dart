@@ -81,9 +81,11 @@ mixin ClassPromotionUIMixin on State<ClassPromotionWizard> {
                 Text(
                   languageProvider.getTranslatedText({
                     'en':
-                        'Step ${currentStep + 1} of ${steps.length}: ${steps[currentStep]}',
+                        'Step ${currentStep + 1} of ${steps.length}: '
+                        '${steps[currentStep]}',
                     'id':
-                        'Langkah ${currentStep + 1} dari ${steps.length}: ${steps[currentStep]}',
+                        'Langkah ${currentStep + 1} dari ${steps.length}: '
+                        '${steps[currentStep]}',
                   }),
                   style: TextStyle(
                     fontSize: 13,

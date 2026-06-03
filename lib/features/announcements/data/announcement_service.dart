@@ -86,7 +86,8 @@ class ApiAnnouncementService {
       }
       AppLogger.warning(
         'announcement',
-        'API response is not a Map (type: ${result.runtimeType}). Returning as list if possible.',
+        'API response is not a Map (type: ${result.runtimeType}). '
+            'Returning as list if possible.',
       );
       return {
         'success': true,

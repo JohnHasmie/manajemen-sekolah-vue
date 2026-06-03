@@ -459,13 +459,16 @@ class AdminClassManagementScreenState
           'en': 'Not Assigned',
           'id': 'Belum Ditugaskan',
         });
+    final studentsWord = lang.getTranslatedText(const {
+      'en': 'students',
+      'id': 'siswa',
+    });
 
     showAdminEntityDetailSheet(
       context,
       kicker: lang.getTranslatedText(const {'en': 'CLASS', 'id': 'KELAS'}),
       title: className,
-      meta:
-          '$gradeText · ${model.studentCount} ${lang.getTranslatedText(const {'en': 'students', 'id': 'siswa'})}',
+      meta: '$gradeText · ${model.studentCount} $studentsWord',
       initials: className,
       status: hasHomeroom
           ? EntityStatus.success(
@@ -595,6 +598,11 @@ class AdminClassManagementScreenState
       ),
     ];
 
+    final classesWord = lang.getTranslatedText(const {
+      'en': 'classes',
+      'id': 'kelas',
+    });
+
     return AdminCrudScaffold(
       title: lang.getTranslatedText(const {'en': 'Classes', 'id': 'Kelas'}),
       subtitle: lang.getTranslatedText(const {
@@ -616,8 +624,7 @@ class AdminClassManagementScreenState
         'en': 'DATA MANAGEMENT',
         'id': 'MANAJEMEN DATA',
       }),
-      counterLabel:
-          '${_classes.length} ${lang.getTranslatedText(const {'en': 'classes', 'id': 'kelas'})}',
+      counterLabel: '${_classes.length} $classesWord',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,

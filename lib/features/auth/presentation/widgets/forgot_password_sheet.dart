@@ -99,7 +99,8 @@ class _ForgotPasswordSheetBodyState extends State<_ForgotPasswordSheetBody> {
           context,
           (result['message']?.toString().trim().isNotEmpty == true
               ? result['message'].toString()
-              : 'Jika email terdaftar, tautan reset akan dikirim. Periksa kotak masuk Anda.'),
+              : 'Jika email terdaftar, tautan reset akan dikirim. '
+                    'Periksa kotak masuk Anda.'),
         );
       });
     } catch (e) {
@@ -224,7 +225,8 @@ class _ForgotPasswordSheetBodyState extends State<_ForgotPasswordSheetBody> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Jika Anda tidak menerima email dalam 5 menit, periksa folder spam atau hubungi admin sekolah.',
+                    'Jika Anda tidak menerima email dalam 5 menit, '
+                    'periksa folder spam atau hubungi admin sekolah.',
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,

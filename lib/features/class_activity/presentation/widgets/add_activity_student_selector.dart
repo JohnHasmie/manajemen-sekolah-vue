@@ -54,7 +54,8 @@ class AddActivityStudentSelector extends StatelessWidget {
                   ),
                   if (kDebugMode)
                     Text(
-                      'Debug: Target=$initialTarget, Count=${studentList.length}, Loading=$isLoading',
+                      'Debug: Target=$initialTarget, '
+                      'Count=${studentList.length}, Loading=$isLoading',
                       style: TextStyle(
                         fontSize: 10,
                         color: ColorUtils.slate400,

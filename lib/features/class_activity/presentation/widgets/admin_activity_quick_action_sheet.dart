@@ -24,7 +24,8 @@ class AdminActivityQuickActionSheet {
       context: context,
       title: activity.title ?? 'Kegiatan',
       subtitle:
-          '${activity.type.labelId} · ${activity.subjectName ?? '—'} · ${activity.className ?? '—'} · ${activity.teacherName ?? '—'}',
+          '${activity.type.labelId} · ${activity.subjectName ?? '—'} · '
+          '${activity.className ?? '—'} · ${activity.teacherName ?? '—'}',
       icon: Icons.event_note_rounded,
       primaryColor: primary,
       content: _Body(

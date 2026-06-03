@@ -243,9 +243,11 @@ mixin TeacherActivityBodyBuilderMixin
         }),
         content: lp.getTranslatedText({
           'en':
-              'Are you sure you want to delete this activity? This cannot be undone.',
+              'Are you sure you want to delete this activity? '
+              'This cannot be undone.',
           'id':
-              'Yakin ingin menghapus kegiatan ini? Tindakan ini tidak dapat dibatalkan.',
+              'Yakin ingin menghapus kegiatan ini? '
+              'Tindakan ini tidak dapat dibatalkan.',
         }),
         confirmText: lp.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}),
         confirmColor: ColorUtils.error600,
