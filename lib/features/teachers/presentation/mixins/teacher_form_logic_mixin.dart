@@ -110,9 +110,13 @@ mixin TeacherFormLogicMixin on ConsumerState<TeacherFormDialog> {
     } catch (error) {
       AppLogger.error('teacher', 'Save/Update teacher error: $error');
       if (mounted) {
+        final prefix = languageProvider.getTranslatedText({
+          'en': 'Failed to save: ',
+          'id': 'Gagal menyimpan: ',
+        });
         SnackBarUtils.showError(
           context,
-          '${languageProvider.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
+          '$prefix${ErrorUtils.getFriendlyMessage(error)}',
         );
       }
     } finally {

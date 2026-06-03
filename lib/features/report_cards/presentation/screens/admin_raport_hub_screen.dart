@@ -517,7 +517,8 @@ class _AdminRaportHubScreenState extends ConsumerState<AdminRaportHubScreen> {
               : Icons.filter_alt_off_rounded,
           title: _statusFilter == 'all'
               ? 'Belum ada data raport'
-              : 'Tidak ada kelas pada status "${_statusLabelForKey(_statusFilter)}"',
+              : 'Tidak ada kelas pada status '
+                    '"${_statusLabelForKey(_statusFilter)}"',
           message: _statusFilter == 'all'
               ? 'Pipeline ini akan terisi setelah guru '
                     'mengajukan nilai akhir.'

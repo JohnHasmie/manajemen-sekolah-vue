@@ -633,7 +633,9 @@ class _ClassCard extends StatelessWidget {
                                     const SizedBox(height: 2),
                                     Text(
                                       hasSelection
-                                          ? '$selectedStudentCount dari ${studentList.length} siswa dipilih'
+                                          ? '$selectedStudentCount dari '
+                                                '${studentList.length} siswa '
+                                                'dipilih'
                                           : '${studentList.length} siswa',
                                       style: TextStyle(
                                         fontSize: 11,

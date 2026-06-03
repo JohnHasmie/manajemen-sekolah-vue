@@ -398,9 +398,13 @@ class AdminTeacherController {
     } catch (error) {
       AppLogger.error('teacher', 'Delete teacher error: $error');
       if (context.mounted) {
+        final prefix = languageProvider.getTranslatedText(const {
+          'en': 'Failed to delete teacher: ',
+          'id': 'Gagal menghapus guru: ',
+        });
         SnackBarUtils.showError(
           context,
-          '${languageProvider.getTranslatedText(const {'en': 'Failed to delete teacher: ', 'id': 'Gagal menghapus guru: '})}${ErrorUtils.getFriendlyMessage(error)}',
+          '$prefix${ErrorUtils.getFriendlyMessage(error)}',
         );
       }
       return false;
@@ -477,9 +481,11 @@ class AdminTeacherController {
       if (result == null || result.files.single.path == null) return false;
 
       final pickedFile = File(result.files.single.path!);
+      final fileSize = await pickedFile.length();
       AppLogger.debug(
         'teacher',
-        'Import teachers - picked file: ${pickedFile.path}, size: ${await pickedFile.length()} bytes',
+        'Import teachers - picked file: ${pickedFile.path}, '
+            'size: $fileSize bytes',
       );
 
       try {
@@ -519,13 +525,12 @@ class AdminTeacherController {
       } catch (apiError) {
         AppLogger.error('teacher', 'Error calling import API: $apiError');
         if (!context.mounted) return false;
+        final friendly = ErrorUtils.getFriendlyMessage(apiError);
         SnackBarUtils.showError(
           context,
           lang.getTranslatedText({
-            'en':
-                'Failed to import file: ${ErrorUtils.getFriendlyMessage(apiError)}',
-            'id':
-                'Gagal import file: ${ErrorUtils.getFriendlyMessage(apiError)}',
+            'en': 'Failed to import file: $friendly',
+            'id': 'Gagal import file: $friendly',
           }),
         );
         return false;

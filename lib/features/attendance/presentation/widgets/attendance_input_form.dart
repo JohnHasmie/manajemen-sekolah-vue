@@ -26,16 +26,21 @@ import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 /// - [classList]              -- all classes the teacher is assigned to
 /// - [selectedSubjectId]      -- id of the selected subject, or null
 /// - [subjectTeacher]         -- subjects available for the selected class
-/// - [showSearch]             -- whether the inline student-search field is visible
-/// - [searchController]       -- TextEditingController for the student-search field
+/// - [showSearch]             -- whether the inline student-search field is
+///                               visible
+/// - [searchController]       -- TextEditingController for the student-search
+///                               field
 /// - [primaryColor]           -- role-based accent colour
 /// - [languageProvider]       -- for translating UI strings
-/// - [onDatePicked]           -- called with the new date after the date picker closes
+/// - [onDatePicked]           -- called with the new date after the date
+///                               picker closes
 /// - [onLessonHourChanged]    -- called when lesson-hour dropdown changes
 /// - [onClassChanged]         -- called when class dropdown changes
 /// - [onSubjectChanged]       -- called when subject dropdown changes
-/// - [onSearchChanged]        -- called on every keystroke in the student search field
-/// - [onSearchClosed]         -- called when the X button in the search field is tapped
+/// - [onSearchChanged]        -- called on every keystroke in the student
+///                               search field
+/// - [onSearchClosed]         -- called when the X button in the search field
+///                               is tapped
 /// - [onSearchToggled] -- called when the search icon button is tapped to open
 /// search
 /// - [onQuickActionsPressed] -- called when the bulk-fill (checklist) button is
@@ -209,7 +214,8 @@ class AttendanceInputForm extends StatelessWidget {
                           (lh) => DropdownMenuItem<String>(
                             value: lh['id']?.toString(),
                             child: Text(
-                              '${lh['name']} (${lh['start_time']} - ${lh['end_time']})',
+                              '${lh['name']} '
+                              '(${lh['start_time']} - ${lh['end_time']})',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

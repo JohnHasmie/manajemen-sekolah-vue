@@ -840,7 +840,8 @@ class _ParentBillCheckoutScreenState
     switch (method) {
       case _PayMethod.qris:
         return const [
-          'Buka aplikasi pembayaran (GoPay, OVO, Dana, ShopeePay, atau m-banking).',
+          'Buka aplikasi pembayaran '
+              '(GoPay, OVO, Dana, ShopeePay, atau m-banking).',
           'Pilih menu "Scan QRIS".',
           'Arahkan kamera ke QR di layar ini.',
           'Periksa nominal, lalu konfirmasi pembayaran.',
@@ -997,7 +998,8 @@ class _ParentBillCheckoutScreenState
       if (!mounted) return;
       SnackBarUtils.showError(
         context,
-        'Ukuran file ${sizeMb.toStringAsFixed(1)}MB melebihi batas 5MB. Mohon kompres atau pilih file lain.',
+        'Ukuran file ${sizeMb.toStringAsFixed(1)}MB melebihi batas 5MB. '
+        'Mohon kompres atau pilih file lain.',
       );
       return;
     }
@@ -1174,17 +1176,20 @@ class _ParentBillCheckoutScreenState
                 bullet(
                   Icons.qr_code_scanner_rounded,
                   'QRIS',
-                  'Pembayaran tercepat. Status tagihan terupdate otomatis < 1 menit.',
+                  'Pembayaran tercepat. '
+                      'Status tagihan terupdate otomatis < 1 menit.',
                 ),
                 bullet(
                   Icons.account_balance_rounded,
                   'Virtual Account',
-                  'Transfer via m-banking ke nomor VA unik. Status terupdate otomatis.',
+                  'Transfer via m-banking ke nomor VA unik. '
+                      'Status terupdate otomatis.',
                 ),
                 bullet(
                   Icons.upload_file_rounded,
                   'Transfer Manual',
-                  'Transfer ke rekening sekolah lalu unggah bukti. Verifikasi admin 1–24 jam.',
+                  'Transfer ke rekening sekolah lalu unggah bukti. '
+                      'Verifikasi admin 1–24 jam.',
                 ),
                 const SizedBox(height: 12),
                 Container(

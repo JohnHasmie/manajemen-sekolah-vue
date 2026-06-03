@@ -26,9 +26,11 @@ Future<bool> showGradeRecapUnsavedChangesDialog(
     }),
     message: languageProvider.getTranslatedText({
       'en':
-          'You have unsaved changes. Are you sure you want to leave? Your changes will be lost.',
+          'You have unsaved changes. Are you sure you want to leave? '
+          'Your changes will be lost.',
       'id':
-          'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? Perubahan akan hilang.',
+          'Anda memiliki perubahan yang belum disimpan. Yakin ingin keluar? '
+          'Perubahan akan hilang.',
     }),
     confirmText: languageProvider.getTranslatedText({
       'en': 'Leave',

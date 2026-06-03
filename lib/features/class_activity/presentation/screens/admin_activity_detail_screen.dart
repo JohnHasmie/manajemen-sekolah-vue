@@ -533,6 +533,9 @@ class _StatsSection extends StatelessWidget {
     }
     final avg = scoreCount > 0 ? sum / scoreCount : null;
     if (scoreCount == 0) min = 0;
+    final tuntasPct = submissions.isEmpty
+        ? 0
+        : ((tuntas / submissions.length) * 100).round();
 
     return _SectionShell(
       icon: Icons.bar_chart_rounded,
@@ -549,7 +552,8 @@ class _StatsSection extends StatelessWidget {
                   primary: avg != null ? avg.toStringAsFixed(1) : '—',
                   primaryLabel: 'rerata',
                   detail: scoreCount > 0
-                      ? 'Tertinggi ${max.toStringAsFixed(0)} · Terendah ${min.toStringAsFixed(0)}'
+                      ? 'Tertinggi ${max.toStringAsFixed(0)} · '
+                            'Terendah ${min.toStringAsFixed(0)}'
                       : 'Belum ada nilai',
                   primaryColor: ColorUtils.brandDarkBlue,
                 ),
@@ -560,8 +564,7 @@ class _StatsSection extends StatelessWidget {
                   label: 'TUNTAS',
                   primary: '$tuntas',
                   primaryLabel: 'dari ${submissions.length}',
-                  detail:
-                      'KKM ≥ $kkm · ${submissions.isEmpty ? 0 : ((tuntas / submissions.length) * 100).round()}%',
+                  detail: 'KKM ≥ $kkm · $tuntasPct%',
                   primaryColor: const Color(0xFF15803D),
                 ),
               ),

@@ -1578,7 +1578,8 @@ class ParentRaporGanjilDecisionNote extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Akan diumumkan oleh sekolah setelah Semester Genap. '
-                  'Rapor Semester Ganjil hanya menampilkan capaian tengah tahun.',
+                  'Rapor Semester Ganjil hanya menampilkan capaian tengah '
+                  'tahun.',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,

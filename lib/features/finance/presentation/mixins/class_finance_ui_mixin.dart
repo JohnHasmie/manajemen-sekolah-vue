@@ -146,7 +146,9 @@ mixin ClassFinanceUIMixin on State<ClassFinanceReportScreen> {
       builder: (_) => ConfirmationDialog(
         title: 'Batalkan Pembayaran?',
         content:
-            'Status tagihan akan kembali ke "Belum Lunas" dan bukti pembayaran tetap tersimpan untuk arsip. Tindakan ini tidak dapat dibatalkan.',
+            'Status tagihan akan kembali ke "Belum Lunas" dan bukti '
+            'pembayaran tetap tersimpan untuk arsip. '
+            'Tindakan ini tidak dapat dibatalkan.',
         confirmText: 'Ya, Batalkan',
         confirmColor: ColorUtils.error600,
       ),
@@ -940,7 +942,8 @@ class _DangerZoneCancelCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Membatalkan pembayaran akan mengembalikan status tagihan menjadi belum lunas. Lakukan hanya jika pembayaran tidak valid.',
+            'Membatalkan pembayaran akan mengembalikan status tagihan '
+            'menjadi belum lunas. Lakukan hanya jika pembayaran tidak valid.',
             style: TextStyle(
               fontSize: 11.5,
               color: ColorUtils.slate600,

@@ -123,7 +123,8 @@ class FinancePaymentTypesTab extends StatelessWidget {
                       child: Text(
                         hasActiveHeaderFilter
                             ? 'Tidak ada jenis pembayaran pada filter ini.'
-                            : 'Belum ada jenis pembayaran. Tap + untuk menambah.',
+                            : 'Belum ada jenis pembayaran. '
+                                  'Tap + untuk menambah.',
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,

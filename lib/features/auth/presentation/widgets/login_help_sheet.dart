@@ -112,7 +112,8 @@ class _LoginHelpSheetBodyState extends State<_LoginHelpSheetBody> {
           context,
           (result['message']?.toString().trim().isNotEmpty == true
               ? result['message'].toString()
-              : 'Permintaan bantuan terkirim. Tim kami akan menghubungi Anda dalam 1×24 jam.'),
+              : 'Permintaan bantuan terkirim. '
+                    'Tim kami akan menghubungi Anda dalam 1×24 jam.'),
         );
       });
     } catch (e) {

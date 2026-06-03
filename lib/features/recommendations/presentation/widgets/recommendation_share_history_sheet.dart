@@ -284,7 +284,8 @@ class _RecommendationShareHistorySheetState
       builder: (ctx) => ConfirmationDialog(
         title: 'Tarik Pesan?',
         content:
-            'Pesan akan disembunyikan dari ${recipient['parent_name'] ?? 'wali'} '
+            'Pesan akan disembunyikan dari '
+            '${recipient['parent_name'] ?? 'wali'} '
             'dan tidak bisa dibaca lagi. Anda tetap bisa Bagikan Ulang nanti.',
         confirmText: 'Tarik Pesan',
       ),

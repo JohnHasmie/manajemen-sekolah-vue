@@ -349,7 +349,8 @@ class _RoleSwitcherSheet extends StatelessWidget {
           ),
       ],
       emptyMessage: others.isEmpty
-          ? 'Tidak ada peran lain yang terhubung dengan akun Anda di sekolah ini'
+          ? 'Tidak ada peran lain yang terhubung dengan akun Anda '
+                'di sekolah ini'
           : null,
     );
   }

@@ -549,6 +549,9 @@ class _StudentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final model = Student.fromJson(data);
+    final studentNumber = model.studentNumber.isNotEmpty
+        ? model.studentNumber
+        : '-';
     // Backend rename: `raport_status` → `report_card_status`.
     final status =
         (data['report_card_status'] ?? data['raport_status'] ?? 'draft')
@@ -656,7 +659,7 @@ class _StudentRow extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'NIS · ${model.studentNumber.isNotEmpty ? model.studentNumber : '-'}',
+                              'NIS · $studentNumber',
                               style: TextStyle(
                                 fontSize: 10.5,
                                 color: ColorUtils.slate500,

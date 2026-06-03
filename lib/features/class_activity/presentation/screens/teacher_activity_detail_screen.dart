@@ -249,6 +249,7 @@ class _TeacherActivityDetailScreenState
       subParts.add(DateFormat('EEEE, d MMM', 'id_ID').format(d));
     }
     if (timeStr.isNotEmpty) subParts.add(_clipTime(timeStr));
+    final subSuffix = subParts.isEmpty ? '' : ' · ${subParts.join(' · ')}';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -295,7 +296,7 @@ class _TeacherActivityDetailScreenState
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$subject · $klass${subParts.isEmpty ? '' : ' · ${subParts.join(' · ')}'}',
+                  '$subject · $klass$subSuffix',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

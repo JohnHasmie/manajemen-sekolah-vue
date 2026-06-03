@@ -203,7 +203,8 @@ class ScheduleCardHeader extends StatelessWidget {
         _MetaChip(
           icon: Icons.access_time_rounded,
           text:
-              '${formatTimeStr(_model.startTime)} – ${formatTimeStr(_model.endTime)}',
+              '${formatTimeStr(_model.startTime)} – '
+              '${formatTimeStr(_model.endTime)}',
           color: color,
         ),
         if (hasTeacher) ...[

@@ -611,6 +611,11 @@ class StudentManagementScreenState
       ),
     ];
 
+    final studentsWord = lang.getTranslatedText(const {
+      'en': 'students',
+      'id': 'siswa',
+    });
+
     return AdminCrudScaffold(
       title: lang.getTranslatedText(const {'en': 'Students', 'id': 'Siswa'}),
       subtitle: lang.getTranslatedText(const {
@@ -632,8 +637,7 @@ class StudentManagementScreenState
         'en': 'DATA MANAGEMENT',
         'id': 'MANAJEMEN DATA',
       }),
-      counterLabel:
-          '${_students.length} ${lang.getTranslatedText(const {'en': 'students', 'id': 'siswa'})}',
+      counterLabel: '${_students.length} $studentsWord',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,

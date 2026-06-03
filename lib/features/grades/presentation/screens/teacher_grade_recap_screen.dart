@@ -696,7 +696,8 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
       builder: (_) => ConfirmationDialog(
         title: 'Hapus bab',
         content:
-            'Yakin ingin menghapus "$name"? Semua nilai siswa di kolom ini akan ikut terhapus.',
+            'Yakin ingin menghapus "$name"? '
+            'Semua nilai siswa di kolom ini akan ikut terhapus.',
         confirmText: 'Hapus',
         confirmColor: ColorUtils.error600,
       ),

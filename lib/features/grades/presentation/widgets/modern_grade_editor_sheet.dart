@@ -242,8 +242,11 @@ class _ModernGradeEditorSheetState
     return ColorUtils.getRoleColor(Teacher.fromJson(widget.teacher).role);
   }
 
-  String _formatDate(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  String _formatDate(DateTime d) {
+    final month = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    return '${d.year}-$month-$day';
+  }
 
   // --- Actions ------------------------------------------------------------
 
@@ -356,9 +359,11 @@ class _ModernGradeEditorSheetState
         content: Text(
           lang.getTranslatedText({
             'en':
-                'The score will be removed from the grade book. This cannot be undone.',
+                'The score will be removed from the grade book. '
+                'This cannot be undone.',
             'id':
-                'Nilai akan dihapus dari buku nilai. Tindakan ini tidak bisa dibatalkan.',
+                'Nilai akan dihapus dari buku nilai. '
+                'Tindakan ini tidak bisa dibatalkan.',
           }),
           style: TextStyle(color: ColorUtils.slate600),
         ),
@@ -583,6 +588,8 @@ class _ModernGradeEditorSheetState
 
   Widget _buildStudentStrip(LanguageProvider lang, Color primary) {
     final subject = Subject.fromJson(widget.subject).name;
+    final studentNumber = widget.student.studentNumber;
+    final numberPrefix = studentNumber.isNotEmpty ? '$studentNumber · ' : '';
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
@@ -636,7 +643,7 @@ class _ModernGradeEditorSheetState
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${widget.student.studentNumber.isNotEmpty ? "${widget.student.studentNumber} · " : ""}$subject',
+                  '$numberPrefix$subject',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 11.5, color: ColorUtils.slate500),

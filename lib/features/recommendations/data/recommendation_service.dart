@@ -212,7 +212,8 @@ class ApiRecommendationService {
 
     AppLogger.debug(
       'recommendation',
-      'List recommendations: ${response.statusCode} - URL: ${response.requestOptions.uri}',
+      'List recommendations: ${response.statusCode} - '
+          'URL: ${response.requestOptions.uri}',
     );
     AppLogger.debug('recommendation', 'Response body: ${response.data}');
 
@@ -482,7 +483,8 @@ class ApiRecommendationService {
     String? studentId,
     required bool unreadOnly,
   }) {
-    return 'parent_inbox_${parentUserId}_${studentId ?? 'all'}_${unreadOnly ? 'u' : 'a'}';
+    return 'parent_inbox_${parentUserId}_${studentId ?? 'all'}'
+        '_${unreadOnly ? 'u' : 'a'}';
   }
 
   /// Per-child summary used by the parent multi-child hub (Frame A).
@@ -682,7 +684,9 @@ class ApiRecommendationService {
 
           AppLogger.error(
             'recommendation',
-            'Job $jobId: status=$status, progress=${data['progress'] ?? 'N/A'}, error=${data['error'] ?? 'none'}',
+            'Job $jobId: status=$status, '
+                'progress=${data['progress'] ?? 'N/A'}, '
+                'error=${data['error'] ?? 'none'}',
           );
 
           onProgress?.call(status, attempt);
@@ -750,7 +754,8 @@ class _AiLoggingInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     AppLogger.error(
       'recommendation',
-      'AI Error ${err.response?.statusCode ?? 'N/A'} ${err.requestOptions.uri}: ${err.message}',
+      'AI Error ${err.response?.statusCode ?? 'N/A'} '
+          '${err.requestOptions.uri}: ${err.message}',
     );
     // Dump the raw response body for 500-class errors. The AI service
     // renders Throwable as JSON in APP_DEBUG=true (see

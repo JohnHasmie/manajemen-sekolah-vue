@@ -157,9 +157,12 @@ mixin GradeBookDialogsMixin on ConsumerState<GradeBookPage> {
       }),
       confirmMessage: languageProvider.getTranslatedText({
         'en':
-            'Are you sure you want to delete all grades for $typeLabel on $dateLabel$titleSuffix? This action cannot be undone.',
+            'Are you sure you want to delete all grades for $typeLabel '
+            'on $dateLabel$titleSuffix? This action cannot be undone.',
         'id':
-            'Apakah Anda yakin ingin menghapus semua nilai $typeLabel pada tanggal $dateLabel$titleSuffix? Tindakan ini tidak dapat dibatalkan.',
+            'Apakah Anda yakin ingin menghapus semua nilai $typeLabel '
+            'pada tanggal $dateLabel$titleSuffix? '
+            'Tindakan ini tidak dapat dibatalkan.',
       }),
       labelCancel: languageProvider.getTranslatedText({
         'en': 'Cancel',

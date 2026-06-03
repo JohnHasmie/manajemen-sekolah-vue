@@ -108,7 +108,8 @@ class _KelolaTahunAjaranScreenState
       builder: (ctx) => ConfirmationDialog(
         title: 'Arsipkan Tahun Ajaran',
         content:
-            'Arsipkan tahun ajaran ${year['year']}? Tahun arsip menjadi read-only dan tidak bisa diubah.',
+            'Arsipkan tahun ajaran ${year['year']}? '
+            'Tahun arsip menjadi read-only dan tidak bisa diubah.',
         confirmText: 'Ya, Arsipkan',
         confirmColor: ColorUtils.warning600,
       ),
@@ -165,7 +166,8 @@ class _KelolaTahunAjaranScreenState
     if (isCurrent) {
       SnackBarUtils.showError(
         context,
-        'Tahun ajaran aktif tidak dapat dihapus. Aktifkan tahun ajaran lain terlebih dahulu.',
+        'Tahun ajaran aktif tidak dapat dihapus. '
+        'Aktifkan tahun ajaran lain terlebih dahulu.',
       );
       return;
     }
@@ -174,7 +176,8 @@ class _KelolaTahunAjaranScreenState
       builder: (ctx) => ConfirmationDialog(
         title: 'Hapus Tahun Ajaran',
         content:
-            'Hapus tahun ajaran ${year['year']}? Tindakan ini tidak dapat dibatalkan.',
+            'Hapus tahun ajaran ${year['year']}? '
+            'Tindakan ini tidak dapat dibatalkan.',
         confirmText: 'Ya, Hapus',
         confirmColor: ColorUtils.error600,
       ),

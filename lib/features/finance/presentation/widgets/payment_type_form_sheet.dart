@@ -634,7 +634,8 @@ class _GoalPickerTile extends StatelessWidget {
                     Text(
                       hasGoal
                           ? description
-                          : 'Pilih kelas, tingkat, atau siswa yang akan ditagih.',
+                          : 'Pilih kelas, tingkat, atau siswa '
+                                'yang akan ditagih.',
                       style: TextStyle(
                         fontSize: 11,
                         color: ColorUtils.slate500,

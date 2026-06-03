@@ -101,7 +101,9 @@ class TeacherProvider extends ChangeNotifier {
 
     AppLogger.debug(
       'teacher',
-      'TeacherProvider: Data cached (teacherId=$teacherId, classes=${allClasses.length}, homeroom=${homeroomClasses.length})',
+      'TeacherProvider: Data cached (teacherId=$teacherId, '
+          'classes=${allClasses.length}, '
+          'homeroom=${homeroomClasses.length})',
     );
   }
 
@@ -188,7 +190,8 @@ class TeacherProvider extends ChangeNotifier {
 
         AppLogger.warning(
           'teacher',
-          'TeacherProvider: Fallback load complete (teacherId=$resolvedTeacherId)',
+          'TeacherProvider: Fallback load complete '
+              '(teacherId=$resolvedTeacherId)',
         );
       }
 

@@ -8,7 +8,8 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 /// titles (e.g. "UH - 019d9a76-337f-72f6-a298-74df9906ee3a"). Those titles
 /// both look like garbage to teachers and blow past the row width.
 final _uuidRegex = RegExp(
-  r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
+  r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-'
+  r'[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
 );
 
 /// 1-2 character initials from a student name. Used as the avatar

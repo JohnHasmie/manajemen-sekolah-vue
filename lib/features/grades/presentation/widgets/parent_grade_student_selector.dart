@@ -143,7 +143,8 @@ class ParentGradeStudentSelector extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${AppLocalizations.classString.tr}: $className • NIS: $nis',
+                          '${AppLocalizations.classString.tr}: $className • '
+                          'NIS: $nis',
                           style: TextStyle(
                             fontSize: 12,
                             color: ColorUtils.slate500,

@@ -212,6 +212,10 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
   /// "Daftar Siswa · N siswa" section head between the toolbar and the
   /// student list — matches the mockup's `.section-head` block.
   Widget buildEmbeddedSectionHead(LanguageProvider lp) {
+    final studentsWord = lp.getTranslatedText({
+      'en': 'students',
+      'id': 'siswa',
+    });
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Row(
@@ -237,7 +241,7 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
           ),
           const Spacer(),
           Text(
-            '$embeddedTotalStudents ${lp.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
+            '$embeddedTotalStudents $studentsWord',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,

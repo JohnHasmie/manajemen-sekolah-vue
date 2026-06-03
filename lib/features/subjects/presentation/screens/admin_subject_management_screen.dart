@@ -536,6 +536,11 @@ class AdminSubjectManagementScreenState
       ),
     ];
 
+    final subjectsWord = lang.getTranslatedText(const {
+      'en': 'subjects',
+      'id': 'mapel',
+    });
+
     return AdminCrudScaffold(
       title: lang.getTranslatedText(const {'en': 'Subjects', 'id': 'Mapel'}),
       subtitle: lang.getTranslatedText(const {
@@ -557,8 +562,7 @@ class AdminSubjectManagementScreenState
         'en': 'DATA MANAGEMENT',
         'id': 'MANAJEMEN DATA',
       }),
-      counterLabel:
-          '${filteredSubjects.length} ${lang.getTranslatedText(const {'en': 'subjects', 'id': 'mapel'})}',
+      counterLabel: '${filteredSubjects.length} $subjectsWord',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,

@@ -119,7 +119,8 @@ class _CompleteSheetBodyState extends State<_CompleteSheetBody> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Wali kelas akan menerima konfirmasi bahwa rekomendasi ini sudah diterapkan di rumah.',
+                  'Wali kelas akan menerima konfirmasi bahwa rekomendasi ini '
+                  'sudah diterapkan di rumah.',
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
@@ -218,7 +219,8 @@ class _CompleteSheetBodyState extends State<_CompleteSheetBody> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Wali kelas akan diberi tahu bahwa anak sudah selesai',
+                          'Wali kelas akan diberi tahu bahwa anak '
+                          'sudah selesai',
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w600,

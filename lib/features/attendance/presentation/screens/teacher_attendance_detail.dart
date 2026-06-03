@@ -104,6 +104,10 @@ class _TeacherAttendanceDetailPageState
     TeacherAttendanceState state,
   ) {
     final stats = state.statistics;
+    final studentsWord = languageProvider.getTranslatedText({
+      'en': 'students',
+      'id': 'siswa',
+    });
 
     if (state.isSaving) {
       // Block the screen with a centered loader during a save —
@@ -213,8 +217,7 @@ class _TeacherAttendanceDetailPageState
                 ),
                 const Spacer(),
                 Text(
-                  '${state.students.length} '
-                  '${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
+                  '${state.students.length} $studentsWord',
                   style: TextStyle(
                     fontSize: 10.5,
                     color: ColorUtils.slate500,

@@ -136,8 +136,10 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
                     AppSpacing.v16,
                     Text(
                       isManualPending
-                          ? 'Bukti diteruskan ke admin sekolah untuk verifikasi.'
-                          : 'Notifikasi lunas otomatis dikirim ke admin sekolah.',
+                          ? 'Bukti diteruskan ke admin sekolah '
+                                'untuk verifikasi.'
+                          : 'Notifikasi lunas otomatis dikirim '
+                                'ke admin sekolah.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 9.5,

@@ -146,7 +146,8 @@ class _ReportCardInfoTabState extends State<ReportCardInfoTab> {
                     ),
                     const TextSpan(
                       text:
-                          'Otomatis terisi dari Presensi · ubah manual jika perlu.',
+                          'Otomatis terisi dari Presensi · '
+                          'ubah manual jika perlu.',
                     ),
                   ],
                 ),

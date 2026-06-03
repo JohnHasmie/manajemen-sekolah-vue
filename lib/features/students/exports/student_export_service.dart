@@ -294,7 +294,9 @@ class ExcelService {
     if (date == null) return '';
     try {
       final parsed = DateTime.parse(date);
-      return '${parsed.year}-${parsed.month.toString().padLeft(2, '0')}-${parsed.day.toString().padLeft(2, '0')}';
+      final month = parsed.month.toString().padLeft(2, '0');
+      final day = parsed.day.toString().padLeft(2, '0');
+      return '${parsed.year}-$month-$day';
     } catch (e) {
       return date;
     }

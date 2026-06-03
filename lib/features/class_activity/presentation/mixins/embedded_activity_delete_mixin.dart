@@ -28,9 +28,11 @@ mixin EmbeddedActivityDeleteMixin on ConsumerState<EmbeddedActivityListScreen> {
       }),
       message: languageProvider.getTranslatedText({
         'en':
-            'Are you sure you want to delete "${activity['title']}"? This action cannot be undone.',
+            'Are you sure you want to delete "${activity['title']}"? '
+            'This action cannot be undone.',
         'id':
-            'Apakah Anda yakin ingin menghapus "${activity['title']}"? Tindakan ini tidak dapat dibatalkan.',
+            'Apakah Anda yakin ingin menghapus "${activity['title']}"? '
+            'Tindakan ini tidak dapat dibatalkan.',
       }),
       confirmText: languageProvider.getTranslatedText({
         'en': 'Delete',
@@ -61,9 +63,13 @@ mixin EmbeddedActivityDeleteMixin on ConsumerState<EmbeddedActivityListScreen> {
     } catch (e) {
       AppLogger.error('class_activity', 'Delete activity error: $e');
       if (!mounted) return;
+      final prefix = languageProvider.getTranslatedText({
+        'en': 'Failed to delete activity: ',
+        'id': 'Gagal menghapus kegiatan: ',
+      });
       SnackBarUtils.showError(
         context,
-        '${languageProvider.getTranslatedText({'en': 'Failed to delete activity: ', 'id': 'Gagal menghapus kegiatan: '})}${ErrorUtils.getFriendlyMessage(e)}',
+        '$prefix${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }

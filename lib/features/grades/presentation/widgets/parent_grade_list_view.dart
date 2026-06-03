@@ -10,7 +10,8 @@ import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 /// Scrollable list of grade cards shown in the parent grade screen.
 ///
 /// Uses two callbacks instead of calling parent setState directly:
-///   - [onItemVisible] → screen queues the grade for "mark as read" (debounced).
+///   - [onItemVisible] → screen queues the grade for "mark as read"
+///                       (debounced).
 ///   - [onGradeTap]    → screen opens the detail dialog.
 ///
 /// This mirrors the Vue pattern of emitting events upward rather than mutating

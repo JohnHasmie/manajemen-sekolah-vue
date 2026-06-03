@@ -151,6 +151,9 @@ class RecommendationClassCard extends StatelessWidget {
   Widget _buildHeaderRow(Color cobalt) {
     final studentCount = _readStudentCount();
     final s = _statsBundle();
+    final studentText = studentCount > 0
+        ? '$studentCount siswa'
+        : 'Belum ada siswa';
     final subject = _subjectName();
     final kicker = isHomeroom
         ? '${className.toUpperCase()} · WALI'
@@ -209,7 +212,7 @@ class RecommendationClassCard extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                '${studentCount > 0 ? "$studentCount siswa" : "Belum ada siswa"} · ${s.total} rekomendasi',
+                '$studentText · ${s.total} rekomendasi',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,

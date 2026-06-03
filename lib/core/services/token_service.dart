@@ -185,7 +185,8 @@ class TokenService {
       if (token == null || token.isEmpty || userData == null) {
         AppLogger.debug(
           'auth',
-          'Incomplete login state: token=${token != null}, user=${userData != null}',
+          'Incomplete login state: token=${token != null}, '
+              'user=${userData != null}',
         );
         return false;
       }

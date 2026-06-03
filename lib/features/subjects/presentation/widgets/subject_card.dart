@@ -42,9 +42,12 @@ class SubjectCard extends ConsumerWidget {
     final model = Subject.fromJson(subject);
     final accent = ColorUtils.getRoleColor('admin');
     final code = (model.code ?? '').isNotEmpty ? model.code! : '-';
+    final classesWord = lang.getTranslatedText(const {
+      'en': 'classes',
+      'id': 'kelas',
+    });
 
-    final topMeta =
-        '$code · ${model.classCount} ${lang.getTranslatedText(const {'en': 'classes', 'id': 'kelas'})}';
+    final topMeta = '$code · ${model.classCount} $classesWord';
 
     final status = model.isActive
         ? BrandRowStatus.success(

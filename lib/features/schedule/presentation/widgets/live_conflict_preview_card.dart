@@ -313,7 +313,8 @@ class _ConflictPreview extends StatelessWidget {
             Text(
               conflicts.length == 1
                   ? 'Slot yang dipilih bentrok dengan 1 sesi:'
-                  : 'Slot yang dipilih bentrok dengan ${conflicts.length} sesi:',
+                  : 'Slot yang dipilih bentrok dengan '
+                        '${conflicts.length} sesi:',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,

@@ -16,7 +16,8 @@
 ///   TC123        Deep: Class Activities → item detail → back back
 ///   TC124        Deep: Nilai (Grades) → subject detail → back back
 ///   TC125        Deep: Kehadiran 2-level (student → records → back back)
-///   TC126        Deep: Kehadiran 3-level (student → records → detail → back ×3)
+///   TC126        Deep: Kehadiran 3-level
+///                (student → records → detail → back ×3)
 ///   TC127        Deep: Tagihan (Billing) → item detail → back back
 ///   TC128        Deep: e-Rapor → semester detail → back back
 ///   TC129        Back-stack isolation: 3 menus in sequence return to dashboard
@@ -391,10 +392,12 @@ void main() {
   );
 
   // =========================================================================
-  // TC124: Parent — Nilai deep (list → first subject → grade detail → back back)
+  // TC124: Parent — Nilai deep
+  // (list → first subject → grade detail → back back)
   // =========================================================================
   testWidgets(
-    'TC124: Parent Nilai deep — subject list → first subject → grade detail → back back',
+    'TC124: Parent Nilai deep — subject list → first subject → '
+    'grade detail → back back',
     timeout: const Timeout(Duration(minutes: 8)),
     (tester) async {
       await loginAndNavigateToDashboard(tester, role: 'Wali Murid');
@@ -443,7 +446,8 @@ void main() {
   // TC125: Parent — Kehadiran 2-level (student selector → attendance records)
   // =========================================================================
   testWidgets(
-    'TC125: Parent Kehadiran 2-level — dashboard → student selector → attendance → back back',
+    'TC125: Parent Kehadiran 2-level — dashboard → student selector → '
+    'attendance → back back',
     timeout: const Timeout(Duration(minutes: 8)),
     (tester) async {
       await loginAndNavigateToDashboard(tester, role: 'Wali Murid');
@@ -484,7 +488,8 @@ void main() {
   // TC126: Parent — Kehadiran 3-level (selector → records → detail → back ×3)
   // =========================================================================
   testWidgets(
-    'TC126: Parent Kehadiran 3-level — selector → records → detail → back back back',
+    'TC126: Parent Kehadiran 3-level — selector → records → detail → '
+    'back back back',
     timeout: const Timeout(Duration(minutes: 10)),
     (tester) async {
       await loginAndNavigateToDashboard(tester, role: 'Wali Murid');
@@ -536,7 +541,8 @@ void main() {
   // TC127: Parent — Tagihan deep (billing list → item detail → back back)
   // =========================================================================
   testWidgets(
-    'TC127: Parent Tagihan deep — billing list → first item → detail → back back',
+    'TC127: Parent Tagihan deep — billing list → first item → '
+    'detail → back back',
     timeout: const Timeout(Duration(minutes: 8)),
     (tester) async {
       await loginAndNavigateToDashboard(tester, role: 'Wali Murid');
@@ -582,7 +588,8 @@ void main() {
   // TC128: Parent — e-Rapor deep (list → semester → report card → back back)
   // =========================================================================
   testWidgets(
-    'TC128: Parent e-Rapor deep — list → semester selector → report card → back back',
+    'TC128: Parent e-Rapor deep — list → semester selector → '
+    'report card → back back',
     timeout: const Timeout(Duration(minutes: 8)),
     (tester) async {
       await loginAndNavigateToDashboard(tester, role: 'Wali Murid');
@@ -628,7 +635,8 @@ void main() {
   // TC129: Parent — Back-stack isolation: 3 menus in sequence
   // =========================================================================
   testWidgets(
-    'TC129: Parent back-stack isolation — Pengumuman → Nilai → Tagihan each back to dashboard',
+    'TC129: Parent back-stack isolation — Pengumuman → Nilai → Tagihan '
+    'each back to dashboard',
     timeout: const Timeout(Duration(minutes: 10)),
     (tester) async {
       await loginAndNavigateToDashboard(tester, role: 'Wali Murid');

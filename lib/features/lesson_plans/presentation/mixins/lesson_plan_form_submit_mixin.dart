@@ -166,10 +166,11 @@ mixin LessonPlanFormSubmitMixin on ConsumerState<LessonPlanFormDialog> {
     } catch (e) {
       AppLogger.error('lesson_plan', 'Error creating RPP: $e');
       final languageProvider = ref.read(languageRiverpod);
-      SnackBarUtils.showInfo(
-        context,
-        '${languageProvider.getTranslatedText({'en': 'Error', 'id': 'Terjadi Kesalahan'})}: $e',
-      );
+      final errorWord = languageProvider.getTranslatedText({
+        'en': 'Error',
+        'id': 'Terjadi Kesalahan',
+      });
+      SnackBarUtils.showInfo(context, '$errorWord: $e');
     } finally {
       setIsUploading(false);
     }

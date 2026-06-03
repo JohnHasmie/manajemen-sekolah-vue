@@ -200,9 +200,10 @@ mixin StudentFormSaveMixin on StudentFormValidationMixin {
       return;
     }
 
+    final prefix = t({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '});
     SnackBarUtils.showError(
       buildContext,
-      '${t({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}${ErrorUtils.getFriendlyMessage(error)}',
+      '$prefix${ErrorUtils.getFriendlyMessage(error)}',
     );
   }
 

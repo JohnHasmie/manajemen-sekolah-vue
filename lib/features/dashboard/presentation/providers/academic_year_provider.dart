@@ -146,7 +146,8 @@ class AcademicYearProvider with ChangeNotifier {
         _selectedAcademicYear = year;
         AppLogger.debug(
           'academic_year',
-          'Selected year set to: ${_selectedAcademicYear?['year']} (ID: ${_selectedAcademicYear?['id']})',
+          'Selected year set to: ${_selectedAcademicYear?['year']} '
+              '(ID: ${_selectedAcademicYear?['id']})',
         );
         AppLogger.debug('academic_year', 'Is Read Only: $isReadOnly');
         notifyListeners();

@@ -23,7 +23,8 @@ import 'package:manajemensekolah/features/students/presentation/mixins/student_f
 
 /// Opens a bottom sheet for adding or editing a student.
 ///
-/// [student]    - pass an existing record map to enter edit mode; null = add mode.
+/// [student]    - pass an existing record map to enter edit mode; null = add
+///                mode.
 /// [classList] - list of class maps [{id, name}] used to populate the class
 /// dropdown.
 /// [primaryColor] - role accent colour forwarded from the screen.
@@ -335,9 +336,11 @@ class _StudentAddEditSheetContentState
                       lastDate: DateTime.now(),
                     );
                     if (picked != null) {
+                      final month = picked.month.toString().padLeft(2, '0');
+                      final day = picked.day.toString().padLeft(2, '0');
                       setState(() {
                         _birthDateController.text =
-                            '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+                            '${picked.year}-$month-$day';
                       });
                     }
                   },
@@ -384,9 +387,11 @@ class _StudentAddEditSheetContentState
                       subtitle: Text(
                         tLocal(const {
                           'en':
-                              'Move this student to a different user account based on the email below.',
+                              'Move this student to a different user account '
+                              'based on the email below.',
                           'id':
-                              'Pindahkan siswa ke akun wali lain berdasarkan email di bawah.',
+                              'Pindahkan siswa ke akun wali lain berdasarkan '
+                              'email di bawah.',
                         }),
                         style: TextStyle(
                           fontSize: 10.5,

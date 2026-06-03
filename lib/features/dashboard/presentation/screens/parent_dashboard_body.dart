@@ -7,13 +7,15 @@
 //   2. Brand-azure gradient hero — SchoolPill.expanded + realtime indicator
 // 3. KPI carousel (per-anak cycle, 4 cards) — Kehadiran, Tagihan, Rata-rata,
 // Pengumuman
-//      Driven by `BrandKpiCarousel` + `activeSliceProvider('parent_dashboard')`.
+//      Driven by `BrandKpiCarousel` +
+//      `activeSliceProvider('parent_dashboard')`.
 //      Backend payload: `state.stats['slices']` is a list of `_ParentSlice`
 //      bundles (see bottom of file) produced by
 //      `DashboardController::buildParentChildSlices`.
 // 4. Perlu perhatian — 4 inbox rows (Tagihan jatuh tempo, Nilai baru anak,
 // etc.)
-//   5. Aksi cepat      — 4 quick action tiles (Pengumuman, Tagihan, Nilai, Kehadiran)
+//   5. Aksi cepat      — 4 quick action tiles
+//                        (Pengumuman, Tagihan, Nilai, Kehadiran)
 //   6. Modul lain strip — horizontal with overflow sheet
 library;
 
@@ -536,14 +538,21 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             accentColor: ColorUtils.success600,
             caption: s.isPlaceholder
                 ? '30 ${AppLocalizations.day.tr.toLowerCase()}'
-                : '${s.attendanceBreakdown['sakit'] ?? 0} ${AppLocalizations.pdSick.tr.toLowerCase()} · ${s.attendanceBreakdown['izin'] ?? 0} ${AppLocalizations.pdPermission.tr.toLowerCase()} · ${s.attendanceBreakdown['alpa'] ?? 0} ${AppLocalizations.pdAlpha.tr.toLowerCase()}',
+                : '${s.attendanceBreakdown['sakit'] ?? 0} '
+                      '${AppLocalizations.pdSick.tr.toLowerCase()} · '
+                      '${s.attendanceBreakdown['izin'] ?? 0} '
+                      '${AppLocalizations.pdPermission.tr.toLowerCase()} · '
+                      '${s.attendanceBreakdown['alpa'] ?? 0} '
+                      '${AppLocalizations.pdAlpha.tr.toLowerCase()}',
             trend: (!s.isPlaceholder && s.attendanceDelta != 0)
                 ? StatTrend(
                     direction: s.attendanceDelta > 0
                         ? StatTrendDirection.up
                         : StatTrendDirection.down,
                     label:
-                        '${s.attendanceDelta > 0 ? '+' : ''}${s.attendanceDelta}% ${AppLocalizations.pdThisMonth.tr}',
+                        '${s.attendanceDelta > 0 ? '+' : ''}'
+                        '${s.attendanceDelta}% '
+                        '${AppLocalizations.pdThisMonth.tr}',
                   )
                 : null,
             onTap: s.isPlaceholder ? null : _openAttendance,
@@ -559,13 +568,15 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             caption: s.isPlaceholder
                 ? AppLocalizations.pdWaiting.tr
                 : (s.tugasOverdue > 0
-                      ? '${s.tugasOverdue} ${AppLocalizations.pdNotCollected.tr}'
+                      ? '${s.tugasOverdue} '
+                            '${AppLocalizations.pdNotCollected.tr}'
                       : '${s.tugasTotal} ${AppLocalizations.pdTotalTasks.tr}'),
             trend: (s.tugasOverdue > 0)
                 ? StatTrend(
                     direction: StatTrendDirection.down,
                     label:
-                        '${s.tugasOverdue} ${AppLocalizations.pdNotCollected.tr}',
+                        '${s.tugasOverdue} '
+                        '${AppLocalizations.pdNotCollected.tr}',
                     inverse: true,
                   )
                 : null,
@@ -586,7 +597,8 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             caption: s.isPlaceholder
                 ? AppLocalizations.pdDue.tr
                 : (s.overdueCount > 0
-                      ? '${s.overdueCount} ${AppLocalizations.billing.tr.toLowerCase()}'
+                      ? '${s.overdueCount} '
+                            '${AppLocalizations.billing.tr.toLowerCase()}'
                       : AppLocalizations.pdNoArrears.tr),
             onTap: s.isPlaceholder ? null : _openBilling,
           ),
@@ -601,7 +613,8 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
             icon: Icons.bar_chart_rounded,
             accentColor: const Color(0xFF6366F1),
             caption: s.avgGradeTerm != null
-                ? '${s.avgGradeSubjectCount} ${AppLocalizations.pdSubjectsCount.tr}'
+                ? '${s.avgGradeSubjectCount} '
+                      '${AppLocalizations.pdSubjectsCount.tr}'
                 : (s.isPlaceholder
                       ? AppLocalizations.pdActiveSemester.tr
                       : AppLocalizations.pdNoDataYet.tr),
@@ -611,7 +624,9 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
                         ? StatTrendDirection.up
                         : StatTrendDirection.down,
                     label:
-                        '${s.avgGradeDelta > 0 ? '+' : ''}${s.avgGradeDelta.toStringAsFixed(1)} ${AppLocalizations.pdLastSemester.tr}',
+                        '${s.avgGradeDelta > 0 ? '+' : ''}'
+                        '${s.avgGradeDelta.toStringAsFixed(1)} '
+                        '${AppLocalizations.pdLastSemester.tr}',
                   )
                 : null,
             onTap: s.isPlaceholder ? null : _openGrades,

@@ -49,6 +49,10 @@ mixin ScheduleCardBuilderMixin {
     final isPastDay = isDayPastCheck(dayName);
     final isToday = isDayTodayCheck(dayName);
     final color = isPastDay ? ColorUtils.slate400 : primary;
+    final sessionWord = languageProvider.getTranslatedText({
+      'en': count == 1 ? 'session' : 'sessions',
+      'id': 'sesi',
+    });
     final translations = dayTranslations[dayName];
     final label = translations != null
         ? languageProvider.getTranslatedText(translations)
@@ -108,8 +112,7 @@ mixin ScheduleCardBuilderMixin {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
-            '$count '
-            '${languageProvider.getTranslatedText({'en': count == 1 ? 'session' : 'sessions', 'id': 'sesi'})}',
+            '$count $sessionWord',
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,

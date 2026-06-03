@@ -45,7 +45,8 @@ class _SnoozeContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Item ini akan hilang sementara dari daftar Perlu Perhatian — hanya di perangkat ini.',
+          'Item ini akan hilang sementara dari daftar Perlu Perhatian — '
+          'hanya di perangkat ini.',
           style: TextStyle(
             fontSize: 12,
             height: 1.4,

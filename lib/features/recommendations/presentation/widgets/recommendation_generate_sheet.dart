@@ -530,7 +530,8 @@ class _RecommendationGenerateSheetState
                   if (overLimit) ...[
                     const TextSpan(
                       text:
-                          'Batas harian tercapai. Coba lagi besok atau hubungi admin sekolah.',
+                          'Batas harian tercapai. '
+                          'Coba lagi besok atau hubungi admin sekolah.',
                     ),
                   ] else ...[
                     const TextSpan(text: 'Estimasi '),
@@ -540,8 +541,10 @@ class _RecommendationGenerateSheetState
                     ),
                     TextSpan(
                       text:
-                          ' · ${_selectedSubjectIds.length} mapel × $_scopeStudentCount siswa. '
-                          'Anda telah pakai ${widget.dailyUsage}/${widget.dailyLimit} hari ini.',
+                          ' · ${_selectedSubjectIds.length} mapel × '
+                          '$_scopeStudentCount siswa. '
+                          'Anda telah pakai '
+                          '${widget.dailyUsage}/${widget.dailyLimit} hari ini.',
                     ),
                   ],
                 ],

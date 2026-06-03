@@ -584,7 +584,8 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
                         ? StatTrendDirection.up
                         : StatTrendDirection.down,
                     label:
-                        '${slice.attendanceDelta > 0 ? '+' : ''}${slice.attendanceDelta}%',
+                        '${slice.attendanceDelta > 0 ? '+' : ''}'
+                        '${slice.attendanceDelta}%',
                   ),
             onTap: _openSiswa,
           ),

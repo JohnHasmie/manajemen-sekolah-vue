@@ -58,6 +58,10 @@ class ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final deadlineWord = languageProvider.getTranslatedText({
+      'en': 'Deadline',
+      'id': 'Batas waktu',
+    });
     final isAssignment =
         activity['jenis'] == 'tugas' ||
         activity['jenis'] == 'assignment' ||
@@ -332,7 +336,8 @@ class ActivityCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${languageProvider.getTranslatedText({'en': 'Deadline', 'id': 'Batas waktu'})}: ${_formatDate(activity['batas_waktu'])}',
+                          '$deadlineWord: '
+                          '${_formatDate(activity['batas_waktu'])}',
                           style: TextStyle(
                             fontSize: 11,
                             color: ColorUtils.error600,

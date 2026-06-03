@@ -278,7 +278,8 @@ class ApiClassService {
   ///   • `current`     — the teacher currently wali kelas (or null)
   ///   • `available`   — teachers with no homeroom this academic year
   ///   • `already_wali` — teachers wali for some other class this AY,
-  ///                     each carrying `current_class_id` + `current_class_name`
+  ///                     each carrying `current_class_id` +
+  ///                     `current_class_name`
   ///
   /// Hits `GET /class/{id}/wali-candidates`.
   Future<Map<String, dynamic>> getWaliCandidates(String classId) async {

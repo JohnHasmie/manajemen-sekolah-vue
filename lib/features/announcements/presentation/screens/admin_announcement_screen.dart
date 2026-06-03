@@ -253,6 +253,11 @@ class AdminAnnouncementScreenState
       ),
     ];
 
+    final announcementsWord = languageProvider.getTranslatedText(const {
+      'en': 'announcements',
+      'id': 'pengumuman',
+    });
+
     return AdminCrudScaffold(
       title: languageProvider.getTranslatedText(const {
         'en': 'Announcements',
@@ -266,8 +271,7 @@ class AdminAnnouncementScreenState
         'en': 'COMMUNICATION',
         'id': 'KOMUNIKASI',
       }),
-      counterLabel:
-          '${announcements.length} ${languageProvider.getTranslatedText(const {'en': 'announcements', 'id': 'pengumuman'})}',
+      counterLabel: '${announcements.length} $announcementsWord',
       primaryColor: primaryColor,
       searchController: searchController,
       searchHint: languageProvider.getTranslatedText(const {

@@ -15,7 +15,8 @@ mixin ReportCardNavMixin on ConsumerState<ReportCardDetailScreen> {
         return AlertDialog(
           title: const Text('Perubahan Belum Disimpan'),
           content: const Text(
-            'Anda memiliki perubahan yang belum disimpan. Apakah Anda yakin ingin meninggalkan halaman ini?',
+            'Anda memiliki perubahan yang belum disimpan. '
+            'Apakah Anda yakin ingin meninggalkan halaman ini?',
           ),
           actions: [
             TextButton(

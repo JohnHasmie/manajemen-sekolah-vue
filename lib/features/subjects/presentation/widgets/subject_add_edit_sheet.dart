@@ -168,13 +168,14 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet>
       if (!mounted) return;
       setState(() => _isSaving = false);
       final lang2 = ref.read(languageRiverpod);
+      final prefix = lang2.getTranslatedText({
+        'en': 'Failed to save: ',
+        'id': 'Gagal menyimpan: ',
+      });
       if (ctx.mounted) {
         ScaffoldMessenger.of(ctx).showSnackBar(
           SnackBar(
-            content: Text(
-              '${lang2.getTranslatedText({'en': 'Failed to save: ', 'id': 'Gagal menyimpan: '})}'
-              '${ErrorUtils.getFriendlyMessage(error)}',
-            ),
+            content: Text('$prefix${ErrorUtils.getFriendlyMessage(error)}'),
             backgroundColor: Colors.red.shade400,
             behavior: SnackBarBehavior.floating,
           ),

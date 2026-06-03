@@ -222,8 +222,12 @@ class _LessonSessionEditSheetState extends State<_LessonSessionEditSheet> {
   Future<void> _save() async {
     if (!_canSave || _isSaving) return;
     setState(() => _isSaving = true);
-    String fmt(TimeOfDay t) =>
-        '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+    String fmt(TimeOfDay t) {
+      final hh = t.hour.toString().padLeft(2, '0');
+      final mm = t.minute.toString().padLeft(2, '0');
+      return '$hh:$mm';
+    }
+
     try {
       if (_isEdit) {
         await getIt<ApiSettingsService>().updateLessonSession(
@@ -311,14 +315,16 @@ class _LessonSessionEditSheetState extends State<_LessonSessionEditSheet> {
                       const SizedBox(height: 8),
                       _warningCard(
                         text:
-                            'Sesi ini tumpang tindih dengan jam lain di hari yang sama.',
+                            'Sesi ini tumpang tindih dengan jam lain '
+                            'di hari yang sama.',
                         tone: _WarningTone.danger,
                       ),
                     ] else ...[
                       const SizedBox(height: 8),
                       _warningCard(
                         text:
-                            'Sesi tidak boleh tumpang tindih dengan jam pelajaran lain pada hari yang sama.',
+                            'Sesi tidak boleh tumpang tindih dengan jam '
+                            'pelajaran lain pada hari yang sama.',
                         tone: _WarningTone.info,
                       ),
                     ],
@@ -558,8 +564,9 @@ class _LessonSessionEditSheetState extends State<_LessonSessionEditSheet> {
     required bool dirty,
     required VoidCallback onTap,
   }) {
-    final display =
-        '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+    final hh = value.hour.toString().padLeft(2, '0');
+    final mm = value.minute.toString().padLeft(2, '0');
+    final display = '$hh:$mm';
     return Material(
       color: dirty ? const Color(0xFFFEFCE8) : ColorUtils.slate50,
       borderRadius: const BorderRadius.all(Radius.circular(12)),

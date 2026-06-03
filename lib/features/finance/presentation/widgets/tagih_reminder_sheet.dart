@@ -156,7 +156,8 @@ class _TagihReminderContentState extends State<_TagihReminderContent> {
               if (overdueDays > 0) ...[
                 const SizedBox(height: 4),
                 Text(
-                  '⚠ Lewat $overdueDays hari · sudah dikirim $reminderCount pengingat',
+                  '⚠ Lewat $overdueDays hari · '
+                  'sudah dikirim $reminderCount pengingat',
                   style: const TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
@@ -220,7 +221,8 @@ class _TagihReminderContentState extends State<_TagihReminderContent> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Pengingat akan tercatat sebagai "Reminder ke-${reminderCount + 1}" pada baris tagihan.',
+                  'Pengingat akan tercatat sebagai '
+                  '"Reminder ke-${reminderCount + 1}" pada baris tagihan.',
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w600,

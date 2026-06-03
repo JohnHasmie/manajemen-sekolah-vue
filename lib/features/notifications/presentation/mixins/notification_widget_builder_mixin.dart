@@ -25,6 +25,10 @@ mixin NotificationWidgetBuilderMixin
     int unread,
     bool hasUnread,
   ) {
+    final unreadWord = languageProvider.getTranslatedText({
+      'en': 'unread',
+      'id': 'belum dibaca',
+    });
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
@@ -87,7 +91,7 @@ mixin NotificationWidgetBuilderMixin
                     if (unread > 0) ...[
                       const SizedBox(height: 2),
                       Text(
-                        '$unread ${languageProvider.getTranslatedText({'en': 'unread', 'id': 'belum dibaca'})}',
+                        '$unread $unreadWord',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.white.withValues(alpha: 0.9),

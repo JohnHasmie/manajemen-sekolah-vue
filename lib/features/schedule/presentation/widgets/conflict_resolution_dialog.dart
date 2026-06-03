@@ -88,9 +88,11 @@ class ConflictResolutionDialogState
             Text(
               languageProvider.getTranslatedText({
                 'en':
-                    'The following schedules conflict with each other. Please select one to delete:',
+                    'The following schedules conflict with each other. '
+                    'Please select one to delete:',
                 'id':
-                    'Jadwal berikut konflik satu sama lain. Pilih salah satu untuk dihapus:',
+                    'Jadwal berikut konflik satu sama lain. '
+                    'Pilih salah satu untuk dihapus:',
               }),
               style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
             ),
@@ -189,6 +191,24 @@ class ConflictResolutionDialogState
         ? startTime.substring(0, 5)
         : startTime;
     final endDisplay = endTime.length >= 5 ? endTime.substring(0, 5) : endTime;
+    final teacherWord = languageProvider.getTranslatedText({
+      'en': 'Teacher',
+      'id': 'Guru',
+    });
+    final teacherValue = (model.teacherName ?? '').isEmpty
+        ? 'No Teacher'
+        : model.teacherName;
+    final classWord = languageProvider.getTranslatedText({
+      'en': 'Class',
+      'id': 'Kelas',
+    });
+    final classValue = (model.className ?? '').isEmpty
+        ? 'No Class'
+        : model.className;
+    final timeWord = languageProvider.getTranslatedText({
+      'en': 'Time',
+      'id': 'Waktu',
+    });
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -212,17 +232,17 @@ class ConflictResolutionDialogState
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              '${languageProvider.getTranslatedText({'en': 'Teacher', 'id': 'Guru'})}: ${(model.teacherName ?? '').isEmpty ? 'No Teacher' : model.teacherName}',
+              '$teacherWord: $teacherValue',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 2),
             Text(
-              '${languageProvider.getTranslatedText({'en': 'Class', 'id': 'Kelas'})}: ${(model.className ?? '').isEmpty ? 'No Class' : model.className}',
+              '$classWord: $classValue',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 2),
             Text(
-              '${languageProvider.getTranslatedText({'en': 'Time', 'id': 'Waktu'})}: $startDisplay - $endDisplay',
+              '$timeWord: $startDisplay - $endDisplay',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
           ],

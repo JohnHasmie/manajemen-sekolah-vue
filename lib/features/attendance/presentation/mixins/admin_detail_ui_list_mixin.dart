@@ -21,6 +21,10 @@ mixin AdminDetailUiListMixin on ConsumerState<AdminAttendanceDetailPage> {
   String getStudentStatusFromData(String studentId);
 
   Widget buildStudentListHeader(LanguageProvider languageProvider) {
+    final studentsWord = languageProvider.getTranslatedText({
+      'en': 'students',
+      'id': 'siswa',
+    });
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
@@ -38,8 +42,7 @@ mixin AdminDetailUiListMixin on ConsumerState<AdminAttendanceDetailPage> {
           ),
           const Spacer(),
           Text(
-            '${studentList.length} '
-            '${languageProvider.getTranslatedText({'en': 'students', 'id': 'siswa'})}',
+            '${studentList.length} $studentsWord',
             style: TextStyle(fontSize: 12, color: ColorUtils.slate600),
           ),
         ],

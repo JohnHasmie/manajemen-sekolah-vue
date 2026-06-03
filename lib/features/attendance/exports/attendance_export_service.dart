@@ -168,7 +168,8 @@ class ExcelPresenceService {
         final allowedStatus = ['hadir', 'terlambat', 'izin', 'sakit', 'alpha'];
         if (!allowedStatus.contains(status)) {
           errors.add(
-            'Baris ${i + 1}: Status harus salah satu dari: hadir, terlambat, izin, sakit, alpha',
+            'Baris ${i + 1}: Status harus salah satu dari: '
+            'hadir, terlambat, izin, sakit, alpha',
           );
         } else {
           validatedPresence['status'] = status;
@@ -232,7 +233,9 @@ class ExcelPresenceService {
   /// Format a DateTime to 'YYYY-MM-DD' string for export. Like Carbon's
   /// `format('Y-m-d')`.
   static String formatDateForExport(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
   }
 
   /// Get localized day name from a DateTime. Like Carbon's

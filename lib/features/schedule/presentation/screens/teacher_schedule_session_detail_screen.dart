@@ -144,7 +144,8 @@ class TeacherScheduleSessionDetailScreen extends StatelessWidget {
                           _detailRow(
                             Icons.access_time_rounded,
                             'Waktu',
-                            '${formatTimeStr(m.startTime)} – ${formatTimeStr(m.endTime)}',
+                            '${formatTimeStr(m.startTime)} – '
+                                '${formatTimeStr(m.endTime)}',
                           ),
                           if ((m.dayName ?? '').isNotEmpty)
                             _detailRow(
@@ -338,7 +339,8 @@ class TeacherScheduleSessionDetailScreen extends StatelessWidget {
                             const TextSpan(text: ' · '),
                             TextSpan(
                               text:
-                                  '${formatTimeStr(m.startTime)} – ${formatTimeStr(m.endTime)}',
+                                  '${formatTimeStr(m.startTime)} – '
+                                  '${formatTimeStr(m.endTime)}',
                             ),
                           ],
                         ),

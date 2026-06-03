@@ -58,9 +58,13 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
     } catch (e) {
       AppLogger.error('settings', e);
       if (!mounted) return;
+      final prefix = ref.read(languageRiverpod).getTranslatedText({
+        'en': 'Failed to change password',
+        'id': 'Gagal mengubah kata sandi',
+      });
       SnackBarUtils.showError(
         context,
-        '${ref.read(languageRiverpod).getTranslatedText({'en': 'Failed to change password', 'id': 'Gagal mengubah kata sandi'})}: ${ErrorUtils.getFriendlyMessage(e)}',
+        '$prefix: ${ErrorUtils.getFriendlyMessage(e)}',
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);

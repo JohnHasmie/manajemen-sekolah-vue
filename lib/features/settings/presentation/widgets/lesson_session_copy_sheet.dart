@@ -319,7 +319,8 @@ class _LessonSessionCopySheetState extends State<_LessonSessionCopySheet> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Atur dulu sesi pada hari lain, lalu Salin akan tersedia di sini.',
+                'Atur dulu sesi pada hari lain, '
+                'lalu Salin akan tersedia di sini.',
                 style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w500,
@@ -366,7 +367,8 @@ class _LessonSessionCopySheetState extends State<_LessonSessionCopySheet> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Sesi $_targetDayName yang lama akan diganti dengan salinan dari hari pilihan.',
+                    'Sesi $_targetDayName yang lama akan diganti dengan '
+                    'salinan dari hari pilihan.',
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,

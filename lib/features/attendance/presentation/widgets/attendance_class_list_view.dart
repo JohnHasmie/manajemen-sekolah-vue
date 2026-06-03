@@ -17,9 +17,11 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 /// Renders the class-selection list for the admin attendance report screen.
 ///
 /// Parameters (like Vue props):
-/// - [isLoading]        -- shows a skeleton list while classes are being fetched
+/// - [isLoading]        -- shows a skeleton list while classes are being
+///                         fetched
 /// - [classList]        -- the full list of class objects (from the API)
-/// - [searchTerm]       -- current search filter value (lower-cased by the parent)
+/// - [searchTerm]       -- current search filter value (lower-cased by the
+///                         parent)
 /// - [primaryColor]     -- role-based accent color
 /// - [languageProvider] -- for translating UI strings
 /// - [onRefresh]        -- called on pull-to-refresh
@@ -87,6 +89,10 @@ class AttendanceClassListView extends StatelessWidget {
         itemBuilder: (context, index) {
           final classItem = filteredClasses[index] as Map<String, dynamic>;
           final classModel = Classroom.fromJson(classItem);
+          final gradeWord = languageProvider.getTranslatedText({
+            'en': 'Grade',
+            'id': 'Tingkat',
+          });
           return Material(
             color: Colors.transparent,
             child: InkWell(
@@ -135,7 +141,7 @@ class AttendanceClassListView extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            '${languageProvider.getTranslatedText({'en': 'Grade', 'id': 'Tingkat'})}: ${classModel.gradeLevel ?? '-'}',
+                            '$gradeWord: ${classModel.gradeLevel ?? '-'}',
                             style: TextStyle(
                               fontSize: 12,
                               color: ColorUtils.slate600,

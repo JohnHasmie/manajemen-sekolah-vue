@@ -69,7 +69,8 @@ class ErrorUtils {
     // School context mismatch (SEC-18) — specific and actionable message
     if (errorStr.contains('school_access_denied') ||
         errorStr.contains('tidak memiliki akses ke sekolah ini')) {
-      return 'Sesi sekolah Anda tidak valid. Silakan pilih sekolah kembali atau login ulang.';
+      return 'Sesi sekolah Anda tidak valid. '
+          'Silakan pilih sekolah kembali atau login ulang.';
     }
 
     // ── Specific Business Logic (check BEFORE generic status codes) ──
@@ -83,13 +84,15 @@ class ErrorUtils {
         errorStr.contains('akun tidak ditemukan') ||
         errorStr.contains('belum terdaftar') ||
         errorStr.contains('tidak memiliki akun')) {
-      return 'Akun dengan email tersebut belum terdaftar. Silakan hubungi admin sekolah Anda untuk didaftarkan.';
+      return 'Akun dengan email tersebut belum terdaftar. '
+          'Silakan hubungi admin sekolah Anda untuk didaftarkan.';
     }
 
     // No schools assigned
     if (errorStr.contains('tidak terdaftar pada sekolah') ||
         errorStr.contains('no schools assigned')) {
-      return 'Akun Anda belum terdaftar pada sekolah manapun, hubungi admin sekolah Anda.';
+      return 'Akun Anda belum terdaftar pada sekolah manapun, '
+          'hubungi admin sekolah Anda.';
     }
 
     // Wrong credentials

@@ -166,7 +166,8 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Tindakan ini tidak bisa dibatalkan dan akan menghapus semua data terkait.',
+                'Tindakan ini tidak bisa dibatalkan dan akan menghapus '
+                'semua data terkait.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,

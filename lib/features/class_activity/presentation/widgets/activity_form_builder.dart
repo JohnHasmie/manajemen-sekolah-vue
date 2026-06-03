@@ -319,6 +319,8 @@ class ActivityFormBuilder {
   }
 
   static String formatDateTime(DateTime d) {
-    return '${formatDate(d)}, ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    final hh = d.hour.toString().padLeft(2, '0');
+    final mm = d.minute.toString().padLeft(2, '0');
+    return '${formatDate(d)}, $hh:$mm';
   }
 }

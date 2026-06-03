@@ -128,9 +128,11 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
               }),
               subtitle: lang.getTranslatedText({
                 'en':
-                    'Mark inactive — past-year records stay intact, but new lists won\'t show this subject.',
+                    'Mark inactive — past-year records stay intact, but '
+                    'new lists won\'t show this subject.',
                 'id':
-                    'Tandai nonaktif — riwayat tahun lampau tetap tersimpan, tapi daftar baru tidak menampilkan mapel ini.',
+                    'Tandai nonaktif — riwayat tahun lampau tetap tersimpan, '
+                    'tapi daftar baru tidak menampilkan mapel ini.',
               }),
               accent: ColorUtils.warning600,
               onTap: () => _confirmSoftDelete(context),
@@ -171,9 +173,11 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
         }),
         content: lang.getTranslatedText({
           'en':
-              'The subject will be hidden from this year and future years. Past-year records stay accessible.',
+              'The subject will be hidden from this year and future years. '
+              'Past-year records stay accessible.',
           'id':
-              'Mapel akan disembunyikan dari tahun ini dan seterusnya. Riwayat tahun lampau tetap dapat diakses.',
+              'Mapel akan disembunyikan dari tahun ini dan seterusnya. '
+              'Riwayat tahun lampau tetap dapat diakses.',
         }),
         confirmColor: ColorUtils.warning600,
       ),
@@ -245,10 +249,11 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
       );
     } catch (e) {
       if (!context.mounted) return;
-      SnackBarUtils.showError(
-        context,
-        '${lang.getTranslatedText({'en': 'Cannot delete: ', 'id': 'Tidak bisa hapus: '})}$e',
-      );
+      final prefix = lang.getTranslatedText({
+        'en': 'Cannot delete: ',
+        'id': 'Tidak bisa hapus: ',
+      });
+      SnackBarUtils.showError(context, '$prefix$e');
     }
   }
 

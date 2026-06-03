@@ -209,7 +209,8 @@ void main() {
         await tester.pump(const Duration(milliseconds: 500));
       }
 
-      // Screen should have more than just the AppBar — widgets should be rendered
+      // Screen should have more than just the AppBar — widgets should be
+      // rendered
       final widgetCount = find.byType(Widget).evaluate().length;
       expect(
         widgetCount,

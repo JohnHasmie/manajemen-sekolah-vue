@@ -201,9 +201,9 @@ class _AnnouncementEventDetailHeroState
     final d = e.eventAt;
     final dow = days[(d.weekday - 1).clamp(0, 6)];
     final m = months[(d.month - 1).clamp(0, 11)];
-    final time = e.eventHasTime
-        ? ' — ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}'
-        : ' — Sepanjang hari';
+    final hh = d.hour.toString().padLeft(2, '0');
+    final mm = d.minute.toString().padLeft(2, '0');
+    final time = e.eventHasTime ? ' — $hh:$mm' : ' — Sepanjang hari';
     return '$dow, ${d.day} $m ${d.year}$time';
   }
 }

@@ -180,7 +180,8 @@ class ActivityDetailDialog extends StatelessWidget {
                       'en': 'Date',
                       'id': 'Tanggal',
                     }),
-                    '${activity['day'] ?? '-'} • ${_formatDate(activity['date'])}',
+                    '${activity['day'] ?? '-'} • '
+                    '${_formatDate(activity['date'])}',
                   ),
                   if (isAssignment && activity['batas_waktu'] != null)
                     _buildInfoTile(
@@ -207,7 +208,9 @@ class ActivityDetailDialog extends StatelessWidget {
                         'en': 'Chapter',
                         'id': 'Materi',
                       }),
-                      '${activity['bab_judul']}${activity['sub_bab_judul'] != null ? '\n• ${activity['sub_bab_judul']}' : ''}',
+                      '${activity['bab_judul']}'
+                      '${activity['sub_bab_judul'] != null ? '\n• '
+                                '${activity['sub_bab_judul']}' : ''}',
                     ),
                 ],
               ),

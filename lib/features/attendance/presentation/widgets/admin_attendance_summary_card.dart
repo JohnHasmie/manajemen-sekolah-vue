@@ -52,6 +52,11 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
         ? ColorUtils.warning600
         : ColorUtils.error600;
 
+    final attendanceWord = languageProvider.getTranslatedText({
+      'en': 'Attendance',
+      'id': 'Kehadiran',
+    });
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -249,7 +254,7 @@ class AdminAttendanceSummaryCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                '$attendanceRate% ${languageProvider.getTranslatedText({'en': 'Attendance', 'id': 'Kehadiran'})}',
+                '$attendanceRate% $attendanceWord',
                 style: TextStyle(fontSize: 10, color: ColorUtils.slate500),
               ),
             ],

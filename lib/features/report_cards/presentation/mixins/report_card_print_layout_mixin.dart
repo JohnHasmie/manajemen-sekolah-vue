@@ -308,6 +308,18 @@ mixin ReportCardPrintLayoutMixin {
   }
 
   Widget buildInfoSection() {
+    // Backend canonical: `promoted` / `not_promoted` / `graduated` /
+    // `not_graduated` (was Indonesian).
+    final decision = reportCardData['promotion_decision']
+        .toString()
+        .toLowerCase();
+    final decisionLabel = switch (decision) {
+      'promoted' => 'Naik Kelas',
+      'not_promoted' => 'Tinggal di Kelas',
+      'graduated' => 'Lulus',
+      'not_graduated' => 'Tidak Lulus',
+      _ => reportCardData['promotion_decision'],
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -379,16 +391,7 @@ mixin ReportCardPrintLayoutMixin {
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 child: Text(
                   'Berdasarkan pencapaian seluruh kompetensi, '
-                  'peserta didik dinyatakan: '
-                  // Backend canonical: `promoted` / `not_promoted` /
-                  // `graduated` / `not_graduated` (was Indonesian).
-                  '${switch (reportCardData['promotion_decision'].toString().toLowerCase()) {
-                    'promoted' => 'Naik Kelas',
-                    'not_promoted' => 'Tinggal di Kelas',
-                    'graduated' => 'Lulus',
-                    'not_graduated' => 'Tidak Lulus',
-                    _ => reportCardData['promotion_decision'],
-                  }}',
+                  'peserta didik dinyatakan: $decisionLabel',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),

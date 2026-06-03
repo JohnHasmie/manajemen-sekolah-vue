@@ -432,6 +432,10 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
     // Homeroom
     final isHomeroom = model.isHomeroomTeacher;
     final homeroomClass = model.homeroomClassName ?? '-';
+    final homeroomWord = lang.getTranslatedText(const {
+      'en': 'Homeroom',
+      'id': 'Wali Kelas',
+    });
 
     // Subjects
     final subjects =
@@ -506,7 +510,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
                 'id': 'Peran',
               }),
               value: isHomeroom
-                  ? '${lang.getTranslatedText(const {'en': 'Homeroom', 'id': 'Wali Kelas'})} $homeroomClass'
+                  ? '$homeroomWord $homeroomClass'
                   : lang.getTranslatedText(const {
                       'en': 'Subject Teacher',
                       'id': 'Guru Mapel',
@@ -647,6 +651,11 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
       ),
     ];
 
+    final teachersWord = lang.getTranslatedText(const {
+      'en': 'teachers',
+      'id': 'guru',
+    });
+
     return AdminCrudScaffold(
       title: lang.getTranslatedText(const {'en': 'Teachers', 'id': 'Guru'}),
       subtitle: lang.getTranslatedText(const {
@@ -668,8 +677,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
         'en': 'DATA MANAGEMENT',
         'id': 'MANAJEMEN DATA',
       }),
-      counterLabel:
-          '${_teachers.length} ${lang.getTranslatedText(const {'en': 'teachers', 'id': 'guru'})}',
+      counterLabel: '${_teachers.length} $teachersWord',
       onClearAllFilters: _clearAllFilters,
       actionMenu: AdminDataMenu(
         languageProvider: lang,

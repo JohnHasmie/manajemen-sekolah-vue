@@ -48,9 +48,12 @@ mixin AdminFilterMixin on ConsumerState<AdminAnnouncementScreen> {
     final List<Map<String, dynamic>> filterChips = [];
 
     if (selectedPriorityFilter != null) {
+      final priorityLabel = languageProvider.getTranslatedText({
+        'en': 'Priority',
+        'id': 'Prioritas',
+      });
       filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Priority', 'id': 'Prioritas'})}: $selectedPriorityFilter',
+        'label': '$priorityLabel: $selectedPriorityFilter',
         'onRemove': () {
           setState(() {
             selectedPriorityFilter = null;
@@ -62,9 +65,12 @@ mixin AdminFilterMixin on ConsumerState<AdminAnnouncementScreen> {
     }
 
     if (selectedTargetFilter != null) {
+      final targetLabel = languageProvider.getTranslatedText({
+        'en': 'Target',
+        'id': 'Target',
+      });
       filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Target', 'id': 'Target'})}: $selectedTargetFilter',
+        'label': '$targetLabel: $selectedTargetFilter',
         'onRemove': () {
           setState(() {
             selectedTargetFilter = null;
@@ -76,9 +82,12 @@ mixin AdminFilterMixin on ConsumerState<AdminAnnouncementScreen> {
     }
 
     if (selectedStatusFilter != null) {
+      final statusLabel = languageProvider.getTranslatedText({
+        'en': 'Status',
+        'id': 'Status',
+      });
       filterChips.add({
-        'label':
-            '${languageProvider.getTranslatedText({'en': 'Status', 'id': 'Status'})}: $selectedStatusFilter',
+        'label': '$statusLabel: $selectedStatusFilter',
         'onRemove': () {
           setState(() {
             selectedStatusFilter = null;

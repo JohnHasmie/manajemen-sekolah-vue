@@ -267,7 +267,8 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
       context: context,
       title: 'Finalisasi Rapor',
       message:
-          'Apakah Anda yakin ingin menyelesaikan rapor ini? Rapor yang telah difinalisasi tidak dapat diubah.',
+          'Apakah Anda yakin ingin menyelesaikan rapor ini? '
+          'Rapor yang telah difinalisasi tidak dapat diubah.',
       confirmText: 'Ya, Finalisasi',
       cancelText: 'Batal',
       icon: Icons.task_alt_rounded,

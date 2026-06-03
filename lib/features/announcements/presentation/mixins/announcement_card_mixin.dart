@@ -4,7 +4,7 @@
 //   ┌─────────────────────────────────────────────┐
 //   │  ⊙   Sekolah · Kepala Sekolah    2 jam lalu │  ← top row (caption + ago)
 //   │      Libur HUT Sekolah · 30 Oktober         │  ← title (slate-900 700)
-//   │      Kegiatan belajar diliburkan…           │  ← preview (slate-600, 2 lines)
+//   │      Kegiatan belajar diliburkan…           │  ← preview (2 lines)
 //   │      ▮Penting  📎 Surat-edaran.pdf          │  ← chips row (optional)
 //   └─────────────────────────────────────────────┘
 //                                              • ← unread dot (azure)

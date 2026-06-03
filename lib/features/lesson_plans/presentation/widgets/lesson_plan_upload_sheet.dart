@@ -1109,7 +1109,8 @@ class _ExistingFileCard extends StatelessWidget {
     if (fileSize < 1024 * 1024) {
       return '${(fileSize / 1024).toStringAsFixed(1)} KB · file saat ini';
     }
-    return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB · file saat ini';
+    final mb = (fileSize / (1024 * 1024)).toStringAsFixed(1);
+    return '$mb MB · file saat ini';
   }
 
   @override

@@ -49,8 +49,10 @@ abstract class Student with _$Student {
     //   b. flat Indonesian       : { kelas_nama: "7A" }
     //   c. nested relation       : { class: { name: "7A" } }
     //   d. nested relation (id)  : { kelas: { nama: "7A" } }
-    //   e. nested enrollment     : { student_classes: [{ class: { name: "7A" } }] }
-    //   f. nested enrollment (id): { siswa_kelas:    [{ kelas: { nama: "7A" } }] }
+    //   e. nested enrollment     :
+    //        { student_classes: [{ class: { name: "7A" } }] }
+    //   f. nested enrollment (id):
+    //        { siswa_kelas:    [{ kelas: { nama: "7A" } }] }
     mapped['class_name'] ??= mapped['kelas_nama'];
     if (mapped['class'] is Map && mapped['class']['name'] != null) {
       mapped['class_name'] ??= mapped['class']['name'];

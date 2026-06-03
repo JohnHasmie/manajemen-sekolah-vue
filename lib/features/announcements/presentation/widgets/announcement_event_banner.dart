@@ -243,9 +243,9 @@ class _BannerCard extends StatelessWidget {
   static String _composeBody(AnnouncementEvent event) {
     final parts = <String>[];
     final d = event.eventAt;
-    final hm = event.eventHasTime
-        ? '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}'
-        : 'Sepanjang hari';
+    final hh = d.hour.toString().padLeft(2, '0');
+    final mm = d.minute.toString().padLeft(2, '0');
+    final hm = event.eventHasTime ? '$hh:$mm' : 'Sepanjang hari';
     parts.add(hm);
     if (event.eventLocation != null) parts.add(event.eventLocation!);
     return parts.join(' · ');

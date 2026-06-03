@@ -354,7 +354,8 @@ void main() {
   // TC099: Admin — Grade Input → select class → grade book → back → back
   // =========================================================================
   testWidgets(
-    'TC099: Admin Grade Input — dashboard → class list → grade book → back back',
+    'TC099: Admin Grade Input — dashboard → class list → grade book → '
+    'back back',
     timeout: const Timeout(Duration(minutes: 8)),
     (tester) async {
       await loginAndNavigateToDashboard(tester, role: 'Administrator');
@@ -476,10 +477,12 @@ void main() {
   );
 
   // =========================================================================
-  // TC103: Teacher — Student Attendance → select class → mark attendance → back back
+  // TC103: Teacher — Student Attendance → select class → mark attendance →
+  // back back
   // =========================================================================
   testWidgets(
-    'TC103: Teacher Attendance deep — dashboard → class list → class detail → back back',
+    'TC103: Teacher Attendance deep — dashboard → class list → '
+    'class detail → back back',
     timeout: const Timeout(Duration(minutes: 8)),
     (tester) async {
       await loginAndNavigateToDashboard(tester, role: 'Teacher');
@@ -521,7 +524,8 @@ void main() {
   // TC104: Teacher — Grade Input → select class → grade book → back back
   // =========================================================================
   testWidgets(
-    'TC104: Teacher Grade Input deep — dashboard → class list → grade book → back back',
+    'TC104: Teacher Grade Input deep — dashboard → class list → '
+    'grade book → back back',
     timeout: const Timeout(Duration(minutes: 8)),
     (tester) async {
       await loginAndNavigateToDashboard(tester, role: 'Teacher');
@@ -555,7 +559,8 @@ void main() {
   );
 
   // =========================================================================
-  // TC105: Teacher — Grade Recap wizard → class list → subject list → back back back
+  // TC105: Teacher — Grade Recap wizard → class list → subject list →
+  // back back back
   // =========================================================================
   testWidgets(
     'TC105: Teacher Grade Recap wizard — class → subject list → back back back',
@@ -651,7 +656,8 @@ void main() {
   );
 
   // =========================================================================
-  // TC107: Teacher — Learning Recommendation → class card → generate → back back
+  // TC107: Teacher — Learning Recommendation → class card → generate →
+  // back back
   // =========================================================================
   testWidgets(
     'TC107: Teacher Learning Recommendation — class card → expand → back back',
@@ -831,7 +837,8 @@ void main() {
   // TC111: Admin — Data Management deep flow (3 levels with real data)
   // =========================================================================
   testWidgets(
-    'TC111: Admin Data Mgmt 3-level deep — list → detail → back → back → dashboard',
+    'TC111: Admin Data Mgmt 3-level deep — list → detail → back → back → '
+    'dashboard',
     timeout: const Timeout(Duration(minutes: 10)),
     (tester) async {
       await loginAndNavigateToDashboard(tester, role: 'Administrator');

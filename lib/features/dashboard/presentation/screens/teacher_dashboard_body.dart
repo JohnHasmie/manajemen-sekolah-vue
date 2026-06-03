@@ -7,7 +7,8 @@
 //   2. Teal gradient hero — SchoolPill.expanded + realtime indicator
 //   3. KPI row (2x2 grid) — 4 cards: Siswa diampu, Kelas, Sesi hari ini, RPP
 //   4. Perlu perhatian    — server-ranked priority inbox (FF.* series)
-//   5. Aksi cepat         — 4 quick action tiles (Jadwal, Absensi, Aktivitas, Nilai)
+//   5. Aksi cepat         — 4 quick action tiles
+//                           (Jadwal, Absensi, Aktivitas, Nilai)
 //   6. Modul lain strip   — horizontal with overflow sheet
 library;
 
@@ -548,7 +549,8 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     // Card 1 — Sesi Hari Ini (with done/total ratio)
     final sessionsCaption = slice.sessionsToday > 0
         ? '${slice.sessionsTodayDone} ${isEn ? 'done' : 'selesai'} · '
-              '${slice.sessionsToday - slice.sessionsTodayDone} ${isEn ? 'pending' : 'belum'}'
+              '${slice.sessionsToday - slice.sessionsTodayDone} '
+              '${isEn ? 'pending' : 'belum'}'
         : (isEn ? 'No sessions today' : 'Tidak ada sesi hari ini');
 
     // Card 2 — Kehadiran (with delta if non-zero)
@@ -559,7 +561,8 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
                 ? StatTrendDirection.up
                 : StatTrendDirection.down,
             label:
-                '${slice.attendanceDelta > 0 ? '+' : ''}${slice.attendanceDelta}%',
+                '${slice.attendanceDelta > 0 ? '+' : ''}'
+                '${slice.attendanceDelta}%',
           );
 
     // Card 3 — RPP status mix. Pending+revision drives the warning
@@ -569,7 +572,8 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
     final rppCaption = rppNeedsAttention > 0
         ? '${slice.lessonPlansPending} ${isEn ? 'waiting' : 'menunggu'} · '
               '${slice.lessonPlansRevision} ${isEn ? 'revision' : 'revisi'}'
-        : '${slice.lessonPlansApproved} ${AppLocalizations.dbApproved.tr.toLowerCase()}';
+        : '${slice.lessonPlansApproved} '
+              '${AppLocalizations.dbApproved.tr.toLowerCase()}';
 
     // Card 4 — Nilai Belum Input
     final gradesCaption = slice.gradesPendingSessions > 0
@@ -1014,7 +1018,8 @@ class _RealtimePill extends StatelessWidget {
     }
     final mins = DateTime.now().difference(lastSync).inMinutes;
     if (mins <= 0) return AppLocalizations.dbConnecting.tr;
-    return '${AppLocalizations.dbLastUpdated.tr} $mins ${AppLocalizations.dbMinsAgo.tr}';
+    return '${AppLocalizations.dbLastUpdated.tr} $mins '
+        '${AppLocalizations.dbMinsAgo.tr}';
   }
 }
 

@@ -856,7 +856,8 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
       context: context,
       title: 'Batas Tercapai',
       message:
-          'Batas regenerasi untuk "$fieldLabel" telah tercapai (maksimal 2 kali per field).',
+          'Batas regenerasi untuk "$fieldLabel" telah tercapai '
+          '(maksimal 2 kali per field).',
       icon: Icons.timer_off_rounded,
       confirmText: 'Mengerti',
       showCancel: false,
