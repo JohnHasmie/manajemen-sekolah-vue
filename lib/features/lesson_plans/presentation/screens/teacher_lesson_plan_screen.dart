@@ -124,10 +124,8 @@ class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>
     _hasActiveFilter = value;
   }
 
-  @override
   GlobalKey get filterKey => _filterKey;
 
-  @override
   GlobalKey get addRppKey => _addRppKey;
 
   // ── Bridges for LessonPlanBrandHeaderMixin ──

@@ -37,23 +37,6 @@ class _GradeRecapOverviewPageState extends ConsumerState<GradeRecapOverviewPage>
         GradeRecapBrandHeaderMixin,
         GradeRecapBrandBodyMixin {
   @override
-  late List<dynamic> groupedData;
-  @override
-  late bool isLoading;
-  @override
-  late bool isHomeroomView;
-  @override
-  late TextEditingController searchController;
-  @override
-  late String? filterClassId;
-  @override
-  late String? filterClassName;
-  @override
-  late String? filterSubjectId;
-  @override
-  late String? filterSubjectName;
-
-  @override
   Map<String, dynamic> get teacherData => widget.teacher;
 
   @override

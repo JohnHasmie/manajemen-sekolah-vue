@@ -500,15 +500,10 @@ class _AdminReportCardScreenState extends ConsumerState<AdminReportCardScreen>
   bool get isPublishing => _isPublishing;
   @override
   set isPublishing(bool value) => _isPublishing = value;
-  @override
   LanguageProvider get languageProvider => _languageProvider;
-  @override
   GlobalKey get selectClassKey => _selectClassKey;
-  @override
   GlobalKey get studentListKey => _studentListKey;
-  @override
   GlobalKey get exportBtnKey => _exportBtnKey;
-  @override
   GlobalKey get publishBtnKey => _publishBtnKey;
 }
 

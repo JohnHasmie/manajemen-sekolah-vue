@@ -140,20 +140,12 @@ class AdminAttendanceReportScreenState
   final GlobalKey _filterKey = GlobalKey();
   final GlobalKey _moreKey = GlobalKey();
   final GlobalKey _infoKey = GlobalKey();
-  bool _isTourShowing = false;
+  bool isTourShowing = false;
 
-  @override
   GlobalKey get searchKey => _searchKey;
-  @override
   GlobalKey get filterKey => _filterKey;
-  @override
   GlobalKey get moreKey => _moreKey;
-  @override
   GlobalKey get infoKey => _infoKey;
-  @override
-  bool get isTourShowing => _isTourShowing;
-  @override
-  set isTourShowing(bool value) => _isTourShowing = value;
 
   List<dynamic> _subjectList = [];
   List<dynamic> _classList = [];
@@ -283,7 +275,6 @@ class AdminAttendanceReportScreenState
     super.dispose();
   }
 
-  @override
   void onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {

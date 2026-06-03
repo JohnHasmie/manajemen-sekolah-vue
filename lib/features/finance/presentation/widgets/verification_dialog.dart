@@ -85,7 +85,6 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog>
   @override
   Map<String, dynamic> get payment => widget.payment;
 
-  @override
   ApiService get apiService => widget.apiService;
 
   @override
@@ -94,7 +93,6 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog>
   @override
   Color get primaryColor => widget.primaryColor;
 
-  @override
   VoidCallback get onSuccess => widget.onSuccess;
 
   @override

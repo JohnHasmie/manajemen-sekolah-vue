@@ -108,10 +108,8 @@ class _LearningRecommendationResultScreenState
     fetchRecommendations();
   }
 
-  @override
   GlobalKey get recommendationListKey => _recommendationListKey;
 
-  @override
   GlobalKey get editButtonKey => _editButtonKey;
 
   @override

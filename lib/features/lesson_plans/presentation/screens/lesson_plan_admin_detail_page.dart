@@ -57,9 +57,6 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
         CardBuildersMixin,
         HeaderBuilderMixin,
         ContentCardBuilderMixin {
-  @override
-  late Map<String, dynamic> lessonPlan;
-
   late final ScrollController _scrollController;
   final GlobalKey _historyKey = GlobalKey();
   List<Map<String, dynamic>> _reviews = const [];

@@ -45,7 +45,6 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
   // CORE NAVIGATION & ACTIONS
   // ═══════════════════════════════════════════
 
-  @override
   void toggleView() {
     setState(() => isTimelineView = !isTimelineView);
     LocalCacheService.save('absensi_view_preference', {
@@ -70,7 +69,6 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
   /// scheduled slot with zero records), we fall back to the all-dates
   /// sheet via [openAttendanceDetailSheet] so the teacher can still
   /// open Ambil Presensi via the FAB inside.
-  @override
   void openAttendanceDetail({
     required String classId,
     required String className,
@@ -153,7 +151,6 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
     );
   }
 
-  @override
   void openInputSheet({
     required String classId,
     required String className,
@@ -186,7 +183,6 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
     ).then((_) => refreshGroupedAttendance());
   }
 
-  @override
   void showQuickActionsSheet(LanguageProvider lp) {
     showModalBottomSheet(
       context: context,
@@ -285,10 +281,8 @@ mixin AttendanceNavigationMixin on ConsumerState<AttendancePage> {
     }
   }
 
-  @override
   void detectCurrentLessonHour() => detectLessonHour();
 
-  @override
   Future<void> forceRefresh() async {
     await LocalCacheService.clearStartingWith('presence_');
     if (isTimelineView) {

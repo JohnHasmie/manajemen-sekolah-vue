@@ -102,10 +102,8 @@ class ParentAttendanceScreenState extends ConsumerState<ParentAttendanceScreen>
 
   // ----------------------------------------------------------------
 
-  @override
   GlobalKey get monthlySummaryKey => _monthlySummaryKey;
 
-  @override
   GlobalKey get attendanceListKey => _attendanceListKey;
 
   @override

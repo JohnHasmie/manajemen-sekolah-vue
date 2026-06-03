@@ -160,7 +160,6 @@ class _StudentAddEditSheetContentState
   @override
   void onSaveSuccess() => widget.onSave();
 
-  @override
   Color get primaryColor => widget.primaryColor;
 
   @override

@@ -104,11 +104,8 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
   final List<String> decisions = ['Naik Kelas', 'Tinggal di Kelas'];
 
   // Tour keys
-  @override
   late GlobalKey tabKey;
-  @override
   late GlobalKey saveDraftKey;
-  @override
   late GlobalKey finalizeKey;
 
   @override

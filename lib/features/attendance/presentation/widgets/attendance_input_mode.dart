@@ -351,10 +351,8 @@ class _AttendanceInputModeState extends ConsumerState<AttendanceInputMode>
   @override
   Color get toolbarPrimaryColor => widget.primaryColor;
 
-  @override
   List<dynamic> get toolbarFilteredStudents => widget.filteredStudentList;
 
-  @override
   Map<String, String> get toolbarAttendanceStatus => widget.attendanceStatus;
 
   @override

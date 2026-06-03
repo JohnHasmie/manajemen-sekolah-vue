@@ -14,25 +14,6 @@ import 'package:manajemensekolah/features/students/presentation/mixins/student_f
 ///
 /// Provides methods to handle form submission, API calls, and error handling.
 mixin StudentFormSaveMixin on StudentFormValidationMixin {
-  @override
-  late final TextEditingController nameController;
-  @override
-  late final TextEditingController nisController;
-  @override
-  late final TextEditingController addressController;
-  @override
-  late final TextEditingController birthDateController;
-  @override
-  late final TextEditingController parentNameController;
-  @override
-  late final TextEditingController phoneController;
-  @override
-  late final TextEditingController emailParentController;
-
-  @override
-  String? selectedClassId;
-  @override
-  String? selectedGender;
   bool isChangeUserMode = false;
 
   /// Must access student data — implement in consuming class.

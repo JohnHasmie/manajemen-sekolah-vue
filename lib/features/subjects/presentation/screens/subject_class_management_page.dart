@@ -146,9 +146,6 @@ class SubjectClassManagementPageState
   }
 
   @override
-  late TextEditingController searchController;
-
-  @override
   void initState() {
     super.initState();
     searchController = TextEditingController();
