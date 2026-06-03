@@ -60,9 +60,13 @@ void main() {
       expect(find.text('Budi Santoso'), findsOneWidget);
     });
 
-    testWidgets('shows row number', (WidgetTester tester) async {
+    testWidgets('shows the student NIS line', (WidgetTester tester) async {
+      // Frame A compact layout dropped the leading order number; the
+      // student block now shows the name plus a "NIS <number>" line.
       await tester.pumpWidget(buildWidget(index: 2));
-      expect(find.text('3'), findsOneWidget);
+      expect(find.text('NIS 20240001'), findsOneWidget);
+      // Order number is no longer rendered.
+      expect(find.text('3'), findsNothing);
     });
 
     testWidgets('shows full-word status labels (Frame A)', (
@@ -97,11 +101,14 @@ void main() {
       expect(capturedStatus, equals('sakit'));
     });
 
-    testWidgets('avatar shows first letter of student name', (
+    testWidgets('drops the avatar in the Frame A compact layout', (
       WidgetTester tester,
     ) async {
+      // Frame A intentionally drops the avatar so the row fits the
+      // full-word status buttons. The name is the only "B…" text present.
       await tester.pumpWidget(buildWidget());
-      expect(find.text('B'), findsOneWidget);
+      expect(find.text('B'), findsNothing);
+      expect(find.text('Budi Santoso'), findsOneWidget);
     });
   });
 }

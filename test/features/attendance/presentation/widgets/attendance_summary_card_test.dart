@@ -65,22 +65,27 @@ void main() {
       expect(find.byType(AttendanceSummaryCard), findsOneWidget);
     });
 
-    testWidgets('shows subject name', (WidgetTester tester) async {
-      await tester.pumpWidget(buildWidget());
-      expect(find.text('Matematika'), findsOneWidget);
-    });
-
-    testWidgets('shows present and absent counts in tags', (
+    testWidgets('shows subject name in the class · subject chip', (
       WidgetTester tester,
     ) async {
+      // Redesign: the chip combines "<class> · <subject>".
       await tester.pumpWidget(buildWidget());
-      expect(find.text('25 Hadir'), findsOneWidget);
-      expect(find.text('5 Absen'), findsOneWidget);
+      expect(find.text('VII-A · Matematika'), findsOneWidget);
     });
 
-    testWidgets('shows total student count tag', (WidgetTester tester) async {
+    testWidgets('shows present and absent counts', (
+      WidgetTester tester,
+    ) async {
+      // Redesign: counts are bare numbers next to icons (no "Hadir"/"Absen"
+      // text labels).
       await tester.pumpWidget(buildWidget());
-      expect(find.text('30 Siswa'), findsOneWidget);
+      expect(find.text('25'), findsOneWidget);
+      expect(find.text('5'), findsOneWidget);
+    });
+
+    testWidgets('shows total student count', (WidgetTester tester) async {
+      await tester.pumpWidget(buildWidget());
+      expect(find.text('30'), findsOneWidget);
     });
 
     testWidgets('long-press fires onLongPress callback', (
@@ -105,53 +110,62 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('shows book icon for subject', (WidgetTester tester) async {
+    testWidgets('shows circular attendance-rate indicator', (
+      WidgetTester tester,
+    ) async {
+      // Redesign: the leading slot is a circular percentage indicator
+      // (25/30 = 83%), replacing the old book icon.
       await tester.pumpWidget(buildWidget());
-      final bookIcon = find.byWidgetPredicate(
-        (w) => w is Icon && w.icon == Icons.book_outlined,
-      );
-      expect(bookIcon, findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('83%'), findsOneWidget);
     });
 
     // --- Additional edge case scenarios ---
 
     testWidgets('shows zero present count', (WidgetTester tester) async {
+      // present=0 is the only zero value, so the bare '0' is unique.
       await tester.pumpWidget(
         buildWidget(summary: makeSummary(present: 0, absent: 30)),
       );
-      expect(find.text('0 Hadir'), findsOneWidget);
+      expect(find.text('0'), findsOneWidget);
+      expect(find.text('0%'), findsOneWidget); // 0/30 → 0%
     });
 
     testWidgets('shows zero absent count', (WidgetTester tester) async {
+      // absent=0 is the only zero value, so the bare '0' is unique.
       await tester.pumpWidget(
         buildWidget(summary: makeSummary(present: 30, absent: 0)),
       );
-      expect(find.text('0 Absen'), findsOneWidget);
+      expect(find.text('0'), findsOneWidget);
     });
 
     testWidgets('shows zero total students', (WidgetTester tester) async {
+      // All three counts are 0; rate falls back to 0%.
       await tester.pumpWidget(
         buildWidget(
           summary: makeSummary(totalStudent: 0, present: 0, absent: 0),
         ),
       );
-      expect(find.text('0 Siswa'), findsOneWidget);
+      expect(find.text('0'), findsNWidgets(3));
+      expect(find.text('0%'), findsOneWidget);
     });
 
-    testWidgets('shows custom subject name', (WidgetTester tester) async {
+    testWidgets('shows custom subject name in the class · subject chip', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         buildWidget(summary: makeSummary(subjectName: 'Bahasa Indonesia')),
       );
-      expect(find.text('Bahasa Indonesia'), findsOneWidget);
+      expect(find.text('VII-A · Bahasa Indonesia'), findsOneWidget);
     });
 
-    testWidgets('shows className in card when provided', (
+    testWidgets('shows className in the class · subject chip', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
         buildWidget(summary: makeSummary(className: 'IX-C')),
       );
-      expect(find.text('IX-C'), findsOneWidget);
+      expect(find.text('IX-C · Matematika'), findsOneWidget);
     });
 
     testWidgets('renders correctly without className (null)', (
@@ -209,8 +223,8 @@ void main() {
           summary: makeSummary(totalStudent: 999, present: 997, absent: 2),
         ),
       );
-      expect(find.text('999 Siswa'), findsOneWidget);
-      expect(find.text('997 Hadir'), findsOneWidget);
+      expect(find.text('999'), findsOneWidget);
+      expect(find.text('997'), findsOneWidget);
     });
   });
 }
