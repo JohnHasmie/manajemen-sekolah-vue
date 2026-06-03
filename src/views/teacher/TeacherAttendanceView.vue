@@ -81,7 +81,7 @@ const activeHomeroom = computed(() =>
 );
 
 // ── Filter state ──
-type PeriodKey = 'today' | 'week' | 'last7' | 'month';
+type PeriodKey = 'today' | 'week' | 'last7' | 'month' | 'semester' | 'year';
 const periodKey = ref<PeriodKey>('week');
 const classes = ref<Classroom[]>([]);
 const subjects = ref<Subject[]>([]);
@@ -97,6 +97,8 @@ const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
   { key: 'week', label: 'Minggu ini' },
   { key: 'last7', label: '7 hari terakhir' },
   { key: 'month', label: 'Bulan ini' },
+  { key: 'semester', label: 'Semester ini' },
+  { key: 'year', label: 'Tahun ini' },
 ];
 const activePeriod = computed(
   () =>
@@ -141,6 +143,16 @@ function startOfMonthIso(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
 }
+function startOfYearIso(): string {
+  return `${new Date().getFullYear()}-01-01`;
+}
+function startOfSemesterIso(): string {
+  // Odd semester (Ganjil) ≈ Jul–Dec, even (Genap) ≈ Jan–Jun. Pick the
+  // current semester's first month based on today's month.
+  const d = new Date();
+  const startMonth = d.getMonth() + 1 >= 7 ? 7 : 1;
+  return `${d.getFullYear()}-${String(startMonth).padStart(2, '0')}-01`;
+}
 function dateRange(p: PeriodKey): { from: string; to: string } {
   const to = todayIso();
   switch (p) {
@@ -152,6 +164,10 @@ function dateRange(p: PeriodKey): { from: string; to: string } {
       return { from: isoDaysAgo(6), to };
     case 'month':
       return { from: startOfMonthIso(), to };
+    case 'semester':
+      return { from: startOfSemesterIso(), to };
+    case 'year':
+      return { from: startOfYearIso(), to };
   }
 }
 
