@@ -21,7 +21,8 @@ mixin ResultFetchMixin on ConsumerState<LearningRecommendationResultScreen> {
     final classId = widget.classData['id']?.toString() ?? '';
     final studentId = Student.fromJson(widget.student).id;
     final scopeTag = widget.isHomeroomView ? 'wali' : 'mengajar';
-    return 'recommendation_result_${teacherId}_${classId}_${studentId}_$scopeTag';
+    return 'recommendation_result_${teacherId}_${classId}_'
+        '${studentId}_$scopeTag';
   }
 
   /// Forces refresh by clearing cache and fetching fresh data.

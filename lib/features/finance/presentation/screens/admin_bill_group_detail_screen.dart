@@ -400,6 +400,9 @@ class _SummaryCard extends StatelessWidget {
     final avg = stats.totalCount > 0
         ? stats.totalAmount / stats.totalCount
         : 0.0;
+    final paidShort = _AdminBillGroupDetailScreenState._formatRupiahShort(
+      stats.paidAmount,
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -438,8 +441,7 @@ class _SummaryCard extends StatelessWidget {
             const SizedBox(height: 8),
             _row(
               label: 'Sudah dibayar',
-              value:
-                  '${_AdminBillGroupDetailScreenState._formatRupiahShort(stats.paidAmount)} · $pctPaid%',
+              value: '$paidShort · $pctPaid%',
               accent: const Color(0xFF10B981),
             ),
             const SizedBox(height: 8),

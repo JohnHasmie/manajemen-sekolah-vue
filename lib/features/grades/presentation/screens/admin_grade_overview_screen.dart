@@ -635,7 +635,8 @@ class _AdminGradeOverviewScreenState
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '$subjectCount mapel · $classCount kelas · $totalGrades nilai',
+                                      '$subjectCount mapel · '
+                                      '$classCount kelas · $totalGrades nilai',
                                       style: TextStyle(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.w600,

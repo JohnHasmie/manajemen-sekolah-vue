@@ -221,7 +221,9 @@ class FinanceService {
   }) async {
     try {
       final response = await dioClient.get(
-        '${ApiEndpoints.financeGeneratedMonths}?payment_type_id=$paymentTypeId&academic_year_id=$academicYearId',
+        '${ApiEndpoints.financeGeneratedMonths}'
+        '?payment_type_id=$paymentTypeId'
+        '&academic_year_id=$academicYearId',
       );
       final result = response.data;
       if (result is List) {

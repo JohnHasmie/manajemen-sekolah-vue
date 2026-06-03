@@ -85,7 +85,8 @@ mixin SubChapterAiGenerationMixin on ConsumerState<SubBabDetailPage> {
           isPollingAi = true;
           isLoadingAi = true;
           pollingStatus =
-              'Sedang memproses materi... ini bisa memakan waktu hingga 1 menit.';
+              'Sedang memproses materi... '
+              'ini bisa memakan waktu hingga 1 menit.';
         });
 
         await _startPolling(jobId: jobId, pollUrl: pollUrl);
@@ -163,7 +164,8 @@ mixin SubChapterAiGenerationMixin on ConsumerState<SubBabDetailPage> {
               } else {
                 AppLogger.error(
                   'material',
-                  'Unexpected polling payload shape: ${materialData.runtimeType}',
+                  'Unexpected polling payload shape: '
+                      '${materialData.runtimeType}',
                 );
                 await _applyResult(<String, dynamic>{});
               }

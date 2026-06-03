@@ -12,12 +12,14 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 /// Card for one RPP content field with optional AI regeneration controls.
 ///
 /// Constructor params:
-/// - [fieldKey]         — API key (e.g. 'core_competence'), used to match regen info
+/// - [fieldKey]         — API key (e.g. 'core_competence'), used to match
+///                        regen info
 /// - [fieldLabel]       — human-readable label shown in the card header
 /// - [value]            — the field's current HTML-stripped text content
 /// - [regenInfo] — regen quota map from the API: {remaining, max, used}
 /// (nullable)
-/// - [isLoadingLimits]  — true while regen limits are being fetched from the API
+/// - [isLoadingLimits]  — true while regen limits are being fetched from the
+///                        API
 /// - [isRegeneratingThis] — true when this field (or all fields) is being
 /// regenerated
 /// - [primaryColor]     — brand colour for header, icons, and borders

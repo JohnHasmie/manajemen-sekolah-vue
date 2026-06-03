@@ -94,7 +94,8 @@ class LessonPlanPollingSkeletonBody extends StatelessWidget {
               Text(
                 pollingStatus.isNotEmpty
                     ? pollingStatus
-                    : 'Menyusun kompetensi, tujuan pembelajaran, dan kegiatan belajar...',
+                    : 'Menyusun kompetensi, tujuan pembelajaran, '
+                          'dan kegiatan belajar...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,

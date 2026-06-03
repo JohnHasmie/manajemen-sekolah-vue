@@ -215,6 +215,9 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
   Widget buildEmbedded(LanguageProvider lp) {
     final subjectName = widget.initialSubjectName ?? '-';
     final className = widget.initialClassName ?? '';
+    final classSuffix = className.isNotEmpty
+        ? ' · ${className.toUpperCase()}'
+        : '';
     final cobalt = ColorUtils.brandCobalt;
     final dark = ColorUtils.brandDarkBlue;
 
@@ -277,7 +280,7 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'MATERI${className.isNotEmpty ? ' · ${className.toUpperCase()}' : ''}',
+                              'MATERI$classSuffix',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,

@@ -72,6 +72,7 @@ mixin LessonPlanCrudMixin on ConsumerState<LessonPlanScreen> {
   /// Deletes a lesson plan after showing a confirmation dialog.
   Future<void> deleteLessonPlan(Map<String, dynamic> lessonPlan) async {
     final languageProvider = ref.read(languageRiverpod);
+    final title = LessonPlan.fromJson(lessonPlan).title;
     final confirmed = await ActionConfirmSheet.show(
       context: context,
       title: languageProvider.getTranslatedText({
@@ -79,10 +80,8 @@ mixin LessonPlanCrudMixin on ConsumerState<LessonPlanScreen> {
         'id': 'Konfirmasi Hapus',
       }),
       message: languageProvider.getTranslatedText({
-        'en':
-            'Are you sure you want to delete RPP "${LessonPlan.fromJson(lessonPlan).title}"?',
-        'id':
-            'Apakah Anda yakin ingin menghapus RPP "${LessonPlan.fromJson(lessonPlan).title}"?',
+        'en': 'Are you sure you want to delete RPP "$title"?',
+        'id': 'Apakah Anda yakin ingin menghapus RPP "$title"?',
       }),
       confirmText: languageProvider.getTranslatedText({
         'en': 'Delete',
@@ -107,9 +106,13 @@ mixin LessonPlanCrudMixin on ConsumerState<LessonPlanScreen> {
       } catch (e) {
         AppLogger.error('lesson_plan', 'Delete RPP error: $e');
         if (mounted) {
+          final prefix = languageProvider.getTranslatedText({
+            'en': 'Failed to delete RPP: ',
+            'id': 'Gagal menghapus RPP: ',
+          });
           SnackBarUtils.showError(
             context,
-            '${languageProvider.getTranslatedText({'en': 'Failed to delete RPP: ', 'id': 'Gagal menghapus RPP: '})}${ErrorUtils.getFriendlyMessage(e)}',
+            '$prefix${ErrorUtils.getFriendlyMessage(e)}',
           );
         }
       }

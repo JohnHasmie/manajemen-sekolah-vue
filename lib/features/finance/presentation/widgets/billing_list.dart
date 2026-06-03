@@ -48,6 +48,8 @@ class BillingKpiOverlay extends ConsumerWidget {
     );
     final stats = _aggregateBilling(items);
     final lp = languageProvider;
+    final billsWord = lp.getTranslatedText({'en': 'bills', 'id': 'tagihan'});
+    final lateWord = lp.getTranslatedText({'en': 'late', 'id': 'telat'});
 
     return BrandKpiStrip(
       columns: [
@@ -57,16 +59,12 @@ class BillingKpiOverlay extends ConsumerWidget {
             'id': 'Total bulan ini',
           }),
           value: _formatRupiahShort(stats.totalThisMonth),
-          sub:
-              '${stats.countThisMonth} '
-              '${lp.getTranslatedText({'en': 'bills', 'id': 'tagihan'})}',
+          sub: '${stats.countThisMonth} $billsWord',
         ),
         BrandKpiColumn(
           label: lp.getTranslatedText({'en': 'Paid', 'id': 'Sudah lunas'}),
           value: _formatRupiahShort(stats.paid),
-          badge: stats.paidCount > 0
-              ? '${stats.paidCount} ${lp.getTranslatedText({'en': 'bills', 'id': 'tagihan'})}'
-              : null,
+          badge: stats.paidCount > 0 ? '${stats.paidCount} $billsWord' : null,
           badgeColor: const Color(0xFF15803D),
           badgeIcon: Icons.check_rounded,
         ),
@@ -75,7 +73,7 @@ class BillingKpiOverlay extends ConsumerWidget {
           value: _formatRupiahShort(stats.unpaid),
           valueColor: stats.unpaid > 0 ? const Color(0xFFDC2626) : null,
           badge: stats.overdueCount > 0
-              ? '${stats.overdueCount} ${lp.getTranslatedText({'en': 'late', 'id': 'telat'})}'
+              ? '${stats.overdueCount} $lateWord'
               : null,
           badgeColor: const Color(0xFFDC2626),
           badgeIcon: Icons.priority_high_rounded,
@@ -422,7 +420,10 @@ DateTime? _parseBillingDate(dynamic v) {
 String _formatRupiahShort(double v) {
   if (v >= 1000000) {
     final m = v / 1000000;
-    return 'Rp ${m % 1 == 0 ? m.toStringAsFixed(0) : m.toStringAsFixed(1).replaceAll('.', ',')}jt';
+    final mStr = m % 1 == 0
+        ? m.toStringAsFixed(0)
+        : m.toStringAsFixed(1).replaceAll('.', ',');
+    return 'Rp ${mStr}jt';
   }
   if (v >= 1000) {
     final k = v / 1000;
@@ -717,6 +718,16 @@ class _BillingRow extends ConsumerWidget {
     final isPaid =
         status == 'verified' || status == 'lunas' || status == 'paid';
     final isPending = status == 'pending';
+    final dueWord = lang.getTranslatedText({'en': 'Due', 'id': 'Jatuh tempo'});
+    final viewProofWord = lang.getTranslatedText({
+      'en': 'View proof',
+      'id': 'Lihat bukti',
+    });
+    final payWord = lang.getTranslatedText({'en': 'Pay', 'id': 'Bayar'});
+    final viewReceiptWord = lang.getTranslatedText({
+      'en': 'View receipt',
+      'id': 'Lihat bukti',
+    });
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -781,7 +792,7 @@ class _BillingRow extends ConsumerWidget {
                             )
                           else if (dueLabel.isNotEmpty)
                             Text(
-                              '${lang.getTranslatedText({'en': 'Due', 'id': 'Jatuh tempo'})} $dueLabel',
+                              '$dueWord $dueLabel',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
@@ -841,7 +852,7 @@ class _BillingRow extends ConsumerWidget {
                           const Spacer(),
                           if (isPending)
                             Text(
-                              '${lang.getTranslatedText({'en': 'View proof', 'id': 'Lihat bukti'})} →',
+                              '$viewProofWord →',
                               style: const TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
@@ -850,7 +861,7 @@ class _BillingRow extends ConsumerWidget {
                             )
                           else if (!isPaid)
                             Text(
-                              '${lang.getTranslatedText({'en': 'Pay', 'id': 'Bayar'})} →',
+                              '$payWord →',
                               style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
@@ -859,7 +870,7 @@ class _BillingRow extends ConsumerWidget {
                             )
                           else
                             Text(
-                              '${lang.getTranslatedText({'en': 'View receipt', 'id': 'Lihat bukti'})} →',
+                              '$viewReceiptWord →',
                               style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w600,

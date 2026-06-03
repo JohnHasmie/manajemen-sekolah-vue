@@ -83,7 +83,8 @@ mixin LessonPlanAiResultUiMixin
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'RPP AI telah tersimpan otomatis.\nAnda dapat melihat dan mengedit dari daftar RPP.',
+                'RPP AI telah tersimpan otomatis.\n'
+                'Anda dapat melihat dan mengedit dari daftar RPP.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,

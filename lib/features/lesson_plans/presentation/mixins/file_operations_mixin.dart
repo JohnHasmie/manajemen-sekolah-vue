@@ -76,7 +76,8 @@ mixin FileOperationsMixin on State<LessonPlanAdminDetailPage> {
       if (!context.mounted) return;
       SnackBarUtils.showError(
         context,
-        '${AppLocalizations.failedToDownload.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
+        '${AppLocalizations.failedToDownload.tr}: '
+        '${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }

@@ -56,9 +56,11 @@ mixin LessonPlanFilterMixin on ConsumerState<LessonPlanScreen> {
 
     if (selectedFormats.isNotEmpty) {
       final formatLabels = selectedFormats.map((f) => f.label).join(', ');
-      parts.add(
-        '${languageProvider.getTranslatedText({'en': 'Format', 'id': 'Format'})}: $formatLabels',
-      );
+      final formatWord = languageProvider.getTranslatedText({
+        'en': 'Format',
+        'id': 'Format',
+      });
+      parts.add('$formatWord: $formatLabels');
     }
 
     if (selectedMethod != null) {
@@ -68,15 +70,23 @@ mixin LessonPlanFilterMixin on ConsumerState<LessonPlanScreen> {
               'en': 'Manual',
               'id': 'Manual',
             });
-      parts.add(
-        '${languageProvider.getTranslatedText({'en': 'Method', 'id': 'Metode'})}: $label',
-      );
+      final methodWord = languageProvider.getTranslatedText({
+        'en': 'Method',
+        'id': 'Metode',
+      });
+      parts.add('$methodWord: $label');
     }
 
     if (selectedStatusFilter != null) {
-      parts.add(
-        '${languageProvider.getTranslatedText({'en': 'Status', 'id': 'Status'})}: ${_localizedStatus(selectedStatusFilter!, languageProvider)}',
+      final statusWord = languageProvider.getTranslatedText({
+        'en': 'Status',
+        'id': 'Status',
+      });
+      final statusValue = _localizedStatus(
+        selectedStatusFilter!,
+        languageProvider,
       );
+      parts.add('$statusWord: $statusValue');
     }
 
     return parts.join(' • ');

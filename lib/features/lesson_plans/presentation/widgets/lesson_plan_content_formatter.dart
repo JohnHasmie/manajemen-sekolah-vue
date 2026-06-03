@@ -184,9 +184,10 @@ class LessonPlanContentFormatter {
         // Separate data (introduction, main, closing)
         if (preliminaryActivities.isNotEmpty) {
           final preliminaryTime = getField(['waktu_pendahuluan']);
-          buffer.writeln(
-            'Kegiatan Pendahuluan${preliminaryTime.isNotEmpty ? ' ($preliminaryTime menit)' : ''}',
-          );
+          final timeSuffix = preliminaryTime.isNotEmpty
+              ? ' ($preliminaryTime menit)'
+              : '';
+          buffer.writeln('Kegiatan Pendahuluan$timeSuffix');
           for (final line in preliminaryActivities.split('\n')) {
             if (line.trim().isNotEmpty) {
               buffer.writeln('• ${line.trim()}');
@@ -216,9 +217,10 @@ class LessonPlanContentFormatter {
 
         if (closingActivities.isNotEmpty) {
           final closingTime = getField(['waktu_penutup']);
-          buffer.writeln(
-            'Kegiatan Penutup${closingTime.isNotEmpty ? ' ($closingTime menit)' : ''}',
-          );
+          final timeSuffix = closingTime.isNotEmpty
+              ? ' ($closingTime menit)'
+              : '';
+          buffer.writeln('Kegiatan Penutup$timeSuffix');
           for (final line in closingActivities.split('\n')) {
             if (line.trim().isNotEmpty) {
               buffer.writeln('• ${line.trim()}');

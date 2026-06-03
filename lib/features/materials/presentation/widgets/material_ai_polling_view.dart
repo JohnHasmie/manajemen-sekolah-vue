@@ -88,7 +88,8 @@ class MaterialAiPollingView extends StatelessWidget {
               Text(
                 pollingStatus.isNotEmpty
                     ? pollingStatus
-                    : 'Merangkum materi, menyusun kuis, dan mencari referensi terbaik...',
+                    : 'Merangkum materi, menyusun kuis, '
+                          'dan mencari referensi terbaik...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,

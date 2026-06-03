@@ -473,7 +473,8 @@ class _LessonPlanSetupSheetState extends ConsumerState<_LessonPlanSetupSheet> {
                   _TextField(
                     controller: _extraContextController,
                     placeholder:
-                        'Misal: fokus contoh kontekstual, gunakan diskusi kelompok…',
+                        'Misal: fokus contoh kontekstual, '
+                        'gunakan diskusi kelompok…',
                     minLines: 3,
                     maxLines: 6,
                   ),

@@ -56,7 +56,8 @@ class SubChapterEmptyContent extends StatelessWidget {
     String displayMessage = pollingError!;
     if (isRateLimit) {
       displayMessage =
-          'Sistem membutuhkan sedikit waktu pemulihan untuk hasil terbaik. $pollingError';
+          'Sistem membutuhkan sedikit waktu pemulihan untuk hasil terbaik. '
+          '$pollingError';
     }
 
     return Center(
