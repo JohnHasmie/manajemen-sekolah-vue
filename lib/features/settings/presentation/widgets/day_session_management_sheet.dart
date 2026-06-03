@@ -565,7 +565,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
             child: SizedBox(
               height: 46,
               child: ElevatedButton.icon(
-                onPressed: () => _openEditSheet(),
+                onPressed: _openEditSheet,
                 icon: const Icon(
                   Icons.add_rounded,
                   size: 18,

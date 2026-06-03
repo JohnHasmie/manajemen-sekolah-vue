@@ -119,7 +119,7 @@ class _AdminBillGroupDetailScreenState
       setState(() {
         _bills = list
             .whereType<Map>()
-            .map((m) => Map<String, dynamic>.from(m))
+            .map(Map<String, dynamic>.from)
             .toList();
         _isLoading = false;
       });

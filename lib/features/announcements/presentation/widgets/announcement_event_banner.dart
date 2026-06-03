@@ -133,7 +133,7 @@ class _BannerCard extends StatelessWidget {
     final accent = isLive
         ? const Color(0xFFB91C1C)
         : const Color(0xFFB45309);
-    final iconBg = Colors.white;
+    const iconBg = Colors.white;
     final title = (announcement['title'] ?? '').toString();
     final body = _composeBody(event);
 

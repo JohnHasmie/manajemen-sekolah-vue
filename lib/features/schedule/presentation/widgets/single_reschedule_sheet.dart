@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
@@ -74,7 +73,7 @@ class _SingleRescheduleContentState extends State<_SingleRescheduleContent> {
   List<dynamic> _occupiedSlots = [];
   
   bool _isLoadingHours = false;
-  bool _isSaving = false;
+  final bool _isSaving = false;
 
   @override
   void initState() {

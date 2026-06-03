@@ -42,7 +42,7 @@ class AdminActivityEmptyState extends StatelessWidget {
       title = 'Belum ada kegiatan di tahun ini';
       desc = 'Tahun ajaran ini hanya baca. Pindah ke tahun berjalan untuk '
           'melihat data terbaru.';
-      cta = _Pill(
+      cta = const _Pill(
         icon: Icons.lock_outline_rounded,
         label: 'Hanya baca',
       );

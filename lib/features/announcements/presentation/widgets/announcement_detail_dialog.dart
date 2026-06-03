@@ -159,13 +159,13 @@ class AnnouncementDetailDialog extends StatelessWidget {
   List<Map<String, dynamic>>? _remindersFrom(Map<String, dynamic> data) {
     final raw = data['reminders'];
     if (raw is! List) return null;
-    return raw.whereType<Map>().map((m) => Map<String, dynamic>.from(m)).toList();
+    return raw.whereType<Map>().map(Map<String, dynamic>.from).toList();
   }
 
   List<Map<String, dynamic>> _personalRemindersFrom(Map<String, dynamic> data) {
     final raw = data['personal_reminders'];
     if (raw is! List) return const [];
-    return raw.whereType<Map>().map((m) => Map<String, dynamic>.from(m)).toList();
+    return raw.whereType<Map>().map(Map<String, dynamic>.from).toList();
   }
 
   Future<void> _openPersonalReminderPicker(BuildContext context, String announcementId) async {

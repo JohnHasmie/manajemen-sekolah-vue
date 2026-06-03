@@ -399,10 +399,10 @@ mixin ReportCardPrintLayoutMixin {
   }
 
   Widget buildSignatures() {
-    return Row(
+    return const Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Expanded(
           child: _SignatureBlock(
             lineOne: 'Mengetahui,',

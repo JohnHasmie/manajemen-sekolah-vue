@@ -78,7 +78,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
     final personalReminders =
         (announcementData['personal_reminders'] as List?)
             ?.whereType<Map>()
-            .map((m) => Map<String, dynamic>.from(m))
+            .map(Map<String, dynamic>.from)
             .toList() ??
         const <Map<String, dynamic>>[];
     // Backend canonical priorities: `low` / `normal` / `high` / `urgent`.

@@ -162,6 +162,7 @@ class _StudentAddEditSheetContentState
   @override
   Color get primaryColor => widget.primaryColor;
 
+  @override
   bool get isEditMode => _isEdit;
 
   /// "MENGEDIT: <Nama · Kelas>" context strip — only rendered in edit mode.

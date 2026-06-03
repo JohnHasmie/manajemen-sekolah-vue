@@ -708,7 +708,7 @@ class _PaymentReceiptCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = payment;
     if (p == null) return const SizedBox.shrink();
-    final method = (p['payment_method']?.toString() ?? '-');
+    final method = p['payment_method']?.toString() ?? '-';
     final date = formatDate(p['payment_date']);
     final amount = formatCurrency(p['amount']);
     final proofUrl = p['payment_proof_url']?.toString() ?? '';
@@ -850,7 +850,6 @@ class _ReceiptCell extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
-    this.valueColor,
   });
 
   @override

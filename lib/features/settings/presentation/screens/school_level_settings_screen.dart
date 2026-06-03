@@ -7,7 +7,6 @@ import 'package:manajemensekolah/core/utils/academic_year_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/features/settings/presentation/mixins/school_level_data_mixin.dart';
 import 'package:manajemensekolah/features/settings/presentation/mixins/school_level_dialog_mixin.dart';
 import 'package:manajemensekolah/features/settings/presentation/mixins/school_level_ui_builders_mixin.dart';
@@ -444,7 +443,7 @@ class _ActiveYearHero extends StatelessWidget {
               // Top pill row — green "Saat Ini" + transparent semester
               Row(
                 children: [
-                  _HeroPill.live(label: 'Saat Ini'),
+                  const _HeroPill.live(label: 'Saat Ini'),
                   if (semesterName != null) ...[
                     const SizedBox(width: 6),
                     _HeroPill(label: semesterName.toUpperCase()),

@@ -192,7 +192,7 @@ class _AdminClassActivityScreenState
           List<Map<String, dynamic>> pluck(String key) =>
               (opts[key] as List?)
                   ?.whereType<Map>()
-                  .map((m) => Map<String, dynamic>.from(m))
+                  .map(Map<String, dynamic>.from)
                   .toList() ??
               const [];
           _availableClasses = pluck('classes');
@@ -552,7 +552,7 @@ class _TypeTabStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tabs = <_TabSpec>[
-      _TabSpec(value: null, label: 'Semua'),
+      const _TabSpec(value: null, label: 'Semua'),
       ...AdminActivityType.values.map(
         (t) => _TabSpec(value: t, label: t.labelId),
       ),
@@ -728,7 +728,7 @@ class _ErrorRetry extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           OutlinedButton.icon(
-            onPressed: () => onRetry(),
+            onPressed: onRetry,
             icon: const Icon(Icons.refresh_rounded, size: 16),
             label: const Text('Muat ulang'),
           ),

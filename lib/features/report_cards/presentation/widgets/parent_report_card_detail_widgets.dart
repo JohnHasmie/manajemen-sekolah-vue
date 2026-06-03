@@ -1847,21 +1847,21 @@ class _DraftHintRow extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(10)),
         border: Border.all(color: const Color(0xFFFDE68A), width: 0.75),
       ),
-      child: Row(
+      child: const Row(
         children: [
           Icon(
             Icons.lock_outline_rounded,
             size: 14,
-            color: const Color(0xFFB45309),
+            color: Color(0xFFB45309),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           Expanded(
             child: Text(
               'Rapor masih draft — cetak PDF belum tersedia',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF92400E),
+                color: Color(0xFF92400E),
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
