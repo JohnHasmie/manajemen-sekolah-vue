@@ -98,25 +98,21 @@ void main() {
       expect(find.text('Class 7A'), findsOneWidget);
     });
 
-    testWidgets('renders grade text tag', (tester) async {
+    testWidgets('renders grade text and student count in top meta', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _buildCard(classData: _classroom, gradeText: 'Grade 7 SMP'),
       );
-      expect(find.text('Grade 7 SMP'), findsOneWidget);
+      // SS2 redesign: the top meta line combines grade + student count.
+      // Default language is 'id', so the count reads "30 siswa".
+      expect(find.text('Grade 7 SMP · 30 siswa'), findsOneWidget);
     });
 
-    testWidgets('renders student count chip with Indonesian label', (
-      tester,
-    ) async {
+    testWidgets('renders avatar initials from class name', (tester) async {
       await tester.pumpWidget(_buildCard(classData: _classroom));
-      // Default language is 'id', so the chip reads "30 siswa".
-      expect(find.text('30 siswa'), findsOneWidget);
-    });
-
-    testWidgets('renders avatar initial from class name', (tester) async {
-      await tester.pumpWidget(_buildCard(classData: _classroom));
-      // Avatar shows first letter of "Class 7A" → 'C'.
-      expect(find.text('C'), findsAtLeastNWidgets(1));
+      // InitialsAvatar shows two-letter initials of "Class 7A" → 'C7'.
+      expect(find.text('C7'), findsAtLeastNWidgets(1));
     });
 
     // ── Homeroom teacher name resolution ─────────────────────────────────────
@@ -125,7 +121,9 @@ void main() {
       'renders homeroom teacher from flat homeroom_teacher_name key',
       (tester) async {
         await tester.pumpWidget(_buildCard(classData: _classroom));
-        expect(find.text('Mr. Ahmad'), findsOneWidget);
+        // SS2 redesign: the homeroom teacher appears in the inline status
+        // as "Wali: <name>" (id default).
+        expect(find.text('Wali: Mr. Ahmad'), findsOneWidget);
       },
     );
 
@@ -135,7 +133,7 @@ void main() {
         await tester.pumpWidget(
           _buildCard(classData: _classroomWithTeacherList),
         );
-        expect(find.text('Ms. Sari'), findsOneWidget);
+        expect(find.text('Wali: Ms. Sari'), findsOneWidget);
       },
     );
 
@@ -145,12 +143,12 @@ void main() {
         await tester.pumpWidget(
           _buildCard(classData: _classroomWithTeacherMap),
         );
-        expect(find.text('Mr. Budi'), findsOneWidget);
+        expect(find.text('Wali: Mr. Budi'), findsOneWidget);
       },
     );
 
     testWidgets(
-      'shows "Belum Ditugaskan" when no homeroom teacher is assigned',
+      'shows "Belum ada wali" when no homeroom teacher is assigned',
       (tester) async {
         const noTeacher = <String, dynamic>{
           'name': 'Class 10A',
@@ -158,27 +156,22 @@ void main() {
           // no homeroom_teacher or homeroom_teacher_name keys
         };
         await tester.pumpWidget(_buildCard(classData: noTeacher));
-        // Default language is 'id'.
-        expect(find.text('Belum Ditugaskan'), findsOneWidget);
+        // Default language is 'id'; status shows the warning label.
+        expect(find.text('Belum ada wali'), findsOneWidget);
       },
     );
 
-    // ── Edit / delete action icons ────────────────────────────────────────────
+    // ── Trailing CTA ──────────────────────────────────────────────────────────
+    //
+    // The SS2 redesign replaced the inline edit/delete icon buttons with a
+    // "Detail →" trailing CTA. Editing is now triggered via long-press
+    // (wired to onEdit when not read-only).
 
-    testWidgets('shows edit and delete icons when NOT read-only', (
-      tester,
-    ) async {
+    testWidgets('shows Detail CTA in the trailing slot', (tester) async {
       await tester.pumpWidget(
         _buildCard(classData: _classroom, readOnly: false),
       );
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
-    });
-
-    testWidgets('hides edit and delete icons when read-only', (tester) async {
-      await tester.pumpWidget(
-        _buildCard(classData: _classroom, readOnly: true),
-      );
+      expect(find.text('Detail →'), findsOneWidget);
       expect(find.byIcon(Icons.edit_outlined), findsNothing);
       expect(find.byIcon(Icons.delete_outline), findsNothing);
     });
@@ -195,7 +188,9 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('calls onEdit when edit icon is tapped', (tester) async {
+    testWidgets('calls onEdit on long-press when NOT read-only', (
+      tester,
+    ) async {
       bool edited = false;
       await tester.pumpWidget(
         _buildCard(
@@ -204,21 +199,23 @@ void main() {
           onEdit: () => edited = true,
         ),
       );
-      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.longPress(find.text('Class 7A'));
       expect(edited, isTrue);
     });
 
-    testWidgets('calls onDelete when delete icon is tapped', (tester) async {
-      bool deleted = false;
+    testWidgets('does not call onEdit on long-press when read-only', (
+      tester,
+    ) async {
+      bool edited = false;
       await tester.pumpWidget(
         _buildCard(
           classData: _classroom,
-          readOnly: false,
-          onDelete: () => deleted = true,
+          readOnly: true,
+          onEdit: () => edited = true,
         ),
       );
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      expect(deleted, isTrue);
+      await tester.longPress(find.text('Class 7A'));
+      expect(edited, isFalse);
     });
 
     // ── Edge cases ────────────────────────────────────────────────────────────
@@ -238,8 +235,11 @@ void main() {
         'name': 'Empty Class',
         'student_count': 0,
       };
-      await tester.pumpWidget(_buildCard(classData: empty));
-      expect(find.text('0 siswa'), findsOneWidget);
+      await tester.pumpWidget(
+        _buildCard(classData: empty, gradeText: 'Grade 7 SMP'),
+      );
+      // Combined top meta line: "<grade> · 0 siswa".
+      expect(find.text('Grade 7 SMP · 0 siswa'), findsOneWidget);
     });
   });
 }
