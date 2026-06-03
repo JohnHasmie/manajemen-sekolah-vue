@@ -377,9 +377,12 @@ class _ActiveYearHero extends StatelessWidget {
     // `/semesters` table, whose `name` was normalized to canonical
     // `odd` / `even` in the follow-up rename. Defensively handle both
     // encodings via [semesterDisplayLabel].
-    final activeYearSem = semesterDisplayLabel(activeYear['semester']?.toString());
+    final activeYearSem = semesterDisplayLabel(
+      activeYear['semester']?.toString(),
+    );
     final fallbackSem = semesterDisplayLabel(fallbackSemesterName);
-    final semesterName = activeYearSem ??
+    final semesterName =
+        activeYearSem ??
         fallbackSem ??
         (fallbackSemesterName?.toString().trim().isNotEmpty == true
             ? fallbackSemesterName!

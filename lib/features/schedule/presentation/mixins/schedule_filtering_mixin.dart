@@ -189,8 +189,7 @@ mixin ScheduleFilteringMixin {
     String? hourNumber;
     if (rawHour is Map) {
       hourNumber =
-          rawHour['hour_number']?.toString() ??
-          rawHour['jam_ke']?.toString();
+          rawHour['hour_number']?.toString() ?? rawHour['jam_ke']?.toString();
     } else if (rawHour != null) {
       hourNumber = rawHour.toString();
     }

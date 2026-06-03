@@ -174,7 +174,8 @@ class ClassroomHomeroomTeacherDropdown extends StatelessWidget {
       }
     }
 
-    // Validate value — if the teacher no longer exists in the list, reset to null
+    // Validate value — if the teacher no longer exists in the list, reset to
+    // null
     String? validValue = value;
     if (validValue != null && !uniqueTeachers.containsKey(validValue)) {
       validValue = null;

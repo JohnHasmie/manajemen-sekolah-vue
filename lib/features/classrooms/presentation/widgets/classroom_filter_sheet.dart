@@ -1,4 +1,5 @@
-// Bottom sheet widget for filtering the classroom list by grade and homeroom status.
+// Bottom sheet widget for filtering the classroom list by grade and homeroom
+// status.
 //
 // Like Vue's `<ClassroomFilterModal>` component — owns its own temporary
 // selection state and calls back via [onApply] only when the user taps Apply.
@@ -10,7 +11,8 @@ import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
 import 'package:manajemensekolah/core/widgets/teacher_filter_content.dart';
 
-/// Bottom sheet for filtering classrooms by grade level and homeroom-teacher status.
+/// Bottom sheet for filtering classrooms by grade level and homeroom-teacher
+/// status.
 ///
 /// Receives the currently active filter values as initial state, then calls
 /// [onApply] with the new selections when the user taps "Apply Filter" —
@@ -34,10 +36,12 @@ class ClassroomFilterSheet extends StatefulWidget {
   /// Grade levels available for the current school type (e.g. ['7','8','9']).
   final List<String> availableGradeLevels;
 
-  /// Language provider injected from the parent screen (avoids re-reading Riverpod here).
+  /// Language provider injected from the parent screen (avoids re-reading
+  /// Riverpod here).
   final dynamic languageProvider;
 
-  /// Called when the user taps "Apply Filter" — passes (gradeFilter, homeroomFilter).
+  /// Called when the user taps "Apply Filter" — passes (gradeFilter,
+  /// homeroomFilter).
   final void Function(String? gradeFilter, String? homeroomFilter) onApply;
 
   @override

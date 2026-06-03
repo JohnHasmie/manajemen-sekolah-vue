@@ -22,7 +22,8 @@ import 'package:manajemensekolah/features/schedule/presentation/widgets/schedule
 
 /// A bottom sheet form for creating or editing a schedule entry.
 ///
-/// Implements cascading dropdown logic with form validation and data submission.
+/// Implements cascading dropdown logic with form validation and data
+/// submission.
 /// Returns the schedule data map via `Navigator.pop(context, scheduleData)`.
 class ScheduleFormDialog extends ConsumerStatefulWidget {
   final List<dynamic> teacherList;
@@ -469,7 +470,9 @@ class ScheduleFormDialogState extends ConsumerState<ScheduleFormDialog>
     final subjectName = (s['subject_name'] ?? s['subject']?['name'] ?? '')
         .toString()
         .trim();
-    final dayName = (s['day_name'] ?? s['day']?['name'] ?? '').toString().trim();
+    final dayName = (s['day_name'] ?? s['day']?['name'] ?? '')
+        .toString()
+        .trim();
     final parts = [
       if (className.isNotEmpty) className,
       if (subjectName.isNotEmpty) subjectName,

@@ -1,4 +1,5 @@
-// Extracted from teacher_attendance_screen.dart (_buildInputMode, form section).
+// Extracted from teacher_attendance_screen.dart (_buildInputMode, form
+// section).
 // Like a Vue `<AttendanceInputForm>` component -- the card at the top of the
 // "Add Attendance" tab that lets the teacher pick date, lesson hour, class,
 // and subject, plus toggle an inline student search and quick-fill buttons.
@@ -35,8 +36,10 @@ import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 /// - [onSubjectChanged]       -- called when subject dropdown changes
 /// - [onSearchChanged]        -- called on every keystroke in the student search field
 /// - [onSearchClosed]         -- called when the X button in the search field is tapped
-/// - [onSearchToggled]        -- called when the search icon button is tapped to open search
-/// - [onQuickActionsPressed]  -- called when the bulk-fill (checklist) button is tapped
+/// - [onSearchToggled] -- called when the search icon button is tapped to open
+/// search
+/// - [onQuickActionsPressed] -- called when the bulk-fill (checklist) button is
+/// tapped
 class AttendanceInputForm extends StatelessWidget {
   final DateTime selectedDate;
   final String? selectedLessonHourId;

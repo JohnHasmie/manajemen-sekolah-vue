@@ -1,4 +1,5 @@
-// Attendance overview card for the dashboard showing today's attendance summary.
+// Attendance overview card for the dashboard showing today's attendance
+// summary.
 //
 // Like a Vue `<AttendanceSummaryCard>` dashboard widget. Displays present/absent/
 // sick/permitted counts with a colored distribution bar. Similar to a Laravel
@@ -7,7 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
-/// A compact dashboard card showing today's attendance summary with a distribution bar.
+/// A compact dashboard card showing today's attendance summary with a
+/// distribution bar.
 ///
 /// Like a Vue `<AttendanceOverviewCard>` with props:
 /// - [hadir] / [izin] / [sakit] / [alpha] - attendance counts by status

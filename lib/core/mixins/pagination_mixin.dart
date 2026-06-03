@@ -1,5 +1,6 @@
 /// pagination_mixin.dart - Reusable pagination logic for scrollable lists.
-/// Like a Laravel trait (`HasPagination`) that can be mixed into any controller.
+/// Like a Laravel trait (`HasPagination`) that can be mixed into any
+/// controller.
 ///
 /// Replaces the pagination boilerplate duplicated in 30+ screens:
 /// - ScrollController setup + listener

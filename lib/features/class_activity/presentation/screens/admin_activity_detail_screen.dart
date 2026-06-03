@@ -258,12 +258,10 @@ class _InfoSection extends StatelessWidget {
           _MetaRow(label: 'Guru', value: activity.teacherName ?? '—'),
           _MetaRow(
             label: 'Kelas',
-            value: '${activity.className ?? '—'} · ${activity.subjectName ?? '—'}',
+            value:
+                '${activity.className ?? '—'} · ${activity.subjectName ?? '—'}',
           ),
-          _MetaRow(
-            label: 'Tanggal',
-            value: _formatDate(activity.date),
-          ),
+          _MetaRow(label: 'Tanggal', value: _formatDate(activity.date)),
           _MetaRow(label: 'Tipe', value: activity.type.labelId),
           if ((activity.description ?? '').isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -284,8 +282,18 @@ class _InfoSection extends StatelessWidget {
   String _formatDate(DateTime? d) {
     if (d == null) return '—';
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${d.day} ${months[d.month - 1]} ${d.year}';
   }
@@ -346,10 +354,7 @@ class _SubmissionsSection extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
                 'Kegiatan ini tidak melacak submit per siswa.',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: ColorUtils.slate500,
-                ),
+                style: TextStyle(fontSize: 11.5, color: ColorUtils.slate500),
               ),
             )
           : Column(
@@ -391,9 +396,7 @@ class _SubmissionRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: ColorUtils.slate100),
-        ),
+        border: Border(bottom: BorderSide(color: ColorUtils.slate100)),
       ),
       child: Row(
         children: [
@@ -493,7 +496,8 @@ class _SubmissionRow extends StatelessWidget {
     final parts = name.split(' ').where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty) return '—';
     if (parts.length == 1) {
-      return parts.first.substring(0, parts.first.length >= 2 ? 2 : 1)
+      return parts.first
+          .substring(0, parts.first.length >= 2 ? 2 : 1)
           .toUpperCase();
     }
     return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
@@ -556,7 +560,8 @@ class _StatsSection extends StatelessWidget {
                   label: 'TUNTAS',
                   primary: '$tuntas',
                   primaryLabel: 'dari ${submissions.length}',
-                  detail: 'KKM ≥ $kkm · ${submissions.isEmpty ? 0 : ((tuntas / submissions.length) * 100).round()}%',
+                  detail:
+                      'KKM ≥ $kkm · ${submissions.isEmpty ? 0 : ((tuntas / submissions.length) * 100).round()}%',
                   primaryColor: const Color(0xFF15803D),
                 ),
               ),
@@ -630,14 +635,10 @@ class _StatBox extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             detail,
-            style: TextStyle(
-              fontSize: 10.5,
-              color: ColorUtils.slate500,
-            ),
+            style: TextStyle(fontSize: 10.5, color: ColorUtils.slate500),
           ),
         ],
       ),
     );
   }
 }
-

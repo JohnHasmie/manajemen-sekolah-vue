@@ -125,15 +125,18 @@ mixin CardBuildersMixin on State<LessonPlanAdminDetailPage> {
 
   Widget _formatPill(LessonPlanFormat fmt) {
     final (bg, fg) = switch (fmt) {
-      LessonPlanFormat.k13 => (const Color(0xFFDBEAFE), const Color(0xFF1E40AF)),
+      LessonPlanFormat.k13 => (
+        const Color(0xFFDBEAFE),
+        const Color(0xFF1E40AF),
+      ),
       LessonPlanFormat.modulAjar => (
-            const Color(0xFFEDE9FE),
-            const Color(0xFF6D28D9),
-          ),
+        const Color(0xFFEDE9FE),
+        const Color(0xFF6D28D9),
+      ),
       LessonPlanFormat.rpp1Halaman => (
-            const Color(0xFFCCFBF1),
-            const Color(0xFF0F766E),
-          ),
+        const Color(0xFFCCFBF1),
+        const Color(0xFF0F766E),
+      ),
       LessonPlanFormat.file => (ColorUtils.slate100, ColorUtils.slate700),
     };
     return Container(
@@ -154,12 +157,7 @@ mixin CardBuildersMixin on State<LessonPlanAdminDetailPage> {
     );
   }
 
-  Widget _statusPill(
-    String status,
-    Color fg,
-    Color bg,
-    _StatusKind kind,
-  ) {
+  Widget _statusPill(String status, Color fg, Color bg, _StatusKind kind) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
       decoration: BoxDecoration(
@@ -258,7 +256,9 @@ mixin CardBuildersMixin on State<LessonPlanAdminDetailPage> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: _metaCell('Mata Pelajaran', mapel.isEmpty ? '—' : mapel)),
+            Expanded(
+              child: _metaCell('Mata Pelajaran', mapel.isEmpty ? '—' : mapel),
+            ),
             const SizedBox(width: 12),
             Expanded(child: _metaCell('Kelas', kelas.isEmpty ? '—' : kelas)),
           ],
@@ -355,7 +355,9 @@ mixin CardBuildersMixin on State<LessonPlanAdminDetailPage> {
     if (clean.isEmpty) return '?';
     final parts = clean.split(RegExp(r'\s+'));
     if (parts.length == 1) {
-      return parts.first.substring(0, parts.first.length >= 2 ? 2 : 1).toUpperCase();
+      return parts.first
+          .substring(0, parts.first.length >= 2 ? 2 : 1)
+          .toUpperCase();
     }
     return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
   }
@@ -371,8 +373,18 @@ mixin CardBuildersMixin on State<LessonPlanAdminDetailPage> {
       if (diff.inDays == 1) return 'Kemarin';
       if (diff.inDays < 7) return '${diff.inDays} hari lalu';
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-        'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'Mei',
+        'Jun',
+        'Jul',
+        'Agu',
+        'Sep',
+        'Okt',
+        'Nov',
+        'Des',
       ];
       return '${dt.day} ${months[dt.month - 1]}';
     } catch (_) {

@@ -1,4 +1,5 @@
-// Bottom-sheet widget for creating or editing a single subject (mata pelajaran).
+// Bottom-sheet widget for creating or editing a single subject (mata
+// pelajaran).
 // Owns all form controllers, autocomplete state, active-status toggle, and
 // the isSaving loading flag. Calls onSaved() on success so the screen reloads.
 import 'package:flutter/material.dart';
@@ -19,7 +20,8 @@ import 'package:manajemensekolah/features/subjects/presentation/widgets/mixins/s
 /// Analogous to a Vue modal component:
 /// - [subject] is null when adding (like a "new" prop), or populated for edit.
 /// - [availableMasterSubjects] is a preloaded list (like a Vuex store getter).
-/// - [onSaved] is the "$emit('saved')" callback the screen uses to trigger reload.
+/// - [onSaved] is the "$emit('saved')" callback the screen uses to trigger
+/// reload.
 class SubjectAddEditSheet extends ConsumerStatefulWidget {
   /// If null, the sheet creates a new subject; if set, it edits the given one.
   final Map<String, dynamic>? subject;
@@ -42,9 +44,7 @@ class SubjectAddEditSheet extends ConsumerStatefulWidget {
 }
 
 class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet>
-    with
-        SubjectAddEditSheetUiMixin,
-        SubjectAddEditSheetButtonsMixin {
+    with SubjectAddEditSheetUiMixin, SubjectAddEditSheetButtonsMixin {
   // Form controllers – like Vue's reactive `ref()` values
   late final TextEditingController _codeController;
   late final TextEditingController _nameController;
@@ -187,11 +187,17 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet>
   Widget build(BuildContext context) {
     final isEditing = widget.subject != null;
     final lang = ref.watch(languageRiverpod);
-    
+
     final title = isEditing
-        ? lang.getTranslatedText(const {'en': 'Edit Subject', 'id': 'Edit Mapel'})
-        : lang.getTranslatedText(const {'en': 'Add Subject', 'id': 'Tambah Mapel'});
-        
+        ? lang.getTranslatedText(const {
+            'en': 'Edit Subject',
+            'id': 'Edit Mapel',
+          })
+        : lang.getTranslatedText(const {
+            'en': 'Add Subject',
+            'id': 'Tambah Mapel',
+          });
+
     final subtitle = isEditing
         ? (() {
             final s = widget.subject!;
@@ -200,7 +206,10 @@ class SubjectAddEditSheetState extends ConsumerState<SubjectAddEditSheet>
             if (name.isEmpty) return code;
             return code.isEmpty ? name : '$name · $code';
           })()
-        : lang.getTranslatedText(const {'en': 'NEW ENTRY', 'id': 'TAMBAH BARU'});
+        : lang.getTranslatedText(const {
+            'en': 'NEW ENTRY',
+            'id': 'TAMBAH BARU',
+          });
 
     return Padding(
       padding: EdgeInsets.only(

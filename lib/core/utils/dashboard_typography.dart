@@ -1,5 +1,7 @@
-/// dashboard_typography.dart - Centralized text style definitions for the dashboard UI.
-/// Like a Laravel Helper function file but for typography, or a Vue design-system
+/// dashboard_typography.dart - Centralized text style definitions for the
+/// dashboard UI.
+/// Like a Laravel Helper function file but for typography, or a Vue
+/// design-system
 /// composable that returns pre-configured text styles. Similar to defining a
 /// Tailwind `@apply` typography utility layer.
 library;
@@ -7,7 +9,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
-/// Provides a consistent set of [TextStyle] factory methods for all dashboard text.
+/// Provides a consistent set of [TextStyle] factory methods for all dashboard
+/// text.
 /// Like a Laravel Helper function class for typography. Each method returns a
 /// configured [TextStyle] with optional color override.
 ///
@@ -15,12 +18,15 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 ///
 /// Style hierarchy:
 /// - Headings: [heading1] (24px), [heading2] (20px), [heading3] (18px)
-/// - Body: [subtitle] (14px medium), [body] (14px regular), [bodyBold] (14px semibold)
+/// - Body: [subtitle] (14px medium), [body] (14px regular), [bodyBold] (14px
+/// semibold)
 /// - Small: [caption] (12px), [captionBold] (12px semibold), [label] (10px)
-/// - Specialized: [statValue] (28px, for big numbers), [statTitle], [statSubtitle],
+/// - Specialized: [statValue] (28px, for big numbers), [statTitle],
+/// [statSubtitle],
 ///   [categoryTitle], [menuTitle], [trendText]
 class DashboardTypography {
-  /// Heading styles - decreasing size from h1 to h3. Optional [color] overrides the default slate.
+  /// Heading styles - decreasing size from h1 to h3. Optional [color] overrides
+  /// the default slate.
   static TextStyle heading1({Color? color}) => TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.w700,
@@ -45,7 +51,8 @@ class DashboardTypography {
     height: 1.3,
   );
 
-  /// Body text styles for general content. [subtitle] is medium-weight, [body] is regular, [bodyBold] is semibold.
+  /// Body text styles for general content. [subtitle] is medium-weight, [body]
+  /// is regular, [bodyBold] is semibold.
   static TextStyle subtitle({Color? color}) => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
@@ -82,7 +89,8 @@ class DashboardTypography {
     height: 1.4,
   );
 
-  /// Specialized text styles for dashboard widgets (stats, categories, menus, trends).
+  /// Specialized text styles for dashboard widgets (stats, categories, menus,
+  /// trends).
   static TextStyle label({Color? color}) => TextStyle(
     fontSize: 10,
     fontWeight: FontWeight.w500,

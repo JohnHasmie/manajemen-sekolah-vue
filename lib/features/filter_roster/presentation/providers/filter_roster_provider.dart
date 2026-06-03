@@ -127,14 +127,18 @@ class FilterRosterProvider extends ChangeNotifier {
     final subjectsSource = useTeaching
         ? (_teachingSubjects.isNotEmpty ? _teachingSubjects : _subjects)
         : (_role == 'guru' && isHomeroomView && _homeroomSubjects.isNotEmpty
-            ? _homeroomSubjects
-            : _subjects);
+              ? _homeroomSubjects
+              : _subjects);
 
     final mapSource = useTeaching
-        ? (_teachingClassSubjects.isNotEmpty ? _teachingClassSubjects : _classSubjectsByClass)
-        : (_role == 'guru' && isHomeroomView && _homeroomClassSubjects.isNotEmpty
-            ? _homeroomClassSubjects
-            : _classSubjectsByClass);
+        ? (_teachingClassSubjects.isNotEmpty
+              ? _teachingClassSubjects
+              : _classSubjectsByClass)
+        : (_role == 'guru' &&
+                  isHomeroomView &&
+                  _homeroomClassSubjects.isNotEmpty
+              ? _homeroomClassSubjects
+              : _classSubjectsByClass);
 
     if (classId == null || classId.isEmpty) return subjectsSource;
     final allowed = mapSource[classId];
@@ -171,10 +175,14 @@ class FilterRosterProvider extends ChangeNotifier {
 
     final useTeaching = _role == 'guru' && !isHomeroomView;
     final mapSource = useTeaching
-        ? (_teachingClassesBySubject.isNotEmpty ? _teachingClassesBySubject : _classesBySubject)
-        : (_role == 'guru' && isHomeroomView && _homeroomClassesBySubject.isNotEmpty
-            ? _homeroomClassesBySubject
-            : _classesBySubject);
+        ? (_teachingClassesBySubject.isNotEmpty
+              ? _teachingClassesBySubject
+              : _classesBySubject)
+        : (_role == 'guru' &&
+                  isHomeroomView &&
+                  _homeroomClassesBySubject.isNotEmpty
+              ? _homeroomClassesBySubject
+              : _classesBySubject);
 
     final allowed = mapSource[subjectId];
     if (allowed == null || allowed.isEmpty) return base;
@@ -273,8 +281,12 @@ class FilterRosterProvider extends ChangeNotifier {
       _semesters = _asList(data['semesters']);
       _academicYears = _asList(data['academic_years']);
       _classSubjectsByClass = _asStringListMap(data['class_subjects']);
-      _teachingClassSubjects = _asStringListMap(data['teaching_class_subjects']);
-      _homeroomClassSubjects = _asStringListMap(data['homeroom_class_subjects']);
+      _teachingClassSubjects = _asStringListMap(
+        data['teaching_class_subjects'],
+      );
+      _homeroomClassSubjects = _asStringListMap(
+        data['homeroom_class_subjects'],
+      );
       _classesBySubject = _invertMap(_classSubjectsByClass);
       _teachingClassesBySubject = _invertMap(_teachingClassSubjects);
       _homeroomClassesBySubject = _invertMap(_homeroomClassSubjects);

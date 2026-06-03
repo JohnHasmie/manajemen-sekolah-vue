@@ -264,10 +264,7 @@ class LessonPlanService {
   }) async {
     final response = await dioClient.put(
       '/rpp/$lessonPlanId/send-back',
-      data: {
-        'catatan': catatan,
-        if (areas != null) 'revision_areas': areas,
-      },
+      data: {'catatan': catatan, if (areas != null) 'revision_areas': areas},
     );
     await CacheInvalidationService.onLessonPlanChanged();
     return response.data;

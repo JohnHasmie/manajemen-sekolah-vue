@@ -315,7 +315,8 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet>
   }
 }
 
-// --- Inline UI building blocks ------------------------------------------------
+// --- Inline UI building blocks
+// ------------------------------------------------
 
 class _SectionHeader extends StatelessWidget {
   final String label;

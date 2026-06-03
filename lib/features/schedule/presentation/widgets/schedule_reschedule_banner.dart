@@ -391,7 +391,10 @@ class _ShimmerArrow extends StatelessWidget {
       animation: progress,
       builder: (context, _) {
         return CustomPaint(
-          painter: _ShimmerArrowPainter(progress: progress.value, accent: accent),
+          painter: _ShimmerArrowPainter(
+            progress: progress.value,
+            accent: accent,
+          ),
         );
       },
     );
@@ -428,11 +431,7 @@ class _ShimmerArrowPainter extends CustomPainter {
     const gapWidth = 3.0;
     double x = 0;
     while (x < size.width - 10) {
-      canvas.drawLine(
-        Offset(x, midY),
-        Offset(x + dashWidth, midY),
-        linePaint,
-      );
+      canvas.drawLine(Offset(x, midY), Offset(x + dashWidth, midY), linePaint);
       x += dashWidth + gapWidth;
     }
 
@@ -501,6 +500,5 @@ class _StaticArrowPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _StaticArrowPainter old) =>
-      old.accent != accent;
+  bool shouldRepaint(covariant _StaticArrowPainter old) => old.accent != accent;
 }

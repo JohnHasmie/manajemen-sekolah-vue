@@ -17,7 +17,6 @@
 // case. The multi-section regen sheet (Frame J in the original
 // mockup) remains for bulk regen and is a separate widget.
 
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;

@@ -23,12 +23,14 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// In Vue terms, think of this as a Pinia store with persistent cache.
 ///
 /// Key patterns:
-/// - School-scoped cache keys (prefix: `class_{schoolId}_`) to avoid data leaking
+/// - School-scoped cache keys (prefix: `class_{schoolId}_`) to avoid data
+/// leaking
 /// - Cache invalidation on any mutation (create/update/delete/import)
 /// - Fallback pagination structure for backward compatibility
 class ApiClassService {
   /// Imports classes from an Excel file via multipart upload.
-  /// Like Laravel's `Excel::import()` with Maatwebsite. Clears cache after success.
+  /// Like Laravel's `Excel::import()` with Maatwebsite. Clears cache after
+  /// success.
   /// Similar to a Vue file upload action that triggers a backend import job.
   Future<Map<String, dynamic>> importClassesFromExcel(File file) async {
     try {
@@ -69,8 +71,10 @@ class ApiClassService {
     }
   }
 
-  /// Fetches filter dropdown options (grade levels, homeroom teachers) for class listing.
-  /// Like a Laravel endpoint returning distinct filter values for a Vue filter component.
+  /// Fetches filter dropdown options (grade levels, homeroom teachers) for
+  /// class listing.
+  /// Like a Laravel endpoint returning distinct filter values for a Vue filter
+  /// component.
   Future<Map<String, dynamic>> getClassFilterOptions() async {
     try {
       final response = await dioClient.get('/class/filter-options');
@@ -186,7 +190,8 @@ class ApiClassService {
   }
 
   /// Legacy method to fetch all classes as a flat list.
-  /// Like `SchoolClass::all()` in Laravel. New code should use [getClassPaginated].
+  /// Like `SchoolClass::all()` in Laravel. New code should use
+  /// [getClassPaginated].
   Future<List<dynamic>> getClass({String? academicYearId}) async {
     try {
       String url = '/class';
@@ -206,7 +211,8 @@ class ApiClassService {
     }
   }
 
-  /// Fetches a single class by its UUID. Like `SchoolClass::findOrFail($id)` in Laravel.
+  /// Fetches a single class by its UUID. Like `SchoolClass::findOrFail($id)` in
+  /// Laravel.
   Future<dynamic> getClassById(String id) async {
     try {
       final result = await ApiService().get('/class/$id');

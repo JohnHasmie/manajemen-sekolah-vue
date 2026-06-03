@@ -88,7 +88,8 @@ mixin StudentFormSaveMixin on StudentFormValidationMixin {
 
       // Only include guardian_email in specific cases:
       // 1. When adding a new student (student == null)
-      // 2. When explicitly changing the guardian user (isChangeUserMode == true)
+      // 2. When explicitly changing the guardian user (isChangeUserMode ==
+      // true)
       // 3. When the email has actually changed from the original
       if (student == null) {
         // New student - always include email
@@ -99,21 +100,28 @@ mixin StudentFormSaveMixin on StudentFormValidationMixin {
         data['use_another_user'] = true;
       } else {
         // Editing existing student - only include email if it changed
-        final originalEmail = (student!['guardian_email'] ?? 
-                               student!['parent_email'] ?? '').toString();
+        final originalEmail =
+            (student!['guardian_email'] ?? student!['parent_email'] ?? '')
+                .toString();
         if (emailParent != originalEmail) {
           data['guardian_email'] = emailParent;
         }
       }
 
-      AppLogger.debug('student', 'Preparing to save student. Is edit: ${student != null}');
+      AppLogger.debug(
+        'student',
+        'Preparing to save student. Is edit: ${student != null}',
+      );
       AppLogger.debug('student', 'Student data: $data');
-      
+
       if (student != null) {
         AppLogger.debug('student', 'Student object: $student');
         final studentId = student!['id']?.toString();
         if (studentId == null || studentId.isEmpty) {
-          AppLogger.error('student', 'Student ID is null or empty. Full student object: $student');
+          AppLogger.error(
+            'student',
+            'Student ID is null or empty. Full student object: $student',
+          );
           throw Exception('Student ID is missing or invalid');
         }
         AppLogger.debug('student', 'Calling updateStudent with ID: $studentId');

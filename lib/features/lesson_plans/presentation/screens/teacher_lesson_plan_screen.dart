@@ -3,7 +3,8 @@
 //
 // Displays a list of RPPs with search, filter by status,
 // CRUD operations, AI generation, and Word/PDF download.
-// In Laravel terms: `LessonPlanController@index`, `@store`, `@update`, `@destroy`.
+// In Laravel terms: `LessonPlanController@index`, `@store`, `@update`,
+// `@destroy`.
 //
 // Follows the same UI patterns as TeachingScheduleScreen and
 // TeacherClassActivityScreen for consistency across teacher pages.
@@ -60,7 +61,8 @@ class LessonPlanScreen extends ConsumerStatefulWidget {
 
 /// State for [LessonPlanScreen].
 ///
-/// Manages the RPP list, search, status filter, pagination, and CRUD operations.
+/// Manages the RPP list, search, status filter, pagination, and CRUD
+/// operations.
 /// Uses shared widgets (AppErrorState, EmptyState, AppRefreshIndicator) for
 /// consistency with TeachingScheduleScreen and TeacherClassActivityScreen.
 class LessonPlanScreenState extends ConsumerState<LessonPlanScreen>

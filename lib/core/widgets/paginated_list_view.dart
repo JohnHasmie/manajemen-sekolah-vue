@@ -68,7 +68,8 @@ class PaginatedListView<T> extends StatefulWidget {
   /// Optional pull-to-refresh callback.
   final Future<void> Function()? onRefresh;
 
-  /// User role for theming the refresh indicator (e.g. 'guru', 'admin', 'wali').
+  /// User role for theming the refresh indicator (e.g. 'guru', 'admin',
+  /// 'wali').
   final String? refreshRole;
 
   const PaginatedListView({

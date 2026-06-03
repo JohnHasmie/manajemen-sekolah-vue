@@ -88,7 +88,8 @@ mixin GradeRecapDialogMixin {
     );
   }
 
-  /// Safely access availableClasses — returns empty list if data not loaded yet.
+  /// Safely access availableClasses — returns empty list if data not loaded
+  /// yet.
   List<Map<String, String>> get _safeAvailableClasses {
     try {
       return availableClasses;

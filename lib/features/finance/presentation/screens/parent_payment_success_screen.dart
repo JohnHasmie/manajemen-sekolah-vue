@@ -291,10 +291,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
               width: 90,
               child: Text(
                 label,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: ColorUtils.slate500,
-                ),
+                style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
               ),
             ),
             Text(
@@ -338,10 +335,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: ColorUtils.success600.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
@@ -438,10 +432,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
           // ── Verified stamp — gives the screenshot some authority ─
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: ColorUtils.success600.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
@@ -494,7 +485,8 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
   /// (KW-YYYYMMDD-XXXXXX) so screenshots feel official.
   String _resolveReceiptNumber() {
     final date = paidAt ?? DateTime.now();
-    final ymd = '${date.year}'
+    final ymd =
+        '${date.year}'
         '${date.month.toString().padLeft(2, '0')}'
         '${date.day.toString().padLeft(2, '0')}';
     final tail = (billId == null || billId!.length < 6)
@@ -505,8 +497,19 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
 
   String _formatDate(DateTime dt) {
     const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${dt.day} ${months[dt.month]} ${dt.year}';
   }
@@ -604,7 +607,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
       SnackBarUtils.showInfo(context, 'Mengunduh bukti pembayaran…');
       try {
         final bytes = await ApiService.downloadFile('/payment/$id/receipt');
-        
+
         String ext = 'jpg';
         if (paymentProofUrl != null) {
           final cleanUrl = paymentProofUrl!.split('?').first.toLowerCase();
@@ -616,18 +619,18 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
             ext = 'webp';
           }
         }
-        
+
         final fileName = 'Bukti_Pembayaran_${id.substring(0, 8)}.$ext';
         final dir = await getTemporaryDirectory();
         final localFile = File('${dir.path}/$fileName');
         await localFile.writeAsBytes(bytes, flush: true);
-        
+
         if (!context.mounted) return;
         SnackBarUtils.showSuccess(
           context,
           'Bukti pembayaran berhasil diunduh.',
         );
-        
+
         final result = await OpenFile.open(localFile.path);
         if (result.type != ResultType.done && context.mounted) {
           SnackBarUtils.showError(
@@ -657,10 +660,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
       return;
     }
     try {
-      final ok = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!ok && context.mounted) {
         SnackBarUtils.showError(context, 'Tidak dapat membuka bukti.');
       }

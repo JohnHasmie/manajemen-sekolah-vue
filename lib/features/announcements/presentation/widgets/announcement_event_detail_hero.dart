@@ -120,10 +120,7 @@ class _AnnouncementEventDetailHeroState
                 const SizedBox(height: 2),
                 Text(
                   e.eventLocation!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: ColorUtils.slate700,
-                  ),
+                  style: TextStyle(fontSize: 12, color: ColorUtils.slate700),
                 ),
               ],
               if (!e.isPast) ...[
@@ -179,11 +176,27 @@ class _AnnouncementEventDetailHeroState
 
   static String _formatWhen(AnnouncementEvent e) {
     const days = [
-      'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu',
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
     ];
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     final d = e.eventAt;
     final dow = days[(d.weekday - 1).clamp(0, 6)];
@@ -220,13 +233,21 @@ class _CountdownRow extends StatelessWidget {
     final seconds = d.inSeconds % 60;
     return Row(
       children: [
-        Expanded(child: _Cell(n: days, label: 'HARI', palette: palette)),
+        Expanded(
+          child: _Cell(n: days, label: 'HARI', palette: palette),
+        ),
         const SizedBox(width: 6),
-        Expanded(child: _Cell(n: hours, label: 'JAM', palette: palette)),
+        Expanded(
+          child: _Cell(n: hours, label: 'JAM', palette: palette),
+        ),
         const SizedBox(width: 6),
-        Expanded(child: _Cell(n: minutes, label: 'MENIT', palette: palette)),
+        Expanded(
+          child: _Cell(n: minutes, label: 'MENIT', palette: palette),
+        ),
         const SizedBox(width: 6),
-        Expanded(child: _Cell(n: seconds, label: 'DETIK', palette: palette)),
+        Expanded(
+          child: _Cell(n: seconds, label: 'DETIK', palette: palette),
+        ),
       ],
     );
   }
@@ -325,9 +346,7 @@ class _ReminderStatusCard extends StatelessWidget {
         : (isFailed ? const Color(0xFFB91C1C) : ColorUtils.slate700);
     final icon = isSent
         ? Icons.check_rounded
-        : (isFailed
-              ? Icons.error_outline_rounded
-              : Icons.access_time_rounded);
+        : (isFailed ? Icons.error_outline_rounded : Icons.access_time_rounded);
 
     String trailing;
     if (isAdmin) {
@@ -482,10 +501,7 @@ class _PersonalReminderCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 6),
               child: Text(
                 'Belum ada pengingat pribadi.',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: ColorUtils.slate500,
-                ),
+                style: TextStyle(fontSize: 11.5, color: ColorUtils.slate500),
               ),
             ),
           for (final r in rows) _buildRow(r),

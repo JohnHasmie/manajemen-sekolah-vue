@@ -1,7 +1,8 @@
 // Extracted from admin_attendance_report_screen.dart (_buildSummaryCard +
 // _buildInfoTag). Like a Vue `<AdminAttendanceSummaryCard>` component --
 // renders one attendance summary row in the admin report list, showing subject
-// info, attendance counts, a progress bar, a detail button, and a delete button.
+// info, attendance counts, a progress bar, a detail button, and a delete
+// button.
 //
 // Stateless: the parent passes callbacks for navigation and deletion so this
 // widget has zero business logic of its own, just pure UI. In Laravel terms

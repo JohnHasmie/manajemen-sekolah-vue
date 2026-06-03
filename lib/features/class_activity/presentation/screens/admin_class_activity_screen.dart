@@ -216,28 +216,29 @@ class _AdminClassActivityScreenState
       initialType: _selectedType,
       initialPeriod: _selectedPeriod,
       previewCount: _page.totalItems,
-      onApply: ({
-        required String? classId,
-        required String? className,
-        required String? subjectId,
-        required String? subjectName,
-        required String? teacherId,
-        required String? teacherName,
-        required AdminActivityType? type,
-        required AdminActivityPeriod period,
-      }) {
-        setState(() {
-          _selectedClassId = classId;
-          _selectedClassName = className;
-          _selectedSubjectId = subjectId;
-          _selectedSubjectName = subjectName;
-          _selectedTeacherId = teacherId;
-          _selectedTeacherName = teacherName;
-          _selectedType = type;
-          _selectedPeriod = period;
-        });
-        _loadData();
-      },
+      onApply:
+          ({
+            required String? classId,
+            required String? className,
+            required String? subjectId,
+            required String? subjectName,
+            required String? teacherId,
+            required String? teacherName,
+            required AdminActivityType? type,
+            required AdminActivityPeriod period,
+          }) {
+            setState(() {
+              _selectedClassId = classId;
+              _selectedClassName = className;
+              _selectedSubjectId = subjectId;
+              _selectedSubjectName = subjectName;
+              _selectedTeacherId = teacherId;
+              _selectedTeacherName = teacherName;
+              _selectedType = type;
+              _selectedPeriod = period;
+            });
+            _loadData();
+          },
     );
   }
 
@@ -590,7 +591,9 @@ class _TypeTabStrip extends StatelessWidget {
                       tab.label,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                        fontWeight: isActive
+                            ? FontWeight.w800
+                            : FontWeight.w600,
                         color: isActive ? Colors.white : ColorUtils.slate700,
                       ),
                     ),
@@ -715,11 +718,7 @@ class _ErrorRetry extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.cloud_off_rounded,
-            size: 32,
-            color: ColorUtils.slate500,
-          ),
+          Icon(Icons.cloud_off_rounded, size: 32, color: ColorUtils.slate500),
           const SizedBox(height: AppSpacing.sm),
           Text(
             message,

@@ -1,9 +1,12 @@
-/// local_cache_service.dart - Provides TTL-based local caching via SharedPreferences.
+/// local_cache_service.dart - Provides TTL-based local caching via
+/// SharedPreferences.
 /// Like Laravel's Cache facade (with file/database driver) / Vue's localStorage helper.
 ///
 /// This is the Flutter equivalent of Laravel's `Cache::put()` / `Cache::get()` with
-/// expiration. Uses SharedPreferences (key-value storage on device) instead of Redis.
-/// All API service classes use this to cache paginated responses for offline support
+/// expiration. Uses SharedPreferences (key-value storage on device) instead of
+/// Redis.
+/// All API service classes use this to cache paginated responses for offline
+/// support
 /// and performance. Keys are prefixed with `api_cache_` to avoid collision.
 ///
 /// Key differences from Laravel Cache:
@@ -31,7 +34,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// await LocalCacheService.save('my_key', data); // cache miss -> save
 /// ```
 class LocalCacheService {
-  /// Prefix for all cache keys to avoid collision with other SharedPreferences data.
+  /// Prefix for all cache keys to avoid collision with other SharedPreferences
+  /// data.
   /// Like Laravel's `cache.prefix` config.
   static const String _prefix = 'api_cache_';
 
@@ -50,7 +54,8 @@ class LocalCacheService {
     }
   }
 
-  /// Clears all cache entries starting with a specific sub-prefix (after the main prefix)
+  /// Clears all cache entries starting with a specific sub-prefix (after the
+  /// main prefix)
   /// Example: clearStartingWith('subject_') will remove api_cache_subject_...
   static Future<void> clearStartingWith(String subPrefix) async {
     final prefs = await SharedPreferences.getInstance();

@@ -1,6 +1,8 @@
-// excel_raport_service.dart - Export student report cards (raport) to Excel and PDF.
+// excel_raport_service.dart - Export student report cards (raport) to Excel and
+// PDF.
 // Like Laravel's Maatwebsite/Excel + DomPDF combined for generating raport documents.
-// Supports class-wide Excel export, individual student PDF, and certificate PDF.
+// Supports class-wide Excel export, individual student PDF, and certificate
+// PDF.
 
 import 'dart:io';
 
@@ -14,12 +16,17 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Service for exporting student report cards (raport) in multiple formats.
 /// Like a Laravel controller with three export actions:
-/// - `exportReportCardToExcel` -> `Excel::download(new RaportExport)` for a whole class
-/// - `exportSingleRaportPdf` -> `PDF::loadView('raport.single')->download()` for one student
-/// - `exportCertificateRaportPdf` -> `PDF::loadView('raport.certificate')->download()`
+/// - `exportReportCardToExcel` -> `Excel::download(new RaportExport)` for a
+/// whole class
+/// - `exportSingleRaportPdf` -> `PDF::loadView('raport.single')->download()`
+/// for one student
+/// - `exportCertificateRaportPdf` ->
+/// `PDF::loadView('raport.certificate')->download()`
 ///
-/// All exports are server-side: Flutter sends parameters, Laravel generates the file,
-/// Flutter saves and opens the binary response. Uses query parameters (GET) rather
+/// All exports are server-side: Flutter sends parameters, Laravel generates the
+/// file,
+/// Flutter saves and opens the binary response. Uses query parameters (GET)
+/// rather
 /// than POST body since the data is just IDs/filters.
 class ExcelReportCardService {
   static String get baseUrl => '/report-cards';

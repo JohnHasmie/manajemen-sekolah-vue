@@ -1,8 +1,10 @@
-// Class promotion wizard - multi-step form for promoting students to next grade.
+// Class promotion wizard - multi-step form for promoting students to next
+// grade.
 //
 // Like `pages/admin/class-promotion.vue` - a step-by-step wizard that allows
 // admins to promote students from one class to another across academic years.
-// Steps: 1) Select source class -> 2) Select students -> 3) Configure target -> 4) Confirm.
+// Steps: 1) Select source class -> 2) Select students -> 3) Configure target ->
+// 4) Confirm.
 //
 // In Laravel terms, this calls `POST /api/classes/promote` with selected student IDs
 // and target class/year configuration.
@@ -24,7 +26,8 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 /// Multi-step wizard for promoting students to the next class/academic year.
 ///
 /// Like a Vuetify `<v-stepper>` component with 4 steps.
-/// This is a [ConsumerStatefulWidget] with step navigation, student selection, and
+/// This is a [ConsumerStatefulWidget] with step navigation, student selection,
+/// and
 /// target class configuration state.
 class ClassPromotionWizard extends ConsumerStatefulWidget {
   const ClassPromotionWizard({super.key});
@@ -37,7 +40,8 @@ class ClassPromotionWizard extends ConsumerStatefulWidget {
 /// Mutable state for [ClassPromotionWizard].
 ///
 /// Key state (like Vue `data()`):
-/// - [_currentStep] - active wizard step (0-based), controls which view is shown
+/// - [_currentStep] - active wizard step (0-based), controls which view is
+/// shown
 /// - [_classes] / [_academicYears] / [_students] - data lists from API
 /// - [_selectedSourceClassId] / [_selectedTargetYearId] / [_selectedTargetClassId] - user selections
 /// - [_selectedStudentIds] - Set of student IDs selected for promotion

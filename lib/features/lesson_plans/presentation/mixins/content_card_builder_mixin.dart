@@ -53,11 +53,7 @@ mixin ContentCardBuilderMixin on State<LessonPlanAdminDetailPage> {
                   color: format.tintColor,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  format.icon,
-                  size: 14,
-                  color: format.brandColor,
-                ),
+                child: Icon(format.icon, size: 14, color: format.brandColor),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -124,7 +120,9 @@ mixin ContentCardBuilderMixin on State<LessonPlanAdminDetailPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: const Color(0xFFEDE9FE), // soft violet background
-          border: Border.all(color: const Color(0xFFDDD6FE)), // light violet border
+          border: Border.all(
+            color: const Color(0xFFDDD6FE),
+          ), // light violet border
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -158,8 +156,12 @@ mixin ContentCardBuilderMixin on State<LessonPlanAdminDetailPage> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFFCCFBF1).withValues(alpha: 0.3), // soft teal background
-          border: Border.all(color: const Color(0xFF99F6E4)), // light teal border
+          color: const Color(
+            0xFFCCFBF1,
+          ).withValues(alpha: 0.3), // soft teal background
+          border: Border.all(
+            color: const Color(0xFF99F6E4),
+          ), // light teal border
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(

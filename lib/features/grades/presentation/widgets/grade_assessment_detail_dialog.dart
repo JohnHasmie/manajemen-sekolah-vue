@@ -72,7 +72,8 @@ class GradeAssessmentDetailDialog extends StatelessWidget {
     required this.averageScore,
   });
 
-  // ── Small helper row — like a Vue computed `detailRow(label, value)` ────────
+  // ── Small helper row — like a Vue computed `detailRow(label, value)`
+  // ────────
   Widget _row(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),

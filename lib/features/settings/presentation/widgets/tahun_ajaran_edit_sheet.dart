@@ -295,15 +295,12 @@ class TahunAjaranEditSheet {
                   final semList = (await dioClient.get('/semesters')).data;
                   if (semList is List) {
                     final semCanonical = canonicalSemesterName(semLower);
-                    final match = semList.firstWhere(
-                      (s) {
-                        final name = (s['name']?.toString() ?? '')
-                            .trim()
-                            .toLowerCase();
-                        return name == semCanonical || name == semLower;
-                      },
-                      orElse: () => null,
-                    );
+                    final match = semList.firstWhere((s) {
+                      final name = (s['name']?.toString() ?? '')
+                          .trim()
+                          .toLowerCase();
+                      return name == semCanonical || name == semLower;
+                    }, orElse: () => null);
                     if (match != null) {
                       await dioClient.patch(
                         '/semesters/${match['id']}',

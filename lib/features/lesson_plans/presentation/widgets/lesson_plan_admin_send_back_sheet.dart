@@ -388,9 +388,7 @@ class _AreaChip extends StatelessWidget {
             color: selected ? const Color(0xFFFEF3C7) : ColorUtils.slate50,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: selected
-                  ? const Color(0xFFFDE68A)
-                  : ColorUtils.slate300,
+              color: selected ? const Color(0xFFFDE68A) : ColorUtils.slate300,
               width: 1,
             ),
           ),
@@ -410,7 +408,9 @@ class _AreaChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
-                  color: selected ? ColorUtils.warningDark : ColorUtils.slate600,
+                  color: selected
+                      ? ColorUtils.warningDark
+                      : ColorUtils.slate600,
                 ),
               ),
             ],

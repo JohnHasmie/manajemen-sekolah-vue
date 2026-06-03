@@ -1,11 +1,14 @@
 /// main.dart - Application entry point and root widget configuration.
 /// Like Laravel's `public/index.php` + `bootstrap/app.php` + `app/Http/Kernel.php` combined.
-/// In Vue terms, this is `main.ts` where you create the Vue app, install plugins (Vuex, Router),
+/// In Vue terms, this is `main.ts` where you create the Vue app, install
+/// plugins (Vuex, Router),
 /// and mount it to the DOM.
 ///
 /// Initialization flow (in `main()`):
-/// 1. Load `.env` file (like Laravel's `Dotenv::load()` in `bootstrap/app.php`).
-/// 2. Initialize ApiService (HTTP client setup - like configuring Axios baseURL).
+/// 1. Load `.env` file (like Laravel's `Dotenv::load()` in
+/// `bootstrap/app.php`).
+/// 2. Initialize ApiService (HTTP client setup - like configuring Axios
+/// baseURL).
 /// 3. Initialize Firebase (analytics, crash reporting, FCM push notifications).
 /// 4. Initialize date formatting for Indonesian locale.
 /// 5. Load saved language preference from SharedPreferences.
@@ -14,14 +17,18 @@
 ///
 /// Provider setup (in `build()`):
 /// - [LanguageProvider]: Reactive i18n state (like Vue-i18n plugin).
-/// - [AcademicYearProvider]: Tracks selected academic year (like a Vuex module).
+/// - [AcademicYearProvider]: Tracks selected academic year (like a Vuex
+/// module).
 /// - [TeacherProvider]: Caches logged-in teacher's data (like a Vuex module).
 ///
 /// Auth flow:
-/// - Checks token validity via [TokenService.isLoggedIn] (like Laravel auth middleware).
+/// - Checks token validity via [TokenService.isLoggedIn] (like Laravel auth
+/// middleware).
 /// - If authenticated: reads user role from SharedPreferences and routes to the
-///   role-specific Dashboard (like Laravel's `RedirectIfAuthenticated` middleware).
-/// - If not authenticated: shows LoginScreen (like Laravel's `auth` middleware redirect).
+/// role-specific Dashboard (like Laravel's `RedirectIfAuthenticated`
+/// middleware).
+/// - If not authenticated: shows LoginScreen (like Laravel's `auth` middleware
+/// redirect).
 ///
 /// Named routes map roles to Dashboard instances (like Laravel's `Route::get('/admin', ...)`).
 library;
@@ -57,12 +64,16 @@ import 'package:upgrader/upgrader.dart';
 import 'package:version/version.dart';
 import 'package:manajemensekolah/core/widgets/update_prompt.dart';
 
-/// Global navigator key that enables navigation from anywhere without a BuildContext.
-/// Like a global `$router` reference in Vue, or using `app()->make('redirect')` in Laravel.
-/// Used by the global error handler to redirect to LoginScreen on auth failures.
+/// Global navigator key that enables navigation from anywhere without a
+/// BuildContext.
+/// Like a global `$router` reference in Vue, or using `app()->make('redirect')`
+/// in Laravel.
+/// Used by the global error handler to redirect to LoginScreen on auth
+/// failures.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-/// App entry point. Wrapped in [runZonedGuarded] to catch unhandled async errors
+/// App entry point. Wrapped in [runZonedGuarded] to catch unhandled async
+/// errors
 /// (like Laravel's global exception handler in `bootstrap/app.php`).
 ///
 /// Initialization order matters:
@@ -165,7 +176,8 @@ void _setupErrorHandling() {
   }
 }
 
-/// The root widget of the application. Like Vue's `App.vue` or Laravel's root layout.
+/// The root widget of the application. Like Vue's `App.vue` or Laravel's root
+/// layout.
 ///
 /// This is a [StatefulWidget] because it needs to:
 /// 1. Run async initialization (FCM, error stream subscription).
@@ -173,8 +185,10 @@ void _setupErrorHandling() {
 /// 3. Listen to a global error stream for auth failures.
 ///
 /// The `build()` method sets up:
-/// - [MultiProvider]: Injects global state providers (like Vue's `app.use(store)`).
-/// - [MaterialApp]: Configures theming, localization, routing, and the auth gate.
+/// - [MultiProvider]: Injects global state providers (like Vue's
+/// `app.use(store)`).
+/// - [MaterialApp]: Configures theming, localization, routing, and the auth
+/// gate.
 class SchoolManagementApp extends ConsumerStatefulWidget {
   /// Set to true during integration tests to skip FCM initialization
   /// (which triggers the notification permission dialog on iOS simulator).
@@ -188,11 +202,13 @@ class SchoolManagementApp extends ConsumerStatefulWidget {
 }
 
 class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
-  /// Handles token storage, validation, and logout. Like Laravel's `Auth` guard.
+  /// Handles token storage, validation, and logout. Like Laravel's `Auth`
+  /// guard.
   final TokenService _tokenService = TokenService();
 
   /// Subscription to the global error stream for catching auth errors app-wide.
-  /// Like a Laravel middleware that intercepts 401 responses and redirects to login.
+  /// Like a Laravel middleware that intercepts 401 responses and redirects to
+  /// login.
   StreamSubscription<Exception>? _errorSubscription;
 
   /// Tracks whether async init (FCM, error handling) has completed.
@@ -204,7 +220,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
     _initializeApp();
   }
 
-  /// Performs async initialization that can't happen in `initState` synchronously.
+  /// Performs async initialization that can't happen in `initState`
+  /// synchronously.
   /// Clears stale force-logout flags, sets up FCM push notifications, and
   /// subscribes to the global error stream.
   void _initializeApp() async {
@@ -216,7 +233,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
       // Setup error handling
       _setupErrorHandling();
 
-      // Initialize FCM Service (skip if disabled, e.g. during integration tests)
+      // Initialize FCM Service (skip if disabled, e.g. during integration
+      // tests)
       if (!SchoolManagementApp.skipFCM) {
         try {
           await FCMService().initialize();
@@ -250,7 +268,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
     }
   }
 
-  /// Subscribes to the global error stream to catch auth errors from any screen.
+  /// Subscribes to the global error stream to catch auth errors from any
+  /// screen.
   /// Like a global Axios response interceptor in Vue that handles 401s.
   void _setupErrorHandling() {
     _errorSubscription = AppErrorHandler.errorStream.listen((error) async {
@@ -259,7 +278,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
   }
 
   /// Handles authentication-related errors globally.
-  /// If the error is an auth error (expired token, 401, etc.), logs the user out
+  /// If the error is an auth error (expired token, 401, etc.), logs the user
+  /// out
   /// and navigates to LoginScreen. Like Laravel's `unauthenticated()` method
   /// in `Handler.php` that redirects to the login route.
   Future<void> _handleGlobalError(Exception error) async {
@@ -279,7 +299,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
   }
 
   /// Checks if an exception is authentication-related by keyword matching.
-  /// Only matches genuine auth failures (expired token, 401) - not general errors.
+  /// Only matches genuine auth failures (expired token, 401) - not general
+  /// errors.
   ///
   /// [error] - The exception to check.
   /// Returns true if this is an auth error that should trigger a logout.
@@ -373,7 +394,8 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
       supportedLocales: const [Locale('en', 'US'), Locale('id', 'ID')],
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        final appcastUrl = '${ApiService.baseUrl.replaceAll('/api', '')}'
+        final appcastUrl =
+            '${ApiService.baseUrl.replaceAll('/api', '')}'
             '${ApiEndpoints.appcast}';
         UpgraderAppcastStore appcastStore() => UpgraderAppcastStore(
           appcastURL: appcastUrl,

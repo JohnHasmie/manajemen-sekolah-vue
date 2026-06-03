@@ -95,10 +95,15 @@ class _AdminAnnouncementComposeSheetState
           .toString();
       _pin = widget.announcementData!['is_pinned'] == true;
       _startDate = widget.announcementData!['start_date'] != null
-          ? DateTime.tryParse(widget.announcementData!['start_date'].toString())?.toLocal() ?? DateTime.now()
+          ? DateTime.tryParse(
+                  widget.announcementData!['start_date'].toString(),
+                )?.toLocal() ??
+                DateTime.now()
           : DateTime.now();
       _endDate = widget.announcementData!['end_date'] != null
-          ? DateTime.tryParse(widget.announcementData!['end_date'].toString())?.toLocal()
+          ? DateTime.tryParse(
+              widget.announcementData!['end_date'].toString(),
+            )?.toLocal()
           : null;
       // Rehydrate audience_matrix from edit data.
       final existingMatrix = widget.announcementData!['audience_matrix'];
@@ -107,10 +112,16 @@ class _AdminAnnouncementComposeSheetState
         for (final entry in existingMatrix.entries) {
           final roleStr = entry.key.toString();
           AudienceRole? role;
-          if (roleStr == AudienceRole.guru.apiKey) role = AudienceRole.guru;
-          if (roleStr == AudienceRole.waliKelas.apiKey) role = AudienceRole.waliKelas;
-          if (roleStr == AudienceRole.waliMurid.apiKey) role = AudienceRole.waliMurid;
-          
+          if (roleStr == AudienceRole.guru.apiKey) {
+            role = AudienceRole.guru;
+          }
+          if (roleStr == AudienceRole.waliKelas.apiKey) {
+            role = AudienceRole.waliKelas;
+          }
+          if (roleStr == AudienceRole.waliMurid.apiKey) {
+            role = AudienceRole.waliMurid;
+          }
+
           if (role != null && entry.value is List) {
             for (final val in (entry.value as List)) {
               cells.add(MapEntry(role, val));
@@ -392,153 +403,153 @@ class _AdminAnnouncementComposeSheetState
           maxHeight: MediaQuery.of(context).size.height * 0.85,
         ),
         child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AdminFormSheetHeader(
-              title: _isEdit ? 'Edit Pengumuman' : 'Tulis Pengumuman',
-              kicker: _isEdit ? 'EDIT DATA' : 'TULIS BARU',
-              isEditMode: _isEdit,
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const _SectionLabel(text: 'JUDUL'),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _titleController,
-                      decoration: _inputDecoration('Misal: Persiapan PAS'),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    const _SectionLabel(text: 'ISI'),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _contentController,
-                      maxLines: 5,
-                      decoration: _inputDecoration('Tulis isi pengumuman…'),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _SectionLabel(text: 'AUDIENS · matriks'),
-                    const SizedBox(height: 6),
-                    AudienceMatrix(
-                      columns: _columns,
-                      selection: _selection,
-                      onToggle: _onCellToggle,
-                      onCustomTap: () => SnackBarUtils.showInfo(
-                        context,
-                        'Pemilih kelas spesifik segera hadir.',
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    AudienceSummaryStrip(
-                      caption: _previewLoading
-                          ? 'Menghitung audiens…'
-                          : _preview.caption,
-                      hasAudience: _preview.hasAudience,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _SectionLabel(text: 'HARI TAYANG'),
-                    const SizedBox(height: 6),
-                    _BroadcastDateTimeRow(
-                      startDate: _startDate,
-                      endDate: _endDate,
-                      onPickStartDate: _pickStartDate,
-                      onPickEndDate: _pickEndDate,
-                      onClearEndDate: () => setState(() => _endDate = null),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    const _SectionLabel(text: 'ACARA · opsional'),
-                    const SizedBox(height: 6),
-                    AdminFormToggle(
-                      title: 'Tambahkan Acara',
-                      subtitle:
-                          'Tanggal kejadian + reminder otomatis sebelum mulai',
-                      value: _hasEvent,
-                      onChanged: (v) => setState(() => _hasEvent = v),
-                    ),
-                    if (_hasEvent) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      _EventDateTimeRow(
-                        date: _eventDate,
-                        time: _eventTime,
-                        hasTime: _eventHasTime,
-                        onPickDate: _pickEventDate,
-                        onPickTime: _pickEventTime,
-                        onClearTime: () => setState(() {
-                          _eventTime = null;
-                          _eventHasTime = false;
-                        }),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AdminFormSheetHeader(
+                title: _isEdit ? 'Edit Pengumuman' : 'Tulis Pengumuman',
+                kicker: _isEdit ? 'EDIT DATA' : 'TULIS BARU',
+                isEditMode: _isEdit,
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const _SectionLabel(text: 'JUDUL'),
+                      const SizedBox(height: 6),
                       TextField(
-                        controller: _eventLocationController,
-                        decoration: _inputDecoration(
-                          'Lokasi (opsional) · misal Aula Lt. 2',
+                        controller: _titleController,
+                        decoration: _inputDecoration('Misal: Persiapan PAS'),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      const _SectionLabel(text: 'ISI'),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _contentController,
+                        maxLines: 5,
+                        decoration: _inputDecoration('Tulis isi pengumuman…'),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const _SectionLabel(text: 'AUDIENS · matriks'),
+                      const SizedBox(height: 6),
+                      AudienceMatrix(
+                        columns: _columns,
+                        selection: _selection,
+                        onToggle: _onCellToggle,
+                        onCustomTap: () => SnackBarUtils.showInfo(
+                          context,
+                          'Pemilih kelas spesifik segera hadir.',
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      const _SectionLabel(text: 'KIRIM PERINGATAN'),
+                      AudienceSummaryStrip(
+                        caption: _previewLoading
+                            ? 'Menghitung audiens…'
+                            : _preview.caption,
+                        hasAudience: _preview.hasAudience,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const _SectionLabel(text: 'HARI TAYANG'),
                       const SizedBox(height: 6),
-                      _ReminderChipRow(
-                        selected: _reminderOffsets,
-                        onToggle: (offset) {
-                          setState(() {
-                            if (_reminderOffsets.contains(offset)) {
-                              _reminderOffsets.remove(offset);
-                            } else {
-                              _reminderOffsets.add(offset);
-                            }
-                          });
-                        },
+                      _BroadcastDateTimeRow(
+                        startDate: _startDate,
+                        endDate: _endDate,
+                        onPickStartDate: _pickStartDate,
+                        onPickEndDate: _pickEndDate,
+                        onClearEndDate: () => setState(() => _endDate = null),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const _SectionLabel(text: 'ACARA · opsional'),
+                      const SizedBox(height: 6),
+                      AdminFormToggle(
+                        title: 'Tambahkan Acara',
+                        subtitle:
+                            'Tanggal kejadian + reminder otomatis sebelum mulai',
+                        value: _hasEvent,
+                        onChanged: (v) => setState(() => _hasEvent = v),
+                      ),
+                      if (_hasEvent) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        _EventDateTimeRow(
+                          date: _eventDate,
+                          time: _eventTime,
+                          hasTime: _eventHasTime,
+                          onPickDate: _pickEventDate,
+                          onPickTime: _pickEventTime,
+                          onClearTime: () => setState(() {
+                            _eventTime = null;
+                            _eventHasTime = false;
+                          }),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        TextField(
+                          controller: _eventLocationController,
+                          decoration: _inputDecoration(
+                            'Lokasi (opsional) · misal Aula Lt. 2',
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        const _SectionLabel(text: 'KIRIM PERINGATAN'),
+                        const SizedBox(height: 6),
+                        _ReminderChipRow(
+                          selected: _reminderOffsets,
+                          onToggle: (offset) {
+                            setState(() {
+                              if (_reminderOffsets.contains(offset)) {
+                                _reminderOffsets.remove(offset);
+                              } else {
+                                _reminderOffsets.add(offset);
+                              }
+                            });
+                          },
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.lg),
+                      const _SectionLabel(text: 'PENJADWALAN'),
+                      const SizedBox(height: 6),
+                      AdminFormToggle(
+                        title: 'Kirim sekarang',
+                        subtitle: 'Notifikasi push langsung dikirim',
+                        value: _sendNow,
+                        onChanged: (v) => setState(() => _sendNow = v),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      AdminFormToggle(
+                        title: '📌 Sematkan',
+                        subtitle: 'Tampil di atas list selama 7 hari',
+                        tone: AdminToggleTone.warning,
+                        value: _pin,
+                        onChanged: (v) => setState(() => _pin = v),
                       ),
                     ],
-                    const SizedBox(height: AppSpacing.lg),
-                    const _SectionLabel(text: 'PENJADWALAN'),
-                    const SizedBox(height: 6),
-                    AdminFormToggle(
-                      title: 'Kirim sekarang',
-                      subtitle: 'Notifikasi push langsung dikirim',
-                      value: _sendNow,
-                      onChanged: (v) => setState(() => _sendNow = v),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    AdminFormToggle(
-                      title: '📌 Sematkan',
-                      subtitle: 'Tampil di atas list selama 7 hari',
-                      tone: AdminToggleTone.warning,
-                      value: _pin,
-                      onChanged: (v) => setState(() => _pin = v),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-            AdminFormFooter(
-              primaryLabel: _isEdit
-                  ? 'Simpan'
-                  : (_preview.total > 0
-                        ? 'Kirim ke ${_preview.total} orang'
-                        : 'Kirim'),
-              onPrimary: _preview.hasAudience ? _save : null,
-              isSaving: _isSaving,
-            ),
-          ],
+              AdminFormFooter(
+                primaryLabel: _isEdit
+                    ? 'Simpan'
+                    : (_preview.total > 0
+                          ? 'Kirim ke ${_preview.total} orang'
+                          : 'Kirim'),
+                onPrimary: _preview.hasAudience ? _save : null,
+                isSaving: _isSaving,
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -866,7 +877,9 @@ class _BroadcastDateTimeRow extends StatelessWidget {
         Expanded(
           child: _PickerCell(
             label: 'Selesai Tayang',
-            value: endDate == null ? 'Selamanya (Indefinite)' : _fmtDate(endDate!),
+            value: endDate == null
+                ? 'Selamanya (Indefinite)'
+                : _fmtDate(endDate!),
             icon: Icons.stop_rounded,
             onTap: onPickEndDate,
             placeholder: endDate == null,

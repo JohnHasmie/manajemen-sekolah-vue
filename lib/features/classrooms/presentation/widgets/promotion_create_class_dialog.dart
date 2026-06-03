@@ -1,4 +1,5 @@
-// Dialog widget for creating a new target class from within the promotion wizard.
+// Dialog widget for creating a new target class from within the promotion
+// wizard.
 //
 // Extracted from ClassPromotionWizard._showCreateClassDialog.
 // Renders a modal Dialog with a gradient header, a text field, grade-level

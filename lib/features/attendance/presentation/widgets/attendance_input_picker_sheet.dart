@@ -126,10 +126,7 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
       );
       final raw = res['sessions_today'];
       final sessions = raw is List
-          ? raw
-                .whereType<Map>()
-                .map(Map<String, dynamic>.from)
-                .toList()
+          ? raw.whereType<Map>().map(Map<String, dynamic>.from).toList()
           : <Map<String, dynamic>>[];
       if (!mounted) return;
       setState(() {
@@ -528,10 +525,7 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${widget.lp.getTranslatedText({
-                        'en': 'Live now',
-                        'id': 'Sesi sekarang',
-                      })} · ${s['lesson_hour_name'] ?? ''} · ${s['class_name'] ?? ''} · ${s['subject_name'] ?? ''}',
+                  '${widget.lp.getTranslatedText({'en': 'Live now', 'id': 'Sesi sekarang'})} · ${s['lesson_hour_name'] ?? ''} · ${s['class_name'] ?? ''} · ${s['subject_name'] ?? ''}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -633,10 +627,8 @@ class _AmbilPresensiSheetState extends State<_AmbilPresensiSheet> {
     // `recorded_count` (any status) for older backend responses so
     // pre-deploy clients still render something coherent. The label
     // says "hadir"; the count must match the label.
-    final recordedCount = ((s['present_count'] ??
-            s['recorded_count'] ??
-            0) as num)
-        .toInt();
+    final recordedCount =
+        ((s['present_count'] ?? s['recorded_count'] ?? 0) as num).toInt();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

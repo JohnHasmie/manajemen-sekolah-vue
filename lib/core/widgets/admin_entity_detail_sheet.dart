@@ -160,12 +160,18 @@ Future<void> showAdminEntityDetailSheet(
 
   // Construct sheetTitle based on kicker and current active language.
   final isIndonesian = languageProvider.currentLanguage == 'id';
-  final displayKicker = kicker.toLowerCase().split(' ').map((word) {
-    if (word.isEmpty) return '';
-    return word[0].toUpperCase() + word.substring(1);
-  }).join(' ');
+  final displayKicker = kicker
+      .toLowerCase()
+      .split(' ')
+      .map((word) {
+        if (word.isEmpty) return '';
+        return word[0].toUpperCase() + word.substring(1);
+      })
+      .join(' ');
 
-  final sheetTitle = isIndonesian ? 'Detail $displayKicker' : '$displayKicker Detail';
+  final sheetTitle = isIndonesian
+      ? 'Detail $displayKicker'
+      : '$displayKicker Detail';
 
   return AppBottomSheet.show<void>(
     context: context,
@@ -212,11 +218,7 @@ class _IdentityCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          InitialsAvatar.onDark(
-            name: initials,
-            size: 56,
-            borderRadius: 14,
-          ),
+          InitialsAvatar.onDark(name: initials, size: 56, borderRadius: 14),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -311,10 +313,7 @@ class _DetailSectionView extends StatelessWidget {
   final EntityDetailSection section;
   final Color accent;
 
-  const _DetailSectionView({
-    required this.section,
-    required this.accent,
-  });
+  const _DetailSectionView({required this.section, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -348,10 +347,7 @@ class _DetailSectionView extends StatelessWidget {
           child: Column(
             children: [
               for (var i = 0; i < section.rows.length; i++) ...[
-                _DetailRowView(
-                  row: section.rows[i],
-                  accent: accent,
-                ),
+                _DetailRowView(row: section.rows[i], accent: accent),
                 if (i < section.rows.length - 1)
                   Divider(
                     height: 1,
@@ -416,11 +412,7 @@ class _DetailRowView extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
               child: Padding(
                 padding: const EdgeInsets.all(2),
-                child: Icon(
-                  row.trailingIcon,
-                  size: 16,
-                  color: accent,
-                ),
+                child: Icon(row.trailingIcon, size: 16, color: accent),
               ),
             ),
           ] else if (isInteractive) ...[

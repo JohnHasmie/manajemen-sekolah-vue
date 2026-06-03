@@ -14,9 +14,7 @@ class ShorebirdUpdateResult {
 
   const ShorebirdUpdateResult({required this.hasUpdate, this.patchNumber});
 
-  const ShorebirdUpdateResult.none()
-      : hasUpdate = false,
-        patchNumber = null;
+  const ShorebirdUpdateResult.none() : hasUpdate = false, patchNumber = null;
 }
 
 class ShorebirdService {

@@ -31,7 +31,8 @@ class NotificationNotifier extends AsyncNotifier<List<dynamic>> {
       );
     } catch (e) {
       AppLogger.error('notification_controller', 'Failed to mark as read: $e');
-      // We don't necessarily want to change the state to error for a single item failure
+      // We don't necessarily want to change the state to error for a single
+      // item failure
     }
   }
 

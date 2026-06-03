@@ -1,6 +1,8 @@
 // Dropdown widget for selecting a child student in the parent grade screen.
-// Mirrors the "Select Child" step in the UI; like a Vue `<StudentSelector>` component.
-// Emits `onStudentChanged` instead of calling setState directly (callback pattern).
+// Mirrors the "Select Child" step in the UI; like a Vue `<StudentSelector>`
+// component.
+// Emits `onStudentChanged` instead of calling setState directly (callback
+// pattern).
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
@@ -23,7 +25,8 @@ class ParentGradeStudentSelector extends StatelessWidget {
   final GlobalKey selectorKey;
 
   /// Called when the user picks a different child from the dropdown.
-  /// Passes the new student ID (nullable) — equivalent to `$emit('change', id)`.
+  /// Passes the new student ID (nullable) — equivalent to `$emit('change',
+  /// id)`.
   final ValueChanged<String?> onStudentChanged;
 
   const ParentGradeStudentSelector({

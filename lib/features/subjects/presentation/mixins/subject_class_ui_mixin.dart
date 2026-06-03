@@ -40,6 +40,7 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
   void clearSelection();
   Future<void> bulkDetachSelected();
   TextEditingController get searchController;
+
   /// Builds the main UI scaffold. The header carries the navy
   /// gradient + kicker pattern and an optional [headerFilterChips]
   /// slot. Edit is exposed via the [SubjectMetaCard] inside the body,
@@ -66,7 +67,8 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
       onSearchChanged: (_) => setState(() {}),
       brandChips: brandChips,
       isLoading: isLoading,
-      isEmpty: false, // We handle the empty state internally inside buildClassList
+      isEmpty:
+          false, // We handle the empty state internally inside buildClassList
       onRefresh: onRefresh,
       emptyTitle: 'Tidak ada kelas',
       emptySubtitle: 'Tidak ditemukan hasil pencarian',
@@ -109,7 +111,6 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
   /// pull-to-refresh gesture works everywhere — even when the list is
   /// empty. The class list slots into the bottom as a sliver-style
   /// `ListView.builder` wrapped in a `NeverScrollable` shrink-wrap so
-
 
   /// Builds the subject identity card sitting above the KPI strip.
   /// Reads the subject map via [Subject.fromJson] so admin/parent key
@@ -215,7 +216,10 @@ mixin SubjectClassUiMixin on ConsumerState<SubjectClassManagementPage> {
         if (index == 1) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: buildStatsContainer(availableClasses.length, assignedClasses0.length),
+            child: buildStatsContainer(
+              availableClasses.length,
+              assignedClasses0.length,
+            ),
           );
         }
         if (index == 2) {

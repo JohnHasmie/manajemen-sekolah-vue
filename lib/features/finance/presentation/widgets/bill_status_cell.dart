@@ -1,6 +1,7 @@
 // Status pill widget for a single bill cell in the class finance report table.
 // Like a Vue `<BillStatusCell :bill="bill" @tap="onTap" />` that derives color
-// and label from the bill's status and payments list, then fires a tap callback.
+// and label from the bill's status and payments list, then fires a tap
+// callback.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/widgets/status_badge.dart';

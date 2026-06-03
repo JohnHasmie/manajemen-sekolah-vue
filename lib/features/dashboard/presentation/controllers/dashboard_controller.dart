@@ -160,12 +160,14 @@ class DashboardNotifier extends AsyncNotifier<DashboardState> {
       _isInitializing = false;
     }
   }
+
   Future<void> _fetchFreshData(String role) async {
     try {
       final normalizedRole = DashboardStateTransformer.normalizeRole(role);
       final academicYearId = _getSelectedAcademicYearId();
 
-      // Consolidated: 1 call for core data + parallel calls for charts & finance
+      // Consolidated: 1 call for core data + parallel calls for charts &
+      // finance
       final results = await Future.wait([
         _dataFetcher.fetchDashboardFull(normalizedRole, academicYearId),
         _dataFetcher.fetchChartData(normalizedRole, academicYearId),

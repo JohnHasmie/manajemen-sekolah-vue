@@ -42,7 +42,8 @@ class ParentGradeListView extends StatelessWidget {
   /// The screen uses this to queue the grade for "mark as read".
   final void Function(Map<String, dynamic> grade) onItemVisible;
 
-  /// Called when the user taps a grade card; the screen shows the detail dialog.
+  /// Called when the user taps a grade card; the screen shows the detail
+  /// dialog.
   final void Function(Map<String, dynamic> grade) onGradeTap;
 
   /// Optional scroll controller — attach for infinite-scroll pagination.
@@ -120,7 +121,8 @@ class ParentGradeListView extends StatelessWidget {
     if (gradeList.isEmpty) {
       // loadingWidget is shown when the list is empty (covers both "loading"
       // and "truly empty" cases; parent passes the right widget via build()).
-      // The parent differentiates: if isLoading → SkeletonLoading, else EmptyState.
+      // The parent differentiates: if isLoading → SkeletonLoading, else
+      // EmptyState.
       return loadingWidget;
     }
 
@@ -154,7 +156,8 @@ class ParentGradeListView extends StatelessWidget {
         return Builder(
           builder: (context) {
             // Notify the parent screen that this item is now visible so it can
-            // be queued for "mark as read" — like calling $emit('item-visible').
+            // be queued for "mark as read" — like calling
+            // $emit('item-visible').
             onItemVisible(grade);
             return Container(
               margin: const EdgeInsets.symmetric(vertical: 5),
@@ -225,7 +228,8 @@ class ParentGradeListView extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  // Unread indicator dot (like a Vue v-if badge).
+                                  // Unread indicator dot (like a Vue v-if
+                                  // badge).
                                   if (!isRead) ...[
                                     const SizedBox(width: AppSpacing.sm),
                                     Container(

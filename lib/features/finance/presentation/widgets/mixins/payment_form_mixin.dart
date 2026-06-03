@@ -164,22 +164,22 @@ mixin PaymentFormMixin {
 
   /// Date picker field.
   Widget buildDate() => FinanceDialogTextField(
-        controller: paymentDateController,
-        label: 'Tanggal Bayar',
-        icon: Icons.calendar_today_rounded,
-        primaryColor: primaryColor,
-        onTap: () async {
-          final date = await showModernDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            title: 'Pilih Tanggal Bayar',
-            lastDate: DateTime.now(),
-          );
-          if (date != null) {
-            paymentDateController.text = date.toString().split(' ')[0];
-          }
-        },
+    controller: paymentDateController,
+    label: 'Tanggal Bayar',
+    icon: Icons.calendar_today_rounded,
+    primaryColor: primaryColor,
+    onTap: () async {
+      final date = await showModernDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        title: 'Pilih Tanggal Bayar',
+        lastDate: DateTime.now(),
       );
+      if (date != null) {
+        paymentDateController.text = date.toString().split(' ')[0];
+      }
+    },
+  );
 
   String _formatRupiahFromController(String raw) {
     if (raw.isEmpty) return 'Rp 0';
@@ -245,11 +245,7 @@ class _PaymentMethodChipRowState extends State<_PaymentMethodChipRow> {
           padding: const EdgeInsets.only(left: 4, bottom: 6),
           child: Row(
             children: [
-              Icon(
-                Icons.payment_rounded,
-                size: 13,
-                color: ColorUtils.slate500,
-              ),
+              Icon(Icons.payment_rounded, size: 13, color: ColorUtils.slate500),
               const SizedBox(width: 5),
               Text(
                 'METODE PEMBAYARAN',

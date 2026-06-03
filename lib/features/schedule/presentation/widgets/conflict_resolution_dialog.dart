@@ -10,10 +10,12 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
 
-/// A dialog that shows conflicting schedules and lets the user select one to delete.
+/// A dialog that shows conflicting schedules and lets the user select one to
+/// delete.
 ///
 /// Like a Vue component `<ConflictResolutionDialog>` with props:
-/// - [conflictingSchedules] - list of schedule maps that overlap (from API 409 response)
+/// - [conflictingSchedules] - list of schedule maps that overlap (from API 409
+/// response)
 /// - [onDeleteConfirmed] - callback with the selected schedule ID to delete
 /// - [onCancel] - callback when the user cancels
 ///
@@ -35,7 +37,8 @@ class ConflictResolutionDialog extends ConsumerStatefulWidget {
       ConflictResolutionDialogState();
 }
 
-/// State for [ConflictResolutionDialog]. Tracks which schedule the user selected.
+/// State for [ConflictResolutionDialog]. Tracks which schedule the user
+/// selected.
 /// Like Vue's `data() { return { selectedId: null } }`.
 class ConflictResolutionDialogState
     extends ConsumerState<ConflictResolutionDialog> {
@@ -170,7 +173,8 @@ class ConflictResolutionDialogState
     );
   }
 
-  /// Builds a single schedule radio item showing subject, teacher, class, and time.
+  /// Builds a single schedule radio item showing subject, teacher, class, and
+  /// time.
   /// Like a `<ScheduleRadioItem>` Vue component inside a `v-for` loop.
   Widget _buildScheduleItem(
     dynamic schedule,

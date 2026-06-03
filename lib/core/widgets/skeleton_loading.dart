@@ -2,7 +2,8 @@
 //
 // Like a Vue `<SkeletonLoader>` component or the `vue-content-loading` package.
 // In Laravel/Vue apps you might use a CSS skeleton loader while data loads;
-// in Flutter we use the `shimmer` package for the same animated placeholder effect.
+// in Flutter we use the `shimmer` package for the same animated placeholder
+// effect.
 // These components replace `CircularProgressIndicator` for a better perceived
 // performance experience (content-first loading pattern).
 import 'package:flutter/material.dart';
@@ -17,11 +18,13 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Facebook/Instagram-style content placeholders.
 ///
 /// Props:
-/// - [infoTagCount] - number of placeholder tag rows (customizes skeleton shape)
+/// - [infoTagCount] - number of placeholder tag rows (customizes skeleton
+/// shape)
 /// - [showActions] - whether to show action button placeholders on the right
 /// - [baseColor] / [highlightColor] - customizable shimmer colors
 ///
-/// Used across management screens (student, teacher, etc.) for consistent loading UX.
+/// Used across management screens (student, teacher, etc.) for consistent
+/// loading UX.
 class SkeletonListCard extends StatelessWidget {
   /// Number of info tag rows below the title
   final int infoTagCount;

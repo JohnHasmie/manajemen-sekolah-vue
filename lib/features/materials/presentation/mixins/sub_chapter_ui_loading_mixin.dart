@@ -1,6 +1,7 @@
 // Loading state UI helpers for sub-chapter detail screen.
 //
-// Provides reusable loading state widgets for material, quiz, and reference tabs.
+// Provides reusable loading state widgets for material, quiz, and reference
+// tabs.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';

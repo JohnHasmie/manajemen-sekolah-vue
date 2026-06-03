@@ -1227,9 +1227,7 @@ class _DayColumnState extends State<_DayColumn> {
           : (widget.onTap == null ? null : () => widget.onTap!(s)),
       onLongPress: dragEnabled
           ? null
-          : (widget.onLongPress == null
-                ? null
-                : () => widget.onLongPress!(s)),
+          : (widget.onLongPress == null ? null : () => widget.onLongPress!(s)),
       child: cardContent,
     );
 

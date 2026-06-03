@@ -18,7 +18,8 @@ import 'package:manajemensekolah/features/class_activity/presentation/widgets/ac
 /// receives all its data and callbacks as props — no local state, no setState.
 ///
 /// Uses [ConsumerWidget] because it calls `ref.watch(languageRiverpod)` to
-/// react to locale changes without the parent needing to pass the provider down.
+/// react to locale changes without the parent needing to pass the provider
+/// down.
 class ActivityListView extends ConsumerWidget {
   // ── Loading / data state ──────────────────────────────────────────────────
   final bool isLoading;
@@ -28,7 +29,8 @@ class ActivityListView extends ConsumerWidget {
   // ── Filter state ──────────────────────────────────────────────────────────
   final bool hasActiveFilter;
 
-  /// Non-null when a date filter is active; value is 'today' | 'week' | 'month'.
+  /// Non-null when a date filter is active; value is 'today' | 'week' |
+  /// 'month'.
   final String? selectedDateFilter;
 
   // ── Controllers passed from parent State ─────────────────────────────────

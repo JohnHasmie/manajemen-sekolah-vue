@@ -1,6 +1,8 @@
 // DashboardTodaysOverview — the "Today's Overview" 2-column card grid section.
-// Receives pre-built overview card widgets from the screen; only handles the layout.
-// Like a Vue grid-section component that renders whatever card slots are passed as children.
+// Receives pre-built overview card widgets from the screen; only handles the
+// layout.
+// Like a Vue grid-section component that renders whatever card slots are passed
+// as children.
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
@@ -10,19 +12,22 @@ import 'package:manajemensekolah/features/dashboard/presentation/widgets/overvie
 /// A section widget that renders a 2-column `GridView` of overview cards.
 ///
 /// The parent (dashboard screen) builds the role-specific [cards] list via
-/// `_getTodaysOverviewCards(state)` (FinanceBarChartCard, AttendanceOverviewCard,
+/// `_getTodaysOverviewCards(state)` (FinanceBarChartCard,
+/// AttendanceOverviewCard,
 /// ScheduleSliderCard, OverviewCard, etc.) and passes them in. This widget only
 /// handles the section title, grid layout, and skeleton placeholder rows.
 class DashboardTodaysOverview extends StatelessWidget {
   /// Pre-built list of overview card widgets for the current role.
-  /// Pass an empty list while [isLoaded] is false — skeletons are shown instead.
+  /// Pass an empty list while [isLoaded] is false — skeletons are shown
+  /// instead.
   final List<Widget> cards;
 
   /// Whether the dashboard stats have finished loading.
   /// False → shows 4 skeleton placeholder cards.
   final bool isLoaded;
 
-  /// Optional GlobalKey placed on the outer Padding (used by the onboarding tour).
+  /// Optional GlobalKey placed on the outer Padding (used by the onboarding
+  /// tour).
   final GlobalKey? statsSectionKey;
 
   const DashboardTodaysOverview({

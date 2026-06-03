@@ -1,6 +1,9 @@
-// Part of the AppLocalizations API — language data for Parent screens and Dashboard statistics — parent dashboard, grades, activity, billing, presence, finance navigation.
+// Part of the AppLocalizations API — language data for Parent screens and
+// Dashboard statistics — parent dashboard, grades, activity, billing, presence,
+// finance navigation.
 // All translations here are private top-level constants (prefixed `_k`),
-// referenced by the static getters in [AppLocalizations] in language_utils.dart.
+// referenced by the static getters in [AppLocalizations] in
+// language_utils.dart.
 part of 'language_utils.dart';
 
 const _kChooseLanguage = {'en': 'Choose Language', 'id': 'Pilih Bahasa'};

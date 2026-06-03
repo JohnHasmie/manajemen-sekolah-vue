@@ -1,6 +1,8 @@
-// excel_class_activity_service.dart - Export class activity data to Excel via backend API.
+// excel_class_activity_service.dart - Export class activity data to Excel via
+// backend API.
 // Like Laravel's Maatwebsite/Excel export (`ClassActivityExport`) triggered from a controller.
-// The Flutter side sends data to the Laravel backend which generates the .xlsx file.
+// The Flutter side sends data to the Laravel backend which generates the .xlsx
+// file.
 
 import 'dart:io';
 
@@ -13,7 +15,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
-/// Service responsible for exporting class activity data (kegiatan kelas) to Excel.
+/// Service responsible for exporting class activity data (kegiatan kelas) to
+/// Excel.
 /// Similar to a Laravel Maatwebsite/Excel export class that implements `FromCollection`.
 ///
 /// The export flow:
@@ -22,7 +25,8 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 /// 3. Backend generates the .xlsx using Maatwebsite/Excel
 /// 4. Save the returned binary file to device storage and open it
 ///
-/// All methods are static -- no instance state needed (like a Laravel helper class).
+/// All methods are static -- no instance state needed (like a Laravel helper
+/// class).
 class ExcelClassActivityService {
   // static const String baseUrl = ApiService.baseUrl;
   static String get baseUrl => ApiService.baseUrl;
@@ -58,7 +62,8 @@ class ExcelClassActivityService {
 
         // Save the downloaded file
         final File file = File(filePath);
-        // Dio response.data can be bytes or parsed JSON depending on responseType
+        // Dio response.data can be bytes or parsed JSON depending on
+        // responseType
         if (response.data is List<int>) {
           await file.writeAsBytes(response.data);
         } else {
@@ -96,7 +101,8 @@ class ExcelClassActivityService {
     }
   }
 
-  /// Validate and prepare activity data with tolerant defaults for missing fields.
+  /// Validate and prepare activity data with tolerant defaults for missing
+  /// fields.
   /// Like a Laravel FormRequest that fills default values instead of rejecting.
   /// Handles date type conversion (DateTime -> ISO string).
   /// Returns a cleaned list ready for the backend export endpoint.

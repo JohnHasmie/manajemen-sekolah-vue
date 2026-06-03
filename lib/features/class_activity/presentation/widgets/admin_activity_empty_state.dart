@@ -40,12 +40,10 @@ class AdminActivityEmptyState extends StatelessWidget {
       iconBg = ColorUtils.slate100;
       iconFg = ColorUtils.slate600;
       title = 'Belum ada kegiatan di tahun ini';
-      desc = 'Tahun ajaran ini hanya baca. Pindah ke tahun berjalan untuk '
+      desc =
+          'Tahun ajaran ini hanya baca. Pindah ke tahun berjalan untuk '
           'melihat data terbaru.';
-      cta = const _Pill(
-        icon: Icons.lock_outline_rounded,
-        label: 'Hanya baca',
-      );
+      cta = const _Pill(icon: Icons.lock_outline_rounded, label: 'Hanya baca');
     } else if (hasFilters) {
       icon = Icons.filter_alt_off_rounded;
       iconBg = const Color(0xFFFEF3C7);
@@ -67,7 +65,8 @@ class AdminActivityEmptyState extends StatelessWidget {
       iconBg = ColorUtils.brandCobalt.withValues(alpha: 0.08);
       iconFg = ColorUtils.brandCobalt;
       title = 'Belum ada kegiatan';
-      desc = 'Guru-guru belum mencatat kegiatan kelas apapun di periode '
+      desc =
+          'Guru-guru belum mencatat kegiatan kelas apapun di periode '
           'ini. Pantau dari sini begitu kegiatan pertama dibuat.';
       cta = const _Pill(
         icon: Icons.visibility_outlined,
@@ -144,9 +143,7 @@ class _Pill extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor ?? ColorUtils.slate100,
         borderRadius: BorderRadius.circular(999),
-        border: bgColor == null
-            ? Border.all(color: ColorUtils.slate200)
-            : null,
+        border: bgColor == null ? Border.all(color: ColorUtils.slate200) : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

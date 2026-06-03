@@ -8,7 +8,8 @@ import 'package:manajemensekolah/core/widgets/action_confirm_sheet.dart';
 
 /// Confirmation dialog shown before deleting an announcement.
 ///
-/// Like a Vue `<ConfirmDeleteModal>` component that emits `confirm` or `cancel`.
+/// Like a Vue `<ConfirmDeleteModal>` component that emits `confirm` or
+/// `cancel`.
 /// Calls ActionConfirmSheet.show() with destructive styling.
 class AnnouncementDeleteDialog {
   final LanguageProvider languageProvider;

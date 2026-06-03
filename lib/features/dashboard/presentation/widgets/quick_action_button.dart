@@ -1,6 +1,7 @@
 // Quick action button for common dashboard tasks in a horizontal scroll.
 //
-// Like a Vue `<QuickAction>` component displayed in a horizontal `<v-slide-group>`,
+// Like a Vue `<QuickAction>` component displayed in a horizontal
+// `<v-slide-group>`,
 // or a shortcut button row in a Laravel admin panel. Each button has an icon,
 // label, and optional notification badge. Similar to iOS-style quick action
 // buttons below a hero section.

@@ -5,9 +5,11 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
-/// Student checklist section shown when target is "khusus" and a class is selected.
+/// Student checklist section shown when target is "khusus" and a class is
+/// selected.
 ///
-/// Renders a scrollable list of students with checkboxes. Calls [onToggleStudent]
+/// Renders a scrollable list of students with checkboxes. Calls
+/// [onToggleStudent]
 /// when the user taps a row or its checkbox, and [onRefresh] when the refresh
 /// icon is tapped.
 class AddActivityStudentSelector extends StatelessWidget {

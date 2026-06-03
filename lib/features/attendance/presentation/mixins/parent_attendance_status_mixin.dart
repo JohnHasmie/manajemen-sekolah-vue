@@ -5,7 +5,8 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/mixins/parent_attendance_state_mixin.dart';
 
-/// Provides status-related utilities (normalization, colors, icons, translations).
+/// Provides status-related utilities (normalization, colors, icons,
+/// translations).
 mixin ParentAttendanceStatusMixin
     on ConsumerState<ParentAttendanceScreen>, ParentAttendanceStateMixin {
   String normalizeStatus(dynamic rawStatus) {

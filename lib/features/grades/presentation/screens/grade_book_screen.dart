@@ -49,7 +49,8 @@ class GradeBookPage extends ConsumerStatefulWidget {
   GradeBookPageState createState() => GradeBookPageState();
 }
 
-/// State with 7 mixins: tour, data, formatter, dialogs, edit, navigation, export.
+/// State with 7 mixins: tour, data, formatter, dialogs, edit, navigation,
+/// export.
 class GradeBookPageState extends ConsumerState<GradeBookPage>
     with
         GradeBookDataMixin,

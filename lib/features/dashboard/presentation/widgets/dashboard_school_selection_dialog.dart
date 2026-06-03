@@ -115,8 +115,7 @@ class _SchoolSwitcherSheet extends StatelessWidget {
   });
 
   /// Role-aware gradient for the "Saat ini" school hero card.
-  LinearGradient get _schoolGradient =>
-      ColorUtils.brandGradient(currentRole);
+  LinearGradient get _schoolGradient => ColorUtils.brandGradient(currentRole);
 
   String _schoolName(Map<dynamic, dynamic> school) =>
       (school['school_name'] ?? school['name'] ?? 'Sekolah').toString();
@@ -207,10 +206,10 @@ class _SchoolSwitcherSheet extends StatelessWidget {
       if (result['needsRoleSelection'] == true) {
         final roleList = List<String>.from(result['role_list'] ?? []);
         if (roleList.isEmpty) return;
-        
+
         // Restore previous dashboard state since switch has not completed
         ref.read(dashboardProvider.notifier).restorePreviousState();
-        
+
         // ignore: use_build_context_synchronously
         onNeedsRoleSelection(parentContext, schoolId, roleList);
         return;

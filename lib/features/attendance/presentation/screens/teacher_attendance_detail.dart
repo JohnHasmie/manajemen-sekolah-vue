@@ -1,4 +1,5 @@
-// Teacher attendance detail screen — extracted from teacher_attendance_screen.dart.
+// Teacher attendance detail screen — extracted from
+// teacher_attendance_screen.dart.
 // Shows per-student attendance for a specific subject/class/date/lesson-hour,
 // with edit mode to change individual statuses and save back to the API.
 import 'package:flutter/material.dart';

@@ -1,6 +1,9 @@
-// DashboardQuickActionsSection — horizontal scrollable row of role-specific quick-action buttons.
-// Receives a pre-built list of QuickActionButton widgets from the screen so it stays stateless.
-// Like a Vue "shortcut bar" presentational component that renders whatever actions are passed in.
+// DashboardQuickActionsSection — horizontal scrollable row of role-specific
+// quick-action buttons.
+// Receives a pre-built list of QuickActionButton widgets from the screen so it
+// stays stateless.
+// Like a Vue "shortcut bar" presentational component that renders whatever
+// actions are passed in.
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
@@ -8,21 +11,26 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/widgets/quick_action_skeleton.dart';
 
-/// A section widget that shows a labelled horizontal list of quick-action buttons.
+/// A section widget that shows a labelled horizontal list of quick-action
+/// buttons.
 ///
 /// The parent (dashboard screen) builds the actual [QuickActionButton] list via
-/// `_getQuickActions(state)` and passes it in as [actions]. This widget only handles
-/// the layout, skeleton placeholder, and section header — not the navigation logic.
+/// `_getQuickActions(state)` and passes it in as [actions]. This widget only
+/// handles
+/// the layout, skeleton placeholder, and section header — not the navigation
+/// logic.
 class DashboardQuickActionsSection extends StatelessWidget {
   /// Pre-built list of [QuickActionButton] widgets for the current role.
-  /// Pass an empty list while [isLoaded] is false — skeletons are shown instead.
+  /// Pass an empty list while [isLoaded] is false — skeletons are shown
+  /// instead.
   final List<Widget> actions;
 
   /// Whether the dashboard stats have finished loading.
   /// False → shows skeleton shimmer placeholders.
   final bool isLoaded;
 
-  /// Optional GlobalKey placed on the outer Padding (used by the onboarding tour).
+  /// Optional GlobalKey placed on the outer Padding (used by the onboarding
+  /// tour).
   final GlobalKey? quickActionsKey;
 
   const DashboardQuickActionsSection({
@@ -34,7 +42,8 @@ class DashboardQuickActionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Hide the section entirely once loaded if there are no actions for this role
+    // Hide the section entirely once loaded if there are no actions for this
+    // role
     if (actions.isEmpty && isLoaded) {
       return const SizedBox.shrink();
     }

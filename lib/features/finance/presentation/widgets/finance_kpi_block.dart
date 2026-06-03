@@ -331,11 +331,7 @@ class _AliranBar extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(
-          Icons.water_drop_outlined,
-          size: 11,
-          color: ColorUtils.slate500,
-        ),
+        Icon(Icons.water_drop_outlined, size: 11, color: ColorUtils.slate500),
         const SizedBox(width: 4),
         Text(
           'ALIRAN',

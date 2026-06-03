@@ -134,7 +134,8 @@ class AttendanceTableView extends StatelessWidget {
           rowHeight: 60,
           headerRowHeight: 50,
           stackedHeaderRows: [
-            // Top stacked row: month labels spanning their respective date columns.
+            // Top stacked row: month labels spanning their respective date
+            // columns.
             if (monthsMap.isNotEmpty)
               StackedHeaderRow(
                 cells: [
@@ -171,7 +172,8 @@ class AttendanceTableView extends StatelessWidget {
                   }),
                 ],
               ),
-            // Second stacked row: day-of-month numbers spanning subject columns.
+            // Second stacked row: day-of-month numbers spanning subject
+            // columns.
             StackedHeaderRow(
               cells: [
                 StackedHeaderCell(

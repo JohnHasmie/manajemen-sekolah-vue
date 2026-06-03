@@ -1,5 +1,6 @@
 // Confirmation bottom sheet before permanently deleting all grades for one
-// assessment. Migrated from a hand-rolled `showDialog(Dialog(...))` red-gradient
+// assessment. Migrated from a hand-rolled `showDialog(Dialog(...))`
+// red-gradient
 // dialog to the shared [ActionConfirmSheet] so destructive flows across the
 // app stay visually consistent (drag handle → red gradient header → message →
 // Samsung-safe Cancel/Delete footer).

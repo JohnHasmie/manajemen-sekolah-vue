@@ -666,10 +666,12 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
     );
   }
 
-  /// Build chapter content with chapters and sub-chapters (delegated to MaterialBuildListMixin).
+  /// Build chapter content with chapters and sub-chapters (delegated to
+  /// MaterialBuildListMixin).
   Widget buildChapterContent(LanguageProvider lp);
 
-  /// Build content list with expandable chapters (delegated to MaterialBuildListMixin).
+  /// Build content list with expandable chapters (delegated to
+  /// MaterialBuildListMixin).
   Widget buildContentList();
 
   /// Check if any filter is active.

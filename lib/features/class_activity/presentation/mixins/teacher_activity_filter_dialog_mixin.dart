@@ -195,7 +195,7 @@ class _ActivityFilterSheetState extends State<_ActivityFilterSheet> {
                             )
                             .map((s) => (s as Map)['id']?.toString());
                         if (!allowed.contains(_subjectId)) {
-                           _subjectId = null;
+                          _subjectId = null;
                         }
                       }
                       // Auto-select-on-single.

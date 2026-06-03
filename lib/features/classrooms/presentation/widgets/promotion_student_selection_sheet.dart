@@ -14,7 +14,8 @@ import 'package:manajemensekolah/features/students/domain/models/student.dart';
 ///
 /// [students] — full list of students in the source class.
 /// [selectedStudentIds] — mutable Set passed by reference; updated in-place
-///   so the parent [ClassPromotionWizard] sees the changes via [onSelectionChanged].
+/// so the parent [ClassPromotionWizard] sees the changes via
+/// [onSelectionChanged].
 /// [isAlreadyPromoted] — callback that checks whether a student is already in
 ///   the target year (avoids duplicating that logic here).
 class PromotionStudentSelectionSheet extends StatefulWidget {

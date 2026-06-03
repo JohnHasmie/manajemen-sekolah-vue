@@ -9,7 +9,8 @@
 //
 // One widget, three ways to fill it:
 //   1. solid color background  — `InitialsAvatar(name: 'KA', accent: navy)`
-//   2. gradient background     — `InitialsAvatar.gradient(name: 'KA', gradient: brandGradient)`
+// 2. gradient background — `InitialsAvatar.gradient(name: 'KA', gradient:
+// brandGradient)`
 //   3. translucent-on-dark     — `InitialsAvatar.onDark(name: 'KA')`
 //
 // Logo URL takes precedence — when a non-empty URL is passed the

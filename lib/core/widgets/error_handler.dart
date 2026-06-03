@@ -15,7 +15,8 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// combined with a logging middleware.
 ///
 /// Uses the singleton pattern (like Laravel's `app()` container binding).
-/// - [setupErrorHandling] - registers error handlers (like `Handler::register()`)
+/// - [setupErrorHandling] - registers error handlers (like
+/// `Handler::register()`)
 /// - [errorStream] - broadcasts errors (like Laravel Events / broadcasting)
 /// - [_logError] - logs to backend (like `Handler::report()` sending to Sentry)
 /// - [dispose] - cleans up the stream controller

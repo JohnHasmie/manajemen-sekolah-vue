@@ -9,8 +9,10 @@ import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 
 /// A modal bottom sheet that presents column-level actions for one assessment.
 ///
-/// Mirrors what `_showColumnOptions` used to build inline: a gradient header bar
-/// then a list of action tiles (View Details, Edit Assessment, Delete Assessment).
+/// Mirrors what `_showColumnOptions` used to build inline: a gradient header
+/// bar
+/// then a list of action tiles (View Details, Edit Assessment, Delete
+/// Assessment).
 /// Think of it like a Vue `<ColumnContextMenu>` component.
 ///
 /// Data flows in via constructor params; results flow out via named callbacks —
@@ -31,13 +33,16 @@ class GradeColumnOptionsSheet extends StatelessWidget {
   /// Whether the grade book is in read-only mode (e.g. closed academic year).
   final bool isReadOnly;
 
-  /// Called when the user taps "View Details". Parent shows [GradeAssessmentDetailDialog].
+  /// Called when the user taps "View Details". Parent shows
+  /// [GradeAssessmentDetailDialog].
   final VoidCallback onViewDetails;
 
-  /// Called when the user taps "Edit Assessment". Parent enters inline edit mode.
+  /// Called when the user taps "Edit Assessment". Parent enters inline edit
+  /// mode.
   final VoidCallback onEditAssessment;
 
-  /// Called when the user taps "Delete Assessment". Parent shows confirm dialog.
+  /// Called when the user taps "Delete Assessment". Parent shows confirm
+  /// dialog.
   final VoidCallback onDeleteAssessment;
 
   // ── Bilingual label strings passed in from the parent ──────────────────────

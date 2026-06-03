@@ -1,4 +1,5 @@
-// excel_subject_service.dart - Export and import subject (mata pelajaran) data via Excel.
+// excel_subject_service.dart - Export and import subject (mata pelajaran) data
+// via Excel.
 // Like Laravel's Maatwebsite/Excel SubjectExport with template download and validation.
 // Handles bilingual field names (name/nama, code/kode, description/deskripsi).
 
@@ -16,10 +17,12 @@ import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 
 /// Service for exporting subject (mata pelajaran) data to Excel and downloading
 /// import templates via the backend API.
-/// Similar to `Excel::download(new SubjectExport($data), 'Mata_Pelajaran.xlsx')` in Laravel.
+/// Similar to `Excel::download(new SubjectExport($data),
+/// 'Mata_Pelajaran.xlsx')` in Laravel.
 ///
 /// Supports bilingual field name mapping (English/Indonesian) for data that may
-/// arrive in either format from the API. Like a Laravel Resource that normalizes
+/// arrive in either format from the API. Like a Laravel Resource that
+/// normalizes
 /// `name`/`nama` and `code`/`kode` fields into a consistent structure.
 class ExcelSubjectService {
   static String get baseUrl => '/subject';

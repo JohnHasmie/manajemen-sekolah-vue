@@ -1,4 +1,5 @@
-// Teacher dashboard body (guru) — mirrors admin Phase 3 redesign with teal gradient.
+// Teacher dashboard body (guru) — mirrors admin Phase 3 redesign with teal
+// gradient.
 //
 // Shape of the screen (top-to-bottom)
 // -----------------------------------

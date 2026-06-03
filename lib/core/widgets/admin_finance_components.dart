@@ -1004,8 +1004,10 @@ class BillGroupRow extends StatelessWidget {
         ? (data.paidAmount / data.totalAmount).clamp(0.0, 1.0)
         : 0.0;
     final pctOverdue = data.totalAmount > 0
-        ? (data.overdueCount / data.totalCount.clamp(1, 1 << 30))
-              .clamp(0.0, 1.0)
+        ? (data.overdueCount / data.totalCount.clamp(1, 1 << 30)).clamp(
+            0.0,
+            1.0,
+          )
         : 0.0;
 
     // Subtitle — count breakdown ordered worst-first so the most

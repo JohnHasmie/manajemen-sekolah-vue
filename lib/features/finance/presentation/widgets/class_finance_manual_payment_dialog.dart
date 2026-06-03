@@ -141,10 +141,7 @@ class _ManualPaymentSheetContentState extends State<_ManualPaymentSheetContent>
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: Icon(
-                  Icons.image_outlined,
-                  color: widget.primaryColor,
-                ),
+                leading: Icon(Icons.image_outlined, color: widget.primaryColor),
                 title: Text(AppLocalizations.imageCameraGallery.tr),
                 onTap: () => AppNavigator.pop(sheetContext, 'image'),
               ),
@@ -193,8 +190,7 @@ class _ManualPaymentSheetContentState extends State<_ManualPaymentSheetContent>
                 color: widget.primaryColor,
               ),
               title: Text(AppLocalizations.gallery.tr),
-              onTap: () =>
-                  AppNavigator.pop(sheetContext, ImageSource.gallery),
+              onTap: () => AppNavigator.pop(sheetContext, ImageSource.gallery),
             ),
             ListTile(
               leading: Icon(
@@ -202,8 +198,7 @@ class _ManualPaymentSheetContentState extends State<_ManualPaymentSheetContent>
                 color: widget.primaryColor,
               ),
               title: Text(AppLocalizations.camera.tr),
-              onTap: () =>
-                  AppNavigator.pop(sheetContext, ImageSource.camera),
+              onTap: () => AppNavigator.pop(sheetContext, ImageSource.camera),
             ),
           ],
         ),
@@ -274,7 +269,10 @@ class _ManualPaymentSheetContentState extends State<_ManualPaymentSheetContent>
 
     final amount = double.tryParse(amountText);
     if (amount == null) {
-      SnackBarUtils.showWarning(context, 'Format jumlah pembayaran tidak valid.');
+      SnackBarUtils.showWarning(
+        context,
+        'Format jumlah pembayaran tidak valid.',
+      );
       return;
     }
 
@@ -416,10 +414,7 @@ class _FilePickerSection extends StatelessWidget {
                   ),
                   label: Text(
                     'Hapus',
-                    style: TextStyle(
-                      color: ColorUtils.slate600,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: ColorUtils.slate600, fontSize: 12),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),

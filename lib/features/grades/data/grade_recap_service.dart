@@ -1,8 +1,10 @@
-/// api_grade_recap_services.dart - Manages grade recaps (rekap nilai) for classes.
+/// api_grade_recap_services.dart - Manages grade recaps (rekap nilai) for
+/// classes.
 /// Like Laravel's GradeRecapController / Vue's gradeRecap store module.
 ///
 /// Grade recaps aggregate student scores per class, subject, and academic year.
-/// Supports fetching, saving individual recaps, and batch-saving multiple at once.
+/// Supports fetching, saving individual recaps, and batch-saving multiple at
+/// once.
 library;
 
 import 'package:manajemensekolah/core/network/dio_client.dart';

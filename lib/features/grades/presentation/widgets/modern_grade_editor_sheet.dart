@@ -5,7 +5,8 @@
 // --------------------
 // The old flow had the teacher tap a grade cell, which pushed a whole new
 // Scaffold (`GradeInputForm`) built from four mixins (`GradeFormDataMixin`,
-// `GradeFormUIBuilderMixin`, `GradeFormBuilderMixin`, `GradeFormSubmissionMixin`).
+// `GradeFormUIBuilderMixin`, `GradeFormBuilderMixin`,
+// `GradeFormSubmissionMixin`).
 // The mixins spread ~650 lines across five files, hid the save/update branch
 // behind indirection, and the full-screen push felt heavy for a single-score
 // edit. A bottom sheet keeps the grade book context visible underneath and
@@ -16,7 +17,8 @@
 // - Draggable bottom sheet, Material-3 surface, big score hero at the top.
 // - Live predikat preview (A/B/C/D) + colored progress bar — teachers get
 //   instant feedback on what grade the score maps to.
-// - Stepper buttons (-5, -1, +1, +5) so score tweaks don't require the keyboard.
+// - Stepper buttons (-5, -1, +1, +5) so score tweaks don't require the
+// keyboard.
 // - Collapsible "Detail lainnya" section holds the rarely-changed fields
 //   (title, date, notes) so the common case (type a score, tap Save) stays
 //   one-glance.
@@ -202,7 +204,6 @@ class _ModernGradeEditorSheetState
 
   /// Indonesian-school predikat mapping. Mirrors the thresholds used on the
   /// grade recap screen so teachers see the same letter grade in both places.
-
 
   void _bumpScore(int delta) {
     HapticFeedback.selectionClick();

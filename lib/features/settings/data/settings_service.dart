@@ -10,7 +10,8 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for user profile and school settings API calls.
 /// Like a combined Laravel controller handling /profile and /school/settings routes.
-/// In Vue terms, this is a settings store module managing user prefs and school config.
+/// In Vue terms, this is a settings store module managing user prefs and school
+/// config.
 class ApiSettingsService {
   /// Updates the current user's password.
   /// Like Laravel's `Hash::check()` + `$user->update(['password' => ...])`.

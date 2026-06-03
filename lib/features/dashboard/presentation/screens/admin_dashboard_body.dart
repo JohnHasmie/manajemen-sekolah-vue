@@ -385,7 +385,8 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
 
   // ── Header — navy gradient + realtime pill + KPI overlay ───
 
-  /// Combined hero + KPI section matching `Admin_Refactor_Phase3_Dashboard_Mockup.svg`.
+  /// Combined hero + KPI section matching
+  /// `Admin_Refactor_Phase3_Dashboard_Mockup.svg`.
   ///
   /// The navy gradient extends edge-to-edge from the top of the screen
   /// (under the system status bar), with rounded bottom corners. Inside,

@@ -64,7 +64,8 @@ class AttendanceSummary {
       '$subjectId-$classId-${DateFormat('yyyy-MM-dd').format(date)}-$lessonHourId';
 }
 
-/// Admin attendance report screen with list and table views, multi-filter support.
+/// Admin attendance report screen with list and table views, multi-filter
+/// support.
 ///
 /// This is a [StatefulWidget] - like a Vue page with extensive local state
 /// for filters, pagination, and two view modes (list vs table/grid).

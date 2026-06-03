@@ -1,5 +1,7 @@
-// Bottom sheet for changing the user's password. Extracted from settings_screen.dart.
-// Migrated from hand-rolled Dialog → brand [AppBottomSheet] + [BottomSheetFooter]
+// Bottom sheet for changing the user's password. Extracted from
+// settings_screen.dart.
+// Migrated from hand-rolled Dialog → brand [AppBottomSheet] +
+// [BottomSheetFooter]
 // so the header gradient, drag handle, and Samsung-safe footer come for free.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;

@@ -100,8 +100,10 @@ class SubjectClassManagementPageState
           'id': 'Lepas Kelas',
         }),
         content: lang.getTranslatedText({
-          'en': 'Are you sure you want to remove ${selected.length} class(es) from this subject?',
-          'id': 'Yakin ingin melepas ${selected.length} kelas dari mata pelajaran ini?',
+          'en':
+              'Are you sure you want to remove ${selected.length} class(es) from this subject?',
+          'id':
+              'Yakin ingin melepas ${selected.length} kelas dari mata pelajaran ini?',
         }),
         confirmColor: Colors.red,
       ),

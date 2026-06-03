@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/widgets/app_alert_dialog.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
-/// Shows an [AppAlertDialog] asking the user to confirm deletion of a bab column.
+/// Shows an [AppAlertDialog] asking the user to confirm deletion of a bab
+/// column.
 ///
 /// [onConfirm] is called (after closing the dialog) when the user taps the
 /// delete button.  All actual data-mutation logic lives in the callback, which

@@ -38,7 +38,8 @@ final adminScheduleControllerProvider = Provider<AdminScheduleController>((
   return AdminScheduleController(ref);
 });
 
-/// Day-name translation table used by [AdminScheduleController.buildActiveFilterChips].
+/// Day-name translation table used by
+/// [AdminScheduleController.buildActiveFilterChips].
 ///
 /// Keys are the lowercased Indonesian / English day names as they appear
 /// in the API payload, values map to localized labels for both supported

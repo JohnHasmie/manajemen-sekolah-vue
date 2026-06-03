@@ -109,7 +109,8 @@ class _BarChartPainter extends CustomPainter {
 
     for (int i = 0; i < data.length; i++) {
       final value = data[i];
-      // Ensure a minimum height of 2.0 so that 0-value bars are slightly visible
+      // Ensure a minimum height of 2.0 so that 0-value bars are slightly
+      // visible
       final barHeight = math.max((value / effectiveMax) * size.height, 2.0);
 
       final x = startX + (i * (barWidth + barSpacing));

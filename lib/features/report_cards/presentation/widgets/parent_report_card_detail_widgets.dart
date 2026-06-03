@@ -1849,11 +1849,7 @@ class _DraftHintRow extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          Icon(
-            Icons.lock_outline_rounded,
-            size: 14,
-            color: Color(0xFFB45309),
-          ),
+          Icon(Icons.lock_outline_rounded, size: 14, color: Color(0xFFB45309)),
           SizedBox(width: 6),
           Expanded(
             child: Text(

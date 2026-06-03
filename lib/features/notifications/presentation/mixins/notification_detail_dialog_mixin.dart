@@ -26,11 +26,7 @@ mixin NotificationDetailDialogMixin
       primaryColor: color,
       content: Text(
         notif['body'] ?? '',
-        style: TextStyle(
-          fontSize: 14,
-          color: ColorUtils.slate700,
-          height: 1.6,
-        ),
+        style: TextStyle(fontSize: 14, color: ColorUtils.slate700, height: 1.6),
       ),
       footer: BottomSheetFooter(
         primaryLabel: AppLocalizations.close.tr,

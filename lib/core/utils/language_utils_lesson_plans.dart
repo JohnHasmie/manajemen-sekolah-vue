@@ -1,6 +1,8 @@
-// Part of the AppLocalizations API — language data for Lesson Plans (RPP) — screen titles, status, form fields, actions, messages, file types.
+// Part of the AppLocalizations API — language data for Lesson Plans (RPP) —
+// screen titles, status, form fields, actions, messages, file types.
 // All translations here are private top-level constants (prefixed `_k`),
-// referenced by the static getters in [AppLocalizations] in language_utils.dart.
+// referenced by the static getters in [AppLocalizations] in
+// language_utils.dart.
 part of 'language_utils.dart';
 
 const _kLessonPlan = {

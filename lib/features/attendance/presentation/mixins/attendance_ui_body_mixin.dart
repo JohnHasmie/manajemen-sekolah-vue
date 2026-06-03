@@ -340,7 +340,6 @@ mixin AttendanceUIBodyMixin on ConsumerState<AttendancePage> {
   /// Timeline list rendered as a Column for use inside
   /// `BrandPageLayout.bodyChildren`.
 
-
   // ── Subclass-specific accessors ──
   ScrollController get scrollController;
   Future<void> forceRefresh();

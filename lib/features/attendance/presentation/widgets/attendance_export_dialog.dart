@@ -37,7 +37,8 @@ class AttendanceExportDialog extends ConsumerStatefulWidget {
   final String activeYearName;
   final String activeYearString;
 
-  /// Called with the user's selected months (already sorted) when they tap Export.
+  /// Called with the user's selected months (already sorted) when they tap
+  /// Export.
   final void Function(List<DateTime> months) onExport;
 
   /// Convenience factory: presents this widget as an [AppBottomSheet].

@@ -1,15 +1,18 @@
-// Parent dashboard body (wali) — mirrors admin Phase 3 redesign with brand-azure gradient.
+// Parent dashboard body (wali) — mirrors admin Phase 3 redesign with
+// brand-azure gradient.
 //
 // Shape of the screen (top-to-bottom)
 // -----------------------------------
 //   1. DashboardAppBar         — school name, lang, bell, profile
 //   2. Brand-azure gradient hero — SchoolPill.expanded + realtime indicator
-//   3. KPI carousel (per-anak cycle, 4 cards) — Kehadiran, Tagihan, Rata-rata, Pengumuman
+// 3. KPI carousel (per-anak cycle, 4 cards) — Kehadiran, Tagihan, Rata-rata,
+// Pengumuman
 //      Driven by `BrandKpiCarousel` + `activeSliceProvider('parent_dashboard')`.
 //      Backend payload: `state.stats['slices']` is a list of `_ParentSlice`
 //      bundles (see bottom of file) produced by
 //      `DashboardController::buildParentChildSlices`.
-//   4. Perlu perhatian — 4 inbox rows (Tagihan jatuh tempo, Nilai baru anak, etc.)
+// 4. Perlu perhatian — 4 inbox rows (Tagihan jatuh tempo, Nilai baru anak,
+// etc.)
 //   5. Aksi cepat      — 4 quick action tiles (Pengumuman, Tagihan, Nilai, Kehadiran)
 //   6. Modul lain strip — horizontal with overflow sheet
 library;
@@ -59,7 +62,8 @@ import 'package:manajemensekolah/features/settings/presentation/screens/settings
 // goes from brand azure → a slightly darker shade so the gradient still
 // reads as "depth" while staying inside the brand swatch. Tokens live in
 // `ColorUtils.brandAzure` / `ColorUtils.brandAzureDeep` so deep-tab parent
-// screens share the same gradient endpoints via `ColorUtils.brandGradient('wali')`.
+// screens share the same gradient endpoints via
+// `ColorUtils.brandGradient('wali')`.
 final Color _parentBrandAzure = ColorUtils.brandAzure;
 final Color _parentBrandAzureDeep = ColorUtils.brandAzureDeep;
 const Duration _pollInterval = Duration(seconds: 60);
@@ -498,7 +502,8 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
   /// strip, no cycle) — but the four mockup KPIs are always present.
   ///
   /// Backend shape — `widget.state.stats['slices']` is a list of
-  /// per-child KPI bundles produced by `DashboardController::buildParentChildSlices`.
+  /// per-child KPI bundles produced by
+  /// `DashboardController::buildParentChildSlices`.
   Widget _buildKpiCarousel() {
     final parsed = _parseSlices(widget.state.stats['slices']);
 

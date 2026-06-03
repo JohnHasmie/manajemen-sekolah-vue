@@ -75,28 +75,27 @@ void main() {
       }
     });
 
-    testWidgets(
-      'onStatusChanged fires with correct studentId and status',
-      (WidgetTester tester) async {
-        String? capturedId;
-        String? capturedStatus;
+    testWidgets('onStatusChanged fires with correct studentId and status', (
+      WidgetTester tester,
+    ) async {
+      String? capturedId;
+      String? capturedStatus;
 
-        await tester.pumpWidget(
-          buildWidget(
-            onStatusChanged: (id, status) {
-              capturedId = id;
-              capturedStatus = status;
-            },
-          ),
-        );
+      await tester.pumpWidget(
+        buildWidget(
+          onStatusChanged: (id, status) {
+            capturedId = id;
+            capturedStatus = status;
+          },
+        ),
+      );
 
-        await tester.tap(find.text('Sakit'));
-        await tester.pump();
+      await tester.tap(find.text('Sakit'));
+      await tester.pump();
 
-        expect(capturedId, equals('stu-1'));
-        expect(capturedStatus, equals('sakit'));
-      },
-    );
+      expect(capturedId, equals('stu-1'));
+      expect(capturedStatus, equals('sakit'));
+    });
 
     testWidgets('avatar shows first letter of student name', (
       WidgetTester tester,

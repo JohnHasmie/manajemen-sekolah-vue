@@ -209,7 +209,8 @@ class _DashboardState extends ConsumerState<Dashboard>
   ) {
     final primaryColor = getPrimaryColor();
 
-    // Sub-PR 7 — unified Beranda for all roles. Each has its own redesigned body.
+    // Sub-PR 7 — unified Beranda for all roles. Each has its own redesigned
+    // body.
     if (effectiveRole == 'admin') {
       return AdminDashboardBody(
         primaryColor: primaryColor,

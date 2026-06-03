@@ -62,16 +62,17 @@ class _SingleRescheduleContent extends StatefulWidget {
   });
 
   @override
-  State<_SingleRescheduleContent> createState() => _SingleRescheduleContentState();
+  State<_SingleRescheduleContent> createState() =>
+      _SingleRescheduleContentState();
 }
 
 class _SingleRescheduleContentState extends State<_SingleRescheduleContent> {
   String _selectedDayId = '';
   String _selectedLessonHourId = '';
-  
+
   List<dynamic> _availableLessonHours = [];
   List<dynamic> _occupiedSlots = [];
-  
+
   bool _isLoadingHours = false;
   final bool _isSaving = false;
 
@@ -110,7 +111,9 @@ class _SingleRescheduleContentState extends State<_SingleRescheduleContent> {
       _availableLessonHours = filtered;
       // Reset selected hour if it's not in the new day's hours
       if (_selectedLessonHourId.isNotEmpty &&
-          !filtered.any((jam) => jam['id'].toString() == _selectedLessonHourId)) {
+          !filtered.any(
+            (jam) => jam['id'].toString() == _selectedLessonHourId,
+          )) {
         _selectedLessonHourId = '';
       }
     });
@@ -160,22 +163,28 @@ class _SingleRescheduleContentState extends State<_SingleRescheduleContent> {
       if (!mounted) return;
 
       final allOccupied = [...classOccupied, ...teacherOccupied];
-      // Exclude the current schedule from occupied slots so it doesn't block its own move
+      // Exclude the current schedule from occupied slots so it doesn't block
+      // its own move
       final currentScheduleId = widget.schedule['id']?.toString();
       if (currentScheduleId != null) {
-        allOccupied.removeWhere((s) => s['id']?.toString() == currentScheduleId);
+        allOccupied.removeWhere(
+          (s) => s['id']?.toString() == currentScheduleId,
+        );
       }
 
       setState(() {
         _occupiedSlots = allOccupied;
         _isLoadingHours = false;
-        
+
         // Auto-clear if the selected hour became occupied
         if (_selectedLessonHourId.isNotEmpty) {
           final isOccupied = _occupiedSlots.any((occ) {
-            final occId = occ['lesson_hour_days_id']?.toString() ??
-                          occ['lesson_hour_id']?.toString() ??
-                          (occ['lesson_hour'] != null ? occ['lesson_hour']['id']?.toString() : null);
+            final occId =
+                occ['lesson_hour_days_id']?.toString() ??
+                occ['lesson_hour_id']?.toString() ??
+                (occ['lesson_hour'] != null
+                    ? occ['lesson_hour']['id']?.toString()
+                    : null);
             return occId == _selectedLessonHourId;
           });
           if (isOccupied) {
@@ -184,7 +193,10 @@ class _SingleRescheduleContentState extends State<_SingleRescheduleContent> {
         }
       });
     } catch (e) {
-      AppLogger.error('single_reschedule_sheet', 'Error fetching occupied slots: $e');
+      AppLogger.error(
+        'single_reschedule_sheet',
+        'Error fetching occupied slots: $e',
+      );
       if (mounted) {
         setState(() => _isLoadingHours = false);
       }
@@ -249,7 +261,10 @@ class _SingleRescheduleContentState extends State<_SingleRescheduleContent> {
             'id': 'Simpan',
           }),
           primaryColor: ColorUtils.getRoleColor('admin'),
-          primaryEnabled: _selectedDayId.isNotEmpty && _selectedLessonHourId.isNotEmpty && !_isSaving,
+          primaryEnabled:
+              _selectedDayId.isNotEmpty &&
+              _selectedLessonHourId.isNotEmpty &&
+              !_isSaving,
           onPrimary: () {
             AppNavigator.pop(context, _selectedLessonHourId);
           },

@@ -34,7 +34,7 @@ class UpdatePromptWrapper extends ConsumerWidget {
           final storeUrl = isAndroid
               ? 'https://play.google.com/store/apps/details?id=com.kamillabs.kamiledu'
               : 'https://apps.apple.com/app/idYOUR_APP_ID'; // Replace with real ID
-          
+
           NativeUpdatePrompt.show(
             context: navContext,
             version: next.version ?? 'Terbaru',
@@ -65,11 +65,7 @@ class UpdatePromptWrapper extends ConsumerWidget {
             'Kami telah melakukan perbaikan kecil dan peningkatan '
             'performa. Tap "Muat Ulang Aplikasi" — pembaruan akan '
             'otomatis aktif saat aplikasi terbuka kembali.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-              height: 1.5,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
           ),
         ],
       ),
@@ -95,7 +91,7 @@ class UpdatePromptWrapper extends ConsumerWidget {
               'Memuat ulang aplikasi untuk menerapkan pembaruan...',
             );
           }
-          
+
           await Future.delayed(const Duration(milliseconds: 1000));
           if (Platform.isAndroid) {
             try {

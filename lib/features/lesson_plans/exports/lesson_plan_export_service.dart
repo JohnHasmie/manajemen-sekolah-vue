@@ -14,11 +14,13 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 
 /// Service for exporting RPP (Rencana Pelaksanaan Pembelajaran / Lesson Plan) to Excel.
-/// Similar to `Excel::download(new RppExport($data), 'Data_RPP.xlsx')` in Laravel.
+/// Similar to `Excel::download(new RppExport($data), 'Data_RPP.xlsx')` in
+/// Laravel.
 ///
 /// Handles field name mapping between frontend and backend conventions
 /// (e.g., 'catatan_admin' / 'note_admin' -> 'admin_note', 'learning_objectives' -> 'learning_objective').
-/// This is like defining `$appends` or custom attribute mappings on a Laravel Resource.
+/// This is like defining `$appends` or custom attribute mappings on a Laravel
+/// Resource.
 ///
 /// Provides both server-side and local validation for RPP data, with status
 /// translation (Disetujui/Menunggu/Ditolak -> Approved/Pending/Rejected).
@@ -27,7 +29,8 @@ class ExcelLessonPlanService {
 
   /// Export RPP data to Excel via backend POST to `/rpp/export`.
   /// [lessonPlanList] - list of RPP records. [context] - for SnackBar and i18n.
-  /// Side effects: validates locally, sends to backend, saves .xlsx, opens file.
+  /// Side effects: validates locally, sends to backend, saves .xlsx, opens
+  /// file.
   static Future<void> exportLessonPlansToExcel({
     required List<dynamic> lessonPlanList,
     required BuildContext context,
@@ -103,7 +106,8 @@ class ExcelLessonPlanService {
   /// Local fallback validation for RPP data before export.
   /// Validates required fields (title, subject_name, class_name) and maps
   /// alternative field names to the backend's expected keys.
-  /// Like a Laravel FormRequest with field aliasing (`$request->input('catatan_admin', $request->input('note_admin'))`).
+  /// Like a Laravel FormRequest with field aliasing
+  /// (`$request->input('catatan_admin', $request->input('note_admin'))`).
   static List<Map<String, dynamic>> validateLessonPlanData(
     List<dynamic> lessonPlanList,
   ) {

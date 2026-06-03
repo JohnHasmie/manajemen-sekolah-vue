@@ -80,8 +80,9 @@ class _LessonPlanReviewHistoryScreenState
       _errorMessage = null;
     });
     try {
-      final rows =
-          await LessonPlanService.getLessonPlanReviews(widget.lessonPlanId);
+      final rows = await LessonPlanService.getLessonPlanReviews(
+        widget.lessonPlanId,
+      );
       if (!mounted) return;
       setState(() {
         _reviews = rows;
@@ -165,7 +166,8 @@ class _LessonPlanReviewHistoryScreenState
     if (_reviews.isEmpty) {
       return const EmptyState(
         title: 'Belum ada riwayat',
-        subtitle: 'Riwayat persetujuan akan muncul setelah ada perubahan status.',
+        subtitle:
+            'Riwayat persetujuan akan muncul setelah ada perubahan status.',
         icon: Icons.history_rounded,
       );
     }
@@ -235,10 +237,7 @@ class TimelineCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           for (var i = 0; i < rows.length; i++)
-            TimelineRow(
-              row: rows[i],
-              isLast: i == rows.length - 1,
-            ),
+            TimelineRow(row: rows[i], isLast: i == rows.length - 1),
         ],
       ),
     );
@@ -325,7 +324,9 @@ class TimelineRow extends StatelessWidget {
                 ),
                 if (revisionAreas is List && revisionAreas.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  AreasRow(areas: revisionAreas.map((e) => e.toString()).toList()),
+                  AreasRow(
+                    areas: revisionAreas.map((e) => e.toString()).toList(),
+                  ),
                 ],
                 if (note.isNotEmpty) ...[
                   const SizedBox(height: 6),
@@ -423,17 +424,26 @@ class TimelineRow extends StatelessWidget {
     try {
       final dt = DateTime.parse(iso).toLocal();
       final now = DateTime.now();
-      final isToday = dt.year == now.year &&
-          dt.month == now.month &&
-          dt.day == now.day;
+      final isToday =
+          dt.year == now.year && dt.month == now.month && dt.day == now.day;
       if (isToday) {
         final hh = dt.hour.toString().padLeft(2, '0');
         final mm = dt.minute.toString().padLeft(2, '0');
         return '$hh:$mm';
       }
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-        'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'Mei',
+        'Jun',
+        'Jul',
+        'Agu',
+        'Sep',
+        'Okt',
+        'Nov',
+        'Des',
       ];
       return '${dt.day} ${months[dt.month - 1]}';
     } catch (_) {

@@ -19,7 +19,8 @@ class RecommendationMaterialItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Guard: skip non-map entries — same logic as the original _buildMaterialItem.
+    // Guard: skip non-map entries — same logic as the original
+    // _buildMaterialItem.
     if (matItem is! Map<String, dynamic>) return const SizedBox.shrink();
     final mat = matItem as Map<String, dynamic>;
 

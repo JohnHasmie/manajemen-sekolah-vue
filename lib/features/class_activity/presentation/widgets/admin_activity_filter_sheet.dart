@@ -18,16 +18,17 @@ import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
 import 'package:manajemensekolah/features/class_activity/domain/models/admin_activity_summary.dart';
 
-typedef AdminActivityFilterApply = void Function({
-  required String? classId,
-  required String? className,
-  required String? subjectId,
-  required String? subjectName,
-  required String? teacherId,
-  required String? teacherName,
-  required AdminActivityType? type,
-  required AdminActivityPeriod period,
-});
+typedef AdminActivityFilterApply =
+    void Function({
+      required String? classId,
+      required String? className,
+      required String? subjectId,
+      required String? subjectName,
+      required String? teacherId,
+      required String? teacherName,
+      required AdminActivityType? type,
+      required AdminActivityPeriod period,
+    });
 
 class AdminActivityFilterSheet extends StatefulWidget {
   const AdminActivityFilterSheet({
@@ -267,8 +268,10 @@ class _AdminActivityFilterSheetState extends State<AdminActivityFilterSheet> {
           FilterChipGrid<AdminActivityType>(
             options: AdminActivityType.values
                 .map(
-                  (t) =>
-                      FilterOption<AdminActivityType>(value: t, label: t.labelId),
+                  (t) => FilterOption<AdminActivityType>(
+                    value: t,
+                    label: t.labelId,
+                  ),
                 )
                 .toList(),
             selectedValue: _type,
@@ -333,8 +336,10 @@ class _TeacherAutocomplete extends StatelessWidget {
           focusNode: focusNode,
           decoration: InputDecoration(
             hintText: 'Cari guru…',
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             filled: true,
             fillColor: ColorUtils.slate50,
             prefixIcon: Icon(Icons.search_rounded, color: ColorUtils.slate400),

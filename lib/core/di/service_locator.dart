@@ -3,7 +3,8 @@
 /// In Vue terms, this is like providing global services via `app.provide()`.
 ///
 /// Registers all singleton services at app startup. Screens and other services
-/// can then access them via `getIt<ServiceType>()` instead of creating new instances.
+/// can then access them via `getIt<ServiceType>()` instead of creating new
+/// instances.
 library;
 
 import 'package:dio/dio.dart';

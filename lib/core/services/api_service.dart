@@ -178,7 +178,8 @@ class ApiService {
     return headers;
   }
 
-  /// Handles authentication failures by clearing stored data and redirecting to login.
+  /// Handles authentication failures by clearing stored data and redirecting to
+  /// login.
   static Future<void> _handleAuthenticationErrorWithMessage(
     String errorMessage,
   ) async {

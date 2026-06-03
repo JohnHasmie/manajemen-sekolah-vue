@@ -1,7 +1,8 @@
 // Admin school-wide grade overview screen.
 //
 // Shows school-level KPI stats (total grades, avg, pass rate, distribution)
-// and per-teacher summary cards with their subjects, scores, and assessment counts.
+// and per-teacher summary cards with their subjects, scores, and assessment
+// counts.
 // Uses admin theme color (blue) instead of teacher theme color (green).
 //
 // Consumes: GET /grades/admin-overview?academic_year_id=...

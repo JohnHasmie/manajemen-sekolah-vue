@@ -1,4 +1,5 @@
-/// api_academic_services.dart - Manages academic year CRUD and student promotion.
+/// api_academic_services.dart - Manages academic year CRUD and student
+/// promotion.
 /// Like Laravel's AcademicYearService / Vue's academicYear store module.
 ///
 /// Handles operations related to academic years (tahun ajaran) such as
@@ -16,8 +17,10 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 /// similar to how Laravel services use dependency injection for HTTP clients.
 class ApiAcademicServices {
   /// Fetches all academic years from the backend.
-  /// Like `AcademicYear::all()` in Laravel or a Vuex `fetchAcademicYears` action.
-  /// Returns a list of academic year maps, or an empty list on unexpected format.
+  /// Like `AcademicYear::all()` in Laravel or a Vuex `fetchAcademicYears`
+  /// action.
+  /// Returns a list of academic year maps, or an empty list on unexpected
+  /// format.
   Future<List<dynamic>> getAcademicYears() async {
     final response = await dioClient.get('/academic-years');
     final result = response.data;
@@ -52,7 +55,8 @@ class ApiAcademicServices {
   }
 
   /// Creates a new academic year record.
-  /// Like `AcademicYear::create()` in Laravel or dispatching a Vuex `createAcademicYear` action.
+  /// Like `AcademicYear::create()` in Laravel or dispatching a Vuex
+  /// `createAcademicYear` action.
   /// [year] - The academic year label (e.g. "2024/2025").
   /// [semester] - 'ganjil' or 'genap' (nullable for legacy callers).
   /// [current] - Whether this should be the current year.

@@ -5,7 +5,8 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
-/// An animated two-tab toggle for switching between Teaching and Homeroom views.
+/// An animated two-tab toggle for switching between Teaching and Homeroom
+/// views.
 ///
 /// Designed for use inside gradient headers with semi-transparent styling.
 /// The active tab slides with a white pill indicator behind it.

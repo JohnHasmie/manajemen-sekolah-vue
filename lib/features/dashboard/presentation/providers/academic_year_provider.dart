@@ -1,5 +1,6 @@
 /// academic_year_provider.dart - State management for academic year selection.
-/// Like a Vuex store module - holds reactive global state that widgets can listen to.
+/// Like a Vuex store module - holds reactive global state that widgets can
+/// listen to.
 /// In Laravel terms, this is like a service/singleton that tracks which "Tahun Ajaran"
 /// (academic year) is currently active and selected across the entire app.
 library;
@@ -11,26 +12,34 @@ import 'package:manajemensekolah/features/settings/data/academic_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
-/// Manages the list of academic years and tracks which one is currently selected.
-/// Like a Vuex store module - holds reactive global state that widgets can listen to.
+/// Manages the list of academic years and tracks which one is currently
+/// selected.
+/// Like a Vuex store module - holds reactive global state that widgets can
+/// listen to.
 ///
-/// Extends [ChangeNotifier] (Flutter's built-in observable pattern), which is the
-/// Flutter equivalent of Vue's `reactive()` or Vuex's state. When properties change,
-/// `notifyListeners()` is called - similar to how Vuex mutations trigger re-renders.
+/// Extends [ChangeNotifier] (Flutter's built-in observable pattern), which is
+/// the
+/// Flutter equivalent of Vue's `reactive()` or Vuex's state. When properties
+/// change,
+/// `notifyListeners()` is called - similar to how Vuex mutations trigger
+/// re-renders.
 ///
 /// Key state:
 /// - [_academicYears]: Full list fetched from API (like Vuex state).
 /// - [_activeAcademicYear]: The backend-designated "current" year.
 /// - [_selectedAcademicYear]: The user's chosen year (may differ from active).
-/// - [isReadOnly]: Computed property - inactive years are read-only (like a Vuex getter).
-/// - [isCurrent]: Computed property - whether the selected year is the current one.
+/// - [isReadOnly]: Computed property - inactive years are read-only (like a
+/// Vuex getter).
+/// - [isCurrent]: Computed property - whether the selected year is the current
+/// one.
 class AcademicYearProvider with ChangeNotifier {
   List<dynamic> _academicYears = [];
   Map<String, dynamic>? _activeAcademicYear;
   Map<String, dynamic>? _selectedAcademicYear;
   bool _isLoading = false;
 
-  /// Public getters - like Vuex getters, these expose read-only access to private state.
+  /// Public getters - like Vuex getters, these expose read-only access to
+  /// private state.
   List<dynamic> get academicYears => _academicYears;
   Map<String, dynamic>? get activeAcademicYear => _activeAcademicYear;
   Map<String, dynamic>? get selectedAcademicYear => _selectedAcademicYear;
@@ -114,10 +123,12 @@ class AcademicYearProvider with ChangeNotifier {
   }
 
   /// Updates the selected academic year by its ID.
-  /// Like a Vuex mutation - finds the year in the cached list and sets it as selected.
+  /// Like a Vuex mutation - finds the year in the cached list and sets it as
+  /// selected.
   ///
   /// [yearId] - The ID of the academic year to select (matched as string).
-  /// Side effects: Calls [notifyListeners] to trigger UI rebuilds in all consuming widgets.
+  /// Side effects: Calls [notifyListeners] to trigger UI rebuilds in all
+  /// consuming widgets.
   void setSelectedYear(String yearId) {
     AppLogger.debug(
       'academic_year',

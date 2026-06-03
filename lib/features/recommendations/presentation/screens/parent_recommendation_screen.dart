@@ -129,10 +129,7 @@ class _ParentRecommendationScreenState
         studentId: null,
         useCache: useCache,
       );
-      inbox = raw
-          .whereType<Map>()
-          .map(Map<String, dynamic>.from)
-          .toList();
+      inbox = raw.whereType<Map>().map(Map<String, dynamic>.from).toList();
     } catch (e) {
       inboxErr = e;
     }

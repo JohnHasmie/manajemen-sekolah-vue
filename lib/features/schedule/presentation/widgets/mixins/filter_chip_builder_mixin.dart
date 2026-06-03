@@ -45,12 +45,9 @@ mixin FilterChipBuilderMixin {
     final ids = <String>{};
     for (final row in scheduleList) {
       if (row is! Map) continue;
-      final tId =
-          (row['teacher_id'] ?? row['guru_id'])?.toString();
+      final tId = (row['teacher_id'] ?? row['guru_id'])?.toString();
       if (tId == teacherId) {
-        final sId = (row['subject_id'] ??
-                row['mata_pelajaran_id'])
-            ?.toString();
+        final sId = (row['subject_id'] ?? row['mata_pelajaran_id'])?.toString();
         if (sId != null && sId.isNotEmpty) ids.add(sId);
       }
     }
@@ -63,12 +60,9 @@ mixin FilterChipBuilderMixin {
     final ids = <String>{};
     for (final row in scheduleList) {
       if (row is! Map) continue;
-      final sId = (row['subject_id'] ??
-              row['mata_pelajaran_id'])
-          ?.toString();
+      final sId = (row['subject_id'] ?? row['mata_pelajaran_id'])?.toString();
       if (sId == subjectId) {
-        final tId =
-            (row['teacher_id'] ?? row['guru_id'])?.toString();
+        final tId = (row['teacher_id'] ?? row['guru_id'])?.toString();
         if (tId != null && tId.isNotEmpty) ids.add(tId);
       }
     }
@@ -85,11 +79,12 @@ mixin FilterChipBuilderMixin {
     required ValueChanged<String?> onSelected,
   }) {
     final options = items
-        .map((item) => {
-              'id': item['id'].toString(),
-              'name':
-                  (item['name'] ?? item['nama'] ?? '').toString(),
-            })
+        .map(
+          (item) => {
+            'id': item['id'].toString(),
+            'name': (item['name'] ?? item['nama'] ?? '').toString(),
+          },
+        )
         .toList();
 
     return Autocomplete<Map<String, String>>(
@@ -97,19 +92,17 @@ mixin FilterChipBuilderMixin {
         if (textEditingValue.text.isEmpty) {
           return const Iterable<Map<String, String>>.empty();
         }
-        return options.where((option) => option['name']!
-            .toLowerCase()
-            .contains(
-                textEditingValue.text.toLowerCase()));
+        return options.where(
+          (option) => option['name']!.toLowerCase().contains(
+            textEditingValue.text.toLowerCase(),
+          ),
+        );
       },
       displayStringForOption: (option) => option['name']!,
       onSelected: (option) => onSelected(option['id']),
-      fieldViewBuilder:
-          (context, controller, focusNode, onFieldSubmitted) {
-        if (selectedValue != null &&
-            controller.text.isEmpty) {
-          final matched =
-              options.where((o) => o['id'] == selectedValue);
+      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+        if (selectedValue != null && controller.text.isEmpty) {
+          final matched = options.where((o) => o['id'] == selectedValue);
           if (matched.isNotEmpty) {
             controller.text = matched.first['name']!;
           }
@@ -126,35 +119,24 @@ mixin FilterChipBuilderMixin {
             filled: true,
             fillColor: ColorUtils.slate50,
             border: OutlineInputBorder(
-              borderRadius:
-                  const BorderRadius.all(Radius.circular(12)),
-              borderSide:
-                  BorderSide(color: ColorUtils.slate200),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              borderSide: BorderSide(color: ColorUtils.slate200),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius:
-                  const BorderRadius.all(Radius.circular(12)),
-              borderSide:
-                  BorderSide(color: ColorUtils.slate200),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              borderSide: BorderSide(color: ColorUtils.slate200),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius:
-                  const BorderRadius.all(Radius.circular(12)),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               borderSide: BorderSide(
                 color: ColorUtils.getRoleColor('admin'),
                 width: 2,
               ),
             ),
-            prefixIcon: Icon(
-              Icons.search_rounded,
-              color: ColorUtils.slate400,
-            ),
+            prefixIcon: Icon(Icons.search_rounded, color: ColorUtils.slate400),
             suffixIcon: selectedValue != null
                 ? IconButton(
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      size: 20,
-                    ),
+                    icon: const Icon(Icons.close_rounded, size: 20),
                     onPressed: () {
                       controller.clear();
                       onSelected(null);
@@ -176,15 +158,13 @@ mixin FilterChipBuilderMixin {
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxHeight: 200,
-                maxWidth:
-                    MediaQuery.of(context).size.width - 40,
+                maxWidth: MediaQuery.of(context).size.width - 40,
               ),
               child: ListView.separated(
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 itemCount: options.length,
-                separatorBuilder: (_, __) =>
-                    const Divider(height: 1),
+                separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (_, index) {
                   final option = options.elementAt(index);
                   return ListTile(
@@ -227,18 +207,15 @@ mixin FilterChipBuilderMixin {
       options: availableDays.map<FilterOption<String>>((day) {
         final dayId = day['id'].toString();
         final dayNameRaw = day['name'] ?? day['nama'] ?? '';
-        final normalizedKey =
-            dayNameRaw.toString().toLowerCase();
+        final normalizedKey = dayNameRaw.toString().toLowerCase();
         final dayName = dayMap[normalizedKey] != null
-            ? languageProvider
-                .getTranslatedText(dayMap[normalizedKey]!)
+            ? languageProvider.getTranslatedText(dayMap[normalizedKey]!)
             : dayNameRaw;
 
         return FilterOption(value: dayId, label: dayName);
       }).toList(),
       selectedValue: tempSelectedHariId,
-      onSelected: (val) =>
-          setState(() => tempSelectedHariId = val),
+      onSelected: (val) => setState(() => tempSelectedHariId = val),
       selectedColor: ColorUtils.getRoleColor('admin'),
     );
   }
@@ -248,16 +225,14 @@ mixin FilterChipBuilderMixin {
   /// Builds FilterChip row for class groups.
   Widget buildClassChips() {
     return FilterChipGrid<String>(
-      options:
-          availableClasses.map<FilterOption<String>>((cls) {
+      options: availableClasses.map<FilterOption<String>>((cls) {
         return FilterOption(
           value: cls['id'].toString(),
           label: cls['name'] ?? cls['nama'] ?? '',
         );
       }).toList(),
       selectedValue: tempSelectedClassId,
-      onSelected: (val) =>
-          setState(() => tempSelectedClassId = val),
+      onSelected: (val) => setState(() => tempSelectedClassId = val),
       selectedColor: ColorUtils.getRoleColor('admin'),
     );
   }
@@ -268,10 +243,8 @@ mixin FilterChipBuilderMixin {
   /// who teach that subject. Otherwise → show autocomplete search.
   Widget buildTeacherChips(dynamic languageProvider) {
     // Subject selected → narrow to chip list
-    if (tempSelectedSubjectId != null &&
-        tempSelectedSubjectId!.isNotEmpty) {
-      final teacherIds =
-          _teacherIdsForSubject(tempSelectedSubjectId!);
+    if (tempSelectedSubjectId != null && tempSelectedSubjectId!.isNotEmpty) {
+      final teacherIds = _teacherIdsForSubject(tempSelectedSubjectId!);
       final filtered = availableTeachers.where((t) {
         final tId = t['id']?.toString() ?? '';
         return teacherIds.contains(tId);
@@ -281,13 +254,11 @@ mixin FilterChipBuilderMixin {
         options: filtered.map<FilterOption<String>>((t) {
           return FilterOption(
             value: t['id'].toString(),
-            label:
-                (t['name'] ?? t['nama'] ?? '').toString(),
+            label: (t['name'] ?? t['nama'] ?? '').toString(),
           );
         }).toList(),
         selectedValue: tempSelectedTeacherId,
-        onSelected: (val) =>
-            setState(() => tempSelectedTeacherId = val),
+        onSelected: (val) => setState(() => tempSelectedTeacherId = val),
         selectedColor: ColorUtils.getRoleColor('admin'),
       );
     }
@@ -318,10 +289,8 @@ mixin FilterChipBuilderMixin {
   /// that teacher teaches. Otherwise → show autocomplete search.
   Widget buildSubjectChips(dynamic languageProvider) {
     // Teacher selected → narrow to chip list
-    if (tempSelectedTeacherId != null &&
-        tempSelectedTeacherId!.isNotEmpty) {
-      final subjectIds =
-          _subjectIdsForTeacher(tempSelectedTeacherId!);
+    if (tempSelectedTeacherId != null && tempSelectedTeacherId!.isNotEmpty) {
+      final subjectIds = _subjectIdsForTeacher(tempSelectedTeacherId!);
       final filtered = availableSubjects.where((s) {
         final sId = s['id']?.toString() ?? '';
         return subjectIds.contains(sId);
@@ -331,13 +300,11 @@ mixin FilterChipBuilderMixin {
         options: filtered.map<FilterOption<String>>((s) {
           return FilterOption(
             value: s['id'].toString(),
-            label:
-                (s['name'] ?? s['nama'] ?? '').toString(),
+            label: (s['name'] ?? s['nama'] ?? '').toString(),
           );
         }).toList(),
         selectedValue: tempSelectedSubjectId,
-        onSelected: (val) =>
-            setState(() => tempSelectedSubjectId = val),
+        onSelected: (val) => setState(() => tempSelectedSubjectId = val),
         selectedColor: ColorUtils.getRoleColor('admin'),
       );
     }
@@ -367,25 +334,18 @@ mixin FilterChipBuilderMixin {
   /// Builds FilterChip row for semesters with academic year suffix.
   Widget buildTermChips() {
     return FilterChipGrid<String>(
-      options:
-          semesterList.map<FilterOption<String>>((semester) {
+      options: semesterList.map<FilterOption<String>>((semester) {
         final semesterId = semester['id'].toString();
-        String semesterName = semester['name'] ??
-            semester['nama'] ??
-            'Semester $semesterId';
+        String semesterName =
+            semester['name'] ?? semester['nama'] ?? 'Semester $semesterId';
         if (semester['academic_year'] != null &&
             semester['academic_year']['year'] != null) {
-          semesterName +=
-              ' (${semester['academic_year']['year']})';
+          semesterName += ' (${semester['academic_year']['year']})';
         }
-        return FilterOption(
-          value: semesterId,
-          label: semesterName,
-        );
+        return FilterOption(value: semesterId, label: semesterName);
       }).toList(),
       selectedValue: tempSelectedSemester,
-      onSelected: (val) =>
-          setState(() => tempSelectedSemester = val),
+      onSelected: (val) => setState(() => tempSelectedSemester = val),
       selectedColor: ColorUtils.getRoleColor('admin'),
     );
   }
@@ -396,25 +356,18 @@ mixin FilterChipBuilderMixin {
   Widget buildLessonHourChips() {
     final Set<String> uniqueHours = {};
     for (final jp in lessonHourList) {
-      final h =
-          (jp['hour_number'] ?? jp['jam_ke'])?.toString();
+      final h = (jp['hour_number'] ?? jp['jam_ke'])?.toString();
       if (h != null) uniqueHours.add(h);
     }
     final sortedHours = uniqueHours.toList()
-      ..sort((a, b) => (int.tryParse(a) ?? 0)
-          .compareTo(int.tryParse(b) ?? 0));
+      ..sort((a, b) => (int.tryParse(a) ?? 0).compareTo(int.tryParse(b) ?? 0));
 
     return FilterChipGrid<String>(
-      options:
-          sortedHours.map<FilterOption<String>>((hourNum) {
-        return FilterOption(
-          value: hourNum,
-          label: 'Jam $hourNum',
-        );
+      options: sortedHours.map<FilterOption<String>>((hourNum) {
+        return FilterOption(value: hourNum, label: 'Jam $hourNum');
       }).toList(),
       selectedValue: tempSelectedLessonHour,
-      onSelected: (val) =>
-          setState(() => tempSelectedLessonHour = val),
+      onSelected: (val) => setState(() => tempSelectedLessonHour = val),
       selectedColor: ColorUtils.getRoleColor('admin'),
     );
   }

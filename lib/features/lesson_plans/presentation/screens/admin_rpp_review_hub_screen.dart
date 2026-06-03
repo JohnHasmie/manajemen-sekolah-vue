@@ -74,14 +74,15 @@ class _AdminRppReviewHubScreenState
   /// backend doesn't have a status query param on /admin-queue and
   /// the queue is already grouped by tier.
   void _syncQueryParams() {
-    ref.read(adminLessonPlanQueueParamsProvider.notifier).state =
-        AdminLessonPlanQueueParams(
-          format: _filter.format,
-          subjectId: _filter.subjectId,
-          classId: _filter.classId,
-          teacherId: _filter.teacherId,
-          period: _filter.period,
-        );
+    ref
+        .read(adminLessonPlanQueueParamsProvider.notifier)
+        .state = AdminLessonPlanQueueParams(
+      format: _filter.format,
+      subjectId: _filter.subjectId,
+      classId: _filter.classId,
+      teacherId: _filter.teacherId,
+      period: _filter.period,
+    );
   }
 
   @override
@@ -443,10 +444,7 @@ class _AdminRppReviewHubScreenState
       'subject_name': item.subtitle.split('·').first.trim(),
       if (item.rejectionReason != null) 'note_admin': item.rejectionReason,
     };
-    await LessonPlanAdminDetailPage.show(
-      context: context,
-      lessonPlan: seed,
-    );
+    await LessonPlanAdminDetailPage.show(context: context, lessonPlan: seed);
     // Always refresh — admin may have acted on the row inside the sheet.
     ref.invalidate(adminLessonPlanQueueProvider);
   }
@@ -494,7 +492,9 @@ class _AdminRppReviewHubScreenState
     if (clean.isEmpty) return '?';
     final parts = clean.split(RegExp(r'\s+'));
     if (parts.length == 1) {
-      return parts.first.substring(0, parts.first.length >= 2 ? 2 : 1).toUpperCase();
+      return parts.first
+          .substring(0, parts.first.length >= 2 ? 2 : 1)
+          .toUpperCase();
     }
     return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
   }
@@ -567,15 +567,18 @@ class _FormatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (format) {
-      LessonPlanFormat.k13 => (const Color(0xFFDBEAFE), const Color(0xFF1E40AF)),
+      LessonPlanFormat.k13 => (
+        const Color(0xFFDBEAFE),
+        const Color(0xFF1E40AF),
+      ),
       LessonPlanFormat.modulAjar => (
-            const Color(0xFFEDE9FE),
-            const Color(0xFF6D28D9),
-          ),
+        const Color(0xFFEDE9FE),
+        const Color(0xFF6D28D9),
+      ),
       LessonPlanFormat.rpp1Halaman => (
-            const Color(0xFFCCFBF1),
-            const Color(0xFF0F766E),
-          ),
+        const Color(0xFFCCFBF1),
+        const Color(0xFF0F766E),
+      ),
       LessonPlanFormat.file => (ColorUtils.slate100, ColorUtils.slate700),
     };
     return Container(

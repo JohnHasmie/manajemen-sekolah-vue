@@ -21,7 +21,8 @@ class AiConfig {
   /// Whether [init] has been called.
   static bool _initialized = false;
 
-  /// Initializes the AI base URL. Safe to call multiple times (no-op after first).
+  /// Initializes the AI base URL. Safe to call multiple times (no-op after
+  /// first).
   ///
   /// Resolution order:
   /// 1. `--dart-define=AI_API_BASE_URL=...` (compile-time)

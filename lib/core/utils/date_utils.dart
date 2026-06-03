@@ -1,7 +1,11 @@
-/// date_utils.dart - Date parsing and formatting helpers with correct timezone handling.
-/// Like a Laravel Helper function file (e.g., Carbon date helpers in `helpers.php`).
-/// Solves the common timezone pitfall where `DateTime.parse("2024-01-15")` creates a
-/// UTC date that shifts back one day when displayed in local time (e.g., WIB = UTC+7).
+/// date_utils.dart - Date parsing and formatting helpers with correct timezone
+/// handling.
+/// Like a Laravel Helper function file (e.g., Carbon date helpers in
+/// `helpers.php`).
+/// Solves the common timezone pitfall where `DateTime.parse("2024-01-15")`
+/// creates a
+/// UTC date that shifts back one day when displayed in local time (e.g., WIB =
+/// UTC+7).
 library;
 
 import 'package:intl/intl.dart';
@@ -11,7 +15,8 @@ import 'package:intl/intl.dart';
 /// the `intl` package's `DateFormat` with timezone-aware logic.
 ///
 /// Key design decision: Dates without time components (e.g., "2024-01-15")
-/// are parsed as **local time** instead of UTC to prevent the off-by-one-day bug
+/// are parsed as **local time** instead of UTC to prevent the off-by-one-day
+/// bug
 /// common in mobile apps. This is similar to how Carbon in Laravel handles
 /// `Carbon::parse('2024-01-15')` in the app's configured timezone.
 /// Maps English day names (from the backend) to Indonesian.

@@ -40,8 +40,18 @@ class AnnouncementDetailDialog extends StatelessWidget {
   // ── Date helpers ──────────────────────────────────────────────────
 
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-    'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
   ];
 
   String _prettyDate(String? raw) {
@@ -92,7 +102,7 @@ class AnnouncementDetailDialog extends StatelessWidget {
     final hasEvent = announcementData['event_at'] != null;
 
     final titleStr = model.title.isNotEmpty ? model.title : 'Tanpa Judul';
-    
+
     return AppBottomSheet(
       title: isImportant ? 'Pengumuman Penting' : 'Detail Pengumuman',
       subtitle: titleStr,
@@ -133,7 +143,8 @@ class AnnouncementDetailDialog extends StatelessWidget {
                   : _personalRemindersFrom(announcementData),
               onAddPersonalReminder: viewerRole == 'admin'
                   ? null
-                  : () => _openPersonalReminderPicker(context, ev.announcementId),
+                  : () =>
+                        _openPersonalReminderPicker(context, ev.announcementId),
             ),
           ],
 
@@ -168,7 +179,10 @@ class AnnouncementDetailDialog extends StatelessWidget {
     return raw.whereType<Map>().map(Map<String, dynamic>.from).toList();
   }
 
-  Future<void> _openPersonalReminderPicker(BuildContext context, String announcementId) async {
+  Future<void> _openPersonalReminderPicker(
+    BuildContext context,
+    String announcementId,
+  ) async {
     await PersonalReminderPickerSheet.show(
       context: context,
       announcementId: announcementId,
@@ -230,7 +244,11 @@ class AnnouncementDetailDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
-              child: Icon(Icons.attach_file_rounded, color: primaryColor, size: 18),
+              child: Icon(
+                Icons.attach_file_rounded,
+                color: primaryColor,
+                size: 18,
+              ),
             ),
             AppSpacing.h12,
             Expanded(

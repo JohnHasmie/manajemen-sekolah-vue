@@ -9,7 +9,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// One metadata row inside [ActivityDetailDialog] (or any detail sheet).
 ///
-/// Renders a coloured icon box on the left and a label+value column on the right.
+/// Renders a coloured icon box on the left and a label+value column on the
+/// right.
 /// Mirrors the `<DetailRow>` pattern common in Laravel Blade detail cards.
 ///
 /// Props (constructor params — like Vue props):

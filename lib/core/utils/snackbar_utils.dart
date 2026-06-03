@@ -1,7 +1,9 @@
 /// snackbar_utils.dart - Centralized snackbar display utilities.
-/// Like Laravel's `session()->flash('success', 'message')` but for Flutter SnackBars.
+/// Like Laravel's `session()->flash('success', 'message')` but for Flutter
+/// SnackBars.
 ///
-/// Replaces 100+ scattered `ScaffoldMessenger.of(context).showSnackBar(...)` calls
+/// Replaces 100+ scattered `ScaffoldMessenger.of(context).showSnackBar(...)`
+/// calls
 /// with a clean, consistent API.
 library;
 

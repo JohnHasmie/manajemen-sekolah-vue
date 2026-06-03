@@ -1,12 +1,15 @@
-// Shimmer skeleton placeholder for a quick-action button in the horizontal scroll row.
+// Shimmer skeleton placeholder for a quick-action button in the horizontal
+// scroll row.
 // Shown while dashboard data loads — matches the size/shape of QuickActionButton.
-// Like a Vue `<Skeleton>` scoped to one action-button column in the quick-access strip.
+// Like a Vue `<Skeleton>` scoped to one action-button column in the
+// quick-access strip.
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:shimmer/shimmer.dart';
 
-/// Shimmer placeholder that mirrors the visual structure of [QuickActionButton].
+/// Shimmer placeholder that mirrors the visual structure of
+/// [QuickActionButton].
 ///
 /// Rendered inside the horizontal [ListView] in the "Quick Access" section
 /// while the real action buttons are not yet available.  Matches the button's

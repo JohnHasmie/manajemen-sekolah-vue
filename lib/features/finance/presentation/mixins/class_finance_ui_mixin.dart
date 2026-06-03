@@ -844,7 +844,6 @@ class _ReceiptCell extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
-  final Color? valueColor;
 
   const _ReceiptCell({
     required this.label,
@@ -890,7 +889,7 @@ class _ReceiptCell extends StatelessWidget {
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w800,
-              color: valueColor ?? ColorUtils.slate900,
+              color: ColorUtils.slate900,
               height: 1.2,
             ),
             maxLines: 1,

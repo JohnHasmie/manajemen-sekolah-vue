@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
-/// A styled dropdown with a text [label] above it and an optional leading [icon].
+/// A styled dropdown with a text [label] above it and an optional leading
+/// [icon].
 ///
 /// Like a `<labeled-select>` Vue component — stateless, fires [onChanged].
 /// [primaryColor] is the brand colour used for the leading icon tint.

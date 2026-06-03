@@ -19,10 +19,12 @@ import 'dart:convert';
 /// similar to Laravel's `app()->singleton(AnalyticsService::class, ...)`.
 ///
 /// Key properties:
-/// - [_analytics] : The Firebase Analytics instance (like the GA client in Laravel).
+/// - [_analytics] : The Firebase Analytics instance (like the GA client in
+/// Laravel).
 /// - [_observer]  : A navigator observer for automatic route/screen tracking.
 ///
-/// All methods are static for convenience -- call `AnalyticsService.logLogin(...)`
+/// All methods are static for convenience -- call
+/// `AnalyticsService.logLogin(...)`
 /// from anywhere, like calling a Laravel Facade (`Analytics::logLogin(...)`).
 class AnalyticsService {
   static final AnalyticsService _instance = AnalyticsService._internal();
@@ -32,8 +34,10 @@ class AnalyticsService {
   static FirebaseAnalytics? _analytics;
   static FirebaseAnalyticsObserver? _observer;
 
-  /// Initialize the analytics engine. Must be called after `Firebase.initializeApp()`.
-  /// Like registering a service provider in Laravel's `AppServiceProvider::boot()`.
+  /// Initialize the analytics engine. Must be called after
+  /// `Firebase.initializeApp()`.
+  /// Like registering a service provider in Laravel's
+  /// `AppServiceProvider::boot()`.
   /// Side effect: enables analytics collection globally.
   static Future<void> initialize() async {
     try {
@@ -56,8 +60,10 @@ class AnalyticsService {
 
   /// Set user identity on login so events are attributed to a specific tester.
   /// Like Laravel's `Auth::login($user)` but for analytics context.
-  /// Parameters: [userId], [email], [role] are required; [name], [schoolName] optional.
-  /// Side effect: sets Firebase user properties (similar to session data in Laravel).
+  /// Parameters: [userId], [email], [role] are required; [name], [schoolName]
+  /// optional.
+  /// Side effect: sets Firebase user properties (similar to session data in
+  /// Laravel).
   static Future<void> setUser({
     required String userId,
     required String email,
@@ -112,7 +118,8 @@ class AnalyticsService {
   }
 
   /// Clear user identity on logout. Like `Auth::logout()` in Laravel.
-  /// Side effect: resets the Firebase userId so subsequent events are anonymous.
+  /// Side effect: resets the Firebase userId so subsequent events are
+  /// anonymous.
   static Future<void> clearUser() async {
     try {
       await _analytics?.setUserId(id: null);

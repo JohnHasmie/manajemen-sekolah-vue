@@ -12,7 +12,8 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Mixin for data loading operations in ClassPromotionWizard.
-/// Handles loading classes, students, academic years, teachers, and school settings.
+/// Handles loading classes, students, academic years, teachers, and school
+/// settings.
 mixin ClassPromotionDataMixin on ConsumerState<ClassPromotionWizard> {
   // Data getters/setters
   List<dynamic> get classes;
