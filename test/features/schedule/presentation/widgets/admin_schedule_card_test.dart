@@ -68,26 +68,28 @@ void main() {
       expect(find.text('Fisika'), findsOneWidget);
     });
 
-    testWidgets('shows teacher name from schedule map', (tester) async {
+    testWidgets('shows teacher name in the inline status', (tester) async {
+      // SS2 redesign: the inline status combines "<teacher> · <class>".
       await tester.pumpWidget(_build(schedule: _schedule(teacher: 'Bu Sari')));
-      expect(find.text('Bu Sari'), findsOneWidget);
+      expect(find.text('Bu Sari · Kelas 7A'), findsOneWidget);
     });
 
-    testWidgets('shows class name tag', (tester) async {
+    testWidgets('shows class name in the inline status', (tester) async {
       await tester.pumpWidget(
         _build(schedule: _schedule(className: 'Kelas 8B')),
       );
-      expect(find.text('Kelas 8B'), findsOneWidget);
+      expect(find.text('Pak Ahmad · Kelas 8B'), findsOneWidget);
     });
 
-    testWidgets('shows dayLabel tag', (tester) async {
+    testWidgets('shows dayLabel in the top meta', (tester) async {
+      // SS2 redesign: the top meta combines "<day> · <time>".
       await tester.pumpWidget(_build(dayLabel: 'Selasa, Kamis'));
-      expect(find.text('Selasa, Kamis'), findsOneWidget);
+      expect(find.text('Selasa, Kamis · 07:00 - 08:30'), findsOneWidget);
     });
 
-    testWidgets('shows timeLabel tag', (tester) async {
+    testWidgets('shows timeLabel in the top meta', (tester) async {
       await tester.pumpWidget(_build(timeLabel: '09:00 - 10:30'));
-      expect(find.text('09:00 - 10:30'), findsOneWidget);
+      expect(find.text('Senin · 09:00 - 10:30'), findsOneWidget);
     });
 
     testWidgets('falls back to "No Subject" when mata_pelajaran_nama absent', (
@@ -101,25 +103,21 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_build(schedule: {'mata_pelajaran_nama': 'IPA'}));
-      expect(find.text('-'), findsWidgets); // teacher and class both '-'
+      // Teacher and class both fall back to '-', combined in the status.
+      expect(find.text('- · -'), findsOneWidget);
     });
   });
 
   group('AdminScheduleCard — isReadOnly', () {
-    testWidgets('hides edit and delete buttons when isReadOnly=true', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_build(isReadOnly: true));
+    // The SS2 redesign replaced the inline edit/delete icon buttons with a
+    // "Detail →" trailing CTA. Editing is now triggered via long-press
+    // (wired to onEdit when not read-only); deletion happens off-card.
+
+    testWidgets('never shows inline edit/delete icons', (tester) async {
+      await tester.pumpWidget(_build(isReadOnly: false));
       expect(find.byIcon(Icons.edit_outlined), findsNothing);
       expect(find.byIcon(Icons.delete_outline), findsNothing);
-    });
-
-    testWidgets('shows edit and delete buttons when isReadOnly=false', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_build(isReadOnly: false));
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+      expect(find.text('Detail →'), findsOneWidget);
     });
   });
 
@@ -131,40 +129,26 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('fires onEdit when edit button is tapped', (tester) async {
+    testWidgets('fires onEdit on long-press when NOT read-only', (
+      tester,
+    ) async {
       bool edited = false;
       await tester.pumpWidget(
         _build(isReadOnly: false, onEdit: () => edited = true),
       );
-      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.longPress(find.text('Matematika'));
       expect(edited, isTrue);
     });
 
-    testWidgets('fires onDelete when delete button is tapped', (tester) async {
-      bool deleted = false;
+    testWidgets('does not fire onEdit on long-press when read-only', (
+      tester,
+    ) async {
+      bool edited = false;
       await tester.pumpWidget(
-        _build(isReadOnly: false, onDelete: () => deleted = true),
+        _build(isReadOnly: true, onEdit: () => edited = true),
       );
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      expect(deleted, isTrue);
-    });
-
-    testWidgets('edit and delete fire independently', (tester) async {
-      int editCount = 0;
-      int deleteCount = 0;
-      await tester.pumpWidget(
-        _build(
-          isReadOnly: false,
-          onEdit: () => editCount++,
-          onDelete: () => deleteCount++,
-        ),
-      );
-
-      await tester.tap(find.byIcon(Icons.edit_outlined));
-      await tester.tap(find.byIcon(Icons.delete_outline));
-
-      expect(editCount, 1);
-      expect(deleteCount, 1);
+      await tester.longPress(find.text('Matematika'));
+      expect(edited, isFalse);
     });
   });
 

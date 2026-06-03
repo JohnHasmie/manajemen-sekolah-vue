@@ -135,48 +135,49 @@ void main() {
   // ---------------------------------------------------------------------------
 
   group('computeScheduleDate logic', () {
-    // Replicates the _computeScheduleDate logic for testing
-    DateTime computeDate(int scheduleDayIndex, DateTime now) {
-      // now.weekday is 1-based (Monday=1), scheduleDayIndex is 0-based
-      final todayIndex = now.weekday - 1;
-      int daysSince = todayIndex - scheduleDayIndex;
-      if (daysSince < 0) daysSince += 7;
-      return DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).subtract(Duration(days: daysSince));
+    // Replicates the current ScheduleCardDataMixin.computeScheduleDate logic:
+    // the schedule day is resolved within the CURRENT (Monday-anchored) week,
+    // so the result can land before, on, or after `now`.
+    //   monday = today - (now.weekday - 1)
+    //   result = monday + (scheduleWeekday - 1)
+    // [scheduleWeekday] is the ISO weekday number (Senin=1 .. Minggu=7).
+    DateTime computeDate(int scheduleWeekday, DateTime now) {
+      final today = DateTime(now.year, now.month, now.day);
+      final monday = today.subtract(Duration(days: now.weekday - 1));
+      return monday.add(Duration(days: scheduleWeekday - 1));
     }
 
     test('same day returns today', () {
       // If schedule is Wednesday and today is Wednesday
-      final now = DateTime(2026, 4, 1); // Wednesday
-      final result = computeDate(3, now); // 3 = Rabu in dayOptions (index)
+      final now = DateTime(2026, 4, 1); // Wednesday (weekday 3)
+      final result = computeDate(3, now); // 3 = Rabu
       expect(result, DateTime(2026, 4, 1));
     });
 
-    test('past day returns most recent occurrence', () {
-      // If schedule is Monday and today is Wednesday
+    test('earlier weekday returns that day in the current week', () {
+      // If schedule is Monday and today is Wednesday → Monday of this week
       final now = DateTime(2026, 4, 1); // Wednesday
       final result = computeDate(1, now); // 1 = Senin
-      expect(result, DateTime(2026, 3, 30)); // Last Monday
+      expect(result, DateTime(2026, 3, 30)); // This Monday
     });
 
-    test('future day returns last week occurrence', () {
-      // If schedule is Friday and today is Wednesday
+    test('later weekday returns that day in the current week', () {
+      // If schedule is Friday and today is Wednesday → Friday of this week
       final now = DateTime(2026, 4, 1); // Wednesday
       final result = computeDate(5, now); // 5 = Jumat
-      expect(result, DateTime(2026, 3, 27)); // Last Friday
+      expect(result, DateTime(2026, 4, 3)); // This Friday (current week)
     });
 
-    test('never returns a future date', () {
-      final now = DateTime.now();
-      for (int dayIdx = 1; dayIdx <= 6; dayIdx++) {
-        final result = computeDate(dayIdx, now);
+    test('always lands within the current Monday-anchored week', () {
+      final now = DateTime(2026, 4, 1); // Wednesday
+      final monday = DateTime(2026, 3, 30);
+      final sunday = DateTime(2026, 4, 5);
+      for (int weekday = 1; weekday <= 7; weekday++) {
+        final result = computeDate(weekday, now);
         expect(
-          result.isBefore(now.add(const Duration(days: 1))),
+          !result.isBefore(monday) && !result.isAfter(sunday),
           isTrue,
-          reason: 'dayIndex=$dayIdx should not be in the future',
+          reason: 'weekday=$weekday should fall inside the current week',
         );
       }
     });
