@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_profile_components.dart';
 import 'package:manajemensekolah/features/account/data/profile_service.dart';
+import 'package:manajemensekolah/features/account/domain/models/account_profile.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/settings/presentation/widgets/change_password_dialog.dart';
 
@@ -27,8 +28,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  Map<String, dynamic> _userData = {};
-  String _role = 'wali';
+  AccountProfile _profile = AccountProfile.empty;
   bool _isLoggingOut = false;
 
   @override
@@ -38,27 +38,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _loadProfile() {
+    // Build the merged user map exactly as before: start from the
+    // cached `user` blob, then spread the live dashboard `userData`
+    // over it so fresher dashboard values win. Role is sourced from the
+    // dashboard map specifically (falling back to the current role),
+    // matching the original logic.
+    Map<String, dynamic> userData = {};
     final raw = PreferencesService().getString('user');
     if (raw != null) {
-      _userData = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      userData = Map<String, dynamic>.from(jsonDecode(raw) as Map);
     }
+    String role = _profile.role;
     final dashState = ref.read(dashboardProvider).asData?.value;
     if (dashState != null) {
-      _userData = {..._userData, ...dashState.userData};
-      _role = (dashState.userData['role'] ?? _role).toString();
+      userData = {...userData, ...dashState.userData};
+      role = (dashState.userData['role'] ?? role).toString();
     }
+    _profile = AccountProfile.fromMap(userData, role: role);
     if (mounted) setState(() {});
   }
 
-  String get _name =>
-      (_userData['name'] ?? _userData['nama'] ?? 'Pengguna').toString();
-  String get _email => (_userData['email'] ?? '-').toString();
-  String get _phone =>
-      (_userData['phone'] ?? _userData['no_telepon'] ?? '-').toString();
-  String get _address =>
-      (_userData['address'] ?? _userData['alamat'] ?? '-').toString();
-  String get _schoolName =>
-      (_userData['school_name'] ?? _userData['nama_sekolah'] ?? '-').toString();
+  String get _name => _profile.name;
+  String get _email => _profile.email;
+  String get _phone => _profile.phone;
+  String get _address => _profile.address;
+  String get _schoolName => _profile.schoolName;
+  String get _role => _profile.role;
   String get _roleLabel {
     return switch (_role) {
       'admin' => 'Admin',
@@ -68,11 +73,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     };
   }
 
-  String get _initial {
-    final n = _name.trim();
-    if (n.isEmpty) return '?';
-    return n[0].toUpperCase();
-  }
+  String get _initial => _profile.initial;
 
   Color get _accentColor => ColorUtils.getRoleColor(_role);
 
