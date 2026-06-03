@@ -52,17 +52,6 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
         ReportCardUIBuilderMixin<ParentReportCardScreen>,
         ParentReportCardFilterMixin {
   @override
-  bool isLoading = true;
-  @override
-  String errorMessage = '';
-  @override
-  List<dynamic> studentsData = [];
-  @override
-  Map<String, dynamic> parentData = {};
-  @override
-  String selectedTermId = '1';
-
-  @override
   String? get academicYearId => widget.academicYearId;
 
   // Sibling selector state — mirrors the pattern from parent attendance.
@@ -71,6 +60,13 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
   @override
   void initState() {
     super.initState();
+    // Backing fields (isLoading, errorMessage, studentsData, parentData,
+    // selectedTermId) are provided by ReportCardDataMixin.
+    isLoading = true;
+    errorMessage = '';
+    studentsData = [];
+    parentData = {};
+    selectedTermId = '1';
     loadData();
     _loadSiblings();
   }

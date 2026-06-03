@@ -54,53 +54,11 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
         ReportCardNavMixin {
   late TabController tabController;
 
-  // State: Loading and errors
-  @override
-  bool isLoading = true;
-  @override
-  bool isSaving = false;
-  @override
-  String errorMessage = '';
-  @override
-  bool hasUnsavedChanges = false;
+  // State containers (isLoading, isSaving, errorMessage, hasUnsavedChanges,
+  // existingRaport, the form controllers, predicate/decision strings, and the
+  // subjects/extras/achievements lists) are provided by the report-card
+  // mixins; they are initialized in [initState] below.
 
-  // State: Data containers
-  @override
-  Map<String, dynamic>? existingRaport;
-
-  // State: Form controllers - Sikap
-  @override
-  late TextEditingController spiritualDescCtrl;
-  @override
-  late TextEditingController socialDescCtrl;
-  @override
-  String spiritualPredicate = 'Baik';
-  @override
-  String socialPredicate = 'Baik';
-
-  // State: Form controllers - Info
-  @override
-  late TextEditingController sickCtrl;
-  @override
-  late TextEditingController permitCtrl;
-  @override
-  late TextEditingController absentCtrl;
-  @override
-  late TextEditingController notesCtrl;
-  @override
-  String promotionDecision = 'Naik Kelas';
-
-  // State: Lists
-  @override
-  List<Map<String, dynamic>> subjects = [];
-  @override
-  List<Map<String, dynamic>> extras = [];
-  @override
-  List<Map<String, dynamic>> achievements = [];
-
-  // Constants
-  @override
-  final List<String> predicates = ['Sangat Baik', 'Baik', 'Cukup', 'Kurang'];
   final List<String> decisions = ['Naik Kelas', 'Tinggal di Kelas'];
 
   // Tour keys
@@ -112,6 +70,19 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
   void initState() {
     super.initState();
     tabController = TabController(length: 4, vsync: this);
+
+    isLoading = true;
+    isSaving = false;
+    errorMessage = '';
+    hasUnsavedChanges = false;
+    spiritualPredicate = 'Baik';
+    socialPredicate = 'Baik';
+    promotionDecision = 'Naik Kelas';
+    subjects = [];
+    extras = [];
+    achievements = [];
+    predicates = ['Sangat Baik', 'Baik', 'Cukup', 'Kurang'];
+    existingRaport = null;
 
     spiritualDescCtrl = TextEditingController();
     socialDescCtrl = TextEditingController();
