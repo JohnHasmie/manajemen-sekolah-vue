@@ -9,7 +9,7 @@ import 'package:manajemensekolah/features/attendance/data/attendance_service.dar
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Mixin for data loading and statistics in AdminAttendanceDetailPage
-mixin admin_detail_data_mixin on ConsumerState<AdminAttendanceDetailPage> {
+mixin AdminDetailDataMixin on ConsumerState<AdminAttendanceDetailPage> {
   // Abstract properties - must be implemented by consuming class
   List<Attendance> get attendanceData;
   set attendanceData(List<Attendance> value);

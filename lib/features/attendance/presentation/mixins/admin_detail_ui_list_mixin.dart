@@ -9,7 +9,7 @@ import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Mixin for student list UI in AdminAttendanceDetailPage
-mixin admin_detail_ui_list_mixin on ConsumerState<AdminAttendanceDetailPage> {
+mixin AdminDetailUiListMixin on ConsumerState<AdminAttendanceDetailPage> {
   // Abstract properties - must be implemented by consuming class
   List<Student> get studentList;
   bool get isLoading;

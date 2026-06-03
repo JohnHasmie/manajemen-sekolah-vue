@@ -10,7 +10,7 @@ import 'package:manajemensekolah/features/attendance/domain/models/attendance.da
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Mixin for saving attendance changes in AdminAttendanceDetailPage
-mixin admin_detail_save_mixin on ConsumerState<AdminAttendanceDetailPage> {
+mixin AdminDetailSaveMixin on ConsumerState<AdminAttendanceDetailPage> {
   // Abstract properties - must be implemented by consuming class
   List<Attendance> get attendanceData;
 

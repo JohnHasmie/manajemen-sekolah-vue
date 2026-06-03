@@ -5,7 +5,7 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_detail.dart';
 
 /// Mixin for status mapping and display in AdminAttendanceDetailPage
-mixin admin_detail_status_mixin on ConsumerState<AdminAttendanceDetailPage> {
+mixin AdminDetailStatusMixin on ConsumerState<AdminAttendanceDetailPage> {
   String mapStatusToBackend(String status) {
     switch (status.toLowerCase()) {
       case 'hadir':
