@@ -845,12 +845,20 @@ function reportFromGroup(parent: any, rec: any): SessionReport {
     lesson_hour_id: rec.lesson_hour_id ?? null,
     total,
     hadir: present,
-    // Group rows from Flutter only carry `present/total`; H/S/I/A
-    // breakdown isn't surfaced on the list — set to 0 and let detail
-    // page fetch the full roster.
-    sakit: 0,
-    izin: 0,
-    alpa: Math.max(0, total - present),
+    // Backend now surfaces the H/S/I/A breakdown per session
+    // (present/sick/izin/alpa), so read it directly — izin was previously
+    // folded into alpha by `alpa = total - present`. Fall back to a
+    // status-aware remainder for older payloads that only carried present/total.
+    sakit: Number(rec.sakit ?? rec.sick ?? 0),
+    izin: Number(rec.izin ?? rec.permit ?? 0),
+    alpa: Number(
+      rec.alpa ??
+        rec.absent ??
+        Math.max(
+          0,
+          total - present - Number(rec.sakit ?? rec.sick ?? 0) - Number(rec.izin ?? rec.permit ?? 0),
+        ),
+    ),
     filled: present > 0 || total > 0,
     percentage,
     teacher_id: parent.teacher_id ?? null,
