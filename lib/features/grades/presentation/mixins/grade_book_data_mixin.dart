@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 import 'package:manajemensekolah/features/grades/presentation/controllers/grade_book_controller.dart';
-import 'package:manajemensekolah/features/grades/presentation/controllers/grade_book_models.dart';
+import 'package:manajemensekolah/features/grades/domain/models/grade_book_models.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/grade_book_screen.dart';
 

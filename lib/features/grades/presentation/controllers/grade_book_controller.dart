@@ -13,7 +13,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
-import 'package:manajemensekolah/features/grades/presentation/controllers/grade_book_models.dart'
+import 'package:manajemensekolah/features/grades/domain/models/grade_book_models.dart'
     as models;
 import 'package:manajemensekolah/features/grades/presentation/controllers/helpers/grade_data_processor.dart'
     as proc;
