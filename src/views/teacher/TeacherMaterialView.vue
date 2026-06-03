@@ -267,8 +267,20 @@ const essayQuizzes = computed<QuizItem[]>(() =>
 
 async function loadReferences() {
   try {
-    const s = await SubjectService.list({ per_page: 100 });
-    subjects.value = s.items;
+    // Scope the mapel filter to the subjects THIS teacher teaches (bug:
+    // Guru/Materi previously listed every school subject, so chapters/
+    // sub-chapters from non-taught mapel leaked in). Fall back to the full
+    // list only when there's no teacher context or the teacher has none
+    // mapped yet, so the page never renders empty.
+    const tid = auth.teacherId ?? auth.user?.id ?? '';
+    let items: Subject[] = [];
+    if (tid) {
+      items = await SubjectService.listForTeacher(tid);
+    }
+    if (items.length === 0) {
+      items = (await SubjectService.list({ per_page: 100 })).items;
+    }
+    subjects.value = items;
 
     if (fromQuickAction.value) {
       subjectId.value = queryString('subject_id') ?? '';
