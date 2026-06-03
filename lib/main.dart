@@ -136,7 +136,8 @@ void main() async {
       AppLogger.error('init', 'Firebase initialization error: $e');
       AppLogger.warning(
         'init',
-        'Please configure Firebase using FlutterFire CLI or update firebase_options.dart',
+        'Please configure Firebase using FlutterFire CLI or update '
+            'firebase_options.dart',
       );
       LogService.sendError(e, stack);
     }
@@ -241,7 +242,9 @@ class _SchoolManagementAppState extends ConsumerState<SchoolManagementApp> {
           if (!FCMService().isInitialized) {
             AppLogger.warning(
               'init',
-              'FCM failed to initialize: ${FCMService().initError ?? "unknown"}. Push notifications will not work.',
+              'FCM failed to initialize: '
+                  '${FCMService().initError ?? "unknown"}. '
+                  'Push notifications will not work.',
             );
           } else {
             AppLogger.info('init', 'FCM Service initialized in app');

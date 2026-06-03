@@ -203,8 +203,14 @@ mixin ScheduleTableTabsMixin on State<TeacherScheduleTableView> {
   }
 
   Widget _buildSessionCountText(List<Map<String, dynamic>> daySchedules) {
+    final sessionWord =
+        (this as dynamic).tr({
+              'en': daySchedules.length == 1 ? 'session' : 'sessions',
+              'id': 'sesi',
+            })
+            as String;
     return Text(
-      '${daySchedules.length} ${(this as dynamic).tr({'en': daySchedules.length == 1 ? 'session' : 'sessions', 'id': 'sesi'}) as String}',
+      '${daySchedules.length} $sessionWord',
       style: TextStyle(
         fontSize: 11,
         color: ColorUtils.slate500,

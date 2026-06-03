@@ -43,8 +43,9 @@ mixin ScheduleTableDataMixin on State<TeacherScheduleTableView> {
     final subjectId = model.subjectId;
     if (classId == null || subjectId == null) return null;
     final date = computeScheduleDate(schedule);
-    final dateStr =
-        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    final dateStr = '${date.year}-$month-$day';
     final key = '${dateStr}__${classId}__$subjectId';
     final s = summaries[key];
     return s is Map<String, dynamic> ? s : null;

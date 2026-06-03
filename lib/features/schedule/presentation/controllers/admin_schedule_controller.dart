@@ -149,10 +149,13 @@ class AdminScheduleController
       final label = _kDayTranslations[key] != null
           ? languageProvider.getTranslatedText(_kDayTranslations[key]!)
           : raw.toString();
+      final dayWord = languageProvider.getTranslatedText(const {
+        'en': 'Day',
+        'id': 'Hari',
+      });
       chips.add(
         ActiveFilter(
-          label:
-              '${languageProvider.getTranslatedText(const {'en': 'Day', 'id': 'Hari'})}: $label',
+          label: '$dayWord: $label',
           icon: Icons.today_outlined,
           onRemove: onClearDay,
         ),
@@ -167,10 +170,13 @@ class AdminScheduleController
       final label = (cls as Map).isNotEmpty
           ? (cls['name'] ?? cls['nama'] ?? 'Class').toString()
           : 'Class';
+      final classWord = languageProvider.getTranslatedText(const {
+        'en': 'Class',
+        'id': 'Kelas',
+      });
       chips.add(
         ActiveFilter(
-          label:
-              '${languageProvider.getTranslatedText(const {'en': 'Class', 'id': 'Kelas'})}: $label',
+          label: '$classWord: $label',
           icon: Icons.school_outlined,
           onRemove: onClearClass,
         ),
@@ -193,10 +199,13 @@ class AdminScheduleController
           semester['academic_year']['year'] != null) {
         label = '$label (${semester['academic_year']['year']})';
       }
+      final semesterWord = languageProvider.getTranslatedText(const {
+        'en': 'Semester',
+        'id': 'Semester',
+      });
       chips.add(
         ActiveFilter(
-          label:
-              '${languageProvider.getTranslatedText(const {'en': 'Semester', 'id': 'Semester'})}: $label',
+          label: '$semesterWord: $label',
           icon: Icons.event_outlined,
           onRemove: onClearSemester,
         ),

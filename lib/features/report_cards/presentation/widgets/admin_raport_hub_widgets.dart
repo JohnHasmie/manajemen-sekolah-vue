@@ -261,7 +261,8 @@ class AdminRaportStatusFilterSheet extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Pilih satu status — body daftar tingkat akan disaring otomatis.',
+                'Pilih satu status — body daftar tingkat akan disaring '
+                'otomatis.',
                 style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
               ),
             ),

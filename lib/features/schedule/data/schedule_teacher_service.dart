@@ -122,9 +122,9 @@ class ScheduleTeacherService {
   }) async {
     final now = DateTime.now();
     final monday = now.subtract(Duration(days: now.weekday - 1));
-    final weekStartStr =
-        weekStart ??
-        '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
+    final mondayMonth = monday.month.toString().padLeft(2, '0');
+    final mondayDay = monday.day.toString().padLeft(2, '0');
+    final weekStartStr = weekStart ?? '${monday.year}-$mondayMonth-$mondayDay';
     final cacheKey = 'schedule_week_summary_${teacherId}_$weekStartStr';
 
     // Try cache first (5 minute TTL)

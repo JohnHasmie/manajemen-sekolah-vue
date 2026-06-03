@@ -79,7 +79,8 @@ class TahunAjaranActivateDialog extends StatelessWidget {
               children: [
                 if (currentActiveYear != null) ...[
                   Text(
-                    'Tahun ajaran $currentActiveYear akan otomatis diarsipkan dan tidak bisa diubah lagi.',
+                    'Tahun ajaran $currentActiveYear akan otomatis '
+                    'diarsipkan dan tidak bisa diubah lagi.',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -102,15 +103,18 @@ class TahunAjaranActivateDialog extends StatelessWidget {
 
                 // Bullet points
                 _buildConsequenceRow(
-                  'Semua perubahan data (nilai, kehadiran, RPP) di tahun ajaran saat ini akan dikunci (read-only).',
+                  'Semua perubahan data (nilai, kehadiran, RPP) di tahun '
+                  'ajaran saat ini akan dikunci (read-only).',
                 ),
                 const SizedBox(height: 10),
                 _buildConsequenceRow(
-                  'Siswa, guru, dan kelas akan disesuaikan dengan lingkup tahun ajaran baru.',
+                  'Siswa, guru, dan kelas akan disesuaikan dengan lingkup '
+                  'tahun ajaran baru.',
                 ),
                 const SizedBox(height: 10),
                 _buildConsequenceRow(
-                  'Notifikasi penyesuaian tahun ajaran akan dikirimkan ke guru dan wali murid.',
+                  'Notifikasi penyesuaian tahun ajaran akan dikirimkan ke '
+                  'guru dan wali murid.',
                 ),
               ],
             ),

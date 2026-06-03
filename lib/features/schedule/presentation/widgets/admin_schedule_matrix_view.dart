@@ -132,8 +132,9 @@ class AdminScheduleMatrixView extends StatelessWidget {
       if (raw is! Map) continue;
       final schedule = Map<String, dynamic>.from(raw);
       final model = Schedule.fromJson(schedule);
-      final slotKey =
-          '${_trimTime(model.startTime ?? '')}-${_trimTime(model.endTime ?? '')}';
+      final slotStart = _trimTime(model.startTime ?? '');
+      final slotEnd = _trimTime(model.endTime ?? '');
+      final slotKey = '$slotStart-$slotEnd';
       if (slotKey == '-') continue;
 
       for (final dayId in _extractDayIds(schedule, model)) {
@@ -499,7 +500,8 @@ class _EmptyMatrixCard extends StatelessWidget {
           Text(
             languageProvider.getTranslatedText(const {
               'en':
-                  'Adjust the filter or wait for lesson hours and days to load.',
+                  'Adjust the filter or wait for lesson hours and days '
+                  'to load.',
               'id':
                   'Sesuaikan filter atau tunggu jam pelajaran & hari termuat.',
             }),

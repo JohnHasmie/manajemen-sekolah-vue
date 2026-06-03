@@ -176,7 +176,8 @@ class TahunAjaranEditSheet {
               BrandAmberToggleRow(
                 title: "Set sebagai 'Saat Ini'",
                 subtitle:
-                    'Mengganti tahun ajaran aktif. Data lama otomatis diarsipkan.',
+                    'Mengganti tahun ajaran aktif. '
+                    'Data lama otomatis diarsipkan.',
                 value: isCurrent,
                 onChanged: (v) => setSheetState(() => isCurrent = v),
               ),

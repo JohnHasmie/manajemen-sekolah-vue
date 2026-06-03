@@ -101,9 +101,11 @@ class SubjectClassManagementPageState
         }),
         content: lang.getTranslatedText({
           'en':
-              'Are you sure you want to remove ${selected.length} class(es) from this subject?',
+              'Are you sure you want to remove ${selected.length} class(es) '
+              'from this subject?',
           'id':
-              'Yakin ingin melepas ${selected.length} kelas dari mata pelajaran ini?',
+              'Yakin ingin melepas ${selected.length} kelas dari mata '
+              'pelajaran ini?',
         }),
         confirmColor: Colors.red,
       ),
@@ -168,13 +170,21 @@ class SubjectClassManagementPageState
   /// Shows confirmation before removing class
   @override
   Future<bool?> showRemoveConfirmation(Map<String, dynamic> classItem) {
+    final lang = ref.read(languageRiverpod);
+    final question = lang.getTranslatedText({
+      'en': 'Are you sure you want to remove class',
+      'id': 'Yakin ingin menghapus kelas',
+    });
+    final fromSubject = lang.getTranslatedText({
+      'en': 'from this subject?',
+      'id': 'dari mata pelajaran ini?',
+    });
+    final className = Classroom.fromJson(classItem).name;
     return showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
         title: 'Remove Class',
-        content:
-            '${ref.read(languageRiverpod).getTranslatedText({'en': 'Are you sure you want to remove class', 'id': 'Yakin ingin menghapus kelas'})} ${Classroom.fromJson(classItem).name} '
-            '${ref.read(languageRiverpod).getTranslatedText({'en': 'from this subject?', 'id': 'dari mata pelajaran ini?'})}',
+        content: '$question $className $fromSubject',
         confirmColor: Colors.red,
       ),
     );

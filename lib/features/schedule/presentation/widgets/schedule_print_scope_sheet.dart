@@ -76,14 +76,16 @@ class _SchedulePrintScopeSheetState extends State<SchedulePrintScopeSheet> {
       icon: Icons.person_outline_rounded,
       title: 'Per Guru',
       description:
-          'Kelompokkan tabel per guru — cocok untuk membagikan jadwal masing-masing.',
+          'Kelompokkan tabel per guru — '
+          'cocok untuk membagikan jadwal masing-masing.',
     ),
     _ScopeOption(
       scope: SchedulePrintScope.perClass,
       icon: Icons.class_outlined,
       title: 'Per Kelas',
       description:
-          'Kelompokkan tabel per kelas — cocok untuk ditempel di kelas atau dibagikan ke wali.',
+          'Kelompokkan tabel per kelas — '
+          'cocok untuk ditempel di kelas atau dibagikan ke wali.',
     ),
   ];
 

@@ -358,7 +358,8 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
                           ? 'Ketuk lagi untuk batal pilih'
                           : _sessions.isEmpty
                           ? 'Belum diatur'
-                          : '${_sessions.length} jam · ketuk untuk edit, tahan untuk pilih',
+                          : '${_sessions.length} jam · '
+                                'ketuk untuk edit, tahan untuk pilih',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -493,8 +494,8 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Tambahkan jam pelajaran satu per satu, atau salin dari hari lain '
-              'yang sudah diatur untuk menghemat waktu.',
+              'Tambahkan jam pelajaran satu per satu, atau salin dari hari '
+              'lain yang sudah diatur untuk menghemat waktu.',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,

@@ -413,7 +413,8 @@ class TeachingScheduleManagementScreenState
   /// nested API shape.
   ///
   /// The backend eagerly loads `lesson_hour` as a Map of
-  ///   `{ id, start_time, end_time, hour_number, day: {id, name, order_number} }`
+  ///   `{ id, start_time, end_time, hour_number,
+  ///      day: {id, name, order_number} }`
   /// which means a naive `row['start_time']` returns null and a row card's
   /// time column renders as "-- --" (issue surfaced in TR.E.2 verify).
   ///
@@ -1071,9 +1072,13 @@ class TeachingScheduleManagementScreenState
       }
       // Non-409 — prefer the server's error message when present,
       // otherwise fall back to the generic friendly translator.
+      final prefix = lang.getTranslatedText(const {
+        'en': 'Failed to reschedule: ',
+        'id': 'Gagal memindahkan: ',
+      });
       SnackBarUtils.showError(
         context,
-        '${lang.getTranslatedText(const {'en': 'Failed to reschedule: ', 'id': 'Gagal memindahkan: '})}${serverMsg ?? ErrorUtils.getFriendlyMessage(e)}',
+        '$prefix${serverMsg ?? ErrorUtils.getFriendlyMessage(e)}',
       );
       // The backend has been observed to 500 *after* committing the
       // update (e.g. notify-step failure). Force a refresh so the UI
@@ -1084,9 +1089,13 @@ class TeachingScheduleManagementScreenState
     } catch (e) {
       AppLogger.error('schedule', e);
       if (!mounted) return;
+      final prefix = lang.getTranslatedText(const {
+        'en': 'Failed to reschedule: ',
+        'id': 'Gagal memindahkan: ',
+      });
       SnackBarUtils.showError(
         context,
-        '${lang.getTranslatedText(const {'en': 'Failed to reschedule: ', 'id': 'Gagal memindahkan: '})}${ErrorUtils.getFriendlyMessage(e)}',
+        '$prefix${ErrorUtils.getFriendlyMessage(e)}',
       );
       await _loadSchedules(resetPage: true, useCache: false);
       if (mounted) unawaited(_loadKpiSummary());
@@ -1147,9 +1156,13 @@ class TeachingScheduleManagementScreenState
       }
     } catch (e) {
       if (!mounted) return;
+      final prefix = lp.getTranslatedText(const {
+        'en': 'Failed to save schedule: ',
+        'id': 'Gagal menyimpan jadwal: ',
+      });
       SnackBarUtils.showError(
         context,
-        '${lp.getTranslatedText(const {'en': 'Failed to save schedule: ', 'id': 'Gagal menyimpan jadwal: '})}${ErrorUtils.getFriendlyMessage(e)}',
+        '$prefix${ErrorUtils.getFriendlyMessage(e)}',
       );
       await _loadSchedules(resetPage: true, useCache: false);
     }
@@ -1277,9 +1290,13 @@ class TeachingScheduleManagementScreenState
     } catch (e) {
       AppLogger.error('schedule', 'bulk delete failed: $e');
       if (!mounted) return;
+      final prefix = lang.getTranslatedText(const {
+        'en': 'Bulk delete failed: ',
+        'id': 'Hapus massal gagal: ',
+      });
       SnackBarUtils.showError(
         context,
-        '${lang.getTranslatedText(const {'en': 'Bulk delete failed: ', 'id': 'Hapus massal gagal: '})}${ErrorUtils.getFriendlyMessage(e)}',
+        '$prefix${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }
@@ -1400,9 +1417,13 @@ class TeachingScheduleManagementScreenState
     } catch (e) {
       AppLogger.error('schedule', 'bulk move failed: $e');
       if (!mounted) return;
+      final prefix = lang.getTranslatedText(const {
+        'en': 'Bulk move failed: ',
+        'id': 'Pindah massal gagal: ',
+      });
       SnackBarUtils.showError(
         context,
-        '${lang.getTranslatedText(const {'en': 'Bulk move failed: ', 'id': 'Pindah massal gagal: '})}${ErrorUtils.getFriendlyMessage(e)}',
+        '$prefix${ErrorUtils.getFriendlyMessage(e)}',
       );
       // The backend has been observed to 500 *after* committing the
       // update (e.g. notify-step failure). Force a refresh so the UI
@@ -1529,9 +1550,13 @@ class TeachingScheduleManagementScreenState
     } catch (e) {
       AppLogger.error('schedule', 'bulk change teacher failed: $e');
       if (!mounted) return;
+      final prefix = lang.getTranslatedText(const {
+        'en': 'Bulk change teacher failed: ',
+        'id': 'Ganti guru massal gagal: ',
+      });
       SnackBarUtils.showError(
         context,
-        '${lang.getTranslatedText(const {'en': 'Bulk change teacher failed: ', 'id': 'Ganti guru massal gagal: '})}${ErrorUtils.getFriendlyMessage(e)}',
+        '$prefix${ErrorUtils.getFriendlyMessage(e)}',
       );
       // Same "500-after-commit" refresh pattern as bulk move — see
       // _runBulkMove for the rationale.
@@ -1567,9 +1592,13 @@ class TeachingScheduleManagementScreenState
       AppLogger.error('schedule', e);
       if (!mounted) return;
       setState(() => _isLoading = false);
+      final prefix = lp.getTranslatedText(const {
+        'en': 'Failed to import file: ',
+        'id': 'Gagal mengimpor berkas: ',
+      });
       SnackBarUtils.showError(
         context,
-        '${lp.getTranslatedText(const {'en': 'Failed to import file: ', 'id': 'Gagal mengimpor berkas: '})}${ErrorUtils.getFriendlyMessage(e)}',
+        '$prefix${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }
@@ -1624,12 +1653,16 @@ class TeachingScheduleManagementScreenState
     if (_selectedLessonHour != null) {
       parts.add('Jam $_selectedLessonHour');
     }
+    final activeFilterPrefix = lang.getTranslatedText(const {
+      'en': 'Active filter: ',
+      'id': 'Filter aktif: ',
+    });
     final summary = parts.isEmpty
         ? lang.getTranslatedText(const {
             'en': 'No filters active — full timetable.',
             'id': 'Tanpa filter — seluruh jadwal akan dicetak.',
           })
-        : '${lang.getTranslatedText(const {'en': 'Active filter: ', 'id': 'Filter aktif: '})}${parts.join(' · ')}';
+        : '$activeFilterPrefix${parts.join(' · ')}';
 
     SchedulePrintScopeSheet.show(
       context: context,

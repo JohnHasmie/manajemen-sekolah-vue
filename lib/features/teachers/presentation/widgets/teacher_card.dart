@@ -48,11 +48,13 @@ class TeacherCard extends ConsumerWidget {
     if (email.isNotEmpty) metaParts.add(email);
     final topMeta = metaParts.isEmpty ? null : metaParts.join(' · ');
 
+    final homeroomWord = lang.getTranslatedText(const {
+      'en': 'Homeroom',
+      'id': 'Wali',
+    });
     final secondaryChip =
         model.isHomeroomTeacher && (model.homeroomClassName ?? '').isNotEmpty
-        ? BrandRowChip.role(
-            '${lang.getTranslatedText(const {'en': 'Homeroom', 'id': 'Wali'})} ${model.homeroomClassName}',
-          )
+        ? BrandRowChip.role('$homeroomWord ${model.homeroomClassName}')
         : null;
 
     return BrandListRow(

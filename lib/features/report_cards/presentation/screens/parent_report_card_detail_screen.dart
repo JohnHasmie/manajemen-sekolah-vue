@@ -513,7 +513,8 @@ class _ParentReportCardDetailScreenState
           _AdminPdfChoiceTile(
             title: 'Raport (Format Guru)',
             subtitle:
-                'Dokumen resmi lengkap — KI 3 + KI 4, sikap, kehadiran, deskripsi capaian.',
+                'Dokumen resmi lengkap — KI 3 + KI 4, sikap, kehadiran, '
+                'deskripsi capaian.',
             icon: Icons.description_outlined,
             accent: ColorUtils.brandCobalt,
             onTap: () {
@@ -525,7 +526,8 @@ class _ParentReportCardDetailScreenState
           _AdminPdfChoiceTile(
             title: 'E-Raport (Format Wali)',
             subtitle:
-                'Sertifikat ringkas — rata-rata, badge, dan layout modern untuk orang tua.',
+                'Sertifikat ringkas — rata-rata, badge, dan layout modern '
+                'untuk orang tua.',
             icon: Icons.workspace_premium_outlined,
             accent: const Color(0xFF7C3AED),
             onTap: () {
