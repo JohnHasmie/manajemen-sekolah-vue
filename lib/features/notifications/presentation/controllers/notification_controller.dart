@@ -1,13 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/features/notifications/data/notification_service.dart';
+import 'package:manajemensekolah/features/notifications/domain/models/notification_item.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
-class NotificationNotifier extends AsyncNotifier<List<dynamic>> {
+class NotificationNotifier extends AsyncNotifier<List<NotificationItem>> {
   late final ApiNotificationService _apiService;
 
   @override
-  Future<List<dynamic>> build() async {
+  Future<List<NotificationItem>> build() async {
     _apiService = getIt<ApiNotificationService>();
     // Default to fetching for the current role if we can determine it,
     // but typically we pass it or use a separate provider for current role.
@@ -27,7 +28,7 @@ class NotificationNotifier extends AsyncNotifier<List<dynamic>> {
       await _apiService.markAsRead(id);
       final currentList = state.value ?? [];
       state = AsyncValue.data(
-        currentList.where((n) => n['id'].toString() != id).toList(),
+        currentList.where((n) => n.id != id).toList(),
       );
     } catch (e) {
       AppLogger.error('notification_controller', 'Failed to mark as read: $e');
@@ -41,7 +42,7 @@ class NotificationNotifier extends AsyncNotifier<List<dynamic>> {
       await _apiService.deleteNotification(id);
       final currentList = state.value ?? [];
       state = AsyncValue.data(
-        currentList.where((n) => n['id'].toString() != id).toList(),
+        currentList.where((n) => n.id != id).toList(),
       );
     } catch (e) {
       AppLogger.error(
@@ -65,7 +66,7 @@ class NotificationNotifier extends AsyncNotifier<List<dynamic>> {
 }
 
 final notificationProvider =
-    AsyncNotifierProvider<NotificationNotifier, List<dynamic>>(
+    AsyncNotifierProvider<NotificationNotifier, List<NotificationItem>>(
       NotificationNotifier.new,
       isAutoDispose: true,
     );

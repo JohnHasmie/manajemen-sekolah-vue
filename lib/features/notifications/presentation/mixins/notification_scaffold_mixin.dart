@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
+import 'package:manajemensekolah/features/notifications/domain/models/notification_item.dart';
 import 'package:manajemensekolah/features/notifications/presentation/mixins/notification_widget_builder_mixin.dart';
 
 /// Mixin for scaffold/layout and async value handling.
@@ -13,10 +14,10 @@ mixin NotificationScaffoldMixin on NotificationWidgetBuilderMixin {
 
   // Methods to be implemented by the class using this mixin
   Future<void> loadData();
-  void handleTap(Map<String, dynamic> notif);
+  void handleTap(NotificationItem notif);
 
   Widget buildHeaderSection(
-    AsyncValue<dynamic> asyncVal,
+    AsyncValue<List<NotificationItem>> asyncVal,
     LanguageProvider langProvider,
   ) {
     return asyncVal.when(
@@ -33,7 +34,7 @@ mixin NotificationScaffoldMixin on NotificationWidgetBuilderMixin {
     );
   }
 
-  Widget buildContentSection(AsyncValue<dynamic> asyncVal) {
+  Widget buildContentSection(AsyncValue<List<NotificationItem>> asyncVal) {
     return asyncVal.when(
       data: (notifications) => RefreshIndicator(
         onRefresh: loadData,
@@ -47,7 +48,7 @@ mixin NotificationScaffoldMixin on NotificationWidgetBuilderMixin {
     );
   }
 
-  Widget _buildNotificationList(List<dynamic> notifications) {
+  Widget _buildNotificationList(List<NotificationItem> notifications) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       itemCount: notifications.length,
@@ -56,7 +57,7 @@ mixin NotificationScaffoldMixin on NotificationWidgetBuilderMixin {
         return GestureDetector(
           onTap: () {
             if (!isUnread(notif)) {
-              markAsRead(notif['id'].toString());
+              markAsRead(notif.id);
             }
             handleTap(notif);
           },

@@ -8,6 +8,7 @@
 library;
 
 import 'package:manajemensekolah/core/network/dio_client.dart';
+import 'package:manajemensekolah/features/notifications/domain/models/notification_item.dart';
 
 /// Service for notification-related API calls.
 /// Uses instance methods for API compatibility with existing callers.
@@ -19,8 +20,12 @@ class ApiNotificationService {
   /// Like `Notification::where('user_id', auth()->id)->paginate()` in Laravel.
   /// [page] - Page number for pagination (server-side).
   /// [role] - Optional role filter (e.g., 'guru', 'siswa', 'admin').
-  /// Returns the 'data' array from the paginated response.
-  Future<List<dynamic>> getNotifications({int page = 1, String? role}) async {
+  /// Returns the 'data' array from the paginated response, parsed into
+  /// typed [NotificationItem]s.
+  Future<List<NotificationItem>> getNotifications({
+    int page = 1,
+    String? role,
+  }) async {
     try {
       final queryParams = <String, dynamic>{
         'page': page,
@@ -30,7 +35,10 @@ class ApiNotificationService {
         '/notifications',
         queryParameters: queryParams,
       );
-      return response.data['data'] ?? [];
+      final List<dynamic> raw = response.data['data'] ?? [];
+      return raw
+          .map((e) => NotificationItem.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       rethrow;
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/features/notifications/domain/models/notification_item.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/parent_billing_screen.dart';
@@ -10,8 +11,8 @@ mixin NotificationNavigationMixin {
   BuildContext get context;
   String get role;
 
-  void handleTap(Map<String, dynamic> notif) {
-    final type = notif['type'];
+  void handleTap(NotificationItem notif) {
+    final type = notif.type;
 
     if (role == 'wali' || role == 'parent') {
       if (type == 'bill') {
