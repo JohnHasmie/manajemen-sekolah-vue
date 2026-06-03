@@ -98,7 +98,6 @@ class MaterialOverviewView extends StatelessWidget {
 // ── Card view ──
 
 class _CardView extends StatelessWidget with CardViewBuilderMixin {
-  @override
   final List<dynamic> summary;
   @override
   final Color primaryColor;
@@ -130,7 +129,6 @@ class _CardView extends StatelessWidget with CardViewBuilderMixin {
 // ── List view (grouped by subject) ──
 
 class _ListView extends StatelessWidget with ListViewBuilderMixin {
-  @override
   final List<dynamic> summary;
   @override
   final Color primaryColor;

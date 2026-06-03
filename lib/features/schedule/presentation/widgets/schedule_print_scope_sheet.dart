@@ -116,10 +116,7 @@ class _SchedulePrintScopeSheetState extends State<SchedulePrintScopeSheet> {
                 Expanded(
                   child: Text(
                     widget.filterSummary!,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: ColorUtils.slate700,
-                    ),
+                    style: TextStyle(fontSize: 12, color: ColorUtils.slate700),
                   ),
                 ),
               ],

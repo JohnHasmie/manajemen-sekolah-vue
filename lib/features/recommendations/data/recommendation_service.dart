@@ -1,15 +1,21 @@
-/// api_recommendation_services.dart - Interfaces with the AI recommendation engine.
+/// api_recommendation_services.dart - Interfaces with the AI recommendation
+/// engine.
 /// Like a Laravel service that calls an external AI microservice / Vue's AI store module.
 ///
-/// This service communicates with a separate AI API (KamillLabs Edu AI), not the main
-/// Laravel backend. It handles AI-powered teaching recommendations: generating them
-/// (async via job polling), listing, updating status, and getting class summaries.
+/// This service communicates with a separate AI API (KamillLabs Edu AI), not
+/// the main
+/// Laravel backend. It handles AI-powered teaching recommendations: generating
+/// them
+/// (async via job polling), listing, updating status, and getting class
+/// summaries.
 ///
 /// Key patterns:
-/// - Async job processing: generate returns 202 with a job_id, then poll until done
+/// - Async job processing: generate returns 202 with a job_id, then poll until
+/// done
 /// - Rate limiting: 429 responses throw [RateLimitException]
 /// - Separate auth headers (no X-School-ID, only Bearer token)
-/// - Uses its own Dio instance (_aiDio) instead of dioClient, because the AI API
+/// - Uses its own Dio instance (_aiDio) instead of dioClient, because the AI
+/// API
 ///   has a different base URL and does not need X-School-ID headers.
 library;
 
@@ -23,11 +29,14 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for AI-powered teaching recommendation API calls.
-/// Talks to a separate microservice (KamillLabs Edu AI), not the main Laravel backend.
-/// Like a Laravel service class that uses `Http::baseUrl()` to call an external API,
+/// Talks to a separate microservice (KamillLabs Edu AI), not the main Laravel
+/// backend.
+/// Like a Laravel service class that uses `Http::baseUrl()` to call an external
+/// API,
 /// or a Vue composable that wraps a dedicated Axios instance for an AI service.
 ///
-/// Key difference from other services: uses [_aiBaseUrl] instead of the global dioClient,
+/// Key difference from other services: uses [_aiBaseUrl] instead of the global
+/// dioClient,
 /// and has its own auth interceptor without X-School-ID.
 class ApiRecommendationService {
   /// Base URL for the AI microservice. Separate from the main Laravel API.
@@ -572,7 +581,8 @@ class ApiRecommendationService {
   }
 
   /// Get per-student recommendation status counts for a class.
-  /// Returns a Map keyed by student_id with { total, pending, completed } counts.
+  /// Returns a Map keyed by student_id with { total, pending, completed }
+  /// counts.
   /// Paginates through all pages (backend max per_page is 50).
   ///
   /// Pass [homeroomClassId] (not [teacherId]) when the caller is the wali

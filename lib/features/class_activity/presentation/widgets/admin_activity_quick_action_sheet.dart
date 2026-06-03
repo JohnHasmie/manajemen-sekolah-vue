@@ -76,7 +76,8 @@ class _Body extends StatelessWidget {
             iconBg: const Color(0xFFCCFBF1),
             iconFg: const Color(0xFF0D9488),
             title: 'Filter pakai Guru ini',
-            desc: 'Tampilkan semua kegiatan oleh ${activity.teacherName ?? '—'}',
+            desc:
+                'Tampilkan semua kegiatan oleh ${activity.teacherName ?? '—'}',
             onTap: () {
               AppNavigator.pop(context);
               onFilterByTeacher();
@@ -88,8 +89,7 @@ class _Body extends StatelessWidget {
             iconBg: const Color(0xFFDBEAFE),
             iconFg: const Color(0xFF1D4ED8),
             title: 'Filter pakai Mapel ini',
-            desc:
-                'Tampilkan semua kegiatan ${activity.subjectName ?? '—'}',
+            desc: 'Tampilkan semua kegiatan ${activity.subjectName ?? '—'}',
             onTap: () {
               AppNavigator.pop(context);
               onFilterBySubject();

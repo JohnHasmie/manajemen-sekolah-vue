@@ -28,7 +28,8 @@ abstract class Attendance with _$Attendance {
   static Map<String, dynamic> _standardizeJson(Map<String, dynamic> json) {
     final Map<String, dynamic> mapped = Map<String, dynamic>.from(json);
 
-    // Map Indonesian keys to backend-expected snake_case English model properties
+    // Map Indonesian keys to backend-expected snake_case English model
+    // properties
     mapped['student_id'] ??= mapped['id_siswa'];
     mapped['date'] ??= mapped['tanggal'];
     // Normalize is_read: API may return int (0/1), String ("0"/"1"), or bool

@@ -1,5 +1,6 @@
 // AdminActivityDetailItem — a single labelled row used inside the admin
-// activity detail dialog (icon + label + value, like a form field in read mode).
+// activity detail dialog (icon + label + value, like a form field in read
+// mode).
 //
 // Extracted from `AdminClassActivityScreenState._buildDetailItem`.
 // Think of this like a Vue `<DetailItem :icon :label :value />` — a small,

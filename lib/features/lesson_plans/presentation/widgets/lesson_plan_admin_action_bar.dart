@@ -180,10 +180,7 @@ class _LessonPlanAdminActionBarState
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-          ),
+          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
         ),
         icon: _busy
             ? const SizedBox(

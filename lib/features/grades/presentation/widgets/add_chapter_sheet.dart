@@ -151,7 +151,7 @@ class _AddChapterSheetState extends State<_AddChapterSheet> {
       Future.delayed(const Duration(milliseconds: 280), () {
         if (!mounted) return;
         final ctx = _selectedTileKey.currentContext;
-        if (ctx == null) return;
+        if (ctx == null || !ctx.mounted) return;
         Scrollable.ensureVisible(
           ctx,
           duration: const Duration(milliseconds: 240),

@@ -1,6 +1,8 @@
 // Inline edit-mode table for the Grade Book screen.
-// Displays all students with score + description inputs for a single assessment.
-// Like a Vue inline-editing data-table component driven by props and $emit callbacks.
+// Displays all students with score + description inputs for a single
+// assessment.
+// Like a Vue inline-editing data-table component driven by props and $emit
+// callbacks.
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
@@ -8,9 +10,11 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
-/// Inline edit-mode table shown while a teacher edits grades for one assessment.
+/// Inline edit-mode table shown while a teacher edits grades for one
+/// assessment.
 ///
-/// This is like a Vue `<InlineEditTable>` component. It owns no mutable state of
+/// This is like a Vue `<InlineEditTable>` component. It owns no mutable state
+/// of
 /// its own — all controllers/focus nodes are passed in from the parent so that
 /// the parent can read final values when the "Finish" button is tapped.
 ///

@@ -162,7 +162,6 @@ mixin GradeRecapBrandBodyMixin on ConsumerState<GradeRecapOverviewPage> {
     final initial = sn.isNotEmpty ? sn[0].toUpperCase() : '?';
     final spec = _subjectColor(sn);
 
-    final recapCount = ((item.subject['recap_count'] ?? 0) as num).toInt();
     final totalStudents = ((item.subject['total_students'] ?? 0) as num)
         .toInt();
     final completionPct = ((item.subject['completion_pct'] ?? 0) as num)

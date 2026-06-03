@@ -1,29 +1,37 @@
 /// error_utils.dart - Converts raw exceptions/errors into user-friendly Indonesian messages.
-/// Like a Laravel Helper function, or Laravel's exception handler (`Handler.php`)
+/// Like a Laravel Helper function, or Laravel's exception handler
+/// (`Handler.php`)
 /// that maps exceptions to HTTP responses. In Vue terms, this is like an Axios
 /// interceptor that translates API errors into localized toast messages.
 library;
 
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
-/// Maps raw error objects to localized, user-friendly Indonesian error messages.
+/// Maps raw error objects to localized, user-friendly Indonesian error
+/// messages.
 /// Like a Laravel Helper function class, or the `render()` method in Laravel's
 /// `App\Exceptions\Handler` that converts exceptions into readable responses.
 ///
-/// Uses keyword matching on the error's string representation to categorize errors
-/// into groups: connection, timeout, auth, business logic, permissions, server errors, etc.
+/// Uses keyword matching on the error's string representation to categorize
+/// errors
+/// into groups: connection, timeout, auth, business logic, permissions, server
+/// errors, etc.
 ///
-/// Priority order matters: specific business-logic checks (e.g., "email tidak terdaftar")
-/// run before generic HTTP status code checks (e.g., "404") to avoid false matches.
+/// Priority order matters: specific business-logic checks (e.g., "email tidak
+/// terdaftar")
+/// run before generic HTTP status code checks (e.g., "404") to avoid false
+/// matches.
 class ErrorUtils {
-  /// Returns a user-friendly Indonesian error message based on the [error] object.
+  /// Returns a user-friendly Indonesian error message based on the [error]
+  /// object.
   /// Like Laravel's `Handler::render()` - converts any thrown error into a
   /// displayable string for the UI.
   ///
   /// [error] - Any error/exception object. Its `.toString()` is analyzed via
   ///   keyword matching to determine the appropriate message.
   ///
-  /// Returns a localized Indonesian string suitable for showing in a SnackBar or dialog.
+  /// Returns a localized Indonesian string suitable for showing in a SnackBar
+  /// or dialog.
   static String getFriendlyMessage(dynamic error) {
     AppLogger.error('error', error);
 

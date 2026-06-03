@@ -59,14 +59,14 @@ class ProfileService {
     return ManagedSchoolsResult(activeSchoolId: activeId, schools: list);
   }
 
-  _ParsedItem _parseItem(Map<String, dynamic> m) {
+  ParsedItem _parseItem(Map<String, dynamic> m) {
     final state = switch ((m['state'] ?? '').toString()) {
       'ok' => SecurityState.ok,
       'warn' => SecurityState.warn,
       'fail' => SecurityState.fail,
       _ => SecurityState.warn,
     };
-    return _ParsedItem(
+    return ParsedItem(
       key: (m['key'] ?? '').toString(),
       label: (m['label'] ?? '').toString(),
       state: state,
@@ -77,7 +77,7 @@ class ProfileService {
 }
 
 class SecurityStatusResult {
-  final List<_ParsedItem> items;
+  final List<ParsedItem> items;
   final String? computedAt;
   const SecurityStatusResult({required this.items, this.computedAt});
 
@@ -94,13 +94,13 @@ class SecurityStatusResult {
   }
 }
 
-class _ParsedItem {
+class ParsedItem {
   final String key;
   final String label;
   final SecurityState state;
   final String? actionLabel;
   final String? actionRoute;
-  const _ParsedItem({
+  const ParsedItem({
     required this.key,
     required this.label,
     required this.state,

@@ -35,8 +35,6 @@ mixin TeacherScheduleCacheMixin on ConsumerState<TeachingScheduleScreen> {
   bool get isLoadingInternal;
   set isLoadingInternal(bool v);
 
-  static List<dynamic>? _memCachedSchedules;
-  static List<Map<String, String>>? _memCachedClasses;
   static const String _prefKeyLastCacheKey = 'schedule_last_cache_key';
 
   String? buildScheduleCacheKey(
@@ -74,9 +72,6 @@ mixin TeacherScheduleCacheMixin on ConsumerState<TeachingScheduleScreen> {
     })
     loadScheduleCallback,
   ) async {
-    _memCachedSchedules = null;
-    _memCachedClasses = null;
-
     final ctrl = ref.read(teacherScheduleControllerProvider);
     await ctrl.invalidateScheduleCache(
       buildScheduleCacheKey(
@@ -218,9 +213,6 @@ mixin TeacherScheduleCacheMixin on ConsumerState<TeachingScheduleScreen> {
         isLoadingInternal = false;
         errorMessageInternal = null;
       });
-
-      _memCachedSchedules = schedules;
-      _memCachedClasses = classes;
 
       if (cacheKey != null) {
         ctrl.saveScheduleToCache(

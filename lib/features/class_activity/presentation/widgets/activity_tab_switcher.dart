@@ -7,7 +7,8 @@ import 'package:manajemensekolah/core/widgets/tab_switcher.dart';
 
 /// Renders the "Semua Siswa" / "Khusus Siswa" tab bar for the activity list step.
 ///
-/// Wraps the shared [TabSwitcher] component with the two activity-audience tabs.
+/// Wraps the shared [TabSwitcher] component with the two activity-audience
+/// tabs.
 /// The [tabSwitcherKey] must remain in the parent State so the onboarding tour
 /// can reference it (like a Vue `$refs` key staying on the parent component).
 ///

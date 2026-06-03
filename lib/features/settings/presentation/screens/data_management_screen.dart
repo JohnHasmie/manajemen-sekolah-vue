@@ -39,7 +39,7 @@ class AdminDataManagementScreen extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.zero,
         children: [
-          BrandPageHeader(
+          const BrandPageHeader(
             role: 'admin',
             subtitle: 'MANAJEMEN DATA',
             title: 'Kelola Data',

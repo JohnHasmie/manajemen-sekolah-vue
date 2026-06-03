@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 class MonthFilterResult {
   /// Year (e.g. 2026), null = all years
   final int? year;
+
   /// Month (1-12), null = all months
   final int? month;
   const MonthFilterResult({this.year, this.month});
@@ -133,9 +134,7 @@ class _MonthFilterSheetState extends State<MonthFilterSheet> {
           ? const Center(
               child: SizedBox(
                 height: 100,
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: Center(child: CircularProgressIndicator()),
               ),
             )
           : Column(

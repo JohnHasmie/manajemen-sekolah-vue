@@ -6,7 +6,8 @@ import 'package:manajemensekolah/features/attendance/presentation/mixins/attenda
 import 'package:manajemensekolah/features/attendance/presentation/mixins/attendance_dialog_shared_mixin.dart';
 
 /// Facade mixin that combines all attendance dialog functionality.
-/// This maintains backward compatibility while delegating to specialized mixins.
+/// This maintains backward compatibility while delegating to specialized
+/// mixins.
 ///
 /// The dialog handling is split into three focused mixins:
 /// - AttendanceDialogAddMixin: Add attendance flow

@@ -14,7 +14,8 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Service for exporting student attendance (absensi/presence) data to Excel.
-/// Similar to Laravel's `Excel::download(new AttendanceExport, 'Absensi.xlsx')`.
+/// Similar to Laravel's `Excel::download(new AttendanceExport,
+/// 'Absensi.xlsx')`.
 ///
 /// Supports filter-based export (by class, subject, date range) and validates
 /// attendance status against an allowlist (hadir/terlambat/izin/sakit/alpha).
@@ -228,12 +229,14 @@ class ExcelPresenceService {
     }
   }
 
-  /// Format a DateTime to 'YYYY-MM-DD' string for export. Like Carbon's `format('Y-m-d')`.
+  /// Format a DateTime to 'YYYY-MM-DD' string for export. Like Carbon's
+  /// `format('Y-m-d')`.
   static String formatDateForExport(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  /// Get localized day name from a DateTime. Like Carbon's `translatedFormat('l')`.
+  /// Get localized day name from a DateTime. Like Carbon's
+  /// `translatedFormat('l')`.
   static String getDayName(DateTime date, LanguageProvider languageProvider) {
     final days = [
       languageProvider.getTranslatedText({'en': 'Sunday', 'id': 'Minggu'}),

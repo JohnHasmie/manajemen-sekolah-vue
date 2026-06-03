@@ -18,7 +18,8 @@ import 'package:manajemensekolah/features/class_activity/presentation/mixins/emb
 import 'package:manajemensekolah/features/class_activity/presentation/mixins/embedded_activity_scroll_mixin.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_list_view.dart';
 
-/// Lightweight activity list screen that only renders the activity list (step 2)
+/// Lightweight activity list screen that only renders the activity list (step
+/// 2)
 /// without class/subject wizard overhead.
 ///
 /// Used by:

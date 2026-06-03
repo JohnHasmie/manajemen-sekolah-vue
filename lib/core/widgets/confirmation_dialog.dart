@@ -10,7 +10,8 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A reusable confirmation dialog with a gradient header and confirm/cancel buttons.
 ///
-/// Like a Vue `<ConfirmDialog>` component, or using SweetAlert2 in a Laravel app:
+/// Like a Vue `<ConfirmDialog>` component, or using SweetAlert2 in a Laravel
+/// app:
 /// ```js
 /// Swal.fire({ title: 'Delete?', confirmButtonText: 'Delete' })
 /// ```
@@ -18,7 +19,8 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// Props (parameters):
 /// - [title] - dialog title displayed in the gradient header
 /// - [content] - body message explaining the action
-/// - [confirmText] - label for the confirm button (defaults to translated 'Delete')
+/// - [confirmText] - label for the confirm button (defaults to translated
+/// 'Delete')
 /// - [confirmColor] - color theme for the header and confirm button
 ///
 /// Returns `bool` via `Navigator.pop(context, true/false)`.

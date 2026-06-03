@@ -526,11 +526,7 @@ class _ImageProofView extends StatefulWidget {
   final Map<String, String>? headers;
   final String? paymentId;
 
-  const _ImageProofView({
-    required this.url,
-    this.headers,
-    this.paymentId,
-  });
+  const _ImageProofView({required this.url, this.headers, this.paymentId});
 
   @override
   State<_ImageProofView> createState() => _ImageProofViewState();
@@ -571,9 +567,7 @@ class _ImageProofViewState extends State<_ImageProofView> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(
-                child: CircularProgressIndicator(
-                  color: ColorUtils.slate600,
-                ),
+                child: CircularProgressIndicator(color: ColorUtils.slate600),
               );
             }
             if (snapshot.hasError) {
@@ -751,8 +745,7 @@ class _PdfProofViewState extends State<_PdfProofView> {
           ),
           const SizedBox(height: AppSpacing.lg),
           ElevatedButton.icon(
-            onPressed:
-                _isDownloading ? null : _downloadAndOpen,
+            onPressed: _isDownloading ? null : _downloadAndOpen,
             icon: const Icon(Icons.download_rounded, size: 16),
             label: _isDownloading
                 ? const SizedBox(
@@ -762,10 +755,7 @@ class _PdfProofViewState extends State<_PdfProofView> {
                   )
                 : const Text('Download & Buka PDF'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 22,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),

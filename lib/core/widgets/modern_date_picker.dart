@@ -65,7 +65,8 @@ Future<DateTime?> showModernDatePicker({
               ],
             ),
           ),
-          // Calendar — use ThemeData.light() to avoid inheriting global colorScheme.fromSeed
+          // Calendar — use ThemeData.light() to avoid inheriting global
+          // colorScheme.fromSeed
           SizedBox(
             height: 350,
             child: Theme(

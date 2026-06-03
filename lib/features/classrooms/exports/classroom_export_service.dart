@@ -81,7 +81,8 @@ class ExcelClassService {
   }
 
   /// Download an Excel import template from the backend GET `/class/template`.
-  /// Like a Laravel route that returns `Excel::download(new ClassTemplateExport)`.
+  /// Like a Laravel route that returns `Excel::download(new
+  /// ClassTemplateExport)`.
   /// Provides users with a pre-formatted .xlsx file to fill in and import.
   static Future<void> downloadTemplate(BuildContext context) async {
     try {
@@ -188,8 +189,10 @@ class ExcelClassService {
 
   /// Local fallback validation for class data before export.
   /// Like a Laravel FormRequest but running client-side when the backend
-  /// validation endpoint is not used. Checks required fields (name, grade_level)
-  /// and handles polymorphic homeroom_teacher data (List from pivot vs Map legacy).
+  /// validation endpoint is not used. Checks required fields (name,
+  /// grade_level)
+  /// and handles polymorphic homeroom_teacher data (List from pivot vs Map
+  /// legacy).
   /// Throws an Exception with all accumulated errors if validation fails.
   static List<Map<String, dynamic>> validateClassData(List<dynamic> classes) {
     final List<Map<String, dynamic>> validatedData = [];

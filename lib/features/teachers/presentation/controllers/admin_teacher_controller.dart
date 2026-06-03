@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/services/filter_options_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
@@ -407,8 +406,6 @@ class AdminTeacherController {
       return false;
     }
   }
-
-
 
   // ---------------------------------------------------------------------------
   // Excel flows

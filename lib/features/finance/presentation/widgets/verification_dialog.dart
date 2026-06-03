@@ -85,7 +85,6 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog>
   @override
   Map<String, dynamic> get payment => widget.payment;
 
-  @override
   ApiService get apiService => widget.apiService;
 
   @override
@@ -94,7 +93,6 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog>
   @override
   Color get primaryColor => widget.primaryColor;
 
-  @override
   VoidCallback get onSuccess => widget.onSuccess;
 
   @override
@@ -117,10 +115,10 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog>
             : _notesController.text,
       });
 
-      if (!mounted) return;
+      if (!context.mounted) return;
       AppNavigator.pop(context);
       onSuccess();
-      if (mounted) {
+      if (context.mounted) {
         SnackBarUtils.showSuccess(
           context,
           _status == 'verified'
@@ -130,7 +128,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog>
       }
     } catch (error) {
       AppLogger.error('finance', error);
-      if (mounted) {
+      if (context.mounted) {
         SnackBarUtils.showError(
           context,
           '${AppLocalizations.failedToVerify.tr}: '

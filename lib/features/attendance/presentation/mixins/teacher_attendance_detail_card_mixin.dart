@@ -248,8 +248,9 @@ mixin TeacherAttendanceDetailCardMixin
         // Drop the change into the controller's edited-status map and
         // persist via the same path the FAB/Edit sheet uses, so it
         // re-fetches on success and the row repaints.
-        ref.read(teacherAttendanceProvider(params).notifier)
-          .updateStatus(student.id, status);
+        ref
+            .read(teacherAttendanceProvider(params).notifier)
+            .updateStatus(student.id, status);
         await ref
             .read(teacherAttendanceProvider(params).notifier)
             .saveChanges();

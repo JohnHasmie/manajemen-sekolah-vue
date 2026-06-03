@@ -7,7 +7,8 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
-/// A tappable card that represents one activity type (e.g. "Tugas" or "Materi").
+/// A tappable card that represents one activity type (e.g. "Tugas" or
+/// "Materi").
 ///
 /// Constructor params replace every state reference from the original
 /// `_buildActivityTypeOption` method — like Vue props:

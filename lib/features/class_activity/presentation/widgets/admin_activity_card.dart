@@ -176,10 +176,7 @@ class AdminActivityCard extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      ColorUtils.brandCobalt,
-                      const Color(0xFF21AFE6),
-                    ],
+                    colors: [ColorUtils.brandCobalt, const Color(0xFF21AFE6)],
                   ),
                   borderRadius: BorderRadius.circular(999),
                 ),

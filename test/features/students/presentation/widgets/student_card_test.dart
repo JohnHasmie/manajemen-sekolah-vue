@@ -58,42 +58,48 @@ void main() {
       expect(find.text('Alice Tan'), findsOneWidget);
     });
 
-    testWidgets('renders gender text tag', (tester) async {
-      await tester.pumpWidget(
-        _buildCard(student: _student, genderText: 'Female'),
-      );
-      expect(find.text('Female'), findsOneWidget);
+    testWidgets('renders NIS meta line when student_number present', (
+      tester,
+    ) async {
+      // The SS2 redesign dropped the standalone gender tag. The top meta
+      // line now carries "className · NIS <number>" instead.
+      const withNis = <String, dynamic>{
+        'name': 'Alice Tan',
+        'class': {'name': 'Class 7A'},
+        'student_number': '1234567',
+      };
+      await tester.pumpWidget(_buildCard(student: withNis));
+      expect(find.text('Class 7A · NIS 1234567'), findsOneWidget);
     });
 
-    testWidgets('renders class name tag', (tester) async {
+    testWidgets('renders class name in top meta', (tester) async {
+      // With no NIS the top meta line is just the class name.
       await tester.pumpWidget(_buildCard(student: _student));
       expect(find.text('Class 7A'), findsOneWidget);
     });
 
-    testWidgets('renders avatar initial from student name', (tester) async {
+    testWidgets('renders avatar initials from student name', (tester) async {
       await tester.pumpWidget(_buildCard(student: _student));
-      // Avatar shows first letter of "Alice Tan" → 'A'.
-      expect(find.text('A'), findsAtLeastNWidgets(1));
+      // InitialsAvatar shows two-letter initials of "Alice Tan" → 'AT'.
+      expect(find.text('AT'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('renders Active status badge', (tester) async {
+    testWidgets('renders Aktif status badge', (tester) async {
       await tester.pumpWidget(_buildCard(student: _student));
-      // StudentCard always renders a hardcoded "Active" label (not translated).
-      expect(find.text('Active'), findsOneWidget);
+      // BrandListRow renders a hardcoded "Aktif" inline status label.
+      expect(find.text('Aktif'), findsOneWidget);
     });
 
-    // ── Edit / delete action icons ────────────────────────────────────────────
+    // ── Trailing CTA ──────────────────────────────────────────────────────────
+    //
+    // The SS2 redesign replaced the inline edit/delete icon buttons with a
+    // "Detail →" trailing CTA. Editing is now triggered via long-press
+    // (wired to onEdit when not read-only); deletion happens from the detail
+    // sheet / bulk-select mode, not from a per-row icon.
 
-    testWidgets('shows edit and delete icons when NOT read-only', (
-      tester,
-    ) async {
+    testWidgets('shows Detail CTA in the trailing slot', (tester) async {
       await tester.pumpWidget(_buildCard(student: _student, isReadOnly: false));
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
-    });
-
-    testWidgets('hides edit and delete icons when read-only', (tester) async {
-      await tester.pumpWidget(_buildCard(student: _student, isReadOnly: true));
+      expect(find.text('Detail →'), findsOneWidget);
       expect(find.byIcon(Icons.edit_outlined), findsNothing);
       expect(find.byIcon(Icons.delete_outline), findsNothing);
     });
@@ -110,7 +116,9 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('calls onEdit when edit icon is tapped', (tester) async {
+    testWidgets('calls onEdit on long-press when NOT read-only', (
+      tester,
+    ) async {
       bool edited = false;
       await tester.pumpWidget(
         _buildCard(
@@ -119,21 +127,23 @@ void main() {
           onEdit: () => edited = true,
         ),
       );
-      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.longPress(find.text('Alice Tan'));
       expect(edited, isTrue);
     });
 
-    testWidgets('calls onDelete when delete icon is tapped', (tester) async {
-      bool deleted = false;
+    testWidgets('does not call onEdit on long-press when read-only', (
+      tester,
+    ) async {
+      bool edited = false;
       await tester.pumpWidget(
         _buildCard(
           student: _student,
-          isReadOnly: false,
-          onDelete: () => deleted = true,
+          isReadOnly: true,
+          onEdit: () => edited = true,
         ),
       );
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      expect(deleted, isTrue);
+      await tester.longPress(find.text('Alice Tan'));
+      expect(edited, isFalse);
     });
 
     // ── Conditional rendering — class name ───────────────────────────────────

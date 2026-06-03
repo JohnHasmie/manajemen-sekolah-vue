@@ -95,7 +95,8 @@ class AuthService {
     }
   }
 
-  /// Authenticates via Google OAuth. Sends Google ID token for server-side verification.
+  /// Authenticates via Google OAuth. Sends Google ID token for server-side
+  /// verification.
   static Future<Map<String, dynamic>> googleLogin({
     required String email,
     String? displayName,
@@ -294,7 +295,8 @@ class AuthService {
     }
   }
 
-  /// Normalizes Indonesian backend flags to the keys used by _handleLoginResponse.
+  /// Normalizes Indonesian backend flags to the keys used by
+  /// _handleLoginResponse.
   static Map<String, dynamic> _normalizeFlags(dynamic data) {
     final responseData = Map<String, dynamic>.from(data);
     if (responseData['pilih_sekolah'] == true) {

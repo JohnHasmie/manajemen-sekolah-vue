@@ -1,6 +1,8 @@
 /// api_exceptions.dart - Typed exception classes for API error handling.
-/// Like Laravel's custom exception classes (e.g., AuthenticationException, ValidationException).
-/// Replaces the generic `throw Exception(message)` pattern used across all services.
+/// Like Laravel's custom exception classes (e.g., AuthenticationException,
+/// ValidationException).
+/// Replaces the generic `throw Exception(message)` pattern used across all
+/// services.
 library;
 
 /// Base class for all API-related exceptions.
@@ -26,7 +28,8 @@ class AuthenticationException extends ApiException {
   });
 }
 
-/// Thrown when the user doesn't have access to the requested school (403 with school context).
+/// Thrown when the user doesn't have access to the requested school (403 with
+/// school context).
 /// Like a custom Laravel `SchoolAccessDeniedException`.
 class SchoolAccessDeniedException extends ApiException {
   const SchoolAccessDeniedException(

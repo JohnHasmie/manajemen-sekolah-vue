@@ -22,6 +22,7 @@ class QueueItem {
   final String status;
   final String? rejectionReason;
   final String? updatedAtHuman;
+
   /// Backend lesson_plans.format (k13 / rpp_1_halaman / modul_ajar /
   /// file). Defaults to 'k13' when missing so legacy rows render with
   /// the K13 pill instead of a blank space.
@@ -234,7 +235,8 @@ class AdminLessonPlanQueueParams {
   }
 
   @override
-  int get hashCode => Object.hash(format, subjectId, classId, teacherId, period);
+  int get hashCode =>
+      Object.hash(format, subjectId, classId, teacherId, period);
 }
 
 final adminLessonPlanQueueParamsProvider =
@@ -245,11 +247,13 @@ final adminLessonPlanQueueParamsProvider =
 final adminLessonPlanQueueProvider =
     FutureProvider.autoDispose<AdminLessonPlanQueue>((ref) async {
       final params = ref.watch(adminLessonPlanQueueParamsProvider);
-      return ref.read(adminLessonPlanQueueServiceProvider).fetch(
-        format: params.format,
-        subjectId: params.subjectId,
-        classId: params.classId,
-        teacherId: params.teacherId,
-        period: params.period,
-      );
+      return ref
+          .read(adminLessonPlanQueueServiceProvider)
+          .fetch(
+            format: params.format,
+            subjectId: params.subjectId,
+            classId: params.classId,
+            teacherId: params.teacherId,
+            period: params.period,
+          );
     });

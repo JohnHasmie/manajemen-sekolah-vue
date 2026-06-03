@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
@@ -101,8 +100,10 @@ class SubjectClassManagementPageState
           'id': 'Lepas Kelas',
         }),
         content: lang.getTranslatedText({
-          'en': 'Are you sure you want to remove ${selected.length} class(es) from this subject?',
-          'id': 'Yakin ingin melepas ${selected.length} kelas dari mata pelajaran ini?',
+          'en':
+              'Are you sure you want to remove ${selected.length} class(es) from this subject?',
+          'id':
+              'Yakin ingin melepas ${selected.length} kelas dari mata pelajaran ini?',
         }),
         confirmColor: Colors.red,
       ),
@@ -133,7 +134,7 @@ class SubjectClassManagementPageState
     setState(selectedIds.clear);
     await loadData();
 
-    if (mounted) {
+    if (context.mounted) {
       SnackBarUtils.showSuccess(
         context,
         lang.getTranslatedText({
@@ -143,9 +144,6 @@ class SubjectClassManagementPageState
       );
     }
   }
-
-  @override
-  late TextEditingController searchController;
 
   @override
   void initState() {

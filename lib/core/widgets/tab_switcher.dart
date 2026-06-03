@@ -11,7 +11,8 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 /// A horizontal tab switcher with icon and label for each tab.
 ///
 /// Like a Vue `<TabSwitcher>` component with props:
-/// - [tabController] - Flutter's TabController (like Vue's `v-model` for active tab index)
+/// - [tabController] - Flutter's TabController (like Vue's `v-model` for active
+/// tab index)
 /// - [tabs] - list of [TabItem] objects defining label and icon for each tab
 /// - [primaryColor] - highlight color for the selected tab
 ///

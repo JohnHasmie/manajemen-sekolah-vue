@@ -1,4 +1,5 @@
-// performance_service.dart - App performance monitoring via Firebase Performance.
+// performance_service.dart - App performance monitoring via Firebase
+// Performance.
 // Like Laravel Telescope's request/query monitoring, or a Vue performance plugin.
 // Tracks screen load times, API latency, and custom operation durations.
 
@@ -10,14 +11,16 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// but the data goes to the Firebase console instead of a local dashboard.
 ///
 /// Three main monitoring types:
-/// 1. **Custom Traces** - measure duration of any operation (like Telescope's query timing)
+/// 1. **Custom Traces** - measure duration of any operation (like Telescope's
+/// query timing)
 /// 2. **Screen Load Traces** - measure how long screens take to load
 /// 3. **HTTP Metrics** - detailed tracking of API call performance
 ///
 /// Also provides [trackAsync], a convenience wrapper that automatically
 /// traces any async operation -- like wrapping a Laravel job in a timer.
 ///
-/// Uses Singleton pattern (`factory` + `_internal`) just like [AnalyticsService].
+/// Uses Singleton pattern (`factory` + `_internal`) just like
+/// [AnalyticsService].
 class PerformanceService {
   static final PerformanceService _instance = PerformanceService._internal();
   factory PerformanceService() => _instance;
@@ -25,7 +28,8 @@ class PerformanceService {
 
   static FirebasePerformance? _performance;
 
-  /// Initialize Firebase Performance monitoring. Call after `Firebase.initializeApp()`.
+  /// Initialize Firebase Performance monitoring. Call after
+  /// `Firebase.initializeApp()`.
   /// Like registering Telescope in Laravel's `AppServiceProvider::register()`.
   static Future<void> initialize() async {
     try {
@@ -110,7 +114,8 @@ class PerformanceService {
     }
   }
 
-  /// Stop an HTTP metric and attach response metadata (status code, payload sizes).
+  /// Stop an HTTP metric and attach response metadata (status code, payload
+  /// sizes).
   /// All parameters are optional -- attach whatever info is available.
   static Future<void> stopHttpMetric(
     HttpMetric? metric, {

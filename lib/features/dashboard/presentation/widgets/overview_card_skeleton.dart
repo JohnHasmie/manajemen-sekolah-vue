@@ -1,6 +1,9 @@
-// Shimmer skeleton placeholder for an overview card in the "Today's Overview" grid.
-// Shown while the dashboard stats are loading — matches the shape of OverviewCard.
-// Like a Vue `<Skeleton>` component that mirrors a card in a 2-column grid layout.
+// Shimmer skeleton placeholder for an overview card in the "Today's Overview"
+// grid.
+// Shown while the dashboard stats are loading — matches the shape of
+// OverviewCard.
+// Like a Vue `<Skeleton>` component that mirrors a card in a 2-column grid
+// layout.
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';

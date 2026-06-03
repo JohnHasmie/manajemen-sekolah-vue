@@ -739,6 +739,7 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
     if (!mounted) return;
     setState(() => _regeneratingField = null);
     await _loadRegenLimits();
+    if (!mounted) return;
     var msg = '$ok field ${AppLocalizations.fieldRegeneratedSuccessfully.tr}';
     if (fail > 0) {
       msg += ', $fail ${AppLocalizations.failedExceededLimit.tr}';

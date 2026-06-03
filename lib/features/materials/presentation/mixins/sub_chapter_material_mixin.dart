@@ -31,7 +31,8 @@ mixin SubChapterMaterialMixin on ConsumerState<SubBabDetailPage> {
       return;
     }
 
-    // Only set materi-loading, keep _aiGeneratedData so quiz+ref tabs stay visible
+    // Only set materi-loading, keep _aiGeneratedData so quiz+ref tabs stay
+    // visible
     setState(() => isRegeneratingMateri = true);
     final aiCacheKey = CacheKeyBuilder.custom(
       'materi_ai',

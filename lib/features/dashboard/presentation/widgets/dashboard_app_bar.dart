@@ -1,6 +1,8 @@
 // DashboardAppBar — the pinned top app bar for all dashboard roles.
-// Displays school name, language switcher, notification badge, and account button.
-// Like a Vue layout component (<AppHeader>) that accepts callbacks for modal actions.
+// Displays school name, language switcher, notification badge, and account
+// button.
+// Like a Vue layout component (<AppHeader>) that accepts callbacks for modal
+// actions.
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
@@ -14,7 +16,8 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 /// All interactive actions are provided by the parent via callbacks so this
 /// widget stays stateless (like a "dumb" Vue presentational component).
 class DashboardAppBar extends StatelessWidget {
-  /// The school name shown as the main title. Falls back to [AppLocalizations.appTitle].
+  /// The school name shown as the main title. Falls back to
+  /// [AppLocalizations.appTitle].
   final String? schoolName;
 
   /// Role-specific primary color used for the logo container.

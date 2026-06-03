@@ -1,8 +1,11 @@
-/// log_service.dart - Sends client-side error logs to a centralized logging backend.
+/// log_service.dart - Sends client-side error logs to a centralized logging
+/// backend.
 /// Like Laravel's Log facade sending to a remote log aggregator / Vue's error handler.
 ///
-/// This service posts error details (message, stack trace, user context, platform)
-/// to a separate logging microservice running on port 5009. It is fire-and-forget:
+/// This service posts error details (message, stack trace, user context,
+/// platform)
+/// to a separate logging microservice running on port 5009. It is
+/// fire-and-forget:
 /// failures to log are silently caught to avoid cascading errors.
 ///
 /// Similar to how you might use Sentry or Bugsnag in a Laravel/Vue app,
@@ -22,14 +25,16 @@ import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 
 /// Service for sending client-side error logs to the logging backend.
-/// Like Laravel's `Log::error()` but sends to a remote API instead of local files.
+/// Like Laravel's `Log::error()` but sends to a remote API instead of local
+/// files.
 /// Runs on a different port (5009) than the main API -- like a separate
 /// microservice in your Docker Compose stack.
 class LogService {
   /// Port for the logging microservice. Separate from the main API.
   static const String _logApiPort = '5009';
 
-  /// Constructs the log API URL by taking the main API host and swapping the port.
+  /// Constructs the log API URL by taking the main API host and swapping the
+  /// port.
   /// Like constructing a sibling service URL in a microservice architecture.
   static String get _logApiUrl {
     // Use the same host as the main ApiService but with port 5009
@@ -58,10 +63,18 @@ class LogService {
   /// Logs an error.
   void error(String message, [dynamic error, StackTrace? stackTrace]) {
     AppLogger.error('app', '$message: $error');
-    _log('error', '$message: ${error?.toString() ?? ""}', trace: stackTrace?.toString());
+    _log(
+      'error',
+      '$message: ${error?.toString() ?? ""}',
+      trace: stackTrace?.toString(),
+    );
   }
 
-  static Future<void> _log(String level, String message, {String? trace}) async {
+  static Future<void> _log(
+    String level,
+    String message, {
+    String? trace,
+  }) async {
     try {
       final prefs = PreferencesService();
       final userJson = prefs.getString('user');
@@ -107,7 +120,8 @@ class LogService {
       await logDio.post(_logApiUrl, data: body);
     } catch (e) {
       final msg = e.toString();
-      if (msg.contains('Connection refused') || msg.contains('SocketException')) {
+      if (msg.contains('Connection refused') ||
+          msg.contains('SocketException')) {
         return;
       }
     }

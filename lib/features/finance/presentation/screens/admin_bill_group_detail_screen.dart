@@ -117,10 +117,7 @@ class _AdminBillGroupDetailScreenState
       final list = raw is List ? raw : const [];
       if (!mounted) return;
       setState(() {
-        _bills = list
-            .whereType<Map>()
-            .map((m) => Map<String, dynamic>.from(m))
-            .toList();
+        _bills = list.whereType<Map>().map(Map<String, dynamic>.from).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -164,17 +161,13 @@ class _AdminBillGroupDetailScreenState
             BrandKpiColumn(
               label: 'Belum bayar',
               value: '${stats.unpaidCount}',
-              valueColor: stats.unpaidCount > 0
-                  ? ColorUtils.warning600
-                  : null,
+              valueColor: stats.unpaidCount > 0 ? ColorUtils.warning600 : null,
               sub: _formatRupiahShort(stats.unpaidAmount),
             ),
             BrandKpiColumn(
               label: 'Jatuh tempo',
               value: '${stats.overdueCount}',
-              valueColor: stats.overdueCount > 0
-                  ? ColorUtils.error600
-                  : null,
+              valueColor: stats.overdueCount > 0 ? ColorUtils.error600 : null,
               sub: _formatRupiahShort(stats.overdueAmount),
             ),
           ],
@@ -192,21 +185,13 @@ class _AdminBillGroupDetailScreenState
       );
     }
     if (_errorMessage != null) {
-      return _ErrorState(
-        message: _errorMessage!,
-        onRetry: _loadBills,
-      );
+      return _ErrorState(message: _errorMessage!, onRetry: _loadBills);
     }
     return AppRefreshIndicator(
       onRefresh: _onRefresh,
       role: 'admin',
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(
-          0,
-          AppSpacing.md,
-          0,
-          AppSpacing.xl,
-        ),
+        padding: const EdgeInsets.fromLTRB(0, AppSpacing.md, 0, AppSpacing.xl),
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         itemCount: 1 + _bills.length,
@@ -513,11 +498,7 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.cloud_off_rounded,
-            size: 36,
-            color: ColorUtils.slate400,
-          ),
+          Icon(Icons.cloud_off_rounded, size: 36, color: ColorUtils.slate400),
           const SizedBox(height: 12),
           Text(
             message,

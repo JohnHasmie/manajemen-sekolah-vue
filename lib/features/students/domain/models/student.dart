@@ -102,7 +102,8 @@ abstract class Student with _$Student {
     // Fall back to student_id if id missing (recommendation APIs)
     mapped['id'] ??= mapped['student_id'];
 
-    // 4. Force String types — provide defaults for required fields to prevent null cast errors
+    // 4. Force String types — provide defaults for required fields to prevent
+    // null cast errors
     mapped['id'] = (mapped['id'] ?? '').toString();
     mapped['name'] = (mapped['name'] ?? '').toString();
     mapped['class_name'] = (mapped['class_name'] ?? '').toString();

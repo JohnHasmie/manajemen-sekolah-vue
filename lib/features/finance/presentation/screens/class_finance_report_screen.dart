@@ -82,9 +82,6 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
         ClassFinancePaymentMixin,
         ClassFinanceUtilsMixin,
         ClassFinanceUIMixin {
-  @override
-  File? selectedFile;
-
   String _searchQuery = '';
   String? _selectedPaymentTypeId;
   String? _selectedMonthKey;

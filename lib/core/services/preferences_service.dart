@@ -1,8 +1,10 @@
 /// preferences_service.dart - Centralized wrapper for SharedPreferences.
 /// Like Laravel's `config()` helper or Vue's Pinia persisted state.
 ///
-/// All non-sensitive data (cache, language, tour flags) goes through this service.
-/// Sensitive data (tokens, user info) goes through SecureStorageService instead.
+/// All non-sensitive data (cache, language, tour flags) goes through this
+/// service.
+/// Sensitive data (tokens, user info) goes through SecureStorageService
+/// instead.
 ///
 /// Initialized once at app startup via [init()], then accessed synchronously.
 /// This avoids the repeated `await SharedPreferences.getInstance()` pattern

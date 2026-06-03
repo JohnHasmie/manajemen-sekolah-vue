@@ -345,9 +345,7 @@ class _SemesterChip extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
-                    color: active
-                        ? roleColor
-                        : ColorUtils.slate600,
+                    color: active ? roleColor : ColorUtils.slate600,
                   ),
                 ),
               ],

@@ -54,7 +54,8 @@ class TeacherAttendanceParams {
 class TeacherAttendanceController
     extends AsyncNotifier<TeacherAttendanceState> {
   /// The params passed at construction time (replaces the old `arg` property
-  /// from AutoDisposeFamilyAsyncNotifier, which no longer exists in Riverpod 3.x).
+  /// from AutoDisposeFamilyAsyncNotifier, which no longer exists in Riverpod
+  /// 3.x).
   final TeacherAttendanceParams arg;
 
   TeacherAttendanceController(this.arg);

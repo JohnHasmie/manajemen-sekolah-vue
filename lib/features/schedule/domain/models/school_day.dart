@@ -6,7 +6,8 @@
 ///
 /// To convert from API / cache data:
 /// ```dart
-/// final days = rawList.map((d) => SchoolDay.fromJson(Map<String, dynamic>.from(d))).toList();
+/// final days = rawList.map((d) => SchoolDay.fromJson(Map<String,
+/// dynamic>.from(d))).toList();
 /// ```
 class SchoolDay {
   final String id;

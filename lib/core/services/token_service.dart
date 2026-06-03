@@ -84,7 +84,8 @@ class TokenService {
     }
   }
 
-  /// Validates token format: Sanctum (contains '|') or JWT (3 dot-separated parts).
+  /// Validates token format: Sanctum (contains '|') or JWT (3 dot-separated
+  /// parts).
   bool _isValidJWTFormat(String token) {
     if (token.contains('|')) return true;
     final parts = token.split('.');
@@ -107,7 +108,8 @@ class TokenService {
     return await _secureStorage.getToken();
   }
 
-  /// Logs out: revokes backend token, clears FCM, clears cache + secure storage.
+  /// Logs out: revokes backend token, clears FCM, clears cache + secure
+  /// storage.
   /// Like `Auth::logout()` in Laravel.
   Future<void> logout() async {
     try {

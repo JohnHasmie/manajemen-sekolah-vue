@@ -90,7 +90,6 @@ class TeachingScheduleManagementScreenState
   // Reference lists returned alongside schedules — used by the detail
   // dialog, form, and filter sheet.
   List<dynamic> _subjectList = [];
-  List<dynamic> _classList = [];
   List<dynamic> _dayList = [];
   List<dynamic> _termList = [];
   List<dynamic> _lessonHourList = [];
@@ -246,7 +245,6 @@ class TeachingScheduleManagementScreenState
     setState(() {
       _scheduleList = result.scheduleList;
       _subjectList = result.subjectList;
-      _classList = result.classList;
       _dayList = result.dayList;
       _termList = result.semesterList;
       _lessonHourList = result.lessonHourList;
@@ -371,7 +369,6 @@ class TeachingScheduleManagementScreenState
       setState(() {
         _scheduleList = result.scheduleList;
         _subjectList = result.subjectList;
-        _classList = result.classList;
         _dayList = result.dayList.isEmpty && _availableDays.isNotEmpty
             ? _availableDays
             : result.dayList;
@@ -638,7 +635,7 @@ class TeachingScheduleManagementScreenState
   Future<void> _moveSlotForSchedule(Map<String, dynamic> schedule) async {
     final id = schedule['id']?.toString();
     if (id == null || id.isEmpty) return;
-    
+
     final visibleDays = _visibleListDays();
     final targetLessonHourDaysId = await showSingleRescheduleSheet(
       context: context,
@@ -649,32 +646,47 @@ class TeachingScheduleManagementScreenState
       academicYearId: _selectedAcademicYear,
       languageProvider: ref.read(languageRiverpod),
     );
-    
+
     if (targetLessonHourDaysId == null || !mounted) return;
-    
-    // The sheet returns the specific lesson_hour_days_id. We need to 
+
+    // The sheet returns the specific lesson_hour_days_id. We need to
     // find the corresponding day name and start time for the success toast.
     final targetHourData = _lessonHourList.firstWhere(
       (h) => h['id']?.toString() == targetLessonHourDaysId,
       orElse: () => const <String, dynamic>{},
     );
-    
-    final targetDayId = targetHourData['day_id']?.toString() ?? targetHourData['hari_id']?.toString();
-    final dayName = visibleDays.firstWhere(
-      (d) => d['id']?.toString() == targetDayId,
-      orElse: () => const {'name': ''},
-    )['name']?.toString() ?? '';
-    
-    final startTime = (targetHourData['start_time'] ?? targetHourData['jam_mulai'] ?? '').toString();
-    
-    final previousLessonHourId = schedule['lesson_hour_days_id']?.toString() ?? '';
-    final previousDayName = visibleDays.firstWhere(
-      (d) => d['id']?.toString() == schedule['day_id']?.toString(),
-      orElse: () => const {'name': ''},
-    )['name']?.toString() ?? '';
+
+    final targetDayId =
+        targetHourData['day_id']?.toString() ??
+        targetHourData['hari_id']?.toString();
+    final dayName =
+        visibleDays
+            .firstWhere(
+              (d) => d['id']?.toString() == targetDayId,
+              orElse: () => const {'name': ''},
+            )['name']
+            ?.toString() ??
+        '';
+
+    final startTime =
+        (targetHourData['start_time'] ?? targetHourData['jam_mulai'] ?? '')
+            .toString();
+
+    final previousLessonHourId =
+        schedule['lesson_hour_days_id']?.toString() ?? '';
+    final previousDayName =
+        visibleDays
+            .firstWhere(
+              (d) => d['id']?.toString() == schedule['day_id']?.toString(),
+              orElse: () => const {'name': ''},
+            )['name']
+            ?.toString() ??
+        '';
     final previousStartTime = (schedule['start_time'] ?? '').toString();
-    
-    final subjectName = (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'] ?? '—').toString();
+
+    final subjectName =
+        (schedule['subject_name'] ?? schedule['mata_pelajaran_nama'] ?? '—')
+            .toString();
 
     await _doReschedule(
       scheduleId: id,
@@ -946,9 +958,7 @@ class TeachingScheduleManagementScreenState
       // even on slow networks where _loadSchedules adds a beat. The
       // banner auto-dismisses 1.4s later regardless of refresh state.
       _setRescheduleBanner(
-        _rescheduleBanner?.copyWith(
-          phase: ScheduleReschedulePhase.success,
-        ),
+        _rescheduleBanner?.copyWith(phase: ScheduleReschedulePhase.success),
         autoDismiss: const Duration(milliseconds: 1400),
       );
       await _loadSchedules(resetPage: true, useCache: false);
@@ -2354,8 +2364,7 @@ class TeachingScheduleManagementScreenState
                         ? lang.getTranslatedText(const {
                             'en':
                                 'Try clearing filters or picking another day.',
-                            'id':
-                                'Coba bersihkan filter atau pilih hari lain.',
+                            'id': 'Coba bersihkan filter atau pilih hari lain.',
                           })
                         : lang.getTranslatedText(const {
                             'en':

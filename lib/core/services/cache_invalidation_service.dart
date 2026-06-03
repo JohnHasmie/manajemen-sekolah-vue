@@ -253,7 +253,8 @@ class CacheInvalidationService {
       LocalCacheService.clearStartingWith('teacher_classes_'),
       LocalCacheService.clearStartingWith('teacher_profile_'),
       LocalCacheService.clearStartingWith('filter_options_'),
-      // Deliberately NOT clearing: *_view_preference, tour_*, school_semester_data
+      // Deliberately NOT clearing: *_view_preference, tour_*,
+      // school_semester_data
     ]);
   }
 

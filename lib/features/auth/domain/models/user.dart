@@ -3,7 +3,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'user.freezed.dart';
 part 'user.g.dart';
 
-/// User model representing a profile with specific roles and school assignments.
+/// User model representing a profile with specific roles and school
+/// assignments.
 @freezed
 abstract class User with _$User {
   const factory User({

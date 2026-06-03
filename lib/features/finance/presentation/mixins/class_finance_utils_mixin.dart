@@ -9,6 +9,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_report_screen.dart';
+
 /// Utility methods for file handling and formatting.
 mixin ClassFinanceUtilsMixin on State<ClassFinanceReportScreen> {
   /// Formats amount as Indonesian Rupiah currency.
@@ -85,12 +86,18 @@ mixin ClassFinanceUtilsMixin on State<ClassFinanceReportScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.photo_library_outlined, color: getPrimaryColor()),
+              leading: Icon(
+                Icons.photo_library_outlined,
+                color: getPrimaryColor(),
+              ),
               title: Text(AppLocalizations.gallery.tr),
               onTap: () => AppNavigator.pop(sheetContext, ImageSource.gallery),
             ),
             ListTile(
-              leading: Icon(Icons.camera_alt_outlined, color: getPrimaryColor()),
+              leading: Icon(
+                Icons.camera_alt_outlined,
+                color: getPrimaryColor(),
+              ),
               title: Text(AppLocalizations.camera.tr),
               onTap: () => AppNavigator.pop(sheetContext, ImageSource.camera),
             ),
@@ -137,7 +144,10 @@ mixin ClassFinanceUtilsMixin on State<ClassFinanceReportScreen> {
               onTap: () => AppNavigator.pop(sheetContext, 'image'),
             ),
             ListTile(
-              leading: Icon(Icons.picture_as_pdf_outlined, color: getPrimaryColor()),
+              leading: Icon(
+                Icons.picture_as_pdf_outlined,
+                color: getPrimaryColor(),
+              ),
               title: Text(AppLocalizations.pdfDocument.tr),
               onTap: () => AppNavigator.pop(sheetContext, 'pdf'),
             ),

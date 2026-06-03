@@ -123,7 +123,8 @@ class AdminAnnouncementScreenState
 
     setState(() => errorMessage = null);
 
-    // Call individual deletes (the service doesn't have a bulk-delete endpoint yet,
+    // Call individual deletes (the service doesn't have a bulk-delete endpoint
+    // yet,
     // so we loop it just like the Student Management screen does)
     try {
       final api = ApiService();

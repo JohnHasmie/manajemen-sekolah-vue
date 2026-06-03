@@ -177,7 +177,7 @@ mixin EditFormCardMixin {
     );
   }
 
-  /// Open the add-material picker. Returns a Map<String, dynamic>
+  /// Open the add-material picker. Returns a `Map<String, dynamic>`
   /// shaped to match the materialChips contract:
   ///   {
   ///     type: 'chapter'|'sub_chapter',

@@ -15,7 +15,8 @@ class MetadataHelper {
   /// Results are cached with a 5-minute TTL when [includeContext] is true.
   /// Returns {'data': [...], 'pagination': {...}} or
   /// {'data': [], 'pagination': null}.
-  /// Returns the cache key for teacher activity summary, or null if not cacheable.
+  /// Returns the cache key for teacher activity summary, or null if not
+  /// cacheable.
   static String? buildSummaryCacheKey({
     String? teacherId,
     String? classId,
@@ -196,14 +197,13 @@ class MetadataHelper {
       if (result is Map<String, dynamic>) {
         final parsed = <String, dynamic>{
           'data': (result['data'] as List?) ?? const [],
-          'kpi':
-              result['kpi'] is Map
-                  ? Map<String, dynamic>.from(result['kpi'] as Map)
-                  : <String, dynamic>{
-                      'total': 0,
-                      'this_week': 0,
-                      'pending_submissions': 0,
-                    },
+          'kpi': result['kpi'] is Map
+              ? Map<String, dynamic>.from(result['kpi'] as Map)
+              : <String, dynamic>{
+                  'total': 0,
+                  'this_week': 0,
+                  'pending_submissions': 0,
+                },
           'pagination': result['pagination'],
         };
         if (cacheKey != null) {
@@ -213,11 +213,7 @@ class MetadataHelper {
       }
       return {
         'data': const [],
-        'kpi': const {
-          'total': 0,
-          'this_week': 0,
-          'pending_submissions': 0,
-        },
+        'kpi': const {'total': 0, 'this_week': 0, 'pending_submissions': 0},
         'pagination': null,
       };
     } catch (e) {
@@ -227,11 +223,7 @@ class MetadataHelper {
       );
       return {
         'data': const [],
-        'kpi': const {
-          'total': 0,
-          'this_week': 0,
-          'pending_submissions': 0,
-        },
+        'kpi': const {'total': 0, 'this_week': 0, 'pending_submissions': 0},
         'pagination': null,
       };
     }
@@ -244,7 +236,8 @@ class MetadataHelper {
     String? academicYearId,
     String? period,
   }) async {
-    final key = 'activity_admin_summary_${academicYearId ?? 'all'}_${period ?? 'year'}';
+    final key =
+        'activity_admin_summary_${academicYearId ?? 'all'}_${period ?? 'year'}';
     final cached = await LocalCacheService.load(
       key,
       ttl: const Duration(minutes: 5),

@@ -138,7 +138,7 @@ class _SubjectBulkAddClassesSheetState
   }
 
   void _clearSelection() {
-    setState(() => _selectedIds.clear());
+    setState(_selectedIds.clear);
   }
 
   Future<void> _save() async {

@@ -49,7 +49,8 @@ class ScheduleFilterSheet extends ConsumerStatefulWidget {
   final List<dynamic> lessonHourList;
 
   /// The full schedule list — used to derive teacher↔subject relationships
-  /// for cross-filtering (selecting a teacher narrows subjects, and vice versa).
+  /// for cross-filtering (selecting a teacher narrows subjects, and vice
+  /// versa).
   final List<dynamic> scheduleList;
 
   /// The screen-level default semester id used for the Reset action.

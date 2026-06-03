@@ -63,7 +63,9 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('MTK'), findsOneWidget);
+      // SS2 redesign: the code now lives in the combined top-meta line
+      // "<code> · <N> kelas" (id default).
+      expect(find.text('MTK · 3 kelas'), findsOneWidget);
     });
 
     testWidgets('fires onTap when card body is tapped', (tester) async {
@@ -85,7 +87,8 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('fires onEdit when pencil button is tapped', (tester) async {
+    testWidgets('fires onEdit on long-press', (tester) async {
+      // SS2 redesign: edit is triggered via long-press, not an icon button.
       bool edited = false;
       await tester.pumpWidget(
         _wrap(
@@ -100,12 +103,16 @@ void main() {
         ),
       );
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.longPress(find.text('Matematika'));
       expect(edited, isTrue);
     });
 
-    testWidgets('fires onDelete when trash button is tapped', (tester) async {
-      bool deleted = false;
+    testWidgets('shows Detail CTA and no inline edit/delete icons', (
+      tester,
+    ) async {
+      // SS2 redesign: inline edit/delete icon buttons were removed in favor
+      // of a "Detail →" trailing CTA. Deletion happens off-card (detail
+      // sheet / bulk-select), so there is no per-row delete icon.
       await tester.pumpWidget(
         _wrap(
           SubjectCard(
@@ -114,16 +121,17 @@ void main() {
             primaryColor: Colors.blue,
             onTap: () {},
             onEdit: () {},
-            onDelete: () => deleted = true,
+            onDelete: () {},
           ),
         ),
       );
       await tester.pump();
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      expect(deleted, isTrue);
+      expect(find.text('Detail →'), findsOneWidget);
+      expect(find.byIcon(Icons.edit_outlined), findsNothing);
+      expect(find.byIcon(Icons.delete_outline), findsNothing);
     });
 
-    testWidgets('avatar shows first letter of subject name', (tester) async {
+    testWidgets('avatar shows initials of subject name', (tester) async {
       await tester.pumpWidget(
         _wrap(
           SubjectCard(
@@ -137,7 +145,8 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('B'), findsOneWidget);
+      // InitialsAvatar shows two-letter initials of "Bahasa Indonesia" → 'BI'.
+      expect(find.text('BI'), findsOneWidget);
     });
 
     testWidgets('uses kode fallback when code key is absent', (tester) async {
@@ -160,7 +169,8 @@ void main() {
         ),
       );
       await tester.pump();
-      expect(find.text('IPA01'), findsOneWidget);
+      // Code falls back to the `kode` key; rendered in the top-meta line.
+      expect(find.text('IPA01 · 1 kelas'), findsOneWidget);
     });
   });
 }

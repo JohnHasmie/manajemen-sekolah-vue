@@ -15,7 +15,7 @@ mixin LessonPlanAiResultExportMixin
   Future<void> previewPDF() async {
     try {
       final (document, page, graphics) = _createPdfDocument();
-      final double yPosition = _renderPdfContent(document, page, graphics);
+      _renderPdfContent(document, page, graphics);
       await _savePdfFile(document);
     } catch (e) {
       _handlePdfError(e);

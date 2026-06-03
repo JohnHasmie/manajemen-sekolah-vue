@@ -9,23 +9,28 @@ import 'package:flutter/material.dart';
 
 part 'color_utils_mappings.dart';
 
-/// Provides static color constants, semantic color mappers, and decoration builders
+/// Provides static color constants, semantic color mappers, and decoration
+/// builders
 /// for the entire app. Like a Laravel Helper function class for UI colors.
 ///
-/// Usage: `ColorUtils.primaryColor`, `ColorUtils.getStatusColor('active')`, etc.
-/// All methods are static - no instantiation needed (like Laravel helper functions).
+/// Usage: `ColorUtils.primaryColor`, `ColorUtils.getStatusColor('active')`,
+/// etc.
+/// All methods are static - no instantiation needed (like Laravel helper
+/// functions).
 ///
 /// Key sections:
 /// - Index-based colors: Rotating palette for lists (like chart colors).
 /// - Day/semester colors: Maps day names to consistent colors.
 /// - Status/grade/role colors: Semantic color mapping based on business logic.
 /// - Subject colors: Color-codes school subjects by keyword matching.
-/// - Card gradients & decorations: Reusable `BoxDecoration` builders for UI cards.
+/// - Card gradients & decorations: Reusable `BoxDecoration` builders for UI
+/// cards.
 /// - Slate palette: Tailwind CSS-inspired neutral gray scale.
 /// - Corporate blue palette: Professional blue scale for dashboard elements.
 class ColorUtils {
   /// Returns a color from a rotating palette based on [index].
-  /// Useful for assigning consistent colors to list items (e.g., chart segments).
+  /// Useful for assigning consistent colors to list items (e.g., chart
+  /// segments).
   /// Uses modulo to cycle through 6 colors. Like a Laravel Helper function.
   static Color getColorForIndex(int index) {
     final colors = [
@@ -42,12 +47,15 @@ class ColorUtils {
   /// The app's primary brand color (indigo).
   static Color get primaryColor => const Color(0xFF4F46E5);
 
-  /// Returns black or white text color for optimal contrast against [backgroundColor].
-  /// Uses the perceived luminance formula (ITU-R BT.601) to determine readability.
+  /// Returns black or white text color for optimal contrast against
+  /// [backgroundColor].
+  /// Uses the perceived luminance formula (ITU-R BT.601) to determine
+  /// readability.
   /// Like a CSS `color-contrast()` function.
   ///
   /// [backgroundColor] - The background color to check against.
-  /// Returns [Colors.black] for light backgrounds, [Colors.white] for dark ones.
+  /// Returns [Colors.black] for light backgrounds, [Colors.white] for dark
+  /// ones.
   static Color getTextColorForBackground(Color backgroundColor) {
     // Calculate the perceptive luminance
     final luminance =
@@ -83,7 +91,8 @@ class ColorUtils {
   static Color get infoDark => const Color(0xFF0C4A6E);
 
   /// Slate gray scale (Tailwind CSS-inspired). Used throughout the app for
-  /// text, borders, and backgrounds. Like Tailwind's `slate-50` through `slate-950`.
+  /// text, borders, and backgrounds. Like Tailwind's `slate-50` through
+  /// `slate-950`.
   static Color get slate50 => const Color(0xFFF8FAFC);
   static Color get slate100 => const Color(0xFFF1F5F9);
   static Color get slate200 => const Color(0xFFE2E8F0);
@@ -185,7 +194,10 @@ class ColorUtils {
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [base, base.withValues(alpha: endOpacity)],
+      colors: [
+        base,
+        base.withValues(alpha: endOpacity),
+      ],
     );
   }
 

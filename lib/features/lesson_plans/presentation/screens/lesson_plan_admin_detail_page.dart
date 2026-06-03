@@ -57,9 +57,6 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
         CardBuildersMixin,
         HeaderBuilderMixin,
         ContentCardBuilderMixin {
-  @override
-  late Map<String, dynamic> lessonPlan;
-
   late final ScrollController _scrollController;
   final GlobalKey _historyKey = GlobalKey();
   List<Map<String, dynamic>> _reviews = const [];
@@ -197,8 +194,6 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
     _refreshFromBackend();
   }
 
-
-
   Widget _buildReviewsError() {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -209,7 +204,11 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline_rounded, color: ColorUtils.error600, size: 20),
+          Icon(
+            Icons.error_outline_rounded,
+            color: ColorUtils.error600,
+            size: 20,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -225,10 +224,7 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
                 ),
                 Text(
                   _reviewsErrorMessage ?? '',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    color: ColorUtils.slate500,
-                  ),
+                  style: TextStyle(fontSize: 10.5, color: ColorUtils.slate500),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -268,10 +264,7 @@ class _LessonPlanAdminDetailPageState extends State<LessonPlanAdminDetailPage>
             _buildReviewsError(),
           ] else if (_reviews.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.lg),
-            TimelineCard(
-              key: _historyKey,
-              rows: _reviews,
-            ),
+            TimelineCard(key: _historyKey, rows: _reviews),
           ],
         ],
       ),

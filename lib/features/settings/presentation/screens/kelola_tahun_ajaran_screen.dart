@@ -311,7 +311,7 @@ class _KelolaTahunAjaranScreenState
       body: BrandPageLayout(
         role: 'admin',
         onRefresh: _handleRefresh,
-        header: BrandPageHeader(
+        header: const BrandPageHeader(
           role: 'admin',
           subtitle: 'SISTEM · KONFIGURASI',
           title: 'Tahun Ajaran',
@@ -396,7 +396,7 @@ class _KelolaTahunAjaranScreenState
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showEditSheet(),
+        onPressed: _showEditSheet,
         backgroundColor: _accent,
         elevation: 8,
         shape: const RoundedRectangleBorder(

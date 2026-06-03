@@ -11,7 +11,8 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 /// Like a Laravel Resource Controller (index, store, update) combined with
 /// a Vue composable/store that handles announcement state.
 class ApiAnnouncementService {
-  /// Fetches available filter options (priority, target, status) for announcement listing.
+  /// Fetches available filter options (priority, target, status) for
+  /// announcement listing.
   Future<Map<String, dynamic>> getAnnouncementFilterOptions() async {
     try {
       final response = await dioClient.get('/announcement/filter-options');
@@ -182,7 +183,8 @@ class ApiAnnouncementService {
 /// and acts as the concrete implementation of [ApiAnnouncementService].
 class AnnouncementService extends ApiAnnouncementService {
   /// Fetches announcement summary grouped by month + priority.
-  /// Returns list of { month_key, total, priorities: { normal: N, high: N, ... } }.
+  /// Returns list of { month_key, total, priorities: { normal: N, high: N, ...
+  /// } }.
   /// Backend canonical priorities: `low` / `normal` / `high` / `urgent`
   /// (was `biasa` / `penting`).
   static Future<List<Map<String, dynamic>>> getAnnouncementSummary({

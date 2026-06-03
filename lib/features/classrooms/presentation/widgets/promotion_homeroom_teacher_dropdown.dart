@@ -1,4 +1,5 @@
-// Homeroom-teacher dropdown for the "Create New Class" dialog in the promotion wizard.
+// Homeroom-teacher dropdown for the "Create New Class" dialog in the promotion
+// wizard.
 // De-duplicates teacher records by ID and formats display as "Name (NIP: xxx)".
 // Receives the full teacher list from the parent to stay stateless.
 import 'package:flutter/material.dart';
@@ -29,7 +30,8 @@ class PromotionHomeroomTeacherDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // De-duplicate teachers by ID (same as removing duplicate keys in a Vue computed).
+    // De-duplicate teachers by ID (same as removing duplicate keys in a Vue
+    // computed).
     final uniqueTeachers = <String, Map<String, dynamic>>{};
     for (final teacher in teachers) {
       final model = Teacher.fromJson(teacher);

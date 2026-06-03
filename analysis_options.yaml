@@ -62,6 +62,13 @@ analyzer:
     unused_element_parameter: info
     override_on_non_overriding_member: info
     unnecessary_cast: info
+    # `use_build_context_synchronously` is `info` in our pinned SDK, but newer
+    # Dart SDKs / flutter_lints promote it to `warning` — which intermittently
+    # failed CI's `flutter analyze --fatal-warnings` depending on the runner's
+    # SDK version. Pin it to `info` so analysis severity is deterministic
+    # across environments. (Follow-up: add `if (!context.mounted) return;`
+    # guards at the 21 call sites, then drop this override.)
+    use_build_context_synchronously: info
 
 # ─── Dart Linter ──────────────────────────────────────────────────────────────
 linter:

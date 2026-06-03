@@ -18,7 +18,8 @@ import 'package:manajemensekolah/features/report_cards/presentation/mixins/teach
 import 'package:manajemensekolah/features/report_cards/presentation/mixins/teacher_report_card_ui_mixin.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
 
-/// Report card list screen -- shows classes and their students for raport entry.
+/// Report card list screen -- shows classes and their students for raport
+/// entry.
 ///
 /// Props (like Vue props): [teacher] -- current teacher info.
 /// Navigates to [ReportCardDetailScreen] when a student is tapped.

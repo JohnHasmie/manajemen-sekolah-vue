@@ -47,9 +47,8 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
     // that if a caller in another part of the app reaches this widget
     // with a paid bill, it still degrades gracefully.
     final String status = (bill?['status'] ?? 'pending').toString();
-    final bool isPaid = status == 'paid' ||
-        status == 'verified' ||
-        status == 'success';
+    final bool isPaid =
+        status == 'paid' || status == 'verified' || status == 'success';
 
     return AppBottomSheet(
       title: 'Opsi Pembayaran',
@@ -120,10 +119,10 @@ class _OptionTile extends StatelessWidget {
   });
 
   Color get _accent => switch (tone) {
-        _OptionTone.success => ColorUtils.success600,
-        _OptionTone.danger => ColorUtils.error600,
-        _OptionTone.neutral => ColorUtils.corporateBlue600,
-      };
+    _OptionTone.success => ColorUtils.success600,
+    _OptionTone.danger => ColorUtils.error600,
+    _OptionTone.neutral => ColorUtils.corporateBlue600,
+  };
 
   @override
   Widget build(BuildContext context) {

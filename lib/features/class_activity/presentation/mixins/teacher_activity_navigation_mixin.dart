@@ -70,10 +70,7 @@ mixin TeacherActivityNavigationMixin
           : (raw is Map && raw['data'] is List
                 ? raw['data'] as List
                 : const []);
-      subjects = list
-          .whereType<Map>()
-          .map(Map<String, dynamic>.from)
-          .toList();
+      subjects = list.whereType<Map>().map(Map<String, dynamic>.from).toList();
     } catch (e) {
       // Non-fatal — sheet still opens with an empty subject list.
     }

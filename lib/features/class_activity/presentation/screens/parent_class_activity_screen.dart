@@ -96,8 +96,6 @@ class ParentClassActivityScreenState
   Timer? markReadDebounce;
 
   // Drives the realtime pill — bumped after every successful refresh.
-  DateTime _lastSync = DateTime.now();
-
   @override
   void initState() {
     super.initState();
@@ -135,7 +133,7 @@ class ParentClassActivityScreenState
         role: 'wali',
         onRefresh: () async {
           await forceRefresh();
-          if (mounted) setState(() => _lastSync = DateTime.now());
+          if (mounted) setState(() {});
         },
         bodyChildren: [
           KeyedSubtree(key: activityListKey, child: buildActivityList()),

@@ -1,6 +1,8 @@
-// DashboardHeroSection — the gradient hero card at the top of the dashboard body.
+// DashboardHeroSection — the gradient hero card at the top of the dashboard
+// body.
 // Shows a greeting, the user's name, the current academic year/semester, and 4 KPI stat cells.
-// Uses ConsumerWidget because it calls ref.watch(academicYearRiverpod) for reactive year display.
+// Uses ConsumerWidget because it calls ref.watch(academicYearRiverpod) for
+// reactive year display.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,9 +21,11 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 /// back to the parent via [onAcademicYearTap].
 ///
 /// Extends [ConsumerWidget] because the academic-year badge uses
-/// `ref.watch(academicYearRiverpod)` to reactively update when the year changes.
+/// `ref.watch(academicYearRiverpod)` to reactively update when the year
+/// changes.
 class DashboardHeroSection extends ConsumerWidget {
-  /// Role-specific primary color (blue for admin, green for guru, purple for wali).
+  /// Role-specific primary color (blue for admin, green for guru, purple for
+  /// wali).
   final Color primaryColor;
 
   /// The effective role string: 'admin', 'guru', or 'wali'.
@@ -30,7 +34,8 @@ class DashboardHeroSection extends ConsumerWidget {
   /// Full dashboard state — provides [userData], [stats], [isStatsLoaded], etc.
   final DashboardState state;
 
-  /// Called when the academic-year badge is tapped (opens the year picker dialog).
+  /// Called when the academic-year badge is tapped (opens the year picker
+  /// dialog).
   final VoidCallback onAcademicYearTap;
 
   /// Optional GlobalKey placed on the outer Container for the onboarding tour.
@@ -45,7 +50,8 @@ class DashboardHeroSection extends ConsumerWidget {
     this.heroSectionKey,
   });
 
-  // ── Greeting helpers ────────────────────────────────────────────────────────
+  // ── Greeting helpers
+  // ────────────────────────────────────────────────────────
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -61,7 +67,8 @@ class DashboardHeroSection extends ConsumerWidget {
     return '🌙';
   }
 
-  // ── Role-specific stat cells ─────────────────────────────────────────────────
+  // ── Role-specific stat cells
+  // ─────────────────────────────────────────────────
 
   List<Widget> _buildFourColumnStats() {
     final lp = languageProvider;
@@ -139,7 +146,8 @@ class DashboardHeroSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ref.watch so the academic-year badge re-renders when the selected year changes.
+    // ref.watch so the academic-year badge re-renders when the selected year
+    // changes.
     // Like a Vue computed property that depends on an academicYear store value.
     final academicYearProvider = ref.watch(academicYearRiverpod);
     final academicYear =

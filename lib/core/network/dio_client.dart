@@ -1,11 +1,13 @@
 /// dio_client.dart - Singleton Dio HTTP client with interceptors.
-/// Like Laravel's Http facade with global middleware (auth, logging, error handling).
+/// Like Laravel's Http facade with global middleware (auth, logging, error
+/// handling).
 /// In Vue terms, this is the root Axios instance with interceptors configured.
 ///
 /// Replaces the duplicated _getHeaders() and _handleResponse() patterns found
 /// across 13+ service files. Interceptors handle:
 /// - Auth header injection (Bearer token + X-School-ID)
-/// - Error response parsing (401 auto-logout, 422 validation, 403 school access)
+/// - Error response parsing (401 auto-logout, 422 validation, 403 school
+/// access)
 /// - Debug logging in development mode
 library;
 
@@ -53,7 +55,8 @@ Dio createDioClient(String baseUrl) {
 }
 
 /// Injects Bearer token and X-School-ID headers into every request.
-/// Like Laravel Sanctum auth middleware + multi-tenant school middleware combined.
+/// Like Laravel Sanctum auth middleware + multi-tenant school middleware
+/// combined.
 /// Replaces the duplicated _getHeaders() method found in 13+ service files.
 class AuthInterceptor extends Interceptor {
   final SecureStorageService _secureStorage = SecureStorageService();
@@ -84,7 +87,8 @@ class AuthInterceptor extends Interceptor {
 }
 
 /// Handles API error responses centrally.
-/// Like Laravel's exception handler (Handler::render()) or an Axios response interceptor.
+/// Like Laravel's exception handler (Handler::render()) or an Axios response
+/// interceptor.
 ///
 /// Converts Dio errors into typed ApiExceptions:
 /// - 401 → AuthenticationException (triggers auto-logout)
@@ -268,8 +272,10 @@ class ErrorInterceptor extends Interceptor {
     }
   }
 
-  /// Handles authentication failure by clearing stored data and navigating to login.
-  /// Mirrors the exact behavior of ApiService._handleAuthenticationErrorWithMessage().
+  /// Handles authentication failure by clearing stored data and navigating to
+  /// login.
+  /// Mirrors the exact behavior of
+  /// ApiService._handleAuthenticationErrorWithMessage().
   Future<void> _handleAuthenticationError(String errorMessage) async {
     try {
       AppLogger.error('dio', errorMessage);

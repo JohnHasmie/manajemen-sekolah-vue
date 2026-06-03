@@ -109,7 +109,7 @@ class LessonPlanAdminFilter {
 }
 
 /// Sentinel for copyWith to distinguish "not passed" from "explicit
-/// null." Dart doesn't have an Optional<T> in the language proper.
+/// null." Dart doesn't have an `Optional<T>` in the language proper.
 const _unset = Object();
 
 /// Backend-facing status keys. Display labels stay short so chips
@@ -201,11 +201,10 @@ class _FilterSheetState extends State<_FilterSheet> {
       setState(() {
         _subjects = _mapToOptions(data['subjects']);
         _classes = _mapToOptions(data['classes']);
-        _teachers = _mapToOptions(data['teachers'], labelKeys: const [
-          'name',
-          'full_name',
-          'nama',
-        ]);
+        _teachers = _mapToOptions(
+          data['teachers'],
+          labelKeys: const ['name', 'full_name', 'nama'],
+        );
         _loadingOptions = false;
       });
     } catch (_) {
@@ -276,7 +275,8 @@ class _FilterSheetState extends State<_FilterSheet> {
           title: 'Status',
           options: _statusOptions,
           selectedValue: _draft.status,
-          onSelected: (v) => setState(() => _draft = _draft.copyWith(status: v)),
+          onSelected: (v) =>
+              setState(() => _draft = _draft.copyWith(status: v)),
           selectedColor: navy,
         ),
         const SizedBox(height: 14),
@@ -284,7 +284,8 @@ class _FilterSheetState extends State<_FilterSheet> {
           title: 'Format',
           options: _formatOptions,
           selectedValue: _draft.format,
-          onSelected: (v) => setState(() => _draft = _draft.copyWith(format: v)),
+          onSelected: (v) =>
+              setState(() => _draft = _draft.copyWith(format: v)),
           selectedColor: navy,
         ),
         const SizedBox(height: 14),
@@ -297,10 +298,7 @@ class _FilterSheetState extends State<_FilterSheet> {
                 SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: navy,
-                  ),
+                  child: CircularProgressIndicator(strokeWidth: 2, color: navy),
                 ),
                 const SizedBox(width: 10),
                 Text(
@@ -353,7 +351,8 @@ class _FilterSheetState extends State<_FilterSheet> {
           title: 'Periode',
           options: _periodOptions,
           selectedValue: _draft.period,
-          onSelected: (v) => setState(() => _draft = _draft.copyWith(period: v)),
+          onSelected: (v) =>
+              setState(() => _draft = _draft.copyWith(period: v)),
           selectedColor: navy,
         ),
       ],

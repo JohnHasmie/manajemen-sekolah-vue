@@ -1,6 +1,7 @@
 // excel_teacher_service.dart - Export and import teacher (guru) data via Excel.
 // Like Laravel's Maatwebsite/Excel TeacherExport with template download.
-// Simpler than other Excel services -- no local validation, delegates entirely to backend.
+// Simpler than other Excel services -- no local validation, delegates entirely
+// to backend.
 
 import 'dart:io';
 
@@ -12,11 +13,14 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
-/// Service for exporting teacher data to Excel and downloading import templates.
-/// Similar to `Excel::download(new TeacherExport($teachers), 'Data_Guru.xlsx')` in Laravel.
+/// Service for exporting teacher data to Excel and downloading import
+/// templates.
+/// Similar to `Excel::download(new TeacherExport($teachers), 'Data_Guru.xlsx')`
+/// in Laravel.
 ///
 /// This is one of the simpler Excel services -- it sends raw teacher data to
-/// the backend without local validation. The backend handles both file generation
+/// the backend without local validation. The backend handles both file
+/// generation
 /// and data validation. Uses `context.mounted` checks before showing SnackBars
 /// (best practice for async BuildContext usage in Flutter).
 class ExcelTeacherService {
@@ -69,7 +73,8 @@ class ExcelTeacherService {
   }
 
   /// Download teacher import template from GET `/teacher/template/download`.
-  /// Like a Laravel route returning `Excel::download(new TeacherTemplateExport)`.
+  /// Like a Laravel route returning `Excel::download(new
+  /// TeacherTemplateExport)`.
   static Future<void> downloadTemplate(BuildContext context) async {
     try {
       final response = await dioClient.get<List<int>>(

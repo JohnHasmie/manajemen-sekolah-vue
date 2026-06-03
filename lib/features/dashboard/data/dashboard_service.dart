@@ -72,9 +72,7 @@ class DashboardService {
         final items = raw is List
             ? raw
                   .whereType<Map>()
-                  .map<Map<String, dynamic>>(
-                    Map<String, dynamic>.from,
-                  )
+                  .map<Map<String, dynamic>>(Map<String, dynamic>.from)
                   .toList(growable: false)
             : <Map<String, dynamic>>[];
         final counts = <String, int>{};

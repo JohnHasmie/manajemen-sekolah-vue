@@ -148,7 +148,9 @@ class _ClassRow extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: selected ? adminAccent.withValues(alpha: 0.04) : Colors.white,
+              color: selected
+                  ? adminAccent.withValues(alpha: 0.04)
+                  : Colors.white,
               border: Border.all(
                 color: selected ? adminAccent : ColorUtils.slate200,
                 width: selected ? 1.4 : 0.75,

@@ -1,4 +1,5 @@
-/// api_notification_service.dart - Handles push notification and in-app notification management.
+/// api_notification_service.dart - Handles push notification and in-app
+/// notification management.
 /// Like Laravel's Notification system / Vue's notification store module.
 ///
 /// Manages fetching, reading, and deleting user notifications.

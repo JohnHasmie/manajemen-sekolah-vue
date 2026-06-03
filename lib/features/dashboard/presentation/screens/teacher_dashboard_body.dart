@@ -1,4 +1,5 @@
-// Teacher dashboard body (guru) — mirrors admin Phase 3 redesign with teal gradient.
+// Teacher dashboard body (guru) — mirrors admin Phase 3 redesign with teal
+// gradient.
 //
 // Shape of the screen (top-to-bottom)
 // -----------------------------------
@@ -512,7 +513,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   ///
   /// Slice axis (auto-cycles ~6 s, story-style progress strip):
   ///   • Mengajar      — all teaching classes, today scope
-  ///   • Wali <X>      — one slice per homeroom class held
+  ///   • Wali `<X>`      — one slice per homeroom class held
   ///   • Hari Ini      — time view, today
   ///   • Pekan Ini     — time view, current week
   ///

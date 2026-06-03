@@ -9,7 +9,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// A rounded, icon-prefixed text field used inside the student create/edit dialog.
 ///
-/// All mutable state (the [TextEditingController]) is passed in from the caller,
+/// All mutable state (the [TextEditingController]) is passed in from the
+/// caller,
 /// keeping this widget purely presentational — like a Vue "dumb component".
 class StudentDialogTextField extends StatelessWidget {
   /// Controls the text being edited.

@@ -1,6 +1,7 @@
 // Shared rich-text Quill editor component with custom-designed toolbar.
 // Professional UI with a branded compact toolbar and styled editor area.
-// Used by: recommendation edit, RPP section editor, and any future rich-text needs.
+// Used by: recommendation edit, RPP section editor, and any future rich-text
+// needs.
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/core/utils/color_utils.dart';

@@ -1,6 +1,7 @@
 // Announcement list-card widget for the admin announcement screen.
 // Displays title, content preview, metadata chips, and edit/delete action buttons.
-// Like a Vue <AnnouncementCard> component — fully stateless, driven by callbacks.
+// Like a Vue <AnnouncementCard> component — fully stateless, driven by
+// callbacks.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
@@ -36,7 +37,8 @@ class AnnouncementCard extends StatelessWidget {
   /// Whether this card is currently selected in bulk mode.
   final bool isSelected;
 
-  /// i18n label for "Important" — passed from parent to avoid re-reading the provider here.
+  /// i18n label for "Important" — passed from parent to avoid re-reading the
+  /// provider here.
   final String importantLabel;
 
   const AnnouncementCard({
@@ -64,7 +66,9 @@ class AnnouncementCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 16),
-      color: isSelected ? primaryColor.withValues(alpha: 0.04) : Colors.transparent,
+      color: isSelected
+          ? primaryColor.withValues(alpha: 0.04)
+          : Colors.transparent,
       child: Material(
         color: Colors.transparent,
         child: InkWell(

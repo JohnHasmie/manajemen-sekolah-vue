@@ -32,7 +32,7 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// One labelled section of an admin form. Renders as:
 ///   `DATA POKOK`  ← uppercase 11pt w800 slate-500
-///   <child stack with 12 px gaps between rows>
+///   `<child stack with 12 px gaps between rows>`
 class AdminFormSection extends StatelessWidget {
   /// Uppercase heading (e.g. `'DATA POKOK'`).
   final String label;

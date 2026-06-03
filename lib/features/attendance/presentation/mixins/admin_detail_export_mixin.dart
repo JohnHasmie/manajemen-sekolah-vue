@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 /// Mixin for exporting attendance data in AdminAttendanceDetailPage
-mixin admin_detail_export_mixin on ConsumerState<AdminAttendanceDetailPage> {
+mixin AdminDetailExportMixin on ConsumerState<AdminAttendanceDetailPage> {
   // Abstract properties - must be implemented by consuming class
   List<Attendance> get attendanceData;
   List<Student> get studentList;

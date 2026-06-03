@@ -53,7 +53,7 @@ class _AdminAnnouncementCalendarScreenState
     final rawData = result['data'];
     final rows = (rawData is List ? rawData : const <dynamic>[])
         .whereType<Map>()
-        .map((m) => Map<String, dynamic>.from(m))
+        .map(Map<String, dynamic>.from)
         .toList();
     setState(() {
       _items = rows;
@@ -209,8 +209,8 @@ class _MonthGrid extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Row(
-            children: const [
+          const Row(
+            children: [
               _DowLabel('Sen'),
               _DowLabel('Sel'),
               _DowLabel('Rab'),

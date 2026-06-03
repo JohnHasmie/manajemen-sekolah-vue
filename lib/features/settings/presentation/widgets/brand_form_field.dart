@@ -313,7 +313,7 @@ class BrandAmberToggleRow extends StatelessWidget {
             child: Switch(
               value: value,
               onChanged: onChanged,
-              activeColor: Colors.white,
+              activeThumbColor: Colors.white,
               activeTrackColor: ColorUtils.green600,
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: ColorUtils.slate300,

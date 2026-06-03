@@ -1,7 +1,8 @@
 /// api_endpoints.dart - Centralized API endpoint path constants.
 /// Like Laravel's `routes/api.php` — single source of truth for all API paths.
 ///
-/// Replaces hardcoded string paths scattered across api_service.dart and feature services.
+/// Replaces hardcoded string paths scattered across api_service.dart and
+/// feature services.
 library;
 
 /// All API endpoint paths used by the app.

@@ -1,17 +1,21 @@
 // RPP file attachment card. Extracted from lesson_plan_detail_screen.dart.
 // Displays a tappable card showing a file icon, name, and a download/open button.
-// Like a `<FileCard>` Vue component — shows loading state, fires a callback on tap.
+// Like a `<FileCard>` Vue component — shows loading state, fires a callback on
+// tap.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
-/// Tappable card showing a file attachment for an RPP, with download affordance.
+/// Tappable card showing a file attachment for an RPP, with download
+/// affordance.
 ///
 /// Constructor params:
 /// - [filePath]      — the URL/path of the attached file (used to derive name + extension)
-/// - [isDownloading] — when true, shows a spinner instead of the download button
+/// - [isDownloading] — when true, shows a spinner instead of the download
+/// button
 /// - [primaryColor]  — brand colour for the download icon and shadow tint
-/// - [onTap]         — callback fired when the user taps (should trigger download + open)
+/// - [onTap] — callback fired when the user taps (should trigger download +
+/// open)
 class LessonPlanFileCard extends StatelessWidget {
   final String filePath;
   final bool isDownloading;

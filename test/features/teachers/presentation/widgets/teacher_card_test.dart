@@ -81,8 +81,9 @@ const _homeroomTeacher = <String, dynamic>{
   'name': 'Jane Smith',
   'user': {'email': 'jane@example.com'},
   'homeroom_class': {
+    'id': '7a',
     'name': 'Class 7A',
-  }, // Map shape → shows "Wali Kelas" badge
+  }, // Map shape (with id) → shows Wali homeroom chip
 };
 
 void main() {
@@ -99,10 +100,10 @@ void main() {
       expect(find.text('john@example.com'), findsOneWidget);
     });
 
-    testWidgets('renders avatar initial from teacher name', (tester) async {
+    testWidgets('renders avatar initials from teacher name', (tester) async {
       await tester.pumpWidget(_buildCard(teacher: _teacher));
-      // Avatar shows first letter of name, uppercased.
-      expect(find.text('J'), findsAtLeastNWidgets(1));
+      // InitialsAvatar shows two-letter initials of "John Doe" → 'JD'.
+      expect(find.text('JD'), findsAtLeastNWidgets(1));
     });
 
     // ── Status badge — conditional on homeroom_class ─────────────────────────
@@ -115,42 +116,33 @@ void main() {
       expect(find.text('Aktif'), findsOneWidget);
     });
 
-    testWidgets('shows Homeroom badge when teacher has a homeroom class', (
+    testWidgets('shows Wali homeroom chip when teacher has a homeroom class', (
       tester,
     ) async {
       await tester.pumpWidget(_buildCard(teacher: _homeroomTeacher));
-      // Default language is 'id'.
-      expect(find.text('Wali Kelas'), findsOneWidget);
+      // SS2 redesign: the homeroom secondary chip combines the "Wali"
+      // role label (id) with the class name into a single chip.
+      expect(find.text('Wali Class 7A'), findsOneWidget);
     });
 
     testWidgets(
-      'renders homeroom class name tag when teacher has a homeroom class',
-      (tester) async {
-        await tester.pumpWidget(_buildCard(teacher: _homeroomTeacher));
-        expect(find.text('Class 7A'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'does NOT render homeroom class name tag for a non-homeroom teacher',
+      'does NOT render homeroom chip for a non-homeroom teacher',
       (tester) async {
         await tester.pumpWidget(_buildCard(teacher: _teacher));
-        expect(find.text('Class 7A'), findsNothing);
+        expect(find.text('Wali Class 7A'), findsNothing);
+        expect(find.textContaining('Wali'), findsNothing);
       },
     );
 
-    // ── Edit / delete action icons ────────────────────────────────────────────
+    // ── Trailing CTA ──────────────────────────────────────────────────────────
+    //
+    // The SS2 redesign replaced the inline edit/delete icon buttons with a
+    // "Detail →" trailing CTA. Editing is now triggered via long-press
+    // (wired to onEdit when not read-only).
 
-    testWidgets('shows edit and delete icons when NOT read-only', (
-      tester,
-    ) async {
+    testWidgets('shows Detail CTA in the trailing slot', (tester) async {
       await tester.pumpWidget(_buildCard(teacher: _teacher, readOnly: false));
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
-    });
-
-    testWidgets('hides edit and delete icons when read-only', (tester) async {
-      await tester.pumpWidget(_buildCard(teacher: _teacher, readOnly: true));
+      expect(find.text('Detail →'), findsOneWidget);
       expect(find.byIcon(Icons.edit_outlined), findsNothing);
       expect(find.byIcon(Icons.delete_outline), findsNothing);
     });
@@ -167,7 +159,9 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('calls onEdit when edit icon is tapped', (tester) async {
+    testWidgets('calls onEdit on long-press when NOT read-only', (
+      tester,
+    ) async {
       bool edited = false;
       await tester.pumpWidget(
         _buildCard(
@@ -176,21 +170,23 @@ void main() {
           onEdit: () => edited = true,
         ),
       );
-      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.longPress(find.text('John Doe'));
       expect(edited, isTrue);
     });
 
-    testWidgets('calls onDelete when delete icon is tapped', (tester) async {
-      bool deleted = false;
+    testWidgets('does not call onEdit on long-press when read-only', (
+      tester,
+    ) async {
+      bool edited = false;
       await tester.pumpWidget(
         _buildCard(
           teacher: _teacher,
-          readOnly: false,
-          onDelete: () => deleted = true,
+          readOnly: true,
+          onEdit: () => edited = true,
         ),
       );
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      expect(deleted, isTrue);
+      await tester.longPress(find.text('John Doe'));
+      expect(edited, isFalse);
     });
 
     // ── Edge cases ────────────────────────────────────────────────────────────
@@ -208,12 +204,11 @@ void main() {
       const listShape = <String, dynamic>{
         'name': 'Bob Lee',
         'homeroom_class': [
-          {'name': 'Class 8B'},
+          {'id': '8b', 'name': 'Class 8B'},
         ],
       };
       await tester.pumpWidget(_buildCard(teacher: listShape));
-      expect(find.text('Class 8B'), findsOneWidget);
-      expect(find.text('Wali Kelas'), findsOneWidget);
+      expect(find.text('Wali Class 8B'), findsOneWidget);
     });
   });
 }

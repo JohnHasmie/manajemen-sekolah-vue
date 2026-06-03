@@ -22,8 +22,6 @@ mixin LessonPlanAiResultDataMixin
   late TextEditingController classSemesterController;
   late TextEditingController timeAllocationController;
 
-
-
   void initControllers(Map<String, dynamic> data) {
     _initTextControllers(data);
     _initQuillControllers(data);

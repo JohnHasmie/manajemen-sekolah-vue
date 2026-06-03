@@ -7,7 +7,8 @@ library;
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-/// A [TextInputFormatter] that auto-formats text field input as Indonesian Rupiah.
+/// A [TextInputFormatter] that auto-formats text field input as Indonesian
+/// Rupiah.
 /// Like a Laravel Helper function combined with a Vue input mask/directive.
 ///
 /// Attach to a `TextField` via its `inputFormatters` parameter:
@@ -19,7 +20,8 @@ import 'package:intl/intl.dart';
 /// parses the number, and reformats it with the "Rp " prefix and thousands
 /// separators (e.g., "Rp 1.500.000").
 ///
-/// Also provides [parseCurrency] to reverse the formatting back to a numeric value
+/// Also provides [parseCurrency] to reverse the formatting back to a numeric
+/// value
 /// for API submission.
 class CurrencyInputFormatter extends TextInputFormatter {
   /// The currency symbol prefix prepended to all formatted values.

@@ -7,7 +7,7 @@ import 'package:manajemensekolah/features/attendance/presentation/screens/admin_
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Mixin for stats card building in AdminAttendanceDetailPage
-mixin admin_detail_ui_stats_mixin on ConsumerState<AdminAttendanceDetailPage> {
+mixin AdminDetailUiStatsMixin on ConsumerState<AdminAttendanceDetailPage> {
   Widget buildStatsCards(
     LanguageProvider languageProvider,
     Map<String, int> stats,

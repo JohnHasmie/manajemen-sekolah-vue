@@ -1,5 +1,6 @@
 // Redesigned announcement card for teacher role — minimal, modern style.
-// Matches the LessonPlanCard pattern: status bar left, content middle, metadata.
+// Matches the LessonPlanCard pattern: status bar left, content middle,
+// metadata.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';

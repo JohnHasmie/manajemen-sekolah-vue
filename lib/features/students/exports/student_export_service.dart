@@ -14,14 +14,17 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Service for generating student data Excel files entirely on the client side.
-/// Unlike the other `Excel*Service` classes that POST to the backend, this service
-/// uses `syncfusion_flutter_xlsio` to create .xlsx files locally -- like running
+/// Unlike the other `Excel*Service` classes that POST to the backend, this
+/// service
+/// uses `syncfusion_flutter_xlsio` to create .xlsx files locally -- like
+/// running
 /// Maatwebsite/Excel directly in the app instead of on the Laravel server.
 ///
 /// Provides:
 /// 1. [exportStudentsToExcel] - Export current student data with styled headers
 /// 2. [downloadTemplate] - Generate a pre-formatted import template (.xlsx)
-/// 3. [downloadTemplateCSV] - Generate a CSV import template (simpler alternative)
+/// 3. [downloadTemplateCSV] - Generate a CSV import template (simpler
+/// alternative)
 ///
 /// The Syncfusion `Workbook` / `Worksheet` API is similar to PhpSpreadsheet
 /// in PHP: create workbook -> get sheet -> set cell values -> save as bytes.
@@ -218,8 +221,10 @@ class ExcelService {
     }
   }
 
-  /// Generate and download a CSV import template as a simpler alternative to Excel.
-  /// Like a plain-text version of the template for users without Excel software.
+  /// Generate and download a CSV import template as a simpler alternative to
+  /// Excel.
+  /// Like a plain-text version of the template for users without Excel
+  /// software.
   static Future<void> downloadTemplateCSV(BuildContext context) async {
     try {
       const String csvContent =
@@ -283,7 +288,8 @@ class ExcelService {
     }
   }
 
-  /// Format a date string to 'YYYY-MM-DD' for export. Like Carbon's `format('Y-m-d')`.
+  /// Format a date string to 'YYYY-MM-DD' for export. Like Carbon's
+  /// `format('Y-m-d')`.
   static String _formatDateForExport(String? date) {
     if (date == null) return '';
     try {

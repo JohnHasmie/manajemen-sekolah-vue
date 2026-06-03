@@ -50,14 +50,14 @@ class AdminAttendanceDetailPage extends ConsumerStatefulWidget {
 class _AdminAttendanceDetailPageState
     extends ConsumerState<AdminAttendanceDetailPage>
     with
-        admin_detail_data_mixin,
-        admin_detail_status_mixin,
-        admin_detail_save_mixin,
-        admin_detail_export_mixin,
-        admin_detail_style_mixin,
-        admin_detail_ui_mixin,
-        admin_detail_ui_list_mixin,
-        admin_detail_ui_stats_mixin {
+        AdminDetailDataMixin,
+        AdminDetailStatusMixin,
+        AdminDetailSaveMixin,
+        AdminDetailExportMixin,
+        AdminDetailStyleMixin,
+        AdminDetailUiMixin,
+        AdminDetailUiListMixin,
+        AdminDetailUiStatsMixin {
   List<Attendance> _attendanceData = [];
   List<Student> _studentList = [];
   bool _isLoading = true;
@@ -105,7 +105,7 @@ class _AdminAttendanceDetailPageState
     super.dispose();
   }
 
-  // Implement mixin abstract methods for admin_detail_ui_mixin
+  // Implement mixin abstract methods for AdminDetailUiMixin
   @override
   Color getPrimaryColor() {
     return ColorUtils.getRoleColor('admin');

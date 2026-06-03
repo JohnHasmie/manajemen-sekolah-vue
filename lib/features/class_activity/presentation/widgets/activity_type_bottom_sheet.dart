@@ -7,7 +7,8 @@ import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_type_option_tile.dart';
 
-/// Bottom sheet content for choosing between "Tugas" and "Materi" activity types.
+/// Bottom sheet content for choosing between "Tugas" and "Materi" activity
+/// types.
 ///
 /// Call [ActivityTypeBottomSheet.show] to display this as a modal sheet.
 /// [onActivityTypeSelected] is called with the selected type string

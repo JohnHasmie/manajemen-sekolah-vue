@@ -30,7 +30,8 @@ mixin ActivityNameHelperMixin on ConsumerState<AddActivityDialog> {
         'Unknown';
   }
 
-  /// Updates title controller text based on selected chapter and sub-chapter materials
+  /// Updates title controller text based on selected chapter and sub-chapter
+  /// materials
   void updateTitleFromMaterial({
     required String? selectedChapterId,
     required String? selectedSubChapterId,

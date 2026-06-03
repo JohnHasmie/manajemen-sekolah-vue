@@ -264,10 +264,7 @@ class LessonPlanService {
   }) async {
     final response = await dioClient.put(
       '/rpp/$lessonPlanId/send-back',
-      data: {
-        'catatan': catatan,
-        if (areas != null) 'revision_areas': areas,
-      },
+      data: {'catatan': catatan, if (areas != null) 'revision_areas': areas},
     );
     await CacheInvalidationService.onLessonPlanChanged();
     return response.data;
@@ -289,14 +286,14 @@ class LessonPlanService {
       if (data is List) {
         return data
             .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
+            .map(Map<String, dynamic>.from)
             .toList(growable: false);
       }
     }
     if (body is List) {
       return body
           .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
+          .map(Map<String, dynamic>.from)
           .toList(growable: false);
     }
     return const [];

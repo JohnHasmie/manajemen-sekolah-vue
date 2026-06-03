@@ -67,7 +67,6 @@ class _LearningRecommendationClassScreenState
     with DataLoadingMixin, GenerateFlowMixin, BuildMixin {
   final GlobalKey _classListKey = GlobalKey();
 
-  @override
   GlobalKey get classListKey => _classListKey;
 
   /// Whether the Wali Kelas scope is active. Defaults to `false` —

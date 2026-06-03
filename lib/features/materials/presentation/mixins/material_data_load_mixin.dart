@@ -1,7 +1,8 @@
 // Mixin for main data loading in TeacherMaterialScreen.
 //
 // Extracted from material_data_mixin.dart to keep that file under 400 lines.
-// Contains loadData and all its sub-methods for resolving classes, profiles, etc.
+// Contains loadData and all its sub-methods for resolving classes, profiles,
+// etc.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';

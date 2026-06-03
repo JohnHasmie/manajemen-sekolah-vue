@@ -234,12 +234,12 @@ void main() {
   // getRoleColor
   // ─────────────────────────────────────────────────────────────────────────
   group('getRoleColor', () {
-    test('admin → blue', () {
-      expect(ColorUtils.getRoleColor('admin'), equals(const Color(0xFF2563EB)));
+    test('admin → brand dark blue', () {
+      expect(ColorUtils.getRoleColor('admin'), equals(const Color(0xFF143068)));
     });
 
-    test('guru → green', () {
-      expect(ColorUtils.getRoleColor('guru'), equals(const Color(0xFF16A34A)));
+    test('guru → brand cobalt', () {
+      expect(ColorUtils.getRoleColor('guru'), equals(const Color(0xFF1B6FB8)));
     });
 
     test('teacher → green (same as guru)', () {
@@ -253,8 +253,8 @@ void main() {
       expect(ColorUtils.getRoleColor('staff'), equals(const Color(0xFFFF9F1C)));
     });
 
-    test('wali → purple', () {
-      expect(ColorUtils.getRoleColor('wali'), equals(const Color(0xFF9333EA)));
+    test('wali → brand azzure blue', () {
+      expect(ColorUtils.getRoleColor('wali'), equals(const Color(0xFF21AFE6)));
     });
 
     test('parent → purple (same as wali)', () {
@@ -271,8 +271,8 @@ void main() {
       );
     });
 
-    test('siswa → blue', () {
-      expect(ColorUtils.getRoleColor('siswa'), equals(const Color(0xFF3B82F6)));
+    test('siswa → brand azzure blue', () {
+      expect(ColorUtils.getRoleColor('siswa'), equals(const Color(0xFF21AFE6)));
     });
 
     test('student → blue (same as siswa)', () {

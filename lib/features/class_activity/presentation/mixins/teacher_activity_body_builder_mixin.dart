@@ -219,6 +219,7 @@ mixin TeacherActivityBodyBuilderMixin
         await svc.updateActivity(id, payload);
       },
     );
+    if (!mounted) return;
     if (res != null) {
       SnackBarUtils.showSuccess(
         context,

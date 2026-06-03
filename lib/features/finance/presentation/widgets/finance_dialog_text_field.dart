@@ -1,6 +1,8 @@
-// Reusable styled text field used inside finance dialogs (e.g. manual payment form).
+// Reusable styled text field used inside finance dialogs (e.g. manual payment
+// form).
 // Like a Vue component `<FinanceDialogTextField />` that wraps a TextField with
-// consistent border, background, and prefix icon styling for finance-related dialogs.
+// consistent border, background, and prefix icon styling for finance-related
+// dialogs.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 
@@ -10,7 +12,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 /// reusable `<input-field>` Vue component scoped to finance dialogs.
 ///
 /// [primaryColor] replaces the parent's `_getPrimaryColor()` call.
-/// [onTap] makes the field read-only and opens a custom picker (e.g. date picker).
+/// [onTap] makes the field read-only and opens a custom picker (e.g. date
+/// picker).
 class FinanceDialogTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;

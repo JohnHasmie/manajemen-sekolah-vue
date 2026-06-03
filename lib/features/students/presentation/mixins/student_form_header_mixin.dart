@@ -6,7 +6,7 @@ import 'package:manajemensekolah/core/widgets/admin_form_sheet_header.dart';
 ///
 /// Delegates to the shared [AdminFormSheetHeader] so the visual matches
 /// the v3 actions mockup across every admin entity (Siswa, Guru, Kelas,
-/// Mapel, Jadwal). Edit mode also surfaces the "MENGEDIT: <name>"
+/// Mapel, Jadwal). Edit mode also surfaces the "MENGEDIT: `<name>`"
 /// context strip when [editingContextLabel] is provided.
 mixin StudentFormHeaderMixin {
   /// Translation helper — must be implemented by consuming class.

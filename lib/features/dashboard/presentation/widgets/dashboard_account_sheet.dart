@@ -120,148 +120,148 @@ class _DashboardAccountSheetState extends ConsumerState<DashboardAccountSheet>
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
-      // Clip so the navy IdentityHero gradient (admin variant)
-      // honours the rounded top corners.
-      clipBehavior: Clip.antiAlias,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.only(bottom: 20 + bottomPad),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── Top hero / drag handle (no horizontal padding) ──
-            if (_isAdminVariant)
-              _buildAdminIdentityHero(context)
-            else
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 10, bottom: 20),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFCBD5E1),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-
-            // ── Body (24px horizontal padding) ──────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!_isAdminVariant) ...[
-                    _buildLegacyAvatarRow(context),
-                    const SizedBox(height: 20),
-                  ] else
-                    const SizedBox(height: 16),
-
-                  // Lihat Profil Lengkap
-                  buildLihatProfilTile(context),
-                  const SizedBox(height: 20),
-
-                  // Divider
-                  const Divider(color: Color(0xFFF1F5F9), height: 1),
-                  const SizedBox(height: 16),
-
-                  // AKSES SAYA section
-                  Text(
-                    AppLocalizations.myAccess.tr.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF94A3B8),
-                      letterSpacing: 0.5,
+        // Clip so the navy IdentityHero gradient (admin variant)
+        // honours the rounded top corners.
+        clipBehavior: Clip.antiAlias,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(bottom: 20 + bottomPad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ── Top hero / drag handle (no horizontal padding) ──
+              if (_isAdminVariant)
+                _buildAdminIdentityHero(context)
+              else
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 10, bottom: 20),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFCBD5E1),
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                ),
 
-                  // Peran aktif row
-                  () {
-                    final roles = widget.state.availableRoles;
-                    final hasMultiple = roles.length > 1;
-                    return _AccessRow(
-                      icon: Icons.person_outline,
-                      iconColor: widget.primaryColor,
-                      label: AppLocalizations.activeRole.tr,
-                      value: roleDisplayName(widget.effectiveRole),
-                      action: hasMultiple
-                          ? AppLocalizations.switchAction.tr
-                          : '',
-                      isActive: true,
-                      accentColor: widget.primaryColor,
-                      onTap: hasMultiple
-                          ? () {
-                              final sId =
-                                  (widget.state.userData['school_id'] ?? '')
-                                      .toString();
-                              final rList = roles
-                                  .map((e) => e.toString())
-                                  .toList();
-                              Navigator.pop(context);
-                              widget.onShowRoleSelection(sId, rList);
-                            }
-                          : () {},
-                    );
-                  }(),
-                  const SizedBox(height: 8),
+              // ── Body (24px horizontal padding) ──────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!_isAdminVariant) ...[
+                      _buildLegacyAvatarRow(context),
+                      const SizedBox(height: 20),
+                    ] else
+                      const SizedBox(height: 16),
 
-                  // Sekolah aktif row
-                  () {
-                    final schools = widget.state.accessibleSchools;
-                    final hasMultiple = schools.length > 1;
-                    return _AccessRow(
-                      icon: Icons.school_outlined,
-                      iconColor: const Color(0xFF10B981),
-                      label: AppLocalizations.activeSchool.tr,
-                      value: _schoolName,
-                      action: hasMultiple
-                          ? AppLocalizations.switchAction.tr
-                          : '',
-                      onTap: hasMultiple
-                          ? () {
-                              Navigator.pop(context);
-                              widget.onShowSchoolSelection();
-                            }
-                          : () {},
-                    );
-                  }(),
-                  const SizedBox(height: 12),
+                    // Lihat Profil Lengkap
+                    buildLihatProfilTile(context),
+                    const SizedBox(height: 20),
 
-                  // Divider before Bahasa
-                  const Divider(color: Color(0xFFF1F5F9), height: 1),
-                  const SizedBox(height: 16),
+                    // Divider
+                    const Divider(color: Color(0xFFF1F5F9), height: 1),
+                    const SizedBox(height: 16),
 
-                  // Bahasa row
-                  _AccessRow(
-                    icon: Icons.language_outlined,
-                    iconColor: const Color(0xFF6366F1),
-                    label: AppLocalizations.language.tr,
-                    value:
-                        ref.watch(languageRiverpod).currentLanguage ==
-                            LanguageProvider.english
-                        ? 'English'
-                        : 'Bahasa Indonesia',
-                    action: AppLocalizations.changeAction.tr,
-                    onTap: widget.onLanguageTap,
-                  ),
-                  const SizedBox(height: 20),
+                    // AKSES SAYA section
+                    Text(
+                      AppLocalizations.myAccess.tr.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF94A3B8),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
-                  // Divider
-                  const Divider(color: Color(0xFFF1F5F9), height: 1),
-                  const SizedBox(height: 12),
+                    // Peran aktif row
+                    () {
+                      final roles = widget.state.availableRoles;
+                      final hasMultiple = roles.length > 1;
+                      return _AccessRow(
+                        icon: Icons.person_outline,
+                        iconColor: widget.primaryColor,
+                        label: AppLocalizations.activeRole.tr,
+                        value: roleDisplayName(widget.effectiveRole),
+                        action: hasMultiple
+                            ? AppLocalizations.switchAction.tr
+                            : '',
+                        isActive: true,
+                        accentColor: widget.primaryColor,
+                        onTap: hasMultiple
+                            ? () {
+                                final sId =
+                                    (widget.state.userData['school_id'] ?? '')
+                                        .toString();
+                                final rList = roles
+                                    .map((e) => e.toString())
+                                    .toList();
+                                Navigator.pop(context);
+                                widget.onShowRoleSelection(sId, rList);
+                              }
+                            : () {},
+                      );
+                    }(),
+                    const SizedBox(height: 8),
 
-                  // Logout
-                  buildLogoutButton(context),
-                  const SizedBox(height: 12),
-                ],
+                    // Sekolah aktif row
+                    () {
+                      final schools = widget.state.accessibleSchools;
+                      final hasMultiple = schools.length > 1;
+                      return _AccessRow(
+                        icon: Icons.school_outlined,
+                        iconColor: const Color(0xFF10B981),
+                        label: AppLocalizations.activeSchool.tr,
+                        value: _schoolName,
+                        action: hasMultiple
+                            ? AppLocalizations.switchAction.tr
+                            : '',
+                        onTap: hasMultiple
+                            ? () {
+                                Navigator.pop(context);
+                                widget.onShowSchoolSelection();
+                              }
+                            : () {},
+                      );
+                    }(),
+                    const SizedBox(height: 12),
+
+                    // Divider before Bahasa
+                    const Divider(color: Color(0xFFF1F5F9), height: 1),
+                    const SizedBox(height: 16),
+
+                    // Bahasa row
+                    _AccessRow(
+                      icon: Icons.language_outlined,
+                      iconColor: const Color(0xFF6366F1),
+                      label: AppLocalizations.language.tr,
+                      value:
+                          ref.watch(languageRiverpod).currentLanguage ==
+                              LanguageProvider.english
+                          ? 'English'
+                          : 'Bahasa Indonesia',
+                      action: AppLocalizations.changeAction.tr,
+                      onTap: widget.onLanguageTap,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Divider
+                    const Divider(color: Color(0xFFF1F5F9), height: 1),
+                    const SizedBox(height: 12),
+
+                    // Logout
+                    buildLogoutButton(context),
+                    const SizedBox(height: 12),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

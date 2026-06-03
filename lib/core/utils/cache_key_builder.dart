@@ -1,5 +1,6 @@
 /// cache_key_builder.dart - Centralized cache key construction.
-/// Like Laravel's cache key conventions: `Cache::remember("user_{$id}_profile", ...)`.
+/// Like Laravel's cache key conventions: `Cache::remember("user_{$id}_profile",
+/// ...)`.
 ///
 /// Replaces 15+ files manually building cache keys like:
 /// `'grade_classes_${teacherId}_$yearId'`

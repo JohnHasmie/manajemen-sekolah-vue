@@ -1,4 +1,5 @@
-/// riverpod_providers.dart - Re-exports feature-based providers for backward compatibility.
+/// riverpod_providers.dart - Re-exports feature-based providers for backward
+/// compatibility.
 ///
 /// As part of the Feature-First refactoring, providers were moved to their
 /// respective features. This file serves as a legacy barrel to prevent

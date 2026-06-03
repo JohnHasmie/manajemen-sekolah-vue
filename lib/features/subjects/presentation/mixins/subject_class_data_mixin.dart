@@ -122,7 +122,7 @@ mixin SubjectClassDataMixin on ConsumerState<SubjectClassManagementPage> {
     }
   }
 
-  /// Parses API response to List<dynamic>
+  /// Parses API response to `List<dynamic>`
   List<dynamic> _parseResponse(dynamic response) {
     if (response is Map<String, dynamic>) {
       return response['data'] ?? [];

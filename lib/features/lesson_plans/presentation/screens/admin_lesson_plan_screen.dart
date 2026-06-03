@@ -119,11 +119,8 @@ class _AdminLessonPlanScreenState extends ConsumerState<AdminLessonPlanScreen>
   final ScrollController _scrollController = ScrollController();
   Timer? _searchDebounce;
 
-  @override
   final GlobalKey menuKey = GlobalKey();
-  @override
   final GlobalKey searchKey = GlobalKey();
-  @override
   final GlobalKey filterKey = GlobalKey();
 
   // ── Lifecycle ────────────────────────────────

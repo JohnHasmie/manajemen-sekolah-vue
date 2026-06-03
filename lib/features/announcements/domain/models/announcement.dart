@@ -40,7 +40,8 @@ abstract class Announcement with _$Announcement {
     mapped['created_at'] ??= mapped['tanggal'] ?? mapped['date'];
 
     // 2. Normalize is_read — API can return: null, true, false, 1, 0, '1', '0'
-    // Null is treated as "read" (default true) to match pre-existing UI semantics.
+    // Null is treated as "read" (default true) to match pre-existing UI
+    // semantics.
     final rawRead = mapped['is_read'];
     if (rawRead == null) {
       mapped['is_read'] = true;

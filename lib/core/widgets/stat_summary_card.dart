@@ -129,9 +129,12 @@ class StatSummaryCard extends StatelessWidget {
 /// ```dart
 /// StatSummaryRow(
 ///   cards: [
-///     StatSummaryCard(label: 'Hadir', value: '24', icon: Icons.check, color: Colors.green),
-///     StatSummaryCard(label: 'Sakit', value: '2', icon: Icons.healing, color: Colors.orange),
-///     StatSummaryCard(label: 'Alpha', value: '1', icon: Icons.close, color: Colors.red),
+/// StatSummaryCard(label: 'Hadir', value: '24', icon: Icons.check, color:
+/// Colors.green),
+/// StatSummaryCard(label: 'Sakit', value: '2', icon: Icons.healing, color:
+/// Colors.orange),
+/// StatSummaryCard(label: 'Alpha', value: '1', icon: Icons.close, color:
+/// Colors.red),
 ///   ],
 /// )
 /// ```

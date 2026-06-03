@@ -1,4 +1,5 @@
-// Sub-chapter (sub-bab) detail page extracted from teacher_material_screen.dart.
+// Sub-chapter (sub-bab) detail page extracted from
+// teacher_material_screen.dart.
 //
 // Shows content for a single sub-chapter with AI-generated materials,
 // quizzes, and references in a tabbed layout.
@@ -27,7 +28,8 @@ import 'package:manajemensekolah/features/materials/presentation/widgets/sub_cha
 import 'package:manajemensekolah/features/materials/presentation/widgets/sub_chapter_header.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/sub_chapter_tab_bar.dart';
 
-/// Detail page for a sub-chapter (sub-bab) showing its content and AI materials.
+/// Detail page for a sub-chapter (sub-bab) showing its content and AI
+/// materials.
 class SubBabDetailPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> subChapter;
   final Map<String, dynamic> chapter;
@@ -394,7 +396,8 @@ class SubBabDetailPageState extends ConsumerState<SubBabDetailPage>
     );
   }
 
-  // ==================== SUBCHAPTERUILOADINGMIXIN IMPLEMENTATIONS ====================
+  // ==================== SUBCHAPTERUILOADINGMIXIN IMPLEMENTATIONS
+  // ====================
   @override
   Widget buildLoadingState(String message) {
     return Center(

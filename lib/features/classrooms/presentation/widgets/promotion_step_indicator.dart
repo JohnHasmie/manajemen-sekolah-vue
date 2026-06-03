@@ -8,7 +8,8 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 
 /// A horizontal step indicator that shows progress through a multi-step wizard.
 ///
-/// This is a [StatelessWidget] - it receives all data via props (constructor params),
+/// This is a [StatelessWidget] - it receives all data via props (constructor
+/// params),
 /// just like a Vue component that only uses `props` with no local `data()`.
 ///
 /// Props (constructor parameters):
@@ -31,7 +32,8 @@ class PromotionStepIndicator extends StatelessWidget {
   });
 
   /// Renders the step indicator with circles, connecting lines, and labels.
-  /// Uses `List.generate` to build the UI dynamically - like Vue's `v-for` directive.
+  /// Uses `List.generate` to build the UI dynamically - like Vue's `v-for`
+  /// directive.
   @override
   Widget build(BuildContext context) {
     return Container(

@@ -35,9 +35,7 @@
 //   Migrating those is out of scope for this mixin.
 // • The mixin is generic over the screen's StatefulWidget so the
 //   subtype constraint on `ConsumerState<T>` matches each consumer.
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/providers/academic_year_provider.dart';
 
 mixin AdminAcademicYearReloadMixin<T extends ConsumerStatefulWidget>

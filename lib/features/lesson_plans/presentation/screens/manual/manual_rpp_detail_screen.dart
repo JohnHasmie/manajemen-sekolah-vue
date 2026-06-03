@@ -800,8 +800,6 @@ class _ManualRppDetailScreenState extends State<ManualRppDetailScreen> {
     SnackBarUtils.showInfo(context, 'RPP file tersimpan');
   }
 
-
-
   // ── Export menu (PDF / text) ──────────────────────────────────
 
   void _showExportMenu() {

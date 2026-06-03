@@ -122,8 +122,9 @@ class _LessonSessionEditSheetState extends State<_LessonSessionEditSheet> {
   /// the latest existing session (so the new row stacks naturally), or
   /// 07:00 when the day is empty.
   TimeOfDay _suggestedStartTime() {
-    if (widget.existingSessions.isEmpty)
+    if (widget.existingSessions.isEmpty) {
       return const TimeOfDay(hour: 7, minute: 0);
+    }
     final last = widget.existingSessions.last as Map;
     final t = _readTime(last['end_time']?.toString() ?? '');
     return t ?? const TimeOfDay(hour: 7, minute: 0);
@@ -418,9 +419,9 @@ class _LessonSessionEditSheetState extends State<_LessonSessionEditSheet> {
                                 Radius.circular(999),
                               ),
                             ),
-                            child: Row(
+                            child: const Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: const [
+                              children: [
                                 _Dot(color: Color(0xFFF59E0B)),
                                 SizedBox(width: 4),
                                 Text(

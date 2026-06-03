@@ -76,7 +76,7 @@ mixin LessonPlanFormFileMixin on ConsumerState<LessonPlanFormDialog> {
       await OpenFile.open(file.path);
     } catch (e) {
       AppLogger.error('lesson_plan', 'Error opening file: $e');
-      if (context.mounted) {
+      if (mounted) {
         SnackBarUtils.showError(
           context,
           'File tidak dapat diunduh. Coba lagi.',

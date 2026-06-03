@@ -49,7 +49,8 @@ class GradeBookPage extends ConsumerStatefulWidget {
   GradeBookPageState createState() => GradeBookPageState();
 }
 
-/// State with 7 mixins: tour, data, formatter, dialogs, edit, navigation, export.
+/// State with 7 mixins: tour, data, formatter, dialogs, edit, navigation,
+/// export.
 class GradeBookPageState extends ConsumerState<GradeBookPage>
     with
         GradeBookDataMixin,
@@ -113,9 +114,7 @@ class GradeBookPageState extends ConsumerState<GradeBookPage>
   Map<String, dynamic> get classData => widget.classData;
   @override
   void onDataLoaded() {}
-  @override
   GlobalKey get addGradeKey => _addGradeKey;
-  @override
   bool get canEditGrades =>
       _canEdit && !ref.read(academicYearRiverpod).isReadOnly;
   @override

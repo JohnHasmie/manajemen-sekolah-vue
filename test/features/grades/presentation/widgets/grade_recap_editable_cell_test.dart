@@ -56,11 +56,17 @@ void main() {
       expect(values, contains(90.0));
     });
 
-    testWidgets('onChanged returns 0.0 for non-numeric input', (tester) async {
+    testWidgets('rejects non-numeric input via the score formatter', (
+      tester,
+    ) async {
+      // The _ScoreRangeFormatter rejects non-numeric edits, so the field
+      // stays empty and onChanged never fires for 'abc'.
       final values = <double>[];
       await tester.pumpWidget(_build(onChanged: values.add));
       await tester.enterText(find.byType(TextField), 'abc');
-      expect(values, contains(0.0));
+      expect(values, isEmpty);
+      final tf = tester.widget<TextField>(find.byType(TextField));
+      expect(tf.controller!.text, isEmpty);
     });
 
     testWidgets('onChanged returns 0.0 when field is cleared', (tester) async {

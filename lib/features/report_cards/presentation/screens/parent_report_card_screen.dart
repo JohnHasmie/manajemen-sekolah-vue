@@ -52,28 +52,21 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
         ReportCardUIBuilderMixin<ParentReportCardScreen>,
         ParentReportCardFilterMixin {
   @override
-  bool isLoading = true;
-  @override
-  String errorMessage = '';
-  @override
-  List<dynamic> studentsData = [];
-  @override
-  Map<String, dynamic> parentData = {};
-  @override
-  String selectedTermId = '1';
-
-  @override
   String? get academicYearId => widget.academicYearId;
 
   // Sibling selector state — mirrors the pattern from parent attendance.
   List<Student> _siblings = const [];
   String? _selectedChildId;
-
-  DateTime _lastSync = DateTime.now();
-
   @override
   void initState() {
     super.initState();
+    // Backing fields (isLoading, errorMessage, studentsData, parentData,
+    // selectedTermId) are provided by ReportCardDataMixin.
+    isLoading = true;
+    errorMessage = '';
+    studentsData = [];
+    parentData = {};
+    selectedTermId = '1';
     loadData();
     _loadSiblings();
   }
@@ -143,7 +136,7 @@ class _ParentReportCardScreenState extends ConsumerState<ParentReportCardScreen>
         onRefresh: () async {
           await forceRefresh();
           await _loadSiblings();
-          if (mounted) setState(() => _lastSync = DateTime.now());
+          if (mounted) setState(() {});
         },
         bodyChildren: [buildContentArea(filteredData: _filteredStudents)],
       ),

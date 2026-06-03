@@ -34,7 +34,8 @@ class TeacherAttendanceState {
     );
   }
 
-  /// Calculates student statistics based on CURRENT (potentially edited) status.
+  /// Calculates student statistics based on CURRENT (potentially edited)
+  /// status.
   Map<String, int> get statistics {
     int hadir = 0;
     int terlambat = 0;

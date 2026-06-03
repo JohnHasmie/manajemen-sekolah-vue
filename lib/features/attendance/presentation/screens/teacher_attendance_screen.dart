@@ -241,7 +241,6 @@ class AttendancePageState extends ConsumerState<AttendancePage>
   String? get selectedClassId => _selectedClassId;
   @override
   String? get selectedLessonHourId => _selectedLessonHourId;
-  @override
   String? get selectedStatusFilter => _selectedStatusFilter;
   @override
   bool get isSubmitting => _isSubmitting;

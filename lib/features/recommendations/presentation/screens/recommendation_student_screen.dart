@@ -107,14 +107,12 @@ class _LearningRecommendationStudentScreenState
   String get errorMessage => _errorMessage;
   @override
   set errorMessage(String value) => _errorMessage = value;
-  @override
   GlobalKey get studentListKey => _studentListKey;
   @override
   Map<String, dynamic> get classData => widget.classData;
   @override
   String? get academicYearId =>
       ref.read(academicYearRiverpod).selectedAcademicYear?['id']?.toString();
-  @override
   Map<String, String> get teacher => widget.teacher;
 
   String get _className =>

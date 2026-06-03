@@ -24,7 +24,8 @@ import 'package:manajemensekolah/features/students/presentation/mixins/student_f
 /// Opens a bottom sheet for adding or editing a student.
 ///
 /// [student]    - pass an existing record map to enter edit mode; null = add mode.
-/// [classList]  - list of class maps [{id, name}] used to populate the class dropdown.
+/// [classList] - list of class maps [{id, name}] used to populate the class
+/// dropdown.
 /// [primaryColor] - role accent colour forwarded from the screen.
 /// [onSave]     - called after a successful API save so the screen can reload.
 void showStudentAddEditDialog({
@@ -159,12 +160,12 @@ class _StudentAddEditSheetContentState
   @override
   void onSaveSuccess() => widget.onSave();
 
-  @override
   Color get primaryColor => widget.primaryColor;
 
+  @override
   bool get isEditMode => _isEdit;
 
-  /// "MENGEDIT: <Nama · Kelas>" context strip — only rendered in edit mode.
+  /// "MENGEDIT: `<Nama · Kelas>`" context strip — only rendered in edit mode.
   String? get editingContextLabel {
     if (!_isEdit) return null;
     final s = widget.student;

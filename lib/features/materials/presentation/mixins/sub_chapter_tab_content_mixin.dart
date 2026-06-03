@@ -16,10 +16,12 @@ mixin SubChapterTabContentMixin on ConsumerState<SubBabDetailPage> {
   /// Abstract getter for primary color - must be implemented by consumer.
   Color getPrimaryColor();
 
-  /// Abstract getter for parsed material content - must be implemented by consumer.
+  /// Abstract getter for parsed material content - must be implemented by
+  /// consumer.
   Map<String, dynamic>? parseMaterialContent(Map<String, dynamic>? data);
 
-  /// Abstract getter for HTML stripping function - must be implemented by consumer.
+  /// Abstract getter for HTML stripping function - must be implemented by
+  /// consumer.
   String stripHtml(String html);
 
   /// Callback when AI result is tapped - must be implemented by consumer.

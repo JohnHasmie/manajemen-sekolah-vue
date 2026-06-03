@@ -26,7 +26,8 @@ class AttendanceGridData {
 }
 
 /// DataGridSource that feeds student attendance data into a SfDataGrid.
-/// Builds rows with a frozen "student_info" column and dynamic date-subject columns.
+/// Builds rows with a frozen "student_info" column and dynamic date-subject
+/// columns.
 class AttendanceDataSource extends DataGridSource {
   final List<AttendanceGridData> students;
   final List<String> dates;

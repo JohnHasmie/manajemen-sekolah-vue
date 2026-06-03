@@ -1,6 +1,8 @@
-// A single stat cell displayed in the 4-column stats row inside the dashboard hero banner.
+// A single stat cell displayed in the 4-column stats row inside the dashboard
+// hero banner.
 // Like a Vue sub-component `<HeroStatCell icon value label />` rendered inside the hero card.
-// Receives all data as constructor params — pure StatelessWidget, no state or providers needed.
+// Receives all data as constructor params — pure StatelessWidget, no state or
+// providers needed.
 
 import 'package:flutter/material.dart';
 
@@ -12,7 +14,8 @@ import 'package:flutter/material.dart';
 ///
 /// Example usage:
 /// ```dart
-/// Expanded(child: HeroStatCell(icon: Icons.people_outline, value: '120', label: 'Students'))
+/// Expanded(child: HeroStatCell(icon: Icons.people_outline, value: '120',
+/// label: 'Students'))
 /// ```
 class HeroStatCell extends StatelessWidget {
   /// Icon to show in the frosted-glass container.
@@ -36,7 +39,8 @@ class HeroStatCell extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Icon with glass morphism effect — white semi-transparent box on the gradient background
+        // Icon with glass morphism effect — white semi-transparent box on the
+        // gradient background
         Container(
           padding: const EdgeInsets.all(9),
           decoration: BoxDecoration(

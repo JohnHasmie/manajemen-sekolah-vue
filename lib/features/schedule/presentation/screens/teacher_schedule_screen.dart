@@ -76,13 +76,9 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
   /// card view auto-scrolls to the current/next lesson.
   bool _isInitialLoad = true;
 
-  @override
   GlobalKey get toggleViewKey => _toggleViewKey;
-  @override
   GlobalKey get searchFilterKey => _searchFilterKey;
-  @override
   GlobalKey get firstScheduleKey => _firstScheduleKey;
-  @override
   GlobalKey get actionButtonsKey => _actionButtonsKey;
 
   @override

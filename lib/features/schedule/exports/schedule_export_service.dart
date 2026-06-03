@@ -1,4 +1,5 @@
-// excel_schedule_service.dart - Export teaching schedule (jadwal mengajar) to Excel.
+// excel_schedule_service.dart - Export teaching schedule (jadwal mengajar) to
+// Excel.
 // Like Laravel's Maatwebsite/Excel ScheduleExport with day-name translation.
 // Handles bilingual day names (Senin/Monday) based on the app's language setting.
 
@@ -14,14 +15,16 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
 
 /// Service for exporting teaching schedules (jadwal mengajar) to Excel.
-/// Similar to `Excel::download(new ScheduleExport($data), 'Jadwal.xlsx')` in Laravel.
+/// Similar to `Excel::download(new ScheduleExport($data), 'Jadwal.xlsx')` in
+/// Laravel.
 ///
 /// Unique feature: translates day names based on the current language before
 /// sending to the backend, so the exported file matches the user's locale.
 ///
 /// Supports flexible field name mapping for schedule data that can come from
 /// different API response formats (e.g., 'day_name' vs 'hari_nama', nested
-/// 'day.name' vs flat 'day_name'). Like Laravel's `$request->input('key', $fallback)`.
+/// 'day.name' vs flat 'day_name'). Like Laravel's `$request->input('key',
+/// $fallback)`.
 class ExcelScheduleService {
   static String get baseUrl => '/teaching-schedule';
 
@@ -146,8 +149,10 @@ class ExcelScheduleService {
 
   /// Local fallback validation for schedule data. Handles multiple field name
   /// conventions (e.g., 'teacher_name' vs 'guru_nama', nested 'day.name' vs
-  /// flat 'day_name'). Like a Laravel FormRequest with complex input normalization.
-  /// Validates: teacher, subject, class, day, lesson_hour, semester, academic_year.
+  /// flat 'day_name'). Like a Laravel FormRequest with complex input
+  /// normalization.
+  /// Validates: teacher, subject, class, day, lesson_hour, semester,
+  /// academic_year.
   static List<Map<String, dynamic>> validateScheduleData(
     List<dynamic> schedules,
   ) {
@@ -220,7 +225,8 @@ class ExcelScheduleService {
 
   /// Translate a day name between English and Indonesian.
   /// [targetLang] - 'id' for Indonesian, 'en' for English.
-  /// Like Laravel's `__('days.Monday')` localization but done as a simple map lookup.
+  /// Like Laravel's `__('days.Monday')` localization but done as a simple map
+  /// lookup.
   static String _translateDay(String dayName, String targetLang) {
     const enToId = {
       'Monday': 'Senin',

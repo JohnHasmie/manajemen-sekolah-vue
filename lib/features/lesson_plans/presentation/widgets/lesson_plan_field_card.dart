@@ -1,6 +1,9 @@
-// Single RPP field card with AI regen button. Extracted from lesson_plan_detail_screen.dart.
-// Shows a labelled section (e.g. "Kompetensi Inti") with a regen count badge and trigger button.
-// Like a `<FieldCard>` Vue component — display + one interaction delegated via callback.
+// Single RPP field card with AI regen button. Extracted from
+// lesson_plan_detail_screen.dart.
+// Shows a labelled section (e.g. "Kompetensi Inti") with a regen count badge
+// and trigger button.
+// Like a `<FieldCard>` Vue component — display + one interaction delegated via
+// callback.
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
@@ -12,12 +15,15 @@ import 'package:manajemensekolah/core/utils/color_utils.dart';
 /// - [fieldKey]         — API key (e.g. 'core_competence'), used to match regen info
 /// - [fieldLabel]       — human-readable label shown in the card header
 /// - [value]            — the field's current HTML-stripped text content
-/// - [regenInfo]        — regen quota map from the API: {remaining, max, used} (nullable)
+/// - [regenInfo] — regen quota map from the API: {remaining, max, used}
+/// (nullable)
 /// - [isLoadingLimits]  — true while regen limits are being fetched from the API
-/// - [isRegeneratingThis] — true when this field (or all fields) is being regenerated
+/// - [isRegeneratingThis] — true when this field (or all fields) is being
+/// regenerated
 /// - [primaryColor]     — brand colour for header, icons, and borders
 /// - [onRegenTap]       — callback fired when the regen icon is tapped
-/// - [stripHtml]        — function that strips HTML from the value string (from parent)
+/// - [stripHtml] — function that strips HTML from the value string (from
+/// parent)
 class LessonPlanFieldCard extends StatelessWidget {
   final String fieldKey;
   final String fieldLabel;

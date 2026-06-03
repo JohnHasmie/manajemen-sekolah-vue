@@ -3,7 +3,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'teacher.freezed.dart';
 part 'teacher.g.dart';
 
-/// Represents a teacher record with personal info, homeroom assignment, and role.
+/// Represents a teacher record with personal info, homeroom assignment, and
+/// role.
 ///
 /// The API returns teacher data in several shapes (English + Indonesian keys,
 /// nested `user` objects, `homeroom_class` as either Map or List). This model

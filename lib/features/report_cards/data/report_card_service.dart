@@ -9,8 +9,10 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/cache_invalidation_service.dart';
 
 /// Service for raport (report card) API calls.
-/// Like a Laravel Resource Controller with show, store, and custom initial-data actions.
-/// In Vue terms, this is a store module that handles all raport-related API state.
+/// Like a Laravel Resource Controller with show, store, and custom initial-data
+/// actions.
+/// In Vue terms, this is a store module that handles all raport-related API
+/// state.
 class ApiReportCardService {
   /// Fetches homeroom classes with raport completion stats.
   static Future<List<dynamic>> getTeacherRaportSummary({
@@ -56,7 +58,8 @@ class ApiReportCardService {
   }
 
   /// Fetches initial data needed to populate a new raport form.
-  /// Like a Laravel controller method that returns form defaults and relationships.
+  /// Like a Laravel controller method that returns form defaults and
+  /// relationships.
   /// Similar to a Vue `mounted()` hook that loads prerequisite data.
   Future<Map<String, dynamic>?> getInitialData({
     required String studentClassId,

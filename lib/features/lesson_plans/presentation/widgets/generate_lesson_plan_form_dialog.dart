@@ -127,7 +127,8 @@ class _GenerateLessonPlanFormDialogState
     final mediaHeight = MediaQuery.of(context).size.height;
 
     // isScrollControlled: true on the parent showModalBottomSheet handles
-    // keyboard avoidance automatically — no manual Padding(bottom: keyboardInset).
+    // keyboard avoidance automatically — no manual Padding(bottom:
+    // keyboardInset).
     return Container(
       constraints: BoxConstraints(maxHeight: mediaHeight * 0.92),
       decoration: const BoxDecoration(

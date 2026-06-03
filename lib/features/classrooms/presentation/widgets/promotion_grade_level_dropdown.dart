@@ -1,4 +1,5 @@
-// Grade-level dropdown for the "Create New Class" dialog in the promotion wizard.
+// Grade-level dropdown for the "Create New Class" dialog in the promotion
+// wizard.
 // Converts integer grade levels to human-readable SD/SMP/SMA labels.
 // Receives the available grade list from the parent to stay stateless.
 import 'package:flutter/material.dart';

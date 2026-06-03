@@ -38,8 +38,6 @@ class ParentBillingScreen extends ConsumerStatefulWidget {
 }
 
 class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
-  DateTime _lastSync = DateTime.now();
-
   void _showFilterSheet(LanguageProvider lp) {
     final state = ref.read(parentFinanceProvider).value;
     if (state == null) return;
@@ -118,7 +116,7 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         role: 'wali',
         onRefresh: () async {
           await ref.read(parentFinanceProvider.notifier).forceRefresh();
-          if (mounted) setState(() => _lastSync = DateTime.now());
+          if (mounted) setState(() {});
         },
         header: header,
         kpiCard: BillingKpiOverlay(languageProvider: languageProvider),
@@ -181,9 +179,9 @@ class _ParentBillingScreenState extends ConsumerState<ParentBillingScreen> {
         ),
       ],
       // Compact v2 — inline 6dp dot beside the title instead of the
-      // full-row `BrandRealtimePill`. `_lastSync` is no longer surfaced
-      // visually here; if the user wants the timestamp back we can
-      // promote the dot to a tiny pill.
+      // full-row `BrandRealtimePill`. The last-sync timestamp is no longer
+      // surfaced visually here; if the user wants it back we can promote the
+      // dot to a tiny pill.
       isRealtimeFresh: true,
       childSelector: summaries.length < 2
           ? null

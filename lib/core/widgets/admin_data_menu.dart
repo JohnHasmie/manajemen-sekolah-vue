@@ -174,16 +174,15 @@ enum _AdminMenuAction { refresh, export, import, template }
 /// Icon + label row used inside each [PopupMenuItem].
 class _MenuRow extends StatelessWidget {
   final IconData icon;
-  final Color? iconColor;
   final String label;
 
-  const _MenuRow({required this.icon, this.iconColor, required this.label});
+  const _MenuRow({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: iconColor),
+        Icon(icon, size: 20),
         const SizedBox(width: AppSpacing.sm),
         Text(label),
       ],

@@ -91,8 +91,6 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
   final Map<String, FocusNode> scoreFocusNodes = {};
 
   @override
-  bool isLoading = false;
-  @override
   bool isSaving = false;
   @override
   bool isExporting = false;
@@ -103,8 +101,8 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
   @override
   int get currentStep => _currentStep;
 
-  @override
-  final TextEditingController searchController = TextEditingController();
+  // isLoading and searchController are provided by GradeRecapDataMixin and
+  // initialized in initState.
   final ScrollController _scrollController = ScrollController();
 
   // Save-bar + Add-chapter FAB anchor keys. Previously also doubled as
@@ -749,6 +747,8 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
   @override
   void initState() {
     super.initState();
+    isLoading = false;
+    searchController = TextEditingController();
     _scrollController.addListener(_onScroll);
 
     if (widget.initialClass != null && widget.initialSubject != null) {
@@ -820,7 +820,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
   /// and let the teacher keep editing or navigate back manually.
   Future<void> _onSavePressed() async {
     final success = await saveRecaps();
-    if (!mounted || !success) return;
+    if (!context.mounted || !success) return;
     final isDialogEntry =
         widget.initialClass != null && widget.initialSubject != null;
     if (isDialogEntry) AppNavigator.pop(context);
@@ -846,7 +846,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
         hasUnsavedChanges = false;
       });
     } else {
-      if (mounted) AppNavigator.pop(context);
+      if (context.mounted) AppNavigator.pop(context);
     }
   }
 
