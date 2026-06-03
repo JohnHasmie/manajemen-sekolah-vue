@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:manajemensekolah/features/grades/presentation/controllers/grade_book_models.dart';
+import 'package:manajemensekolah/features/grades/domain/models/grade_book_models.dart';
 import 'package:manajemensekolah/features/grades/presentation/controllers/helpers/grade_lookup_helper.dart';
 import 'package:manajemensekolah/features/grades/presentation/controllers/helpers/grade_format_helper.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
