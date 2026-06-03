@@ -52,7 +52,7 @@ mixin ReportCardNavMixin on ConsumerState<ReportCardDetailScreen> {
   Future<void> onPopInvoked(bool didPop, dynamic result) async {
     if (didPop) return;
     final canLeave = await onWillPop();
-    if (canLeave && context.mounted) {
+    if (canLeave && mounted) {
       AppNavigator.pop(context, result);
     }
   }

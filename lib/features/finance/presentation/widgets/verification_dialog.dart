@@ -115,10 +115,10 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog>
             : _notesController.text,
       });
 
-      if (!mounted) return;
+      if (!context.mounted) return;
       AppNavigator.pop(context);
       onSuccess();
-      if (mounted) {
+      if (context.mounted) {
         SnackBarUtils.showSuccess(
           context,
           _status == 'verified'
@@ -128,7 +128,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog>
       }
     } catch (error) {
       AppLogger.error('finance', error);
-      if (mounted) {
+      if (context.mounted) {
         SnackBarUtils.showError(
           context,
           '${AppLocalizations.failedToVerify.tr}: '

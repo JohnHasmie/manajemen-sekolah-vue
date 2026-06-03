@@ -327,13 +327,13 @@ mixin GradeRecapDataOpsMixin {
 
       await getIt<ApiGradeRecapService>().batchSaveGradeRecap(payload);
 
-      if (mounted) {
+      if (context.mounted) {
         setState(() => hasUnsavedChanges = false);
         SnackBarUtils.showInfo(context, AppLocalizations.gradeRecapSaved.tr);
       }
       return true;
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
       return false;
@@ -360,7 +360,7 @@ mixin GradeRecapDataOpsMixin {
         context: context,
       );
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         SnackBarUtils.showInfo(context, ErrorUtils.getFriendlyMessage(e));
       }
     } finally {

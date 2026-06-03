@@ -165,7 +165,7 @@ class _ManualPaymentSheetContentState extends State<_ManualPaymentSheetContent>
         await _pickPdf();
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         SnackBarUtils.showError(context, 'Gagal memilih file: $e');
       }
     } finally {
@@ -294,7 +294,7 @@ class _ManualPaymentSheetContentState extends State<_ManualPaymentSheetContent>
     // here once success is reported keeps the admin on the student list
     // (route below the sheet) instead of stacking an extra pop that
     // earlier dropped them back on the class picker.
-    if (success && mounted) {
+    if (success && context.mounted) {
       Navigator.pop(context);
     }
   }

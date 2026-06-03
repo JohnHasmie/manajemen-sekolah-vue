@@ -820,7 +820,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
   /// and let the teacher keep editing or navigate back manually.
   Future<void> _onSavePressed() async {
     final success = await saveRecaps();
-    if (!mounted || !success) return;
+    if (!context.mounted || !success) return;
     final isDialogEntry =
         widget.initialClass != null && widget.initialSubject != null;
     if (isDialogEntry) AppNavigator.pop(context);
@@ -846,7 +846,7 @@ class _GradeRecapPageState extends ConsumerState<GradeRecapPage>
         hasUnsavedChanges = false;
       });
     } else {
-      if (mounted) AppNavigator.pop(context);
+      if (context.mounted) AppNavigator.pop(context);
     }
   }
 

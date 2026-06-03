@@ -113,7 +113,7 @@ class ClassroomAddEditSheetState extends ConsumerState<ClassroomAddEditSheet>
         });
       }
 
-      if (!mounted) return;
+      if (!context.mounted) return;
 
       SnackBarUtils.showSuccess(
         context,
@@ -133,7 +133,7 @@ class ClassroomAddEditSheetState extends ConsumerState<ClassroomAddEditSheet>
       AppNavigator.pop(context);
       widget.onSaved();
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         SnackBarUtils.showError(
           context,
           'Gagal menyimpan: ${ErrorUtils.getFriendlyMessage(e)}',

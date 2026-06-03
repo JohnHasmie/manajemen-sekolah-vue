@@ -36,7 +36,7 @@ mixin EditFormStateMixin {
 
     await Future.delayed(const Duration(seconds: 1));
 
-    if (mounted) {
+    if (context.mounted) {
       setState(() => isSaving = false);
       SnackBarUtils.showInfo(context, 'Perubahan berhasil disimpan!');
       AppNavigator.pop(context, true);

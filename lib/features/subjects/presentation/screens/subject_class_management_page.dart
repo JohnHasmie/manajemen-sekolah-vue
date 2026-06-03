@@ -134,7 +134,7 @@ class SubjectClassManagementPageState
     setState(selectedIds.clear);
     await loadData();
 
-    if (mounted) {
+    if (context.mounted) {
       SnackBarUtils.showSuccess(
         context,
         lang.getTranslatedText({
