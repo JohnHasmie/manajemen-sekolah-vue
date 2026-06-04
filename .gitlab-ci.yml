@@ -447,3 +447,37 @@ promote_to_prod:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
       allow_failure: false
+
+# ---------------------------------------------------------------------------
+# Deploy WEBSITE — web-vue → Vercel (via GitHub mirror)
+#
+# The KamilEdu *website* is the `web-vue/` Vue app, hosted on Vercel and fed
+# from the GitHub mirror repo (web-vue-mirror). A GitLab merge does NOT reach
+# Vercel on its own — this job pushes the `web-vue/` subtree up to the mirror,
+# and Vercel auto-deploys the mirror's `main`.
+#
+# Runs on `main` ONLY, and ONLY when `web-vue/` actually changed (rules:changes)
+# — so it fires exactly when the website code moves, and stays out of the way
+# of mobile-only commits.
+#
+# Auth: this is a self-hosted (local) runner that already has the developer's
+# GitHub SSH key + the `web-vue-mirror` remote in its persistent checkout; the
+# job re-adds the remote defensively in case of a fresh clone. No extra CI
+# variable required. GIT_DEPTH:0 → full history so `git subtree split` works.
+# ---------------------------------------------------------------------------
+deploy_web:
+  stage: deploy
+  needs: []
+  variables:
+    GIT_DEPTH: "0"
+    WEB_VUE_MIRROR: "git@github.com:JohnHasmie/manajemen-sekolah-vue.git"
+  script:
+    - git remote get-url web-vue-mirror >/dev/null 2>&1 || git remote add web-vue-mirror "$WEB_VUE_MIRROR"
+    - git subtree split --prefix=web-vue "$CI_COMMIT_SHA" -b _web_deploy
+    - git push -f web-vue-mirror _web_deploy:main
+    - git branch -D _web_deploy
+    - echo "✅ web-vue subtree pushed to web-vue-mirror → Vercel will auto-deploy the website"
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - web-vue/**/*
