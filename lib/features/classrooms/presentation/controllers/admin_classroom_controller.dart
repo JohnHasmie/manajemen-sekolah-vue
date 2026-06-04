@@ -144,8 +144,10 @@ class AdminClassroomController {
   // API / Data Methods
   // ─────────────────────────────────────────────────────────────
 
-  Future<SchoolSettingsResult> loadSchoolSettings() async {
-    return _dataService.loadSchoolSettings();
+  Future<SchoolSettingsResult> loadSchoolSettings({
+    bool forceRefresh = false,
+  }) async {
+    return _dataService.loadSchoolSettings(forceRefresh: forceRefresh);
   }
 
   Future<List<dynamic>> fetchTeachers() async {

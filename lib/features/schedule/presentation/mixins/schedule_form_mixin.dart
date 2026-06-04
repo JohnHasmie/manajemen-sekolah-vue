@@ -92,7 +92,12 @@ mixin ScheduleFormMixin on ConsumerState<ScheduleFormDialog> {
         occupiedSlots = occupied;
 
         if (schedule != null && schedule['id'] != null) {
-          occupiedSlots.removeWhere((s) => s['id'] == schedule['id']);
+          // String-compare so the row being edited is reliably excluded
+          // from its own occupied set — raw `==` on a mixed int/String id
+          // would miss the match and wrongly flag the editee's slot as
+          // "(Terisi)".
+          final editingId = schedule['id'].toString();
+          occupiedSlots.removeWhere((s) => s['id']?.toString() == editingId);
         }
       });
 
@@ -115,10 +120,30 @@ mixin ScheduleFormMixin on ConsumerState<ScheduleFormDialog> {
 
       if (!mounted) return;
 
+      // Build the set of subject ids this teacher teaches, normalising to
+      // String and tolerating the `subject_id` / `mata_pelajaran_id` key
+      // aliases the API uses in some payload shapes. Raw `==` on mixed
+      // int/String ids (the /teacher/{id}/subjects and /subject endpoints
+      // can disagree on id type) silently matches nothing, so the picked
+      // teacher's "Mata Pelajaran" dropdown comes out wrong. String-compare
+      // against the same id set keeps the dropdown limited to exactly the
+      // teacher's own subjects, mirroring the mobile behaviour.
+      final teacherSubjectIds = teacherSubjects
+          .map(
+            (ts) =>
+                (ts['id'] ?? ts['subject_id'] ?? ts['mata_pelajaran_id'])
+                    ?.toString(),
+          )
+          .where((id) => id != null && id.isNotEmpty)
+          .toSet();
+
       final filtered = subjectList.where((subject) {
-        return teacherSubjects.any(
-          (teacherSubject) => teacherSubject['id'] == subject['id'],
-        );
+        final sId =
+            (subject['id'] ??
+                    subject['subject_id'] ??
+                    subject['mata_pelajaran_id'])
+                ?.toString();
+        return sId != null && teacherSubjectIds.contains(sId);
       }).toList();
 
       setState(() {

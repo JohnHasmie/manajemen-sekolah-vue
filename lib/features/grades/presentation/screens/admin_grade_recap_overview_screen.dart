@@ -139,7 +139,15 @@ class _AdminGradeRecapOverviewScreenState
   void _openSlice(Map<String, dynamic> row) {
     final teacherId = row['teacher_id']?.toString() ?? '';
     final teacherName = row['teacher_name']?.toString() ?? 'Guru';
-    if (teacherId.isEmpty) return;
+    final classId = row['class_id']?.toString() ?? '';
+    final subjectId = row['subject_id']?.toString() ?? '';
+    // The recap table the admin drills into is keyed by class + subject
+    // (see GradeRecapPage.loadRecapData → getGradeRecaps). The teacher is
+    // optional — many slices have no assigned guru yet, and the secondary
+    // materials/grades feeds degrade gracefully on an empty teacher id.
+    // Guarding on teacher_id here silently swallowed the tap for those
+    // slices; gate on what the destination actually needs instead.
+    if (classId.isEmpty || subjectId.isEmpty) return;
     final teacher = {
       'id': teacherId,
       'teacher_id': teacherId,
@@ -148,12 +156,12 @@ class _AdminGradeRecapOverviewScreenState
       'role': 'admin',
     };
     final initialClass = {
-      'id': row['class_id']?.toString() ?? '',
-      'class_id': row['class_id']?.toString() ?? '',
+      'id': classId,
+      'class_id': classId,
       'name': row['class_name']?.toString() ?? '',
     };
     final initialSubject = {
-      'id': row['subject_id']?.toString() ?? '',
+      'id': subjectId,
       'name': row['subject_name']?.toString() ?? '',
     };
     AppNavigator.push(
@@ -268,13 +276,18 @@ class _AdminGradeRecapOverviewScreenState
       onRefresh: () => _loadData(useCache: false),
       role: 'admin',
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
         children: [
-          // KPI strip overlaps the header (overlay offset).
-          Transform.translate(
-            offset: const Offset(0, -22),
-            child: _buildKpiStrip(),
-          ),
+          // KPI strip sits fully below the pinned header + search bar.
+          //
+          // This screen lays the header and body out in a plain Column
+          // (not BrandPageLayout's Stack overlap), so there's no reserved
+          // gradient free-zone for the card to overlap into. The previous
+          // negative Transform.translate dragged the card up *behind* the
+          // floating search field, clipping its top row. Render it in
+          // normal flow with a small top gap instead.
+          _buildKpiStrip(),
+          const SizedBox(height: 14),
           _buildFilterChipsRow(lp),
           const SizedBox(height: 12),
           _buildSectionHeader(lp, filtered.length),
