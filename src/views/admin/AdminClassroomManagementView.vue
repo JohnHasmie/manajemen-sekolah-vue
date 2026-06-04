@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, shallowRef } from 'vue';
 import { ClassroomService } from '@/services/classrooms.service';
+import { SettingsService } from '@/services/settings.service';
 import { TeacherService } from '@/services/teachers.service';
 import { AdminDataExcelService } from '@/services/admin-data-excel.service';
 import { useRoleHex } from '@/composables/useRoleHex';
@@ -41,6 +42,13 @@ const ayReadOnly = computed(() => ayStore.isReadOnly);
 
 const classrooms = shallowRef<Classroom[]>([]);
 const teachers = shallowRef<Teacher[]>([]);
+/**
+ * Active school's jenjang (`schools.education_level`), loaded once from
+ * GET /school/settings. Drives the tingkat dropdown in the edit sheet
+ * (SD→1-6, SMP→7-9, SMA/SMK→10-12). Mirrors Flutter's
+ * `_loadSchoolSettings()` in `admin_classroom_management_screen.dart`.
+ */
+const educationLevel = ref<string | null>(null);
 const pagination = ref<Pagination | null>(null);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
@@ -139,7 +147,17 @@ async function loadTeachers() {
   }
 }
 
+async function loadSchoolSettings() {
+  try {
+    const school = await SettingsService.getSchool();
+    educationLevel.value = school.education_level || null;
+  } catch {
+    // edit sheet falls back to the full 1-12 range if this fails
+  }
+}
+
 onMounted(() => {
+  loadSchoolSettings();
   loadTeachers();
   reload();
 });
@@ -524,6 +542,7 @@ function statusFor(c: Classroom) {
     :classroom="editTarget"
     :teachers="teachers"
     :is-saving="isSaving"
+    :education-level="educationLevel"
     @close="editTarget = undefined"
     @save="handleSave"
   />

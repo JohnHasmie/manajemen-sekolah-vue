@@ -14,6 +14,36 @@ export interface ClassroomListParams {
   has_homeroom?: 'yes' | 'no' | null;
 }
 
+/**
+ * Grade-level (tingkat) options constrained to a school's jenjang.
+ *
+ * Mirrors Flutter's `ClassroomFilterHelper.generateGradeLevels`
+ * (`lib/features/classrooms/.../classroom_filter_helper.dart`):
+ *   SD  → 1-6
+ *   SMP → 7-9
+ *   SMA / SMK → 10-12
+ * Anything else (null/unknown, e.g. MA/MTs/Pesantren) falls back to
+ * the full 1-12 range so we never hide a valid option.
+ */
+export function generateGradeLevels(jenjang?: string | null): string[] {
+  let start = 1;
+  let end = 12;
+  if (jenjang) {
+    const j = jenjang.trim().toUpperCase();
+    if (j === 'SD') {
+      start = 1;
+      end = 6;
+    } else if (j === 'SMP') {
+      start = 7;
+      end = 9;
+    } else if (j === 'SMA' || j === 'SMK') {
+      start = 10;
+      end = 12;
+    }
+  }
+  return Array.from({ length: end - start + 1 }, (_, i) => String(start + i));
+}
+
 interface ListResult {
   items: Classroom[];
   pagination?: Pagination;

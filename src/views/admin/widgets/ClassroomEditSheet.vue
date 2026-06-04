@@ -5,13 +5,23 @@
 import { computed, reactive } from 'vue';
 import Modal from '@/components/ui/Modal.vue';
 import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
+import { generateGradeLevels } from '@/services/classrooms.service';
 import type { Classroom, Teacher } from '@/types/entities';
 
 const props = defineProps<{
   classroom?: Classroom | null;
   teachers: Teacher[];
   isSaving?: boolean;
+  /**
+   * School jenjang (`schools.education_level`, e.g. SD/SMP/SMA/SMK).
+   * Constrains the tingkat dropdown: SD→1-6, SMP→7-9, SMA/SMK→10-12.
+   * Falls back to 1-12 when unknown.
+   */
+  educationLevel?: string | null;
 }>();
+
+/** Tingkat options matched to the active school's jenjang. */
+const gradeOptions = computed(() => generateGradeLevels(props.educationLevel));
 
 const emit = defineEmits<{
   close: [];
@@ -71,7 +81,7 @@ function submit() {
             :disabled="isSaving"
           >
             <option value="">— Pilih tingkat —</option>
-            <option v-for="g in ['7', '8', '9', '10', '11', '12', '1', '2', '3', '4', '5', '6']" :key="g" :value="g">
+            <option v-for="g in gradeOptions" :key="g" :value="g">
               Kelas {{ g }}
             </option>
           </select>
