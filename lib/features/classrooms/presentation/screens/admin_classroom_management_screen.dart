@@ -112,10 +112,10 @@ class AdminClassManagementScreenState
     await _loadData();
   }
 
-  Future<void> _loadSchoolSettings() async {
+  Future<void> _loadSchoolSettings({bool forceRefresh = false}) async {
     final result = await ref
         .read(adminClassroomControllerProvider)
-        .loadSchoolSettings();
+        .loadSchoolSettings(forceRefresh: forceRefresh);
     if (!mounted) return;
     setState(() {
       _availableGradeLevels
@@ -304,6 +304,12 @@ class AdminClassManagementScreenState
     // Refresh the teacher list on every open so a newly-created teacher
     // shows up in the homeroom dropdown without needing a pull-to-refresh.
     await _fetchTeachers();
+
+    // Refresh the school settings so the "tingkat" (grade-level) dropdown is
+    // constrained to the active school's jenjang (SD → 1-6, SMP → 7-9,
+    // SMA/SMK → 10-12). Bypass the cache so a stale blob (or a first-load race)
+    // can't keep the form showing the all-grades fallback.
+    await _loadSchoolSettings(forceRefresh: true);
 
     Map<String, dynamic>? resolvedClassData = classData;
     if (resolvedClassData != null) {

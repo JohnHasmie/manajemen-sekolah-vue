@@ -43,14 +43,23 @@ class ClassroomDataService {
     : _generateGradeLevels = generateGradeLevels;
 
   /// Loads school settings with cache-first strategy.
-  Future<SchoolSettingsResult> loadSchoolSettings() async {
+  ///
+  /// Pass [forceRefresh] to bypass the cache and re-read the live
+  /// `education_level` from the API — used when opening the add/edit form so
+  /// the "tingkat" dropdown is always constrained to the school's current
+  /// jenjang instead of a possibly-stale cached blob.
+  Future<SchoolSettingsResult> loadSchoolSettings({
+    bool forceRefresh = false,
+  }) async {
     const cacheKey = 'school_settings';
 
     try {
-      final cached = await LocalCacheService.load(
-        cacheKey,
-        ttl: const Duration(hours: 24),
-      );
+      final cached = forceRefresh
+          ? null
+          : await LocalCacheService.load(
+              cacheKey,
+              ttl: const Duration(hours: 24),
+            );
       if (cached != null) {
         // Backend rename: `schools.jenjang` → `schools.education_level`.
         final jenjang =
