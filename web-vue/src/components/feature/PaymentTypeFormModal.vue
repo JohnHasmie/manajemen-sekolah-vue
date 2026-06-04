@@ -6,8 +6,9 @@
     PUT    /payment-types/{id}     (edit)
 -->
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { FinanceService } from '@/services/finance.service';
+import { formatThousands, parseDigits } from '@/lib/format';
 import type { PaymentType, PaymentTypePayload } from '@/types/billing';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
@@ -51,6 +52,20 @@ watch(
 
 const isSaving = ref(false);
 const err = ref<string | null>(null);
+
+/**
+ * Nominal money input — shows Indonesian thousand separators as the
+ * user types (`500000` → `500.000`) while `form.amount` stays the RAW
+ * integer that gets submitted to the API. `amountDisplay` is the
+ * formatted string bound to the (text) input; the setter strips dots
+ * back to a plain int. Mirrors Flutter's `CurrencyInputFormatter`.
+ */
+const amountDisplay = computed<string>({
+  get: () => (form.value.amount ? formatThousands(form.value.amount) : ''),
+  set: (raw: string) => {
+    form.value.amount = parseDigits(raw);
+  },
+});
 
 // Backend stores `payment_types.period` as canonical English (monthly /
 // yearly / once). Labels stay Indonesian.
@@ -129,12 +144,18 @@ async function save() {
           <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             Nominal
           </label>
-          <input
-            v-model.number="form.amount"
-            type="number"
-            placeholder="0"
-            class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
-          />
+          <div class="mt-1 relative">
+            <span
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] font-bold text-slate-400 pointer-events-none"
+            >Rp</span>
+            <input
+              v-model="amountDisplay"
+              type="text"
+              inputmode="numeric"
+              placeholder="0"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
+            />
+          </div>
         </div>
         <div>
           <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
