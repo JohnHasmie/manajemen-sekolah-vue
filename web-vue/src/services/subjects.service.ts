@@ -64,9 +64,19 @@ export const SubjectService = {
    * Used to scope teacher-facing pickers (e.g. Materi, RPP) to only the
    * mapel the teacher actually teaches. The endpoint returns a bare array
    * (no `data`/pagination envelope), so handle both shapes defensively.
+   *
+   * Pass scope='teaching' to drop the wali-kelas homeroom-class curriculum
+   * and return ONLY the subjects the teacher teaches (assigned + scheduled
+   * + grade-authored) — the schedule add/edit form needs this so picking a
+   * homeroom teacher doesn't list every subject in the school.
    */
-  async listForTeacher(teacherId: string): Promise<Subject[]> {
-    const res = await api.get(`/teacher/${teacherId}/subjects`);
+  async listForTeacher(
+    teacherId: string,
+    scope?: 'teaching',
+  ): Promise<Subject[]> {
+    const res = await api.get(`/teacher/${teacherId}/subjects`, {
+      params: scope ? { scope } : undefined,
+    });
     const body = res.data as unknown;
     const arr = Array.isArray(body)
       ? body

@@ -116,8 +116,11 @@ async function loadSubjectsForTeacher(tId: string) {
   subjectsLoadFailed.value = false;
   try {
     // Reuse SubjectService.listForTeacher — returns the teacher's own
-    // mapel (full {id,name} rows, not just IDs).
-    const list = await SubjectService.listForTeacher(tId);
+    // mapel (full {id,name} rows, not just IDs). scope='teaching' drops
+    // the wali-kelas homeroom-class curriculum, so picking a homeroom
+    // teacher lists only the subjects they actually teach (not every
+    // subject offered in their class).
+    const list = await SubjectService.listForTeacher(tId, 'teaching');
     const ids = new Set(list.map((s) => s.id));
     teacherSubjects.value = list.map((s) => ({ id: s.id, name: s.name }));
     // Clear subject if it's no longer in the teacher's set.
