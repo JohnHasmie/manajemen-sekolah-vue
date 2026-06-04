@@ -194,9 +194,34 @@ const priorityHeaderLabel = computed(() =>
 );
 
 // Today's schedule (stats.todays_schedule[] from the Flutter dashboard state transformer)
+//
+// The backend ships denormalised Indonesian field names (mata_pelajaran_nama,
+// kelas_nama, jam_mulai/jam_selesai) plus nested `subject`/`class` relation
+// OBJECTS — NOT the English subject_name/class_name/start_time the card reads.
+// Without mapping, `s.subject_name` was undefined and the template fell through
+// to rendering the raw `subject` object/id ("berupa id jadwal"). Mirror the
+// normalisation Flutter already does in schedule.dart so names actually show.
 const todaysSchedule = computed<ScheduleEntry[]>(() => {
   const raw = stats.value.todays_schedule;
-  return Array.isArray(raw) ? (raw as ScheduleEntry[]) : [];
+  if (!Array.isArray(raw)) return [];
+  const name = (v: unknown): string | undefined => {
+    if (typeof v === 'string') return v;
+    if (v && typeof v === 'object') {
+      const o = v as Record<string, unknown>;
+      return (o.name ?? o.nama) as string | undefined;
+    }
+    return undefined;
+  };
+  return (raw as Array<Record<string, any>>).map((r) => ({
+    id: r.id,
+    subject_name:
+      r.subject_name ?? r.mata_pelajaran_nama ?? name(r.subject ?? r.mata_pelajaran),
+    class_name: r.class_name ?? r.kelas_nama ?? name(r.class ?? r.kelas),
+    start_time: r.start_time ?? r.jam_mulai ?? r.lesson_hour?.start_time ?? r.lesson_hour?.jam_mulai,
+    end_time: r.end_time ?? r.jam_selesai ?? r.lesson_hour?.end_time ?? r.lesson_hour?.jam_selesai,
+    room: r.room ?? r.ruangan ?? undefined,
+    is_active: r.is_active,
+  }));
 });
 
 function fmtTime(t?: string): string {
@@ -480,10 +505,10 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                   {{ fmtTime(s.start_time) }} <span v-if="s.end_time">– {{ fmtTime(s.end_time) }}</span>
                 </p>
                 <p class="text-sm font-black text-slate-900 truncate mt-1">
-                  {{ s.subject_name ?? s.subject ?? 'Mata Pelajaran' }}
+                  {{ s.subject_name ?? 'Mata Pelajaran' }}
                 </p>
                 <p class="text-[11px] font-bold text-slate-500 truncate mt-0.5">
-                  {{ s.class_name ?? s.kelas ?? '' }}<span v-if="s.room"> · {{ s.room }}</span>
+                  {{ s.class_name ?? '' }}<span v-if="s.room"> · {{ s.room }}</span>
                 </p>
                 <span
                   v-if="s.is_active"
