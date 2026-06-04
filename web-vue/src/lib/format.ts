@@ -52,6 +52,30 @@ export function formatNumber(value: number | null | undefined): string {
   return NUMBER.format(value);
 }
 
+/**
+ * Strip everything but digits from a money input, returning the raw
+ * integer (no separators). `"500.000"` → `500000`, `""` → `0`. This is
+ * what gets submitted to the API.
+ */
+export function parseDigits(value: string | number | null | undefined): number {
+  if (value === null || value === undefined) return 0;
+  const digits = String(value).replace(/\D/g, '');
+  return digits ? Number(digits) : 0;
+}
+
+/**
+ * Group a money input with Indonesian thousand separators as the user
+ * types, WITHOUT the "Rp" prefix (unlike `formatRupiah`). `"500000"` →
+ * `"500.000"`. Non-digit chars are ignored; empty input stays empty so
+ * the field can be cleared.
+ */
+export function formatThousands(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return '';
+  const digits = String(value).replace(/\D/g, '');
+  if (!digits) return '';
+  return NUMBER.format(Number(digits));
+}
+
 export function formatDateLong(value: Date | string | null | undefined): string {
   if (!value) return '';
   const d = value instanceof Date ? value : new Date(value);
