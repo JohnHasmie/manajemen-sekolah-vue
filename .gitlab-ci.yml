@@ -456,28 +456,36 @@ promote_to_prod:
 # Vercel on its own — this job pushes the `web-vue/` subtree up to the mirror,
 # and Vercel auto-deploys the mirror's `main`.
 #
-# Runs on `main` ONLY, and ONLY when `web-vue/` actually changed (rules:changes)
-# — so it fires exactly when the website code moves, and stays out of the way
-# of mobile-only commits.
+# ALWAYS shows on `main` (so you can see it in the deploy stage), but only
+# actually pushes when this commit changed `web-vue/` — the change-detection is
+# in the SCRIPT (not `rules:changes`), which is both more visible and more
+# robust than `rules:changes` on the default branch. Mobile-only commits → the
+# job runs, finds nothing, and no-ops. It sits in the `deploy` stage with no
+# `needs:`, so it only runs after analyze + test pass (won't ship broken code).
 #
-# Auth: this is a self-hosted (local) runner that already has the developer's
-# GitHub SSH key + the `web-vue-mirror` remote in its persistent checkout; the
-# job re-adds the remote defensively in case of a fresh clone. No extra CI
-# variable required. GIT_DEPTH:0 → full history so `git subtree split` works.
+# Auth: self-hosted (local) runner already has the developer's GitHub SSH key +
+# the `web-vue-mirror` remote in its persistent checkout; the job re-adds the
+# remote defensively in case of a fresh clone. GIT_DEPTH:0 → full history so
+# `git subtree split` works.
 # ---------------------------------------------------------------------------
 deploy_web:
   stage: deploy
-  needs: []
   variables:
     GIT_DEPTH: "0"
     WEB_VUE_MIRROR: "git@github.com:JohnHasmie/manajemen-sekolah-vue.git"
   script:
-    - git remote get-url web-vue-mirror >/dev/null 2>&1 || git remote add web-vue-mirror "$WEB_VUE_MIRROR"
-    - git subtree split --prefix=web-vue "$CI_COMMIT_SHA" -b _web_deploy
-    - git push -f web-vue-mirror _web_deploy:main
-    - git branch -D _web_deploy
-    - echo "✅ web-vue subtree pushed to web-vue-mirror → Vercel will auto-deploy the website"
+    - |
+      BEFORE="${CI_COMMIT_BEFORE_SHA}"
+      if [ -z "$BEFORE" ] || printf '%s' "$BEFORE" | grep -qE '^0+$'; then BEFORE="${CI_COMMIT_SHA}~1"; fi
+      if git diff --quiet "$BEFORE" "$CI_COMMIT_SHA" -- web-vue/ 2>/dev/null; then
+        echo "No web-vue/ changes in this commit → nothing to deploy (job is intentionally a no-op)."
+        exit 0
+      fi
+      echo "web-vue/ changed in this commit → pushing subtree to the Vercel mirror..."
+      git remote get-url web-vue-mirror >/dev/null 2>&1 || git remote add web-vue-mirror "$WEB_VUE_MIRROR"
+      git subtree split --prefix=web-vue "$CI_COMMIT_SHA" -b _web_deploy
+      git push -f web-vue-mirror _web_deploy:main
+      git branch -D _web_deploy
+      echo "Pushed web-vue subtree to web-vue-mirror → Vercel will auto-deploy the website."
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes:
-        - web-vue/**/*
