@@ -46,6 +46,16 @@ variables:
 .flutter_setup: &flutter_setup
   before_script:
     - unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
+    # Kill orphaned Flutter/Dart processes left by prior CANCELLED jobs on this
+    # self-hosted runner, BEFORE anything else. gitlab-runner's shell executor
+    # does NOT kill the `flutter analyze`/test child when a job is cancelled, so
+    # they pile up and deadlock on the SDK cache lockfile → `flutter analyze`
+    # hangs ~15 min (the "cancel & restart fixes it" symptom). Target ONLY the CI
+    # SDK ($HOME/MobileProjects/flutter); never the developer's IDE Dart, which
+    # runs from $HOME/flutter (different path — must stay alive).
+    - pkill -9 -f "MobileProjects/flutter/bin/cache.*analyze" 2>/dev/null || true
+    - pkill -9 -f "MobileProjects/flutter/bin/cache.*analysis_server" 2>/dev/null || true
+    - pkill -9 -f "MobileProjects/flutter/bin/cache.*flutter_tester" 2>/dev/null || true
     - export PATH="$HOME/MobileProjects/flutter/bin:$HOME/.pub-cache/bin:$PATH"
     # Pin the LOCAL Flutter SDK to the same commit Shorebird bundles
     # (FLUTTER_COMMIT below). Previously `flutter upgrade --force`
