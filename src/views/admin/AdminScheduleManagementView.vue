@@ -291,9 +291,34 @@ const rowsByDay = computed<Record<DayKey, ScheduleRow[]>>(() => {
 });
 
 // ── Matrix view computation ─────────────────────────────────────────
+//
+// The matrix is fed by `/teaching-schedule/all`, which only honours
+// semester_id + academic_year_id server-side — it ignores the
+// teacher/class/day/subject/hour filter chips. So we re-apply those
+// chips client-side here, mirroring what the list endpoint does on the
+// server. The list view stays untouched (it's already filtered by the
+// backend), so this only narrows the matrix.
+const matrixRows = computed<ScheduleRow[]>(() => {
+  return rows.value.filter((r) => {
+    if (filterTeacherId.value && r.teacher_id !== filterTeacherId.value) return false;
+    if (filterClassId.value && r.class_id !== filterClassId.value) return false;
+    if (filterDayId.value && r.day_id !== filterDayId.value) return false;
+    if (filterSubjectId.value && r.subject_id !== filterSubjectId.value) return false;
+    if (filterHourNumber.value !== '' && r.hour_number !== filterHourNumber.value) return false;
+    if (search.value.trim()) {
+      const q = search.value.trim().toLowerCase();
+      const haystack = [r.subject_name, r.class_name, r.teacher_name ?? '']
+        .join(' ')
+        .toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+});
+
 const hourSlots = computed(() => {
   const set = new Map<number, { hour_number: number; start: string; end: string }>();
-  for (const r of rows.value) {
+  for (const r of matrixRows.value) {
     if (!set.has(r.hour_number)) {
       set.set(r.hour_number, {
         hour_number: r.hour_number,
@@ -306,7 +331,7 @@ const hourSlots = computed(() => {
 });
 
 function cellFor(day: DayKey, hourNumber: number): ScheduleRow[] {
-  return rows.value.filter((r) => r.day === day && r.hour_number === hourNumber);
+  return matrixRows.value.filter((r) => r.day === day && r.hour_number === hourNumber);
 }
 
 // ── Drag-and-drop reschedule (matrix only) ──────────────────────────
