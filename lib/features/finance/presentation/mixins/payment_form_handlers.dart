@@ -74,9 +74,14 @@ mixin PaymentFormHandlersMixin on ConsumerState<PaymentTypeFormSheet> {
       return;
     }
 
+    // The nominal field auto-formats as the admin types (e.g. "500000" →
+    // "Rp 500.000") via CurrencyInputFormatter. parseCurrency strips the
+    // "Rp " prefix and the dot thousand-separators back to the raw value;
+    // cast to int so the wire payload carries a clean integer rupiah amount
+    // (e.g. 500000) instead of "Rp 500.000" or a 500000.0 float.
     final parsedAmount = CurrencyInputFormatter.parseCurrency(
       amountController.text,
-    );
+    ).toInt();
 
     try {
       final data = <String, dynamic>{
