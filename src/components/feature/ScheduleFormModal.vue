@@ -18,6 +18,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { ScheduleService } from '@/services/schedule.service';
 import { LessonHourService } from '@/services/lesson-hour.service';
+import { SubjectService } from '@/services/subjects.service';
 import { api } from '@/lib/http';
 import type {
   LessonHour,
@@ -74,6 +75,14 @@ const teacherSubjects = ref<Array<{ id: string; name: string }>>([]);
 const allSubjects = ref<Array<{ id: string; name: string }>>([]);
 const lessonHours = ref<LessonHour[]>([]);
 const conflicts = ref<ScheduleConflict[]>([]);
+/** Occupied slots — existing schedules for the picked class/day/term.
+ * Used to mark each lesson-hour option as "Terisi" + disable it. */
+const occupiedSlots = ref<ScheduleRow[]>([]);
+/** True only when the teacher-subjects request errored (not when it
+ * succeeded but returned an empty list). Mirrors Flutter: on error we
+ * fall back to showing all subjects; on a genuine empty result we show
+ * none so the picker is scoped strictly to the teacher's mapel. */
+const subjectsLoadFailed = ref(false);
 
 const isLoadingSubjects = ref(false);
 const isLoadingHours = ref(false);
@@ -100,20 +109,23 @@ async function loadAllSubjects() {
 async function loadSubjectsForTeacher(tId: string) {
   if (!tId) {
     teacherSubjects.value = [];
+    subjectsLoadFailed.value = false;
     return;
   }
   isLoadingSubjects.value = true;
+  subjectsLoadFailed.value = false;
   try {
-    const res = await api.get(`/teacher/${tId}/subjects`);
-    const body = res.data?.data ?? res.data ?? [];
-    const list = Array.isArray(body) ? body : [];
-    const ids = new Set(list.map((s: any) => String(s.id)));
-    // Intersect with all subjects so we get full {id,name} not just IDs.
-    teacherSubjects.value = allSubjects.value.filter((s) => ids.has(s.id));
-    // Clear subject if it's no longer in the filtered set.
+    // Reuse SubjectService.listForTeacher — returns the teacher's own
+    // mapel (full {id,name} rows, not just IDs).
+    const list = await SubjectService.listForTeacher(tId);
+    const ids = new Set(list.map((s) => s.id));
+    teacherSubjects.value = list.map((s) => ({ id: s.id, name: s.name }));
+    // Clear subject if it's no longer in the teacher's set.
     if (subjectId.value && !ids.has(subjectId.value)) subjectId.value = '';
   } catch {
-    teacherSubjects.value = allSubjects.value;
+    // On error only, fall back to all subjects (mirrors Flutter mixin).
+    subjectsLoadFailed.value = true;
+    teacherSubjects.value = [];
   } finally {
     isLoadingSubjects.value = false;
   }
@@ -160,15 +172,55 @@ async function probeConflicts() {
   }
 }
 
+/**
+ * Fetch the slots already taken for the selected class on the selected
+ * day (+ term / academic year). Mirrors Flutter's `fetchOccupiedSlots`:
+ * each occupied row's lesson hour gets marked "Terisi" + disabled in the
+ * Jam Pelajaran picker so the admin can't double-book a slot.
+ */
+async function fetchOccupiedSlots() {
+  if (
+    !classId.value ||
+    selectedDayIds.value.length === 0 ||
+    !semesterId.value
+  ) {
+    occupiedSlots.value = [];
+    return;
+  }
+  try {
+    const res = await ScheduleService.list({
+      class_id: classId.value,
+      day_id: selectedDayIds.value[0],
+      semester_id: semesterId.value,
+      academic_year_id: academicYearId.value || undefined,
+      per_page: 100,
+    });
+    // Exclude the row currently being edited — its own slot isn't "taken".
+    occupiedSlots.value = props.row?.id
+      ? res.items.filter((s) => s.id !== props.row?.id)
+      : res.items;
+  } catch {
+    occupiedSlots.value = [];
+  }
+}
+
 onMounted(async () => {
   await loadAllSubjects();
   await loadLessonHours();
   if (teacherId.value) await loadSubjectsForTeacher(teacherId.value);
+  await fetchOccupiedSlots();
 });
 
 watch(teacherId, async (v) => {
   await loadSubjectsForTeacher(v);
 });
+
+// Re-fetch occupied slots whenever the class / day / term context changes.
+watch(
+  [classId, selectedDayIds, semesterId, academicYearId],
+  () => void fetchOccupiedSlots(),
+  { deep: true },
+);
 
 // Debounced conflict probe
 let probeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -182,8 +234,12 @@ watch(
 );
 
 // ── Derived ────────────────────────────────────────────────────────
+// Scope the mapel picker strictly to the selected teacher's subjects.
+// Only fall back to the full catalogue when the teacher-subjects request
+// errored — a successful-but-empty result means the teacher has no mapel,
+// so we show none (matching the Flutter behaviour).
 const subjectOptions = computed(() =>
-  teacherSubjects.value.length > 0 ? teacherSubjects.value : allSubjects.value,
+  subjectsLoadFailed.value ? allSubjects.value : teacherSubjects.value,
 );
 
 const days = computed(() => props.filterOptions?.days ?? []);
@@ -285,6 +341,20 @@ const filteredHours = computed(() => {
   const first = selectedDayIds.value[0];
   return groupedHours.value.get(first) ?? [];
 });
+
+/** Lesson-hour slot ids that are already booked for the picked class/day.
+ * Mirrors Flutter's match on `lesson_hour_days_id`. */
+const occupiedHourIds = computed<Set<string>>(() => {
+  const ids = new Set<string>();
+  for (const s of occupiedSlots.value) {
+    if (s.lesson_hour_days_id) ids.add(s.lesson_hour_days_id);
+  }
+  return ids;
+});
+
+function isHourOccupied(hour: LessonHour): boolean {
+  return occupiedHourIds.value.has(hour.id);
+}
 </script>
 
 <template>
@@ -325,8 +395,8 @@ const filteredHours = computed(() => {
           <option value="">— pilih mapel —</option>
           <option v-for="s in subjectOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
-        <p v-if="teacherId && teacherSubjects.length === 0 && !isLoadingSubjects" class="text-[10px] text-amber-700 mt-1">
-          Guru ini belum punya mapel terdaftar — semua mapel ditampilkan.
+        <p v-if="teacherId && teacherSubjects.length === 0 && !subjectsLoadFailed && !isLoadingSubjects" class="text-[10px] text-amber-700 mt-1">
+          Guru ini belum punya mapel terdaftar. Tambahkan mapel ke guru terlebih dahulu.
         </p>
       </div>
 
@@ -388,8 +458,13 @@ const filteredHours = computed(() => {
           class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin disabled:opacity-50"
         >
           <option value="">— pilih jam —</option>
-          <option v-for="h in filteredHours" :key="h.id" :value="h.id">
-            Jam ke-{{ h.hour_number }} · {{ h.start_time }}–{{ h.end_time }}
+          <option
+            v-for="h in filteredHours"
+            :key="h.id"
+            :value="h.id"
+            :disabled="isHourOccupied(h)"
+          >
+            Jam ke-{{ h.hour_number }} · {{ h.start_time }}–{{ h.end_time }}{{ isHourOccupied(h) ? ' (Terisi)' : '' }}
           </option>
         </select>
         <p v-if="!isEdit && selectedDayIds.length > 1" class="text-[10px] text-slate-500 mt-1">
