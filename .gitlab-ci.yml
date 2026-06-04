@@ -309,11 +309,17 @@ patch:
       echo ""
       echo "✅ Patch pushed — users will receive it on next app restart"
   rules:
-    # Auto-patch: runs automatically when Dart-only changes on main
-    # (NEEDS_RELEASE=false from detect_changes job)
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $NEEDS_RELEASE == "false" && $SKIP_AUTO_PATCH != "true"
+    # Auto-patch on EVERY main pipeline unless it's a confirmed native RELEASE
+    # (NEEDS_RELEASE == "true") or explicitly skipped. Using `!= "true"` (not
+    # `== "false"`) means an unset/empty NEEDS_RELEASE — e.g. if detect_changes
+    # is skipped or its dotenv artifact doesn't propagate — still AUTO-patches
+    # instead of silently dropping to the manual button (which then never gets
+    # clicked, so mobile OTA fixes never shipped). Native changes still require
+    # the manual `release` job; patch can't carry native code anyway.
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $NEEDS_RELEASE != "true" && $SKIP_AUTO_PATCH != "true"
       when: on_success
-    # Manual fallback: always available as a manual button on main
+    # Manual fallback: still available as a button on main (e.g. after a
+    # release, to re-patch, or when auto-patch was skipped).
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
       allow_failure: true
