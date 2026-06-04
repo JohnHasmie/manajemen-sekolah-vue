@@ -568,4 +568,84 @@ export const GradeService = {
     }
     await api.delete('/grades/batch', { params });
   },
+
+  /**
+   * Edit an existing assessment column's details (title / type / date).
+   *
+   * The backend has no dedicated "update assessment" endpoint — the
+   * `assessments` row is implicit, keyed by the composite unique index
+   * `(teacher_id, subject_id, type, date, title)`, and only the
+   * delete-batch + grade-POST operations touch it. So an "edit" is
+   * expressed with the exact same primitives the rest of this service
+   * already uses:
+   *
+   *   1. Re-POST every *scored* cell of the column under the NEW
+   *      (type, date, title) — this lazily creates the new assessment
+   *      row + migrates the grades (POST /grades, same path as add +
+   *      autosave).
+   *   2. DELETE /grades/batch on the OLD (type, date, title) — removes
+   *      the now-orphaned original assessment + its grades.
+   *
+   * Ordering matters: create-new BEFORE delete-old so a mid-flight
+   * failure can never leave the teacher with zero columns. If the new
+   * key equals the old key (nothing actually changed) the caller
+   * should short-circuit and never reach here.
+   *
+   * `old.date` is required by the batch-delete filter; a column with no
+   * date can't be migrated from the web (same limitation the delete
+   * flow already surfaces). When the column has no scored cells yet
+   * there's nothing to re-POST — we still create a placeholder so the
+   * renamed column survives; the caller handles that by re-seeding the
+   * matrix locally.
+   */
+  async renameAssessment(payload: {
+    rows: GradeRow[];
+    old: { type: AssessmentType; date: string; title: string | null };
+    next: { type: AssessmentType; date: string; title: string | null };
+    assessmentId: string;
+    subject_id: string;
+    teacher_id: string;
+  }): Promise<void> {
+    const nextAssessment: Assessment = {
+      // Synthetic id — the backend assigns the real id on first POST;
+      // the matrix refetch reconciles it afterwards.
+      id: `__rename__${Date.now()}`,
+      name: payload.next.title || ASSESSMENT_LABELS[payload.next.type],
+      raw_title: payload.next.title,
+      type: payload.next.type,
+      date: payload.next.date,
+    };
+
+    // 1. Re-POST scored cells under the new key. Cells are sent with
+    //    their id stripped so saveCell takes the POST path (create),
+    //    landing the grade on the new/looked-up assessment row.
+    const tasks: Promise<unknown>[] = [];
+    for (const row of payload.rows) {
+      const cell = row.cells[payload.assessmentId];
+      if (!cell || typeof cell.score !== 'number') continue;
+      tasks.push(
+        GradeService.saveCell({
+          cell: {
+            student_id: cell.student_id,
+            assessment_id: nextAssessment.id,
+            score: cell.score,
+            notes: cell.notes ?? null,
+          },
+          row,
+          assessment: nextAssessment,
+          subject_id: payload.subject_id,
+          teacher_id: payload.teacher_id,
+        }),
+      );
+    }
+    await Promise.all(tasks);
+
+    // 2. Delete the old column (grades + implicit assessment row).
+    await GradeService.deleteAssessmentBatch({
+      subject_id: payload.subject_id,
+      type: payload.old.type,
+      date: payload.old.date,
+      title: payload.old.title,
+    });
+  },
 };
