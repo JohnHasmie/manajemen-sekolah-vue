@@ -7,6 +7,39 @@ import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Helper for loading and processing grade data from API/cache.
 class GradeDataProcessor {
+  /// Maps the backend's canonical English assessment types onto the short
+  /// codes the grade book uses everywhere ([GradeConstants.allTypes] —
+  /// `uh` / `tugas` / `uts` / `uas` / `pts` / `pas`).
+  ///
+  /// The backend rename (assessments.type → `daily_test` / `assignment` /
+  /// `midterm` / `final_exam` / `quiz`) was reflected in the *label*
+  /// helpers but NOT in [_buildAssessmentHeaders], which only keeps a grade
+  /// when its type is one of the short codes. The list view sidesteps this
+  /// (it groups `gradeList` directly), but the TABLE view builds its columns
+  /// solely from `assessmentHeaders` — so long-form types were dropped and
+  /// the table rendered empty while the list showed the grades.
+  ///
+  /// Canonicalising once here, at the single point where raw API rows enter
+  /// the app, keeps `gradeList`, `assessmentHeaders`, the table columns, the
+  /// cell-matching, and the list grouping all consistently keyed on the
+  /// short codes — fixing the empty-table bug and making the list's expanded
+  /// type-group headers read "Tugas" instead of "ASSIGNMENT".
+  static const Map<String, String> _typeAliases = {
+    'daily_test': 'uh',
+    'assignment': 'tugas',
+    'midterm': 'uts',
+    'final_exam': 'uas',
+  };
+
+  /// Returns the canonical short code for a raw assessment type, or the
+  /// lower-cased input unchanged when it's already canonical (or an unknown
+  /// type such as `quiz` that has no short-code equivalent).
+  static String? _canonicalType(String? rawType) {
+    if (rawType == null) return null;
+    final lower = rawType.toLowerCase();
+    return _typeAliases[lower] ?? lower;
+  }
+
   /// Processes raw API student + grade arrays into structured state.
   /// Returns a LoadDataResult tuple: (students, gradeList, assessmentHeaders).
   static ({
@@ -153,10 +186,10 @@ class GradeDataProcessor {
             'deskripsi': item['notes'] ?? item['deskripsi'],
             'tanggal':
                 item['assessment']?['date'] ?? item['date'] ?? item['tanggal'],
-            'jenis':
-                (item['assessment']?['type'] ?? item['type'] ?? item['jenis'])
-                    ?.toString()
-                    .toLowerCase(),
+            'jenis': _canonicalType(
+              (item['assessment']?['type'] ?? item['type'] ?? item['jenis'])
+                  ?.toString(),
+            ),
             'title': item['assessment']?['title'] ?? item['title'] ?? '',
             'assessment_id': item['assessment_id'],
           };
