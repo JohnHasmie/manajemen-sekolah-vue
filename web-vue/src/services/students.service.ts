@@ -70,6 +70,39 @@ export const StudentService = {
   },
 
   /**
+   * Type-ahead lookup for guardian (wali) names.
+   *
+   * Hits `GET /student/guardians?search=<query>` — the same endpoint the
+   * Flutter app's `ApiStudentService.getGuardians` uses to power the
+   * `Autocomplete<String>` in the student filter sheet. The backend does a
+   * case-insensitive LIKE on `students.guardian_name`, scoped to the active
+   * school, and returns `{ success, data: string[] }` of distinct names.
+   *
+   * Returns the matching names (non-empty) or `[]` on any error so the
+   * caller's dropdown simply shows nothing rather than throwing.
+   */
+  async searchGuardians(query: string): Promise<string[]> {
+    const q = query.trim();
+    if (!q) return [];
+    try {
+      const res = await api.get('/student/guardians', {
+        params: { search: q },
+      });
+      const body = res.data as { data?: unknown } | unknown[];
+      const list = Array.isArray(body)
+        ? body
+        : Array.isArray((body as { data?: unknown }).data)
+          ? (body as { data: unknown[] }).data
+          : [];
+      return list
+        .map((v) => (typeof v === 'string' ? v : String(v ?? '')))
+        .filter((v) => v.length > 0);
+    } catch {
+      return [];
+    }
+  },
+
+  /**
    * Fetch a single student with full eager-loaded relations
    * (`student_classes.class`, guardian, etc.). Mirrors Flutter's
    * `getStudentById`.

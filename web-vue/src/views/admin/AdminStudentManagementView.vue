@@ -75,6 +75,47 @@ const filters = reactive<{
 // on every keystroke until the user confirms / closes the modal).
 const guardianNameDraft = ref('');
 
+// ── Wali (guardian) type-ahead state ───────────────────────────────
+// As the admin types in the "Cari Wali" modal we query
+// `GET /student/guardians?search=` (debounced) and surface matching
+// names in a dropdown — same UX as the Flutter app's
+// `Autocomplete<String>` in the student filter sheet. Selecting a
+// suggestion fills the input; the list still filters by the typed text
+// even if the admin types a name not yet in the suggestion list.
+const guardianSuggestions = ref<string[]>([]);
+const guardianSearching = ref(false);
+const showGuardianSuggestions = ref(false);
+let guardianSearchSeq = 0;
+let guardianSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
+function onGuardianInput() {
+  showGuardianSuggestions.value = true;
+  if (guardianSearchTimer) clearTimeout(guardianSearchTimer);
+  const q = guardianNameDraft.value.trim();
+  // Mirror mobile: only query once there are >= 2 characters, otherwise
+  // clear any stale suggestions.
+  if (q.length < 2) {
+    guardianSuggestions.value = [];
+    guardianSearching.value = false;
+    return;
+  }
+  guardianSearching.value = true;
+  guardianSearchTimer = setTimeout(async () => {
+    const seq = ++guardianSearchSeq;
+    const results = await StudentService.searchGuardians(q);
+    // Ignore out-of-order responses from earlier keystrokes.
+    if (seq !== guardianSearchSeq) return;
+    guardianSuggestions.value = results;
+    guardianSearching.value = false;
+  }, 250);
+}
+
+function pickGuardianSuggestion(name: string) {
+  guardianNameDraft.value = name;
+  showGuardianSuggestions.value = false;
+  applyGuardianFilter();
+}
+
 // ── Selection ──────────────────────────────────────────────────────
 const selectedIds = ref<Set<string>>(new Set());
 
@@ -166,17 +207,23 @@ const activeFilterCount = computed(() => {
 // Modal open/close helpers for the guardian-name search input.
 function openGuardianPicker() {
   guardianNameDraft.value = filters.guardian_name ?? '';
+  guardianSuggestions.value = [];
+  guardianSearching.value = false;
+  showGuardianSuggestions.value = false;
   showGuardianPicker.value = true;
 }
 function applyGuardianFilter() {
   const v = guardianNameDraft.value.trim();
   filters.guardian_name = v.length > 0 ? v : null;
+  showGuardianSuggestions.value = false;
   showGuardianPicker.value = false;
   reload(1);
 }
 function clearGuardianFilter() {
   guardianNameDraft.value = '';
   filters.guardian_name = null;
+  guardianSuggestions.value = [];
+  showGuardianSuggestions.value = false;
   showGuardianPicker.value = false;
   reload(1);
 }
@@ -595,11 +642,12 @@ function topMeta(s: Student): string {
     @apply="(v) => { filters.gender = (v as 'L' | 'P' | '') || null; reload(1); }"
   />
   <!--
-    Guardian (wali) name search modal. Replaces the prior with/without
-    dropdown: admin types the wali's name and the list filters by
-    case-insensitive LIKE on `students.guardian_name`. Mirrors the
-    Flutter app, which already uses a typed search field for this
-    facet.
+    Guardian (wali) name search modal. A type-ahead: the admin types a
+    wali's name and matching names are surfaced in a dropdown
+    (`GET /student/guardians?search=`, debounced). Picking a suggestion
+    applies it immediately; submitting the raw text also works for names
+    not yet in the suggestion list. Mirrors the Flutter app's
+    `Autocomplete<String>` in the student filter sheet.
   -->
   <Modal
     v-if="showGuardianPicker"
@@ -615,10 +663,47 @@ function topMeta(s: Student): string {
           v-model="guardianNameDraft"
           type="search"
           autofocus
+          autocomplete="off"
           placeholder="Mis. Ibu Ahmad"
+          role="combobox"
+          aria-expanded="true"
+          aria-autocomplete="list"
           class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-cobalt focus:outline-none focus:ring-2 focus:ring-brand-cobalt/20"
+          @input="onGuardianInput"
+          @focus="onGuardianInput"
         />
       </label>
+
+      <!--
+        Suggestion dropdown. Rendered inline (not absolutely positioned)
+        so the modal's own scroll handles overflow without clipping.
+      -->
+      <div
+        v-if="showGuardianSuggestions && guardianNameDraft.trim().length >= 2"
+        class="max-h-56 overflow-y-auto rounded-xl border border-slate-200 bg-white"
+      >
+        <p
+          v-if="guardianSearching"
+          class="px-4 py-3 text-sm text-slate-400"
+        >
+          Mencari…
+        </p>
+        <ul v-else-if="guardianSuggestions.length > 0" class="divide-y divide-slate-100">
+          <li v-for="name in guardianSuggestions" :key="name">
+            <button
+              type="button"
+              class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+              @click="pickGuardianSuggestion(name)"
+            >
+              <span class="truncate">{{ name }}</span>
+            </button>
+          </li>
+        </ul>
+        <p v-else class="px-4 py-3 text-sm text-slate-400">
+          Tidak ada wali yang cocok.
+        </p>
+      </div>
+
       <div class="flex items-center justify-between gap-3">
         <button
           type="button"
