@@ -24,6 +24,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { useAcademicYearStore } from '@/stores/academic-year';
+import { useAuthStore } from '@/stores/auth';
 import { GradeRecapService } from '@/services/grade-recap.service';
 import type {
   GradeRecapRow,
@@ -39,10 +40,14 @@ import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
+import GradeRecapSourcePickerModal, {
+  type RecapColumnKind,
+} from '@/components/feature/GradeRecapSourcePickerModal.vue';
 
 const route = useRoute();
 const router = useRouter();
 const ay = useAcademicYearStore();
+const auth = useAuthStore();
 
 const classId = computed(() => String(route.params.classId ?? ''));
 const subjectId = computed(() => String(route.params.subjectId ?? ''));
@@ -75,6 +80,24 @@ const showAddChapter = ref(false);
 const addChapterDraft = ref('');
 const renameChapter = ref<{ index: number; draft: string } | null>(null);
 const deleteChapter = ref<{ index: number } | null>(null);
+
+// Source-picker modal (web port of Flutter's column_source_picker_sheet).
+// `column` is the logical recap column the chosen assessment fills;
+// `babIndex` is set only for Bab columns so we know which chapter slot
+// to write into. `label` drives the modal header text.
+const sourcePicker = ref<{
+  column: RecapColumnKind;
+  babIndex: number | null;
+  label: string;
+} | null>(null);
+
+function openSourcePicker(
+  column: RecapColumnKind,
+  label: string,
+  babIndex: number | null = null,
+) {
+  sourcePicker.value = { column, babIndex, label };
+}
 
 // ── Loaders ──
 async function load() {
@@ -364,6 +387,54 @@ function confirmDeleteChapter() {
   toast.value = { message: 'Bab dihapus (simpan untuk konfirmasi)', tone: 'success' };
 }
 
+// ── Source picker (pull column values from Buku Nilai) ──
+//
+// Web port of Flutter's `_showFixedColumnSourcePicker`: the modal
+// resolves a `student_id → score` map (or null for "Input Manual") and
+// hands it back here. We write each row's matching score into the
+// target column, blanking rows the map doesn't cover, then mark every
+// row dirty so the floating Save bar persists the pull on the next
+// `/grade-recaps/batch`.
+function applySource(payload: {
+  scoresByStudentId: Map<string, number> | null;
+}) {
+  const picker = sourcePicker.value;
+  if (!picker) return;
+  const { column, babIndex } = picker;
+  const map = payload.scoresByStudentId;
+
+  for (const r of rows.value) {
+    const pulled = map?.get(r.student_id) ?? null;
+    switch (column) {
+      case 'midterm':
+        r.uts_score = pulled;
+        break;
+      case 'final_exam':
+        r.uas_score = pulled;
+        break;
+      case 'skill':
+        r.skill_score = pulled;
+        break;
+      case 'bab':
+        if (babIndex !== null) {
+          if (!r.bab_scores) r.bab_scores = [];
+          r.bab_scores[babIndex] = pulled;
+        }
+        break;
+    }
+    markDirty(r.student_class_id);
+  }
+
+  const filledCount = map ? map.size : 0;
+  sourcePicker.value = null;
+  toast.value = {
+    message: map
+      ? `Nilai ${picker.label} diisi dari Buku Nilai (${filledCount} siswa)`
+      : `Kolom ${picker.label} dikosongkan`,
+    tone: 'success',
+  };
+}
+
 // ── Save ──
 async function save() {
   if (isSaving.value) return;
@@ -620,6 +691,14 @@ function onPredikatBlur(rowId: string) {
                   <div class="flex items-center justify-center gap-1">
                     <span class="truncate max-w-[80px]">{{ name }}</span>
                     <button
+                      type="button"
+                      class="opacity-0 group-hover:opacity-100 text-white/80 hover:text-white transition"
+                      @click.stop="openSourcePicker('bab', name, i)"
+                      :title="`Ambil nilai ${name} dari Buku Nilai`"
+                    >
+                      <NavIcon name="database" :size="11" />
+                    </button>
+                    <button
                       v-if="chapters.length > 1"
                       type="button"
                       class="opacity-0 group-hover:opacity-100 text-white/80 hover:text-white transition"
@@ -630,17 +709,47 @@ function onPredikatBlur(rowId: string) {
                     </button>
                   </div>
                 </th>
-                <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[80px]">
-                  UTS
+                <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[80px] group">
+                  <div class="flex items-center justify-center gap-1">
+                    <span>UTS</span>
+                    <button
+                      type="button"
+                      class="opacity-0 group-hover:opacity-100 text-white/80 hover:text-white transition"
+                      @click.stop="openSourcePicker('midterm', 'UTS')"
+                      title="Ambil nilai UTS dari Buku Nilai"
+                    >
+                      <NavIcon name="database" :size="11" />
+                    </button>
+                  </div>
                 </th>
-                <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[80px]">
-                  UAS
+                <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[80px] group">
+                  <div class="flex items-center justify-center gap-1">
+                    <span>UAS</span>
+                    <button
+                      type="button"
+                      class="opacity-0 group-hover:opacity-100 text-white/80 hover:text-white transition"
+                      @click.stop="openSourcePicker('final_exam', 'UAS')"
+                      title="Ambil nilai UAS dari Buku Nilai"
+                    >
+                      <NavIcon name="database" :size="11" />
+                    </button>
+                  </div>
                 </th>
                 <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[70px] bg-brand-cobalt/90">
                   Final
                 </th>
-                <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[80px]">
-                  Skill
+                <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[80px] group">
+                  <div class="flex items-center justify-center gap-1">
+                    <span>Skill</span>
+                    <button
+                      type="button"
+                      class="opacity-0 group-hover:opacity-100 text-white/80 hover:text-white transition"
+                      @click.stop="openSourcePicker('skill', 'Skill')"
+                      title="Ambil nilai Skill dari Buku Nilai"
+                    >
+                      <NavIcon name="database" :size="11" />
+                    </button>
+                  </div>
                 </th>
                 <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[60px]">
                   Pred.
@@ -943,6 +1052,19 @@ function onPredikatBlur(rowId: string) {
         </div>
       </div>
     </Modal>
+
+    <!-- SOURCE PICKER (pull column values from Buku Nilai) -->
+    <GradeRecapSourcePickerModal
+      v-if="sourcePicker"
+      :column="sourcePicker.column"
+      :column-label="sourcePicker.label"
+      :class-id="classId"
+      :subject-id="subjectId"
+      :academic-year-id="Number(ay.selectedYearId ?? 0)"
+      :teacher-id="auth.teacherId"
+      @close="sourcePicker = null"
+      @apply="applySource"
+    />
 
     <Toast
       v-if="toast"
