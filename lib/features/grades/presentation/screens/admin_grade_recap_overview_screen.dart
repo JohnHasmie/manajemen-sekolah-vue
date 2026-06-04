@@ -140,7 +140,19 @@ class _AdminGradeRecapOverviewScreenState
     final teacherId = row['teacher_id']?.toString() ?? '';
     final teacherName = row['teacher_name']?.toString() ?? 'Guru';
     final classId = row['class_id']?.toString() ?? '';
-    final subjectId = row['subject_id']?.toString() ?? '';
+    // The drill endpoint (`GET /grade-recaps`, GradeRecapController@index)
+    // validates `subject_id` as the per-school `subject_schools` UUID and
+    // resolves the master subject id from it server-side. The overview row,
+    // however, exposes TWO ids: `subject_id` is the MASTER subject id
+    // (bigint, kept for back-compat) and `subject_school_id` is the per-
+    // school UUID. Passing the master bigint as the drill's `subject_id`
+    // made the endpoint resolve no subject → it returned an empty student
+    // list → the detail showed "Tidak Ada Siswa" even for slices that
+    // clearly have grades in the overview. Prefer the school UUID; fall
+    // back to `subject_id` only for older payloads that predate the
+    // `subject_school_id` field.
+    final subjectId =
+        (row['subject_school_id'] ?? row['subject_id'])?.toString() ?? '';
     // The recap table the admin drills into is keyed by class + subject
     // (see GradeRecapPage.loadRecapData → getGradeRecaps). The teacher is
     // optional — many slices have no assigned guru yet, and the secondary
