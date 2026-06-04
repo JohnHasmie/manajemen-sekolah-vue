@@ -10,6 +10,8 @@ import { api } from '@/lib/http';
 import { StudentService } from '@/services/students.service';
 import {
   adminGradeOverviewFromJson,
+  ASSESSMENT_LABELS,
+  normalizeAssessmentType,
   teacherGradeSummaryFromJson,
   type AdminGradeOverview,
   type Assessment,
@@ -40,7 +42,9 @@ function assessmentFromJson(raw: any): Assessment {
   return {
     id: String(raw.id ?? ''),
     name: String(raw.name ?? raw.nama ?? ''),
-    type: (String(raw.type ?? raw.jenis ?? 'lainnya').toLowerCase() as AssessmentType),
+    // Normalise to the canonical English key so the matrix
+    // type-filter (which compares against canonical keys) matches.
+    type: normalizeAssessmentType(raw.type ?? raw.jenis),
     weight: asNum(raw.weight) ?? undefined,
     date: raw.date ?? raw.tanggal ?? undefined,
   };
@@ -282,9 +286,13 @@ export const GradeService = {
         date: string | null;
       } {
         const ass = (e?.assessment ?? null) as Record<string, unknown> | null;
-        const type = String(
+        // Raw wire value — kept only for the display-name fallback +
+        // synthetic id below. The matrix type-filter compares against
+        // the canonical key, so `type` must be normalised.
+        const rawType = String(
           ass?.type ?? e.grade_type ?? e.type ?? e.jenis ?? 'lainnya',
         ).toLowerCase();
+        const type: AssessmentType = normalizeAssessmentType(rawType);
         // Preserve the exact backend title (including null) so
         // POST /grades can echo it verbatim without spawning a
         // duplicate assessment row.
@@ -297,16 +305,18 @@ export const GradeService = {
         // Display name — fallback for null-titled assessments adds a
         // "(tanpa judul)" suffix so the column is visually distinct
         // from a sibling assessment that genuinely has the same name.
+        // Use the Indonesian label (e.g. "UTS") rather than the
+        // canonical key so the header reads naturally.
         const name =
           raw_title ||
-          `${type.toUpperCase()} (tanpa judul)`;
+          `${ASSESSMENT_LABELS[type]} (tanpa judul)`;
         const date = (ass?.date ?? e.date ?? e.tanggal ?? null) as
           | string
           | null;
         const aid = String(
-          e.assessment_id ?? ass?.id ?? `${type}-${name}-${date ?? ''}`,
+          e.assessment_id ?? ass?.id ?? `${rawType}-${name}-${date ?? ''}`,
         );
-        return { aid, name, raw_title, type: type as AssessmentType, date };
+        return { aid, name, raw_title, type, date };
       }
 
       // 1. Build the assessment list. Entries from `/grades/teacher`
