@@ -21,6 +21,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { ScheduleService } from '@/services/schedule.service';
 import { LessonHourService } from '@/services/lesson-hour.service';
+import { SubjectService } from '@/services/subjects.service';
 import type {
   AdminScheduleFilters,
 } from '@/services/schedule.service';
@@ -67,6 +68,10 @@ const rows = ref<ScheduleRow[]>([]);
 const stats = ref<ScheduleStats | null>(null);
 const filterOptions = ref<ScheduleFilterOptions | null>(null);
 const lessonHours = ref<LessonHour[]>([]);
+// Full school subject list — used to populate the Mapel filter so the
+// list view offers every subject (not just the ones present in the
+// currently-loaded/paginated rows). Matches the matrix view's coverage.
+const allSubjects = ref<Array<{ id: string; name: string }>>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
@@ -117,6 +122,18 @@ async function loadLessonHours() {
   }
 }
 
+async function loadAllSubjects() {
+  // One-shot — the full school subject catalogue. The Mapel filter
+  // reads from this so the list view offers every subject, not just
+  // the few that appear in the currently-loaded rows.
+  try {
+    const res = await SubjectService.list({ per_page: 200 });
+    allSubjects.value = res.items.map((s) => ({ id: s.id, name: s.name }));
+  } catch {
+    allSubjects.value = [];
+  }
+}
+
 async function loadStats() {
   try {
     stats.value = await ScheduleService.getStats(activeFilters());
@@ -147,12 +164,12 @@ async function reload() {
 }
 
 onMounted(async () => {
-  await Promise.all([loadFilterOptions(), loadLessonHours()]);
+  await Promise.all([loadFilterOptions(), loadLessonHours(), loadAllSubjects()]);
   await reload();
 });
 
 useAcademicYearWatcher(async () => {
-  await Promise.all([loadFilterOptions(), loadLessonHours()]);
+  await Promise.all([loadFilterOptions(), loadLessonHours(), loadAllSubjects()]);
   await reload();
 });
 
@@ -184,7 +201,10 @@ const dayChipValue = computed(() => {
 });
 const subjectChipValue = computed(() => {
   if (!filterSubjectId.value) return 'Semua mapel';
-  // Derive subject name from rows since /filter-options doesn't return subjects.
+  // Prefer the full subject catalogue (covers subjects not in current rows);
+  // fall back to deriving the name from the loaded rows.
+  const fromCatalogue = allSubjects.value.find((s) => s.id === filterSubjectId.value);
+  if (fromCatalogue) return fromCatalogue.name;
   const found = rows.value.find((r) => r.subject_id === filterSubjectId.value);
   return found?.subject_name ?? '—';
 });
@@ -193,12 +213,21 @@ const hourChipValue = computed(() => {
   return `Jam ke-${filterHourNumber.value}`;
 });
 
-// Subject options derived from current rows + dedup
+// Subject options for the Mapel filter. Prefer the full school subject
+// catalogue so the list view offers every subject (bug: it used to show
+// only the handful present in the currently-loaded rows). Fall back to
+// deriving from rows if the catalogue couldn't be loaded.
 const subjectOptions = computed(() => {
   const seen = new Map<string, { id: string; name: string }>();
-  for (const r of rows.value) {
-    if (!seen.has(r.subject_id)) {
-      seen.set(r.subject_id, { id: r.subject_id, name: r.subject_name });
+  if (allSubjects.value.length > 0) {
+    for (const s of allSubjects.value) {
+      if (!seen.has(s.id)) seen.set(s.id, { id: s.id, name: s.name });
+    }
+  } else {
+    for (const r of rows.value) {
+      if (!seen.has(r.subject_id)) {
+        seen.set(r.subject_id, { id: r.subject_id, name: r.subject_name });
+      }
     }
   }
   return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name, 'id'));
@@ -262,9 +291,34 @@ const rowsByDay = computed<Record<DayKey, ScheduleRow[]>>(() => {
 });
 
 // ── Matrix view computation ─────────────────────────────────────────
+//
+// The matrix is fed by `/teaching-schedule/all`, which only honours
+// semester_id + academic_year_id server-side — it ignores the
+// teacher/class/day/subject/hour filter chips. So we re-apply those
+// chips client-side here, mirroring what the list endpoint does on the
+// server. The list view stays untouched (it's already filtered by the
+// backend), so this only narrows the matrix.
+const matrixRows = computed<ScheduleRow[]>(() => {
+  return rows.value.filter((r) => {
+    if (filterTeacherId.value && r.teacher_id !== filterTeacherId.value) return false;
+    if (filterClassId.value && r.class_id !== filterClassId.value) return false;
+    if (filterDayId.value && r.day_id !== filterDayId.value) return false;
+    if (filterSubjectId.value && r.subject_id !== filterSubjectId.value) return false;
+    if (filterHourNumber.value !== '' && r.hour_number !== filterHourNumber.value) return false;
+    if (search.value.trim()) {
+      const q = search.value.trim().toLowerCase();
+      const haystack = [r.subject_name, r.class_name, r.teacher_name ?? '']
+        .join(' ')
+        .toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  });
+});
+
 const hourSlots = computed(() => {
   const set = new Map<number, { hour_number: number; start: string; end: string }>();
-  for (const r of rows.value) {
+  for (const r of matrixRows.value) {
     if (!set.has(r.hour_number)) {
       set.set(r.hour_number, {
         hour_number: r.hour_number,
@@ -277,7 +331,7 @@ const hourSlots = computed(() => {
 });
 
 function cellFor(day: DayKey, hourNumber: number): ScheduleRow[] {
-  return rows.value.filter((r) => r.day === day && r.hour_number === hourNumber);
+  return matrixRows.value.filter((r) => r.day === day && r.hour_number === hourNumber);
 }
 
 // ── Drag-and-drop reschedule (matrix only) ──────────────────────────
