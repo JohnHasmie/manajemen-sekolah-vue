@@ -151,6 +151,17 @@ const columnActionsFor = ref<Assessment | null>(null);
 const columnDetail = ref<Assessment | null>(null);
 const columnDeleteConfirm = ref<Assessment | null>(null);
 const isDeletingColumn = ref(false);
+// Edit-assessment modal — opens when the teacher taps the assessment
+// header then "Edit Asesmen". Lets them rename (judul) + change the
+// type/date of an existing column. Mirrors Flutter's `onEditAssessment`
+// tile in `grade_column_options_sheet.dart`.
+const columnEditFor = ref<Assessment | null>(null);
+const editForm = ref<{ type: AssessmentType; title: string; date: string }>({
+  type: 'daily_test',
+  title: '',
+  date: new Date().toISOString().slice(0, 10),
+});
+const isSavingColumnEdit = ref(false);
 
 // Add-assessment modal state — mirrors Flutter `grade_input_dialog.dart`
 // trigger from the FAB.
@@ -643,6 +654,135 @@ function openDeleteConfirm() {
   if (!columnActionsFor.value) return;
   columnDeleteConfirm.value = columnActionsFor.value;
   columnActionsFor.value = null;
+}
+
+// ── Edit assessment (rename + details) ──
+// Opens the edit modal pre-filled with the column's current title /
+// type / date. Title falls back to '' when the backend column is NULL
+// (raw_title null) so the input shows the placeholder, not "(tanpa
+// judul)".
+function openEditColumn() {
+  const a = columnActionsFor.value;
+  if (!a) return;
+  columnEditFor.value = a;
+  editForm.value = {
+    type: a.type,
+    title: a.raw_title ?? '',
+    date: a.date ?? new Date().toISOString().slice(0, 10),
+  };
+  columnActionsFor.value = null;
+}
+
+async function applyEditColumn() {
+  const a = columnEditFor.value;
+  if (!a || !matrixSubject.value?.id) return;
+  const f = editForm.value;
+  if (!f.type || !f.date) {
+    toast.value = { message: 'Tipe dan tanggal wajib diisi.', tone: 'error' };
+    return;
+  }
+  // Editing requires the original column to have a date so the
+  // backend batch-delete can target it (same limit as delete).
+  if (!a.date) {
+    toast.value = {
+      message: 'Asesmen ini belum punya tanggal — tidak bisa diedit dari web.',
+      tone: 'error',
+    };
+    return;
+  }
+  const nextTitle = f.title.trim() || null;
+  const oldTitle = a.raw_title ?? null;
+  // No-op guard — nothing actually changed.
+  if (f.type === a.type && f.date === a.date && nextTitle === oldTitle) {
+    columnEditFor.value = null;
+    return;
+  }
+  if (isAdminView.value) {
+    toast.value = {
+      message:
+        'Mode admin — tampilan hanya-baca. Mintalah guru terkait untuk menyimpan perubahan.',
+      tone: 'error',
+    };
+    return;
+  }
+  // Synthetic (not-yet-saved) column added via the FAB this session —
+  // it has no backend assessment row to migrate. Just edit it in place;
+  // it persists with the new details on first score save.
+  if (a.id.startsWith('__new__')) {
+    const target = matrix.value.assessments.find((x) => x.id === a.id);
+    if (target) {
+      target.type = f.type;
+      target.date = f.date;
+      target.raw_title = nextTitle;
+      target.name = nextTitle || ASSESSMENT_LABELS[f.type];
+    }
+    columnEditFor.value = null;
+    toast.value = {
+      message: `Asesmen "${nextTitle || ASSESSMENT_LABELS[f.type]}" diperbarui.`,
+      tone: 'success',
+    };
+    return;
+  }
+  const teacherId = auth.teacherId ?? auth.user?.id ?? '';
+  if (!teacherId) {
+    toast.value = {
+      message: 'Identitas guru belum siap — coba refresh halaman.',
+      tone: 'error',
+    };
+    return;
+  }
+  isSavingColumnEdit.value = true;
+  try {
+    await GradeService.renameAssessment({
+      rows: matrix.value.rows,
+      old: { type: a.type, date: a.date, title: oldTitle },
+      next: { type: f.type, date: f.date, title: nextTitle },
+      assessmentId: a.id,
+      subject_id: matrixSubject.value.id,
+      teacher_id: teacherId,
+    });
+    toast.value = {
+      message: `Asesmen "${nextTitle || ASSESSMENT_LABELS[f.type]}" diperbarui.`,
+      tone: 'success',
+    };
+    columnEditFor.value = null;
+    // Refresh summary first so the seed reflects the new assessment id,
+    // then refetch the matrix (same reconcile order as save/delete).
+    await loadSummary();
+    const refreshedCard = flatCards.value.find(
+      (c) =>
+        c.class_id === matrixClass.value?.id &&
+        c.subject.id === matrixSubject.value?.id,
+    );
+    if (refreshedCard) {
+      matrixAssessmentSeed.value = refreshedCard.subject.assessments.map(
+        (sa) => ({
+          id: sa.id,
+          name: sa.label,
+          raw_title: sa.raw_title,
+          type: sa.type,
+        }),
+      );
+    }
+    await loadMatrix();
+  } catch (e) {
+    const err = e as {
+      response?: { data?: { message?: string; errors?: Record<string, string[]> } };
+    };
+    const data = err.response?.data;
+    let message = (e as Error).message;
+    if (data?.message) message = data.message;
+    if (data?.errors) {
+      const fields = Object.entries(data.errors)
+        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v[0] : String(v)}`)
+        .slice(0, 3)
+        .join(' · ');
+      if (fields) message = `Validasi gagal — ${fields}`;
+    }
+    toast.value = { message, tone: 'error' };
+  } finally {
+    isSavingColumnEdit.value = false;
+  }
 }
 
 async function confirmDeleteColumn() {
@@ -1496,6 +1636,22 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
         <li>
           <button
             type="button"
+            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-amber-50 text-left"
+            @click="openEditColumn"
+          >
+            <span class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 grid place-items-center flex-shrink-0">
+              <NavIcon name="edit-3" :size="16" />
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold text-slate-900">Edit asesmen</p>
+              <p class="text-[11px] text-slate-500">Ubah judul, tipe, atau tanggal</p>
+            </div>
+            <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 text-left"
             @click="openDeleteConfirm"
           >
@@ -1662,6 +1818,86 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           </Button>
           <Button variant="primary" size="sm" @click="applyAddAsesmen">
             Tambah
+          </Button>
+        </div>
+      </form>
+    </Modal>
+
+    <!-- ── Edit Asesmen modal (rename + details) ────────────── -->
+    <Modal
+      v-if="columnEditFor"
+      title="Edit Asesmen"
+      :subtitle="`Ubah judul / tipe / tanggal untuk kolom '${columnEditFor.name}'.`"
+      @close="!isSavingColumnEdit && (columnEditFor = null)"
+    >
+      <form class="space-y-md" @submit.prevent="applyEditColumn">
+        <div>
+          <label
+            class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+          >
+            Tipe Asesmen
+          </label>
+          <SegmentedControl
+            :model-value="editForm.type"
+            :options="[
+              { key: 'assignment', label: 'Tugas' },
+              { key: 'daily_test', label: 'UH' },
+              { key: 'midterm', label: 'UTS' },
+              { key: 'final_exam', label: 'UAS' },
+              { key: 'other', label: 'Lainnya' },
+            ]"
+            size="sm"
+            @update:model-value="(v) => (editForm.type = v as AssessmentType)"
+          />
+        </div>
+        <div>
+          <label
+            class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+          >
+            Judul (opsional)
+          </label>
+          <input
+            v-model="editForm.title"
+            type="text"
+            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+            placeholder="Contoh: Ulangan Harian 4, UTS Genap"
+          />
+          <p class="text-[10.5px] text-slate-400 mt-1">
+            Kosongkan untuk pakai label default ({{ ASSESSMENT_LABELS[editForm.type] }}).
+          </p>
+        </div>
+        <div>
+          <label
+            class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+          >
+            Tanggal
+          </label>
+          <input
+            v-model="editForm.date"
+            type="date"
+            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
+          />
+        </div>
+        <div class="bg-amber-50 border border-dashed border-amber-200 rounded-lg px-3 py-2 text-[11px] text-amber-700">
+          <NavIcon name="edit-3" :size="11" class="inline-block mr-1 -mt-0.5" />
+          Nilai siswa yang sudah terisi ikut dipindahkan ke kolom dengan detail baru.
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <Button
+            variant="secondary"
+            size="sm"
+            :disabled="isSavingColumnEdit"
+            @click="columnEditFor = null"
+          >
+            Batal
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            :loading="isSavingColumnEdit"
+            @click="applyEditColumn"
+          >
+            Simpan perubahan
           </Button>
         </div>
       </form>
