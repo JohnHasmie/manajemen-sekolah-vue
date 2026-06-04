@@ -138,10 +138,11 @@ test:
   stage: test
   script:
     - flutter test --reporter=expanded
-  allow_failure: true
+  # BLOCKING: a failing test now fails the pipeline (was allow_failure:true +
+  # manual-on-MR, which let 74 broken tests sit unnoticed). Runs automatically on
+  # both MRs and branch pushes so test rot can't accumulate again.
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: manual
     - if: $CI_COMMIT_BRANCH
 
 # ---------------------------------------------------------------------------
