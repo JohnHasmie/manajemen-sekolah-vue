@@ -494,8 +494,11 @@ deploy_web:
       echo "web-vue/ changed in this commit → pushing subtree to the Vercel mirror..."
       git remote get-url web-vue-mirror >/dev/null 2>&1 || git remote add web-vue-mirror "$WEB_VUE_MIRROR"
       git subtree split --prefix=web-vue "$CI_COMMIT_SHA" -b _web_deploy
-      git push -f web-vue-mirror _web_deploy:main
+      # Push to the mirror's `master` branch — that's the mirror's default branch
+      # and Vercel's PRODUCTION branch. Pushing to `main` (a non-production branch)
+      # only produced PREVIEW deployments. master → production deploy.
+      git push -f web-vue-mirror _web_deploy:master
       git branch -D _web_deploy
-      echo "Pushed web-vue subtree to web-vue-mirror → Vercel will auto-deploy the website."
+      echo "Pushed web-vue subtree to web-vue-mirror:master → Vercel will deploy to PRODUCTION."
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
