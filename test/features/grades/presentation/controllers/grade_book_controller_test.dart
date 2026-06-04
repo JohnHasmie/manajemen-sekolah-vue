@@ -557,6 +557,76 @@ void main() {
       expect(result.assessmentHeaders, isEmpty);
       expect(result.studentList, hasLength(2));
     });
+
+    // Regression — Slack 1780540301 ("Mobile Guru (Nilai)"): the backend
+    // emits canonical English types (`daily_test`, `assignment`, `midterm`,
+    // `final_exam`) but the grade book groups on short codes. The table view
+    // builds its columns solely from `assessmentHeaders`, so before the fix
+    // these long-form types were dropped → empty table while the list view
+    // (which groups `gradeList` directly) still showed the grades.
+    test('canonicalizes backend long-form types into short codes', () {
+      final longFormGrades = [
+        {
+          'id': 'lf1',
+          'student_id': '1',
+          'assessment': {
+            'type': 'daily_test',
+            'date': '2025-05-17',
+            'title': null,
+          },
+          'assessment_id': 'lfa1',
+          'score': 90,
+        },
+        {
+          'id': 'lf2',
+          'student_id': '2',
+          'assessment': {
+            'type': 'assignment',
+            'date': '2025-05-18',
+            'title': null,
+          },
+          'assessment_id': 'lfa2',
+          'score': 80,
+        },
+        {
+          'id': 'lf3',
+          'student_id': '1',
+          'assessment': {
+            'type': 'midterm',
+            'date': '2025-05-19',
+            'title': null,
+          },
+          'assessment_id': 'lfa3',
+          'score': 70,
+        },
+        {
+          'id': 'lf4',
+          'student_id': '1',
+          'assessment': {
+            'type': 'final_exam',
+            'date': '2025-05-20',
+            'title': null,
+          },
+          'assessment_id': 'lfa4',
+          'score': 60,
+        },
+      ];
+      final result = GradeDataProcessor.processRawData(
+        rawStudents,
+        longFormGrades,
+        allTypes,
+      );
+      // gradeList carries the canonical short codes, not the raw long-form.
+      expect(
+        result.gradeList.map((g) => g['jenis']).toList(),
+        ['uh', 'tugas', 'uts', 'uas'],
+      );
+      // And the headers the TABLE view builds its columns from now exist.
+      expect(result.assessmentHeaders.containsKey('uh'), isTrue);
+      expect(result.assessmentHeaders.containsKey('tugas'), isTrue);
+      expect(result.assessmentHeaders.containsKey('uts'), isTrue);
+      expect(result.assessmentHeaders.containsKey('uas'), isTrue);
+    });
   });
 
   // ─── LoadDataResult.failure ───────────────────────────────────────────────
