@@ -160,7 +160,7 @@ const addForm = ref<{
   title: string;
   date: string; // YYYY-MM-DD
 }>({
-  type: 'uh',
+  type: 'daily_test',
   title: '',
   date: new Date().toISOString().slice(0, 10),
 });
@@ -356,12 +356,31 @@ const typeCounts = computed(() => {
   return m;
 });
 
+// Option keys use the canonical English AssessmentType values so the
+// selected key matches `assessment.type` (also canonical) when the
+// matrix filters `visibleAssessments`. The labels stay Indonesian.
 const typeOptions = computed(() => [
   { key: 'all', label: 'Semua', meta: String(typeCounts.value.all ?? 0) },
-  { key: 'tugas', label: 'Tugas', meta: String(typeCounts.value.tugas ?? 0) },
-  { key: 'uh', label: 'UH', meta: String(typeCounts.value.uh ?? 0) },
-  { key: 'uts', label: 'UTS', meta: String(typeCounts.value.uts ?? 0) },
-  { key: 'uas', label: 'UAS', meta: String(typeCounts.value.uas ?? 0) },
+  {
+    key: 'assignment',
+    label: 'Tugas',
+    meta: String(typeCounts.value.assignment ?? 0),
+  },
+  {
+    key: 'daily_test',
+    label: 'UH',
+    meta: String(typeCounts.value.daily_test ?? 0),
+  },
+  {
+    key: 'midterm',
+    label: 'UTS',
+    meta: String(typeCounts.value.midterm ?? 0),
+  },
+  {
+    key: 'final_exam',
+    label: 'UAS',
+    meta: String(typeCounts.value.final_exam ?? 0),
+  },
 ]);
 
 const matrixState = computed<AsyncState<GradeMatrix>>(() => {
@@ -689,7 +708,7 @@ async function confirmDeleteColumn() {
 // ── Add Assessment ──
 function openAddAsesmen() {
   addForm.value = {
-    type: 'uh',
+    type: 'daily_test',
     title: '',
     date: new Date().toISOString().slice(0, 10),
   };
@@ -905,13 +924,13 @@ function avgTone(avg: number | null, kkm = 75): {
 
 function typePillClass(type: AssessmentType): string {
   switch (type) {
-    case 'uh':
+    case 'daily_test':
       return 'bg-violet-50 text-violet-700 border-violet-200';
-    case 'uts':
+    case 'midterm':
       return 'bg-amber-50 text-amber-700 border-amber-200';
-    case 'uas':
+    case 'final_exam':
       return 'bg-red-50 text-red-700 border-red-200';
-    case 'tugas':
+    case 'assignment':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     default:
       return 'bg-slate-50 text-slate-600 border-slate-200';
@@ -1591,11 +1610,11 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           <SegmentedControl
             :model-value="addForm.type"
             :options="[
-              { key: 'tugas', label: 'Tugas' },
-              { key: 'uh', label: 'UH' },
-              { key: 'uts', label: 'UTS' },
-              { key: 'uas', label: 'UAS' },
-              { key: 'lainnya', label: 'Lainnya' },
+              { key: 'assignment', label: 'Tugas' },
+              { key: 'daily_test', label: 'UH' },
+              { key: 'midterm', label: 'UTS' },
+              { key: 'final_exam', label: 'UAS' },
+              { key: 'other', label: 'Lainnya' },
             ]"
             size="sm"
             @update:model-value="(v) => (addForm.type = v as AssessmentType)"
