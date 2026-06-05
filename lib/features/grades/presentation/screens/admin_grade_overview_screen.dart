@@ -241,15 +241,19 @@ class _AdminGradeOverviewScreenState
       onRefresh: () => _loadData(useCache: false),
       role: 'admin',
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
         children: [
-          // Fix-FF — lightweight KPI strip overlapping the navy header,
-          // replacing the old heavy gradient card. Same chrome as the
-          // new Rekap Nilai screen (Frame C).
-          Transform.translate(
-            offset: const Offset(0, -22),
-            child: _buildKpiStrip(),
-          ),
+          // KPI strip sits fully below the pinned header + search bar.
+          //
+          // This screen lays the header and body out in a plain Column
+          // (not BrandPageLayout's Stack overlap), so there is no reserved
+          // gradient free-zone for the card to overlap into. The old
+          // negative Transform.translate(0, -22) dragged the card up
+          // *behind* the floating "Cari guru…" search field, clipping its
+          // top row (KPI numbers cut off under the navy header). This is
+          // the Buku Nilai counterpart of the Rekap Nilai fix (c7d45bc2);
+          // render it in normal flow with a small top gap instead.
+          _buildKpiStrip(),
           // Dedicated "Sebaran Nilai" card pulled out of the old KPI
           // block — distribution gets to breathe instead of fighting
           // the KPI tiles for attention.
