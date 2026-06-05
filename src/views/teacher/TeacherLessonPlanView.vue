@@ -116,12 +116,20 @@ const POLL_TIMEOUT_MS = 90_000;
 // ── Loaders ──
 async function loadReferences() {
   try {
+    // RPP pickers must show only the subjects this teacher actually teaches
+    // (assigned + scheduled + grade-authored), not every subject in the
+    // school — mirror the Materi/Jadwal teacher-scoped pattern
+    // (SubjectService.listForTeacher → GET /teacher/{id}/subjects). Falls
+    // back to the full list only if the teacher id is somehow unavailable.
+    const teacherId = auth.teacherId ?? auth.user?.id ?? '';
     const [c, s] = await Promise.all([
       ClassroomService.list({ per_page: 100 }),
-      SubjectService.list({ per_page: 100 }),
+      teacherId
+        ? SubjectService.listForTeacher(teacherId)
+        : SubjectService.list({ per_page: 100 }).then((r) => r.items),
     ]);
     classes.value = c.items;
-    subjects.value = s.items;
+    subjects.value = s;
 
     if (fromQuickAction.value) {
       classId.value = queryString('class_id') ?? '';
