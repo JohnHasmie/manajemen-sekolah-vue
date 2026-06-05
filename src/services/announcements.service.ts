@@ -149,6 +149,8 @@ export const AnnouncementService = {
     target_ids?: string[];
     is_pinned?: boolean;
     scheduled_at?: string | null;
+    event_at?: string | null;
+    event_location?: string | null;
     expires_at?: string | null;
   }): Promise<Announcement> {
     // The backend stores `type` (category-only) and `status` (lifecycle)
