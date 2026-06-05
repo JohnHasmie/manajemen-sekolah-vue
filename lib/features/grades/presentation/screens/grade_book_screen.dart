@@ -245,6 +245,20 @@ class GradeBookPageState extends ConsumerState<GradeBookPage>
     ).then((_) {
       if (!mounted) return;
       _maybeEnterInitialColumnEdit();
+      // Stale-while-revalidate: the local grade cache has no TTL and is
+      // never invalidated by edits made on a DIFFERENT device — e.g. a
+      // teacher adding a PTS/midterm column from the website. So the
+      // instant cached view can lag behind the server (the summary list
+      // shows "2 assessment" while this gradebook still shows 1). After
+      // painting the cached data, silently re-fetch from the server
+      // (showLoading:false ⇒ no spinner, bypasses the cache) so cross-
+      // device changes appear without a manual pull-to-refresh.
+      loadData(
+        teacher: widget.teacher,
+        subject: widget.subject,
+        classData: widget.classData,
+        showLoading: false,
+      );
     });
     updateFilteredGradeTypes();
     _searchController.addListener(filterStudents);
