@@ -122,6 +122,8 @@ const form = reactive({
   audience: 'all' as AnnouncementAudience,
   target_ids: [] as string[],
   scheduled_at: '' as string,
+  event_at: '' as string,
+  event_location: '' as string,
   is_pinned: false,
 });
 
@@ -257,6 +259,8 @@ function resetForm() {
   form.audience = 'all';
   form.target_ids = [];
   form.scheduled_at = '';
+  form.event_at = '';
+  form.event_location = '';
   form.is_pinned = false;
   previewReach.value = null;
   editingId.value = null;
@@ -278,6 +282,10 @@ function openEdit(a: Announcement) {
   form.audience = a.audience ?? 'all';
   form.target_ids = a.target_ids ? [...a.target_ids] : [];
   form.scheduled_at = a.scheduled_at ?? '';
+  // Trim to the `datetime-local` shape (YYYY-MM-DDTHH:mm) so an ISO value
+  // from the API still populates the picker on edit.
+  form.event_at = (a.event_at ?? '').slice(0, 16);
+  form.event_location = a.event_location ?? '';
   form.is_pinned = !!a.is_pinned;
   showCompose.value = true;
   refreshPreviewReach();
@@ -325,6 +333,8 @@ async function publish() {
       target_ids: form.audience === 'all' ? [] : form.target_ids,
       is_pinned: form.is_pinned,
       scheduled_at: form.scheduled_at || null,
+      event_at: form.event_at || null,
+      event_location: form.event_location.trim() || null,
     };
     if (editingId.value) {
       await AnnouncementService.update(editingId.value, payload);
@@ -689,6 +699,40 @@ function pickAudience(k: AudienceFilter) {
             class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none resize-none"
             :disabled="isSaving"
           ></textarea>
+        </div>
+
+        <!-- Acara (opsional) — tanggal kejadian + lokasi. Sejajar dengan
+             form aplikasi (section "Acara"); backend sudah menerima
+             event_at / event_location. -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Tanggal &amp; jam acara (opsional)
+            </label>
+            <input
+              v-model="form.event_at"
+              type="datetime-local"
+              class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
+              :disabled="isSaving"
+            />
+            <p class="text-[10.5px] text-slate-400 mt-1">
+              Isi kalau ini pengumuman acara (mis. rapat 25 Des) — biar muncul di
+              kalender + reminder.
+            </p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              Lokasi acara (opsional)
+            </label>
+            <input
+              v-model="form.event_location"
+              type="text"
+              maxlength="160"
+              placeholder="mis. Aula Lt. 2"
+              class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
+              :disabled="isSaving"
+            />
+          </div>
         </div>
 
         <!-- Schedule + Pin row -->

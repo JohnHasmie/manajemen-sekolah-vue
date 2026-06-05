@@ -79,6 +79,11 @@ export interface Announcement {
   audience_label?: string | null;
   is_pinned?: boolean;
   scheduled_at?: string | null;
+  /** Event date/time this announcement is about (e.g. a meeting). Drives
+   *  the calendar entry + reminders. Distinct from `scheduled_at` (publish). */
+  event_at?: string | null;
+  /** Free-text event location (e.g. "Aula Lt. 2"). */
+  event_location?: string | null;
   published_at?: string | null;
   expires_at?: string | null;
   created_at: string;
@@ -192,6 +197,8 @@ export function announcementFromJson(raw: Record<string, unknown>): Announcement
       (r.audience_label as string | null | undefined) ?? null,
     is_pinned: Boolean(r.is_pinned ?? r.pinned),
     scheduled_at: (r.scheduled_at as string | null | undefined) ?? null,
+    event_at: (r.event_at as string | null | undefined) ?? null,
+    event_location: (r.event_location as string | null | undefined) ?? null,
     published_at: (r.published_at as string | null | undefined) ?? null,
     expires_at: (r.expires_at as string | null | undefined) ?? null,
     created_at: String(r.created_at ?? r.tanggal ?? ''),
