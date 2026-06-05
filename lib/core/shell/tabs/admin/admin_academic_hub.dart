@@ -18,7 +18,7 @@ import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_dashboard_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/admin_class_activity_screen.dart';
-import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_overview_screen.dart';
+import 'package:manajemensekolah/features/grades/presentation/screens/admin_grade_recap_overview_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_rpp_review_hub_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_raport_hub_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/admin_schedule_management_screen.dart';
@@ -79,9 +79,13 @@ class AdminAcademicHub extends StatelessWidget {
                     subtitle: 'Ringkasan nilai per kelas & mapel',
                     icon: DashboardModules.rekapNilai.icon,
                     color: DashboardModules.rekapNilai.color,
+                    // The "Rekap Nilai" tile must open the Rekap Nilai
+                    // (grade recap) screen — it previously opened
+                    // AdminGradeOverviewScreen ("Buku Nilai"), a different
+                    // screen, so the label and destination disagreed.
                     onTap: () => AppNavigator.push(
                       context,
-                      const AdminGradeOverviewScreen(),
+                      const AdminGradeRecapOverviewScreen(),
                     ),
                   ),
                 ),
