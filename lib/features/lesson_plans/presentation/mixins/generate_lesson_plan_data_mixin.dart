@@ -10,8 +10,10 @@ mixin GenerateLessonPlanDataMixin
   Future<void> loadSubjectsByTeacher() async {
     try {
       final apiService = ApiService();
+      // scope=teaching drops the wali-kelas homeroom-class curriculum so the
+      // AI-generate RPP picker only lists subjects this teacher teaches.
       final result = await apiService.get(
-        '/guru/${widget.teacherId}/mata-pelajaran',
+        '/guru/${widget.teacherId}/mata-pelajaran?scope=teaching',
       );
       setState(() {
         if (result is Map && result['data'] is List) {
