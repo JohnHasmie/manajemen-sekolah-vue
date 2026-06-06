@@ -125,7 +125,7 @@ async function loadReferences() {
     const [c, s] = await Promise.all([
       ClassroomService.list({ per_page: 100 }),
       teacherId
-        ? SubjectService.listForTeacher(teacherId)
+        ? SubjectService.listForTeacher(teacherId, 'teaching')
         : SubjectService.list({ per_page: 100 }).then((r) => r.items),
     ]);
     classes.value = c.items;

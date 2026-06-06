@@ -16,13 +16,18 @@ mixin LessonPlanFormDataMixin on ConsumerState<LessonPlanFormDialog> {
   List<dynamic> get subjectList => _subjectList;
   List<dynamic> get classList => _classList;
 
-  /// Loads subjects assigned to this teacher.
+  /// Loads subjects this teacher actually teaches.
   /// Falls back to all subjects if API fails.
+  ///
+  /// `scope=teaching` drops the wali-kelas homeroom-class curriculum — a
+  /// homeroom teacher would otherwise inherit every subject offered in their
+  /// class, so the RPP mapel dropdown listed all subjects instead of just the
+  /// ones they teach. Same param the schedule/jadwal form already uses.
   Future<void> loadSubjectsByTeacher() async {
     try {
       final apiService = ApiService();
       final result = await apiService.get(
-        '/guru/${widget.teacherId}/mata-pelajaran',
+        '/guru/${widget.teacherId}/mata-pelajaran?scope=teaching',
       );
       setState(() {
         if (result is Map && result['data'] is List) {
