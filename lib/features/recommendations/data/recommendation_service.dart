@@ -309,6 +309,68 @@ class ApiRecommendationService {
     return response.data as Map<String, dynamic>;
   }
 
+  /// Kirim Semua ke Wali — fan out *every* not-yet-shared recommendation
+  /// of a teacher to each student's wali in one batch request.
+  ///
+  /// Backend contract (POST /recommendations/share-all): selection is
+  /// `teacher_id` + (status != dismissed) + (shared_with_parent_at IS
+  /// NULL), optionally scoped to one [classId]. We send NO `parents[]` —
+  /// the backend resolves each recommendation's wali itself from the
+  /// student's `guardian_*` fields (promoting `guardian_email` to a
+  /// `parent_user_id` when a matching User exists). One [message] /
+  /// [tone] is applied as a cover to every rec.
+  ///
+  /// Like a Laravel controller that loops the matching rows and dispatches
+  /// the same notification to each, returning a per-row tally instead of
+  /// the caller firing one HTTP request per recommendation.
+  ///
+  /// Returns the raw summary map:
+  /// ```
+  /// {
+  ///   success, total, sent, failed, skipped_no_wali,
+  ///   results: [ { recommendation_id, student_name, status, error? } ]
+  /// }
+  /// ```
+  /// `status` is one of `sent` / `failed` / `skipped`. Throws on a
+  /// validation (422) / authorization (403) failure so the caller can
+  /// surface the message — the per-rec failures inside the batch are
+  /// reported via `failed` / `skipped_no_wali`, not by throwing.
+  Future<Map<String, dynamic>> shareAllRecommendations({
+    required String teacherId,
+    String? classId,
+    String? message,
+    String? tone,
+    bool channelPush = true,
+    bool channelWhatsapp = false,
+  }) async {
+    final response = await _aiDio.post(
+      '/recommendations/share-all',
+      data: {
+        'teacher_id': teacherId,
+        if (classId != null && classId.isNotEmpty) 'class_id': classId,
+        if (message != null && message.isNotEmpty) 'message': message,
+        if (tone != null) 'tone': tone,
+        'channels': {'push': channelPush, 'whatsapp': channelWhatsapp},
+      },
+      // Accept 4xx without throwing so we can read the backend message;
+      // 5xx still throws and is logged by the Dio interceptor stack.
+      options: Options(validateStatus: (s) => s != null && s < 500),
+    );
+
+    AppLogger.debug(
+      'recommendation',
+      'Share-all recs: ${response.statusCode} - ${response.data}',
+    );
+
+    if (response.statusCode == 403 || response.statusCode == 422) {
+      throw Exception(
+        response.data?['message']?.toString() ??
+            'Gagal mengirim rekomendasi ke wali.',
+      );
+    }
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
   /// Riwayat Pengiriman — per-recipient timeline with sent/read/replied stamps.
   Future<Map<String, dynamic>> getShareStatus(String recommendationId) async {
     final response = await _aiDio.get(
@@ -652,6 +714,74 @@ class ApiRecommendationService {
     } catch (e) {
       AppLogger.error('recommendation', 'getStudentStatusCounts error: $e');
       return {};
+    }
+  }
+
+  /// Count how many of a teacher's recommendations are still shareable
+  /// AND not-yet-sent — i.e. the exact set the "Kirim semua ke wali"
+  /// batch endpoint would target.
+  ///
+  /// Mirrors the backend selection criteria for POST
+  /// `/recommendations/share-all`: `status != 'dismissed'` AND
+  /// `shared_with_parent_at IS NULL`, optionally scoped to one
+  /// [classId]. The student-list screen uses this to hide / disable the
+  /// bulk-share button when there is nothing left to send.
+  ///
+  /// Returns 0 on any error so a transient failure never blocks the
+  /// screen — the button simply stays hidden until the next refresh.
+  Future<int> getUnsharedRecommendationCount({
+    required String classId,
+    String? teacherId,
+    String? homeroomClassId,
+    String? academicYearId,
+  }) async {
+    try {
+      var unshared = 0;
+      var page = 1;
+      const perPage = 50;
+
+      // Walk every page (backend caps per_page at 50) and tally the
+      // recs that are both shareable (not dismissed) and not yet sent.
+      while (true) {
+        final result = await getRecommendations(
+          classId: classId,
+          teacherId: teacherId,
+          homeroomClassId: homeroomClassId,
+          academicYearId: academicYearId,
+          perPage: perPage,
+          page: page,
+        );
+
+        final data = result['data'] as List? ?? const [];
+        for (final rec in data) {
+          final status = rec['status']?.toString().toLowerCase() ?? 'pending';
+          if (status == 'dismissed') continue;
+          // A rec with a null share timestamp (or zero recipients) has
+          // not reached any wali yet — the card's own "BELUM DIKIRIM"
+          // gate uses the same fields.
+          final sharedAt = rec['shared_with_parent_at'];
+          final recipientCount =
+              (rec['share_recipient_count'] as num?)?.toInt() ?? 0;
+          final alreadyShared = sharedAt != null && recipientCount > 0;
+          if (!alreadyShared) unshared++;
+        }
+
+        final meta = result['meta'] as Map?;
+        final lastPage = meta?['last_page'] ?? 1;
+        final last = lastPage is int
+            ? lastPage
+            : int.tryParse(lastPage.toString()) ?? 1;
+        if (page >= last) break;
+        page++;
+      }
+
+      return unshared;
+    } catch (e) {
+      AppLogger.error(
+        'recommendation',
+        'getUnsharedRecommendationCount error: $e',
+      );
+      return 0;
     }
   }
 

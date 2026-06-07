@@ -24,6 +24,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_error_state.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
@@ -89,6 +90,21 @@ class _LearningRecommendationStudentScreenState
   /// Per-student counts: { studentId: { total, pending, completed } }.
   Map<String, Map<String, int>> _statusCounts = {};
   bool _isLoadingStatus = false;
+
+  /// How many of *this teacher's* recs are shareable but not yet sent to
+  /// any wali — i.e. the exact set the "Kirim semua ke wali" batch
+  /// endpoint would target. Drives the header send button's visibility:
+  /// 0 means there is nothing to send, so the button stays hidden.
+  ///
+  /// Always scoped to the current teacher (never the cross-teacher
+  /// homeroom scope) because the batch endpoint resolves on
+  /// `teacher_id`; counting cross-teacher recs here would over-promise
+  /// what the button can actually send.
+  int _unsharedCount = 0;
+
+  /// True while the bulk-share request is in flight, so we can swap the
+  /// header button for a spinner and ignore re-taps.
+  bool _isSharingAll = false;
 
   /// 'all' / 'has_recs' / 'has_pending' / 'all_completed'.
   String _statusFilter = 'all';
@@ -200,16 +216,27 @@ class _LearningRecommendationStudentScreenState
           .read(academicYearRiverpod)
           .selectedAcademicYear?['id']
           ?.toString();
-      final counts = await getIt<ApiRecommendationService>()
-          .getStudentStatusCounts(
-            classId: classId,
-            teacherId: widget.isHomeroomView ? null : teacherId,
-            homeroomClassId: widget.isHomeroomView ? classId : null,
-            academicYearId: ayId,
-          );
+      final service = getIt<ApiRecommendationService>();
+      // Fire both reads together — the per-student counts (which honour
+      // the homeroom cross-teacher scope) and the bulk-share eligible
+      // count (always teacher-scoped, mirroring the batch endpoint).
+      final results = await Future.wait([
+        service.getStudentStatusCounts(
+          classId: classId,
+          teacherId: widget.isHomeroomView ? null : teacherId,
+          homeroomClassId: widget.isHomeroomView ? classId : null,
+          academicYearId: ayId,
+        ),
+        service.getUnsharedRecommendationCount(
+          classId: classId,
+          teacherId: teacherId,
+          academicYearId: ayId,
+        ),
+      ]);
       if (mounted) {
         setState(() {
-          _statusCounts = counts;
+          _statusCounts = results[0] as Map<String, Map<String, int>>;
+          _unsharedCount = results[1] as int;
           _isLoadingStatus = false;
         });
       }
@@ -221,6 +248,124 @@ class _LearningRecommendationStudentScreenState
 
   Future<void> _refreshAll() async {
     await Future.wait([forceRefresh(), _loadStatusCounts()]);
+  }
+
+  // ── Kirim semua ke wali (bulk share) ─────────────────────────────
+
+  /// Header action row. We surface a single "Kirim semua ke wali" send
+  /// button — but only when there is actually something to send
+  /// (`_unsharedCount > 0`). When the batch is in flight the icon is
+  /// swapped for a spinner so the teacher gets immediate feedback and
+  /// can't double-fire the request.
+  ///
+  /// Returns an empty list (no actions) when nothing is unsent, which is
+  /// how the button "hides" — `BrandPageHeader` just renders an empty
+  /// action column.
+  List<Widget> _buildHeaderActions() {
+    if (_unsharedCount <= 0 && !_isSharingAll) return const [];
+    if (_isSharingAll) {
+      // In-flight: a small white spinner sitting where the button was.
+      return const [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 6),
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+        ),
+      ];
+    }
+    return [
+      BrandHeaderIconButton(
+        icon: Icons.forward_to_inbox_rounded,
+        onTap: _confirmAndShareAll,
+        // Badge the button with the number of recs that will go out, so
+        // the teacher knows the scope before tapping.
+        badgeCount: _unsharedCount,
+      ),
+    ];
+  }
+
+  /// Confirm, then fan every not-yet-sent recommendation out to each
+  /// student's wali in one batch call. Shows a confirmation dialog
+  /// first (the action is bulk + irreversible), then a progress
+  /// spinner in the header while in flight, and finally a summary
+  /// snackbar ("X terkirim, Y gagal, Z dilewati"). Refreshes the list
+  /// afterwards so the unsent count + status pills are current.
+  Future<void> _confirmAndShareAll() async {
+    if (_isSharingAll) return;
+    if (_unsharedCount <= 0) {
+      SnackBarUtils.showInfo(
+        context,
+        'Tidak ada rekomendasi yang perlu dikirim.',
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Kirim semua ke wali?'),
+        content: Text(
+          'Kirim $_unsharedCount rekomendasi yang belum dikirim ke wali '
+          'masing-masing siswa sekaligus?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Kirim'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isSharingAll = true);
+    try {
+      final teacherId = widget.teacher['id'] ?? '';
+      final classId = widget.classData['id']?.toString() ?? '';
+      final summary = await getIt<ApiRecommendationService>()
+          .shareAllRecommendations(
+            teacherId: teacherId,
+            classId: classId.isEmpty ? null : classId,
+          );
+
+      if (!mounted) return;
+      final sent = (summary['sent'] as num?)?.toInt() ?? 0;
+      final failed = (summary['failed'] as num?)?.toInt() ?? 0;
+      // Backend reports skipped-no-wali separately; surface it as the
+      // "dilewati" tally so the teacher knows why the totals don't add
+      // up to the original count.
+      final skipped = (summary['skipped_no_wali'] as num?)?.toInt() ?? 0;
+
+      // Refresh first so the unsent count + status pills reflect the
+      // batch result, then report the tally.
+      await _loadStatusCounts();
+      if (!mounted) return;
+
+      setState(() => _statusChanged = true);
+
+      final message = '$sent terkirim, $failed gagal, $skipped dilewati';
+      if (failed > 0) {
+        SnackBarUtils.showWarning(context, message);
+      } else {
+        SnackBarUtils.showSuccess(context, message);
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackBarUtils.showError(context, 'Gagal mengirim: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) setState(() => _isSharingAll = false);
+    }
   }
 
   // ── Build ────────────────────────────────────────────────────────
@@ -248,6 +393,7 @@ class _LearningRecommendationStudentScreenState
                   kpiOverlayHeight: 45,
                   onBackPressed: () =>
                       AppNavigator.pop(context, _statusChanged),
+                  actionIcons: _buildHeaderActions(),
                 ),
                 Positioned(
                   left: 16,
