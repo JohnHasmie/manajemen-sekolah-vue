@@ -25,13 +25,20 @@
 import { api } from '@/lib/http';
 import type {
   TeacherAttendanceAdminFilters,
+  TeacherAttendanceAdminSummary,
+  TeacherAttendanceAdminSummaryFilters,
   TeacherAttendanceConfig,
   TeacherAttendanceHistoryFilters,
   TeacherAttendanceListResult,
+  TeacherAttendanceOwnSummary,
+  TeacherAttendanceOwnSummaryTotals,
   TeacherAttendancePageMeta,
   TeacherAttendanceRecord,
   TeacherAttendanceSettings,
   TeacherAttendanceSubmission,
+  TeacherAttendanceSummaryFilters,
+  TeacherAttendanceSummaryRow,
+  TeacherAttendanceSummaryTotals,
 } from '@/types/teacher-attendance';
 
 const Endpoints = {
@@ -39,8 +46,10 @@ const Endpoints = {
   checkIn: '/teacher-attendance/check-in',
   checkOut: '/teacher-attendance/check-out',
   history: '/teacher-attendance/history',
+  historySummary: '/teacher-attendance/history/summary',
   settings: '/teacher-attendance/settings',
   admin: '/teacher-attendance/admin',
+  adminSummary: '/teacher-attendance/admin/summary',
 } as const;
 
 /**
@@ -91,6 +100,49 @@ function asNumOrNull(v: unknown): number | null {
 function asInt(v: unknown, fallback: number): number {
   const n = Number(v);
   return Number.isFinite(n) ? Math.round(n) : fallback;
+}
+
+/** Coerce to a finite float with a fallback (for percentages). */
+function asFloat(v: unknown, fallback: number): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+/** Coerce to a non-empty string or null (employee_number may be null). */
+function asStrOrNull(v: unknown): string | null {
+  if (v === null || v === undefined) return null;
+  const s = String(v).trim();
+  return s === '' ? null : s;
+}
+
+/**
+ * Read the authoritative ordered status-column list from a summary
+ * `meta.statuses`. Defaults to the two always-present columns when the
+ * server omits or mangles it, so the UI never renders a column-less
+ * rekap.
+ */
+function statusKeysFromMeta(meta: unknown): string[] {
+  const raw = (meta as { statuses?: unknown })?.statuses;
+  if (Array.isArray(raw)) {
+    const keys = raw.map((s) => String(s)).filter((s) => s !== '');
+    if (keys.length > 0) return keys;
+  }
+  return ['present', 'late'];
+}
+
+/**
+ * Pull the per-status int counts out of a raw row/totals object using
+ * the authoritative `statuses` list. Any column the server omitted for
+ * a given row reads as 0 (a teacher with no `late` records still gets a
+ * `late: 0` cell).
+ */
+function statusCountsFromJson(
+  raw: Record<string, unknown>,
+  statuses: string[],
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const key of statuses) out[key] = asInt(raw[key], 0);
+  return out;
 }
 
 /** Normalize a raw settings object (handles 0/1 + missing keys). */
@@ -329,6 +381,99 @@ export const TeacherAttendanceService = {
       return listFromJson(res.data);
     } catch (e) {
       throw new Error(humanError(e, 'Gagal memuat laporan presensi guru.'));
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/admin/summary — per-TEACHER rekap over a
+   * date range. Status columns are dynamic: read `meta.statuses` for
+   * the ordered column list, then index each row by status key.
+   * `teacher_id` accepts a Teacher ID OR a User ID; the server resolves
+   * it within the active school. Date bounds default to start-of-month
+   * → today server-side when omitted.
+   */
+  async adminSummary(
+    filters: TeacherAttendanceAdminSummaryFilters = {},
+  ): Promise<TeacherAttendanceAdminSummary> {
+    try {
+      const params: Record<string, unknown> = {};
+      if (filters.start_date) params.start_date = filters.start_date;
+      if (filters.end_date) params.end_date = filters.end_date;
+      if (filters.teacher_id) params.teacher_id = filters.teacher_id;
+      const res = await api.get(Endpoints.adminSummary, { params });
+      const body = (res.data ?? {}) as {
+        meta?: Record<string, unknown>;
+        data?: Record<string, unknown>[];
+        totals?: Record<string, unknown>;
+      };
+      const statuses = statusKeysFromMeta(body.meta);
+      const rawRows = Array.isArray(body.data) ? body.data : [];
+      const data: TeacherAttendanceSummaryRow[] = rawRows.map((r) => ({
+        ...statusCountsFromJson(r, statuses),
+        teacher_id: String(r.teacher_id ?? ''),
+        teacher_name: String(r.teacher_name ?? '-'),
+        employee_number: asStrOrNull(r.employee_number),
+        total: asInt(r.total, 0),
+        present_pct: asFloat(r.present_pct, 0),
+      }));
+      const rawTotals = (body.totals ?? {}) as Record<string, unknown>;
+      const totals: TeacherAttendanceSummaryTotals = {
+        ...statusCountsFromJson(rawTotals, statuses),
+        total: asInt(rawTotals.total, 0),
+        present_pct: asFloat(rawTotals.present_pct, 0),
+        teacher_count: asInt(rawTotals.teacher_count, data.length),
+      };
+      return {
+        meta: {
+          start_date: String(body.meta?.start_date ?? ''),
+          end_date: String(body.meta?.end_date ?? ''),
+          statuses,
+        },
+        data,
+        totals,
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat rekap presensi guru.'));
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/history/summary — the AUTHENTICATED
+   * teacher's OWN totals over a date range (Hadir · Telat · % Kehadiran
+   * for the period header). Status columns are dynamic — read
+   * `meta.statuses`. Same date defaults as the admin summary.
+   */
+  async historySummary(
+    filters: TeacherAttendanceSummaryFilters = {},
+  ): Promise<TeacherAttendanceOwnSummary> {
+    try {
+      const params: Record<string, unknown> = {};
+      if (filters.start_date) params.start_date = filters.start_date;
+      if (filters.end_date) params.end_date = filters.end_date;
+      const res = await api.get(Endpoints.historySummary, { params });
+      const body = (res.data ?? {}) as {
+        meta?: Record<string, unknown>;
+        summary?: Record<string, unknown>;
+      };
+      const statuses = statusKeysFromMeta(body.meta);
+      const rawSummary = (body.summary ?? {}) as Record<string, unknown>;
+      const summary: TeacherAttendanceOwnSummaryTotals = {
+        ...statusCountsFromJson(rawSummary, statuses),
+        total: asInt(rawSummary.total, 0),
+        present_pct: asFloat(rawSummary.present_pct, 0),
+      };
+      return {
+        meta: {
+          teacher_id: String(body.meta?.teacher_id ?? ''),
+          teacher_name: String(body.meta?.teacher_name ?? '-'),
+          start_date: String(body.meta?.start_date ?? ''),
+          end_date: String(body.meta?.end_date ?? ''),
+          statuses,
+        },
+        summary,
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat ringkasan presensi.'));
     }
   },
 };
