@@ -307,6 +307,22 @@ export const useAuthStore = defineStore('auth', {
       storage.set(StorageKeys.user, user);
       if (this.schoolId) storage.set(StorageKeys.schoolId, this.schoolId);
       if (this.role) storage.set(StorageKeys.role, this.role);
+
+      // Cross-device language hydration: when the backend returns a
+      // saved `preferred_language` on the user payload, adopt it so
+      // a user who picked English on their phone gets English on
+      // every other device too. `hydrateFromUser` is a no-op when
+      // the value is null/unsupported/already-active and crucially
+      // does NOT echo a PATCH back, so there's no infinite-update
+      // loop. Dynamic-imported to avoid a load-order cycle (auth
+      // store ↔ preferences store ↔ settings service ↔ http ↔ auth).
+      if (user.preferred_language) {
+        import('./preferences')
+          .then((m) => m.usePreferencesStore().hydrateFromUser(user.preferred_language))
+          .catch(() => {
+            // non-fatal — i18n stays on whatever the local prefs say
+          });
+      }
     },
 
     reset() {
@@ -346,6 +362,19 @@ export const useAuthStore = defineStore('auth', {
         this.schoolId = schoolId;
         this.role = role ?? user.role;
         this.step = 'done';
+
+        // Re-apply the persisted server-side language preference on
+        // reload, same hydration path as `_completeLogin`. The login
+        // payload had it; we cached the whole user object in
+        // localStorage, so it's still here. Dynamic import to dodge
+        // the auth↔prefs circular.
+        if (user.preferred_language) {
+          import('./preferences')
+            .then((m) => m.usePreferencesStore().hydrateFromUser(user.preferred_language))
+            .catch(() => {
+              // non-fatal
+            });
+        }
       }
     },
 
