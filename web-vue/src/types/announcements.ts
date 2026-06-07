@@ -68,6 +68,9 @@ export interface Announcement {
   audience?: AnnouncementAudience;
   /** Target ids (class_id list when audience='class', etc.). */
   target_ids?: string[];
+  /** Mobile-parity audience matrix: { guru, wali_kelas, wali_murid } → each
+   *  a list of 'all' | tingkat | class-id. Drives recipient resolution. */
+  audience_matrix?: Record<string, (string | number)[]>;
   /** Canonical column: `announcements.role_target`. */
   role_target?: string;
   /**

@@ -113,6 +113,20 @@ const isSaving = ref(false);
 const previewReach = ref<number | null>(null);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
+// Audience matrix (mobile parity): roles guru / wali_kelas / wali_murid, each
+// targeting 'all' or specific class ids — replaces the old single dropdown.
+type MatrixRole = 'guru' | 'wali_kelas' | 'wali_murid';
+const MATRIX_ROLES: { key: MatrixRole; label: string; perClass: boolean }[] = [
+  { key: 'guru', label: 'Guru', perClass: false },
+  { key: 'wali_kelas', label: 'Wali Kelas', perClass: true },
+  { key: 'wali_murid', label: 'Wali Murid', perClass: true },
+];
+const emptyMatrix = (): Record<MatrixRole, string[]> => ({
+  guru: [],
+  wali_kelas: [],
+  wali_murid: [],
+});
+
 const form = reactive({
   title: '',
   body: '',
@@ -121,6 +135,11 @@ const form = reactive({
   priority: 'normal' as AnnouncementPriority,
   audience: 'all' as AnnouncementAudience,
   target_ids: [] as string[],
+  // Mobile-parity audience matrix. Each role holds 'all' or specific class ids.
+  audienceMatrix: { guru: [], wali_kelas: [], wali_murid: [] } as Record<
+    MatrixRole,
+    (string)[]
+  >,
   scheduled_at: '' as string,
   event_at: '' as string,
   event_location: '' as string,
@@ -258,6 +277,7 @@ function resetForm() {
   form.priority = 'normal';
   form.audience = 'all';
   form.target_ids = [];
+  form.audienceMatrix = emptyMatrix();
   form.scheduled_at = '';
   form.event_at = '';
   form.event_location = '';
@@ -281,6 +301,16 @@ function openEdit(a: Announcement) {
   form.priority = a.priority ?? 'normal';
   form.audience = a.audience ?? 'all';
   form.target_ids = a.target_ids ? [...a.target_ids] : [];
+  // Rehydrate the audience matrix from the stored value, normalising each
+  // cell to string[] (the API may send numbers/ints for tingkat/class).
+  const m = (a.audience_matrix ?? {}) as Record<string, unknown>;
+  const cell = (k: string): string[] =>
+    Array.isArray(m[k]) ? (m[k] as unknown[]).map((v) => String(v)) : [];
+  form.audienceMatrix = {
+    guru: cell('guru'),
+    wali_kelas: cell('wali_kelas'),
+    wali_murid: cell('wali_murid'),
+  };
   form.scheduled_at = a.scheduled_at ?? '';
   // Trim to the `datetime-local` shape (YYYY-MM-DDTHH:mm) so an ISO value
   // from the API still populates the picker on edit.
@@ -291,20 +321,35 @@ function openEdit(a: Announcement) {
   refreshPreviewReach();
 }
 
-function toggleClassTarget(id: string) {
-  const idx = form.target_ids.indexOf(id);
-  if (idx >= 0) form.target_ids.splice(idx, 1);
-  else form.target_ids.push(id);
+// ── Audience matrix helpers ──
+function cellHasAll(role: MatrixRole): boolean {
+  return form.audienceMatrix[role].includes('all');
+}
+function cellHasClass(role: MatrixRole, id: string): boolean {
+  return form.audienceMatrix[role].includes(id);
+}
+function toggleAll(role: MatrixRole) {
+  form.audienceMatrix[role] = cellHasAll(role) ? [] : ['all'];
   refreshPreviewReach();
 }
+function toggleClass(role: MatrixRole, id: string) {
+  const cell = form.audienceMatrix[role].filter((v) => v !== 'all');
+  const i = cell.indexOf(id);
+  if (i >= 0) cell.splice(i, 1);
+  else cell.push(id);
+  form.audienceMatrix[role] = cell;
+  refreshPreviewReach();
+}
+const hasAudience = computed(() =>
+  MATRIX_ROLES.some((r) => form.audienceMatrix[r.key].length > 0),
+);
 
 let reachTimer: ReturnType<typeof setTimeout> | null = null;
 function refreshPreviewReach() {
   if (reachTimer) clearTimeout(reachTimer);
   reachTimer = setTimeout(async () => {
     const res = await AnnouncementService.previewReach({
-      audience: form.audience,
-      target_ids: form.audience === 'all' ? [] : form.target_ids,
+      audience_matrix: form.audienceMatrix,
     });
     previewReach.value = res.reach;
   }, 250);
@@ -315,11 +360,8 @@ async function publish() {
     toast.value = { message: 'Judul dan isi wajib diisi.', tone: 'error' };
     return;
   }
-  if (form.audience === 'class' && form.target_ids.length === 0) {
-    toast.value = {
-      message: 'Pilih minimal satu kelas tujuan.',
-      tone: 'error',
-    };
+  if (!hasAudience.value) {
+    toast.value = { message: 'Pilih minimal 1 audiens.', tone: 'error' };
     return;
   }
   isSaving.value = true;
@@ -329,8 +371,7 @@ async function publish() {
       body: form.body.trim(),
       category: form.category,
       priority: form.priority,
-      audience: form.audience,
-      target_ids: form.audience === 'all' ? [] : form.target_ids,
+      audience_matrix: form.audienceMatrix,
       is_pinned: form.is_pinned,
       scheduled_at: form.scheduled_at || null,
       event_at: form.event_at || null,
@@ -638,16 +679,56 @@ function pickAudience(k: AudienceFilter) {
 
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-1">Audiens</label>
-          <SegmentedControl
-            :model-value="form.audience"
-            :options="[
-              { key: 'all', label: 'Semua' },
-              { key: 'role', label: 'Per peran' },
-              { key: 'class', label: 'Per kelas' },
-            ]"
-            size="sm"
-            @update:model-value="(v) => { form.audience = v as AnnouncementAudience; refreshPreviewReach(); }"
-          />
+          <p class="text-[11px] text-slate-500 mb-2">
+            Pilih minimal 1 audiens — per peran (sama seperti di aplikasi). Guru
+            mencakup seluruh sekolah; Wali Kelas / Wali Murid bisa "Semua kelas"
+            atau pilih kelas tertentu.
+          </p>
+          <div class="space-y-3 border border-slate-200 rounded-xl p-3">
+            <div
+              v-for="role in MATRIX_ROLES"
+              :key="role.key"
+              class="border-b border-slate-100 last:border-0 pb-3 last:pb-0"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-sm font-semibold text-slate-700">{{ role.label }}</span>
+                <button
+                  type="button"
+                  class="text-[11px] font-bold px-2.5 py-1 rounded-full border"
+                  :class="
+                    cellHasAll(role.key)
+                      ? 'bg-role-admin text-white border-role-admin'
+                      : 'bg-white text-slate-600 border-slate-200'
+                  "
+                  @click="toggleAll(role.key)"
+                >
+                  {{ role.perClass ? 'Semua kelas' : 'Semua guru' }}
+                </button>
+              </div>
+              <div
+                v-if="role.perClass && !cellHasAll(role.key)"
+                class="flex flex-wrap gap-2 max-h-28 overflow-y-auto mt-2"
+              >
+                <button
+                  v-for="c in classes"
+                  :key="c.id"
+                  type="button"
+                  class="text-[11px] font-bold px-2.5 py-1 rounded-full border"
+                  :class="
+                    cellHasClass(role.key, c.id)
+                      ? 'bg-role-admin text-white border-role-admin'
+                      : 'bg-white text-slate-600 border-slate-200'
+                  "
+                  @click="toggleClass(role.key, c.id)"
+                >
+                  {{ c.name }}
+                </button>
+                <span v-if="classes.length === 0" class="text-[11px] text-slate-400">
+                  Belum ada kelas.
+                </span>
+              </div>
+            </div>
+          </div>
           <p
             v-if="previewReach !== null"
             class="text-[11px] text-slate-500 mt-2 inline-flex items-center gap-1.5"
@@ -655,28 +736,6 @@ function pickAudience(k: AudienceFilter) {
             <NavIcon name="users" :size="12" />
             Perkiraan jangkauan: <b class="text-slate-900">{{ previewReach }}</b> penerima
           </p>
-        </div>
-
-        <div v-if="form.audience === 'class'">
-          <label class="block text-sm font-medium text-slate-700 mb-1">
-            Pilih kelas ({{ form.target_ids.length }} dipilih)
-          </label>
-          <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border border-slate-200 rounded-lg">
-            <button
-              v-for="c in classes"
-              :key="c.id"
-              type="button"
-              class="text-[11px] font-bold px-2.5 py-1 rounded-full border"
-              :class="
-                form.target_ids.includes(c.id)
-                  ? 'bg-role-admin text-white border-role-admin'
-                  : 'bg-white text-slate-600 border-slate-200'
-              "
-              @click="toggleClassTarget(c.id)"
-            >
-              {{ c.name }}
-            </button>
-          </div>
         </div>
 
         <div>

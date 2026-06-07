@@ -144,9 +144,12 @@ export const AnnouncementService = {
     priority?: AnnouncementPriority;
     /** Lifecycle status — draft/scheduled/published. */
     status?: AnnouncementStatus;
-    audience: AnnouncementAudience;
+    audience?: AnnouncementAudience;
     role_target?: string;
     target_ids?: string[];
+    /** Mobile-parity audience matrix: { guru, wali_kelas, wali_murid } → each
+     *  'all' | tingkat | class-id. When present the backend uses this. */
+    audience_matrix?: Record<string, (string | number)[]>;
     is_pinned?: boolean;
     scheduled_at?: string | null;
     event_at?: string | null;
@@ -202,8 +205,9 @@ export const AnnouncementService = {
    * on error so the chip just renders "—".
    */
   async previewReach(payload: {
-    audience: AnnouncementAudience;
+    audience?: AnnouncementAudience;
     target_ids?: string[];
+    audience_matrix?: Record<string, (string | number)[]>;
   }): Promise<{ reach: number; breakdown?: Record<string, number> }> {
     try {
       const res = await api.post('/announcement/preview-reach', payload);
