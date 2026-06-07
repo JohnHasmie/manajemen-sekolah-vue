@@ -612,7 +612,7 @@ function topMeta(s: Student): string {
 
     <template #bulk-actions>
       <Button variant="danger" size="sm" @click="bulkDeleteOpen = true">
-        {{ t('common.delete') }} ({{ selectedIds.size }})
+        {{ t('admin.student.bulkDeleteAction', { count: selectedIds.size }) }}
       </Button>
     </template>
   </AdminCrudScaffold>
@@ -739,7 +739,7 @@ function topMeta(s: Student): string {
 
   <ConfirmationDialog
     v-if="deleteTarget"
-    :title="t('admin.student.deleteConfirm').replace('{{deleteTarget.name}}', deleteTarget.name)"
+    :title="t('admin.student.deleteConfirm', { name: deleteTarget.name })"
     :message="t('admin.student.deleteWarning')"
     :confirm-label="t('common.delete')"
     danger
