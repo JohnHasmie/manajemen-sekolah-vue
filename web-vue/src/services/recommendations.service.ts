@@ -46,6 +46,8 @@ import {
   type RecommendationStatus,
   type RecommendationStudent,
   type RecTone,
+  type ShareAllResult,
+  type ShareAllResultRow,
   type StudentStatusCounts,
 } from '@/types/recommendations';
 
@@ -80,13 +82,9 @@ export class RateLimitError extends Error {
     super(message);
     this.name = 'RateLimitError';
     this.dailyLimit =
-      payload?.daily_limit !== undefined
-        ? num(payload.daily_limit)
-        : undefined;
+      payload?.daily_limit !== undefined ? num(payload.daily_limit) : undefined;
     this.dailyUsage =
-      payload?.daily_usage !== undefined
-        ? num(payload.daily_usage)
-        : undefined;
+      payload?.daily_usage !== undefined ? num(payload.daily_usage) : undefined;
     this.retryAfterSeconds =
       payload?.retry_after_seconds !== undefined
         ? num(payload.retry_after_seconds)
@@ -180,7 +178,9 @@ function shareRecipientFromJson(raw: AnyRecord): RecShareRecipient {
   };
 }
 
-function shareSummaryFromJson(raw: AnyRecord | undefined): RecShareSummary | undefined {
+function shareSummaryFromJson(
+  raw: AnyRecord | undefined,
+): RecShareSummary | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
   return {
     recipient_count: num(raw.recipient_count),
@@ -332,7 +332,10 @@ interface GenerateClassPayload {
   academic_year_id?: string;
 }
 
-interface GenerateStudentPayload extends Omit<GenerateClassPayload, 'include_on_track'> {
+interface GenerateStudentPayload extends Omit<
+  GenerateClassPayload,
+  'include_on_track'
+> {
   student_id: string;
 }
 
@@ -353,7 +356,9 @@ export const RecommendationService = {
     try {
       const res = await aiApi.get('/recommendations', {
         params: {
-          ...(params.scope && params.scope !== 'all' ? { scope: params.scope } : {}),
+          ...(params.scope && params.scope !== 'all'
+            ? { scope: params.scope }
+            : {}),
           ...(params.class_id ? { class_id: params.class_id } : {}),
           ...(params.subject_id ? { subject_id: params.subject_id } : {}),
         },
@@ -429,9 +434,11 @@ export const RecommendationService = {
   // ── Per-rec (Flutter parity) surface ────────────────────────────
 
   /** List per-student recs paginated, with Flutter-shaped filters. */
-  async listLearningRecs(
-    params: LearningRecListParams = {},
-  ): Promise<{ items: LearningRecommendation[]; total: number; last_page: number }> {
+  async listLearningRecs(params: LearningRecListParams = {}): Promise<{
+    items: LearningRecommendation[];
+    total: number;
+    last_page: number;
+  }> {
     try {
       const res = await aiApi.get('/recommendations', {
         params: {
@@ -571,6 +578,104 @@ export const RecommendationService = {
     });
     const body = res.data?.data ?? res.data ?? null;
     return body ? learningRecFromJson(body) : null;
+  },
+
+  /**
+   * POST /recommendations/share-all — Kirim semua ke wali.
+   *
+   * Bulk-shares every shareable, not-yet-shared rec (status != dismissed
+   * AND shared_with_parent_at IS NULL) for `teacher_id`, optionally scoped
+   * to one `class_id`. Unlike `shareRecommendation`, the client sends NO
+   * `parents[]` — the backend resolves each rec's wali from the student's
+   * guardian_* fields itself. Returns a tally + per-rec breakdown so the
+   * caller can show a "X terkirim, Y gagal, Z dilewati" summary.
+   *
+   * One cover `message` / `tone` is applied to every rec.
+   */
+  async shareAllToParents(args: {
+    teacher_id: string;
+    class_id?: string;
+    message?: string;
+    tone?: RecTone | string;
+    channel_push?: boolean;
+    channel_whatsapp?: boolean;
+  }): Promise<ShareAllResult> {
+    const res = await aiApi.post('/recommendations/share-all', {
+      teacher_id: args.teacher_id,
+      ...(args.class_id ? { class_id: args.class_id } : {}),
+      ...(args.message ? { message: args.message } : {}),
+      ...(args.tone ? { tone: args.tone } : {}),
+      channels: {
+        push: args.channel_push ?? true,
+        whatsapp: args.channel_whatsapp ?? false,
+      },
+    });
+    const body = (res.data ?? {}) as AnyRecord;
+    const rowsRaw = Array.isArray(body.results)
+      ? (body.results as AnyRecord[])
+      : [];
+    const results: ShareAllResultRow[] = rowsRaw.map((r) => {
+      const status = String(r.status ?? '').toLowerCase();
+      return {
+        recommendation_id: String(r.recommendation_id ?? r.id ?? ''),
+        student_name: String(r.student_name ?? 'Siswa'),
+        status:
+          status === 'sent' || status === 'failed' || status === 'skipped'
+            ? (status as ShareAllResultRow['status'])
+            : 'failed',
+        error: strOrNull(r.error),
+      };
+    });
+    return {
+      success: Boolean(body.success ?? true),
+      total: num(body.total),
+      sent: num(body.sent),
+      failed: num(body.failed),
+      skipped_no_wali: num(body.skipped_no_wali),
+      results,
+    };
+  },
+
+  /**
+   * Count not-yet-shared, shareable recs for a teacher (optionally scoped
+   * to one class). Mirrors the backend's `share-all` selection rule
+   * (status != dismissed AND shared_with_parent_at IS NULL) so the UI can
+   * enable/disable the "Kirim semua ke wali" button and show the count.
+   *
+   * Reuses the same paginated `GET /recommendations` walk as
+   * `getStudentStatusCounts` — the backend has no dedicated counter.
+   */
+  async countUnsharedRecs(args: {
+    teacher_id?: string;
+    homeroom_class_id?: string;
+    class_id?: string;
+    academic_year_id?: string;
+  }): Promise<number> {
+    try {
+      let page = 1;
+      const perPage = 50;
+      const maxPages = 50;
+      let count = 0;
+      while (page <= maxPages) {
+        const { items, last_page } = await this.listLearningRecs({
+          teacher_id: args.teacher_id,
+          homeroom_class_id: args.homeroom_class_id,
+          class_id: args.class_id,
+          academic_year_id: args.academic_year_id,
+          per_page: perPage,
+          page,
+        });
+        for (const rec of items) {
+          if (rec.status === 'dismissed') continue;
+          if (!rec.shared_with_parent_at) count += 1;
+        }
+        if (page >= last_page) break;
+        page += 1;
+      }
+      return count;
+    } catch {
+      return 0;
+    }
   },
 
   /** GET /recommendations/{id}/share-status — per-recipient timeline. */
@@ -796,7 +901,8 @@ export const RecommendationService = {
             return data;
           }
           if (status === 'failed' || status === 'error') {
-            const errMsg = (data.error as string | undefined) ?? 'AI job failed';
+            const errMsg =
+              (data.error as string | undefined) ?? 'AI job failed';
             throw new Error(errMsg);
           }
           // still processing — fall through to wait + retry
@@ -816,7 +922,9 @@ export const RecommendationService = {
         await new Promise((r) => setTimeout(r, intervalMs));
       }
     }
-    throw new Error(`AI job ${jobId} did not complete within ${maxAttempts} attempts`);
+    throw new Error(
+      `AI job ${jobId} did not complete within ${maxAttempts} attempts`,
+    );
   },
 
   // ── Per-student status rollup (Frame B) ────────────────────────
@@ -924,7 +1032,11 @@ export const RecommendationService = {
               force_regenerate: args.cfg.force_regenerate,
               academic_year_id: args.academic_year_id,
             });
-            out.push({ subject_id: subjectId, student_id: studentId, response });
+            out.push({
+              subject_id: subjectId,
+              student_id: studentId,
+              response,
+            });
           } catch (e) {
             out.push({
               subject_id: subjectId,
@@ -1006,9 +1118,10 @@ export const RecommendationService = {
     const children = Array.isArray(body.children) ? body.children : [];
     return {
       children: (children as AnyRecord[]).map(parseParentSummaryChild),
-      totals: body.totals && typeof body.totals === 'object'
-        ? (body.totals as Record<string, number>)
-        : {},
+      totals:
+        body.totals && typeof body.totals === 'object'
+          ? (body.totals as Record<string, number>)
+          : {},
     };
   },
 
@@ -1033,13 +1146,10 @@ export const RecommendationService = {
     parent_user_id: string;
     reply_text: string;
   }): Promise<void> {
-    await aiApi.post(
-      `/recommendations/${args.recommendation_id}/share/reply`,
-      {
-        parent_user_id: args.parent_user_id,
-        reply_text: args.reply_text,
-      },
-    );
+    await aiApi.post(`/recommendations/${args.recommendation_id}/share/reply`, {
+      parent_user_id: args.parent_user_id,
+      reply_text: args.reply_text,
+    });
   },
 
   /**
@@ -1057,9 +1167,7 @@ export const RecommendationService = {
       `/recommendations/${args.recommendation_id}/share/mark-completed-by-parent`,
       {
         parent_user_id: args.parent_user_id,
-        ...(args.note && args.note.trim()
-          ? { note: args.note.trim() }
-          : {}),
+        ...(args.note && args.note.trim() ? { note: args.note.trim() } : {}),
         notify_teacher: args.notify_teacher ?? true,
       },
     );

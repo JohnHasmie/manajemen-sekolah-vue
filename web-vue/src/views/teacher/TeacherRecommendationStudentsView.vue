@@ -28,10 +28,18 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import { RecommendationService } from '@/services/recommendations.service';
+import {
+  RecommendationService,
+  RateLimitError,
+} from '@/services/recommendations.service';
 import { StudentService } from '@/services/students.service';
 import { ClassroomService } from '@/services/classrooms.service';
-import type { StudentStatusCounts } from '@/types/recommendations';
+import {
+  TONE_LABELS,
+  type RecTone,
+  type ShareAllResult,
+  type StudentStatusCounts,
+} from '@/types/recommendations';
 import type { Classroom, Student } from '@/types/entities';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
@@ -42,6 +50,8 @@ import KpiStripCards, {
 import InitialsAvatar from '@/components/feature/InitialsAvatar.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
+import Modal from '@/components/ui/Modal.vue';
+import Button from '@/components/ui/Button.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const route = useRoute();
@@ -113,7 +123,9 @@ async function loadCounts() {
       class_id: classId.value,
       // Mengajar mode → teacher_id. Wali mode → homeroom_class_id
       // (cross-teacher scope across the homeroom).
-      teacher_id: isHomeroomMode.value ? undefined : teacherId.value || undefined,
+      teacher_id: isHomeroomMode.value
+        ? undefined
+        : teacherId.value || undefined,
       homeroom_class_id: isHomeroomMode.value ? classId.value : undefined,
     });
     counts.value = next;
@@ -124,8 +136,148 @@ async function loadCounts() {
   }
 }
 
+// ── Bulk share-to-wali ("Kirim semua ke wali") ──
+//
+// Only available in Mengajar mode: the bulk endpoint requires the
+// authoring teacher (auth:sanctum + role.teacher + teacher.owner) and
+// shares THIS teacher's not-yet-shared recs. In wali-kelas mode the
+// recs span multiple authoring teachers, so the single owner check
+// doesn't apply — we hide the button there.
+const unsharedCount = ref(0);
+const isLoadingUnshared = ref(false);
+
+async function loadUnsharedCount() {
+  if (!classId.value || isHomeroomMode.value || !teacherId.value) {
+    unsharedCount.value = 0;
+    return;
+  }
+  isLoadingUnshared.value = true;
+  try {
+    unsharedCount.value = await RecommendationService.countUnsharedRecs({
+      class_id: classId.value,
+      teacher_id: teacherId.value,
+    });
+  } catch {
+    unsharedCount.value = 0;
+  } finally {
+    isLoadingUnshared.value = false;
+  }
+}
+
+// The button shows only in Mengajar mode and only once we know there's
+// at least one shareable, not-yet-shared rec to send.
+const canBulkShare = computed(
+  () => !isHomeroomMode.value && !!teacherId.value && unsharedCount.value > 0,
+);
+
+// Options dialog (cover message + tone + channels) state.
+const showShareDialog = ref(false);
+const bulkMessage = ref('');
+const bulkTone = ref<RecTone>('warm');
+const bulkChannelPush = ref(true);
+const bulkChannelWhatsapp = ref(false);
+const bulkError = ref<string | null>(null);
+const isSharing = ref(false);
+
+// Result summary dialog state (populated after the batch completes).
+const shareResult = ref<ShareAllResult | null>(null);
+
+const TONE_OPTIONS: { key: RecTone; emoji: string; label: string }[] = [
+  { key: 'warm', emoji: '😊', label: TONE_LABELS.warm },
+  { key: 'formal', emoji: '📋', label: TONE_LABELS.formal },
+  { key: 'concise', emoji: '⚡', label: TONE_LABELS.concise },
+  { key: 'detailed', emoji: '🎯', label: TONE_LABELS.detailed },
+];
+
+function openShareDialog() {
+  if (!canBulkShare.value) return;
+  bulkError.value = null;
+  bulkMessage.value = '';
+  bulkTone.value = 'warm';
+  bulkChannelPush.value = true;
+  bulkChannelWhatsapp.value = false;
+  showShareDialog.value = true;
+}
+
+async function submitBulkShare() {
+  if (isSharing.value) return;
+  bulkError.value = null;
+  if (!bulkChannelPush.value && !bulkChannelWhatsapp.value) {
+    bulkError.value = 'Pilih minimal satu kanal pengiriman.';
+    return;
+  }
+  if (bulkMessage.value.length > 2000) {
+    bulkError.value = 'Pesan terlalu panjang (maks 2000 karakter).';
+    return;
+  }
+  isSharing.value = true;
+  try {
+    const result = await RecommendationService.shareAllToParents({
+      teacher_id: teacherId.value,
+      class_id: classId.value,
+      message: bulkMessage.value.trim() || undefined,
+      tone: bulkTone.value,
+      channel_push: bulkChannelPush.value,
+      channel_whatsapp: bulkChannelWhatsapp.value,
+    });
+    showShareDialog.value = false;
+    shareResult.value = result;
+    // Refresh so the now-shared recs drop out of the unsent count and
+    // the per-student rollup reflects the new share state.
+    await Promise.all([loadCounts(), loadUnsharedCount()]);
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      bulkError.value =
+        e.dailyLimit && e.dailyUsage !== undefined
+          ? `Batas harian AI tercapai (${e.dailyUsage}/${e.dailyLimit}).`
+          : 'Batas harian AI tercapai. Coba lagi besok.';
+    } else {
+      bulkError.value =
+        (e as Error).message || 'Gagal mengirim rekomendasi ke wali.';
+    }
+  } finally {
+    isSharing.value = false;
+  }
+}
+
+// Per-row tone classes for the result breakdown list.
+function resultRowTone(status: 'sent' | 'failed' | 'skipped'): {
+  icon: string;
+  cls: string;
+  badge: string;
+  label: string;
+} {
+  if (status === 'sent') {
+    return {
+      icon: 'check-circle',
+      cls: 'text-emerald-600',
+      badge: 'bg-emerald-100 text-emerald-700',
+      label: 'Terkirim',
+    };
+  }
+  if (status === 'skipped') {
+    return {
+      icon: 'alert-triangle',
+      cls: 'text-amber-600',
+      badge: 'bg-amber-100 text-amber-700',
+      label: 'Dilewati',
+    };
+  }
+  return {
+    icon: 'alert-circle',
+    cls: 'text-red-600',
+    badge: 'bg-red-100 text-red-700',
+    label: 'Gagal',
+  };
+}
+
 onMounted(async () => {
-  await Promise.all([loadClass(), loadStudents(), loadCounts()]);
+  await Promise.all([
+    loadClass(),
+    loadStudents(),
+    loadCounts(),
+    loadUnsharedCount(),
+  ]);
 });
 
 useAcademicYearWatcher(() => {
@@ -133,6 +285,7 @@ useAcademicYearWatcher(() => {
   // enrolments) when the active TP changes.
   loadStudents();
   loadCounts();
+  loadUnsharedCount();
 });
 
 // React to scope flip (back+forward with ?scope=wali toggled).
@@ -142,6 +295,7 @@ watch(
     if (!classId.value) return;
     loadStudents();
     loadCounts();
+    loadUnsharedCount();
   },
 );
 
@@ -281,9 +435,7 @@ function studentStatusPills(
 ): { label: string; cls: string }[] {
   const c = countsFor(studentId);
   if (c.total === 0) {
-    return [
-      { label: 'Belum ada rec', cls: 'bg-slate-100 text-slate-500' },
-    ];
+    return [{ label: 'Belum ada rec', cls: 'bg-slate-100 text-slate-500' }];
   }
   const out: { label: string; cls: string }[] = [];
   if (c.pending > 0) {
@@ -358,6 +510,36 @@ function studentStatusPills(
       </button>
     </div>
 
+    <!-- BULK SHARE TOOLBAR (Mengajar mode only, when unsent recs exist) -->
+    <div
+      v-if="canBulkShare"
+      class="flex items-center gap-3 rounded-2xl border border-brand-cobalt/20 bg-brand-cobalt/5 px-3.5 py-3"
+    >
+      <span
+        class="w-9 h-9 rounded-xl bg-brand-cobalt/10 text-brand-cobalt grid place-items-center flex-shrink-0"
+      >
+        <NavIcon name="send" :size="16" />
+      </span>
+      <div class="flex-1 min-w-0">
+        <p class="text-[12.5px] font-black text-slate-900 leading-tight">
+          {{ unsharedCount }} rekomendasi belum dibagikan
+        </p>
+        <p class="text-[11px] text-slate-500 mt-0.5">
+          Kirim sekaligus ke wali masing-masing siswa.
+        </p>
+      </div>
+      <Button
+        variant="primary"
+        size="sm"
+        :loading="isSharing"
+        :disabled="isSharing"
+        @click="openShareDialog"
+      >
+        <NavIcon v-if="!isSharing" name="send" :size="13" />
+        Kirim semua ke wali
+      </Button>
+    </div>
+
     <!-- STUDENT LIST -->
     <AsyncView
       :state="listState"
@@ -396,9 +578,7 @@ function studentStatusPills(
               <template v-if="s.student_number">
                 {{ s.student_number }}
               </template>
-              <template v-else>
-                Tanpa NIS
-              </template>
+              <template v-else> Tanpa NIS </template>
               · No {{ idx + 1 }}
             </p>
             <!-- Status pills row -->
@@ -429,11 +609,7 @@ function studentStatusPills(
                 REC
               </span>
             </span>
-            <NavIcon
-              name="chevron-right"
-              :size="13"
-              class="text-slate-400"
-            />
+            <NavIcon name="chevron-right" :size="13" class="text-slate-400" />
           </div>
         </button>
       </div>
@@ -444,6 +620,261 @@ function studentStatusPills(
         Memuat jumlah rekomendasi…
       </p>
     </AsyncView>
+
+    <!-- BULK SHARE OPTIONS DIALOG -->
+    <Modal
+      v-if="showShareDialog"
+      title="Kirim semua ke wali"
+      :subtitle="`${unsharedCount} rekomendasi belum dibagikan${
+        cls ? ' · Kelas ' + cls.name : ''
+      }`"
+      size="lg"
+      @close="showShareDialog = false"
+    >
+      <div class="space-y-4">
+        <!-- Intro plaque -->
+        <div
+          class="bg-brand-cobalt/5 border border-brand-cobalt/20 rounded-xl px-3 py-3 text-[12px] text-slate-700"
+        >
+          Setiap rekomendasi akan dikirim ke wali masing-masing siswa. Siswa
+          tanpa data wali yang dapat dihubungi otomatis dilewati.
+        </div>
+
+        <!-- NADA PESAN -->
+        <div>
+          <label
+            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+          >
+            Nada Pesan
+          </label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            <button
+              v-for="opt in TONE_OPTIONS"
+              :key="opt.key"
+              type="button"
+              class="px-3 py-2 rounded-xl border transition inline-flex items-center justify-center gap-1.5 text-[11.5px] font-bold"
+              :class="
+                bulkTone === opt.key
+                  ? 'bg-brand-cobalt text-white border-brand-cobalt shadow-sm'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-brand-cobalt/40'
+              "
+              :disabled="isSharing"
+              @click="bulkTone = opt.key"
+            >
+              <span>{{ opt.emoji }}</span>
+              {{ opt.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- CATATAN (cover message) -->
+        <div>
+          <label
+            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+          >
+            Pesan Pengantar
+            <span class="text-slate-400 normal-case font-normal"
+              >· opsional</span
+            >
+          </label>
+          <textarea
+            v-model="bulkMessage"
+            rows="3"
+            maxlength="2000"
+            placeholder="Misal: Mohon dampingi belajar di rumah ya, Bapak/Ibu."
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white resize-y"
+            :disabled="isSharing"
+          />
+          <p class="text-[10px] text-slate-400 mt-1 text-right tabular-nums">
+            {{ bulkMessage.length }}/2000
+          </p>
+        </div>
+
+        <!-- KANAL -->
+        <div>
+          <label
+            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
+          >
+            Kanal Pengiriman
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <label
+              class="rounded-xl border px-3 py-2.5 flex items-center gap-2.5 cursor-pointer transition"
+              :class="
+                bulkChannelPush
+                  ? 'bg-brand-cobalt/5 border-brand-cobalt'
+                  : 'bg-white border-slate-200 hover:border-brand-cobalt/40'
+              "
+            >
+              <input
+                v-model="bulkChannelPush"
+                type="checkbox"
+                class="w-4 h-4 accent-brand-cobalt flex-shrink-0"
+                :disabled="isSharing"
+              />
+              <span class="text-[14px]">📱</span>
+              <div class="flex-1 min-w-0">
+                <p class="text-[12px] font-bold text-slate-900 leading-tight">
+                  Push App
+                </p>
+                <p class="text-[10px] text-slate-500 mt-0.5">Aplikasi wali</p>
+              </div>
+            </label>
+            <label
+              class="rounded-xl border px-3 py-2.5 flex items-center gap-2.5 cursor-pointer transition"
+              :class="
+                bulkChannelWhatsapp
+                  ? 'bg-emerald-50 border-emerald-500'
+                  : 'bg-white border-slate-200 hover:border-emerald-300'
+              "
+            >
+              <input
+                v-model="bulkChannelWhatsapp"
+                type="checkbox"
+                class="w-4 h-4 accent-emerald-600 flex-shrink-0"
+                :disabled="isSharing"
+              />
+              <span class="text-[14px]">💬</span>
+              <div class="flex-1 min-w-0">
+                <p class="text-[12px] font-bold text-slate-900 leading-tight">
+                  WhatsApp
+                </p>
+                <p class="text-[10px] text-slate-500 mt-0.5">Pesan langsung</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- ERROR -->
+        <div
+          v-if="bulkError"
+          class="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-[12px] text-red-700"
+        >
+          {{ bulkError }}
+        </div>
+
+        <!-- FOOTER -->
+        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+          <Button
+            variant="secondary"
+            block
+            :disabled="isSharing"
+            @click="showShareDialog = false"
+          >
+            Batal
+          </Button>
+          <Button
+            variant="primary"
+            block
+            :loading="isSharing"
+            :disabled="isSharing"
+            @click="submitBulkShare"
+          >
+            <NavIcon v-if="!isSharing" name="send" :size="14" />
+            Kirim ke {{ unsharedCount }} Wali
+          </Button>
+        </div>
+      </div>
+    </Modal>
+
+    <!-- BULK SHARE RESULT SUMMARY DIALOG -->
+    <Modal
+      v-if="shareResult"
+      title="Ringkasan Pengiriman"
+      :subtitle="`${shareResult.sent} terkirim · ${shareResult.failed} gagal · ${shareResult.skipped_no_wali} dilewati`"
+      size="lg"
+      @close="shareResult = null"
+    >
+      <div class="space-y-4">
+        <!-- Tally chips -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="rounded-xl bg-emerald-50 px-2 py-3 text-center">
+            <p
+              class="text-xl font-black leading-none tabular-nums text-emerald-700"
+            >
+              {{ shareResult.sent }}
+            </p>
+            <p
+              class="text-[9px] font-bold uppercase tracking-widest mt-1 text-slate-500"
+            >
+              Terkirim
+            </p>
+          </div>
+          <div class="rounded-xl bg-amber-50 px-2 py-3 text-center">
+            <p
+              class="text-xl font-black leading-none tabular-nums text-amber-700"
+            >
+              {{ shareResult.skipped_no_wali }}
+            </p>
+            <p
+              class="text-[9px] font-bold uppercase tracking-widest mt-1 text-slate-500"
+            >
+              Dilewati
+            </p>
+          </div>
+          <div class="rounded-xl bg-red-50 px-2 py-3 text-center">
+            <p
+              class="text-xl font-black leading-none tabular-nums text-red-700"
+            >
+              {{ shareResult.failed }}
+            </p>
+            <p
+              class="text-[9px] font-bold uppercase tracking-widest mt-1 text-slate-500"
+            >
+              Gagal
+            </p>
+          </div>
+        </div>
+
+        <p class="text-[11.5px] text-slate-500">
+          Dari {{ shareResult.total }} rekomendasi yang belum dibagikan.
+        </p>
+
+        <!-- Per-rec breakdown -->
+        <div
+          v-if="shareResult.results.length > 0"
+          class="border border-slate-200 rounded-xl overflow-hidden max-h-72 overflow-y-auto"
+        >
+          <div
+            v-for="(row, idx) in shareResult.results"
+            :key="row.recommendation_id || idx"
+            class="px-3 py-2.5 flex items-start gap-2.5"
+            :class="idx > 0 ? 'border-t border-slate-100' : ''"
+          >
+            <NavIcon
+              :name="resultRowTone(row.status).icon"
+              :size="15"
+              :class="resultRowTone(row.status).cls"
+              class="flex-shrink-0 mt-0.5"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="text-[12.5px] font-bold text-slate-900 truncate">
+                {{ row.student_name }}
+              </p>
+              <p
+                v-if="row.error"
+                class="text-[11px] text-slate-500 mt-0.5 leading-snug"
+              >
+                {{ row.error }}
+              </p>
+            </div>
+            <span
+              class="text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
+              :class="resultRowTone(row.status).badge"
+            >
+              {{ resultRowTone(row.status).label }}
+            </span>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="pt-2 border-t border-slate-100">
+          <Button variant="primary" block @click="shareResult = null">
+            Selesai
+          </Button>
+        </div>
+      </div>
+    </Modal>
 
     <Toast
       v-if="toast"
