@@ -2,15 +2,30 @@
 // (daily attendance) screen.
 //
 // What the teacher sees, top to bottom:
-//   1. A status hero — today's date + a big chip telling them whether
-//      they've checked in (and if late) / checked out.
-//   2. Today's teaching schedule list (from the config endpoint), with
+//   1. The shared brand header ([BrandPageHeader], role: 'guru') so this
+//      screen wears the SAME Dark-Blue → Azure gradient + back button as
+//      every other teacher deep-tab screen (no more bespoke violet bar).
+//   2. A status hero card that overlaps the header — today's date + a big
+//      pill telling them whether they've checked in (and if late) /
+//      checked out, plus the masuk/pulang timestamps.
+//   3. Requirement chips (selfie / lokasi) so the teacher knows up-front
+//      what the school config will ask for.
+//   4. Today's teaching schedule list (from the config endpoint), with
 //      the "telat jika setelah" (late-after) line if the school set a
 //      grace window.
-//   3. A primary action button that adapts to state:
+//   5. A primary action button that adapts to state:
 //        - not checked in  → "Presensi Masuk"
 //        - checked in, checkout on, not checked out → "Presensi Pulang"
-//        - done for the day → a disabled "Selesai" summary.
+//        - done for the day → a "Selesai" summary card.
+//
+// THEME — this screen now uses the app's design tokens exclusively
+// (`ColorUtils`): the brand gradient/role colour for the teacher
+// (`getRoleColor('guru')` == brand cobalt), the slate neutral scale for
+// surfaces/text, and the semantic 600 weights (success/warning/error/
+// info) for state. No off-palette hex literals live in this file — a
+// future brand refresh in `color_utils.dart` repaints the whole screen.
+// Analogy for the Vue reader: instead of inline Tailwind hex, every
+// colour resolves through the shared "tailwind.config" (`ColorUtils`).
 //
 // The check-in/out flow itself:
 //   * If the school requires a photo (camera_required), we open the LIVE
@@ -37,16 +52,23 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/network/api_exceptions.dart';
-import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
+import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/teacher_attendance/data/'
     'teacher_attendance_location_helper.dart';
 import 'package:manajemensekolah/features/teacher_attendance/data/'
     'teacher_attendance_service.dart';
 import 'package:manajemensekolah/features/teacher_attendance/domain/models/'
     'teacher_attendance_models.dart';
+
+/// Role key for every theme lookup on this screen. Resolving through the
+/// shared helper means the teacher accent (brand cobalt) and the hero
+/// gradient (Dark Blue → Azure) come from ONE source of truth, exactly
+/// like the rest of the teacher experience.
+const String _kRole = 'guru';
 
 /// Standalone screen for a teacher's own daily check-in / check-out.
 class TeacherPresensiScreen extends StatefulWidget {
@@ -67,7 +89,9 @@ class _TeacherPresensiScreenState extends State<TeacherPresensiScreen> {
   bool _submitting = false;
   String? _loadError;
 
-  static const Color _accent = Color(0xFF7C3AED); // violet — Kehadiran
+  /// The teacher accent — brand cobalt (#1B6FB8) — pulled from the shared
+  /// palette so it always matches the rest of the app.
+  Color get _accent => ColorUtils.getRoleColor(_kRole);
 
   @override
   void initState() {
@@ -255,25 +279,29 @@ class _TeacherPresensiScreenState extends State<TeacherPresensiScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The brand header paints its own gradient + rounded bottom + back
+    // button, so we drop the bespoke AppBar entirely and let the screen
+    // be one vertical stack: header on top, content below. Scaffold uses
+    // the app's neutral surface (slate-50) instead of an off-palette grey.
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
-      appBar: AppBar(
-        title: const Text('Presensi Guru'),
-        backgroundColor: _accent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => AppNavigator.pop(context),
-        ),
+      backgroundColor: ColorUtils.slate50,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const BrandPageHeader(
+            role: _kRole,
+            subtitle: 'KEHADIRAN',
+            title: 'Presensi Guru',
+          ),
+          Expanded(child: _buildBody()),
+        ],
       ),
-      body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return _LoadingState(accent: _accent);
     }
     if (_loadError != null) {
       return _ErrorState(message: _loadError!, onRetry: _loadConfig);
@@ -290,14 +318,19 @@ class _TeacherPresensiScreenState extends State<TeacherPresensiScreen> {
       color: _accent,
       onRefresh: _loadConfig,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.xxxl,
+        ),
         children: [
           _StatusHero(config: config, accent: _accent),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           _RequirementChips(settings: config.settings, accent: _accent),
-          const SizedBox(height: 16),
           _ScheduleSection(config: config, accent: _accent),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.xxl),
           _buildPrimaryAction(config),
         ],
       ),
@@ -312,14 +345,12 @@ class _TeacherPresensiScreenState extends State<TeacherPresensiScreen> {
     // Already fully done for the day.
     if (state.hasCheckedIn &&
         (state.hasCheckedOut || !settings.checkoutEnabled)) {
-      return _DoneCard(
-        state: state,
-        checkoutEnabled: settings.checkoutEnabled,
-        accent: _accent,
-      );
+      return _DoneCard(state: state, checkoutEnabled: settings.checkoutEnabled);
     }
 
-    // Checked in, checkout enabled, not yet out → offer check-out.
+    // Checked in, checkout enabled, not yet out → offer check-out. Uses
+    // the semantic error/600 weight so "pulang" reads distinct from the
+    // brand-coloured "masuk" CTA.
     if (state.canCheckOut) {
       return _ActionButton(
         label: 'Presensi Pulang',
@@ -330,7 +361,7 @@ class _TeacherPresensiScreenState extends State<TeacherPresensiScreen> {
       );
     }
 
-    // Default: not checked in yet → offer check-in.
+    // Default: not checked in yet → offer check-in (brand accent).
     return _ActionButton(
       label: 'Presensi Masuk',
       icon: Icons.login_rounded,
@@ -358,7 +389,13 @@ class _TeacherPresensiScreenState extends State<TeacherPresensiScreen> {
 
 // ── Status hero ────────────────────────────────────────────────────────
 
-/// Top card: today's date + a status chip reflecting check-in/out state.
+/// The primary state card. Sits at the top of the body and reads at a
+/// glance: today's date, a status pill (Belum presensi / Hadir / Hadir —
+/// Terlambat), and the masuk/pulang timestamps once they exist.
+///
+/// Themed entirely from the brand teacher gradient + slate scale: the pill
+/// switches between success / warning / slate semantics rather than
+/// hand-mixed colours.
 class _StatusHero extends StatelessWidget {
   final TeacherAttendanceConfig config;
   final Color accent;
@@ -373,22 +410,27 @@ class _StatusHero extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [accent, accent.withValues(alpha: 0.82)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        // Canonical teacher hero gradient (Dark Blue → Azure) — the same
+        // pairing every teacher header uses, via the shared helper.
+        gradient: ColorUtils.brandGradient(_kRole),
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.22),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.event_available_rounded, color: Colors.white),
-              const SizedBox(width: 8),
+              const Icon(Icons.badge_outlined, color: Colors.white, size: 20),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
                   config.teacherName ?? 'Guru',
@@ -402,7 +444,7 @@ class _StatusHero extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             dateLabel,
             style: TextStyle(
@@ -410,25 +452,29 @@ class _StatusHero extends StatelessWidget {
               fontSize: 13,
             ),
           ),
-          const SizedBox(height: 16),
-          _statusChip(state, record),
-          if (record?.checkInAt != null) ...[
-            const SizedBox(height: 12),
-            _timeRow('Masuk', record!.checkInAt),
-          ],
-          if (record?.checkOutAt != null) ...[
-            const SizedBox(height: 6),
-            _timeRow('Pulang', record!.checkOutAt),
+          const SizedBox(height: AppSpacing.lg),
+          _StatusPill(state: state, record: record),
+          if (record?.checkInAt != null || record?.checkOutAt != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _TimeStrip(record: record!),
           ],
         ],
       ),
     );
   }
+}
 
-  Widget _statusChip(
-    TeacherAttendanceState state,
-    TeacherAttendanceRecord? record,
-  ) {
+/// The big status pill inside the hero. Colour-codes the verdict using a
+/// translucent white scrim (so it always reads on the brand gradient)
+/// while the icon hints at the semantic (pending / present / late).
+class _StatusPill extends StatelessWidget {
+  final TeacherAttendanceState state;
+  final TeacherAttendanceRecord? record;
+
+  const _StatusPill({required this.state, required this.record});
+
+  @override
+  Widget build(BuildContext context) {
     late final String label;
     late final IconData icon;
     if (!state.hasCheckedIn) {
@@ -443,16 +489,20 @@ class _StatusHero extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: Colors.white, size: 18),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppSpacing.xs + 2),
           Text(
             label,
             style: const TextStyle(
@@ -464,28 +514,105 @@ class _StatusHero extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _timeRow(String label, String? iso) {
-    final t = _formatTime(iso);
+/// A compact two-up strip showing the masuk + pulang times. Each cell is
+/// a translucent panel on the hero so the timestamps read as "stamped"
+/// facts rather than loose text.
+class _TimeStrip extends StatelessWidget {
+  final TeacherAttendanceRecord record;
+
+  const _TimeStrip({required this.record});
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          label == 'Masuk' ? Icons.login_rounded : Icons.logout_rounded,
-          color: Colors.white,
-          size: 16,
+        Expanded(
+          child: _TimeCell(
+            icon: Icons.login_rounded,
+            label: 'Masuk',
+            value: _formatTime(record.checkInAt),
+          ),
         ),
-        const SizedBox(width: 6),
-        Text(
-          '$label: $t',
-          style: const TextStyle(color: Colors.white, fontSize: 13),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: _TimeCell(
+            icon: Icons.logout_rounded,
+            label: 'Pulang',
+            value: record.checkOutAt != null
+                ? _formatTime(record.checkOutAt)
+                : '--:--',
+          ),
         ),
       ],
     );
   }
 }
 
+/// One masuk/pulang cell — icon + label on top, big time below.
+class _TimeCell extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _TimeCell({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md - 2,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: Colors.white.withValues(alpha: 0.85), size: 14),
+              const SizedBox(width: AppSpacing.xs + 1),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Requirement chips (camera / location / radius) ─────────────────────
 
+/// Up-front signal of what the school config will ask for on submit
+/// (selfie / location). Hidden entirely when neither is required so the
+/// layout stays tight. Chips are tinted with the teacher accent.
 class _RequirementChips extends StatelessWidget {
   final TeacherAttendanceSettings settings;
   final Color accent;
@@ -506,14 +633,26 @@ class _RequirementChips extends StatelessWidget {
         ),
       );
     }
+    // Nothing required → render zero height so the SizedBox above us in
+    // the list doesn't create a dangling gap.
     if (chips.isEmpty) return const SizedBox.shrink();
 
-    return Wrap(spacing: 8, runSpacing: 8, children: chips);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: chips,
+      ),
+    );
   }
 
   Widget _chip(IconData icon, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md - 2,
+        vertical: AppSpacing.xs + 2,
+      ),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
@@ -523,7 +662,7 @@ class _RequirementChips extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 15, color: accent),
-          const SizedBox(width: 5),
+          const SizedBox(width: AppSpacing.xs + 1),
           Text(
             text,
             style: TextStyle(
@@ -540,6 +679,9 @@ class _RequirementChips extends StatelessWidget {
 
 // ── Today's schedule section ───────────────────────────────────────────
 
+/// A white card listing today's teaching periods (+ the "terlambat jika"
+/// line). Styled with the shared `corporateCard` decoration so its
+/// border/shadow match every other card in the app.
 class _ScheduleSection extends StatelessWidget {
   final TeacherAttendanceConfig config;
   final Color accent;
@@ -551,73 +693,149 @@ class _ScheduleSection extends StatelessWidget {
     final schedule = config.todaySchedule;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: ColorUtils.corporateCard(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.schedule_rounded, size: 18, color: accent),
-              const SizedBox(width: 8),
-              const Text(
-                'Jadwal Mengajar Hari Ini',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.schedule_rounded, size: 18, color: accent),
               ),
+              const SizedBox(width: AppSpacing.md - 2),
+              Expanded(
+                child: Text(
+                  'Jadwal Mengajar Hari Ini',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: ColorUtils.slate800,
+                  ),
+                ),
+              ),
+              if (schedule.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${schedule.length} sesi',
+                    style: TextStyle(
+                      color: accent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
             ],
           ),
           if (config.lateAfter != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              'Terlambat jika presensi setelah '
-              '${_formatTime(config.lateAfter)}',
-              style: TextStyle(
-                fontSize: 12,
-                color: ColorUtils.warning600,
-                fontWeight: FontWeight.w500,
-              ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Icon(
+                  Icons.av_timer_rounded,
+                  size: 14,
+                  color: ColorUtils.warning600,
+                ),
+                const SizedBox(width: AppSpacing.xs + 2),
+                Expanded(
+                  child: Text(
+                    'Terlambat jika presensi setelah '
+                    '${_formatTime(config.lateAfter)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: ColorUtils.warning600,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           if (schedule.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                'Tidak ada jadwal mengajar hari ini.',
-                style: TextStyle(color: Colors.black54),
-              ),
-            )
+            _EmptySchedule(accent: accent)
           else
-            ...schedule.map(_scheduleRow),
+            ...schedule.map((s) => _ScheduleRow(schedule: s, accent: accent)),
         ],
       ),
     );
   }
+}
 
-  Widget _scheduleRow(TeacherTodaySchedule s) {
+/// Friendly empty state for a no-class day — themed on the slate scale so
+/// it reads as "quiet" rather than "broken".
+class _EmptySchedule extends StatelessWidget {
+  final Color accent;
+
+  const _EmptySchedule({required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: ColorUtils.slate50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ColorUtils.slate200),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.event_busy_rounded, color: ColorUtils.slate400, size: 28),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Tidak ada jadwal mengajar hari ini.',
+            style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One teaching period row: an accent timeline dot, the subject, then a
+/// muted "kelas · waktu · jam" meta line.
+class _ScheduleRow extends StatelessWidget {
+  final TeacherTodaySchedule schedule;
+  final Color accent;
+
+  const _ScheduleRow({required this.schedule, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = schedule;
     final time = [
       s.startTime,
       s.endTime,
     ].where((t) => (t ?? '').isNotEmpty).map((t) => _shortTime(t!)).join(' - ');
+    final meta = [
+      if ((s.className ?? '').isNotEmpty) s.className!,
+      if (time.isNotEmpty) time,
+      if ((s.lessonHourName ?? '').isNotEmpty) s.lessonHourName!,
+    ].join(' · ');
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm - 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 6,
-            height: 6,
-            margin: const EdgeInsets.only(top: 6, right: 10),
+            width: 8,
+            height: 8,
+            margin: const EdgeInsets.only(top: 5, right: AppSpacing.md - 2),
             decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
           ),
           Expanded(
@@ -626,17 +844,18 @@ class _ScheduleSection extends StatelessWidget {
               children: [
                 Text(
                   s.subjectName ?? 'Mata pelajaran',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: ColorUtils.slate800,
+                  ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  [
-                    if ((s.className ?? '').isNotEmpty) s.className!,
-                    if (time.isNotEmpty) time,
-                    if ((s.lessonHourName ?? '').isNotEmpty) s.lessonHourName!,
-                  ].join(' · '),
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
-                ),
+                if (meta.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    meta,
+                    style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
+                  ),
+                ],
               ],
             ),
           ),
@@ -648,16 +867,13 @@ class _ScheduleSection extends StatelessWidget {
 
 // ── Done card ──────────────────────────────────────────────────────────
 
+/// Shown once the teacher is finished for the day (checked in, and either
+/// checked out or checkout disabled). Uses the semantic success palette.
 class _DoneCard extends StatelessWidget {
   final TeacherAttendanceState state;
   final bool checkoutEnabled;
-  final Color accent;
 
-  const _DoneCard({
-    required this.state,
-    required this.checkoutEnabled,
-    required this.accent,
-  });
+  const _DoneCard({required this.state, required this.checkoutEnabled});
 
   @override
   Widget build(BuildContext context) {
@@ -666,7 +882,7 @@ class _DoneCard extends StatelessWidget {
         : 'Presensi masuk hari ini sudah tercatat.';
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.lg + 2),
       decoration: BoxDecoration(
         color: ColorUtils.success600.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
@@ -674,15 +890,37 @@ class _DoneCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.task_alt_rounded, color: ColorUtils.success600),
-          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm + 2),
+            decoration: BoxDecoration(
+              color: ColorUtils.success600.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.task_alt_rounded, color: ColorUtils.success600),
+          ),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                color: ColorUtils.success600,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Selesai',
+                  style: TextStyle(
+                    color: ColorUtils.success700,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  message,
+                  style: TextStyle(
+                    color: ColorUtils.success700,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -693,6 +931,8 @@ class _DoneCard extends StatelessWidget {
 
 // ── Primary action button ──────────────────────────────────────────────
 
+/// The hero CTA. Adapts its colour/icon to masuk vs pulang and shows an
+/// inline spinner + "Memproses…" while the multipart POST is in flight.
 class _ActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -719,6 +959,9 @@ class _ActionButton extends StatelessWidget {
           backgroundColor: color,
           foregroundColor: Colors.white,
           disabledBackgroundColor: color.withValues(alpha: 0.5),
+          disabledForegroundColor: Colors.white,
+          elevation: 2,
+          shadowColor: color.withValues(alpha: 0.4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -742,8 +985,38 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
+// ── Loading state ──────────────────────────────────────────────────────
+
+/// First-load placeholder. A simple centered spinner tinted with the
+/// teacher accent + a reassuring caption, so the screen never flashes a
+/// bare grey spinner against the brand header.
+class _LoadingState extends StatelessWidget {
+  final Color accent;
+
+  const _LoadingState({required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircularProgressIndicator(color: accent),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Memuat presensi…',
+            style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Error state ────────────────────────────────────────────────────────
 
+/// Shown when the config load fails. Slate-themed icon + message and a
+/// retry button so the teacher can recover without leaving the screen.
 class _ErrorState extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
@@ -754,20 +1027,27 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off_rounded, size: 48, color: Colors.grey),
-            const SizedBox(height: 12),
+            Icon(Icons.cloud_off_rounded, size: 48, color: ColorUtils.slate400),
+            const SizedBox(height: AppSpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.black54),
+              style: TextStyle(color: ColorUtils.slate600),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             ElevatedButton.icon(
               onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorUtils.getRoleColor(_kRole),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               icon: const Icon(Icons.refresh),
               label: const Text('Coba lagi'),
             ),
