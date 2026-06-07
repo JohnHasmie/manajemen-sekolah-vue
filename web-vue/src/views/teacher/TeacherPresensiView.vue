@@ -250,7 +250,7 @@ function resetForm() {
 }
 
 function gotoHistory() {
-  router.push('/teacher/presensi/riwayat');
+  router.push('/teacher/my-attendance/history');
 }
 </script>
 

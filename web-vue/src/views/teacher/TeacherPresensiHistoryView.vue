@@ -113,7 +113,7 @@ onMounted(reload);
       <Button
         variant="secondary"
         size="sm"
-        @click="router.push('/teacher/presensi')"
+        @click="router.push('/teacher/my-attendance')"
       >
         <NavIcon name="arrow-left" :size="13" />Kembali
       </Button>

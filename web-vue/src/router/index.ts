@@ -447,7 +447,7 @@ const routes: RouteRecordRaw[] = [
       {
         // PRESENSI GURU — admin config + report for teacher daily
         // attendance (camera/location/geofence settings + report list).
-        path: 'admin/presensi-guru',
+        path: 'admin/teacher-attendance',
         name: 'admin.teacher-attendance',
         component: AdminTeacherAttendanceView,
         meta: { role: 'admin' satisfies Role },
@@ -471,15 +471,16 @@ const routes: RouteRecordRaw[] = [
         // PRESENSI GURU — the teacher's own daily check-in/out flow
         // (webcam selfie + GPS geofence). Distinct from
         // `teacher/attendance`, which is the per-session STUDENT
-        // attendance ("kehadiran siswa").
-        path: 'teacher/presensi',
-        name: 'teacher.presensi',
+        // attendance ("kehadiran siswa"). Named "my-attendance" so the
+        // English path doesn't collide with that student route.
+        path: 'teacher/my-attendance',
+        name: 'teacher.my-attendance',
         component: TeacherPresensiView,
         meta: { role: 'guru' satisfies Role },
       },
       {
-        path: 'teacher/presensi/riwayat',
-        name: 'teacher.presensi.history',
+        path: 'teacher/my-attendance/history',
+        name: 'teacher.my-attendance.history',
         component: TeacherPresensiHistoryView,
         meta: { role: 'guru' satisfies Role },
       },
