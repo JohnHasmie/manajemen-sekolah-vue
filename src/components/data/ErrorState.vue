@@ -1,22 +1,28 @@
 <!--
   ErrorState.vue — error-screen placeholder.
   Mirrors Flutter's ErrorScreen in `lib/core/widgets/`.
+
+  Defaults are resolved through `useI18n` so they track the active
+  locale. Callers can still pass explicit `title` / `message` /
+  `retryLabel` strings to override.
 -->
 <script setup lang="ts">
-withDefaults(
-  defineProps<{
-    title?: string;
-    message?: string;
-    retryLabel?: string;
-  }>(),
-  {
-    title: 'Terjadi kesalahan',
-    message: 'Mohon coba lagi dalam beberapa saat.',
-    retryLabel: 'Coba lagi',
-  },
-);
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const props = defineProps<{
+  title?: string;
+  message?: string;
+  retryLabel?: string;
+}>();
 
 defineEmits<{ retry: [] }>();
+
+const { t } = useI18n();
+
+const titleText = computed(() => props.title ?? t('common.errorTitle'));
+const messageText = computed(() => props.message ?? t('common.errorMessage'));
+const retryText = computed(() => props.retryLabel ?? t('common.tryAgain'));
 </script>
 
 <template>
@@ -42,15 +48,15 @@ defineEmits<{ retry: [] }>();
       </svg>
     </div>
 
-    <h3 class="text-base font-semibold text-slate-900 mb-1">{{ title }}</h3>
-    <p class="text-sm text-slate-500 max-w-sm">{{ message }}</p>
+    <h3 class="text-base font-semibold text-slate-900 mb-1">{{ titleText }}</h3>
+    <p class="text-sm text-slate-500 max-w-sm">{{ messageText }}</p>
 
     <button
       type="button"
       class="mt-md rounded-xl bg-brand hover:bg-brand-700 text-white font-medium px-md py-sm text-sm"
       @click="$emit('retry')"
     >
-      {{ retryLabel }}
+      {{ retryText }}
     </button>
   </div>
 </template>

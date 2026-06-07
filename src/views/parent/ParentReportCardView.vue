@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { ReportCardService } from '@/services/report-card.service';
 import {
@@ -38,6 +39,7 @@ import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
+const { t } = useI18n();
 const router = useRouter();
 const { activeChildId } = useChildPicker();
 
@@ -49,7 +51,9 @@ const semester = ref<SemesterId>(
   (new Date().getMonth() + 1) >= 7 ? '1' : '2',
 );
 const semesterLabel = (id: SemesterId): string =>
-  id === '1' ? 'Semester 1 (Ganjil)' : 'Semester 2 (Genap)';
+  id === '1'
+    ? t('parent.reportCards.semester1Full')
+    : t('parent.reportCards.semester2Full');
 
 const filterOpen = ref(false);
 
@@ -128,10 +132,10 @@ const kpiCards = computed<KpiCard[]>(() => {
   const r = activeChildRow.value;
   if (!r) {
     return [
-      { icon: 'check-circle', label: 'Rata-rata', value: '—', tone: 'brand' },
-      { icon: 'users', label: 'Peringkat', value: '—', tone: 'violet' },
-      { icon: 'bell', label: 'Kehadiran', value: '—', tone: 'green' },
-      { icon: 'file-text', label: 'Status', value: '—', tone: 'slate' },
+      { icon: 'check-circle', label: t('parent.reportCards.kpiAverage'), value: '—', tone: 'brand' },
+      { icon: 'users', label: t('parent.reportCards.kpiRank'), value: '—', tone: 'violet' },
+      { icon: 'bell', label: t('parent.reportCards.kpiAttendance'), value: '—', tone: 'green' },
+      { icon: 'file-text', label: t('parent.reportCards.kpiStatus'), value: '—', tone: 'slate' },
     ];
   }
   const avg = r.average_score !== null ? r.average_score : null;
@@ -144,14 +148,14 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'check-circle',
-      label: 'Rata-rata',
+      label: t('parent.reportCards.kpiAverage'),
       value: avg !== null ? avg : '—',
       tone: avg !== null && avg >= 75 ? 'green' : 'brand',
     },
-    { icon: 'users', label: 'Peringkat', value: rank, tone: 'violet' },
+    { icon: 'users', label: t('parent.reportCards.kpiRank'), value: rank, tone: 'violet' },
     {
       icon: 'bell',
-      label: 'Kehadiran',
+      label: t('parent.reportCards.kpiAttendance'),
       value: attPct,
       tone:
         r.attendance_pct !== null && r.attendance_pct >= 90
@@ -160,7 +164,7 @@ const kpiCards = computed<KpiCard[]>(() => {
     },
     {
       icon: 'file-text',
-      label: 'Status',
+      label: t('parent.reportCards.kpiStatus'),
       value: STATUS_LABELS[r.reportCard.status],
       tone:
         r.reportCard.status === 'distributed' ||
@@ -196,7 +200,7 @@ async function downloadPdf(row: ParentRaportRow) {
     row.reportCard.status !== 'distributed'
   ) {
     toast.value = {
-      message: 'Sekolah belum menerbitkan rapor ini.',
+      message: t('parent.reportCards.toastNotPublished'),
       tone: 'error',
     };
     return;
@@ -210,7 +214,7 @@ async function downloadPdf(row: ParentRaportRow) {
       semester_id: semester.value,
       filename: `e-rapor-${row.student.name}.pdf`,
     });
-    toast.value = { message: 'E-Rapor terdownload.', tone: 'success' };
+    toast.value = { message: t('parent.reportCards.toastDownloaded'), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -227,8 +231,8 @@ function pickSemester(id: SemesterId) {
 <template>
   <div class="space-y-4 pb-12">
     <ParentPageHeader
-      kicker="Akademik · Rapor"
-      title="E-Raport"
+      :kicker="t('parent.reportCards.kicker')"
+      :title="t('parent.reportCards.title')"
       :meta="
         activeChildRow
           ? `${activeChildRow.student.class_name ?? '—'} · ${semesterLabel(semester)}`
@@ -242,7 +246,7 @@ function pickSemester(id: SemesterId) {
           @click="filterOpen = true"
         >
           <NavIcon name="filter" :size="12" />
-          Filter
+          {{ t('parent.reportCards.filter') }}
         </button>
       </template>
     </ParentPageHeader>
@@ -257,8 +261,8 @@ function pickSemester(id: SemesterId) {
     <div class="flex items-center gap-1.5 flex-wrap">
       <button
         v-for="opt in [
-          { id: '1' as SemesterId, label: 'Semester 1 · Ganjil' },
-          { id: '2' as SemesterId, label: 'Semester 2 · Genap' },
+          { id: '1' as SemesterId, label: t('parent.reportCards.semesterShort1') },
+          { id: '2' as SemesterId, label: t('parent.reportCards.semesterShort2') },
         ]"
         :key="opt.id"
         type="button"
@@ -284,15 +288,15 @@ function pickSemester(id: SemesterId) {
                 : 'bg-slate-100 text-slate-500',
           ]"
         >
-          {{ semesterCounts[opt.id] === 0 ? 'KOSONG' : semesterCounts[opt.id] }}
+          {{ semesterCounts[opt.id] === 0 ? t('parent.reportCards.chipEmpty') : semesterCounts[opt.id] }}
         </span>
       </button>
     </div>
 
     <AsyncView
       :state="listState"
-      empty-title="Sekolah belum menerbitkan rapor"
-      empty-description="Rapor akan muncul di sini setelah wali kelas finalisasi dan admin menerbitkan."
+      :empty-title="t('parent.reportCards.emptyState')"
+      :empty-description="t('parent.reportCards.emptyDesc')"
       empty-icon="file-text"
       @retry="reload"
     >
@@ -337,13 +341,13 @@ function pickSemester(id: SemesterId) {
                   v-if="row.rank !== null && row.total_in_class !== null"
                   class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider"
                 >
-                  Peringkat {{ row.rank }}/{{ row.total_in_class }}
+                  {{ t('parent.reportCards.badgeRank', { rank: row.rank, total: row.total_in_class }) }}
                 </span>
                 <span
                   v-if="row.average_score !== null"
                   class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase tracking-wider"
                 >
-                  Rerata {{ row.average_score }}
+                  {{ t('parent.reportCards.badgeAvg', { avg: row.average_score }) }}
                 </span>
               </div>
             </div>
@@ -361,7 +365,7 @@ function pickSemester(id: SemesterId) {
               @click.stop="openDetail(row)"
             >
               <NavIcon name="file-text" :size="12" />
-              Lihat Detail
+              {{ t('parent.reportCards.btnViewDetail') }}
             </Button>
             <Button
               variant="primary"
@@ -372,7 +376,7 @@ function pickSemester(id: SemesterId) {
               @click.stop="downloadPdf(row)"
             >
               <NavIcon name="download" :size="12" />
-              Cetak PDF
+              {{ t('parent.reportCards.btnPrintPdf') }}
             </Button>
           </div>
         </article>
@@ -387,16 +391,16 @@ function pickSemester(id: SemesterId) {
     />
 
     <!-- Filter sheet (Semester picker — mirrors mobile ShowFilterSheet) -->
-    <Modal v-if="filterOpen" title="Filter E-Raport" @close="filterOpen = false">
+    <Modal v-if="filterOpen" :title="t('parent.reportCards.modalTitle')" @close="filterOpen = false">
       <div class="space-y-3">
         <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500">
-          Semester
+          {{ t('parent.reportCards.semesterLabel') }}
         </p>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="opt in [
-              { id: '1' as SemesterId, label: 'Semester 1 (Ganjil)' },
-              { id: '2' as SemesterId, label: 'Semester 2 (Genap)' },
+              { id: '1' as SemesterId, label: t('parent.reportCards.semester1Full') },
+              { id: '2' as SemesterId, label: t('parent.reportCards.semester2Full') },
             ]"
             :key="opt.id"
             type="button"

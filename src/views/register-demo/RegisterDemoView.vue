@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { DEMO_STEPS, type DemoStepKey } from '@/types/demo';
@@ -40,6 +41,7 @@ import Step9Billing from './steps/Step9Billing.vue';
 import Step10Scenarios from './steps/Step10Scenarios.vue';
 import Step10Done from './steps/Step10Done.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 const auth = useAuthStore();
 const router = useRouter();
@@ -50,20 +52,20 @@ onMounted(() => {
   wizard.hydrate();
 });
 
-const STEP_LABELS: Record<DemoStepKey, string> = {
-  welcome: 'Mulai',
-  school: 'Sekolah',
-  identity: 'Anda',
-  subjects: 'Mapel',
-  teacher: 'Guru',
-  class: 'Kelas',
-  student: 'Siswa',
-  parent: 'Wali',
-  schedule: 'Jadwal',
-  billing: 'Tagihan',
-  scenarios: 'Skenario',
-  done: 'Selesai',
-};
+const STEP_LABELS = computed<Record<DemoStepKey, string>>(() => ({
+  welcome: t('registerDemo.stepLabelWelcome'),
+  school: t('registerDemo.stepLabelSchool'),
+  identity: t('registerDemo.stepLabelIdentity'),
+  subjects: t('registerDemo.stepLabelSubjects'),
+  teacher: t('registerDemo.stepLabelTeacher'),
+  class: t('registerDemo.stepLabelClass'),
+  student: t('registerDemo.stepLabelStudent'),
+  parent: t('registerDemo.stepLabelParent'),
+  schedule: t('registerDemo.stepLabelSchedule'),
+  billing: t('registerDemo.stepLabelBilling'),
+  scenarios: t('registerDemo.stepLabelScenarios'),
+  done: t('registerDemo.stepLabelDone'),
+}));
 
 const stepComponentMap = {
   welcome: Step1Welcome,
@@ -147,11 +149,11 @@ async function confirmResetWizard() {
 }
 
 const nextLabel = computed(() => {
-  if (wizard.currentKey === 'welcome') return 'Mulai';
+  if (wizard.currentKey === 'welcome') return t('registerDemo.nextButtonStart');
   if (wizard.currentKey === 'scenarios')
-    return wizard.isProvisioning ? 'Membuat sekolah…' : 'Buat sekolah demo';
-  if (isLastStep.value) return 'Masuk dashboard demo';
-  return 'Lanjut';
+    return wizard.isProvisioning ? t('registerDemo.nextButtonCreating') : t('registerDemo.nextButtonCreate');
+  if (isLastStep.value) return t('registerDemo.nextButtonEnter');
+  return t('common.next');
 });
 </script>
 
@@ -194,8 +196,8 @@ const nextLabel = computed(() => {
               <NavIcon name="school" :size="18" class="text-role-admin" />
             </div>
             <div>
-              <p class="text-[13px] font-bold text-slate-900 leading-tight">Buat demo</p>
-              <p class="text-[10.5px] text-slate-500">~2 menit</p>
+              <p class="text-[13px] font-bold text-slate-900 leading-tight">{{ t('registerDemo.sidebarTitle') }}</p>
+              <p class="text-[10.5px] text-slate-500">{{ t('registerDemo.sidebarDuration') }}</p>
             </div>
           </div>
           <ul class="space-y-1">
@@ -276,7 +278,7 @@ const nextLabel = computed(() => {
               @click="handleBack"
             >
               <NavIcon name="arrow-left" :size="14" />
-              Kembali
+              {{ t('common.back') }}
             </button>
             <button
               type="button"
@@ -293,7 +295,7 @@ const nextLabel = computed(() => {
       </div>
 
       <p class="text-center text-[11px] text-slate-400 mt-4">
-        Progress tersimpan otomatis · Bisa lanjut kapan saja
+        {{ t('registerDemo.footerSavedNote') }}
         <span v-if="!wizard.isProvisioning && !isLastStep" class="mx-2 text-slate-300">·</span>
         <button
           v-if="!wizard.isProvisioning && !isLastStep"
@@ -301,7 +303,7 @@ const nextLabel = computed(() => {
           class="text-role-admin hover:underline font-bold"
           @click="handleResetWizard"
         >
-          Mulai ulang
+          {{ t('registerDemo.resetButton') }}
         </button>
       </p>
     </div>
@@ -310,10 +312,10 @@ const nextLabel = computed(() => {
 
     <ConfirmationDialog
       v-if="showResetConfirm"
-      title="Mulai ulang wizard?"
-      message="Semua jawaban yang sudah Anda isi akan dihapus, dan wizard kembali ke langkah pertama. Tindakan ini tidak bisa dibatalkan."
-      confirm-label="Mulai ulang"
-      cancel-label="Batal"
+      :title="t('registerDemo.resetConfirmTitle')"
+      :message="t('registerDemo.resetConfirmMessage')"
+      :confirm-label="t('registerDemo.resetConfirmButton')"
+      :cancel-label="t('common.cancel')"
       :danger="true"
       @confirm="confirmResetWizard"
       @close="showResetConfirm = false"

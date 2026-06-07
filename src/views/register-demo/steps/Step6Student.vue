@@ -5,9 +5,11 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
 const perClass = computed({
@@ -31,12 +33,12 @@ const total = computed(() => perClass.value * totalClasses.value);
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Langkah 7 dari 12 · Siswa
+      {{ t('registerDemo.step7Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
-      Rata-rata siswa per kelas?
+      {{ t('registerDemo.step7Title') }}
     </h2>
-    <p class="text-[13px] text-slate-600 mb-4">Sistem akan generate roster otomatis.</p>
+    <p class="text-[13px] text-slate-600 mb-4">{{ t('registerDemo.step7Subtitle') }}</p>
 
     <div class="flex items-center gap-4 mb-5">
       <input
@@ -51,15 +53,15 @@ const total = computed(() => perClass.value * totalClasses.value);
     </div>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Cara isi nama
+      {{ t('registerDemo.step7FillModeLabel') }}
     </p>
     <div class="grid grid-cols-3 gap-3">
       <button
         type="button"
         v-for="opt in [
-          { v: 'random', label: 'Acak', hint: 'Rekomendasi', icon: 'zap' },
-          { v: 'csv', label: 'Upload CSV', hint: 'Punya data?', icon: 'upload' },
-          { v: 'manual', label: 'Manual', hint: 'Per siswa', icon: 'edit' },
+          { v: 'random', label: t('registerDemo.step7RandomLabel'), hint: t('registerDemo.step7RandomHint'), icon: 'zap' },
+          { v: 'csv', label: t('registerDemo.step7CsvLabel'), hint: t('registerDemo.step7CsvHint'), icon: 'upload' },
+          { v: 'manual', label: t('registerDemo.step7ManualLabel'), hint: t('registerDemo.step7ManualHint'), icon: 'edit' },
         ]"
         :key="opt.v"
         class="border rounded-xl p-3 text-center transition"
@@ -85,13 +87,12 @@ const total = computed(() => perClass.value * totalClasses.value);
 
     <div class="bg-slate-50 rounded-lg mt-4 p-3 text-[13px] text-slate-700">
       <NavIcon name="users" :size="14" class="inline-block mr-1.5 -mt-0.5" />
-      Total siswa: <strong class="font-bold">{{ total }} siswa</strong>
+      {{ t('registerDemo.step7TotalLabel') }} <strong class="font-bold">{{ total }} {{ t('registerDemo.step7SiswaUnit') }}</strong>
       ({{ perClass }} × {{ totalClasses }} kelas)
     </div>
 
     <p v-if="fillMode !== 'random'" class="text-[11.5px] text-slate-500 mt-3">
-      Catatan: untuk versi demo, mode <span class="font-mono">{{ fillMode }}</span> akan
-      di-fall-back ke acak. Anda bisa upload CSV / edit per siswa di dashboard setelah selesai.
+      {{ t('registerDemo.step7NotePrefix') }} <span class="font-mono">{{ fillMode }}</span> {{ t('registerDemo.step7NoteSuffix') }}
     </p>
   </div>
 </template>

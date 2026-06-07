@@ -10,12 +10,15 @@
   (form, reschedule, change-teacher, confirm-delete).
 -->
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import type { ScheduleRow } from '@/types/schedule';
 import { DAY_LABELS } from '@/types/schedule';
 import { semesterLabel } from '@/lib/labels';
+
+const { t } = useI18n();
 
 defineProps<{
   row: ScheduleRow;
@@ -34,7 +37,7 @@ const emit = defineEmits<{
 <template>
   <Modal
     :title="row.subject_name"
-    :subtitle="`${row.class_name} · ${DAY_LABELS[row.day]} · Jam ke-${row.hour_number}`"
+    :subtitle="`${row.class_name} · ${DAY_LABELS[row.day]} · ${t('common.lessonHour', { n: row.hour_number })}`"
     size="md"
     @close="emit('close')"
   >
@@ -49,7 +52,7 @@ const emit = defineEmits<{
         }"
       >
         <p class="text-[10px] font-bold tracking-widest uppercase text-white/70">
-          {{ DAY_LABELS[row.day] }} · Jam ke-{{ row.hour_number }}
+          {{ DAY_LABELS[row.day] }} · {{ t('common.lessonHour', { n: row.hour_number }) }}
         </p>
         <p class="text-2xl font-black tracking-tight mt-1">
           {{ row.start_time }}–{{ row.end_time }}

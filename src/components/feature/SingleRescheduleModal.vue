@@ -16,9 +16,12 @@ import type {
   ScheduleRow,
 } from '@/types/schedule';
 import { DAY_LABELS, normalizeDayKey } from '@/types/schedule';
+import { useI18n } from 'vue-i18n';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   row: ScheduleRow;
@@ -133,7 +136,7 @@ const dayLabel = computed(() => {
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Slot sekarang</p>
         <p class="text-[13px] font-bold text-slate-900 mt-1">
           {{ DAY_LABELS[normalizeDayKey(row.day_name)] }} ·
-          Jam ke-{{ row.hour_number }} · {{ row.start_time }}–{{ row.end_time }}
+          {{ t('common.lessonHour', { n: row.hour_number }) }} · {{ row.start_time }}–{{ row.end_time }}
         </p>
       </section>
 
@@ -171,7 +174,7 @@ const dayLabel = computed(() => {
         >
           <option value="">— pilih jam —</option>
           <option v-for="h in filteredHours" :key="h.id" :value="h.id">
-            Jam ke-{{ h.hour_number }} · {{ h.start_time }}–{{ h.end_time }}
+            {{ t('common.lessonHour', { n: h.hour_number }) }} · {{ h.start_time }}–{{ h.end_time }}
           </option>
         </select>
         <p v-if="dayId && filteredHours.length === 0 && !isLoadingHours" class="text-[10px] text-amber-700 mt-1">
@@ -183,7 +186,7 @@ const dayLabel = computed(() => {
       <section v-if="selectedHour" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
         <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Slot baru</p>
         <p class="text-[13px] font-bold text-emerald-900 mt-1">
-          {{ dayLabel }} · Jam ke-{{ selectedHour.hour_number }} ·
+          {{ dayLabel }} · {{ t('common.lessonHour', { n: selectedHour.hour_number }) }} ·
           {{ selectedHour.start_time }}–{{ selectedHour.end_time }}
         </p>
       </section>

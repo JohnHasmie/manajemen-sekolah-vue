@@ -5,20 +5,22 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import type { DemoBillingTemplate } from '@/types/demo';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
-const TEMPLATES: { v: DemoBillingTemplate; label: string }[] = [
-  { v: 'spp_bulanan', label: 'SPP bulanan' },
-  { v: 'uang_gedung', label: 'Uang gedung' },
-  { v: 'seragam', label: 'Seragam' },
-  { v: 'buku_paket', label: 'Buku paket' },
-  { v: 'uts_uas', label: 'UTS / UAS' },
-  { v: 'ekstrakurikuler', label: 'Ekstrakurikuler' },
-];
+const TEMPLATES = computed<{ v: DemoBillingTemplate; label: string }[]>(() => [
+  { v: 'spp_bulanan', label: t('registerDemo.billingTemplateSppBulanan') },
+  { v: 'uang_gedung', label: t('registerDemo.billingTemplateUangGedung') },
+  { v: 'seragam', label: t('registerDemo.billingTemplateSeragam') },
+  { v: 'buku_paket', label: t('registerDemo.billingTemplateBukuPaket') },
+  { v: 'uts_uas', label: t('registerDemo.billingTemplateUtsUas') },
+  { v: 'ekstrakurikuler', label: t('registerDemo.billingTemplateEkstrakurikuler') },
+]);
 
 const templates = computed({
   get: () => wizard.payload.billing.templates,
@@ -35,10 +37,10 @@ const nominal = computed({
   set: (v: number) => wizard.patchPayload('billing', { spp_nominal: v }),
 });
 
-function toggleTemplate(t: DemoBillingTemplate) {
+function toggleTemplate(tpl: DemoBillingTemplate) {
   const set = new Set(templates.value);
-  if (set.has(t)) set.delete(t);
-  else set.add(t);
+  if (set.has(tpl)) set.delete(tpl);
+  else set.add(tpl);
   templates.value = Array.from(set);
 }
 
@@ -50,36 +52,36 @@ const formattedNominal = computed(() =>
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Langkah 10 dari 12 · Tagihan
+      {{ t('registerDemo.step10Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
-      Skenario tagihan
+      {{ t('registerDemo.step10Title') }}
     </h2>
-    <p class="text-[13px] text-slate-600 mb-4">Pilih jenis yang Anda jalankan. Bisa multi-pilih.</p>
+    <p class="text-[13px] text-slate-600 mb-4">{{ t('registerDemo.step10Subtitle') }}</p>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Template tagihan
+      {{ t('registerDemo.step10TemplateLabel') }}
     </p>
     <div class="flex flex-wrap gap-1.5 mb-5">
       <button
-        v-for="t in TEMPLATES"
-        :key="t.v"
+        v-for="tpl in TEMPLATES"
+        :key="tpl.v"
         type="button"
         class="px-3 py-1.5 rounded-full text-[12px] font-bold transition border"
         :class="
-          templates.includes(t.v)
+          templates.includes(tpl.v)
             ? 'bg-role-admin text-white border-role-admin'
             : 'bg-white text-slate-700 border-slate-300 hover:border-slate-400'
         "
-        @click="toggleTemplate(t.v)"
+        @click="toggleTemplate(tpl.v)"
       >
-        {{ t.label }}
+        {{ tpl.label }}
       </button>
     </div>
 
     <template v-if="templates.includes('spp_bulanan')">
       <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-        SPP bulanan · nominal
+        {{ t('registerDemo.step10SppLabel') }}
       </p>
       <div class="flex items-center gap-4 mb-5">
         <input
@@ -95,7 +97,7 @@ const formattedNominal = computed(() =>
     </template>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Skenario pembayaran
+      {{ t('registerDemo.step10ScenarioLabel') }}
     </p>
     <div class="grid grid-cols-2 gap-3">
       <button
@@ -105,9 +107,9 @@ const formattedNominal = computed(() =>
         @click="mode = 'build_year'"
       >
         <NavIcon name="rocket" :size="22" :class="mode === 'build_year' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
-        <div class="text-[13px] font-bold">Bangun setahun</div>
+        <div class="text-[13px] font-bold">{{ t('registerDemo.step10BuildYear') }}</div>
         <div class="text-[11px]" :class="mode === 'build_year' ? 'text-role-admin' : 'text-slate-500'">
-          12 bulan · sebagian sudah lunas
+          {{ t('registerDemo.step10BuildYearHint') }}
         </div>
       </button>
       <button
@@ -119,7 +121,7 @@ const formattedNominal = computed(() =>
         <NavIcon name="clock" :size="22" :class="mode === 'skip' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
         <div class="text-[13px] font-bold">Skip</div>
         <div class="text-[11px]" :class="mode === 'skip' ? 'text-role-admin' : 'text-slate-500'">
-          Atur nanti dari Keuangan
+          {{ t('registerDemo.step10SkipHint') }}
         </div>
       </button>
     </div>

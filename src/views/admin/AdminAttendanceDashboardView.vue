@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { AttendanceService } from '@/services/attendance.service';
 import type { AttendanceDashboard, AttendanceRange, TingkatTrend } from '@/types/attendance';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
@@ -27,6 +28,8 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import AdminAttendanceNewSessionWizard from '@/components/feature/AdminAttendanceNewSessionWizard.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
+// Aliased to `$t` — template iterates `t in trends`.
+const { t: $t } = useI18n();
 const router = useRouter();
 
 const dashboard = ref<AttendanceDashboard | null>(null);
@@ -35,11 +38,11 @@ const error = ref<string | null>(null);
 
 const periodKey = ref<AttendanceRange>('today');
 
-const PERIOD_OPTIONS: { key: AttendanceRange; label: string }[] = [
-  { key: 'today', label: 'Hari ini' },
-  { key: 'week', label: 'Pekan' },
-  { key: 'month', label: 'Bulan' },
-];
+const PERIOD_OPTIONS = computed<{ key: AttendanceRange; label: string }[]>(() => [
+  { key: 'today', label: $t('admin.attendanceDashboard.viewToday') },
+  { key: 'week', label: $t('admin.attendanceDashboard.viewWeek') },
+  { key: 'month', label: $t('admin.attendanceDashboard.viewMonth') },
+]);
 
 const state = computed<AsyncState<AttendanceDashboard>>(() => {
   if (isLoading.value && !dashboard.value) return { status: 'loading' };
@@ -92,9 +95,10 @@ const presentPct = computed(() => {
 
 const absentDeltaText = computed(() => {
   const d = kpi.value?.absent_delta ?? 0;
-  if (d === 0) return 'Sama dengan kemarin';
-  const arrow = d > 0 ? '↑' : '↓';
-  return `${arrow} ${Math.abs(d)} dari kemarin`;
+  if (d === 0) return $t('admin.attendanceDashboard.kpiDeltaSame');
+  return d > 0
+    ? `↑ ${$t('admin.attendanceDashboard.kpiDeltaUp', { n: Math.abs(d) })}`
+    : `↓ ${$t('admin.attendanceDashboard.kpiDeltaDown', { n: Math.abs(d) })}`;
 });
 
 const absentDeltaTone = computed(() => {
@@ -106,28 +110,28 @@ const absentDeltaTone = computed(() => {
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'check-circle',
-    label: 'Rata Kehadiran',
+    label: $t('admin.attendanceDashboard.kpiAvgAttendance'),
     value: `${(kpi.value?.avg_pct ?? 0).toFixed(1)}%`,
-    suffix: '7 hari',
+    suffix: $t('admin.attendanceDashboard.kpiDays7'),
     tone: 'green',
     accented: true,
   },
   {
     icon: 'users',
-    label: 'Hadir',
+    label: $t('admin.attendanceDashboard.kpiPresent'),
     value: totals.value?.present ?? 0,
     tone: 'brand',
   },
   {
     icon: 'user-x',
-    label: 'Tidak Hadir',
+    label: $t('admin.attendanceDashboard.kpiAbsent'),
     value: totalAbsent.value,
     tone: totalAbsent.value > 0 ? 'amber' : 'green',
     suffix: dashboard.value?.range_label ?? '',
   },
   {
     icon: 'trending-up',
-    label: 'Δ vs Kemarin',
+    label: $t('admin.attendanceDashboard.kpiDelta'),
     value: absentDeltaText.value,
     tone: absentDeltaTone.value as KpiCard['tone'],
     accented: (kpi.value?.absent_delta ?? 0) !== 0,
@@ -163,14 +167,32 @@ function formatShortDate(iso: string): string {
   // Parse as local date — backend sends YYYY-MM-DD.
   const [y, m, d] = iso.split('-').map((v) => Number(v));
   if (!y || !m || !d) return iso;
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  // Short month names track the active i18n locale (Jan/Feb/Mar/Mei vs
+  // Jan/Feb/Mar/May etc.) — same short keys used by parent activity card.
+  const months = [
+    $t('parent.activity.month.jan'),
+    $t('parent.activity.month.feb'),
+    $t('parent.activity.month.mar'),
+    $t('parent.activity.month.apr'),
+    $t('parent.activity.month.may'),
+    $t('parent.activity.month.jun'),
+    $t('parent.activity.month.jul'),
+    $t('parent.activity.month.aug'),
+    $t('parent.activity.month.sep'),
+    $t('parent.activity.month.oct'),
+    $t('parent.activity.month.nov'),
+    $t('parent.activity.month.dec'),
+  ];
   return `${d} ${months[m - 1]} ${y}`;
 }
 
 const trendWindowLabel = computed(() => {
   const w = dashboard.value?.trend_window;
-  if (!w) return '7 hari terakhir';
-  return `${formatShortDate(w.start)} – ${formatShortDate(w.end)}`;
+  if (!w) return $t('admin.attendanceDashboard.kpiDays7');
+  return $t('admin.attendanceDashboard.trendHint', {
+    from: formatShortDate(w.start),
+    to: formatShortDate(w.end),
+  });
 });
 
 const trendWindowIsHistorical = computed(
@@ -216,9 +238,9 @@ function onWizardDone(payload: {
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      kicker="Akademik · Kehadiran"
-      title="Dashboard Kehadiran"
-      meta="Ringkasan sekolah · drill ke tingkat untuk detail per-siswa"
+      :kicker="$t('admin.attendanceDashboard.kicker')"
+      :title="$t('admin.attendanceDashboard.title')"
+      :meta="$t('admin.attendanceDashboard.subtitle')"
       :live-dot="false"
     >
       <div class="flex items-center gap-2 flex-wrap">
@@ -234,7 +256,7 @@ function onWizardDone(payload: {
           @click="openLaporan"
         >
           <NavIcon name="file-text" :size="11" class="inline" />
-          Laporan
+          {{ $t('admin.attendanceDashboard.viewReport') }}
         </button>
       </div>
     </BrandPageHeader>
@@ -243,10 +265,8 @@ function onWizardDone(payload: {
 
     <AsyncView
       :state="state"
-      empty-title="Belum ada data kehadiran"
-      empty-description="Tidak ada catatan presensi untuk rentang waktu ini. Coba periksa lagi setelah guru menginput kehadiran hari ini."
+      :empty-title="$t('admin.attendanceDashboard.title')"
       empty-icon="check-square"
-      error-title="Gagal memuat dashboard kehadiran"
       @retry="load"
     >
       <template #default>
@@ -282,7 +302,7 @@ function onWizardDone(payload: {
               <div class="absolute inset-0 grid place-items-center text-center">
                 <div>
                   <p class="text-[10px] font-bold text-white/70 uppercase tracking-widest">
-                    Hadir
+                    {{ $t('admin.attendanceDashboard.todayHadirLabel') }}
                   </p>
                   <p class="text-2xl font-black">{{ presentPct.toFixed(1) }}%</p>
                 </div>
@@ -295,25 +315,25 @@ function onWizardDone(payload: {
                 {{ dashboard?.range_label ?? '—' }}
               </p>
               <p class="text-[12px] text-white/80">
-                {{ totalRecorded }} siswa tercatat
-                <span v-if="totals && totals.present > 0">· {{ totals.present }} hadir</span>
+                {{ $t('admin.attendanceDashboard.todayRecorded', { count: totalRecorded }) }}
+                <span v-if="totals && totals.present > 0">· {{ totals.present }} {{ $t('admin.attendanceDashboard.todayHadirLabel').toLowerCase() }}</span>
               </p>
               <div class="grid grid-cols-3 gap-2 mt-3">
                 <div class="bg-white/10 rounded-xl px-3 py-2">
                   <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">
-                    Izin
+                    {{ $t('admin.attendanceDashboard.todayIzin') }}
                   </p>
                   <p class="text-[15px] font-black mt-0.5">{{ totals?.excused ?? 0 }}</p>
                 </div>
                 <div class="bg-white/10 rounded-xl px-3 py-2">
                   <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">
-                    Sakit
+                    {{ $t('admin.attendanceDashboard.todaySakit') }}
                   </p>
                   <p class="text-[15px] font-black mt-0.5">{{ totals?.sick ?? 0 }}</p>
                 </div>
                 <div class="bg-white/10 rounded-xl px-3 py-2">
                   <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">
-                    Alpa
+                    {{ $t('admin.attendanceDashboard.todayAlpa') }}
                   </p>
                   <p class="text-[15px] font-black mt-0.5">{{ totals?.alpha ?? 0 }}</p>
                 </div>
@@ -331,19 +351,18 @@ function onWizardDone(payload: {
               </div>
               <div>
                 <h3 class="text-sm font-black text-slate-900 leading-none">
-                  Tren per Tingkat
+                  {{ $t('admin.attendanceDashboard.trendTitle') }}
                 </h3>
                 <p class="text-[10px] text-slate-400 font-bold mt-0.5">
-                  {{ trendWindowLabel }} · tap untuk lihat heatmap siswa
+                  {{ trendWindowLabel }}
                 </p>
               </div>
             </div>
             <span
               v-if="trendWindowIsHistorical && dashboard?.tingkats?.length"
               class="text-[9.5px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg"
-              :title="`Tidak ada catatan presensi 7 hari terakhir; menampilkan data sampai ${formatShortDate(dashboard?.trend_window?.end ?? '')}`"
             >
-              DATA HISTORIS
+              {{ $t('admin.attendanceDashboard.trendBadge') }}
             </span>
           </header>
 
@@ -351,8 +370,7 @@ function onWizardDone(payload: {
             v-if="!dashboard?.tingkats?.length"
             class="py-10 text-center text-[12px] text-slate-400 leading-relaxed"
           >
-            Belum ada catatan presensi.<br />
-            Mulai presensi pertama agar tren tingkat mulai terisi.
+            {{ $t('common.emptyTitle') }}
           </div>
           <ul v-else class="divide-y divide-slate-100">
             <li v-for="t in dashboard.tingkats" :key="t.tingkat">
@@ -365,7 +383,7 @@ function onWizardDone(payload: {
                   <span class="text-[13px] font-black">{{ t.tingkat }}</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-[13px] font-bold text-slate-900">Tingkat {{ t.tingkat }}</p>
+                  <p class="text-[13px] font-bold text-slate-900">{{ $t('admin.attendanceDashboard.trendGrade', { n: t.tingkat }) }}</p>
                   <p
                     v-if="t.alert_copy"
                     class="text-[10px] font-bold mt-0.5 leading-tight"
@@ -377,7 +395,7 @@ function onWizardDone(payload: {
                     {{ t.alert_copy }}
                   </p>
                   <p v-else class="text-[10px] text-slate-500 mt-0.5">
-                    Stabil
+                    {{ $t('admin.attendanceDashboard.trendStable') }}
                   </p>
                 </div>
                 <!-- Sparkline -->
@@ -428,7 +446,7 @@ function onWizardDone(payload: {
         <section class="grid grid-cols-2 gap-2 mt-4">
           <Button variant="secondary" block @click="openLaporan">
             <NavIcon name="file-text" :size="13" />
-            Lihat Laporan Sesi
+            {{ $t('admin.attendanceDashboard.openReport') }}
           </Button>
           <Button
             variant="primary"
@@ -437,7 +455,7 @@ function onWizardDone(payload: {
             @click="dashboard?.tingkats?.[0] && openTingkatHeatmap(dashboard.tingkats[0])"
           >
             <NavIcon name="grid" :size="13" />
-            Buka Heatmap Siswa
+            {{ $t('admin.attendanceDashboard.openHeatmap') }}
           </Button>
         </section>
       </template>
@@ -450,7 +468,7 @@ function onWizardDone(payload: {
       @click="showNewSessionWizard = true"
     >
       <NavIcon name="plus" :size="14" />
-      Mulai Presensi
+      {{ $t('admin.attendanceDashboard.startAttendance') }}
     </Button>
 
     <AdminAttendanceNewSessionWizard

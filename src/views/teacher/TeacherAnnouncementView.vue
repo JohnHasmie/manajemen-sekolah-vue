@@ -11,6 +11,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { AnnouncementService } from '@/services/announcements.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import type {
@@ -37,6 +38,8 @@ import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Toast from '@/components/ui/Toast.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
+const { t } = useI18n();
+
 const items = ref<Announcement[]>([]);
 const classes = ref<Classroom[]>([]);
 const isLoading = ref(true);
@@ -52,29 +55,29 @@ const searchQuery = ref('');
 const showPriorityPicker = ref(false);
 const showStatusPicker = ref(false);
 
-const PRIORITY_OPTIONS: { key: PriorityFilter; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'urgent', label: 'Mendesak' },
-  { key: 'high', label: 'Penting' },
-  { key: 'normal', label: 'Biasa' },
-  { key: 'low', label: 'Rendah' },
-];
-const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'active', label: 'Aktif' },
-  { key: 'scheduled', label: 'Terjadwal' },
-  { key: 'expired', label: 'Kedaluwarsa' },
-];
+const PRIORITY_OPTIONS = computed<{ key: PriorityFilter; label: string }[]>(() => [
+  { key: 'all', label: t('common.all') },
+  { key: 'urgent', label: t('teacher.announcement.urgent') },
+  { key: 'high', label: t('teacher.announcement.important') },
+  { key: 'normal', label: t('teacher.announcement.normal') },
+  { key: 'low', label: t('teacher.announcement.low') },
+]);
+const STATUS_OPTIONS = computed<{ key: StatusFilter; label: string }[]>(() => [
+  { key: 'all', label: t('common.all') },
+  { key: 'active', label: t('common.active') },
+  { key: 'scheduled', label: t('teacher.announcement.scheduled') },
+  { key: 'expired', label: t('teacher.announcement.expired') },
+]);
 
 const activePriority = computed(
   () =>
-    PRIORITY_OPTIONS.find((p) => p.key === priorityFilter.value) ??
-    PRIORITY_OPTIONS[0],
+    PRIORITY_OPTIONS.value.find((p) => p.key === priorityFilter.value) ??
+    PRIORITY_OPTIONS.value[0],
 );
 const activeStatus = computed(
   () =>
-    STATUS_OPTIONS.find((s) => s.key === statusFilter.value) ??
-    STATUS_OPTIONS[0],
+    STATUS_OPTIONS.value.find((s) => s.key === statusFilter.value) ??
+    STATUS_OPTIONS.value[0],
 );
 
 // ── Compose modal state ──
@@ -271,11 +274,11 @@ function openCompose() {
 
 async function publish() {
   if (!form.title.trim() || !form.body.trim()) {
-    toast.value = { message: 'Judul dan isi wajib diisi.', tone: 'error' };
+    toast.value = { message: t('teacher.announcement.titleContentRequired'), tone: 'error' };
     return;
   }
   if (form.class_ids.length === 0) {
-    toast.value = { message: 'Pilih minimal satu kelas tujuan.', tone: 'error' };
+    toast.value = { message: t('teacher.announcement.selectClassRequired'), tone: 'error' };
     return;
   }
   isSaving.value = true;

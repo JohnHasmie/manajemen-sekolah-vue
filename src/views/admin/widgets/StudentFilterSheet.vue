@@ -2,10 +2,20 @@
   StudentFilterSheet.vue — port of `student_filter_sheet.dart`.
 -->
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { computed, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Modal from '@/components/ui/Modal.vue';
 import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import type { Classroom } from '@/types/entities';
+
+const { t } = useI18n();
+
+const STATUS_OPTIONS = computed(() => [
+  { val: 'Aktif', label: t('admin.studentFilter.statusActive') },
+  { val: 'Lulus', label: t('admin.studentFilter.statusGraduated') },
+  { val: 'Pindah', label: t('admin.studentFilter.statusTransferred') },
+  { val: 'Non-aktif', label: t('admin.studentFilter.statusInactive') },
+]);
 
 export interface StudentFilterValues {
   status: string | null;
@@ -47,12 +57,12 @@ function apply() {
 </script>
 
 <template>
-  <Modal title="Filter Siswa" subtitle="Sempitkan daftar berdasarkan kriteria." @close="emit('close')">
+  <Modal :title="t('admin.studentFilter.title')" :subtitle="t('admin.studentFilter.subtitle')" @close="emit('close')">
     <div class="space-y-md">
       <!-- Status -->
       <div>
         <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">
-          Status
+          {{ t('admin.studentFilter.statusLabel') }}
         </p>
         <div class="flex flex-wrap gap-2">
           <button
@@ -65,21 +75,21 @@ function apply() {
             "
             @click="form.status = null"
           >
-            Semua
+            {{ t('admin.studentFilter.all') }}
           </button>
           <button
-            v-for="s in ['Aktif', 'Lulus', 'Pindah', 'Non-aktif']"
-            :key="s"
+            v-for="opt in STATUS_OPTIONS"
+            :key="opt.val"
             type="button"
             class="px-3 py-1.5 rounded-full text-xs font-medium border"
             :class="
-              form.status === s
+              form.status === opt.val
                 ? 'bg-brand text-white border-brand'
                 : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
             "
-            @click="form.status = s"
+            @click="form.status = opt.val"
           >
-            {{ s }}
+            {{ opt.label }}
           </button>
         </div>
       </div>
@@ -87,7 +97,7 @@ function apply() {
       <!-- Kelas -->
       <div>
         <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">
-          Kelas
+          {{ t('admin.studentFilter.classLabel') }}
         </p>
         <div class="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
           <button
@@ -110,7 +120,7 @@ function apply() {
       <!-- Gender -->
       <div>
         <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2">
-          Jenis kelamin
+          {{ t('admin.studentFilter.genderLabel') }}
         </p>
         <div class="flex gap-2">
           <button
@@ -123,7 +133,7 @@ function apply() {
             "
             @click="form.gender = null"
           >
-            Semua
+            {{ t('admin.studentFilter.all') }}
           </button>
           <button
             type="button"
@@ -135,7 +145,7 @@ function apply() {
             "
             @click="form.gender = 'L'"
           >
-            Laki-laki
+            {{ t('admin.studentFilter.genderMale') }}
           </button>
           <button
             type="button"
@@ -147,7 +157,7 @@ function apply() {
             "
             @click="form.gender = 'P'"
           >
-            Perempuan
+            {{ t('admin.studentFilter.genderFemale') }}
           </button>
         </div>
       </div>
@@ -158,12 +168,12 @@ function apply() {
           class="text-sm font-medium text-slate-500 hover:text-slate-700"
           @click="reset"
         >
-          Atur ulang
+          {{ t('admin.studentFilter.reset') }}
         </button>
       </div>
 
       <BottomSheetFooter
-        primary-label="Terapkan filter"
+        :primary-label="t('admin.studentFilter.apply')"
         @primary="apply"
         @secondary="emit('close')"
       />

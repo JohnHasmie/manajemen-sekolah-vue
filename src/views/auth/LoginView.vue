@@ -10,7 +10,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
+
+const { t } = useI18n();
 
 import BrandBand from './components/BrandBand.vue';
 import FormCard from './components/FormCard.vue';
@@ -116,7 +119,7 @@ const whatsappUrl = computed(() => {
                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25" />
                 <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
               </svg>
-              <p class="text-[14px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Membuka wizard demo...</p>
+              <p class="text-[14px] font-black text-slate-400 uppercase tracking-widest animate-pulse">{{ t('auth.loadingDemoWizard') }}</p>
             </div>
           </template>
 
@@ -126,14 +129,14 @@ const whatsappUrl = computed(() => {
                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25" />
                 <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
               </svg>
-              <p class="text-[14px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Menyiapkan Dashboard...</p>
+              <p class="text-[14px] font-black text-slate-400 uppercase tracking-widest animate-pulse">{{ t('auth.loadingDashboard') }}</p>
               
               <button 
                 type="button"
                 class="mt-4 text-[12px] font-bold text-slate-400 hover:text-brand-cobalt transition-colors"
                 @click="auth.logout()"
               >
-                Bukan akun Anda? <span class="underline">Keluar</span>
+                {{ t('auth.notYourAccountLogout') }}
               </button>
             </div>
           </template>

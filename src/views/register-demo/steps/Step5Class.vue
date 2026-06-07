@@ -5,9 +5,11 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
 const GRADE_LISTS: Record<string, string[]> = {
@@ -77,12 +79,12 @@ const previewNames = computed(() => {
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Langkah 6 dari 12 · Rombongan belajar
+      {{ t('registerDemo.step6Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
-      Pola kelas Anda?
+      {{ t('registerDemo.step6Title') }}
     </h2>
-    <p class="text-[13px] text-slate-600 mb-4">Pilih pola umum atau sesuaikan per tingkat.</p>
+    <p class="text-[13px] text-slate-600 mb-4">{{ t('registerDemo.step6Subtitle') }}</p>
 
     <div class="grid grid-cols-3 gap-3 mb-4">
       <button
@@ -98,16 +100,16 @@ const previewNames = computed(() => {
         @click="pattern = p"
       >
         <div class="text-[13px] font-bold capitalize">
-          {{ p === 'small' ? 'Kecil' : p === 'medium' ? 'Sedang' : 'Besar' }}
+          {{ p === 'small' ? t('registerDemo.step6PatternSmall') : p === 'medium' ? t('registerDemo.step6PatternMedium') : t('registerDemo.step6PatternLarge') }}
         </div>
         <div class="text-[11px] text-slate-500">
-          {{ PATTERN_DEFAULT[p] }} rombel/tingkat
+          {{ PATTERN_DEFAULT[p] }} {{ t('registerDemo.step6PatternHint') }}
         </div>
       </button>
     </div>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Sesuaikan per tingkat
+      {{ t('registerDemo.step6CustomizeLabel') }}
     </p>
     <div class="space-y-2 mb-4">
       <div
@@ -115,7 +117,7 @@ const previewNames = computed(() => {
         :key="g"
         class="flex items-center gap-3 border border-slate-200 rounded-lg px-3 py-2"
       >
-        <span class="text-[12.5px] font-bold w-16">Kelas {{ g }}</span>
+        <span class="text-[12.5px] font-bold w-16">{{ t('registerDemo.step6GradeLabel', { g }) }}</span>
         <input
           type="range"
           min="1"
@@ -124,14 +126,14 @@ const previewNames = computed(() => {
           class="flex-1 accent-role-admin"
           @input="setGradeCount(g, +($event.target as HTMLInputElement).value)"
         />
-        <span class="text-[13px] font-bold w-16 text-right">{{ perGrade[g] ?? 1 }} rombel</span>
+        <span class="text-[13px] font-bold w-16 text-right">{{ perGrade[g] ?? 1 }} {{ t('registerDemo.step6RombelLabel') }}</span>
       </div>
     </div>
 
     <div class="border border-dashed border-slate-300 rounded-lg p-3 text-[12px] text-slate-600">
-      <strong class="text-slate-900 font-bold">Akan dibuat:</strong>
+      <strong class="text-slate-900 font-bold">{{ t('registerDemo.step6WillCreateLabel') }}</strong>
       {{ previewNames.join(' · ') || '—' }}
-      <span class="text-slate-500">({{ previewNames.length }} kelas)</span>
+      <span class="text-slate-500">({{ previewNames.length }} {{ t('registerDemo.step6CountLabel') }})</span>
     </div>
   </div>
 </template>

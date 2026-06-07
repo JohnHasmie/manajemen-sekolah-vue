@@ -5,9 +5,11 @@
 -->
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { AuthService } from '@/services/auth.service';
 import Modal from '@/components/ui/Modal.vue';
 
+const { t } = useI18n();
 const emit = defineEmits<{ close: [] }>();
 
 const name = ref('');
@@ -21,7 +23,7 @@ const error = ref<string | null>(null);
 
 async function handleSubmit() {
   if (!name.value.trim() || !email.value.trim() || !message.value.trim()) {
-    error.value = 'Nama, email, dan pesan wajib diisi.';
+    error.value = t('auth.help.validationRequired');
     return;
   }
   isLoading.value = true;
@@ -59,13 +61,13 @@ async function handleSubmit() {
         class="w-full rounded-xl bg-brand hover:bg-brand-700 text-white font-semibold py-sm"
         @click="emit('close')"
       >
-        Tutup
+        {{ t('common.close') }}
       </button>
     </div>
 
     <form v-else class="space-y-md" @submit.prevent="handleSubmit">
       <div>
-        <label for="help-name" class="block text-sm font-medium text-slate-700 mb-1">Nama lengkap</label>
+        <label for="help-name" class="block text-sm font-medium text-slate-700 mb-1">{{ t('auth.help.fullName') }}</label>
         <input
           id="help-name"
           v-model="name"
@@ -75,7 +77,7 @@ async function handleSubmit() {
         />
       </div>
       <div>
-        <label for="help-email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <label for="help-email" class="block text-sm font-medium text-slate-700 mb-1">{{ t('auth.email') }}</label>
         <input
           id="help-email"
           v-model="email"
@@ -86,7 +88,7 @@ async function handleSubmit() {
       </div>
       <div>
         <label for="help-school" class="block text-sm font-medium text-slate-700 mb-1">
-          Nama sekolah <span class="text-slate-400 font-normal">(opsional)</span>
+          {{ t('auth.help.schoolName') }} <span class="text-slate-400 font-normal">{{ t('auth.help.optional') }}</span>
         </label>
         <input
           id="help-school"
@@ -97,12 +99,12 @@ async function handleSubmit() {
         />
       </div>
       <div>
-        <label for="help-message" class="block text-sm font-medium text-slate-700 mb-1">Pesan</label>
+        <label for="help-message" class="block text-sm font-medium text-slate-700 mb-1">{{ t('auth.help.message') }}</label>
         <textarea
           id="help-message"
           v-model="message"
           rows="4"
-          placeholder="Jelaskan kendala yang Anda alami…"
+          :placeholder="t('auth.help.messagePlaceholder')"
           class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none resize-none"
           :disabled="isLoading"
         ></textarea>
@@ -116,14 +118,14 @@ async function handleSubmit() {
           class="rounded-xl border border-slate-300 hover:bg-slate-50 py-sm text-sm font-medium"
           @click="emit('close')"
         >
-          Batal
+          {{ t('common.cancel') }}
         </button>
         <button
           type="submit"
           class="rounded-xl bg-brand hover:bg-brand-700 disabled:bg-brand/60 text-white font-semibold py-sm text-sm"
           :disabled="isLoading"
         >
-          {{ isLoading ? 'Mengirim…' : 'Kirim permintaan' }}
+          {{ isLoading ? t('auth.help.sending') : t('auth.help.submit') }}
         </button>
       </div>
     </form>

@@ -6,12 +6,14 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { useToast } from '@/composables/useToast';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 const auth = useAuthStore();
 const toast = useToast();
@@ -22,9 +24,9 @@ const credentials = computed(() => wizard.result?.credentials ?? []);
 async function copyValue(value: string, label: string) {
   try {
     await navigator.clipboard.writeText(value);
-    toast.success(`${label} disalin.`);
+    toast.success(`${label} ${t('registerDemo.step11CopiedSuffix')}`);
   } catch {
-    toast.error('Gagal menyalin.');
+    toast.error(t('registerDemo.step11CopyFailed'));
   }
 }
 
@@ -40,12 +42,12 @@ const roleIcon: Record<string, string> = {
   <div>
     <div v-if="wizard.isProvisioning" class="text-center py-12">
       <Spinner size="lg" />
-      <p class="mt-4 text-[14px] font-bold text-slate-700">Sedang membangun sekolah Anda…</p>
-      <p class="text-[12px] text-slate-500 mt-1">Ini biasanya butuh beberapa detik.</p>
+      <p class="mt-4 text-[14px] font-bold text-slate-700">{{ t('registerDemo.step11Building') }}</p>
+      <p class="text-[12px] text-slate-500 mt-1">{{ t('registerDemo.step11BuildingNote') }}</p>
     </div>
 
     <div v-else-if="!wizard.result" class="text-center py-12 text-slate-500 text-[13px]">
-      Tekan tombol "Buat sekolah demo" di langkah Skenario untuk memulai.
+      {{ t('registerDemo.step11NoResultYet') }}
     </div>
 
     <div v-else>
@@ -53,14 +55,14 @@ const roleIcon: Record<string, string> = {
         <NavIcon name="check" :size="32" class="text-emerald-600" />
       </div>
       <h2 class="text-[22px] font-black text-slate-900 text-center mb-1">
-        Sekolah demo Anda siap!
+        {{ t('registerDemo.step11Title') }}
       </h2>
       <p class="text-center text-[13px] text-slate-600 mb-5">
-        Simpan kredensial di bawah — Anda butuh untuk coba 3 role.
+        {{ t('registerDemo.step11Subtitle') }}
       </p>
 
       <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-        Data dasar
+        {{ t('registerDemo.step11BasicDataLabel') }}
       </p>
       <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
         <div
@@ -91,7 +93,7 @@ const roleIcon: Record<string, string> = {
         "
       >
         <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-          Skenario
+          {{ t('registerDemo.step11ScenarioDataLabel') }}
         </p>
         <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-6">
           <div
@@ -120,7 +122,7 @@ const roleIcon: Record<string, string> = {
 
       <div class="flex items-end justify-between mb-2">
         <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase">
-          3 akun untuk 3 sudut pandang
+          {{ t('registerDemo.step11AccountsLabel') }}
         </p>
       </div>
       <div
@@ -128,11 +130,7 @@ const roleIcon: Record<string, string> = {
       >
         <NavIcon name="alert-circle" :size="14" class="text-amber-600 mt-0.5 flex-shrink-0" />
         <p class="text-[11.5px] text-amber-900 leading-snug">
-          <strong>Akun Google Anda jadi ADMIN sekolah</strong> — dapat akses penuh ke semua
-          data demo. Untuk merasakan POV guru atau wali yang sebenarnya (lihat jadwal
-          mengajar / data anak), <strong>login dengan 2 akun di bawah di tab browser private</strong>.
-          Jangan ketik password manual; pakai tombol <NavIcon name="copy" :size="11" class="inline-block -mt-0.5" /> salin
-          supaya tidak salah karakter.
+          {{ t('registerDemo.step11AdminNote') }}
         </p>
       </div>
       <div class="grid gap-2 sm:grid-cols-3">
@@ -152,10 +150,10 @@ const roleIcon: Record<string, string> = {
               {{ cred.role }}
             </span>
             <span v-if="cred.is_self" class="ml-auto text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full font-bold">
-              Anda
+              {{ t('registerDemo.step11YouBadge') }}
             </span>
             <span v-else class="ml-auto text-[10px] text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded-full font-bold">
-              Demo
+              {{ t('registerDemo.step11DemoBadge') }}
             </span>
           </div>
           <div class="flex items-center gap-1 mb-1">
@@ -163,7 +161,7 @@ const roleIcon: Record<string, string> = {
             <button
               type="button"
               class="text-slate-400 hover:text-role-admin shrink-0"
-              :title="'Salin email'"
+              :title="t('registerDemo.step11CopyEmailTitle')"
               @click="copyValue(cred.email, 'Email')"
             >
               <NavIcon name="copy" :size="12" />
@@ -177,7 +175,7 @@ const roleIcon: Record<string, string> = {
               v-if="cred.password"
               type="button"
               class="text-slate-400 hover:text-role-admin shrink-0"
-              :title="'Salin password'"
+              :title="t('registerDemo.step11CopyPasswordTitle')"
               @click="copyValue(cred.password!, 'Password')"
             >
               <NavIcon name="copy" :size="12" />
@@ -187,16 +185,13 @@ const roleIcon: Record<string, string> = {
             v-if="!cred.is_self"
             class="text-[10px] text-slate-500 mt-1.5 leading-snug"
           >
-            Login dengan kartu ini untuk lihat sudut pandang
-            {{ cred.role === 'teacher' ? 'guru — jadwal mengajar, nilai, RPP' : 'wali — tagihan anak, nilai anak, kehadiran anak' }}.
+            {{ cred.role === 'teacher' ? t('registerDemo.step11TeacherPovNote') : t('registerDemo.step11ParentPovNote') }}.
           </p>
         </div>
       </div>
 
       <p class="text-[11.5px] text-slate-500 mt-4 text-center leading-snug">
-        Klik <strong>Masuk dashboard demo</strong> di bawah untuk masuk sebagai admin
-        dengan akun Google Anda. Jangan tutup tab — buka tab incognito baru untuk
-        login pakai akun guru / wali demo.
+        {{ t('registerDemo.step11FinalNote') }}
       </p>
     </div>
   </div>

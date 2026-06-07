@@ -18,6 +18,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
@@ -38,6 +39,7 @@ import ParentRecommendationCard from '@/components/feature/ParentRecommendationC
 import ParentRecommendationDetailModal from '@/components/feature/ParentRecommendationDetailModal.vue';
 import ParentRecFilterModal from '@/components/feature/ParentRecFilterModal.vue';
 
+const { t } = useI18n();
 const auth = useAuthStore();
 const { children, activeChildId } = useChildPicker();
 
@@ -113,18 +115,18 @@ async function reload() {
 function friendlyError(e: unknown): string {
   const raw = String(e ?? '');
   if (raw.includes('Network') || raw.includes('ECONNREFUSED')) {
-    return 'Tidak dapat terhubung ke server AI rekomendasi.';
+    return t('parent.recommendations.errorNetworkMsg');
   }
   if (raw.includes('500')) {
-    return 'Server rekomendasi sedang bermasalah. Coba lagi sebentar.';
+    return t('parent.recommendations.errorServerMsg');
   }
   if (raw.includes('401') || raw.includes('403')) {
-    return 'Sesi Anda telah berakhir. Silakan masuk ulang.';
+    return t('parent.recommendations.errorSessionExpired');
   }
   if (raw.includes('404')) {
-    return 'Layanan rekomendasi tidak ditemukan pada akun ini.';
+    return t('parent.recommendations.errorNotFound');
   }
-  return 'Gagal memuat rekomendasi. Coba lagi.';
+  return t('parent.recommendations.errorGenericMsg');
 }
 
 onMounted(reload);
@@ -300,10 +302,10 @@ const statusChipEntries = computed<StatusChipEntry[]>(() => {
     if (!row.read_at) unread++;
   }
   return [
-    { key: 'all', label: 'Semua', count: rowsForChild.length },
-    { key: 'unread', label: 'Belum Dibaca', count: unread },
-    { key: 'active', label: 'Aktif', count: active },
-    { key: 'completed', label: 'Selesai', count: completed },
+    { key: 'all', label: t('parent.recommendations.statusAll'), count: rowsForChild.length },
+    { key: 'unread', label: t('parent.recommendations.statusUnread'), count: unread },
+    { key: 'active', label: t('parent.recommendations.statusActive'), count: active },
+    { key: 'completed', label: t('parent.recommendations.statusCompleted'), count: completed },
   ];
 });
 
@@ -330,17 +332,17 @@ const state = computed<AsyncState<ParentInboxRow[]>>(() => {
 
 const emptyTitle = computed(() =>
   isMultiChildHub.value
-    ? 'Belum ada rekomendasi'
+    ? t('parent.recommendations.emptyMultiTitle')
     : inbox.value.length > 0 && filteredRows.value.length === 0
-      ? 'Tidak ada rekomendasi untuk filter ini'
-      : 'Belum ada rekomendasi untuk anak ini',
+      ? t('parent.recommendations.emptyFilteredTitle')
+      : t('parent.recommendations.emptyChildTitle'),
 );
 const emptyDescription = computed(() =>
   isMultiChildHub.value
-    ? 'Wali kelas akan mengirim rekomendasi belajar di sini.'
+    ? t('parent.recommendations.emptyMultiDesc')
     : inbox.value.length > 0 && filteredRows.value.length === 0
-      ? 'Coba reset filter di atas.'
-      : 'Coba periksa lagi nanti.',
+      ? t('parent.recommendations.emptyFilteredDesc')
+      : t('parent.recommendations.emptyChildDesc'),
 );
 
 // ── Initials helper for hero ──
@@ -354,12 +356,15 @@ function initialsOf(name: string): string {
 // ── Header meta ──
 const headerMeta = computed(() => {
   if (isMultiChildHub.value) {
-    return `Wali · ${summaryChildren.value.length} anak`;
+    return t('parent.recommendations.metaMultiChildren', { count: summaryChildren.value.length });
   }
   if (selectedChild.value) {
-    return `${selectedChild.value.class_name} · ${selectedChild.value.total_count} rekomendasi`;
+    return t('parent.recommendations.metaSingleChild', {
+      class: selectedChild.value.class_name,
+      count: selectedChild.value.total_count,
+    });
   }
-  return 'Saran tindakan dari wali kelas';
+  return t('parent.recommendations.metaSubtitle');
 });
 
 // ── Detail handlers ──
@@ -394,8 +399,8 @@ const SKELETON_ROWS = Array.from({ length: 4 });
   <div class="space-y-md pb-12">
     <!-- HEADER -->
     <ParentPageHeader
-      kicker="Akademik · Anak"
-      title="Rekomendasi"
+      :kicker="t('parent.shared.kickerAcademic')"
+      :title="t('parent.recommendations.title')"
       :interpolate-child="false"
       :meta="headerMeta"
     >
@@ -406,7 +411,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
           @click="filterOpen = true"
         >
           <NavIcon name="filter" :size="12" />
-          Filter
+          {{ t('parent.recommendations.filterButton') }}
           <span
             v-if="activeFilterCount > 0"
             class="ml-1 px-1.5 py-0.5 rounded-full bg-white text-role-wali text-[9px] font-black"
@@ -425,13 +430,13 @@ const SKELETON_ROWS = Array.from({ length: 4 });
       <div class="text-center px-2">
         <p class="text-xl font-black text-role-wali leading-none">{{ kpi.unread }}</p>
         <p class="text-[9.5px] font-bold uppercase tracking-widest text-slate-500 mt-1.5">
-          Belum dibaca
+          {{ t('parent.recommendations.kpiUnread') }}
         </p>
       </div>
       <div class="text-center px-2">
         <p class="text-xl font-black text-amber-600 leading-none">{{ kpi.active }}</p>
         <p class="text-[9.5px] font-bold uppercase tracking-widest text-slate-500 mt-1.5">
-          Aktif
+          {{ t('parent.recommendations.kpiActive') }}
         </p>
       </div>
       <div class="text-center px-2">
@@ -439,7 +444,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
           {{ kpi.completed }}
         </p>
         <p class="text-[9.5px] font-bold uppercase tracking-widest text-slate-500 mt-1.5">
-          Selesai
+          {{ t('parent.recommendations.kpiCompleted') }}
         </p>
       </div>
     </section>
@@ -459,7 +464,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
         "
         @click="selectedChildKey = ALL_KEY"
       >
-        Semua
+        {{ t('parent.recommendations.allChildren') }}
         <span
           class="ml-1 px-1.5 py-0.5 rounded-full text-[9px] font-black"
           :class="
@@ -527,7 +532,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
         <!-- Frame A — multi-child hub -->
         <section v-if="isMultiChildHub" class="space-y-2.5">
           <p class="text-[10px] font-bold uppercase tracking-widest text-slate-500 px-1">
-            Anak Saya · {{ summaryChildren.length }} anak
+            {{ t('parent.recommendations.hubHeader', { count: summaryChildren.length }) }}
           </p>
           <button
             v-for="c in summaryChildren"

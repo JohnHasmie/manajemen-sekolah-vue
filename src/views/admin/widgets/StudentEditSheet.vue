@@ -5,9 +5,12 @@
 -->
 <script setup lang="ts">
 import { reactive, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Modal from '@/components/ui/Modal.vue';
 import BottomSheetFooter from '@/components/ui/BottomSheetFooter.vue';
 import type { Student, Classroom } from '@/types/entities';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   student?: Student | null;
@@ -34,23 +37,23 @@ const form = reactive({
 });
 
 const isEdit = computed(() => Boolean(props.student?.id));
-const title = computed(() => (isEdit.value ? 'Ubah Siswa' : 'Tambah Siswa'));
+const title = computed(() => (isEdit.value ? t('admin.student.editTitle') : t('admin.student.addTitle')));
 const subtitle = computed(() =>
   isEdit.value
-    ? 'Perbarui data siswa di bawah ini.'
-    : 'Lengkapi data siswa baru.',
+    ? t('admin.student.editSubtitle')
+    : t('admin.student.addSubtitle'),
 );
 
 const errors = reactive<Record<string, string>>({});
 
 function validate(): boolean {
   Object.keys(errors).forEach((k) => delete errors[k]);
-  if (!form.name.trim()) errors.name = 'Nama wajib diisi.';
+  if (!form.name.trim()) errors.name = t('admin.student.nameRequired');
   if (!form.student_number.trim())
-    errors.student_number = 'NIS wajib diisi.';
-  if (!form.class_id) errors.class_id = 'Kelas wajib dipilih.';
+    errors.student_number = t('admin.student.nisRequired');
+  if (!form.class_id) errors.class_id = t('admin.student.classRequired');
   if (!form.guardian_name.trim())
-    errors.guardian_name = 'Nama wali wajib diisi.';
+    errors.guardian_name = t('admin.student.guardianRequired');
   return Object.keys(errors).length === 0;
 }
 
@@ -75,7 +78,7 @@ function submit() {
     <form class="space-y-md" @submit.prevent="submit">
       <!-- Nama -->
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Nama lengkap</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.fullName') }}</label>
         <input
           v-model="form.name"
           type="text"
@@ -87,7 +90,7 @@ function submit() {
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">NIS / NISN</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('admin.student.nisLabel') }}</label>
           <input
             v-model="form.student_number"
             type="text"
@@ -99,13 +102,13 @@ function submit() {
           </p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Kelas</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.class') }}</label>
           <select
             v-model="form.class_id"
             class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
             :disabled="isSaving"
           >
-            <option value="">— Pilih kelas —</option>
+            <option value="">{{ t('admin.student.selectClassPlaceholder') }}</option>
             <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
           </select>
           <p v-if="errors.class_id" class="text-xs text-status-danger mt-1">
@@ -116,19 +119,19 @@ function submit() {
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Jenis kelamin</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.gender') }}</label>
           <select
             v-model="form.gender"
             class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
             :disabled="isSaving"
           >
-            <option value="">— Pilih —</option>
-            <option value="L">Laki-laki</option>
-            <option value="P">Perempuan</option>
+            <option value="">{{ t('common.selectPlaceholder') }}</option>
+            <option value="L">{{ t('admin.gender.male') }}</option>
+            <option value="P">{{ t('admin.gender.female') }}</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal lahir</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.dateOfBirth') }}</label>
           <input
             v-model="form.date_of_birth"
             type="date"
@@ -139,7 +142,7 @@ function submit() {
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Alamat</label>
+        <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.address') }}</label>
         <textarea
           v-model="form.address"
           rows="2"
@@ -150,10 +153,10 @@ function submit() {
 
       <div class="border-t border-slate-100 pt-md space-y-md">
         <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">
-          Data wali
+          {{ t('admin.student.guardianDataSection') }}
         </p>
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Nama wali</label>
+          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('admin.student.guardianName') }}</label>
           <input
             v-model="form.guardian_name"
             type="text"
@@ -166,7 +169,7 @@ function submit() {
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Email wali</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('admin.student.guardianEmail') }}</label>
             <input
               v-model="form.guardian_email"
               type="email"
@@ -175,7 +178,7 @@ function submit() {
             />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">No. HP</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.phoneNumber') }}</label>
             <input
               v-model="form.phone_number"
               type="tel"
@@ -187,7 +190,7 @@ function submit() {
       </div>
 
       <BottomSheetFooter
-        :primary-label="isEdit ? 'Simpan perubahan' : 'Tambah siswa'"
+        :primary-label="isEdit ? t('common.saveChanges') : t('admin.student.addButton')"
         :primary-loading="isSaving"
         @primary="submit"
         @secondary="emit('close')"

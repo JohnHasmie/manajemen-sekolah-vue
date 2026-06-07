@@ -7,6 +7,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, shallowRef } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TeacherService, type TeacherFilterOptions } from '@/services/teachers.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
@@ -36,6 +37,9 @@ import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vu
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
 
+// Aliased to `$t` because the template iterates `t in teachers` (`t`
+// would shadow the i18n helper inside the v-for scope).
+const { t: $t } = useI18n();
 const primaryColor = useRoleHex();
 const ayStore = useAcademicYearStore();
 const ayReadOnly = computed(() => ayStore.isReadOnly);
@@ -127,21 +131,23 @@ const employmentOptions = computed<FacetOption[]>(() =>
 
 // ── Chip display values ────────────────────────────────────────────
 const roleChipValue = computed(() => {
-  if (!filters.role) return 'Semua';
+  if (!filters.role) return $t('admin.shared.allFilter');
   return filterOptions.value.roles.find((r) => r.key === filters.role)?.label ?? '—';
 });
 const classChipValue = computed(() => {
-  if (!filters.class_id) return 'Semua';
+  if (!filters.class_id) return $t('admin.shared.allFilter');
   const fromFilterOpts = filterOptions.value.classes.find((c) => c.id === filters.class_id);
   if (fromFilterOpts) return fromFilterOpts.name;
   return classes.value.find((c) => c.id === filters.class_id)?.name ?? '—';
 });
 const genderChipValue = computed(() => {
-  if (!filters.gender) return 'Semua';
-  return filters.gender === 'L' ? 'Laki-laki' : 'Perempuan';
+  if (!filters.gender) return $t('admin.shared.allFilter');
+  return filters.gender === 'L'
+    ? $t('admin.studentFilter.genderMale')
+    : $t('admin.studentFilter.genderFemale');
 });
 const employmentChipValue = computed(() => {
-  if (!filters.employment_status) return 'Semua';
+  if (!filters.employment_status) return $t('admin.shared.allFilter');
   return (
     filterOptions.value.employment_statuses.find((es) => es.key === filters.employment_status)
       ?.label ?? '—'
@@ -239,33 +245,36 @@ const pageFemaleCount = computed(
 );
 
 const kpiCards = computed<KpiCard[]>(() => [
-  { icon: 'users', label: 'Total Guru', value: totalTeachers.value, tone: 'brand' },
+  { icon: 'users', label: $t('admin.teachers.kpiTotal'), value: totalTeachers.value, tone: 'brand' },
   {
     icon: 'shield',
-    label: 'Wali Kelas',
+    label: $t('admin.teachers.kpiHomeroom'),
     value: pageWaliCount.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: 'violet',
   },
   {
     icon: 'book-open',
-    label: 'Punya Mapel',
+    label: $t('admin.teachers.kpiHasSubject'),
     value: pageWithSubjectsCount.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: 'green',
   },
   {
     icon: 'user',
-    label: 'Perempuan',
+    label: $t('admin.teachers.kpiFemale'),
     value: pageFemaleCount.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: 'amber',
   },
 ]);
 
-const headerMeta = computed(() => {
-  return `${totalTeachers.value.toLocaleString('id-ID')} guru terdaftar · TP ${ayStore.yearLabel}`;
-});
+const headerMeta = computed(() =>
+  $t('admin.teachers.meta', {
+    count: totalTeachers.value.toLocaleString(),
+    year: ayStore.yearLabel,
+  }),
+);
 
 // ── Bulk select ──
 function toggleSelect(id: string) {
@@ -451,36 +460,38 @@ function onImportDone(res: { imported: number; failed: number }) {
 }
 
 function topMeta(t: Teacher): string {
-  const role = t.role === 'wali_kelas' ? 'Wali Kelas' : 'Guru';
+  const role = t.role === 'wali_kelas'
+    ? $t('role.wali_kelas')
+    : $t('role.guru');
   const nip = t.employee_number;
-  return nip ? `${role} · NIP ${nip}` : role;
+  return nip ? `${role} · ${$t('admin.teachers.rowPrefix', { nip })}` : role;
 }
 
 function statusFor(t: Teacher) {
   if (t.homeroom_class_name) {
     return {
       tone: 'info' as const,
-      label: `Wali ${t.homeroom_class_name}`,
+      label: $t('admin.teachers.homeroomPrefix', { class: t.homeroom_class_name }),
     };
   }
-  return { tone: 'success' as const, label: 'Aktif' };
+  return { tone: 'success' as const, label: $t('admin.subjects.statusActive') };
 }
 </script>
 
 <template>
   <AdminCrudScaffold
-    title="Manajemen Guru"
-    kicker="Admin · Manajemen Data"
+    :title="$t('admin.teachers.title')"
+    :kicker="$t('admin.shared.kicker')"
     :meta="headerMeta"
     :kpi-cards="kpiCards"
     :state="state"
     :selected-count="selectedIds.size"
     :active-filter-count="activeFilterCount"
     :hide-add-fab="ayReadOnly"
-    search-placeholder="Cari nama guru atau NIP..."
-    empty-title="Belum ada guru"
-    empty-description="Tap tombol + untuk menambahkan guru baru."
-    fab-label="Tambah Guru"
+    :search-placeholder="$t('admin.teachers.searchPlaceholder')"
+    :empty-title="$t('admin.teachers.emptyTitle')"
+    :empty-description="$t('admin.teachers.emptyDesc')"
+    :fab-label="$t('admin.teachers.addFab')"
     @search="onSearch"
     @clear-all-filters="clearAll"
     @add-click="editTarget = null"
@@ -500,28 +511,28 @@ function statusFor(t: Teacher) {
     <template #filter-chips>
       <AppFilterChip
         icon-name="shield"
-        label="Peran"
+        :label="$t('admin.teachers.filterRole')"
         :value="roleChipValue"
         tone="violet"
         @click="showRolePicker = true"
       />
       <AppFilterChip
         icon-name="layers"
-        label="Kelas"
+        :label="$t('admin.teachers.filterClass')"
         :value="classChipValue"
         tone="brand"
         @click="showClassPicker = true"
       />
       <AppFilterChip
         icon-name="user"
-        label="Gender"
+        :label="$t('admin.teachers.filterGender')"
         :value="genderChipValue"
         tone="amber"
         @click="showGenderPicker = true"
       />
       <AppFilterChip
         icon-name="briefcase"
-        label="Kepegawaian"
+        :label="$t('admin.teachers.filterEmployment')"
         :value="employmentChipValue"
         tone="green"
         @click="showEmploymentPicker = true"
@@ -536,17 +547,17 @@ function statusFor(t: Teacher) {
         "
         @click="filters.show_all = !filters.show_all; reload(1)"
       >
-        Semua guru
+        {{ $t('admin.teachers.semuaGuru') }}
       </button>
     </template>
 
     <ul class="space-y-2">
       <li v-for="t in teachers" :key="t.id">
         <BrandListRow
-          :title="t.name || 'Tanpa nama'"
+          :title="t.name || $t('admin.shared.noName')"
           :top-meta="topMeta(t)"
           :status="statusFor(t)"
-          :trailing-action-label="selectedIds.has(t.id) ? '' : 'Detail'"
+          :trailing-action-label="selectedIds.has(t.id) ? '' : $t('admin.shared.detail')"
           :trailing-action-color="primaryColor"
           :selected="selectedIds.has(t.id)"
           bulk-selectable

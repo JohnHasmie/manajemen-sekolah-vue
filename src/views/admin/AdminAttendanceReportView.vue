@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { AttendanceService } from '@/services/attendance.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
@@ -41,6 +42,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
 
+const { t: $t } = useI18n();
 const router = useRouter();
 const academicYearStore = useAcademicYearStore();
 
@@ -85,10 +87,10 @@ const datePickerEnd = ref('');
 // View mode
 type ViewMode = 'list' | 'table';
 const viewMode = ref<ViewMode>('list');
-const VIEW_OPTIONS: { key: ViewMode; label: string }[] = [
-  { key: 'list', label: 'List' },
-  { key: 'table', label: 'Tabel' },
-];
+const VIEW_OPTIONS = computed<{ key: ViewMode; label: string }[]>(() => [
+  { key: 'list', label: $t('admin.attendanceReport.viewList') },
+  { key: 'table', label: $t('admin.attendanceReport.viewTable') },
+]);
 
 // ── Loaders ─────────────────────────────────────────────────────────
 async function load(page = 1) {
@@ -188,20 +190,20 @@ const subjectOptions = computed<FacetOption[]>(() =>
 
 // ── Chip display values ────────────────────────────────────────────
 const classChipValue = computed(() => {
-  if (!filters.class_id) return 'Semua';
+  if (!filters.class_id) return $t('admin.shared.allFilter');
   return classes.value.find((c) => c.id === filters.class_id)?.name ?? '—';
 });
 const subjectChipValue = computed(() => {
-  if (!filters.subject_id) return 'Semua';
+  if (!filters.subject_id) return $t('admin.shared.allFilter');
   return subjects.value.find((s) => s.id === filters.subject_id)?.name ?? '—';
 });
 const dateChipValue = computed(() => {
-  if (!filters.date_start && !filters.date_end) return 'Semua';
+  if (!filters.date_start && !filters.date_end) return $t('admin.shared.allFilter');
   if (filters.date_start && filters.date_end) {
     if (filters.date_start === filters.date_end) return filters.date_start;
     return `${filters.date_start} → ${filters.date_end}`;
   }
-  return filters.date_start || filters.date_end || 'Semua';
+  return filters.date_start || filters.date_end || $t('admin.shared.allFilter');
 });
 
 const activeFilterCount = computed(() => {
@@ -235,26 +237,26 @@ const avgPct = computed(() => {
 });
 
 const kpiCards = computed<KpiCard[]>(() => [
-  { icon: 'calendar', label: 'Total Sesi', value: totalSessions.value, tone: 'brand' },
+  { icon: 'calendar', label: $t('admin.attendanceReport.kpiTotalSessions'), value: totalSessions.value, tone: 'brand' },
   {
     icon: 'check-circle',
-    label: 'Terisi',
+    label: $t('admin.attendanceReport.kpiFilled'),
     value: filledCount.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: 'green',
   },
   {
     icon: 'clock',
-    label: 'Pending',
+    label: $t('admin.attendanceReport.kpiPending'),
     value: pendingCount.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: pendingCount.value > 0 ? 'amber' : 'slate',
   },
   {
     icon: 'activity',
-    label: 'Rata Hadir',
+    label: $t('admin.attendanceReport.kpiAvgPresent'),
     value: `${avgPct.value}%`,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: avgPct.value >= 80 ? 'green' : 'red',
   },
 ]);
@@ -284,9 +286,13 @@ function goBack() {
   router.push({ name: 'admin.attendance' });
 }
 
-const headerMeta = computed(() => {
-  return `${totalSessions.value.toLocaleString('id-ID')} sesi · halaman ${pagination.page} dari ${pagination.last_page}`;
-});
+const headerMeta = computed(() =>
+  $t('admin.attendanceReport.meta', {
+    count: totalSessions.value.toLocaleString(),
+    page: pagination.page,
+    pages: pagination.last_page,
+  }),
+);
 
 function applyDateRange() {
   filters.date_start = datePickerStart.value;
@@ -442,13 +448,13 @@ async function processExport() {
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Dashboard Kehadiran
+      {{ $t('admin.attendanceReport.backToDashboard') }}
     </button>
 
     <BrandPageHeader
       role="admin"
-      kicker="Akademik · Kehadiran"
-      title="Laporan Sesi"
+      :kicker="$t('admin.attendanceDashboard.kicker')"
+      :title="$t('admin.attendanceReport.title')"
       :meta="headerMeta"
       :live-dot="false"
     >
@@ -465,7 +471,7 @@ async function processExport() {
           @click="openExportDialog"
         >
           <NavIcon name="download" :size="13" />
-          Export XLSX
+          {{ $t('admin.attendanceReport.exportXlsx') }}
         </button>
       </div>
     </BrandPageHeader>
@@ -474,27 +480,27 @@ async function processExport() {
 
     <PageFilterToolbar
       v-model:search="filters.search"
-      search-placeholder="Cari kelas / mapel..."
+      :search-placeholder="$t('admin.attendanceReport.searchPlaceholder')"
       :search-min-width="240"
     >
       <template #chips>
         <AppFilterChip
           icon-name="calendar"
-          label="Tanggal"
+          :label="$t('admin.attendanceReport.filterDate')"
           :value="dateChipValue"
           tone="brand"
           @click="openDatePicker"
         />
         <AppFilterChip
           icon-name="layers"
-          label="Kelas"
+          :label="$t('admin.attendanceReport.filterClass')"
           :value="classChipValue"
           tone="violet"
           @click="showClassPicker = true"
         />
         <AppFilterChip
           icon-name="book-open"
-          label="Mapel"
+          :label="$t('admin.attendanceReport.filterSubject')"
           :value="subjectChipValue"
           tone="green"
           @click="showSubjectPicker = true"
@@ -505,15 +511,14 @@ async function processExport() {
           class="text-[11px] font-bold text-slate-500 hover:text-role-admin px-2"
           @click="clearAllFilters"
         >
-          Bersihkan ({{ activeFilterCount }})
+          {{ $t('common.reset') }} ({{ activeFilterCount }})
         </button>
       </template>
     </PageFilterToolbar>
 
     <AsyncView
       :state="listState"
-      empty-title="Belum ada sesi"
-      empty-description="Coba longgarkan filter atau periode tanggal."
+      :empty-title="$t('admin.attendanceReport.title')"
       empty-icon="calendar"
       @retry="load(pagination.page)"
     >

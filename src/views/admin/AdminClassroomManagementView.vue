@@ -5,6 +5,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, shallowRef } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SettingsService } from '@/services/settings.service';
 import { TeacherService } from '@/services/teachers.service';
@@ -36,6 +37,10 @@ import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vu
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
 
+// Aliased to `$t` to avoid collision with `v-for="c in classes"` style
+// iterators in the template — though here the v-for variable is `c`,
+// keeping the alias is consistent with the other admin management views.
+const { t: $t } = useI18n();
 const primaryColor = useRoleHex();
 const ayStore = useAcademicYearStore();
 const ayReadOnly = computed(() => ayStore.isReadOnly);
@@ -103,12 +108,14 @@ const HOMEROOM_OPTIONS: FacetOption[] = [
 ];
 
 const gradeChipValue = computed(() => {
-  if (!filters.grade_level) return 'Semua';
-  return `Tingkat ${filters.grade_level}`;
+  if (!filters.grade_level) return $t('admin.shared.allFilter');
+  return $t('admin.classes.gradePrefix', { grade: filters.grade_level });
 });
 const homeroomChipValue = computed(() => {
-  if (!filters.has_homeroom) return 'Semua';
-  return filters.has_homeroom === 'yes' ? 'Sudah ada wali' : 'Belum ada wali';
+  if (!filters.has_homeroom) return $t('admin.shared.allFilter');
+  return filters.has_homeroom === 'yes'
+    ? $t('admin.classes.hasHomeroom')
+    : $t('admin.classes.noHomeroomFilter');
 });
 
 const activeFilterCount = computed(() => {
@@ -194,33 +201,36 @@ const pageStudentCount = computed(
 );
 
 const kpiCards = computed<KpiCard[]>(() => [
-  { icon: 'layers', label: 'Total Kelas', value: totalClasses.value, tone: 'brand' },
+  { icon: 'layers', label: $t('admin.classes.kpiTotal'), value: totalClasses.value, tone: 'brand' },
   {
     icon: 'check-circle',
-    label: 'Punya Wali',
+    label: $t('admin.classes.kpiHasHomeroom'),
     value: pageWithWali.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: 'green',
   },
   {
     icon: 'alert-triangle',
-    label: 'Belum Wali',
+    label: $t('admin.classes.kpiNoHomeroom'),
     value: pageWithoutWali.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: pageWithoutWali.value > 0 ? 'amber' : 'slate',
     accented: pageWithoutWali.value > 0,
   },
   {
     icon: 'users',
-    label: 'Total Siswa',
+    label: $t('admin.classes.kpiTotalStudents'),
     value: pageStudentCount.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: 'violet',
   },
 ]);
 
-const headerMeta = computed(
-  () => `${totalClasses.value.toLocaleString('id-ID')} kelas aktif · TP ${ayStore.yearLabel}`,
+const headerMeta = computed(() =>
+  $t('admin.classes.meta', {
+    count: totalClasses.value.toLocaleString(),
+    year: ayStore.yearLabel,
+  }),
 );
 
 // ── Bulk select ──
@@ -371,35 +381,35 @@ function onImportDone(res: { imported: number; failed: number }) {
 }
 
 function topMeta(c: Classroom): string {
-  const level = c.grade_level ? `Tingkat ${c.grade_level}` : 'Tingkat -';
-  return `${level} · ${c.student_count} siswa`;
+  const level = $t('admin.classes.gradePrefix', { grade: c.grade_level ?? '-' });
+  return `${level} · ${$t('admin.classes.studentCount', { count: c.student_count })}`;
 }
 
 function statusFor(c: Classroom) {
   if (c.homeroom_teacher_name) {
     return {
       tone: 'success' as const,
-      label: `Wali: ${c.homeroom_teacher_name}`,
+      label: `${$t('admin.classes.waliPrefix')} ${c.homeroom_teacher_name}`,
     };
   }
-  return { tone: 'warning' as const, label: 'Belum ada wali kelas' };
+  return { tone: 'warning' as const, label: $t('admin.classes.statusNoHomeroom') };
 }
 </script>
 
 <template>
   <AdminCrudScaffold
-    title="Manajemen Kelas"
-    kicker="Admin · Manajemen Data"
+    :title="$t('admin.classes.title')"
+    :kicker="$t('admin.shared.kicker')"
     :meta="headerMeta"
     :kpi-cards="kpiCards"
     :state="state"
     :selected-count="selectedIds.size"
     :active-filter-count="activeFilterCount"
     :hide-add-fab="true"
-    search-placeholder="Cari nama kelas..."
-    empty-title="Belum ada kelas"
-    empty-description="Tap tombol + untuk membuat kelas baru."
-    fab-label="Tambah Kelas"
+    :search-placeholder="$t('admin.classes.searchPlaceholder')"
+    :empty-title="$t('admin.classes.emptyTitle')"
+    :empty-description="$t('admin.classes.emptyDesc')"
+    :fab-label="$t('admin.classes.addFab')"
     @search="onSearch"
     @clear-all-filters="clearAll"
     @add-click="editTarget = null"
@@ -419,14 +429,14 @@ function statusFor(c: Classroom) {
     <template #filter-chips>
       <AppFilterChip
         icon-name="bar-chart"
-        label="Tingkat"
+        :label="$t('admin.classes.filterGrade')"
         :value="gradeChipValue"
         tone="brand"
         @click="showGradePicker = true"
       />
       <AppFilterChip
         icon-name="shield"
-        label="Wali Kelas"
+        :label="$t('admin.classes.filterHomeroom')"
         :value="homeroomChipValue"
         tone="amber"
         @click="showHomeroomPicker = true"
@@ -439,7 +449,7 @@ function statusFor(c: Classroom) {
           :title="c.name"
           :top-meta="topMeta(c)"
           :status="statusFor(c)"
-          :trailing-action-label="selectedIds.has(c.id) ? '' : 'Detail'"
+          :trailing-action-label="selectedIds.has(c.id) ? '' : $t('admin.shared.detail')"
           :trailing-action-color="primaryColor"
           :selected="selectedIds.has(c.id)"
           bulk-selectable

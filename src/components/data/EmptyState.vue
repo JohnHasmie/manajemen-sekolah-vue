@@ -3,7 +3,10 @@
   Mirrors Flutter's EmptyState in `lib/core/widgets/`.
 -->
 <script setup lang="ts">
-withDefaults(
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const props = withDefaults(
   defineProps<{
     title?: string;
     description?: string;
@@ -11,7 +14,6 @@ withDefaults(
     icon?: string;
   }>(),
   {
-    title: 'Belum ada data',
     description: '',
     actionLabel: '',
     icon: 'inbox',
@@ -19,6 +21,10 @@ withDefaults(
 );
 
 defineEmits<{ action: [] }>();
+
+const { t } = useI18n();
+// Translated default — only kicks in when `title` is empty or undefined.
+const titleText = computed(() => props.title?.trim() ? props.title : t('common.emptyTitle'));
 </script>
 
 <template>
@@ -60,7 +66,7 @@ defineEmits<{ action: [] }>();
       </svg>
     </div>
 
-    <h3 class="text-base font-semibold text-slate-900 mb-1">{{ title }}</h3>
+    <h3 class="text-base font-semibold text-slate-900 mb-1">{{ titleText }}</h3>
     <p v-if="description" class="text-sm max-w-sm">{{ description }}</p>
 
     <button

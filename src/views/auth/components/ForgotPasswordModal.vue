@@ -4,9 +4,11 @@
 -->
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { AuthService } from '@/services/auth.service';
 import Modal from '@/components/ui/Modal.vue';
 
+const { t } = useI18n();
 const emit = defineEmits<{ close: [] }>();
 
 const email = ref('');
@@ -16,7 +18,7 @@ const error = ref<string | null>(null);
 
 async function handleSubmit() {
   if (!email.value.trim()) {
-    error.value = 'Email wajib diisi.';
+    error.value = t('auth.errors.emailRequired');
     return;
   }
   isLoading.value = true;
@@ -55,13 +57,13 @@ async function handleSubmit() {
 
     <form v-else class="space-y-md" @submit.prevent="handleSubmit">
       <div>
-        <label for="forgot-email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+        <label for="forgot-email" class="block text-sm font-medium text-slate-700 mb-1">{{ t('auth.email') }}</label>
         <input
           id="forgot-email"
           v-model="email"
           type="email"
           autocomplete="email"
-          placeholder="nama@sekolah.sch.id"
+          :placeholder="t('auth.emailPlaceholder')"
           class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
           :disabled="isLoading"
         />
@@ -75,14 +77,14 @@ async function handleSubmit() {
           class="rounded-xl border border-slate-300 hover:bg-slate-50 py-sm text-sm font-medium"
           @click="emit('close')"
         >
-          Batal
+          {{ t('common.cancel') }}
         </button>
         <button
           type="submit"
           class="rounded-xl bg-brand hover:bg-brand-700 disabled:bg-brand/60 text-white font-semibold py-sm text-sm"
           :disabled="isLoading"
         >
-          {{ isLoading ? 'Mengirim…' : 'Kirim tautan' }}
+          {{ isLoading ? t('auth.forgot.sending') : t('auth.forgot.submit') }}
         </button>
       </div>
     </form>

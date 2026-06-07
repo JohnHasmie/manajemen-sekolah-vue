@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { DashboardService } from '@/services/dashboard.service';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
 import type { PriorityItem } from '@/components/feature/PriorityInbox.vue';
@@ -40,6 +41,7 @@ const props = withDefaults(
 );
 
 const router = useRouter();
+const { t } = useI18n();
 const { mapToPriorityItems, handlePriorityTap } = usePriorityInbox(props.role);
 const { activeChildId } = useChildPicker();
 
@@ -81,10 +83,10 @@ type FilterKey = 'all' | 'critical' | 'warning' | 'info';
 const activeFilter = ref<FilterKey>('all');
 
 const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'critical', label: 'Kritis' },
-  { key: 'warning', label: 'Peringatan' },
-  { key: 'info', label: 'Info' },
+  { key: 'all', label: t('common.all') },
+  { key: 'critical', label: t('common.critical') },
+  { key: 'warning', label: t('common.warning') },
+  { key: 'info', label: t('common.info') },
 ];
 
 const bucketCounts = computed(() => ({
@@ -120,9 +122,9 @@ function severityBgCls(s: PriorityItem['severity']): string {
   return 'bg-slate-50 border-slate-200';
 }
 function severityLabel(s: PriorityItem['severity']): string {
-  if (s === 'critical') return 'KRITIS';
-  if (s === 'warning') return 'PERINGATAN';
-  return 'INFO';
+  if (s === 'critical') return t('common.severityCritical');
+  if (s === 'warning') return t('common.severityWarning');
+  return t('common.severityInfo');
 }
 function severityChipCls(s: PriorityItem['severity']): string {
   if (s === 'critical') return 'bg-red-100 text-red-700';
@@ -144,12 +146,12 @@ function formatRelative(iso: string): string {
   if (Number.isNaN(d.getTime())) return iso;
   const diff = Date.now() - d.getTime();
   const m = Math.floor(diff / 60_000);
-  if (m < 1) return 'baru saja';
-  if (m < 60) return `${m} menit lalu`;
+  if (m < 1) return t('common.timeJustNow');
+  if (m < 60) return `${m} ${t('common.timeMinutesAgo')}`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h} jam lalu`;
+  if (h < 24) return `${h} ${t('common.timeHoursAgo')}`;
   const days = Math.floor(h / 24);
-  if (days < 7) return `${days} hari lalu`;
+  if (days < 7) return `${days} ${t('common.timeDaysAgo')}`;
   return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
 }
 
@@ -164,13 +166,13 @@ function goBack() {
 }
 
 const kicker = computed(() => {
-  if (props.role === 'admin') return 'Beranda · Admin';
-  if (props.role === 'teacher') return 'Beranda · Guru';
-  return 'Beranda';
+  if (props.role === 'admin') return t('common.homeAdmin');
+  if (props.role === 'teacher') return t('common.homeTeacher');
+  return t('common.home');
 });
 const headerMeta = computed(
   () =>
-    `${bucketCounts.value.all} total · ${bucketCounts.value.critical} kritis · ${bucketCounts.value.warning} peringatan`,
+    `${bucketCounts.value.all} total · ${bucketCounts.value.critical} ${t('common.critical')} · ${bucketCounts.value.warning} ${t('common.warning')}`,
 );
 </script>
 
@@ -182,21 +184,21 @@ const headerMeta = computed(
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Beranda
+      {{ t('common.home') }}
     </button>
 
     <!-- Header — gradient for admin/teacher, solid azure for parent -->
     <ParentPageHeader
       v-if="role === 'parent'"
       :kicker="kicker"
-      title="Perlu Perhatian"
+      :title="t('common.needsAttention')"
       :meta="headerMeta"
     />
     <BrandPageHeader
       v-else
       :role="role"
       :kicker="kicker"
-      title="Perlu Perhatian"
+      :title="t('common.needsAttention')"
       :meta="headerMeta"
       :live-dot="false"
     />
@@ -233,10 +235,10 @@ const headerMeta = computed(
       :state="listState"
       :empty-title="
         activeFilter === 'all'
-          ? 'Belum ada perhatian tertunda'
-          : 'Tidak ada item di kategori ini'
+          ? t('common.noPendingAttention')
+          : t('common.noItemsInCategory')
       "
-      empty-description="Bagus — semua aksi prioritas sudah ditangani."
+      :empty-description="t('common.allPriorityHandled')"
       empty-icon="check-circle"
       @retry="reload"
     >

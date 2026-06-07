@@ -13,10 +13,13 @@
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { SettingsService } from '@/services/settings.service';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
   close: [];
@@ -45,15 +48,15 @@ const canSubmit = computed(
 async function submit() {
   formError.value = null;
   if (!oldPw.value) {
-    formError.value = 'Masukkan password lama.';
+    formError.value = t('account.enterOldPassword');
     return;
   }
   if (!newPwOk.value) {
-    formError.value = 'Password baru minimal 8 karakter.';
+    formError.value = t('account.passwordMinLengthError');
     return;
   }
   if (!matches.value) {
-    formError.value = 'Konfirmasi password tidak cocok.';
+    formError.value = t('account.passwordMismatch');
     return;
   }
   isSaving.value = true;
@@ -75,15 +78,15 @@ async function submit() {
 
 <template>
   <Modal
-    title="Ubah Kata Sandi"
-    subtitle="Pilih password baru minimal 8 karakter"
+    :title="t('account.changePassword')"
+    :subtitle="t('account.passwordMinLength')"
     size="sm"
     @close="emit('close')"
   >
     <form class="space-y-3" @submit.prevent="submit">
       <div>
         <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          Password Lama
+          {{ t('account.oldPassword') }}
         </label>
         <div class="mt-1 relative">
           <input
@@ -104,7 +107,7 @@ async function submit() {
 
       <div>
         <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          Password Baru
+          {{ t('account.newPassword') }}
         </label>
         <div class="mt-1 relative">
           <input
@@ -125,13 +128,13 @@ async function submit() {
           v-if="newPw && !newPwOk"
           class="text-[10.5px] text-amber-700 mt-1"
         >
-          Password baru harus minimal 8 karakter.
+          {{ t('account.passwordMinLengthError') }}
         </p>
       </div>
 
       <div>
         <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          Konfirmasi Password Baru
+          {{ t('account.confirmNewPassword') }}
         </label>
         <div class="mt-1 relative">
           <input
@@ -152,7 +155,7 @@ async function submit() {
           v-if="confirmPw && !matches"
           class="text-[10.5px] text-red-700 mt-1"
         >
-          Konfirmasi password tidak cocok.
+          {{ t('account.passwordMismatch') }}
         </p>
       </div>
 
@@ -171,7 +174,7 @@ async function submit() {
           :disabled="isSaving"
           @click="emit('close')"
         >
-          Batal
+          {{ t('common.cancel') }}
         </Button>
         <Button
           type="submit"
@@ -179,7 +182,7 @@ async function submit() {
           block
           :disabled="!canSubmit"
         >
-          {{ isSaving ? 'Menyimpan…' : 'Simpan' }}
+          {{ isSaving ? t('common.saving') : t('common.save') }}
         </Button>
       </div>
     </form>

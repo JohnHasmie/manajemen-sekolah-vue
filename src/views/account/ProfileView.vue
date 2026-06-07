@@ -43,7 +43,7 @@ const activeSchool = computed(() => {
   return (
     match?.name ??
     match?.school_name ??
-    (auth.schoolId ? 'Sekolah Aktif' : '—')
+    (auth.schoolId ? t('common.activeSchool') : '—')
   );
 });
 
@@ -58,7 +58,7 @@ const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
 function onPasswordChanged() {
   toast.value = {
-    message: 'Password berhasil diubah.',
+    message: t('account.passwordChangedSuccess'),
     tone: 'success',
   };
 }
@@ -139,14 +139,14 @@ function onPasswordChanged() {
       </div>
     </Card>
 
-    <Card padded :title="t('profile.security') || 'Keamanan'">
+    <Card padded :title="t('profile.security')">
       <Button
         variant="secondary"
         block
         @click="showChangePw = true"
       >
         <NavIcon name="shield" :size="14" />
-        Ubah Kata Sandi
+        {{ t('account.changePassword') }}
       </Button>
     </Card>
 

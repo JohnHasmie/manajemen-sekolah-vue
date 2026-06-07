@@ -16,6 +16,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ScheduleService } from '@/services/schedule.service';
 import { LessonHourService } from '@/services/lesson-hour.service';
 import { SubjectService } from '@/services/subjects.service';
@@ -47,6 +48,7 @@ const emit = defineEmits<{
 }>();
 
 const ayStore = useAcademicYearStore();
+const { t } = useI18n();
 
 const isEdit = computed(() => Boolean(props.row?.id));
 
@@ -467,7 +469,7 @@ function isHourOccupied(hour: LessonHour): boolean {
             :value="h.id"
             :disabled="isHourOccupied(h)"
           >
-            Jam ke-{{ h.hour_number }} · {{ h.start_time }}–{{ h.end_time }}{{ isHourOccupied(h) ? ' (Terisi)' : '' }}
+            {{ t('common.lessonHour', { n: h.hour_number }) }} · {{ h.start_time }}–{{ h.end_time }}{{ isHourOccupied(h) ? ` (${t('common.occupied')})` : '' }}
           </option>
         </select>
         <p v-if="!isEdit && selectedDayIds.length > 1" class="text-[10px] text-slate-500 mt-1">

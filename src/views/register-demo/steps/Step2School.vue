@@ -6,6 +6,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { DemoService, type NpsnLookupResult } from '@/services/demo.service';
 import type { Jenjang, SchoolSearchHit } from '@/types/demo';
@@ -13,6 +14,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import { useToast } from '@/composables/useToast';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 const toast = useToast();
 
@@ -111,7 +113,7 @@ async function requestAccess(hit: SchoolSearchHit) {
       requested_role: 'admin',
       message: `Mohon akses untuk ${hit.name}.`,
     });
-    toast.success('Permintaan akses terkirim. Anda akan diberi tahu saat ditanggapi.');
+    toast.success(t('registerDemo.step2RequestSent'));
   } catch (e) {
     toast.error('Gagal kirim permintaan: ' + (e as Error).message);
   } finally {
@@ -126,7 +128,7 @@ const showCreateNewCta = computed(
 async function lookupNpsn() {
   const npsn = npsnInput.value.trim();
   if (!/^\d{6,12}$/.test(npsn)) {
-    npsnError.value = 'NPSN harus 6-12 digit angka.';
+    npsnError.value = t('registerDemo.step2NpsnInvalid');
     npsnHit.value = null;
     return;
   }
@@ -135,7 +137,7 @@ async function lookupNpsn() {
   try {
     const hit = await DemoService.lookupNpsn(npsn);
     if (!hit) {
-      npsnError.value = 'NPSN tidak ditemukan di Dapodik.';
+      npsnError.value = t('registerDemo.step2NpsnNotFound');
       npsnHit.value = null;
       return;
     }
@@ -150,7 +152,7 @@ function acceptNpsnHit() {
   // If a Kamiledu tenant already exists for this NPSN, route the
   // user to "minta akun" instead of overwriting their wizard payload.
   if (npsnHit.value.kamiledu_school) {
-    toast.info('Sekolah ini sudah terdaftar di KamilEdu. Gunakan tombol "Minta akun".');
+    toast.info(t('registerDemo.step2AlreadyExists'));
     return;
   }
   wizard.patchPayload('school', {
@@ -160,7 +162,7 @@ function acceptNpsnHit() {
     education_level: (npsnHit.value.education_level as Jenjang) ?? selectedJenjang.value,
   });
   query.value = npsnHit.value.name;
-  toast.success('Data sekolah terisi dari Dapodik. Lanjut ke langkah berikutnya.');
+  toast.success(t('registerDemo.step2DapodikSuccess'));
   npsnHit.value = null;
 }
 
@@ -215,7 +217,7 @@ async function requestAccessForKamilEduMatch() {
       requested_role: 'admin',
       message: `Mohon akses untuk ${k.name} (NPSN ${npsnHit.value.npsn}).`,
     });
-    toast.success('Permintaan akses terkirim.');
+    toast.success(t('registerDemo.step2RequestSentNpsn'));
   } catch (e) {
     toast.error('Gagal kirim permintaan: ' + (e as Error).message);
   } finally {
@@ -227,17 +229,17 @@ async function requestAccessForKamilEduMatch() {
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Langkah 2 dari 12 · Sekolah
+      {{ t('registerDemo.step2Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
-      Cari sekolah Anda dulu
+      {{ t('registerDemo.step2Title') }}
     </h2>
     <p class="text-[13px] text-slate-600 mb-4">
-      Pilih jenjang, lalu cek nama — supaya tidak dobel dengan sekolah asli atau demo lain.
+      {{ t('registerDemo.step2Subtitle') }}
     </p>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Jenjang
+      {{ t('registerDemo.step2JenjangLabel') }}
     </p>
     <div class="flex flex-wrap gap-1.5 mb-1">
       <button
@@ -264,7 +266,7 @@ async function requestAccessForKamilEduMatch() {
         "
         @click="showOthers = !showOthers"
       >
-        {{ JENJANG_OTHERS.includes(selectedJenjang) ? selectedJenjang : 'Lainnya' }}
+        {{ JENJANG_OTHERS.includes(selectedJenjang) ? selectedJenjang : t('registerDemo.step2JenjangOthers') }}
         <NavIcon :name="showOthers ? 'chevron-up' : 'chevron-down'" :size="11" />
       </button>
     </div>
@@ -286,20 +288,20 @@ async function requestAccessForKamilEduMatch() {
     </div>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mt-5 mb-2">
-      Nama sekolah
+      {{ t('registerDemo.step2NameLabel') }}
     </p>
     <div class="flex items-center gap-2 border border-role-admin rounded-lg px-3 py-2.5 bg-white">
       <NavIcon name="search" :size="16" class="text-role-admin flex-shrink-0" />
       <input
         v-model="query"
         type="text"
-        :placeholder="`Contoh: ${selectedJenjang} Tunas Bangsa`"
+        :placeholder="t('registerDemo.step2NamePlaceholder', { selectedJenjang })"
         class="flex-1 text-[14px] text-slate-900 placeholder-slate-400 outline-none bg-transparent"
         autocomplete="off"
       />
       <Spinner v-if="isSearching" size="sm" />
       <span v-else-if="results.length > 0" class="text-[10px] text-slate-400">
-        {{ results.length }} hasil
+        {{ results.length }} {{ t('registerDemo.step2SearchResults') }}
       </span>
     </div>
 
@@ -337,15 +339,15 @@ async function requestAccessForKamilEduMatch() {
               <span
                 v-if="hit.kind === 'tenant'"
                 class="inline-block px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-100 text-emerald-700"
-              >Terdaftar resmi</span>
+              >{{ t('registerDemo.step2BadgeTenant') }}</span>
               <span
                 v-else-if="hit.kind === 'demo'"
                 class="inline-block px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-100 text-amber-700"
-              >Demo aktif</span>
+              >{{ t('registerDemo.step2BadgeDemo') }}</span>
               <span
                 v-else
                 class="inline-block px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-100 text-blue-700"
-              >Registri NPSN</span>
+              >{{ t('registerDemo.step2BadgeRegistry') }}</span>
               <span
                 v-if="hit.kind === 'registry'"
                 class="inline-block px-2 py-0.5 rounded-full text-[9.5px] font-bold"
@@ -368,7 +370,7 @@ async function requestAccessForKamilEduMatch() {
           <span class="inline-flex items-center gap-2 text-[12px] font-bold">
             <Spinner v-if="requestInflight === hit.id" size="sm" />
             <NavIcon v-else name="mail" :size="13" />
-            Minta akun ke admin sekolah
+            {{ t('registerDemo.step2ActionRequestAccount') }}
           </span>
           <NavIcon name="arrow-right" :size="13" />
         </button>
@@ -383,7 +385,7 @@ async function requestAccessForKamilEduMatch() {
           <span class="inline-flex items-center gap-2 text-[12px] font-bold">
             <Spinner v-if="requestInflight === hit.id" size="sm" />
             <NavIcon v-else name="user-plus" :size="13" />
-            Minta akses dari pemilik
+            {{ t('registerDemo.step2ActionRequestAccess') }}
           </span>
           <NavIcon name="arrow-right" :size="13" />
         </button>
@@ -396,7 +398,7 @@ async function requestAccessForKamilEduMatch() {
         >
           <span class="inline-flex items-center gap-2 text-[12px] font-bold">
             <NavIcon name="check" :size="13" />
-            Pakai data ini · klaim sebagai admin
+            {{ t('registerDemo.step2ActionUseClaim') }}
           </span>
           <NavIcon name="arrow-right" :size="13" />
         </button>
@@ -410,7 +412,7 @@ async function requestAccessForKamilEduMatch() {
     >
       <p class="text-[12.5px] font-bold text-role-admin">
         <NavIcon name="plus" :size="13" class="inline-block -mt-0.5 mr-1" />
-        Bukan ini — buat "{{ query.trim() }}" sebagai demo Anda
+        {{ t('registerDemo.step2CreateNew', { query: query.trim() }) }}
       </p>
     </div>
 
@@ -418,13 +420,13 @@ async function requestAccessForKamilEduMatch() {
       v-if="!isSearching && query.trim().length >= 2 && results.length === 0"
       class="text-[12px] text-slate-500 mt-3"
     >
-      Belum ada hasil. Lanjutkan dengan tombol "Lanjut" untuk membuat baru.
+      {{ t('registerDemo.step2NoResults') }}
     </p>
 
     <!-- NPSN lookup — live Dapodik fetch via the backend proxy. Lebih
          akurat daripada fuzzy name search karena langsung match by ID. -->
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mt-5 mb-2">
-      Punya NPSN? Auto-fill dari Dapodik
+      {{ t('registerDemo.step2NpsnLabel') }}
     </p>
     <div class="flex items-center gap-2">
       <input
@@ -432,7 +434,7 @@ async function requestAccessForKamilEduMatch() {
         type="text"
         inputmode="numeric"
         maxlength="12"
-        placeholder="Contoh: 20254123"
+        :placeholder="t('registerDemo.step2NpsnPlaceholder')"
         class="flex-1 border border-slate-300 rounded-lg px-3 py-2.5 text-[13.5px] font-mono outline-none focus:border-role-admin"
         @keydown.enter.prevent="lookupNpsn"
       />
@@ -444,7 +446,7 @@ async function requestAccessForKamilEduMatch() {
       >
         <Spinner v-if="isLookingUpNpsn" size="sm" class="!text-white" />
         <NavIcon v-else name="search" :size="13" />
-        Cari
+        {{ t('common.search') }}
       </button>
     </div>
     <p v-if="npsnError" class="text-[11.5px] text-red-700 mt-1.5">{{ npsnError }}</p>
@@ -469,7 +471,7 @@ async function requestAccessForKamilEduMatch() {
             <div class="mt-2 p-2 bg-white rounded border border-amber-300">
               <p class="text-[11px] text-amber-800 font-bold">
                 <NavIcon name="alert-circle" :size="11" class="inline-block -mt-0.5 mr-1" />
-                Sekolah ini sudah terdaftar di KamilEdu
+                {{ t('registerDemo.step2NpsnExists') }}
                 <span v-if="npsnHit.kamiledu_school.is_demo">(sebagai demo)</span>.
               </p>
               <button
