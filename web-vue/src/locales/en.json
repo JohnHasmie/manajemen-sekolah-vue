@@ -138,7 +138,7 @@
     "signInTitle": "Sign in",
     "signInSubtitle": "Sign in to continue to your school account.",
     "email": "Email",
-    "emailPlaceholder": "you@school.id",
+    "emailPlaceholder": "you{'@'}school.id",
     "password": "Password",
     "forgotPassword": "Forgot password?",
     "rememberMe": "Remember me",

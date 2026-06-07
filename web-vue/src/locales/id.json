@@ -138,7 +138,7 @@
     "signInTitle": "Masuk",
     "signInSubtitle": "Masuk untuk melanjutkan ke akun sekolah Anda.",
     "email": "Email",
-    "emailPlaceholder": "anda@sekolah.id",
+    "emailPlaceholder": "anda{'@'}sekolah.id",
     "password": "Kata sandi",
     "forgotPassword": "Lupa kata sandi?",
     "rememberMe": "Ingat saya",
