@@ -116,6 +116,8 @@
     "subjects": "Subjects",
     "schedule": "Schedule",
     "attendance": "Attendance",
+    "teacherAttendance": "Teacher attendance",
+    "myAttendance": "My attendance",
     "grades": "Grades",
     "gradeRecap": "Grade recap",
     "lessonPlans": "Lesson plans",
