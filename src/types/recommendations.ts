@@ -151,6 +151,37 @@ export interface RecShareSummary {
   latest_sent_at?: string | null;
 }
 
+// ── Bulk share-to-wali (Kirim semua ke wali) ────────────────────────
+
+/** Per-rec outcome row of the bulk `POST /recommendations/share-all`. */
+export interface ShareAllResultRow {
+  recommendation_id: string;
+  student_name: string;
+  /** 'sent' on success, 'failed' on a per-rec exception, 'skipped' when no contactable wali. */
+  status: 'sent' | 'failed' | 'skipped';
+  /** Present only on 'failed' / 'skipped' rows. */
+  error?: string | null;
+}
+
+/**
+ * Response envelope for the bulk share endpoint. The backend resolves
+ * each rec's wali itself (no `parents[]` sent) and reports a tally plus
+ * a per-rec breakdown so the UI can show "X terkirim, Y gagal, Z
+ * dilewati".
+ */
+export interface ShareAllResult {
+  success: boolean;
+  /** Shareable, not-yet-shared recs found (optionally scoped to one class). */
+  total: number;
+  /** Shared successfully. */
+  sent: number;
+  /** A per-rec share threw (batch continues). */
+  failed: number;
+  /** Student had no contactable wali. */
+  skipped_no_wali: number;
+  results: ShareAllResultRow[];
+}
+
 // ── Full recommendation row ─────────────────────────────────────────
 
 /**
@@ -285,8 +316,11 @@ export const TONE_LABELS: Record<RecTone, string> = {
 
 /** Normalise backend status strings → canonical RecStatus. */
 export function normalizeRecStatus(raw: unknown): RecStatus {
-  const v = String(raw ?? '').toLowerCase().trim();
-  if (v === 'completed' || v === 'done' || v === 'diterapkan') return 'completed';
+  const v = String(raw ?? '')
+    .toLowerCase()
+    .trim();
+  if (v === 'completed' || v === 'done' || v === 'diterapkan')
+    return 'completed';
   if (v === 'in_progress' || v === 'inprogress' || v === 'progress') {
     return 'in_progress';
   }
@@ -297,7 +331,9 @@ export function normalizeRecStatus(raw: unknown): RecStatus {
 }
 
 export function normalizeRecPriority(raw: unknown): RecPriority {
-  const v = String(raw ?? '').toLowerCase().trim();
+  const v = String(raw ?? '')
+    .toLowerCase()
+    .trim();
   if (v === 'high' || v === 'tinggi' || v === 'urgent') return 'high';
   if (v === 'low' || v === 'rendah') return 'low';
   return 'medium';
