@@ -25,6 +25,7 @@ import ToastHost from '@/components/ui/ToastHost.vue';
 import ProfileMenu from '@/components/feature/ProfileMenu.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { useNotificationsStore } from '@/stores/notifications';
+import { init as initRealtime } from '@/lib/echo';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -66,6 +67,10 @@ const topbarStyle = computed(() => ({
 // count before the response landed.
 onMounted(async () => {
   await notifications.refreshUnreadCount();
+  // Open the realtime channel so the bell updates live. No-op unless
+  // Reverb is configured (VITE_REVERB_APP_KEY set) and the user is
+  // logged in — realtime is purely additive over the polling above.
+  initRealtime(auth.user?.id);
 });
 
 // Hydrate the user's schools/roles lists so the SchoolPill shows the

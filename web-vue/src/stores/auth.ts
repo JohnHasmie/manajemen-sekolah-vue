@@ -705,6 +705,15 @@ export const useAuthStore = defineStore('auth', {
       storage.remove(StorageKeys.user);
       storage.remove(StorageKeys.schoolId);
       storage.remove(StorageKeys.role);
+      // Tear down the realtime notifications socket so a logged-out
+      // browser holds no Reverb connection. Lazy-imported to avoid a
+      // load-time dependency on the Echo client (which is inert unless
+      // Reverb is configured). No-op when realtime was never started.
+      import('@/lib/echo')
+        .then((m) => m.teardown())
+        .catch(() => {
+          // non-fatal
+        });
       // Clear cached academic-year selection so a new login starts
       // from the backend's active year.
       import('./academic-year')
