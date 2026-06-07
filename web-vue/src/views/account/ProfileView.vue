@@ -48,8 +48,15 @@ const activeSchool = computed(() => {
 });
 
 async function handleLogout() {
-  await auth.logout();
-  router.replace('/login');
+  // The redirect to /login must happen no matter what: `auth.logout()`
+  // already clears the session locally even when the server call fails,
+  // so `finally` guarantees the user lands on the login page instead of
+  // being stranded on a now-unauthenticated page.
+  try {
+    await auth.logout();
+  } finally {
+    router.replace('/login');
+  }
 }
 
 // ── Change password modal state ──
