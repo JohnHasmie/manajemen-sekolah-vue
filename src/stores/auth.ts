@@ -699,28 +699,50 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async logout() {
-      await AuthService.logout();
-      this.reset();
-      storage.remove(StorageKeys.token);
-      storage.remove(StorageKeys.user);
-      storage.remove(StorageKeys.schoolId);
-      storage.remove(StorageKeys.role);
-      // Tear down the realtime notifications socket so a logged-out
-      // browser holds no Reverb connection. Lazy-imported to avoid a
-      // load-time dependency on the Echo client (which is inert unless
-      // Reverb is configured). No-op when realtime was never started.
-      import('@/lib/echo')
-        .then((m) => m.teardown())
-        .catch(() => {
-          // non-fatal
-        });
-      // Clear cached academic-year selection so a new login starts
-      // from the backend's active year.
-      import('./academic-year')
-        .then((m) => m.useAcademicYearStore().reset())
-        .catch(() => {
-          // non-fatal
-        });
+      // Logout must NEVER leave the user stuck on a broken authenticated
+      // page. The server round-trip is best-effort — whatever it does
+      // (200, 401 on an already-expired token, network failure), the
+      // LOCAL teardown below has to run so the in-memory store + storage
+      // are cleared and the caller's redirect to /login can proceed.
+      //
+      // We therefore wrap the server call so a rejection can never abort
+      // the teardown, and run the teardown in a `finally` so it executes
+      // even on the unexpected throw. `AuthService.logout()` already
+      // swallows its own errors today, but we do not depend on that — a
+      // future refactor (or an interceptor that re-throws) must not be
+      // able to resurrect the "stuck session" bug.
+      try {
+        await AuthService.logout();
+      } catch (e) {
+        // Swallow: the server token is invalidated on its own schedule
+        // (or the request never reached it). Either way the client is
+        // logging out locally regardless. Log for diagnostics only.
+        // eslint-disable-next-line no-console
+        console.warn('[auth] server logout failed, clearing session locally', e);
+      } finally {
+        // ── Local teardown — ALWAYS runs ──────────────────────────────
+        this.reset();
+        storage.remove(StorageKeys.token);
+        storage.remove(StorageKeys.user);
+        storage.remove(StorageKeys.schoolId);
+        storage.remove(StorageKeys.role);
+        // Tear down the realtime notifications socket so a logged-out
+        // browser holds no Reverb connection. Lazy-imported to avoid a
+        // load-time dependency on the Echo client (which is inert unless
+        // Reverb is configured). No-op when realtime was never started.
+        import('@/lib/echo')
+          .then((m) => m.teardown())
+          .catch(() => {
+            // non-fatal
+          });
+        // Clear cached academic-year selection so a new login starts
+        // from the backend's active year.
+        import('./academic-year')
+          .then((m) => m.useAcademicYearStore().reset())
+          .catch(() => {
+            // non-fatal
+          });
+      }
     },
   },
 });
