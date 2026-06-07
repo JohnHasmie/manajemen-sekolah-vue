@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 class AdminActivityEmptyState extends StatelessWidget {
   const AdminActivityEmptyState({
@@ -39,21 +40,19 @@ class AdminActivityEmptyState extends StatelessWidget {
       icon = Icons.lock_outline_rounded;
       iconBg = ColorUtils.slate100;
       iconFg = ColorUtils.slate600;
-      title = 'Belum ada kegiatan di tahun ini';
-      desc =
-          'Tahun ajaran ini hanya baca. Pindah ke tahun berjalan untuk '
-          'melihat data terbaru.';
-      cta = const _Pill(icon: Icons.lock_outline_rounded, label: 'Hanya baca');
+      title = kClaActNoActivitiesThisYear.tr;
+      desc = kClaActReadOnlyYearDesc.tr;
+      cta = _Pill(icon: Icons.lock_outline_rounded, label: kClaActReadOnly.tr);
     } else if (hasFilters) {
       icon = Icons.filter_alt_off_rounded;
       iconBg = const Color(0xFFFEF3C7);
       iconFg = const Color(0xFFB45309);
-      title = 'Tidak ada hasil';
-      desc = 'Coba kurangi filter atau ubah rentang periode.';
+      title = kClaActNoResults.tr;
+      desc = kClaActReduceFilters.tr;
       cta = OutlinedButton.icon(
         onPressed: onClearFilters,
         icon: const Icon(Icons.refresh_rounded, size: 16),
-        label: const Text('Bersihkan filter'),
+        label: Text(kClaActClearFilters.tr),
         style: OutlinedButton.styleFrom(
           foregroundColor: ColorUtils.brandCobalt,
           side: BorderSide(color: ColorUtils.slate200),
@@ -64,15 +63,13 @@ class AdminActivityEmptyState extends StatelessWidget {
       icon = Icons.event_note_rounded;
       iconBg = ColorUtils.brandCobalt.withValues(alpha: 0.08);
       iconFg = ColorUtils.brandCobalt;
-      title = 'Belum ada kegiatan';
-      desc =
-          'Guru-guru belum mencatat kegiatan kelas apapun di periode '
-          'ini. Pantau dari sini begitu kegiatan pertama dibuat.';
-      cta = const _Pill(
+      title = kClaActNoActivities.tr;
+      desc = kClaActNoActivitiesDesc.tr;
+      cta = _Pill(
         icon: Icons.visibility_outlined,
-        label: 'Mode pemantauan',
-        bgColor: Color(0xFFDBEAFE),
-        fgColor: Color(0xFF1D4ED8),
+        label: kClaActMonitoringMode.tr,
+        bgColor: const Color(0xFFDBEAFE),
+        fgColor: const Color(0xFF1D4ED8),
       );
     }
 

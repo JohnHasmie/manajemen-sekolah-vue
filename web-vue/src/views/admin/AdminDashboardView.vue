@@ -59,7 +59,7 @@ const slices = computed<Slice[]>(() => {
   return [
     {
       key: 'all',
-      label: 'Semua tingkat',
+      label: t('admin.dashboard.allLevels'),
       is_aggregate: true,
       total_students: asInt(stats.value.total_students),
       total_teachers: asInt(stats.value.total_teachers),
@@ -105,10 +105,10 @@ const sliceLabelMuted = computed(() => Boolean(current.value.is_aggregate));
 
 const greeting = computed(() => {
   const h = new Date().getHours();
-  if (h < 11) return 'Selamat pagi';
-  if (h < 15) return 'Selamat siang';
-  if (h < 18) return 'Selamat sore';
-  return 'Selamat malam';
+  if (h < 11) return t('common.greetingMorning');
+  if (h < 15) return t('common.greetingAfternoon');
+  if (h < 18) return t('common.greetingEvening');
+  return t('common.greetingNight');
 });
 
 async function load() {
@@ -229,11 +229,11 @@ const financePct = computed(() =>
           <!-- 2. KPI strip (inline, no floating) -->
           <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <StatSummaryCard
-              label="Total siswa"
+              :label="t('admin.dashboard.totalStudents')"
               :value="formatNumber(num('total_students') || topLevelNum('total_students'))"
               tone="brand"
               icon-name="users"
-              :sublabel="`${num('total_classes') || topLevelNum('total_classes')} kelas`"
+              :sublabel="`${num('total_classes') || topLevelNum('total_classes')} ${t('admin.dashboard.classCount')}`"
               :slices="sliceOptions.length"
               :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
               :slice-progress="1"
@@ -242,11 +242,11 @@ const financePct = computed(() =>
               @click="router.push('/admin/students')"
             />
             <StatSummaryCard
-              label="Total guru"
+              :label="t('admin.dashboard.totalTeachers')"
               :value="formatNumber(num('total_teachers') || topLevelNum('total_teachers'))"
               tone="info"
               icon-name="user-check"
-              sublabel="Lihat daftar guru →"
+              :sublabel="t('admin.dashboard.viewTeacherList')"
               :slices="sliceOptions.length"
               :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
               :slice-progress="1"
@@ -255,7 +255,7 @@ const financePct = computed(() =>
               @click="router.push('/admin/teachers')"
             />
             <StatSummaryCard
-              label="Kehadiran hari ini"
+              :label="t('admin.dashboard.attendanceToday')"
               :value="`${num('attendance_rate') || topLevelNum('attendance_rate')}%`"
               tone="success"
               icon-name="check-circle"
@@ -267,7 +267,7 @@ const financePct = computed(() =>
                     }
                   : null
               "
-              sublabel="vs kemarin"
+              :sublabel="t('admin.dashboard.vsYesterday')"
               :slices="sliceOptions.length"
               :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
               :slice-progress="1"
@@ -276,11 +276,11 @@ const financePct = computed(() =>
               @click="router.push('/admin/attendance')"
             />
             <StatSummaryCard
-              label="RPP menunggu"
+              :label="t('admin.dashboard.pendingLessonPlans')"
               :value="formatNumber(num('pending_lesson_plans') || topLevelNum('pending_lesson_plans'))"
               tone="warning"
               icon-name="clipboard-list"
-              :sublabel="`${topLevelNum('rpp_rejected')} perlu revisi`"
+              :sublabel="`${topLevelNum('rpp_rejected')} ${t('admin.dashboard.needRevision')}`"
               :slices="sliceOptions.length"
               :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
               :slice-progress="1"
@@ -300,9 +300,9 @@ const financePct = computed(() =>
                   </div>
                   <div>
                     <h3 class="text-sm font-black text-slate-900 leading-none">
-                      Kehadiran per hari × kelas
+                      {{ t('admin.dashboard.attendancePerDayClass') }}
                     </h3>
-                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">10 hari terakhir</p>
+                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">{{ t('admin.dashboard.last10Days') }}</p>
                   </div>
                 </div>
                 <button
@@ -310,7 +310,7 @@ const financePct = computed(() =>
                   class="text-[11px] font-bold text-role-admin hover:underline"
                   @click="router.push('/admin/attendance')"
                 >
-                  Detail →
+                  {{ t('admin.dashboard.details') }}
                 </button>
               </header>
               <div class="grid gap-1.5" style="grid-template-columns: 60px repeat(10, 1fr);">
@@ -340,8 +340,8 @@ const financePct = computed(() =>
                     <NavIcon name="wallet" :size="16" />
                   </div>
                   <div>
-                    <h3 class="text-sm font-black text-slate-900 leading-none">Keuangan bulan ini</h3>
-                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">Diterima vs tunggakan</p>
+                    <h3 class="text-sm font-black text-slate-900 leading-none">{{ t('admin.dashboard.financeThisMonth') }}</h3>
+                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">{{ t('admin.dashboard.receivedVsOutstanding') }}</p>
                   </div>
                 </div>
                 <button
@@ -349,16 +349,16 @@ const financePct = computed(() =>
                   class="text-[11px] font-bold text-role-admin hover:underline"
                   @click="router.push('/admin/finance')"
                 >
-                  Detail →
+                  {{ t('admin.dashboard.details') }}
                 </button>
               </header>
               <div class="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Diterima</p>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.dashboard.received') }}</p>
                   <p class="text-base font-black text-emerald-700">{{ formatRupiah(financeReceived) }}</p>
                 </div>
                 <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tunggakan</p>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.dashboard.outstanding') }}</p>
                   <p class="text-base font-black text-red-700">{{ formatRupiah(financeOutstanding) }}</p>
                 </div>
               </div>
@@ -369,7 +369,7 @@ const financePct = computed(() =>
                 ></div>
               </div>
               <p class="text-[11px] text-slate-500 mt-2">
-                <b class="text-slate-900">{{ financePct }}%</b> target tercapai
+                <b class="text-slate-900">{{ financePct }}%</b> {{ t('admin.dashboard.targetReached') }}
               </p>
             </div>
           </section>
@@ -379,7 +379,7 @@ const financePct = computed(() =>
             <header class="flex items-center justify-between gap-3 mb-3 px-1">
               <div class="flex items-center gap-2">
                 <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest">
-                  Perlu Perhatian
+                  {{ t('admin.dashboard.needsAttention') }}
                 </h3>
                 <span
                   v-if="priorityItems.length > 0"
@@ -394,7 +394,7 @@ const financePct = computed(() =>
                 class="text-[11px] font-bold text-role-admin hover:underline inline-flex items-center gap-1"
                 @click="gotoAdminInbox"
               >
-                Lihat semua
+                {{ t('common.viewAll') }}
                 <NavIcon name="chevron-right" :size="12" />
               </button>
             </header>
@@ -409,7 +409,7 @@ const financePct = computed(() =>
           <!-- 4. Quick actions -->
           <section>
             <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest mb-3 px-1">
-              Manajemen sekolah
+              {{ t('admin.dashboard.schoolManagement') }}
             </h3>
             <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
               <button

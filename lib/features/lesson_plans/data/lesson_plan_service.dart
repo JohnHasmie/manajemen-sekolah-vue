@@ -14,7 +14,7 @@ class LessonPlanService {
   // contract uses them and a backend change is not currently possible.
   static const _kFilterSubjectId =
       'mataPelajaranId'; // subject filter on RPP endpoint
-  static const _kAcademicYear =
+  static const kAcademicYear =
       'tahun_ajaran'; // free-text year e.g. "2023/2024"
   static const _kDateRangeStart = 'tanggalStart';
   static const _kDateRangeEnd = 'tanggalEnd';
@@ -117,7 +117,7 @@ class LessonPlanService {
       queryParams['semester'] = semester;
     }
     if (academicYear != null && academicYear.isNotEmpty) {
-      queryParams[_kAcademicYear] = academicYear;
+      queryParams[kAcademicYear] = academicYear;
     }
     if (formats != null && formats.isNotEmpty) {
       queryParams['formats'] = formats.join(',');

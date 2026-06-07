@@ -23,6 +23,7 @@ import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/parent_class_activity_screen.dart';
@@ -78,8 +79,8 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: DashboardListTile(
-                title: 'Nilai',
-                subtitle: 'Daftar penilaian per mapel',
+                title: kCorSheTabGrades.tr,
+                subtitle: kCorSheParentGradesSubtitle.tr,
                 icon: DashboardModules.nilai.icon,
                 color: DashboardModules.nilai.color,
                 onTap: () => _openGrades(context, ref),
@@ -88,8 +89,8 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: DashboardListTile(
-                title: 'E-Raport',
-                subtitle: 'Ringkasan rapor tiap semester',
+                title: kCorSheParentEReportCard.tr,
+                subtitle: kCorSheParentReportCardSubtitle.tr,
                 icon: DashboardModules.raport.icon,
                 color: DashboardModules.raport.color,
                 onTap: () => _openReportCard(context, ref),
@@ -98,8 +99,8 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: DashboardListTile(
-                title: 'Kegiatan Kelas',
-                subtitle: 'Tugas & materi yang diberikan guru',
+                title: kClassActivities.tr,
+                subtitle: kCorSheParentActivitiesSubtitle.tr,
                 icon: DashboardModules.kegiatanKelas.icon,
                 color: DashboardModules.kegiatanKelas.color,
                 onTap: () => _openClassActivity(context, ref),
@@ -108,8 +109,8 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: DashboardListTile(
-                title: 'Pengumuman',
-                subtitle: 'Informasi resmi dari sekolah',
+                title: kAnnouncements.tr,
+                subtitle: kCorSheParentAnnouncementsSubtitle.tr,
                 icon: DashboardModules.pengumuman.icon,
                 color: DashboardModules.pengumuman.color,
                 onTap: () => AppNavigator.push(
@@ -147,32 +148,32 @@ class _ParentAcademicHubState extends ConsumerState<ParentAcademicHub> {
         ],
       ),
       padding: EdgeInsets.fromLTRB(20, statusBarHeight + 16, 20, 18),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Untuk anak Anda',
-            style: TextStyle(
+            kCorSheParentForYourChild.tr,
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Text(
-            'Akademik',
-            style: TextStyle(
+            kCorSheTabAcademic.tr,
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w800,
               color: Colors.white,
               height: 1.0,
             ),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Text(
-            'Pantau nilai, raport, kegiatan & pengumuman',
-            style: TextStyle(
+            kCorSheParentMonitorSubtitle.tr,
+            style: const TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w500,
               color: Colors.white,
@@ -259,7 +260,7 @@ class _RecentActivitySection extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
               child: Text(
-                'AKTIVITAS TERBARU',
+                kCorSheParentRecentActivity.tr,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -294,35 +295,35 @@ class _RecentActivityCard extends StatelessWidget {
           bg: const Color(0xFFFEE2E2),
           fg: const Color(0xFFDC2626),
           icon: Icons.priority_high_rounded,
-          label: 'Pengumuman',
+          label: kCorSheActivityTypeAnnouncement.tr,
         );
       case 'grade':
         return (
           bg: const Color(0xFFDCFCE7),
           fg: const Color(0xFF15803D),
           icon: Icons.check_rounded,
-          label: 'Nilai',
+          label: kCorSheActivityTypeGrade.tr,
         );
       case 'class_activity':
         return (
           bg: const Color(0xFFFEF3C7),
           fg: const Color(0xFFB45309),
           icon: Icons.menu_book_outlined,
-          label: 'Kegiatan',
+          label: kCorSheActivityTypeActivity.tr,
         );
       case 'report_card':
         return (
           bg: const Color(0xFFDBEAFE),
           fg: const Color(0xFF1D4ED8),
           icon: Icons.assignment_turned_in_outlined,
-          label: 'Raport',
+          label: kCorSheActivityTypeReportCard.tr,
         );
       default:
         return (
           bg: const Color(0xFFE0F2FE),
           fg: const Color(0xFF0E7490),
           icon: Icons.notifications_none_rounded,
-          label: 'Update',
+          label: kCorSheActivityTypeUpdate.tr,
         );
     }
   }

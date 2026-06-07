@@ -29,6 +29,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/child_selector_chip_row.dart';
@@ -423,7 +424,7 @@ class _ParentRecommendationScreenState
           BrandPageHeader(
             role: 'wali',
             subtitle: headerSubtitle,
-            title: 'Rekomendasi Belajar',
+            title: kRecLearningRecommendations.tr,
             kpiOverlayHeight: 72,
             onBackPressed: () => AppNavigator.pop(context),
             actionIcons: [
@@ -440,7 +441,7 @@ class _ParentRecommendationScreenState
                     children: [
                       ChildSummary(
                         id: _kAllChildren,
-                        shortName: 'Semua',
+                        shortName: kRecAll.tr,
                         klass: '${_children.length} anak',
                         avatarInitials: '◎',
                       ),
@@ -482,11 +483,11 @@ class _ParentRecommendationScreenState
               onRefresh: () => _load(useCache: false),
               role: 'wali',
               emptyTitle: _isMultiChildHub
-                  ? 'Belum ada rekomendasi'
-                  : 'Belum ada rekomendasi untuk anak ini',
+                  ? kRecNoRecommendationsLong.tr
+                  : kRecNoRecommendationsForChildYet.tr,
               emptySubtitle: _isMultiChildHub
-                  ? 'Wali kelas akan mengirim rekomendasi belajar di sini.'
-                  : 'Coba reset filter atau periksa lagi nanti.',
+                  ? kRecHomeroomWillSendRecommendations.tr
+                  : kRecTryResetingFilterOrCheckLater.tr,
               emptyIcon: Icons.chat_bubble_outline_rounded,
               childBuilder: () => AppRefreshIndicator(
                 onRefresh: () => _load(useCache: false),
@@ -654,10 +655,10 @@ class _ParentRecommendationScreenState
     }).length;
     final completed = all.length - active;
     return [
-      (value: ParentRecStatus.all, label: 'Semua', count: all.length),
-      (value: ParentRecStatus.unread, label: 'Belum Dibaca', count: unread),
-      (value: ParentRecStatus.active, label: 'Aktif', count: active),
-      (value: ParentRecStatus.completed, label: 'Selesai', count: completed),
+      (value: ParentRecStatus.all, label: kRecAll.tr, count: all.length),
+      (value: ParentRecStatus.unread, label: kRecUnread.tr, count: unread),
+      (value: ParentRecStatus.active, label: kRecActive.tr, count: active),
+      (value: ParentRecStatus.completed, label: kRecCompleted.tr, count: completed),
     ];
   }
 

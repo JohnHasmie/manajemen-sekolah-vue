@@ -14,6 +14,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/finance/presentation/widgets/finance_report_models.dart';
 
 class ClassFinanceJenisTabs extends StatelessWidget {
@@ -75,7 +76,7 @@ class ClassFinanceJenisTabs extends StatelessWidget {
         itemBuilder: (context, i) {
           if (i == 0) {
             return _Tab(
-              label: 'Semua',
+              label: kFinAll.tr,
               badge: totalMonths > 0 ? '$totalMonths bln' : null,
               selected: selectedPaymentTypeId == null,
               primaryColor: primaryColor,

@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/subjects/presentation/mixins/subject_class_filter_mixin.dart';
@@ -46,8 +47,8 @@ class SubjectClassFilterSheet extends StatefulWidget {
   }) {
     return AppBottomSheet.show<void>(
       context: context,
-      title: 'Filter & Urutkan',
-      subtitle: 'Sesuaikan tampilan daftar kelas',
+      title: kSubFilterSort.tr,
+      subtitle: kSubCustomizeClassList.tr,
       icon: Icons.tune_rounded,
       primaryColor: primaryColor,
       content: SubjectClassFilterSheet(
@@ -97,7 +98,7 @@ class _SubjectClassFilterSheetState extends State<SubjectClassFilterSheet> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionTitle(title: 'Urutkan', accent: widget.primaryColor),
+        _SectionTitle(title: kSubSort.tr, accent: widget.primaryColor),
         for (final option in _sortOptions)
           _PickerRow(
             label: option.label,
@@ -107,7 +108,7 @@ class _SubjectClassFilterSheetState extends State<SubjectClassFilterSheet> {
             onTap: () => _applySort(option.value),
           ),
         const SizedBox(height: AppSpacing.md),
-        _SectionTitle(title: 'Status', accent: widget.primaryColor),
+        _SectionTitle(title: kSubStatus.tr, accent: widget.primaryColor),
         for (final option in _statusOptions)
           _PickerRow(
             label: option.label,
@@ -118,10 +119,10 @@ class _SubjectClassFilterSheetState extends State<SubjectClassFilterSheet> {
           ),
         const SizedBox(height: AppSpacing.md),
         BottomSheetFooter(
-          primaryLabel: 'Terapkan',
+          primaryLabel: kSubApply.tr,
           primaryColor: widget.primaryColor,
           onPrimary: () => AppNavigator.pop(context),
-          secondaryLabel: 'Reset',
+          secondaryLabel: kSubReset.tr,
           onSecondary: _reset,
         ),
       ],
@@ -143,38 +144,42 @@ class _StatusOption {
   const _StatusOption(this.label, this.icon, this.value);
 }
 
-const _sortOptions = <_SortOption>[
+List<_SortOption> get _sortOptions => <_SortOption>[
   _SortOption(
-    'Terdaftar dulu',
+    kSubRegisteredFirst.tr,
     Icons.arrow_downward_rounded,
     SubjectClassSort.assignedFirst,
   ),
   _SortOption(
-    'Belum terdaftar dulu',
+    kSubUnregisteredFirst.tr,
     Icons.arrow_upward_rounded,
     SubjectClassSort.unassignedFirst,
   ),
   _SortOption(
-    'Nama kelas A → Z',
+    kSubNameAscending.tr,
     Icons.sort_by_alpha_rounded,
     SubjectClassSort.nameAsc,
   ),
   _SortOption(
-    'Nama kelas Z → A',
+    kSubNameDescending.tr,
     Icons.sort_by_alpha_rounded,
     SubjectClassSort.nameDesc,
   ),
   _SortOption(
-    'Tingkat (terendah dulu)',
+    kSubGradeLowestFirst.tr,
     Icons.layers_outlined,
     SubjectClassSort.gradeAsc,
   ),
 ];
 
-const _statusOptions = <_StatusOption>[
-  _StatusOption('Semua kelas', Icons.list_alt_rounded, 'All'),
-  _StatusOption('Terdaftar', Icons.check_circle_outline, 'Assigned'),
-  _StatusOption('Belum terdaftar', Icons.radio_button_unchecked, 'Unassigned'),
+List<_StatusOption> get _statusOptions => <_StatusOption>[
+  _StatusOption(kSubAllClasses.tr, Icons.list_alt_rounded, 'All'),
+  _StatusOption(kSubRegistered.tr, Icons.check_circle_outline, 'Assigned'),
+  _StatusOption(
+    kSubNotRegistered.tr,
+    Icons.radio_button_unchecked,
+    'Unassigned',
+  ),
 ];
 
 class _SectionTitle extends StatelessWidget {

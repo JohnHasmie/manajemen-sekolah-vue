@@ -5,6 +5,9 @@
   Frame B/C/D behaviour from `auth_login_school_role_redesign.html`).
 -->
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 defineProps<{ compact?: boolean }>();
 </script>
 
@@ -52,7 +55,7 @@ defineProps<{ compact?: boolean }>();
         v-if="!compact"
         class="text-white/85 text-[11.5px] font-semibold tracking-[0.2px] max-w-xs mx-auto"
       >
-        Platform Manajemen Sekolah Terpadu
+        {{ t('app.tagline') }}
       </p>
     </div>
   </div>

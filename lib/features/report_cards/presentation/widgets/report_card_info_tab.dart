@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 class ReportCardInfoTab extends StatefulWidget {
   final TextEditingController sickCtrl;
@@ -82,7 +83,7 @@ class _ReportCardInfoTabState extends State<ReportCardInfoTab> {
           icon: Icons.event_available_rounded,
           iconBg: ColorUtils.success600.withValues(alpha: 0.10),
           iconFg: ColorUtils.success600,
-          title: 'Kehadiran Semester Ini',
+          title: kRepCarAttendanceThisSemester.tr,
           chip: 'Total $baselineDays hari',
           children: [
             Container(
@@ -97,7 +98,7 @@ class _ReportCardInfoTabState extends State<ReportCardInfoTab> {
                   Expanded(
                     child: _Kpi3Cell(
                       controller: widget.sickCtrl,
-                      label: 'Sakit',
+                      label: kRepCarSick.tr,
                       color: ColorUtils.warning600,
                     ),
                   ),
@@ -105,7 +106,7 @@ class _ReportCardInfoTabState extends State<ReportCardInfoTab> {
                   Expanded(
                     child: _Kpi3Cell(
                       controller: widget.permitCtrl,
-                      label: 'Izin',
+                      label: kRepCarPermission.tr,
                       color: cobalt,
                     ),
                   ),
@@ -113,7 +114,7 @@ class _ReportCardInfoTabState extends State<ReportCardInfoTab> {
                   Expanded(
                     child: _Kpi3Cell(
                       controller: widget.absentCtrl,
-                      label: 'Alpha',
+                      label: kRepCarAbsent.tr,
                       color: ColorUtils.error600,
                     ),
                   ),
@@ -138,16 +139,14 @@ class _ReportCardInfoTabState extends State<ReportCardInfoTab> {
                   ),
                   children: [
                     TextSpan(
-                      text: '$hadir hari hadir. ',
+                      text: '$hadir ${kRepCarDaysPresent.tr} ',
                       style: TextStyle(
                         color: cobalt,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const TextSpan(
-                      text:
-                          'Otomatis terisi dari Presensi · '
-                          'ubah manual jika perlu.',
+                    TextSpan(
+                      text: kRepCarAutofillNote.tr,
                     ),
                   ],
                 ),
@@ -162,12 +161,12 @@ class _ReportCardInfoTabState extends State<ReportCardInfoTab> {
           icon: Icons.chat_rounded,
           iconBg: cobalt.withValues(alpha: 0.10),
           iconFg: cobalt,
-          title: 'Catatan Wali Kelas',
-          chip: 'Opsional',
+          title: kRepCarTeacherNotes.tr,
+          chip: kRepCarOptional.tr,
           children: [
             _DescInput(
               controller: widget.notesCtrl,
-              hint: 'Catatan, saran, atau motivasi untuk siswa dan orang tua…',
+              hint: kRepCarNotesHint.tr,
             ),
           ],
         ),
@@ -178,7 +177,7 @@ class _ReportCardInfoTabState extends State<ReportCardInfoTab> {
           icon: Icons.check_circle_rounded,
           iconBg: ColorUtils.violet700.withValues(alpha: 0.10),
           iconFg: ColorUtils.violet700,
-          title: 'Keputusan Akhir Tahun',
+          title: kRepCarYearEndDecision.tr,
           chip: 'Wajib',
           children: [
             Row(
@@ -188,8 +187,8 @@ class _ReportCardInfoTabState extends State<ReportCardInfoTab> {
                     selected: widget.promotionDecision == 'Naik Kelas',
                     icon: Icons.check_rounded,
                     color: ColorUtils.success600,
-                    title: 'Naik Kelas',
-                    subtitle: 'Lanjut ke tingkat berikutnya',
+                    title: kRepCarPromotion.tr,
+                    subtitle: kRepCarProceedToNext.tr,
                     onTap: () => widget.onPromotionChanged('Naik Kelas'),
                   ),
                 ),
@@ -201,8 +200,8 @@ class _ReportCardInfoTabState extends State<ReportCardInfoTab> {
                         widget.promotionDecision == 'Tinggal Kelas',
                     icon: Icons.close_rounded,
                     color: ColorUtils.error600,
-                    title: 'Tinggal Kelas',
-                    subtitle: 'Mengulang tingkat ini',
+                    title: kRepCarRetention.tr,
+                    subtitle: kRepCarRepeatGrade.tr,
                     onTap: () => widget.onPromotionChanged('Tinggal di Kelas'),
                   ),
                 ),

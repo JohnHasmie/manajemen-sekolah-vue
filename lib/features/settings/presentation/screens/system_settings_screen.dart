@@ -27,6 +27,7 @@ import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_settings_components.dart'
     show AuditLogPin;
@@ -66,8 +67,8 @@ class SystemSettingsScreen extends ConsumerWidget {
       body: Column(
         children: [
           ShellTabHeader(
-            title: 'Sistem',
-            subtitle: 'Pengaturan akun, bahasa, dan sistem',
+            title: kSetSystem.tr,
+            subtitle: kSetSystemSettingsSubtitle.tr,
             accentColor: accent,
           ),
           Expanded(
@@ -96,8 +97,8 @@ class SystemSettingsScreen extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
-          title: 'Pengaturan Umum',
-          subtitle: 'Identitas sekolah & tahun ajaran aktif',
+          title: kSetGeneralSettings.tr,
+          subtitle: kSetSchoolIdentityAcademicYear.tr,
           icon: DashboardModules.tahunAjaran.icon,
           color: DashboardModules.tahunAjaran.color,
           onTap: () =>
@@ -107,8 +108,8 @@ class SystemSettingsScreen extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
-          title: 'Waktu Pembelajaran',
-          subtitle: 'Jam pelajaran & durasi per hari',
+          title: kSetLearningTimeSettings.tr,
+          subtitle: kSetLessonDurationSubtitle.tr,
           icon: DashboardModules.waktuPembelajaran.icon,
           color: DashboardModules.waktuPembelajaran.color,
           onTap: () => AppNavigator.push(context, const TimeSettingsScreen()),
@@ -117,8 +118,8 @@ class SystemSettingsScreen extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
-          title: 'Manajemen Data',
-          subtitle: 'Siswa, guru, kelas, mapel',
+          title: kSetDataManagement.tr,
+          subtitle: kSetDataManagementSubtitle.tr,
           icon: DashboardModules.manajemenData.icon,
           color: DashboardModules.manajemenData.color,
           onTap: () =>
@@ -128,8 +129,8 @@ class SystemSettingsScreen extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
-          title: 'Profil',
-          subtitle: 'Nama, email, kontak & akses',
+          title: kSetProfile.tr,
+          subtitle: kSetProfileInfoSubtitle.tr,
           icon: DashboardModules.bahasa.icon,
           color: DashboardModules.bahasa.color,
           onTap: () => AppNavigator.push(context, const ProfileScreen()),
@@ -138,8 +139,8 @@ class SystemSettingsScreen extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
-          title: 'Notifikasi',
-          subtitle: 'Push, email, SMS · segera hadir',
+          title: kSetNotifications.tr,
+          subtitle: kSetNotificationsSubtitle.tr,
           icon: DashboardModules.notifikasi.icon,
           color: DashboardModules.notifikasi.color,
           onTap: () => _comingSoon(context),
@@ -148,8 +149,8 @@ class SystemSettingsScreen extends ConsumerWidget {
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
-          title: 'Backup & Audit',
-          subtitle: 'Cadangan otomatis · harian',
+          title: kSetBackupAudit.tr,
+          subtitle: kSetBackupSubtitle.tr,
           icon: DashboardModules.backupAudit.icon,
           color: DashboardModules.backupAudit.color,
           onTap: () => _comingSoon(context),
@@ -161,7 +162,7 @@ class SystemSettingsScreen extends ConsumerWidget {
   void _comingSoon(BuildContext context) {
     SnackBarUtils.showInfo(
       context,
-      'Segera hadir — fitur ini sedang disiapkan.',
+      kSetComingSoon.tr,
     );
   }
 }
@@ -177,7 +178,7 @@ class _AuditLogPinConsumer extends ConsumerWidget {
         latest: result.latest,
         onSeeAll: () => SnackBarUtils.showInfo(
           context,
-          'Layar audit log lengkap segera hadir.',
+          kSetAuditLogComingSoon.tr,
         ),
       ),
       // While loading or on error, render an empty pin so the layout

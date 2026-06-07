@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/features/grades/data/grade_recap_table_builder.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/teacher_grade_recap_screen.dart';
@@ -400,11 +401,11 @@ mixin GradeRecapColumnOpsMixin on ConsumerState<GradeRecapPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => ConfirmationDialog(
-        title: 'Hapus bab',
+        title: kGraDeleteChapter.tr,
         content:
-            'Yakin ingin menghapus "$name"? '
-            'Semua nilai siswa di kolom ini akan ikut terhapus.',
-        confirmText: 'Hapus',
+            '${kGraConfirmDelete.tr} "$name"? '
+            '${kGraAllGradesWillBeDeleted.tr}.',
+        confirmText: kDelete.tr,
         confirmColor: ColorUtils.error600,
       ),
     );

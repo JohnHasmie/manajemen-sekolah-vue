@@ -375,13 +375,13 @@ class _ShellTabPlaceholder extends StatelessWidget {
             Icon(tab.icon, size: 56, color: Colors.grey),
             const SizedBox(height: 12),
             Text(
-              '${tab.label} — segera hadir',
+              '${tab.label} — ${kDasTabComingSoon.tr}',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Tab ini akan diisi pada Sub-PR berikutnya.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+            Text(
+              kDasTabPlaceholderDesc.tr,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ),

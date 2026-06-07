@@ -22,6 +22,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
@@ -184,8 +185,8 @@ class _TargetSelectionModalState extends State<TargetSelectionModal>
         widget.classList.isNotEmpty;
 
     return AppBottomSheet(
-      title: 'Pilih target pembayaran',
-      subtitle: 'Centang kelas atau siswa yang akan ditagih.',
+      title: kFinSelectPaymentTarget.tr,
+      subtitle: kFinSelectClassesStudents.tr,
       icon: Icons.groups_rounded,
       primaryColor: navy,
       maxHeightFactor: 0.92,
@@ -207,7 +208,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal>
           ),
           const SizedBox(height: 12),
           _SectionHeader(
-            label: 'KELAS',
+            label: kFinClasses.tr,
             icon: Icons.class_rounded,
             trailing: '${widget.classList.length} TOTAL',
           ),
@@ -269,7 +270,7 @@ class _TargetSelectionModalState extends State<TargetSelectionModal>
             ),
           ),
           BottomSheetFooter(
-            primaryLabel: 'Simpan target',
+            primaryLabel: kFinSaveTarget.tr,
             primaryColor: navy,
             secondaryLabel: 'Batal',
             onPrimary: () {
@@ -310,7 +311,7 @@ class _SearchField extends StatelessWidget {
       ),
       cursorColor: primaryColor,
       decoration: InputDecoration(
-        hintText: 'Cari siswa berdasarkan nama atau NIS…',
+        hintText: kFinSearchStudentsByNameNumber.tr,
         hintStyle: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w500,
@@ -382,7 +383,7 @@ class _QuickActionsRow extends StatelessWidget {
         Expanded(
           child: _QuickActionPill(
             icon: Icons.done_all_rounded,
-            label: 'Pilih semua',
+            label: kFinSelectAll.tr,
             color: primaryColor,
             onTap: onSelectAll,
           ),
@@ -391,7 +392,7 @@ class _QuickActionsRow extends StatelessWidget {
         Expanded(
           child: _QuickActionPill(
             icon: Icons.cleaning_services_rounded,
-            label: 'Hapus semua',
+            label: kFinClearAll.tr,
             color: const Color(0xFFDC2626),
             onTap: onClearAll,
           ),

@@ -60,7 +60,7 @@ class AdminDataManagementScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
           title: AppLocalizations.manageStudents.tr,
-          subtitle: 'Daftar siswa · NIS · kelas aktif',
+          subtitle: kSetStudentManageSubtitle.tr,
           icon: DashboardModules.siswa.icon,
           color: DashboardModules.siswa.color,
           onTap: () =>
@@ -71,7 +71,7 @@ class AdminDataManagementScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
           title: AppLocalizations.manageTeachers.tr,
-          subtitle: 'Profil guru · mapel diampu · kontak',
+          subtitle: kSetTeacherManageSubtitle.tr,
           icon: DashboardModules.guru.icon,
           color: DashboardModules.guru.color,
           onTap: () => AppNavigator.push(context, const TeacherAdminScreen()),
@@ -81,7 +81,7 @@ class AdminDataManagementScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
           title: AppLocalizations.manageClasses.tr,
-          subtitle: 'Rombel · wali kelas · tingkat',
+          subtitle: kSetClassManageSubtitle.tr,
           icon: DashboardModules.kelas.icon,
           color: DashboardModules.kelas.color,
           onTap: () =>
@@ -92,7 +92,7 @@ class AdminDataManagementScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: DashboardListTile(
           title: AppLocalizations.manageSubjects.tr,
-          subtitle: 'Mapel · KKM · kelas penerima',
+          subtitle: kSetSubjectManageSubtitle.tr,
           icon: DashboardModules.mataPelajaran.icon,
           color: DashboardModules.mataPelajaran.color,
           onTap: () =>

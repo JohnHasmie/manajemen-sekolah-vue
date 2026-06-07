@@ -82,10 +82,7 @@ class MaterialGenerateSheet extends StatelessWidget {
 
     AppBottomSheet.show(
       context: context,
-      title: lp.getTranslatedText({
-        'en': '$totalChecked Items Belum AI',
-        'id': '$totalChecked Item Belum AI',
-      }),
+      title: '$totalChecked ${kMatItemsNotAi.tr}',
       subtitle: 'GENERATE MATERI AI · $kickerSubject · $kickerClass',
       icon: Icons.auto_awesome,
       primaryColor: primaryColor,
@@ -157,9 +154,9 @@ class MaterialGenerateSheet extends StatelessWidget {
   }
 
   String _formatEtaLong(int seconds) {
-    if (seconds < 60) return '~$seconds dtk';
+    if (seconds < 60) return kMatEtaSeconds.tr.replaceAll('{seconds}', '$seconds');
     final mins = (seconds / 60).round();
-    return '~$mins mnt';
+    return kMatEtaMinutes.tr.replaceAll('{mins}', '$mins');
   }
 
   // ── Item label helpers ─────────────────────────────────────
@@ -194,7 +191,7 @@ class MaterialGenerateSheet extends StatelessWidget {
       final title = c['judul_bab']?.toString() ?? '-';
       final subCount = _subCountForChapter(id);
       final label = subCount > 0
-          ? 'Bab $urut — $title ($subCount sub-bab)'
+          ? 'Bab $urut — $title ($subCount ${kMatSubChapterUnit.tr})'
           : 'Bab $urut — $title';
       out.add((label: label, etaSeconds: _etaSecondsForChapter(c)));
     }
@@ -241,7 +238,7 @@ class MaterialGenerateSheet extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
           child: Text(
-            'DAFTAR DIPILIH',
+            kMatSelectedList.tr,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
@@ -284,7 +281,7 @@ class MaterialGenerateSheet extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: _kpiCell(value: '$count', label: 'AKAN DIGENERATE'),
+              child: _kpiCell(value: '$count', label: kMatToBeGenerated.tr),
             ),
             Container(
               width: 1,
@@ -294,7 +291,7 @@ class MaterialGenerateSheet extends StatelessWidget {
             Expanded(
               child: _kpiCell(
                 value: _formatEtaLong(totalSeconds),
-                label: 'ESTIMASI WAKTU',
+                label: kMatEstimatedTime.tr,
               ),
             ),
           ],
@@ -396,19 +393,13 @@ class MaterialGenerateSheet extends StatelessWidget {
           Icon(Icons.info_outline, size: 32, color: ColorUtils.slate400),
           const SizedBox(height: 8),
           Text(
-            languageProvider.getTranslatedText({
-              'en': 'No chapters selected yet',
-              'id': 'Belum ada bab yang dipilih',
-            }),
+            kMatNoChaptersSelected.tr,
             style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
-            languageProvider.getTranslatedText({
-              'en': 'Check chapters/sub-chapters first, then generate',
-              'id': 'Centang bab/sub-bab terlebih dahulu',
-            }),
+            kMatCheckChaptersFirst.tr,
             style: TextStyle(fontSize: 11, color: ColorUtils.slate400),
             textAlign: TextAlign.center,
           ),
@@ -432,7 +423,6 @@ class _MaterialGenerateFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lp = languageProvider;
     final enabled = totalChecked > 0;
     const violet = MaterialGenerateSheet._violet;
 
@@ -459,15 +449,7 @@ class _MaterialGenerateFooter extends StatelessWidget {
               : null,
           icon: const Icon(Icons.auto_awesome, size: 18),
           label: Text(
-            enabled
-                ? lp.getTranslatedText({
-                    'en': 'Generate Now',
-                    'id': 'Generate Sekarang',
-                  })
-                : lp.getTranslatedText({
-                    'en': 'Select Materials First',
-                    'id': 'Pilih Materi Dulu',
-                  }),
+            enabled ? kMatGenerateNow.tr : kMatSelectFirst.tr,
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,

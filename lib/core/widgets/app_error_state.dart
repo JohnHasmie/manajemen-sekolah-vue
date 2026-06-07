@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A standardized inline error state widget for use inside screen bodies.
 ///
@@ -80,7 +81,7 @@ class AppErrorState extends StatelessWidget {
             ),
             AppSpacing.v16,
             Text(
-              title ?? 'Terjadi Kesalahan',
+              title ?? kCorWidErrorTitle.tr,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -102,7 +103,7 @@ class AppErrorState extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Coba Lagi'),
+              label: Text(kTryAgain.tr),
               style: ElevatedButton.styleFrom(
                 backgroundColor: buttonColor,
                 foregroundColor: Colors.white,

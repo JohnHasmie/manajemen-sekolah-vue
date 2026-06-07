@@ -16,11 +16,11 @@
 -->
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { ParentService } from '@/services/parent.service';
 import type { ParentGradeEntry } from '@/types/parent';
-import { PARENT_GRADE_TYPE_OPTIONS } from '@/types/parent';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
@@ -28,6 +28,7 @@ import ParentPageHeader from '@/components/layout/ParentPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Modal from '@/components/ui/Modal.vue';
 
+const { t } = useI18n();
 const { activeChildId, activeChild } = useChildPicker();
 
 // Semester defaults to 2 (Genap) — matches the mobile-app default.
@@ -36,10 +37,21 @@ const semester = ref<'1' | '2'>('2');
 // Tipe Nilai — single-select.
 const typeFilter = ref<string | null>(null);
 const showTypePicker = ref(false);
+// Grade-type options localised; `value` stays as the API key, only `label` switches.
+const PARENT_GRADE_TYPE_OPTIONS = computed<{ value: string; label: string }[]>(() => [
+  { value: 'Tugas', label: t('parent.grades.typeTugas') },
+  { value: 'UH', label: t('parent.grades.typeUlanganHarian') },
+  { value: 'PTS', label: t('parent.grades.typePTS') },
+  { value: 'PAS', label: t('parent.grades.typePAS') },
+  { value: 'Praktek', label: t('parent.grades.typePraktek') },
+  { value: 'Portofolio', label: t('parent.grades.typePortofolio') },
+  { value: 'Proyek', label: t('parent.grades.typeProyek') },
+]);
+
 const activeTypeLabel = computed(() => {
-  if (!typeFilter.value) return 'Semua tipe';
+  if (!typeFilter.value) return t('parent.grades.typeAll');
   return (
-    PARENT_GRADE_TYPE_OPTIONS.find((o) => o.value === typeFilter.value)?.label ??
+    PARENT_GRADE_TYPE_OPTIONS.value.find((o) => o.value === typeFilter.value)?.label ??
     typeFilter.value
   );
 });
@@ -153,10 +165,10 @@ const aggregates = computed(() => {
 });
 
 function avgLabel(avg: number): string {
-  if (avg >= 85) return 'Sangat Baik';
-  if (avg >= 75) return 'Baik';
-  if (avg >= 65) return 'Cukup';
-  return 'Perlu perbaikan';
+  if (avg >= 85) return t('parent.grades.kpiBadgeExcellent');
+  if (avg >= 75) return t('parent.grades.kpiBadgeGood');
+  if (avg >= 65) return t('parent.grades.kpiBadgeFair');
+  return t('parent.grades.kpiBadgeNeeds');
 }
 function avgTone(avg: number): string {
   if (avg >= 85) return 'bg-emerald-100 text-emerald-700';
@@ -285,14 +297,16 @@ const state = computed<AsyncState<ParentGradeEntry[]>>(() => {
 
 const emptyTitle = computed(() =>
   entries.value.length > 0 && filteredEntries.value.length === 0
-    ? 'Tidak ada nilai untuk filter ini'
-    : 'Belum ada nilai',
+    ? t('parent.grades.emptyFilteredTitle')
+    : t('parent.grades.emptyTitle'),
 );
 const emptyDescription = computed(() => {
   if (entries.value.length > 0 && filteredEntries.value.length === 0) {
-    return 'Coba reset filter tipe nilai.';
+    return t('parent.grades.emptyFilteredDesc');
   }
-  return `${activeChild()?.name ?? 'Anak ini'} belum punya nilai pada semester ini.`;
+  return t('parent.grades.emptyDesc', {
+    name: activeChild()?.name ?? t('parent.attendance.thisChildFallback'),
+  });
 });
 
 function pickType(value: string | null) {
@@ -304,13 +318,13 @@ function resetFilter() {
 }
 
 // Header semester segmented (Genap default, Ganjil alternative).
-const semesterOptions = [
-  { key: '2' as const, label: 'Semester 2 · Genap' },
-  { key: '1' as const, label: 'Semester 1 · Ganjil' },
-];
+const semesterOptions = computed(() => [
+  { key: '2' as const, label: t('parent.grades.semester2') },
+  { key: '1' as const, label: t('parent.grades.semester1') },
+]);
 const showSemesterPicker = ref(false);
 const activeSemesterLabel = computed(
-  () => semesterOptions.find((o) => o.key === semester.value)?.label ?? '',
+  () => semesterOptions.value.find((o) => o.key === semester.value)?.label ?? '',
 );
 </script>
 
@@ -318,9 +332,13 @@ const activeSemesterLabel = computed(
   <div class="space-y-md pb-12">
     <!-- 1. Header -->
     <ParentPageHeader
-      kicker="Akademik · Anak"
-      title="Nilai"
-      :meta="`${activeChild()?.class_name ?? '—'} · ${semester === '1' ? 'Semester 1' : 'Semester 2'} · ${entries.length} penilaian`"
+      :kicker="t('parent.shared.kickerAcademic')"
+      :title="t('parent.grades.title')"
+      :meta="t('parent.grades.metaPiece', {
+        class: activeChild()?.class_name ?? '—',
+        semester: semester === '1' ? t('parent.grades.semesterShort1') : t('parent.grades.semesterShort2'),
+        count: entries.length,
+      })"
     />
 
     <!-- 2. KPI strip (3 columns — Penilaian / Rata-rata / Rentang) -->
@@ -329,18 +347,18 @@ const activeSemesterLabel = computed(
     >
       <div class="pr-3">
         <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-          Penilaian
+          {{ t('parent.grades.kpiAssessments') }}
         </p>
         <p class="text-xl font-black text-slate-900 mt-1">
           {{ aggregates.total }}
         </p>
         <p class="text-[10px] font-bold text-slate-500 mt-0.5 truncate">
-          {{ aggregates.scored }} sudah · {{ aggregates.pending }} menunggu
+          {{ t('parent.grades.kpiDoneWaiting', { done: aggregates.scored, waiting: aggregates.pending }) }}
         </p>
       </div>
       <div class="px-3">
         <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-          Rata-rata
+          {{ t('parent.grades.kpiAverage') }}
         </p>
         <p class="text-xl font-black text-slate-900 mt-1">
           {{ fmtScore(aggregates.avg) }}
@@ -355,7 +373,7 @@ const activeSemesterLabel = computed(
       </div>
       <div class="pl-3">
         <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-          Rentang
+          {{ t('parent.grades.kpiRange') }}
         </p>
         <p class="text-xl font-black text-slate-900 mt-1">
           {{ aggregates.scored > 0
@@ -363,7 +381,7 @@ const activeSemesterLabel = computed(
             : '—' }}
         </p>
         <p class="text-[10px] font-bold text-slate-500 mt-0.5">
-          Min / Maks
+          {{ t('parent.grades.kpiRangeMinMax') }}
         </p>
       </div>
     </section>
@@ -373,14 +391,14 @@ const activeSemesterLabel = computed(
       <template #chips>
         <div class="flex items-center gap-2 flex-wrap">
           <AppFilterChip
-            label="Periode"
+            :label="t('parent.grades.chipPeriod')"
             :value="activeSemesterLabel"
             icon-name="calendar"
             tone="cobalt"
             @click="showSemesterPicker = true"
           />
           <AppFilterChip
-            label="Tipe Nilai"
+            :label="t('parent.grades.chipType')"
             :value="activeTypeLabel"
             icon-name="book"
             tone="amber"
@@ -483,7 +501,7 @@ const activeSemesterLabel = computed(
     <!-- Tipe Nilai picker -->
     <Modal
       v-if="showTypePicker"
-      title="Filter Tipe Nilai"
+      :title="t('parent.grades.modalTypeTitle')"
       @close="showTypePicker = false"
     >
       <ul class="space-y-1">
@@ -496,7 +514,7 @@ const activeSemesterLabel = computed(
             }"
             @click="pickType(null)"
           >
-            Semua tipe
+            {{ t('parent.grades.typeAll') }}
           </button>
         </li>
         <li v-for="opt in PARENT_GRADE_TYPE_OPTIONS" :key="opt.value">
@@ -518,7 +536,7 @@ const activeSemesterLabel = computed(
     <!-- Semester picker -->
     <Modal
       v-if="showSemesterPicker"
-      title="Pilih Periode"
+      :title="t('parent.grades.modalPeriodTitle')"
       @close="showSemesterPicker = false"
     >
       <ul class="space-y-1">

@@ -19,6 +19,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ScheduleService } from '@/services/schedule.service';
 import { LessonHourService } from '@/services/lesson-hour.service';
 import { SubjectService } from '@/services/subjects.service';
@@ -60,6 +61,7 @@ import ScheduleImportModal from '@/components/feature/ScheduleImportModal.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useRouter } from 'vue-router';
 
+const { t: $t } = useI18n();
 const ayStore = useAcademicYearStore();
 const router = useRouter();
 
@@ -188,19 +190,19 @@ watch(search, () => {
 
 // ── Filter chip values ──────────────────────────────────────────────
 const teacherChipValue = computed(() => {
-  if (!filterTeacherId.value) return 'Semua guru';
+  if (!filterTeacherId.value) return $t('admin.schedule.allTeachers');
   return filterOptions.value?.teachers.find((t) => t.id === filterTeacherId.value)?.name ?? '—';
 });
 const classChipValue = computed(() => {
-  if (!filterClassId.value) return 'Semua kelas';
+  if (!filterClassId.value) return $t('admin.schedule.allClasses');
   return filterOptions.value?.classes.find((c) => c.id === filterClassId.value)?.name ?? '—';
 });
 const dayChipValue = computed(() => {
-  if (!filterDayId.value) return 'Semua hari';
+  if (!filterDayId.value) return $t('admin.schedule.allDays');
   return filterOptions.value?.days.find((d) => d.id === filterDayId.value)?.name ?? '—';
 });
 const subjectChipValue = computed(() => {
-  if (!filterSubjectId.value) return 'Semua mapel';
+  if (!filterSubjectId.value) return $t('admin.schedule.allSubjects');
   // Prefer the full subject catalogue (covers subjects not in current rows);
   // fall back to deriving the name from the loaded rows.
   const fromCatalogue = allSubjects.value.find((s) => s.id === filterSubjectId.value);
@@ -209,8 +211,8 @@ const subjectChipValue = computed(() => {
   return found?.subject_name ?? '—';
 });
 const hourChipValue = computed(() => {
-  if (filterHourNumber.value === '') return 'Semua jam';
-  return `Jam ke-${filterHourNumber.value}`;
+  if (filterHourNumber.value === '') return $t('admin.schedule.allHours');
+  return $t('admin.schedule.hourNumber', { n: filterHourNumber.value });
 });
 
 // Subject options for the Mapel filter. Prefer the full school subject
@@ -233,6 +235,20 @@ const subjectOptions = computed(() => {
   return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name, 'id'));
 });
 
+// Localised day labels — the static DAY_LABELS export stays Indonesian
+// for any non-UI consumer (sort keys, exports, etc.). The view-layer
+// version below tracks the active i18n locale so headers + chips read
+// "MONDAY" in English mode.
+const LOCALIZED_DAY_LABELS = computed<Record<string, string>>(() => ({
+  mon: $t('admin.schedule.dayMon'),
+  tue: $t('admin.schedule.dayTue'),
+  wed: $t('admin.schedule.dayWed'),
+  thu: $t('admin.schedule.dayThu'),
+  fri: $t('admin.schedule.dayFri'),
+  sat: $t('admin.schedule.daySat'),
+  sun: $t('admin.schedule.daySun'),
+}));
+
 // Hour options derived from rows (or from /filter-options once we expose them).
 const hourOptions = computed(() => {
   const seen = new Set<number>();
@@ -248,27 +264,27 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'calendar',
-      label: 'Total Sesi',
+      label: $t('admin.schedule.kpiTotalSessions'),
       value: s?.total ?? rows.value.length,
       tone: 'brand',
     },
     {
       icon: 'sun',
-      label: 'Hari Ini',
+      label: $t('admin.schedule.kpiToday'),
       value: s?.today ?? 0,
       tone: 'amber',
       accented: (s?.today ?? 0) > 0,
     },
     {
       icon: 'alert-triangle',
-      label: 'Bentrok',
+      label: $t('admin.schedule.kpiConflicts'),
       value: s?.conflicts ?? 0,
       tone: (s?.conflicts ?? 0) > 0 ? 'red' : 'slate',
       accented: (s?.conflicts ?? 0) > 0,
     },
     {
       icon: 'users',
-      label: 'Guru Aktif',
+      label: $t('admin.schedule.kpiActiveTeachers'),
       value: s?.total_teachers ?? 0,
       tone: 'violet',
     },
@@ -513,12 +529,13 @@ function clearFilters() {
   search.value = '';
 }
 
-const headerMeta = computed(() => {
-  const total = stats.value?.total ?? rows.value.length;
-  const conflicts = stats.value?.conflicts ?? 0;
-  const ay = ayStore.yearLabel;
-  return `${total} sesi · ${conflicts} bentrok · TP ${ay}`;
-});
+const headerMeta = computed(() =>
+  $t('admin.schedule.meta', {
+    sessions: stats.value?.total ?? rows.value.length,
+    conflicts: stats.value?.conflicts ?? 0,
+    year: ayStore.yearLabel,
+  }),
+);
 
 // CRUD modal state
 const showForm = ref(false);
@@ -689,16 +706,16 @@ async function bulkDelete() {
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      kicker="Admin · Jadwal"
-      title="Manajemen Jadwal Sekolah"
+      :kicker="$t('admin.shared.kicker')"
+      :title="$t('admin.schedule.title')"
       :meta="headerMeta"
     >
       <div class="flex items-center gap-2 flex-wrap">
         <SegmentedControl
           v-model="viewMode"
           :options="[
-            { key: 'list', label: 'List' },
-            { key: 'matrix', label: 'Matrix' },
+            { key: 'list', label: $t('admin.schedule.viewList') },
+            { key: 'matrix', label: $t('admin.schedule.viewMatrix') },
           ]"
         />
         <button
@@ -707,7 +724,7 @@ async function bulkDelete() {
           @click="showPrint = true"
         >
           <NavIcon name="download" :size="11" class="inline" />
-          Cetak
+          {{ $t('admin.schedule.print') }}
         </button>
         <button
           type="button"
@@ -715,7 +732,7 @@ async function bulkDelete() {
           @click="showImport = true"
         >
           <NavIcon name="upload" :size="11" class="inline" />
-          Import
+          {{ $t('admin.schedule.import') }}
         </button>
         <button
           type="button"
@@ -723,7 +740,7 @@ async function bulkDelete() {
           @click="router.push({ name: 'admin.schedule.lesson-hours' })"
         >
           <NavIcon name="clock" :size="11" class="inline" />
-          Jam Pelajaran
+          {{ $t('admin.schedule.lessonHours') }}
         </button>
       </div>
     </BrandPageHeader>
@@ -732,41 +749,41 @@ async function bulkDelete() {
 
     <PageFilterToolbar
       v-model:search="search"
-      search-placeholder="Cari guru / mapel / kelas..."
+      :search-placeholder="$t('admin.schedule.searchPlaceholder')"
       :search-min-width="240"
     >
       <template #chips>
         <AppFilterChip
           icon-name="user"
-          label="Guru"
+          :label="$t('admin.schedule.filterTeacher')"
           :value="teacherChipValue"
           tone="violet"
           @click="showTeacherSheet = true"
         />
         <AppFilterChip
           icon-name="book-open"
-          label="Mapel"
+          :label="$t('admin.schedule.filterSubject')"
           :value="subjectChipValue"
           tone="brand"
           @click="showSubjectSheet = true"
         />
         <AppFilterChip
           icon-name="calendar"
-          label="Hari"
+          :label="$t('admin.schedule.filterDay')"
           :value="dayChipValue"
           tone="amber"
           @click="showDaySheet = true"
         />
         <AppFilterChip
           icon-name="layers"
-          label="Kelas"
+          :label="$t('admin.schedule.filterClass')"
           :value="classChipValue"
           tone="green"
           @click="showClassSheet = true"
         />
         <AppFilterChip
           icon-name="clock"
-          label="Jam"
+          :label="$t('admin.schedule.filterHour')"
           :value="hourChipValue"
           tone="red"
           @click="showHourSheet = true"
@@ -777,7 +794,7 @@ async function bulkDelete() {
           class="text-[11px] font-bold text-slate-500 hover:text-role-admin px-2"
           @click="clearFilters"
         >
-          Bersihkan ({{ activeFilterCount }})
+          {{ $t('common.reset') }} ({{ activeFilterCount }})
         </button>
         <button
           type="button"
@@ -790,15 +807,15 @@ async function bulkDelete() {
           @click="bulkMode ? exitBulkMode() : enterBulkMode()"
         >
           <NavIcon name="check-square" :size="11" class="inline" />
-          {{ bulkMode ? 'Selesai' : 'Pilih' }}
+          {{ bulkMode ? $t('common.done') : $t('admin.schedule.select') }}
         </button>
       </template>
     </PageFilterToolbar>
 
     <AsyncView
       :state="listState"
-      empty-title="Belum ada jadwal"
-      empty-description="Tambahkan jadwal manual atau import dari Excel."
+      :empty-title="$t('admin.schedule.emptyTitle')"
+      :empty-description="$t('admin.schedule.emptyDesc')"
       empty-icon="calendar"
       @retry="reload"
     >
@@ -813,10 +830,10 @@ async function bulkDelete() {
           >
             <header class="flex items-center justify-between sticky top-0 z-10 bg-slate-50 py-2 px-1 rounded-lg">
               <h3 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">
-                {{ DAY_LABELS[d] }}
+                {{ LOCALIZED_DAY_LABELS[d] }}
               </h3>
               <span class="text-[10px] font-bold text-slate-400">
-                {{ rowsByDay[d].length }} sesi
+                {{ $t('admin.schedule.sessionsCount', { count: rowsByDay[d].length }) }}
               </span>
             </header>
             <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
@@ -845,7 +862,7 @@ async function bulkDelete() {
                 <div class="flex-1 min-w-0">
                   <p class="text-[13px] font-bold text-slate-900 truncate">
                     {{ r.subject_name }}
-                    <span v-if="r.conflict_with && r.conflict_with.length > 0" class="text-red-600 ml-1">⚠ Bentrok</span>
+                    <span v-if="r.conflict_with && r.conflict_with.length > 0" class="text-red-600 ml-1">⚠ {{ $t('admin.schedule.conflictBadge') }}</span>
                   </p>
                   <p class="text-[11px] text-slate-500 truncate">
                     {{ r.class_name }} · {{ r.teacher_name ?? 'Tanpa guru' }}
@@ -904,7 +921,7 @@ async function bulkDelete() {
                     :key="d"
                     class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 py-3 min-w-[140px]"
                   >
-                    {{ DAY_LABELS[d] }}
+                    {{ LOCALIZED_DAY_LABELS[d] }}
                   </th>
                 </tr>
               </thead>
@@ -986,7 +1003,7 @@ async function bulkDelete() {
       @click="onAddClick"
     >
       <NavIcon name="plus" :size="14" />
-      Tambah Sesi
+      {{ $t('admin.schedule.addFab') }}
     </Button>
 
     <!-- Bulk action bar — sticky bottom when rows selected -->

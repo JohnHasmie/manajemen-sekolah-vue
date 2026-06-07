@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
@@ -124,8 +125,8 @@ class _MonthFilterSheetState extends State<MonthFilterSheet> {
     final navy = widget.primaryColor;
 
     return AppBottomSheet(
-      title: 'Pilih periode',
-      subtitle: 'Saring data Keuangan berdasarkan tahun dan bulan.',
+      title: kFinSelectPeriod.tr,
+      subtitle: kFinFilterByYearMonth.tr,
       icon: Icons.calendar_month_rounded,
       primaryColor: navy,
       maxHeightFactor: 0.82,
@@ -143,7 +144,7 @@ class _MonthFilterSheetState extends State<MonthFilterSheet> {
               children: [
                 const SizedBox(height: 4),
                 _SectionHeader(
-                  label: 'TAHUN',
+                  label: kFinYear.tr,
                   icon: Icons.calendar_today_rounded,
                   trailing: _selectedYear == null ? 'SEMUA' : null,
                 ),
@@ -153,7 +154,7 @@ class _MonthFilterSheetState extends State<MonthFilterSheet> {
                   runSpacing: 8,
                   children: [
                     _PillToggle(
-                      label: 'Semua tahun',
+                      label: kFinAllYears.tr,
                       selected: _selectedYear == null,
                       primaryColor: navy,
                       onTap: () => setState(() => _selectedYear = null),
@@ -169,7 +170,7 @@ class _MonthFilterSheetState extends State<MonthFilterSheet> {
                 ),
                 const SizedBox(height: 18),
                 _SectionHeader(
-                  label: 'BULAN',
+                  label: kFinMonthLabel.tr,
                   icon: Icons.calendar_today_rounded,
                   trailing: _selectedMonth == null ? 'SEMUA' : null,
                 ),
@@ -179,7 +180,7 @@ class _MonthFilterSheetState extends State<MonthFilterSheet> {
                   runSpacing: 8,
                   children: [
                     _PillToggle(
-                      label: 'Semua bulan',
+                      label: kFinAllMonths.tr,
                       selected: _selectedMonth == null,
                       primaryColor: navy,
                       onTap: () => setState(() => _selectedMonth = null),

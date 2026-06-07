@@ -29,7 +29,7 @@ mixin VerificationDialogPaymentInfoMixin {
           value: payment['jenis_pembayaran_nama'] ?? '-',
         ),
         FinanceInfoItem(
-          label: 'Jumlah Bayar',
+          label: kFinAmountPaid.tr,
           value: formatCurrency(payment['amount']),
         ),
         FinanceInfoItem(

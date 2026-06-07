@@ -854,12 +854,12 @@ class _AiRppDetailScreenState extends State<AiRppDetailScreen> {
   void _showLimitReachedDialog(String fieldLabel) {
     AppAlertDialog.show(
       context: context,
-      title: 'Batas Tercapai',
+      title: kLesPlaLimitReached.tr,
       message:
-          'Batas regenerasi untuk "$fieldLabel" telah tercapai '
+          '${kLesPlaRegenerateFieldLimit.tr} "$fieldLabel" telah tercapai '
           '(maksimal 2 kali per field).',
       icon: Icons.timer_off_rounded,
-      confirmText: 'Mengerti',
+      confirmText: kLesPlaUnderstood.tr,
       showCancel: false,
     );
   }

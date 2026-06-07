@@ -24,6 +24,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_raport_components.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
@@ -87,9 +88,7 @@ class _AdminRaportHubScreenState extends ConsumerState<AdminRaportHubScreen> {
       AppLogger.error('raport-hub', 'fetch timeout: $e');
       if (!mounted) return;
       setState(() {
-        _error =
-            'Permintaan ke server terlalu lama (>15s). '
-            'Cek koneksi backend lalu coba lagi.';
+        _error = kRepCarTimeoutError.tr;
         _loading = false;
       });
     } catch (e, st) {
@@ -279,7 +278,7 @@ class _AdminRaportHubScreenState extends ConsumerState<AdminRaportHubScreen> {
     if (ay == null || sem == null) {
       SnackBarUtils.showError(
         context,
-        'Periode aktif belum tersedia. Coba muat ulang halaman.',
+        kRepCarPeriodNotAvailable.tr,
       );
       return;
     }
@@ -314,18 +313,21 @@ class _AdminRaportHubScreenState extends ConsumerState<AdminRaportHubScreen> {
     if (failures == 0) {
       SnackBarUtils.showSuccess(
         context,
-        '$totalPublished raport diterbitkan dari ${ids.length} kelas.',
+        kRepCarBulkPublishSuccess.tr
+            .replaceAll('{totalPublished}', '$totalPublished')
+            .replaceAll('{count}', '${ids.length}'),
       );
     } else if (failures < ids.length) {
       SnackBarUtils.showInfo(
         context,
-        '$totalPublished raport diterbitkan · '
-        '$failures kelas gagal — coba lagi.',
+        kRepCarPartialPublishSuccess.tr
+            .replaceAll('{totalPublished}', '$totalPublished')
+            .replaceAll('{failures}', '$failures'),
       );
     } else {
       SnackBarUtils.showError(
         context,
-        'Gagal menerbitkan ${ids.length} kelas. Cek koneksi & coba lagi.',
+        kRepCarPublishError.tr.replaceAll('{count}', '${ids.length}'),
       );
     }
   }
@@ -354,8 +356,8 @@ class _AdminRaportHubScreenState extends ConsumerState<AdminRaportHubScreen> {
             onRefresh: _load,
             header: BrandPageHeader(
               role: 'admin',
-              subtitle: 'Akademik · Penilaian',
-              title: 'Raport',
+              subtitle: kRepCarAcademicAssessment.tr,
+              title: kRepCarReportCard.tr,
               isRealtimeFresh: !_loading && _error == null,
               // RULE: when paired with a `kpiCard`, the header MUST
               // reserve `BrandPageLayout.kpiOverlapHeight` of gradient

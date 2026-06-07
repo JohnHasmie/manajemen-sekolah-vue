@@ -3,6 +3,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/features/finance/presentation/screens/class_finance_report_screen.dart';
@@ -79,7 +80,7 @@ mixin ClassFinanceUIMixin on State<ClassFinanceReportScreen> {
 
     AppBottomSheet.show<void>(
       context: context,
-      title: 'Detail Tagihan',
+      title: kFinBillDetails.tr,
       subtitle:
           bill['payment_type']?['name']?.toString() ??
           bill['jenis_pembayaran_nama']?.toString() ??
@@ -144,12 +145,9 @@ mixin ClassFinanceUIMixin on State<ClassFinanceReportScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => ConfirmationDialog(
-        title: 'Batalkan Pembayaran?',
-        content:
-            'Status tagihan akan kembali ke "Belum Lunas" dan bukti '
-            'pembayaran tetap tersimpan untuk arsip. '
-            'Tindakan ini tidak dapat dibatalkan.',
-        confirmText: 'Ya, Batalkan',
+        title: kFinCancelPayment.tr,
+        content: kFinCancelPaymentDesc.tr,
+        confirmText: kFinConfirmCancel.tr,
         confirmColor: ColorUtils.error600,
       ),
     );
@@ -416,9 +414,9 @@ class _DetailSheetFooter extends StatelessWidget {
             ),
             elevation: 0,
           ),
-          child: const Text(
-            'Tutup',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          child: Text(
+            kFinClose.tr,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
           ),
         ),
       ),
@@ -444,18 +442,18 @@ class _StatusHero extends StatelessWidget {
     if (isPaid) {
       accent = ColorUtils.success600;
       icon = Icons.check_circle_rounded;
-      label = 'Lunas';
-      sub = 'Pembayaran telah diverifikasi admin.';
+      label = kFinPaid.tr;
+      sub = kFinPaidDesc.tr;
     } else if (hasPending) {
       accent = ColorUtils.warning600;
       icon = Icons.hourglass_top_rounded;
-      label = 'Menunggu Verifikasi';
-      sub = 'Bukti pembayaran sudah diunggah, menunggu admin.';
+      label = kFinPendingVerification.tr;
+      sub = kFinPendingVerificationDesc.tr;
     } else {
       accent = ColorUtils.error600;
       icon = Icons.error_outline_rounded;
-      label = 'Belum Lunas';
-      sub = 'Belum ada pembayaran tercatat untuk tagihan ini.';
+      label = kFinUnpaid.tr;
+      sub = kFinUnpaidDesc.tr;
     }
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -551,7 +549,7 @@ class _BillInfoCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Jenis Pembayaran',
+                      kFinPaymentType.tr,
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
@@ -600,7 +598,7 @@ class _BillInfoCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _DateBlock(
-                  label: 'Tanggal Buat',
+                  label: kFinCreatedDate.tr,
                   value: created,
                   icon: Icons.event_note_outlined,
                 ),
@@ -608,7 +606,7 @@ class _BillInfoCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _DateBlock(
-                  label: 'Jatuh Tempo',
+                  label: kFinDueDate.tr,
                   value: due,
                   icon: Icons.event_busy_outlined,
                 ),
@@ -618,7 +616,7 @@ class _BillInfoCard extends StatelessWidget {
           if (desc.isNotEmpty && desc != '-') ...[
             const SizedBox(height: 12),
             Text(
-              'KETERANGAN',
+              kFinNotes.tr,
               style: TextStyle(
                 fontSize: 9.5,
                 fontWeight: FontWeight.w800,

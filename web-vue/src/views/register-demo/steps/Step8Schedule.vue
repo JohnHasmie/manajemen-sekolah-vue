@@ -3,9 +3,11 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
 const mode = computed({
@@ -47,13 +49,13 @@ function toggleDay(idx: number) {
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Langkah 9 dari 12 · Jadwal pelajaran
+      {{ t('registerDemo.step9Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
-      Mau jadwal langsung jalan?
+      {{ t('registerDemo.step9Title') }}
     </h2>
     <p class="text-[13px] text-slate-600 mb-4">
-      Sistem bisa generate jadwal mingguan untuk semua kelas.
+      {{ t('registerDemo.step9Subtitle') }}
     </p>
 
     <div class="grid grid-cols-2 gap-3 mb-5">
@@ -64,9 +66,9 @@ function toggleDay(idx: number) {
         @click="mode = 'auto'"
       >
         <NavIcon name="calendar" :size="22" :class="mode === 'auto' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
-        <div class="text-[13px] font-bold">Bangun otomatis</div>
+        <div class="text-[13px] font-bold">{{ t('registerDemo.step9AutoMode') }}</div>
         <div class="text-[11px]" :class="mode === 'auto' ? 'text-role-admin' : 'text-slate-500'">
-          Sen–Jum · 7 JP/hari
+          {{ t('registerDemo.step9AutoHint') }}
         </div>
       </button>
       <button
@@ -76,16 +78,16 @@ function toggleDay(idx: number) {
         @click="mode = 'manual'"
       >
         <NavIcon name="clock" :size="22" :class="mode === 'manual' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
-        <div class="text-[13px] font-bold">Atur manual</div>
+        <div class="text-[13px] font-bold">{{ t('registerDemo.step9ManualMode') }}</div>
         <div class="text-[11px]" :class="mode === 'manual' ? 'text-role-admin' : 'text-slate-500'">
-          Buka /admin/jadwal setelah selesai
+          {{ t('registerDemo.step9ManualHint') }}
         </div>
       </button>
     </div>
 
     <template v-if="mode === 'auto'">
       <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-        Hari aktif
+        {{ t('registerDemo.step9ActiveDaysLabel') }}
       </p>
       <div class="flex flex-wrap gap-1.5 mb-5">
         <button
@@ -105,7 +107,7 @@ function toggleDay(idx: number) {
       </div>
 
       <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-        Jam belajar
+        {{ t('registerDemo.step9TimeRangeLabel') }}
       </p>
       <div class="flex items-center gap-3">
         <input

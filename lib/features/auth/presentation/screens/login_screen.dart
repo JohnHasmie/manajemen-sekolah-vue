@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:manajemensekolah/features/auth/presentation/mixins/login_auth_handler_mixin.dart';
@@ -149,7 +150,7 @@ class _BrandBand extends StatelessWidget {
             const _Wordmark(fontSize: 24, accentOpacity: .86),
             const SizedBox(height: 8),
             Text(
-              'Platform Manajemen Sekolah Terpadu',
+              kAutTagline.tr,
               style: TextStyle(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,

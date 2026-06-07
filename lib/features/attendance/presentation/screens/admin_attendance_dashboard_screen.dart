@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/admin_tingkat_heatmap_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/widgets/admin_attendance_dashboard_hero.dart';
@@ -64,7 +65,7 @@ class _AdminAttendanceDashboardScreenState
         },
         onExportTap: () => SnackBarUtils.showInfo(
           context,
-          'Ekspor laporan akan tersedia di rilis berikutnya.',
+          kAttExportComingSoon.tr,
         ),
       ),
     );

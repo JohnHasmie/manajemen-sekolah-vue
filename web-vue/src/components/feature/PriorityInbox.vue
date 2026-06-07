@@ -4,7 +4,10 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import NavIcon from './NavIcon.vue';
+
+const { t, locale } = useI18n();
 
 export interface PriorityItem {
   id: string;
@@ -39,11 +42,14 @@ const formatRelativeTime = (dateStr: string) => {
   const hours = Math.floor(mins / 60);
   const days = Math.floor(hours / 24);
 
-  if (mins < 1) return 'baru saja';
-  if (mins < 60) return `${mins} menit lalu`;
-  if (hours < 24) return `${hours} jam lalu`;
-  if (days < 7) return `${days} hari lalu`;
-  return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' });
+  if (mins < 1) return t('inbox.justNow');
+  if (mins < 60) return t('inbox.minutesAgo', { n: mins });
+  if (hours < 24) return t('inbox.hoursAgo', { n: hours });
+  if (days < 7) return t('inbox.daysAgo', { n: days });
+  return date.toLocaleDateString(locale.value === 'en' ? 'en-US' : 'id-ID', {
+    day: '2-digit',
+    month: '2-digit',
+  });
 };
 
 const getSeverityColor = (severity: string) => {
@@ -66,7 +72,7 @@ const getIconForType = (type: string) => {
   <div class="space-y-4">
     <div v-if="showHeader" class="flex items-center justify-between px-1">
       <div class="flex items-center gap-2">
-        <h3 class="text-[15px] font-black text-slate-900 uppercase tracking-tight">Perlu Perhatian</h3>
+        <h3 class="text-[15px] font-black text-slate-900 uppercase tracking-tight">{{ t('inbox.title') }}</h3>
         <div v-if="items.length > 0" class="px-1.5 py-0.5 rounded-md bg-status-danger-soft text-status-danger text-[10px] font-black">
           {{ items.length }}
         </div>
@@ -77,7 +83,7 @@ const getIconForType = (type: string) => {
         class="text-[11px] font-black text-brand-cobalt uppercase tracking-wider hover:underline"
         @click="$emit('seeAll')"
       >
-        Lihat Semua
+        {{ t('inbox.seeAll') }}
       </button>
     </div>
 
@@ -89,8 +95,8 @@ const getIconForType = (type: string) => {
       <div class="w-16 h-16 rounded-full bg-emerald-50 text-emerald-500 grid place-items-center mx-auto mb-4">
         <NavIcon name="check-circle" :size="32" />
       </div>
-      <h4 class="text-sm font-bold text-slate-900">Semua aman 🎉</h4>
-      <p class="text-xs text-slate-500 leading-relaxed">Tidak ada yang perlu perhatian saat ini. Kerja bagus!</p>
+      <h4 class="text-sm font-bold text-slate-900">{{ t('inbox.allClear') }}</h4>
+      <p class="text-xs text-slate-500 leading-relaxed">{{ t('inbox.allClearMsg') }}</p>
     </div>
 
     <div v-else class="space-y-2.5">

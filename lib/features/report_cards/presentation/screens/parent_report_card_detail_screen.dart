@@ -25,6 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
@@ -142,15 +143,15 @@ class _ParentReportCardDetailScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const ParentRaporSectionHeader(
-                  title: 'Sikap',
-                  trailing: 'Wali kelas',
+                ParentRaporSectionHeader(
+                  title: kRepCarAttitude.tr,
+                  trailing: kRepCarHomeroomTeacher.tr,
                 ),
                 const SizedBox(height: 8),
                 ParentRaporSikapCard(reportCardData: reportCardData),
                 const SizedBox(height: 18),
                 ParentRaporSectionHeader(
-                  title: 'Nilai per mata pelajaran',
+                  title: kRepCarGradesPerSubject.tr,
                   trailing: '${_subjects.length} mapel',
                 ),
                 const SizedBox(height: 8),
@@ -167,13 +168,13 @@ class _ParentReportCardDetailScreenState
                   ),
                 ),
                 if (_subjects.isEmpty)
-                  const ParentRaporEmptyHint(
-                    label: 'Belum ada nilai mata pelajaran.',
+                  ParentRaporEmptyHint(
+                    label: kRepCarNoGradesYet.tr,
                   ),
                 if (_extras.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   ParentRaporSectionHeader(
-                    title: 'Ekstrakurikuler',
+                    title: kRepCarExtracurricular.tr,
                     trailing: '${_extras.length} kegiatan',
                   ),
                   const SizedBox(height: 8),
@@ -182,7 +183,7 @@ class _ParentReportCardDetailScreenState
                 if (_achievements.isNotEmpty) ...[
                   const SizedBox(height: 18),
                   ParentRaporSectionHeader(
-                    title: 'Prestasi',
+                    title: kRepCarAchievement.tr,
                     trailing: '${_achievements.length} prestasi',
                   ),
                   const SizedBox(height: 8),
@@ -190,7 +191,7 @@ class _ParentReportCardDetailScreenState
                 ],
                 const SizedBox(height: 18),
                 ParentRaporSectionHeader(
-                  title: 'Kehadiran',
+                  title: kRepCarAttendance.tr,
                   trailing: _attendanceTotalLabel(),
                 ),
                 const SizedBox(height: 8),
@@ -201,7 +202,7 @@ class _ParentReportCardDetailScreenState
                     .isNotEmpty) ...[
                   const SizedBox(height: 18),
                   ParentRaporSectionHeader(
-                    title: 'Catatan Wali Kelas',
+                    title: kRepCarTeacherNotes.tr,
                     trailing: _homeroomTeacherName(),
                   ),
                   const SizedBox(height: 8),
@@ -244,7 +245,7 @@ class _ParentReportCardDetailScreenState
       kpiOverlayHeight: 40,
       showBackButton: true,
       onBackPressed: () => AppNavigator.pop(context),
-      subtitle: 'Akademik · Rapor',
+      subtitle: kRepCarAcademicReport.tr,
       title: 'Rapor $studentName',
       actionIcons: [
         BrandHeaderIconButton(
@@ -261,7 +262,9 @@ class _ParentReportCardDetailScreenState
             child: ParentRaporHeroChip(
               label: _className.isEmpty
                   ? _semesterLabel
-                  : 'Kelas $_className · $_semesterLabel',
+                  : kRepCarClassSemesterLabel.tr
+                      .replaceAll('{className}', _className)
+                      .replaceAll('{semesterLabel}', _semesterLabel),
               filled: true,
               onTap: () => _showSemesterSheet(context),
               trailingIcon: Icons.keyboard_arrow_down_rounded,
@@ -295,8 +298,7 @@ class _ParentReportCardDetailScreenState
     final label = which == 'uts' ? 'UTS' : 'UAS';
     SnackBarUtils.showInfo(
       context,
-      'Rapor ini sudah merangkum capaian UTS + UAS. '
-      'Untuk skor per ujian $label, buka Buku Nilai.',
+      kRepCarSummaryNote.tr.replaceAll('{label}', label),
     );
   }
 
@@ -327,7 +329,7 @@ class _ParentReportCardDetailScreenState
               ),
               const SizedBox(height: 16),
               Text(
-                'Pilih semester',
+                kRepCarSelectSemester.tr,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
@@ -336,8 +338,7 @@ class _ParentReportCardDetailScreenState
               ),
               const SizedBox(height: 4),
               Text(
-                'Untuk membuka rapor semester lain, kembali ke daftar '
-                'E-Raport dan pilih semester pada filter di kepala halaman.',
+                kRepCarSemesterHint.tr,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -361,9 +362,9 @@ class _ParentReportCardDetailScreenState
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                   ),
-                  child: const Text(
-                    'Kembali ke daftar E-Raport',
-                    style: TextStyle(
+                  child: Text(
+                    kRepCarBackToList.tr,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -386,8 +387,8 @@ class _ParentReportCardDetailScreenState
 
   String _attendanceTotalLabel() {
     final total = _attendanceTotal();
-    if (total == 0) return 'Belum dihitung';
-    return '$total hari efektif';
+    if (total == 0) return kRepCarNotCalculated.tr;
+    return '$total ${kRepCarEffectiveDays.tr}';
   }
 
   int _attendanceTotal() {
@@ -430,7 +431,7 @@ class _ParentReportCardDetailScreenState
     if (!_isPublished) {
       SnackBarUtils.showInfo(
         context,
-        'Rapor masih draft — cetak PDF belum tersedia.',
+        kRepCarDraftNotAvailable.tr,
       );
       return;
     }
@@ -445,12 +446,12 @@ class _ParentReportCardDetailScreenState
         semesterId.isEmpty) {
       SnackBarUtils.showError(
         context,
-        'Data raport belum lengkap untuk dicetak.',
+        kRepCarIncompleteData.tr,
       );
       return;
     }
 
-    SnackBarUtils.showInfo(context, 'Menyiapkan file PDF...');
+    SnackBarUtils.showInfo(context, kRepCarPreparingFile.tr);
     try {
       if (variant == 'certificate') {
         await ExcelReportCardService.exportCertificateRaportPdf(
@@ -484,7 +485,7 @@ class _ParentReportCardDetailScreenState
     if (!_isPublished) {
       SnackBarUtils.showInfo(
         context,
-        'Rapor masih draft — cetak PDF belum tersedia.',
+        kRepCarDraftNotAvailable.tr,
       );
       return;
     }
@@ -502,8 +503,8 @@ class _ParentReportCardDetailScreenState
   void _showAdminDownloadChooser(BuildContext context) {
     AppBottomSheet.show<void>(
       context: context,
-      title: 'Pilih format PDF',
-      subtitle: 'Pilih format dokumen yang ingin dicetak',
+      title: kRepCarSelectPdfFormat.tr,
+      subtitle: kRepCarSelectDocumentFormat.tr,
       icon: Icons.picture_as_pdf_outlined,
       primaryColor: ColorUtils.getRoleColor(userRole),
       contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -511,10 +512,8 @@ class _ParentReportCardDetailScreenState
         mainAxisSize: MainAxisSize.min,
         children: [
           _AdminPdfChoiceTile(
-            title: 'Raport (Format Guru)',
-            subtitle:
-                'Dokumen resmi lengkap — KI 3 + KI 4, sikap, kehadiran, '
-                'deskripsi capaian.',
+            title: kRepCarTeacherFormat.tr,
+            subtitle: kRepCarTeacherFormatDesc.tr,
             icon: Icons.description_outlined,
             accent: ColorUtils.brandCobalt,
             onTap: () {
@@ -524,10 +523,8 @@ class _ParentReportCardDetailScreenState
           ),
           const SizedBox(height: 10),
           _AdminPdfChoiceTile(
-            title: 'E-Raport (Format Wali)',
-            subtitle:
-                'Sertifikat ringkas — rata-rata, badge, dan layout modern '
-                'untuk orang tua.',
+            title: kRepCarParentFormat.tr,
+            subtitle: kRepCarParentFormatDesc.tr,
             icon: Icons.workspace_premium_outlined,
             accent: const Color(0xFF7C3AED),
             onTap: () {
@@ -543,7 +540,7 @@ class _ParentReportCardDetailScreenState
   Future<void> _share(BuildContext context) async {
     SnackBarUtils.showInfo(
       context,
-      'Bagikan rapor — fitur ini akan tersedia setelah PDF tersimpan.',
+      kRepCarShareComingSoon.tr,
     );
   }
 }

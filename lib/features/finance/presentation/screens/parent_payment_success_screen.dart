@@ -25,6 +25,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
@@ -539,7 +540,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           _TimelineStep(
-            label: 'Pembayaran dibuat',
+            label: kFinPaymentCreated.tr,
             sub: '${_formatTimeShort()} · $methodLabel',
             done: true,
           ),
@@ -582,7 +583,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
         Expanded(
           child: _SecondaryButton(
             icon: Icons.download_rounded,
-            label: 'Unduh Bukti',
+            label: kFinDownloadProof.tr,
             onTap: () => _onDownloadProof(context),
           ),
         ),
@@ -590,7 +591,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
         Expanded(
           child: _SecondaryButton(
             icon: Icons.share_rounded,
-            label: 'Bagikan',
+            label: kFinShare.tr,
             onTap: () => _onShareProof(context),
           ),
         ),
@@ -637,7 +638,10 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
         if (result.type != ResultType.done && context.mounted) {
           SnackBarUtils.showError(
             context,
-            'Gagal membuka file: ${result.message}',
+            kFinFileOpenError.tr.replaceFirst(
+              '\${result.message}',
+              '${result.message}',
+            ),
           );
         }
         return;

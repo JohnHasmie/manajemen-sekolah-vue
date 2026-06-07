@@ -101,7 +101,7 @@ mixin ChartContentBuilderMixin {
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(
-        'Geser ke kiri/kanan untuk berpindah kelas',
+        kDasChartSwipeHint.tr,
         style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
       ),
     );
@@ -120,7 +120,7 @@ mixin ChartContentBuilderMixin {
       height: 212,
       child: Center(
         child: Text(
-          'Belum ada data kehadiran siswa pada periode ini',
+          kDasChartNoAttendanceData.tr,
           style: TextStyle(
             fontSize: 14,
             color: ColorUtils.slate400,
@@ -177,7 +177,7 @@ mixin ChartContentBuilderMixin {
       alignment: Alignment.center,
       child: Text(
         isWeekly
-            ? 'Pekan ${idx + 1}'
+            ? '${kDasChartWeekLabel.tr} ${idx + 1}'
             : ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][idx],
         style: TextStyle(
           fontSize: 12,

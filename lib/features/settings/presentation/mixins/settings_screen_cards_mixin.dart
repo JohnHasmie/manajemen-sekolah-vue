@@ -37,13 +37,13 @@ mixin SettingsScreenCardsMixin {
         buildInfoRow('Email', profileData['email'] ?? '', Icons.email_rounded),
         const SizedBox(height: AppSpacing.md),
         buildInfoRow(
-          'No. Telepon',
+          kSetPhoneNumber.tr,
           profileData['phone_number'] ?? '',
           Icons.phone_rounded,
         ),
         const SizedBox(height: AppSpacing.md),
         buildInfoRow(
-          'Alamat',
+          kSetAddress.tr,
           profileData['address'] ?? '',
           Icons.location_on_rounded,
         ),

@@ -18,6 +18,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ClassActivityService } from '@/services/class-activity.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
@@ -71,6 +72,8 @@ const activeSubject = computed(
 const activeTeacher = computed(
   () => teachers.value.find((t) => t.id === teacherFilter.value) ?? null,
 );
+
+const { t: $t } = useI18n();
 
 // ── Data state ──
 const items = ref<ClassActivity[]>([]);
@@ -156,48 +159,60 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'activity',
-      label: 'Total Kegiatan',
+      label: $t('admin.classActivity.kpiTotal'),
       value: kpi.value.total,
-      suffix: 'aktivitas',
+      suffix: $t('admin.classActivity.kpiTotalSuffix'),
       tone: 'brand',
     },
     {
       icon: 'calendar',
-      label: 'Minggu Ini',
+      label: $t('admin.classActivity.kpiThisWeek'),
       value: kpi.value.this_week,
       tone: 'violet',
     },
     {
       icon: 'alert-triangle',
-      label: 'Belum Submit',
+      label: $t('admin.classActivity.kpiNoSubmit'),
       value: pending,
-      suffix: 'siswa',
+      suffix: $t('admin.classActivity.kpiNoSubmitSuffix'),
       tone: pending > 0 ? 'amber' : 'green',
       accented: pending > 0,
     },
     {
       icon: 'users',
-      label: 'Guru Aktif',
+      label: $t('admin.classActivity.kpiActiveTeachers'),
       value: new Set(
         items.value.map((i) => i.teacher_id).filter((id): id is string => !!id),
       ).size,
-      suffix: 'pengajar',
+      suffix: $t('admin.classActivity.kpiActiveTeachersSuffix'),
       tone: 'green',
     },
   ];
 });
 
-const typeTabs: { key: ActivityType | 'all'; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'tugas', label: 'Tugas' },
-  { key: 'pr', label: 'PR' },
-  { key: 'ulangan', label: 'Ulangan' },
-  { key: 'lainnya', label: 'Lainnya' },
-];
+const typeTabs = computed<{ key: ActivityType | 'all'; label: string }[]>(() => [
+  { key: 'all', label: $t('admin.classActivity.typeAll') },
+  { key: 'tugas', label: $t('admin.classActivity.typeTask') },
+  { key: 'pr', label: $t('admin.classActivity.typePR') },
+  { key: 'ulangan', label: $t('admin.classActivity.typeQuiz') },
+  { key: 'lainnya', label: $t('admin.classActivity.typeOther') },
+]);
 
-const periodTabs: { key: ActivityPeriod; label: string }[] = (
-  ['today', '7d', '30d', 'semester', 'year'] as ActivityPeriod[]
-).map((k) => ({ key: k, label: ACTIVITY_PERIOD_LABELS[k] }));
+// Local labels so the period chips track the active locale; the static
+// ACTIVITY_PERIOD_LABELS export stays Indonesian for the data layer.
+const PERIOD_LABELS_LOCAL = computed<Record<ActivityPeriod, string>>(() => ({
+  today: $t('admin.classActivity.periodToday'),
+  '7d': $t('admin.classActivity.period7d'),
+  '30d': $t('admin.classActivity.period30d'),
+  semester: $t('admin.classActivity.periodSemester'),
+  year: $t('admin.classActivity.periodYear'),
+}));
+const periodTabs = computed<{ key: ActivityPeriod; label: string }[]>(() =>
+  (['today', '7d', '30d', 'semester', 'year'] as ActivityPeriod[]).map((k) => ({
+    key: k,
+    label: PERIOD_LABELS_LOCAL.value[k],
+  })),
+);
 
 // ── Detail flow ──
 async function openDetail(a: ClassActivity) {
@@ -321,9 +336,9 @@ function exportCsv() {
     <!-- HEADER -->
     <BrandPageHeader
       role="admin"
-      kicker="Akademik · Kegiatan Kelas"
-      title="Kegiatan Kelas Sekolah"
-      meta="Pantauan catatan pembelajaran dari semua guru"
+      :kicker="$t('admin.classActivity.kicker')"
+      :title="$t('admin.classActivity.title')"
+      :meta="$t('admin.classActivity.subtitle')"
       :live-dot="false"
     >
       <button
@@ -333,7 +348,7 @@ function exportCsv() {
         @click="exportCsv"
       >
         <NavIcon name="download" :size="14" />
-        Ekspor CSV
+        {{ $t('admin.classActivity.exportCsv') }}
       </button>
     </BrandPageHeader>
 
@@ -343,24 +358,24 @@ function exportCsv() {
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar
       v-model:search="searchQuery"
-      search-placeholder="Cari judul, deskripsi, guru…"
+      :search-placeholder="$t('admin.classActivity.searchPlaceholder')"
     >
       <template #chips>
         <AppFilterChip
-          label="Kelas"
-          :value="activeClass?.name ?? 'Semua kelas'"
+          :label="$t('admin.classActivity.filterClass')"
+          :value="activeClass?.name ?? $t('admin.classActivity.allClasses')"
           :is-active="!!classFilter"
           @click="showClassPicker = true"
         />
         <AppFilterChip
-          label="Mapel"
-          :value="activeSubject?.name ?? 'Semua mapel'"
+          :label="$t('admin.classActivity.filterSubject')"
+          :value="activeSubject?.name ?? $t('admin.classActivity.allSubjects')"
           :is-active="!!subjectFilter"
           @click="showSubjectPicker = true"
         />
         <AppFilterChip
-          label="Guru"
-          :value="activeTeacher?.name ?? 'Semua guru'"
+          :label="$t('admin.classActivity.filterTeacher')"
+          :value="activeTeacher?.name ?? $t('admin.classActivity.allTeachers')"
           :is-active="!!teacherFilter"
           @click="showTeacherPicker = true"
         />
@@ -371,7 +386,7 @@ function exportCsv() {
           @click="resetFilters"
         >
           <NavIcon name="x" :size="12" />
-          Reset
+          {{ $t('admin.classActivity.reset') }}
         </button>
       </template>
     </PageFilterToolbar>
@@ -397,7 +412,7 @@ function exportCsv() {
     <!-- PERIOD TABS -->
     <div class="flex items-center gap-1.5 flex-wrap">
       <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-        Periode
+        {{ $t('admin.classActivity.periodLabel') }}
       </span>
       <button
         v-for="p in periodTabs"
@@ -418,8 +433,8 @@ function exportCsv() {
     <!-- LIST -->
     <AsyncView
       :state="listState"
-      empty-title="Belum ada kegiatan"
-      empty-description="Belum ada catatan kegiatan untuk filter yang dipilih."
+      :empty-title="$t('admin.classActivity.emptyTitle')"
+      :empty-description="$t('admin.classActivity.emptyDesc')"
       empty-icon="activity"
       @retry="reload"
     >

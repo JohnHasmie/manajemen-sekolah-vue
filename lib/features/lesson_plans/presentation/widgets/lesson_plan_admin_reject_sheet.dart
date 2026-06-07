@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
@@ -25,14 +26,14 @@ class LessonPlanRejectResult {
 /// Canonical alasan-penolakan chips. Tapping a chip prepends the
 /// label to the catatan textarea so the resulting note reads as a
 /// structured list of issues the admin observed.
-const List<String> _kRejectReasons = [
-  'Tidak sesuai KD / CP',
-  'Tujuan kurang SMART',
-  'Penilaian kurang lengkap',
-  'Alokasi waktu tidak realistis',
-  'Duplikat dengan RPP lain',
-  'Format tidak sesuai',
-];
+List<String> get _kRejectReasons => [
+      kLesPlaRejectReasonKd.tr,
+      kLesPlaRejectReasonSmart.tr,
+      kLesPlaRejectReasonAssessment.tr,
+      kLesPlaRejectReasonTimeAlloc.tr,
+      kLesPlaRejectReasonDuplicate.tr,
+      kLesPlaRejectReasonFormat.tr,
+    ];
 
 Future<LessonPlanRejectResult?> showLessonPlanAdminRejectSheet({
   required BuildContext context,
@@ -45,8 +46,8 @@ Future<LessonPlanRejectResult?> showLessonPlanAdminRejectSheet({
 }) {
   return AppBottomSheet.show<LessonPlanRejectResult>(
     context: context,
-    title: 'Tolak RPP',
-    subtitle: 'Status menjadi Ditolak. Guru harus membuat ulang RPP.',
+    title: kLesPlaReject.tr,
+    subtitle: kLesPlaRejectSubtitle.tr,
     icon: Icons.cancel_rounded,
     primaryColor: ColorUtils.error600,
     content: _RejectSheetBody(

@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A polished, reusable Quill rich-text editor with a custom toolbar.
 ///
@@ -169,7 +170,7 @@ class _AppQuillEditorState extends State<AppQuillEditor> {
           // Clear format
           _buildToolbarButton(
             icon: Icons.format_clear_rounded,
-            tooltip: 'Hapus Format',
+            tooltip: kCorWidClearFormat.tr,
             onTap: () {
               final selection = widget.controller.selection;
               if (!selection.isCollapsed) {

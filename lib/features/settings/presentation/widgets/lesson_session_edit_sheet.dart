@@ -33,6 +33,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 
@@ -286,7 +287,7 @@ class _LessonSessionEditSheetState extends State<_LessonSessionEditSheet> {
                       children: [
                         Expanded(
                           child: _timeField(
-                            label: 'MULAI',
+                            label: kSetStart.tr,
                             value: _start,
                             dirty: _start != _initialStart,
                             onTap: () => _pickTime(true),
@@ -295,7 +296,7 @@ class _LessonSessionEditSheetState extends State<_LessonSessionEditSheet> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: _timeField(
-                            label: 'SELESAI',
+                            label: kSetEnd.tr,
                             value: _end,
                             dirty: _end != _initialEnd,
                             onTap: () => _pickTime(false),

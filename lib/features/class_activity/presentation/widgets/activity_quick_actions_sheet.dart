@@ -11,6 +11,7 @@
 // desc + chevron) consistent with the absensi quick-actions sheet.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 class ActivityQuickActions {
   final VoidCallback? onCopyLink;
@@ -63,8 +64,8 @@ class _ActivityQuickActionsSheet extends StatelessWidget {
                 icon: Icons.link_rounded,
                 iconBg: const Color(0xFFDBEAFE),
                 iconFg: ColorUtils.info600,
-                title: 'Salin tautan',
-                desc: 'Bagikan ke wali kelas / orang tua',
+                title: kClaActCopyLink.tr,
+                desc: kClaActShareWithTeacherParents.tr,
                 onTap: () {
                   Navigator.pop(context);
                   actions.onCopyLink!();
@@ -75,8 +76,8 @@ class _ActivityQuickActionsSheet extends StatelessWidget {
                 icon: Icons.content_copy_rounded,
                 iconBg: const Color(0xFFEDE9FE),
                 iconFg: ColorUtils.violet700,
-                title: 'Duplikat ke kelas lain',
-                desc: 'Salin ke kelas-kelas yang Anda ajar',
+                title: kClaActDuplicateToAnotherClass.tr,
+                desc: kClaActCopyToYourClasses.tr,
                 onTap: () {
                   Navigator.pop(context);
                   actions.onDuplicate!();
@@ -87,8 +88,8 @@ class _ActivityQuickActionsSheet extends StatelessWidget {
                 icon: Icons.picture_as_pdf_rounded,
                 iconBg: const Color(0xFFDCFCE7),
                 iconFg: ColorUtils.success600,
-                title: 'Ekspor PDF',
-                desc: 'Lampirkan ke laporan kegiatan',
+                title: kClaActExportPdf.tr,
+                desc: kClaActAttachToReport.tr,
                 onTap: () {
                   Navigator.pop(context);
                   actions.onExportPdf!();
@@ -99,8 +100,8 @@ class _ActivityQuickActionsSheet extends StatelessWidget {
                 icon: Icons.delete_outline_rounded,
                 iconBg: const Color(0xFFFEE2E2),
                 iconFg: ColorUtils.error600,
-                title: 'Hapus kegiatan',
-                desc: 'Tidak dapat dipulihkan',
+                title: kClaActDeleteActivity.tr,
+                desc: kClaActCannotBeRecovered.tr,
                 titleColor: ColorUtils.error600,
                 onTap: () {
                   Navigator.pop(context);
@@ -129,7 +130,7 @@ class _ActivityQuickActionsSheet extends StatelessWidget {
     child: Align(
       alignment: Alignment.centerLeft,
       child: Text(
-        'Aksi cepat',
+        kClaActQuickActions.tr,
         style: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w900,
@@ -144,7 +145,7 @@ class _ActivityQuickActionsSheet extends StatelessWidget {
     child: Align(
       alignment: Alignment.centerLeft,
       child: Text(
-        'Salin tautan, duplikat ke kelas lain, ekspor PDF, atau hapus.',
+        kClaActQuickActionsDesc.tr,
         style: TextStyle(fontSize: 11, color: ColorUtils.slate500, height: 1.4),
       ),
     ),

@@ -6,6 +6,7 @@
 // the Phase 2 readability split — behaviour is identical.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 class ParentRecKpiOverlap extends StatelessWidget {
   final int unread;
@@ -42,7 +43,7 @@ class ParentRecKpiOverlap extends StatelessWidget {
           Expanded(
             child: _KpiCell(
               value: '$unread',
-              label: 'BELUM DIBACA',
+              label: kRecUnreadUpper.tr,
               color: azure,
             ),
           ),
@@ -50,7 +51,7 @@ class ParentRecKpiOverlap extends StatelessWidget {
           Expanded(
             child: _KpiCell(
               value: '$active',
-              label: 'AKTIF',
+              label: kRecActiveUpper.tr,
               color: ColorUtils.warning600,
             ),
           ),
@@ -58,7 +59,7 @@ class ParentRecKpiOverlap extends StatelessWidget {
           Expanded(
             child: _KpiCell(
               value: '$completed',
-              label: 'SELESAI',
+              label: kRecCompletedUpper.tr,
               color: ColorUtils.success600,
             ),
           ),

@@ -10,6 +10,7 @@ import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/report_cards/data/report_card_service.dart';
 import 'package:manajemensekolah/features/report_cards/exports/report_card_export_service.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_report_card_screen.dart';
@@ -39,7 +40,7 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
       }
 
       if (academicYearId == null) {
-        throw Exception('Tahun ajaran tidak valid.');
+        throw Exception(kRepCarInvalidAcademicYear.tr);
       }
       if (!mounted) return;
 
@@ -67,14 +68,11 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
     // high-impact confirmation across the admin role.
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => const ConfirmationDialog(
-        title: 'Kirim Rapor',
-        content:
-            'Rapor kelas ini akan dipublikasikan dan dikirim ke seluruh '
-            'wali murid. Tindakan ini tidak dapat dibatalkan setelah '
-            'dikirim.',
-        confirmText: 'Ya, Kirim',
-        confirmColor: Color(0xFF2563EB), // corporate blue (ColorUtils).
+      builder: (_) => ConfirmationDialog(
+        title: kRepCarSendReportCard.tr,
+        content: kRepCarPublishConfirmMessage.tr,
+        confirmText: kRepCarConfirmSend.tr,
+        confirmColor: const Color(0xFF2563EB), // corporate blue (ColorUtils).
       ),
     );
 
@@ -109,7 +107,7 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
       if (mounted) {
         SnackBarUtils.showSuccess(
           context,
-          'Raport berhasil dipublikasi dan dikirim ke wali murid!',
+          kRepCarPublishSuccess.tr,
         );
         loadStudents(useCache: false);
       }
@@ -224,7 +222,7 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
           ),
         );
       } else {
-        throw Exception('Data raport tidak ditemukan.');
+        throw Exception(kRepCarDataNotFound.tr);
       }
     } catch (e) {
       if (mounted) {
@@ -239,12 +237,15 @@ mixin AdminReportCardActionsMixin on ConsumerState<AdminReportCardScreen> {
     final status =
         student['report_card_status'] ?? student['raport_status'] ?? 'draft';
     if (status == 'draft') {
-      SnackBarUtils.showInfo(context, 'Raport Draft belum bisa dicetak.');
+      SnackBarUtils.showInfo(context, kRepCarDraftCannotPrint.tr);
       return;
     }
 
     final model = Student.fromJson(student);
-    SnackBarUtils.showInfo(context, 'Menyiapkan PDF untuk ${model.name}...');
+    SnackBarUtils.showInfo(
+      context,
+      kRepCarPreparingPdf.tr.replaceAll('{name}', model.name),
+    );
 
     try {
       final academicYearProvider = ref.read(academicYearRiverpod);

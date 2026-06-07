@@ -157,12 +157,16 @@ void main() {
     // ── Edge cases ────────────────────────────────────────────────────────────
     //
 
-    testWidgets('falls back to "No Name" when student name is null', (
+    testWidgets('falls back to localised "No Name" when student name is null', (
       tester,
     ) async {
+      // The fallback used to be the hardcoded literal "No Name"; the i18n
+      // sweep wrapped it in `kStuNoName.tr`. The global `languageProvider`
+      // defaults to Indonesian in production AND in tests, so the
+      // rendered string is the Indonesian value from the dictionary.
       const noName = <String, dynamic>{'name': null};
       await tester.pumpWidget(_buildCard(student: noName));
-      expect(find.text('No Name'), findsOneWidget);
+      expect(find.text('Tanpa Nama'), findsOneWidget);
     });
 
     testWidgets('renders correctly with a custom primaryColor', (tester) async {

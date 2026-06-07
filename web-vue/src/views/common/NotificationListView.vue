@@ -121,15 +121,15 @@ function categoryColor(cat: AppNotification['category']) {
 
 function categoryLabel(cat: AppNotification['category']) {
   const labels: Record<AppNotification['category'], string> = {
-    announcement: 'Pengumuman',
-    attendance: 'Kehadiran',
-    grade: 'Nilai',
-    lesson_plan: 'RPP',
-    billing: 'Tagihan',
-    system: 'Sistem',
-    other: 'Lain',
+    announcement: t('common.announcement'),
+    attendance: t('common.attendance'),
+    grade: t('common.grade'),
+    lesson_plan: t('common.lessonPlan'),
+    billing: t('common.billing'),
+    system: t('common.system'),
+    other: t('common.other'),
   };
-  return labels[cat] ?? 'Lain';
+  return labels[cat] ?? t('common.other');
 }
 </script>
 
@@ -141,7 +141,7 @@ function categoryLabel(cat: AppNotification['category']) {
           {{ t('common.notifications') }}
         </h1>
         <p class="text-sm text-slate-500">
-          {{ store.unreadCount }} belum dibaca
+          {{ store.unreadCount }} {{ t('common.unread') }}
         </p>
       </div>
       <button
@@ -158,7 +158,7 @@ function categoryLabel(cat: AppNotification['category']) {
       <AsyncView
         :state="state"
         :empty-title="t('common.empty')"
-        empty-description="Tidak ada notifikasi saat ini."
+        :empty-description="t('common.noNotificationsNow')"
         @retry="store.fetch(1)"
       >
         <template #default="{ data }">

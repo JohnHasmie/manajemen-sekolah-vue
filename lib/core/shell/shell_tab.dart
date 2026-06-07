@@ -15,6 +15,7 @@
 // each role's `kRoleTabs` list, not by enum index.
 
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Identifies a single bottom-nav tab. Distinct tabs across roles
 /// (e.g. admin's `people` vs guru's `teaching`) live as separate values
@@ -80,23 +81,23 @@ extension ShellTabMeta on ShellTab {
   String get label {
     switch (this) {
       case ShellTab.home:
-        return 'Beranda';
+        return kCorSheTabHome.tr;
       case ShellTab.people:
-        return 'Orang';
+        return kCorSheTabPeople.tr;
       case ShellTab.academic:
-        return 'Akademik';
+        return kCorSheTabAcademic.tr;
       case ShellTab.finance:
-        return 'Keuangan';
+        return kCorSheTabFinance.tr;
       case ShellTab.system:
-        return 'Sistem';
+        return kCorSheTabSystem.tr;
       case ShellTab.teaching:
-        return 'Mengajar';
+        return kCorSheTabTeaching.tr;
       case ShellTab.grades:
-        return 'Nilai';
+        return kCorSheTabGrades.tr;
       case ShellTab.other:
-        return 'Lainnya';
+        return kCorSheTabOther.tr;
       case ShellTab.attendance:
-        return 'Kehadiran';
+        return kCorSheTabAttendance.tr;
     }
   }
 
@@ -110,7 +111,7 @@ extension ShellTabMeta on ShellTab {
     // bills, so the nav reads "Tagihan" to match the screen content
     // and the dashboard's KPI / quick-action labelling.
     if ((r == 'wali' || r == 'parent') && this == ShellTab.finance) {
-      return 'Tagihan';
+      return kCorSheTabBills.tr;
     }
     return label;
   }

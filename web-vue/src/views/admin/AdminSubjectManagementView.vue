@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { SubjectService } from '@/services/subjects.service';
 import { AdminDataExcelService } from '@/services/admin-data-excel.service';
 import { useRoleHex } from '@/composables/useRoleHex';
@@ -30,6 +31,8 @@ import AdminImportExcelModal from '@/components/feature/AdminImportExcelModal.vu
 import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
 
+// Aliased to `$t` so v-for over `subjects` (any name) won't shadow it.
+const { t: $t } = useI18n();
 const primaryColor = useRoleHex();
 const ayStore = useAcademicYearStore();
 const ayReadOnly = computed(() => ayStore.isReadOnly);
@@ -98,16 +101,20 @@ const CLASSES_OPTIONS: FacetOption[] = [
 ];
 
 const statusChipValue = computed(() => {
-  if (!filters.status) return 'Semua';
-  return filters.status === 'active' ? 'Aktif' : 'Nonaktif';
+  if (!filters.status) return $t('admin.shared.allFilter');
+  return filters.status === 'active'
+    ? $t('admin.subjects.statusActive')
+    : $t('admin.subjects.statusInactive');
 });
 const gradeChipValue = computed(() => {
-  if (!filters.grade_level) return 'Semua';
-  return `Tingkat ${filters.grade_level}`;
+  if (!filters.grade_level) return $t('admin.shared.allFilter');
+  return $t('admin.classes.gradePrefix', { grade: filters.grade_level });
 });
 const classesChipValue = computed(() => {
-  if (!filters.classes_status) return 'Semua';
-  return filters.classes_status === 'with' ? 'Sudah tertaut' : 'Belum tertaut';
+  if (!filters.classes_status) return $t('admin.shared.allFilter');
+  return filters.classes_status === 'with'
+    ? $t('admin.subjects.hasLinked')
+    : $t('admin.subjects.notLinked');
 });
 
 const activeFilterCount = computed(() => {
@@ -171,32 +178,35 @@ const pageWithClassesCount = computed(
 );
 
 const kpiCards = computed<KpiCard[]>(() => [
-  { icon: 'book-open', label: 'Total Mapel', value: totalSubjects.value, tone: 'brand' },
+  { icon: 'book-open', label: $t('admin.subjects.kpiTotal'), value: totalSubjects.value, tone: 'brand' },
   {
     icon: 'check-circle',
-    label: 'Aktif',
+    label: $t('admin.subjects.kpiActive'),
     value: pageActiveCount.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: 'green',
   },
   {
     icon: 'archive',
-    label: 'Nonaktif',
+    label: $t('admin.subjects.kpiInactive'),
     value: pageInactiveCount.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: pageInactiveCount.value > 0 ? 'amber' : 'slate',
   },
   {
     icon: 'layers',
-    label: 'Tertaut Kelas',
+    label: $t('admin.subjects.kpiLinkedClasses'),
     value: pageWithClassesCount.value,
-    suffix: '/halaman',
+    suffix: $t('admin.shared.perPage'),
     tone: 'violet',
   },
 ]);
 
-const headerMeta = computed(
-  () => `${totalSubjects.value.toLocaleString('id-ID')} mata pelajaran · TP ${ayStore.yearLabel}`,
+const headerMeta = computed(() =>
+  $t('admin.subjects.meta', {
+    count: totalSubjects.value.toLocaleString(),
+    year: ayStore.yearLabel,
+  }),
 );
 
 // ── Bulk ──
@@ -301,17 +311,17 @@ function onImportDone(res: { imported: number; failed: number }) {
 
 function statusFor(s: Subject) {
   if (s.is_active === false) {
-    return { tone: 'warning' as const, label: 'Nonaktif' };
+    return { tone: 'warning' as const, label: $t('admin.subjects.statusInactive') };
   }
   if (s.kkm !== null && s.kkm !== undefined) {
     return { tone: 'info' as const, label: `KKM: ${s.kkm}` };
   }
-  return { tone: 'success' as const, label: 'Aktif' };
+  return { tone: 'success' as const, label: $t('admin.subjects.statusActive') };
 }
 
 function topMeta(s: Subject): string {
   const parts: string[] = [];
-  if (s.code) parts.push(`Kode ${s.code}`);
+  if (s.code) parts.push($t('admin.subjects.codePrefix', { code: s.code }));
   if (s.class_count !== undefined && s.class_count > 0) parts.push(`${s.class_count} kelas`);
   return parts.join(' · ') || '—';
 }
@@ -319,18 +329,18 @@ function topMeta(s: Subject): string {
 
 <template>
   <AdminCrudScaffold
-    title="Mata Pelajaran"
-    kicker="Admin · Manajemen Data"
+    :title="$t('admin.subjects.title')"
+    :kicker="$t('admin.shared.kicker')"
     :meta="headerMeta"
     :kpi-cards="kpiCards"
     :state="state"
     :selected-count="selectedIds.size"
     :active-filter-count="activeFilterCount"
     :hide-add-fab="ayReadOnly"
-    search-placeholder="Cari mata pelajaran..."
-    empty-title="Belum ada mata pelajaran"
-    empty-description="Tap tombol + untuk menambahkan mata pelajaran baru."
-    fab-label="Tambah Mapel"
+    :search-placeholder="$t('admin.subjects.searchPlaceholder')"
+    :empty-title="$t('admin.subjects.emptyTitle')"
+    :empty-description="$t('admin.subjects.emptyDesc')"
+    :fab-label="$t('admin.subjects.addFab')"
     @search="onSearch"
     @clear-all-filters="clearAll"
     @add-click="editTarget = null"
@@ -350,7 +360,7 @@ function topMeta(s: Subject): string {
     <template #filter-chips>
       <AppFilterChip
         icon-name="check-circle"
-        label="Status"
+        :label="$t('admin.subjects.filterStatus')"
         :value="statusChipValue"
         tone="green"
         @click="showStatusPicker = true"
@@ -358,14 +368,14 @@ function topMeta(s: Subject): string {
       <AppFilterChip
         v-if="gradeLevelOptions.length > 0"
         icon-name="bar-chart"
-        label="Tingkat"
+        :label="$t('admin.classes.filterGrade')"
         :value="gradeChipValue"
         tone="brand"
         @click="showGradePicker = true"
       />
       <AppFilterChip
         icon-name="layers"
-        label="Tertaut Kelas"
+        :label="$t('admin.subjects.filterLinked')"
         :value="classesChipValue"
         tone="violet"
         @click="showClassesPicker = true"
@@ -378,7 +388,7 @@ function topMeta(s: Subject): string {
           :title="s.name"
           :top-meta="topMeta(s)"
           :status="statusFor(s)"
-          :trailing-action-label="selectedIds.has(s.id) ? '' : 'Kelas'"
+          :trailing-action-label="selectedIds.has(s.id) ? '' : $t('admin.subjects.kelasLink')"
           :trailing-action-color="primaryColor"
           :selected="selectedIds.has(s.id)"
           bulk-selectable

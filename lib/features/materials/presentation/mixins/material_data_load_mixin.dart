@@ -9,6 +9,7 @@ import 'package:manajemensekolah/core/services/cache_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
@@ -97,7 +98,7 @@ mixin MaterialDataLoadMixin on ConsumerState<TeacherMaterialScreen> {
           isLoading = false;
           isLoadingOverview = false;
         });
-        SnackBarUtils.showInfo(context, 'Error: ID guru tidak valid');
+        SnackBarUtils.showInfo(context, kMatInvalidTeacherId.tr);
         return;
       }
 

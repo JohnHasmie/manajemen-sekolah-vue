@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
 import 'package:manajemensekolah/core/widgets/admin_data_menu.dart';
@@ -379,7 +380,7 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
     final lang = ref.read(languageRiverpod);
     final isReadOnly = ref.read(academicYearRiverpod).isReadOnly;
     final model = Teacher.fromJson(teacher);
-    final name = model.name.isNotEmpty ? model.name : 'No Name';
+    final name = model.name.isNotEmpty ? model.name : kTeaNoName.tr;
     final nip = (model.employeeNumber ?? '').isNotEmpty
         ? model.employeeNumber!
         : '-';
@@ -472,8 +473,8 @@ class TeacherAdminScreenState extends ConsumerState<TeacherAdminScreen>
             'id': 'Identitas',
           }),
           rows: [
-            EntityDetailRow(label: 'NIP / NUPTK', value: nip),
-            EntityDetailRow(label: 'Email', value: email),
+            EntityDetailRow(label: kTeaNipNuptk.tr, value: nip),
+            EntityDetailRow(label: kEmail.tr, value: email),
             EntityDetailRow(
               label: lang.getTranslatedText(const {
                 'en': 'Phone',

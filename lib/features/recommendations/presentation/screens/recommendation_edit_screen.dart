@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/mixins/edit_controller_mixin.dart';
@@ -180,7 +181,7 @@ class _LearningRecommendationEditScreenState
           BrandPageHeader(
             role: 'guru',
             subtitle: '$_studentName · Edit Rec',
-            title: 'Edit Rekomendasi',
+            title: kRecEditRecommendation.tr,
             onBackPressed: _isSaving ? null : () => AppNavigator.pop(context),
             actionIcons: [
               BrandHeaderIconButton(
@@ -197,8 +198,8 @@ class _LearningRecommendationEditScreenState
             ),
           ),
           BottomSheetFooter(
-            primaryLabel: _isSaving ? 'Menyimpan...' : 'Simpan Perubahan',
-            secondaryLabel: 'Batal',
+            primaryLabel: _isSaving ? kRecSavingEllipsis.tr : kRecSaveChanges.tr,
+            secondaryLabel: kRecCancel.tr,
             primaryColor: cobalt,
             primaryEnabled: !_isSaving,
             onPrimary: saveChanges,

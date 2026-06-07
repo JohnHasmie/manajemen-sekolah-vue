@@ -8,11 +8,12 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import {
-  BILL_STATUS_LABELS,
   BILL_STATUS_TONES,
   type Bill,
+  type BillStatus,
 } from '@/types/billing';
 import { formatRupiah, formatDateLong } from '@/lib/format';
 
@@ -26,8 +27,19 @@ const props = defineProps<{
 
 defineEmits<{ click: [Bill] }>();
 
+const { t } = useI18n();
+
+// Localised status badge labels — the static BILL_STATUS_LABELS export
+// stays Indonesian for any data-layer code that switches on it.
+const LOCALIZED_BILL_LABELS = computed<Record<BillStatus, string>>(() => ({
+  paid: t('parent.billing.statusLunas'),
+  overdue: t('parent.billing.statusTelat'),
+  soon: t('parent.billing.statusSegera'),
+  pending: t('parent.billing.statusBelumLunas'),
+}));
+
 const status = computed(() => props.bill.status);
-const labels = computed(() => BILL_STATUS_LABELS[status.value]);
+const labels = computed(() => LOCALIZED_BILL_LABELS.value[status.value]);
 const tones = computed(() => BILL_STATUS_TONES[status.value]);
 
 const iconBg = computed(() => {
@@ -59,23 +71,46 @@ const iconName = computed(() => {
 const dueLabel = computed(() => {
   const b = props.bill;
   if (b.status === 'paid' && b.latest_payment?.payment_date) {
-    return `Lunas · ${formatDateLong(b.latest_payment.payment_date)}`;
+    return t('parent.billing.paidOn', { date: formatDateLong(b.latest_payment.payment_date) });
   }
   if (typeof b.due_in_days === 'number') {
-    if (b.due_in_days < 0) return `Telat ${Math.abs(b.due_in_days)} hari`;
-    if (b.due_in_days === 0) return 'Jatuh tempo hari ini';
-    if (b.due_in_days === 1) return 'Jatuh tempo besok';
-    return `Jatuh tempo ${b.due_in_days} hari lagi`;
+    if (b.due_in_days < 0) return t('parent.billing.lateBy', { days: Math.abs(b.due_in_days) });
+    if (b.due_in_days === 0) return t('parent.billing.dueToday');
+    if (b.due_in_days === 1) return t('parent.billing.dueTomorrow');
+    return t('parent.billing.dueIn', { days: b.due_in_days });
   }
-  return b.due_date ? `Jatuh tempo ${formatDateLong(b.due_date)}` : 'Tanpa jatuh tempo';
+  return b.due_date
+    ? t('parent.billing.dueOn', { date: formatDateLong(b.due_date) })
+    : t('parent.billing.noDueDate');
 });
+
+// Pattern-translate the backend-supplied subtitle ("Tahunan · 7A",
+// "Bulanan · 7A · …") so the period prefix flips to English when the
+// locale is English. Backend ships the raw Indonesian word; we
+// rewrite the first token via this small dictionary.
+const PERIOD_PREFIX_MAP: Record<string, string> = {
+  Bulanan: 'parent.billing.periodMonthly',
+  Tahunan: 'parent.billing.periodYearly',
+  Sekali: 'parent.billing.periodOnce',
+};
+
+function translatePeriodPrefix(s: string): string {
+  // Subtitle shape: "{PeriodWord} · rest…". Split on the first " · "
+  // so the rest of the backend-supplied tokens (class name etc.) pass
+  // through untouched.
+  const idx = s.indexOf(' · ');
+  const head = idx >= 0 ? s.slice(0, idx) : s;
+  const tail = idx >= 0 ? s.slice(idx) : '';
+  const key = PERIOD_PREFIX_MAP[head];
+  return key ? `${t(key)}${tail}` : s;
+}
 
 const subtitle = computed(() => {
   const parts: string[] = [];
   if (props.showStudentName && props.bill.student?.name) {
     parts.push(props.bill.student.name);
   } else if (props.bill.subtitle) {
-    parts.push(props.bill.subtitle);
+    parts.push(translatePeriodPrefix(props.bill.subtitle));
   }
   parts.push(dueLabel.value);
   return parts.join(' · ');
@@ -115,7 +150,7 @@ const subtitle = computed(() => {
         v-if="bill.reminder_count > 0 && status !== 'paid'"
         class="text-[9px] text-amber-700 font-bold mt-1 uppercase tracking-wider"
       >
-        Reminder ke-{{ bill.reminder_count }}
+        {{ t('parent.billing.reminderNth', { n: bill.reminder_count }) }}
       </p>
     </div>
   </component>

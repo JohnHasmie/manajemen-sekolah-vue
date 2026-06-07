@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/section_card.dart';
 
 /// Tab body for AI and manual material content.
@@ -78,12 +79,12 @@ class MaterialTabContent extends StatelessWidget {
             SectionCard(
               icon: Icons.summarize_rounded,
               iconColor: ColorUtils.info600,
-              title: 'Ringkasan Materi',
+              title: kMatMaterialSummary.tr,
               onEdit: onEditSection == null
                   ? null
                   : () => _editIfWired(
                       'ringkasan',
-                      'Ringkasan Materi',
+                      kMatMaterialSummary.tr,
                       parsedContent!['ringkasan']?.toString() ?? '',
                     ),
               child: Text(
@@ -109,12 +110,12 @@ class MaterialTabContent extends StatelessWidget {
                 return SectionCard(
                   icon: Icons.flag_rounded,
                   iconColor: ColorUtils.success600,
-                  title: 'Tujuan Pembelajaran',
+                  title: kMatLearningObjectives.tr,
                   onEdit: onEditSection == null
                       ? null
                       : () => _editIfWired(
                           'tujuan_pembelajaran',
-                          'Tujuan Pembelajaran',
+                          kMatLearningObjectives.tr,
                           seedValue,
                         ),
                   child: isList
@@ -141,12 +142,12 @@ class MaterialTabContent extends StatelessWidget {
             SectionCard(
               icon: Icons.lightbulb_rounded,
               iconColor: ColorUtils.amber500,
-              title: 'Poin Utama',
+              title: kMatKeyPoints.tr,
               onEdit: onEditSection == null
                   ? null
                   : () => _editIfWired(
                       'poin_utama',
-                      'Poin Utama',
+                      kMatKeyPoints.tr,
                       _listToText(parsedContent!['poin_utama'] as List),
                     ),
               child: _NumberedList(
@@ -162,12 +163,12 @@ class MaterialTabContent extends StatelessWidget {
             SectionCard(
               icon: Icons.school_rounded,
               iconColor: primaryColor,
-              title: 'Cara Mengajar',
+              title: kMatTeachingMethods.tr,
               onEdit: onEditSection == null
                   ? null
                   : () => _editIfWired(
                       'cara_mengajar',
-                      'Cara Mengajar',
+                      kMatTeachingMethods.tr,
                       parsedContent!['cara_mengajar']?.toString() ?? '',
                     ),
               child: Text(
@@ -185,12 +186,12 @@ class MaterialTabContent extends StatelessWidget {
           SectionCard(
             icon: Icons.auto_awesome,
             iconColor: Colors.orange,
-            title: 'Materi AI',
+            title: kMatAiContent.tr,
             onEdit: onEditSection == null
                 ? null
                 : () => _editIfWired(
                     'material_content',
-                    'Materi AI',
+                    kMatAiContent.tr,
                     stripHtml(
                       aiGeneratedData!['material_content']?.toString() ?? '',
                     ),
@@ -236,7 +237,7 @@ class MaterialTabContent extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                'Lampiran (Manual)',
+                kMatAttachmentsManual.tr,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -302,7 +303,7 @@ class MaterialTabContent extends StatelessWidget {
                               Text(
                                 content['judul_konten'] ??
                                     content['title'] ??
-                                    'Lampiran',
+                                    kMatAttachment.tr,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
@@ -465,7 +466,7 @@ class _AiUpsellCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Materi Lebih Lengkap dari AI',
+                  kMatMoreComprehensive.tr,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -476,8 +477,7 @@ class _AiUpsellCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Generate ringkasan, contoh soal, dan referensi '
-                  'tambahan untuk sub-bab ini dalam beberapa detik.',
+                  kMatAiUpsellMsg.tr,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11.5,
@@ -503,18 +503,18 @@ class _AiUpsellCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.auto_awesome_rounded,
                         color: Colors.white,
                         size: 13,
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
-                        'Generate dengan AI',
-                        style: TextStyle(
+                        kMatGenerateWithAi.tr,
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,

@@ -9,6 +9,7 @@ import 'package:manajemensekolah/core/widgets/error_screen.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/finance/presentation/controllers/admin_finance_controller.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/finance/data/finance_service.dart';
@@ -507,12 +508,12 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
           (jenisPeriodLabel == null ? 0 : 1);
       headerChips = [
         BrandFilterChip(
-          label: 'Status',
+          label: kFinStatus.tr,
           value: jenisStatusLabel,
           onTap: _pickJenisStatus,
         ),
         BrandFilterChip(
-          label: 'Periode',
+          label: kFinPeriod.tr,
           value: jenisPeriodLabel,
           onTap: _pickJenisPeriod,
         ),
@@ -525,18 +526,18 @@ class FinanceScreenState extends ConsumerState<FinanceScreen>
           (_tagihanSelectedJenisIds.isEmpty ? 0 : 1);
       headerChips = [
         BrandFilterChip(
-          label: 'Status',
+          label: kFinStatus.tr,
           value: tagihanStatusLabel,
           onTap: _pickHeaderStatus,
         ),
         BrandFilterChip(
-          label: 'Bulan',
+          label: kFinMonth.tr,
           value: monthLabel,
           onTap: _pickHeaderMonth,
           width: 168,
         ),
         BrandFilterChip(
-          label: 'Jenis',
+          label: kFinType.tr,
           value: jenisLabel,
           onTap: _openTagihanFilterSheet,
         ),

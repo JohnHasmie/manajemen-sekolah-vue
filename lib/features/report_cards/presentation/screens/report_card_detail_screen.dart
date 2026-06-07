@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/widgets/action_confirm_sheet.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_grade_tab.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_extras_tab.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/widgets/report_card_info_tab.dart';
@@ -189,11 +190,11 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
           fontSize: 11,
         ),
         labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-        tabs: const [
-          Tab(text: 'Sikap'),
-          Tab(text: 'Nilai'),
-          Tab(text: 'Tambahan'),
-          Tab(text: 'Info'),
+        tabs: [
+          Tab(text: kRepCarAttitude.tr),
+          Tab(text: kRepCarGrades.tr),
+          Tab(text: kRepCarExtras.tr),
+          Tab(text: kRepCarInfo.tr),
         ],
       ),
     );
@@ -265,12 +266,10 @@ class _ReportCardDetailScreenState extends ConsumerState<ReportCardDetailScreen>
   Future<void> _showFinalizeDialog() async {
     final confirmed = await ActionConfirmSheet.show(
       context: context,
-      title: 'Finalisasi Rapor',
-      message:
-          'Apakah Anda yakin ingin menyelesaikan rapor ini? '
-          'Rapor yang telah difinalisasi tidak dapat diubah.',
-      confirmText: 'Ya, Finalisasi',
-      cancelText: 'Batal',
+      title: kRepCarFinalizeReportCard.tr,
+      message: kRepCarFinalizeConfirmMessage.tr,
+      confirmText: kRepCarConfirmFinalize.tr,
+      cancelText: AppLocalizations.cancel.tr,
       icon: Icons.task_alt_rounded,
       confirmColor: ColorUtils.getRoleColor('guru'),
     );

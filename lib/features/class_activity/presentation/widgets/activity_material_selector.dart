@@ -28,14 +28,14 @@ class ActivityMaterialSelector extends StatelessWidget {
       width: double.infinity,
       child: SegmentedButton<bool>(
         segments: [
-          const ButtonSegment<bool>(
+          ButtonSegment<bool>(
             value: false,
-            label: Text('Tulis Manual'),
-            icon: Icon(Icons.edit_note_rounded, size: 16),
+            label: Text(kClaActWriteManually.tr),
+            icon: const Icon(Icons.edit_note_rounded, size: 16),
           ),
           ButtonSegment<bool>(
             value: true,
-            label: const Text('Dari Materi'),
+            label: Text(kClaActFromMaterials.tr),
             icon: const Icon(Icons.menu_book_rounded, size: 16),
             enabled: selectedSubjectId != null,
           ),
@@ -121,7 +121,7 @@ class ActivityChapterSelector extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'Tidak ada bab tersedia',
+              kClaActNoChaptersAvailable.tr,
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             ),
           ],

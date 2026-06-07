@@ -8,6 +8,9 @@ import 'package:manajemensekolah/features/notifications/domain/models/notificati
 import 'package:manajemensekolah/features/notifications/presentation/mixins/notification_type_mixin.dart';
 import 'package:manajemensekolah/features/notifications/presentation/mixins/date_formatting_mixin.dart';
 
+const kNotInformation = {'en': 'Information', 'id': 'Informasi'};
+const kCancel = {'en': 'Cancel', 'id': 'Batal'};
+
 /// Mixin for showing notification detail dialog.
 mixin NotificationDetailDialogMixin
     on NotificationTypeMixin, DateFormattingMixin {
@@ -21,7 +24,7 @@ mixin NotificationDetailDialogMixin
 
     AppBottomSheet.show<void>(
       context: context,
-      title: notif.title ?? 'Informasi',
+      title: notif.title ?? kNotInformation.tr,
       subtitle: formatDate(notif.createdAt),
       icon: icon,
       primaryColor: color,
@@ -31,7 +34,7 @@ mixin NotificationDetailDialogMixin
       ),
       footer: BottomSheetFooter(
         primaryLabel: AppLocalizations.close.tr,
-        secondaryLabel: 'Batal',
+        secondaryLabel: kCancel.tr,
         primaryColor: color,
         onPrimary: () => AppNavigator.pop(context),
         onSecondary: () => AppNavigator.pop(context),

@@ -16,6 +16,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
@@ -105,7 +106,7 @@ class _ActivateMonthPickerSheetState extends State<_ActivateMonthPickerSheet> {
   Widget build(BuildContext context) {
     final navy = widget.primaryColor;
     return AppBottomSheet(
-      title: 'Pilih bulan aktif',
+      title: kFinSelectActiveMonth.tr,
       subtitle:
           'Tagihan akan dibuat untuk bulan yang dipilih pada '
           '"${widget.jenisName}".',

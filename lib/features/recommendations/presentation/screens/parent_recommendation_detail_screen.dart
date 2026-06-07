@@ -24,6 +24,7 @@ import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
@@ -333,10 +334,10 @@ class _ParentRecommendationDetailScreenState
                                   label: _subjectName!.toUpperCase(),
                                   color: ColorUtils.indigo600,
                                 ),
-                              _Pill(label: 'DARI WALI KELAS', color: azure),
+                              _Pill(label: kRecFromHomeroomTeacher.tr, color: azure),
                               if (isCompleted)
                                 _Pill(
-                                  label: 'SELESAI',
+                                  label: kRecCompletedUpper.tr,
                                   color: ColorUtils.success600,
                                 ),
                             ],
@@ -372,7 +373,7 @@ class _ParentRecommendationDetailScreenState
                       icon: Icons.chat_bubble_rounded,
                       iconBg: azure.withValues(alpha: 0.10),
                       iconFg: azure,
-                      title: 'Pesan dari Wali Kelas',
+                      title: kRecMessageFromHomeroomTeacher.tr,
                       chip: _teacherName,
                       child: Container(
                         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -404,7 +405,7 @@ class _ParentRecommendationDetailScreenState
                     icon: Icons.checklist_rounded,
                     iconBg: ColorUtils.indigo600.withValues(alpha: 0.10),
                     iconFg: ColorUtils.indigo600,
-                    title: 'Yang Perlu Dilakukan',
+                    title: kRecWhatToDo.tr,
                     child: HtmlWidget(
                       _rec['description']?.toString() ?? '-',
                       textStyle: TextStyle(
@@ -422,8 +423,8 @@ class _ParentRecommendationDetailScreenState
                       icon: Icons.menu_book_rounded,
                       iconBg: ColorUtils.brandCobalt.withValues(alpha: 0.10),
                       iconFg: ColorUtils.brandCobalt,
-                      title: 'Materi Terkait',
-                      chip: '${_materiChips.length} dipilih',
+                      title: kRecRelatedMaterials.tr,
+                      chip: '${_materiChips.length} ${kRecSelected.tr}',
                       child: Wrap(
                         spacing: 6,
                         runSpacing: 6,
@@ -506,7 +507,7 @@ class _ParentRecommendationDetailScreenState
       final title = (ch['title'] ?? ch['judul_bab'])?.toString();
       if (title != null && title.isNotEmpty) {
         out.add(
-          _MateriChip(label: 'Bab · $title', color: ColorUtils.success600),
+          _MateriChip(label: kRecChapter.tr.replaceAll('\$title', title), color: ColorUtils.success600),
         );
       }
     }
@@ -515,7 +516,7 @@ class _ParentRecommendationDetailScreenState
       final title = (sc['title'] ?? sc['judul_sub_bab'])?.toString();
       if (title != null && title.isNotEmpty) {
         out.add(
-          _MateriChip(label: 'Sub: $title', color: ColorUtils.warning600),
+          _MateriChip(label: kRecSubChapter.tr.replaceAll('\$title', title), color: ColorUtils.warning600),
         );
       }
     }
@@ -848,7 +849,7 @@ class _ActionBar extends StatelessWidget {
                   color: isCompleted ? green : ColorUtils.slate700,
                 ),
                 label: Text(
-                  isCompleted ? 'Selesai' : 'Tandai Selesai',
+                  isCompleted ? kRecCompleted.tr : kRecMarkComplete.tr,
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
@@ -882,7 +883,7 @@ class _ActionBar extends StatelessWidget {
                   color: Colors.white,
                 ),
                 label: Text(
-                  busy ? 'Memproses…' : 'Balas Wali Kelas',
+                  busy ? 'Memproses…' : kRecReplyToHomeroomTeacher.tr,
                   style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,

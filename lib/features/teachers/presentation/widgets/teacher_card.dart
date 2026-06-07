@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_list_row.dart';
 import 'package:manajemensekolah/core/widgets/initials_avatar.dart';
 import 'package:manajemensekolah/features/teachers/domain/models/teacher.dart';
@@ -39,7 +40,7 @@ class TeacherCard extends ConsumerWidget {
     final model = Teacher.fromJson(teacher);
     final accent = ColorUtils.getRoleColor('admin');
 
-    final displayName = model.name.isNotEmpty ? model.name : 'No Name';
+    final displayName = model.name.isNotEmpty ? model.name : kTeaNoName.tr;
     final nip = (teacher['nip'] ?? teacher['nuptk'] ?? '').toString();
     final email = model.email.isNotEmpty ? model.email : '';
 

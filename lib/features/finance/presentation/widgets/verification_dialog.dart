@@ -184,7 +184,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog>
   Widget _buildStatusDropdown() {
     return buildDropdownField(
       value: _status,
-      label: 'Status Verifikasi',
+      label: kFinVerificationStatus.tr,
       icon: Icons.check_circle,
       items: ['verified', 'rejected'],
       onChanged: (value) {
@@ -199,7 +199,7 @@ class _VerificationDialogState extends ConsumerState<VerificationDialog>
   Widget _buildNotesField() {
     return buildDialogTextField(
       controller: _notesController,
-      label: 'Catatan (Opsional)',
+      label: kFinNotesOptional.tr,
       icon: Icons.note,
       maxLines: 3,
     );

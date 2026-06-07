@@ -13,6 +13,8 @@
   `if (isLoading) … else if (error) …` blocks.
 -->
 <script setup lang="ts" generic="T">
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Spinner from '../ui/Spinner.vue';
 import EmptyState from './EmptyState.vue';
 import ErrorState from './ErrorState.vue';
@@ -23,7 +25,7 @@ export interface AsyncState<T> {
   error?: string | null;
 }
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     state: AsyncState<T>;
     emptyTitle?: string;
@@ -33,15 +35,27 @@ withDefaults(
     minHeight?: string;
   }>(),
   {
-    emptyTitle: 'Belum ada data',
     emptyDescription: '',
     emptyIcon: 'inbox',
-    errorTitle: 'Terjadi kesalahan',
     minHeight: '12rem',
   },
 );
 
 defineEmits<{ retry: [] }>();
+
+const { t } = useI18n();
+
+// Defaults resolve through i18n so every page using AsyncView gets
+// localised error/empty labels for free unless it passes its own copy.
+const emptyTitleText = computed(() =>
+  props.emptyTitle?.trim() ? props.emptyTitle : t('common.emptyTitle'),
+);
+const errorTitleText = computed(() =>
+  props.errorTitle?.trim() ? props.errorTitle : t('common.errorTitle'),
+);
+const errorMessageText = computed(() =>
+  props.state.error ?? t('common.errorMessage'),
+);
 </script>
 
 <template>
@@ -55,14 +69,14 @@ defineEmits<{ retry: [] }>();
 
     <ErrorState
       v-else-if="state.status === 'error'"
-      :title="errorTitle"
-      :message="state.error ?? 'Mohon coba lagi dalam beberapa saat.'"
+      :title="errorTitleText"
+      :message="errorMessageText"
       @retry="$emit('retry')"
     />
 
     <EmptyState
       v-else-if="state.status === 'empty'"
-      :title="emptyTitle"
+      :title="emptyTitleText"
       :description="emptyDescription"
       :icon="emptyIcon"
     />

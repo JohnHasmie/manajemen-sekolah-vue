@@ -14,6 +14,7 @@
 //         the dashed variant when the class has zero recs yet.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 class RecommendationClassCard extends StatelessWidget {
   final String className;
@@ -235,7 +236,7 @@ class RecommendationClassCard extends StatelessWidget {
         Expanded(
           child: _StatCell(
             value: '${s.pending}',
-            label: 'PENDING',
+            label: kRecPendingUpper.tr,
             color: ColorUtils.warning600,
           ),
         ),
@@ -243,7 +244,7 @@ class RecommendationClassCard extends StatelessWidget {
         Expanded(
           child: _StatCell(
             value: '${s.proses}',
-            label: 'PROSES',
+            label: kRecInProgressUpper.tr,
             color: ColorUtils.brandCobalt,
           ),
         ),
@@ -251,7 +252,7 @@ class RecommendationClassCard extends StatelessWidget {
         Expanded(
           child: _StatCell(
             value: '${s.selesai}',
-            label: 'SELESAI',
+            label: kRecCompletedUpper.tr,
             color: ColorUtils.success600,
           ),
         ),
@@ -259,7 +260,7 @@ class RecommendationClassCard extends StatelessWidget {
         Expanded(
           child: _StatCell(
             value: '${s.dismissed}',
-            label: 'DITOLAK',
+            label: kRecRejectedUpper.tr,
             color: s.dismissed > 0 ? ColorUtils.error600 : ColorUtils.slate500,
           ),
         ),
@@ -330,7 +331,7 @@ class RecommendationClassCard extends StatelessWidget {
         Expanded(
           child: _CardCta(
             icon: Icons.people_alt_rounded,
-            label: 'Lihat Siswa',
+            label: kRecViewStudents.tr,
             color: cobalt,
             variant: _CtaVariant.tonal,
             onTap: onViewStudents,
@@ -340,7 +341,7 @@ class RecommendationClassCard extends StatelessWidget {
         Expanded(
           child: _CardCta(
             icon: Icons.auto_awesome_rounded,
-            label: isGenerating ? 'Memproses…' : 'Buat Baru',
+            label: isGenerating ? kRecProcessingEllipsisShort.tr : kRecCreateNew.tr,
             color: violet,
             // Filled when there's already activity (this is a refresh
             // action), dashed-outline when the class is empty so the

@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/widgets/assign_wali_kelas_sheet.dart';
@@ -45,8 +46,8 @@ class SubjectClassQuickActionSheet extends StatelessWidget {
   }) {
     return AppBottomSheet.show<void>(
       context: context,
-      title: 'Kelas ${model.name.isEmpty ? '—' : model.name}',
-      subtitle: 'Aksi cepat untuk kelas ini',
+      title: '${kSubClassPrefix.tr}${model.name.isEmpty ? '—' : model.name}',
+      subtitle: kSubQuickActions.tr,
       icon: Icons.class_outlined,
       primaryColor: ColorUtils.getRoleColor('admin'),
       content: SubjectClassQuickActionSheet(
@@ -73,8 +74,8 @@ class SubjectClassQuickActionSheet extends StatelessWidget {
           children: [
             Expanded(
               child: _MetaCell(
-                label: 'Tingkat',
-                value: tingkat.isEmpty ? '—' : 'Tingkat $tingkat',
+                label: kSubGradeShort.tr,
+                value: tingkat.isEmpty ? '—' : '${kSubGrade.tr}$tingkat',
                 icon: Icons.layers_outlined,
                 accent: primary,
               ),
@@ -82,8 +83,8 @@ class SubjectClassQuickActionSheet extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _MetaCell(
-                label: 'Wali kelas',
-                value: wali.isEmpty ? 'Belum diset' : wali,
+                label: kSubWaliKelas.tr,
+                value: wali.isEmpty ? kSubNotSet.tr : wali,
                 icon: Icons.person_outline_rounded,
                 accent: wali.isEmpty ? ColorUtils.warning600 : primary,
               ),
@@ -94,14 +95,14 @@ class SubjectClassQuickActionSheet extends StatelessWidget {
 
         _ActionTile(
           icon: Icons.person_outline_rounded,
-          label: wali.isEmpty ? 'Tetapkan wali kelas' : 'Ganti wali kelas',
+          label: wali.isEmpty ? kSubSetWali.tr : kSubChangeWali.tr,
           tone: _ActionTone.cobalt,
           onTap: () async {
             AppNavigator.pop(context);
             final changed = await AssignWaliKelasSheet.show(
               context: context,
               classId: model.id,
-              className: model.name.isEmpty ? 'Kelas' : model.name,
+              className: model.name.isEmpty ? kSubClassGeneric.tr : model.name,
             );
             if (changed == true) onWaliReassigned();
           },
@@ -111,8 +112,8 @@ class SubjectClassQuickActionSheet extends StatelessWidget {
               ? Icons.remove_circle_outline_rounded
               : Icons.add_circle_outline_rounded,
           label: isAssigned
-              ? 'Lepas dari mata pelajaran'
-              : 'Tambah ke mata pelajaran',
+              ? kSubRemoveFromSubject.tr
+              : kSubAddToSubject.tr,
           tone: isAssigned ? _ActionTone.red : _ActionTone.cobalt,
           onTap: () {
             AppNavigator.pop(context);
@@ -122,7 +123,7 @@ class SubjectClassQuickActionSheet extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         _ActionTile(
           icon: Icons.close_rounded,
-          label: 'Tutup',
+          label: kClose.tr,
           tone: _ActionTone.neutral,
           onTap: () => AppNavigator.pop(context),
         ),

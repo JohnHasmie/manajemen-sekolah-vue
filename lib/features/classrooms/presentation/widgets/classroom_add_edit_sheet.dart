@@ -4,6 +4,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/classrooms/data/classroom_service.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
@@ -136,7 +137,7 @@ class ClassroomAddEditSheetState extends ConsumerState<ClassroomAddEditSheet>
       if (context.mounted) {
         SnackBarUtils.showError(
           context,
-          'Gagal menyimpan: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${kClaFailedToSaveError.tr}: ${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     } finally {

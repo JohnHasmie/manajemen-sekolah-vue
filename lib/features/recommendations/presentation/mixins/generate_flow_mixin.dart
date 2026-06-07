@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_header.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/scope_option_tile.dart';
@@ -39,8 +40,8 @@ mixin GenerateFlowMixin on ConsumerState<LearningRecommendationClassScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             BottomSheetHeader(
-              title: 'Cakupan Siswa',
-              subtitle: 'Generate rekomendasi AI untuk $className',
+              title: kRecStudentScope.tr,
+              subtitle: kRecGenerateForClass.tr.replaceAll('\$className', className),
               icon: Icons.groups_rounded,
               primaryColor: primaryColor,
             ),
@@ -52,7 +53,7 @@ mixin GenerateFlowMixin on ConsumerState<LearningRecommendationClassScreen> {
                     ctx: ctx,
                     value: true,
                     icon: Icons.groups_rounded,
-                    title: 'Semua Siswa',
+                    title: kRecAllStudents.tr,
                     subtitle:
                         'Generate rekomendasi untuk semua siswa '
                         'termasuk yang sudah baik',
@@ -62,7 +63,7 @@ mixin GenerateFlowMixin on ConsumerState<LearningRecommendationClassScreen> {
                     ctx: ctx,
                     value: false,
                     icon: Icons.person_search_rounded,
-                    title: 'Siswa yang Perlu Saja',
+                    title: kRecOnlyNeedingStudents.tr,
                     subtitle:
                         'Hanya siswa yang membutuhkan rekomendasi '
                         'berdasarkan data performa',

@@ -909,7 +909,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
       actions: [
         QuickAction(
           icon: DashboardModules.jadwal.icon,
-          label: DashboardModules.jadwal.defaultLabel,
+          label: DashboardModules.jadwal.defaultLabel.tr,
           color: DashboardModules.jadwal.color,
           caption: 'Mengajar',
           onTap: _openSchedule,
@@ -930,7 +930,7 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
         ),
         QuickAction(
           icon: DashboardModules.nilai.icon,
-          label: DashboardModules.nilai.defaultLabel,
+          label: DashboardModules.nilai.defaultLabel.tr,
           color: DashboardModules.nilai.color,
           caption: 'Input',
           onTap: _openGrades,
@@ -946,39 +946,39 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
       accentColor: _teacherCobalt,
       visibleItems: [
         ModulLainStripItem(
-          label: DashboardModules.materi.defaultLabel,
+          label: DashboardModules.materi.defaultLabel.tr,
           icon: DashboardModules.materi.icon,
           onTap: _openMaterials,
         ),
         ModulLainStripItem(
-          label: DashboardModules.rpp.defaultLabel,
+          label: DashboardModules.rpp.defaultLabel.tr,
           icon: DashboardModules.rpp.icon,
           onTap: _openLessonPlans,
         ),
         ModulLainStripItem(
-          label: DashboardModules.rekapNilai.defaultLabel,
+          label: DashboardModules.rekapNilai.defaultLabel.tr,
           icon: DashboardModules.rekapNilai.icon,
           onTap: _openGradeRecap,
         ),
         ModulLainStripItem(
-          label: DashboardModules.raport.defaultLabel,
+          label: DashboardModules.raport.defaultLabel.tr,
           icon: DashboardModules.raport.icon,
           onTap: _openReportCards,
         ),
       ],
       overflowItems: [
         ModulLainStripItem(
-          label: DashboardModules.pengumuman.defaultLabel,
+          label: DashboardModules.pengumuman.defaultLabel.tr,
           icon: DashboardModules.pengumuman.icon,
           onTap: _openAnnouncementDrafts,
         ),
         ModulLainStripItem(
-          label: DashboardModules.rekomendasi.defaultLabel,
+          label: DashboardModules.rekomendasi.defaultLabel.tr,
           icon: DashboardModules.rekomendasi.icon,
           onTap: _openRecommendation,
         ),
         ModulLainStripItem(
-          label: DashboardModules.akun.defaultLabel,
+          label: DashboardModules.akun.defaultLabel.tr,
           icon: DashboardModules.akun.icon,
           onTap: _openAccount,
         ),

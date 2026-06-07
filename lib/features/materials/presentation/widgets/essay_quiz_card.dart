@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// A single essay quiz card.
 ///
@@ -18,11 +19,11 @@ class EssayQuizCard extends StatelessWidget {
   ({Color color, String label}) _difficultyConfig(String difficulty) {
     switch (difficulty) {
       case 'easy':
-        return (color: ColorUtils.emerald500, label: 'Mudah');
+        return (color: ColorUtils.emerald500, label: kMatDifficultyEasy.tr);
       case 'medium':
-        return (color: ColorUtils.amber500, label: 'Sedang');
+        return (color: ColorUtils.amber500, label: kMatDifficultyMedium.tr);
       case 'hard':
-        return (color: ColorUtils.red500, label: 'Sulit');
+        return (color: ColorUtils.red500, label: kMatDifficultyHard.tr);
       default:
         return (color: ColorUtils.slate500, label: difficulty.toUpperCase());
     }
@@ -144,9 +145,9 @@ class EssayQuizCard extends StatelessWidget {
                         color: ColorUtils.emerald500,
                       ),
                       const SizedBox(width: 6),
-                      const Text(
-                        'Kunci Jawaban',
-                        style: TextStyle(
+                      Text(
+                        kMatAnswerKey.tr,
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF059669),

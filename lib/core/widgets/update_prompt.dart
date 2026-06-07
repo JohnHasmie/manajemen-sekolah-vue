@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/update_provider.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
@@ -37,7 +38,7 @@ class UpdatePromptWrapper extends ConsumerWidget {
 
           NativeUpdatePrompt.show(
             context: navContext,
-            version: next.version ?? 'Terbaru',
+            version: next.version ?? kCorWidLatest.tr,
             storeUrl: storeUrl,
           );
         }
@@ -50,28 +51,24 @@ class UpdatePromptWrapper extends ConsumerWidget {
   void _showShorebirdPrompt(BuildContext context, WidgetRef ref) {
     AppBottomSheet.show(
       context: context,
-      title: 'Update Tersedia',
-      subtitle:
-          'Versi terbaru telah diunduh. Aplikasi akan dimuat ulang '
-          'untuk menerapkan perubahan.',
+      title: kCorWidUpdateAvailable.tr,
+      subtitle: kCorWidUpdateDownloaded.tr,
       icon: Icons.auto_fix_high_rounded,
       primaryColor: const Color(0xFF143068), // Brand dark blue
       isDismissible: false,
       enableDrag: false,
-      content: const Column(
+      content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Kami telah melakukan perbaikan kecil dan peningkatan '
-            'performa. Tap "Muat Ulang Aplikasi" — pembaruan akan '
-            'otomatis aktif saat aplikasi terbuka kembali.',
-            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+            kCorWidUpdateDescription.tr,
+            style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
           ),
         ],
       ),
       footer: BottomSheetFooter(
-        primaryLabel: 'Muat Ulang Aplikasi',
-        secondaryLabel: 'Nanti Saja',
+        primaryLabel: kCorWidRestartApp.tr,
+        secondaryLabel: kCorWidLater.tr,
         primaryColor: const Color(0xFF143068),
         onPrimary: () async {
           AppLogger.info(
@@ -88,7 +85,7 @@ class UpdatePromptWrapper extends ConsumerWidget {
           if (context.mounted) {
             SnackBarUtils.showInfo(
               context,
-              'Memuat ulang aplikasi untuk menerapkan pembaruan...',
+              kCorWidRestartingApp.tr,
             );
           }
 
@@ -132,20 +129,21 @@ class NativeUpdatePrompt {
 
     return AppBottomSheet.show(
       context: navContext,
-      title: 'Versi Baru Tersedia',
-      subtitle: 'Versi $version tersedia di $storeName.',
+      title: kCorWidNewVersionAvailable.tr,
+      subtitle: kCorWidVersionAvailableIn.tr
+          .replaceAll('\$version', version)
+          .replaceAll('\$storeName', storeName),
       icon: Icons.system_update_rounded,
       primaryColor: const Color(0xFF143068),
       isDismissible: false,
       enableDrag: false,
-      content: const Text(
-        'Pembaruan besar tersedia dengan fitur-fitur baru yang menarik. '
-        'Segera perbarui aplikasi Anda untuk terus menggunakan layanan kami.',
-        style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+      content: Text(
+        kCorWidMajorUpdateAvailable.tr,
+        style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
       ),
       footer: BottomSheetFooter(
-        primaryLabel: 'Perbarui Sekarang',
-        secondaryLabel: 'Nanti Saja',
+        primaryLabel: kCorWidUpdateNow.tr,
+        secondaryLabel: kCorWidLater.tr,
         primaryColor: const Color(0xFF143068),
         onPrimary: () async {
           final url = Uri.parse(storeUrl);

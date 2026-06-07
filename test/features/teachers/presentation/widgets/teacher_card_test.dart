@@ -30,6 +30,7 @@ class _FakeAcademicYearProvider extends AcademicYearProvider {
   bool get isReadOnly => _readOnly;
 }
 
+
 // ---------------------------------------------------------------------------
 // Helper — builds the widget under test inside the minimal widget tree it
 // needs: ProviderScope (for Riverpod) > MaterialApp > Scaffold.
@@ -192,12 +193,17 @@ void main() {
     // ── Edge cases ────────────────────────────────────────────────────────────
     //
 
-    testWidgets('falls back to "No Name" when teacher name is null', (
+    testWidgets('falls back to localised "No Name" when teacher name is null', (
       tester,
     ) async {
+      // The name-missing fallback used to be the hardcoded literal "No
+      // Name"; the i18n sweep wrapped it in `kTeaNoName.tr` which now
+      // resolves via the global `languageProvider`. The provider defaults
+      // to Indonesian in production AND in tests, so the rendered string
+      // is the Indonesian value from the dictionary.
       const noName = <String, dynamic>{'name': null, 'homeroom_class': null};
       await tester.pumpWidget(_buildCard(teacher: noName));
-      expect(find.text('No Name'), findsOneWidget);
+      expect(find.text('Tanpa Nama'), findsOneWidget);
     });
 
     testWidgets('handles homeroom_class as a non-empty List', (tester) async {

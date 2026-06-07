@@ -24,6 +24,7 @@ import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_error_state.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
@@ -388,8 +389,8 @@ class _LearningRecommendationStudentScreenState
                   role: 'guru',
                   subtitle: _className.isNotEmpty
                       ? 'Kelas $_className · Rekomendasi'
-                      : 'Rekomendasi',
-                  title: 'Daftar Siswa',
+                      : kRecRecommendations.tr,
+                  title: kRecStudentList.tr,
                   kpiOverlayHeight: 45,
                   onBackPressed: () =>
                       AppNavigator.pop(context, _statusChanged),
@@ -503,7 +504,7 @@ class _LearningRecommendationStudentScreenState
                 onChanged: (v) => setState(() => _searchQuery = v),
                 style: TextStyle(fontSize: 12.5, color: ColorUtils.slate900),
                 decoration: InputDecoration(
-                  hintText: 'Cari nama atau NIS…',
+                  hintText: kRecSearchNameOrStudentNumber.tr,
                   hintStyle: TextStyle(
                     fontSize: 12,
                     color: ColorUtils.slate400,
@@ -547,7 +548,7 @@ class _LearningRecommendationStudentScreenState
         child: Row(
           children: [
             _StatusChip(
-              label: 'Semua',
+              label: kRecAll.tr,
               count: _students.length,
               active: _statusFilter == 'all',
               color: cobalt,
@@ -555,7 +556,7 @@ class _LearningRecommendationStudentScreenState
             ),
             const SizedBox(width: 6),
             _StatusChip(
-              label: 'Punya rec',
+              label: kRecHasRec.tr,
               count: _studentsWithRecs,
               active: _statusFilter == 'has_recs',
               color: cobalt,
@@ -563,7 +564,7 @@ class _LearningRecommendationStudentScreenState
             ),
             const SizedBox(width: 6),
             _StatusChip(
-              label: 'Pending',
+              label: kRecPending.tr,
               count: _totalPending,
               active: _statusFilter == 'has_pending',
               color: cobalt,
@@ -571,7 +572,7 @@ class _LearningRecommendationStudentScreenState
             ),
             const SizedBox(width: 6),
             _StatusChip(
-              label: 'Selesai',
+              label: kRecCompleted.tr,
               count: _totalCompleted,
               active: _statusFilter == 'all_completed',
               color: cobalt,
@@ -595,10 +596,10 @@ class _LearningRecommendationStudentScreenState
       );
     }
     if (_students.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.people_outline,
-        title: 'Tidak Ada Siswa',
-        subtitle: 'Belum ada data siswa di kelas ini',
+        title: kRecNoStudents.tr,
+        subtitle: kRecNoStudentDataInClass.tr,
       );
     }
     final filtered = _filteredStudents;
@@ -758,13 +759,13 @@ class _LearningRecommendationStudentScreenState
     final pills = <Widget>[];
     if (total == 0) {
       pills.add(
-        _StatusMiniPill(label: 'Belum ada rec', color: ColorUtils.slate500),
+        _StatusMiniPill(label: kRecNoRecYet.tr, color: ColorUtils.slate500),
       );
     } else {
       if (pending > 0) {
         pills.add(
           _StatusMiniPill(
-            label: '$pending PENDING',
+            label: '$pending ${kRecPendingUpper.tr}',
             color: ColorUtils.warning600,
           ),
         );
@@ -772,7 +773,7 @@ class _LearningRecommendationStudentScreenState
       if (inProgress > 0) {
         pills.add(
           _StatusMiniPill(
-            label: '$inProgress PROSES',
+            label: '$inProgress ${kRecInProgressUpper.tr}',
             color: ColorUtils.brandCobalt,
           ),
         );
@@ -780,7 +781,7 @@ class _LearningRecommendationStudentScreenState
       if (completed > 0) {
         pills.add(
           _StatusMiniPill(
-            label: '$completed SELESAI',
+            label: '$completed ${kRecCompletedUpper.tr}',
             color: ColorUtils.success600,
           ),
         );
@@ -792,11 +793,11 @@ class _LearningRecommendationStudentScreenState
   Widget _buildEmptySearch() {
     return EmptyState(
       icon: Icons.search_off_rounded,
-      title: 'Tidak Ada Hasil',
+      title: kRecNoResults.tr,
       subtitle: _searchQuery.isNotEmpty
-          ? 'Tidak ada siswa cocok dengan "$_searchQuery"'
-          : 'Tidak ada siswa yang cocok dengan filter',
-      buttonText: 'Reset Filter',
+          ? kRecNoStudentsMatch.tr
+          : kRecNoStudentsMatchFilter.tr,
+      buttonText: kRecResetFilter.tr,
       onPressed: () {
         _searchController.clear();
         setState(() {

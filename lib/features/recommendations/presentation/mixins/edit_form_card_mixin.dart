@@ -16,6 +16,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_quill_editor.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_add_material_sheet.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_edit_form_widgets.dart';
@@ -67,8 +68,8 @@ mixin EditFormCardMixin {
             icon: Icons.edit_rounded,
             iconBg: ColorUtils.violet700.withValues(alpha: 0.10),
             iconFg: ColorUtils.violet700,
-            title: 'Judul',
-            chip: 'Wajib',
+            title: kRecTitle.tr,
+            chip: kRecRequired.tr,
             children: [_buildTitleField(recId)],
           ),
           const SizedBox(height: 10),
@@ -76,14 +77,14 @@ mixin EditFormCardMixin {
             icon: Icons.description_rounded,
             iconBg: ColorUtils.indigo600.withValues(alpha: 0.10),
             iconFg: ColorUtils.indigo600,
-            title: 'Deskripsi',
-            chip: 'Quill',
+            title: kRecDescription.tr,
+            chip: kRecQuill.tr,
             children: [
               if (descriptionControllers[recId] != null)
                 AppQuillEditor(
                   controller: descriptionControllers[recId]!,
                   accentColor: cobalt,
-                  placeholder: 'Tulis deskripsi rekomendasi...',
+                  placeholder: kRecWriteRecommendationDesc.tr,
                   minHeight: 140,
                   maxHeight: 240,
                 ),
@@ -94,8 +95,8 @@ mixin EditFormCardMixin {
             icon: Icons.flag_rounded,
             iconBg: ColorUtils.warning600.withValues(alpha: 0.10),
             iconFg: ColorUtils.warning600,
-            title: 'Prioritas',
-            chip: 'Wajib',
+            title: kRecPriority.tr,
+            chip: kRecRequired.tr,
             children: [_buildPriorityRow(recId)],
           ),
           const SizedBox(height: 10),
@@ -103,10 +104,10 @@ mixin EditFormCardMixin {
             icon: Icons.menu_book_rounded,
             iconBg: cobalt.withValues(alpha: 0.10),
             iconFg: cobalt,
-            title: 'Materi Terkait',
+            title: kRecRelatedMaterials.tr,
             chip: materialChips.isEmpty
                 ? null
-                : '${materialChips.length} dipilih',
+                : '${materialChips.length} ${kRecSelected.tr}',
             children: [_buildMaterialChipStrip()],
           ),
           const SizedBox(height: 10),
@@ -114,8 +115,8 @@ mixin EditFormCardMixin {
             icon: Icons.chat_bubble_outline_rounded,
             iconBg: ColorUtils.slate500.withValues(alpha: 0.10),
             iconFg: ColorUtils.slate600,
-            title: 'Catatan Wali Kelas',
-            chip: 'Opsional',
+            title: kRecHomeroomTeacherNotes.tr,
+            chip: kRecOptional.tr,
             children: [_buildNotesField()],
           ),
         ],
@@ -162,7 +163,7 @@ mixin EditFormCardMixin {
                 Icon(Icons.add, size: 12, color: cobalt),
                 const SizedBox(width: 4),
                 Text(
-                  'Tambah Materi',
+                  kRecAddMaterial.tr,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
@@ -235,7 +236,7 @@ mixin EditFormCardMixin {
       maxLines: 5,
       style: TextStyle(fontSize: 13, color: ColorUtils.slate800),
       decoration: InputDecoration(
-        hintText: 'Tambahkan konteks pribadi atau langkah lanjutan...',
+        hintText: kRecAddPersonalContextOrNextSteps.tr,
         hintStyle: TextStyle(fontSize: 13, color: ColorUtils.slate400),
         filled: true,
         fillColor: ColorUtils.slate50,
@@ -268,7 +269,7 @@ mixin EditFormCardMixin {
         letterSpacing: -0.2,
       ),
       decoration: InputDecoration(
-        hintText: 'Masukkan judul rekomendasi...',
+        hintText: kRecEnterRecommendationTitle.tr,
         hintStyle: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w400,
@@ -303,7 +304,7 @@ mixin EditFormCardMixin {
       children: [
         Expanded(
           child: RecEditPriorityChip(
-            label: 'Tinggi',
+            label: kRecHigh.tr,
             value: 'high',
             current: current,
             color: ColorUtils.error600,
@@ -313,7 +314,7 @@ mixin EditFormCardMixin {
         const SizedBox(width: 6),
         Expanded(
           child: RecEditPriorityChip(
-            label: 'Sedang',
+            label: kRecMedium.tr,
             value: 'medium',
             current: current,
             color: ColorUtils.warning600,
@@ -323,7 +324,7 @@ mixin EditFormCardMixin {
         const SizedBox(width: 6),
         Expanded(
           child: RecEditPriorityChip(
-            label: 'Rendah',
+            label: kRecLow.tr,
             value: 'low',
             current: current,
             color: ColorUtils.slate500,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// A standardized pull-to-refresh wrapper used across all screens.
@@ -99,7 +100,7 @@ class AppRefreshIndicator extends StatelessWidget {
       if (showSuccessFeedback && context.mounted) {
         SnackBarUtils.showSuccess(
           context,
-          successMessage ?? 'Data berhasil diperbarui',
+          successMessage ?? kCorWidDataUpdatedSuccess.tr,
         );
       }
     } catch (e) {
@@ -107,7 +108,7 @@ class AppRefreshIndicator extends StatelessWidget {
       if (showErrorFeedback && context.mounted) {
         SnackBarUtils.showError(
           context,
-          errorMessage ?? 'Gagal memperbarui data',
+          errorMessage ?? kCorWidDataUpdateFailed.tr,
         );
       }
     }

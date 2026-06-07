@@ -44,7 +44,7 @@ mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Selamat Datang Kembali',
+          kAutWelcomeBack.tr,
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w900,
@@ -54,7 +54,7 @@ mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Masuk untuk melanjutkan ke akun sekolah Anda.',
+          kAutSignInSubtitle.tr,
           style: TextStyle(
             fontSize: 12,
             color: ColorUtils.slate500,
@@ -99,7 +99,7 @@ mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
         autofillHints: const [AutofillHints.email],
         style: TextStyle(fontSize: 13, color: ColorUtils.slate900),
         decoration: _inputDecoration(
-          hint: 'anda@sekolah.id',
+          hint: kAutEmailHint.tr,
           prefixIcon: Icons.alternate_email_rounded,
         ),
       ),
@@ -251,7 +251,7 @@ mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Text(
-            'atau lanjutkan dengan',
+            kAutOrContinueWith.tr,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
@@ -281,7 +281,7 @@ mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
         label: Text(
           authState.isLoading
               ? AppLocalizations.pleaseWait.tr
-              : 'Masuk dengan Google',
+              : kAutSignInGoogle.tr,
           style: TextStyle(
             color: enabled ? ColorUtils.slate800 : ColorUtils.slate400,
             fontSize: 13,
@@ -328,9 +328,9 @@ mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
                     color: ColorUtils.slate600,
                   ),
                   children: [
-                    const TextSpan(text: 'Butuh bantuan? '),
+                    TextSpan(text: kAutNeedHelp.tr),
                     TextSpan(
-                      text: 'Bantuan masuk',
+                      text: kAutSignInHelp.tr,
                       style: TextStyle(
                         color: ColorUtils.brandCobalt,
                         fontWeight: FontWeight.w800,
@@ -367,9 +367,9 @@ mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
                 color: ColorUtils.slate500,
               ),
               children: [
-                const TextSpan(text: 'Belum punya akun sekolah? '),
+                TextSpan(text: kAutNoAccount.tr),
                 TextSpan(
-                  text: 'Hubungi admin',
+                  text: kAutContactAdmin.tr,
                   style: TextStyle(
                     color: ColorUtils.brandCobalt,
                     fontWeight: FontWeight.w800,
@@ -395,14 +395,14 @@ mixin LoginFormBuilderMixin on ConsumerState<LoginScreen> {
       if (!ok && mounted) {
         SnackBarUtils.showError(
           context,
-          'Tidak dapat membuka WhatsApp. Hubungi admin di +62 851-7981-9002.',
+          kAutWhatsAppError.tr,
         );
       }
     } catch (_) {
       if (!mounted) return;
       SnackBarUtils.showError(
         context,
-        'Tidak dapat membuka WhatsApp. Hubungi admin di +62 851-7981-9002.',
+        kAutWhatsAppError.tr,
       );
     }
   }
@@ -565,7 +565,7 @@ class _PasswordTextFieldWidgetState extends State<_PasswordTextFieldWidget> {
       onSubmitted: widget.isLoading ? null : (_) => widget.onSubmitted?.call(),
       style: TextStyle(fontSize: 13, color: ColorUtils.slate900),
       decoration: LoginFormBuilderMixin._inputDecoration(
-        hint: 'Masukkan kata sandi',
+        hint: kAutPasswordHint.tr,
         prefixIcon: Icons.lock_outline_rounded,
         suffix: IconButton(
           padding: EdgeInsets.zero,

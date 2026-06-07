@@ -32,6 +32,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/schedule/domain/models/schedule_kpi_summary.dart';
@@ -66,8 +67,8 @@ Future<bool?> showSlotClusterSheet({
       onMoveSession: onMoveSession,
     ),
     footer: BottomSheetFooter(
-      primaryLabel: '+ Tambah di slot ini',
-      secondaryLabel: 'Tutup',
+      primaryLabel: kSchAddToSlot.tr,
+      secondaryLabel: kClose.tr,
       primaryColor: ColorUtils.brandCobalt,
       onPrimary: () {
         AppNavigator.pop(context, true);
@@ -110,11 +111,11 @@ class _SlotClusterContentState extends State<_SlotClusterContent> {
   final TextEditingController _query = TextEditingController();
 
   /// Active filter — either a subject name or one of the special
-  /// constants `_kAll` / `_kConflict`. Backed by a String so the
+  /// constants `kAll` / `_kConflict`. Backed by a String so the
   /// FilterChipGrid-style equality just works.
-  String _activeFilter = _kAll;
+  String _activeFilter = kAll;
 
-  static const _kAll = '__all__';
+  static const kAll = '__all__';
   static const _kConflict = '__conflict__';
 
   @override
@@ -145,7 +146,7 @@ class _SlotClusterContentState extends State<_SlotClusterContent> {
           // Subject / conflict filter.
           if (_activeFilter == _kConflict && !s.hasScheduleConflict) {
             return false;
-          } else if (_activeFilter != _kAll && _activeFilter != _kConflict) {
+          } else if (_activeFilter != kAll && _activeFilter != _kConflict) {
             final subj = (s['subject_name'] ?? s['mata_pelajaran_nama'] ?? '')
                 .toString();
             if (subj != _activeFilter) return false;
@@ -185,7 +186,7 @@ class _SlotClusterContentState extends State<_SlotClusterContent> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search_rounded, size: 18),
-                hintText: 'Cari mapel / kelas / guru...',
+                hintText: kSchSearchPlaceholder.tr,
                 hintStyle: TextStyle(fontSize: 13, color: ColorUtils.slate400),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
@@ -218,13 +219,13 @@ class _SlotClusterContentState extends State<_SlotClusterContent> {
               children: [
                 _FilterTab(
                   label: 'Semua · ${widget.sessions.length}',
-                  active: _activeFilter == _kAll,
-                  onTap: () => setState(() => _activeFilter = _kAll),
+                  active: _activeFilter == kAll,
+                  onTap: () => setState(() => _activeFilter = kAll),
                 ),
                 if (conflictCount > 0) ...[
                   const SizedBox(width: 6),
                   _FilterTab(
-                    label: 'Bentrok · $conflictCount',
+                    label: '${kSchConflicts.tr} · $conflictCount',
                     active: _activeFilter == _kConflict,
                     destructive: true,
                     onTap: () => setState(() => _activeFilter = _kConflict),

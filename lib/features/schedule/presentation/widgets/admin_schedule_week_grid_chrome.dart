@@ -251,7 +251,7 @@ class _FocusedDayHeaderStrip extends StatelessWidget {
           const SizedBox(width: 4),
           // Zoom-out: returns to the full 6-day week view.
           Tooltip(
-            message: 'Lihat semua hari',
+            message: kSchViewAllDays.tr,
             child: GestureDetector(
               onTap: onZoomOut,
               behavior: HitTestBehavior.opaque,

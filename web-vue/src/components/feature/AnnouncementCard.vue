@@ -20,9 +20,12 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { formatRelative, formatDateLong } from '@/lib/format';
 import type { Announcement } from '@/types/announcements';
 import NavIcon from '@/components/feature/NavIcon.vue';
+
+const { t } = useI18n();
 
 const props = withDefaults(
   defineProps<{
@@ -41,22 +44,25 @@ defineEmits<{
 }>();
 
 // Category colour map — same palette across all three role views.
+// The `label` is a translation KEY now so the badge text re-renders when
+// the locale switches.
 const CATEGORY_PALETTE: Record<
   string,
-  { bg: string; text: string; label: string }
+  { bg: string; text: string; labelKey: string }
 > = {
-  penting: { bg: 'bg-red-50', text: 'text-red-700', label: 'Penting' },
-  pengumuman: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Umum' },
-  umum: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Umum' },
-  acara: { bg: 'bg-violet-50', text: 'text-violet-700', label: 'Acara' },
-  libur: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Libur' },
+  penting: { bg: 'bg-red-50', text: 'text-red-700', labelKey: 'announcement.categoryImportant' },
+  pengumuman: { bg: 'bg-slate-100', text: 'text-slate-600', labelKey: 'announcement.categoryGeneral' },
+  umum: { bg: 'bg-slate-100', text: 'text-slate-600', labelKey: 'announcement.categoryGeneral' },
+  acara: { bg: 'bg-violet-50', text: 'text-violet-700', labelKey: 'announcement.categoryEvent' },
+  libur: { bg: 'bg-amber-50', text: 'text-amber-700', labelKey: 'announcement.categoryHoliday' },
 };
 
-const categoryStyle = computed(
-  () =>
+const categoryStyle = computed(() => {
+  const entry =
     CATEGORY_PALETTE[props.announcement.category] ??
-    CATEGORY_PALETTE.pengumuman,
-);
+    CATEGORY_PALETTE.pengumuman;
+  return { ...entry, label: t(entry.labelKey) };
+});
 
 const isUnread = computed(() => props.announcement.is_read === false);
 
@@ -68,10 +74,10 @@ const showUnreadTint = computed(
 const audienceLabel = computed(() => {
   const a = props.announcement;
   if (a.audience_label) return a.audience_label;
-  if (a.audience === 'all') return 'Semua wali';
-  if (a.audience === 'role') return 'Per peran';
-  if (a.audience === 'class') return 'Per kelas';
-  if (a.audience === 'student') return 'Per siswa';
+  if (a.audience === 'all') return t('announcement.audienceAll');
+  if (a.audience === 'role') return t('announcement.audienceRole');
+  if (a.audience === 'class') return t('announcement.audienceClass');
+  if (a.audience === 'student') return t('announcement.audienceStudent');
   return null;
 });
 

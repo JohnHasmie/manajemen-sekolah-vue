@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 
 class SubjectMetaCard extends StatelessWidget {
@@ -59,7 +60,7 @@ class SubjectMetaCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      subject.name.isEmpty ? 'Mata Pelajaran' : subject.name,
+                      subject.name.isEmpty ? kSubject.tr : subject.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -110,7 +111,7 @@ class SubjectMetaCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Tahun ajaran lampau · hanya baca',
+                    kSubPastAcademicYear.tr,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -138,7 +139,7 @@ class SubjectMetaCard extends StatelessWidget {
                       Icon(Icons.edit_rounded, color: accent, size: 16),
                       const SizedBox(width: 6),
                       Text(
-                        'Edit Mata Pelajaran',
+                        kSubEditSubject.tr,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -161,9 +162,11 @@ class SubjectMetaCard extends StatelessWidget {
   String _subtitle() {
     final parts = <String>[];
     final code = (subject.code ?? '').trim();
-    if (code.isNotEmpty) parts.add('Kode $code');
+    if (code.isNotEmpty) parts.add('${kSubCodeLabel.tr}$code');
     parts.add(
-      totalClasses == 0 ? 'Belum ada kelas' : '$totalClasses kelas tersedia',
+      totalClasses == 0
+          ? kSubNoClasses.tr
+          : '$totalClasses${kSubClassesAvailable.tr}',
     );
     return parts.join(' · ');
   }
@@ -212,7 +215,7 @@ class _StatusPill extends StatelessWidget {
           ),
           const SizedBox(width: 5),
           Text(
-            active ? 'Aktif' : 'Nonaktif',
+            active ? kSubActive.tr : kSubInactive.tr,
             style: TextStyle(
               fontSize: 10.5,
               fontWeight: FontWeight.w700,

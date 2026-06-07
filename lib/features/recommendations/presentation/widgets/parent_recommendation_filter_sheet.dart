@@ -17,6 +17,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 
@@ -90,7 +91,7 @@ Future<ParentRecFilter?> showParentRecommendationFilterSheet({
 }) {
   return showFilterSheet<ParentRecFilter>(
     context: context,
-    title: 'Filter Rekomendasi',
+    title: kRecFilterRecommendations.tr,
     primaryColor: ColorUtils.brandAzure,
     onApply: () {}, // wired inside the body so it can read current state
     onReset: () {}, // ditto
@@ -158,27 +159,27 @@ class _ParentRecFilterBodyState extends State<_ParentRecFilterBody> {
       mainAxisSize: MainAxisSize.min,
       children: [
         FilterChipGrid<ParentRecStatus>(
-          title: 'Status',
+          title: kRecStatus.tr,
           selectedColor: azure,
           selectedValue: _status,
-          options: const [
-            FilterOption(value: ParentRecStatus.all, label: 'Semua'),
-            FilterOption(value: ParentRecStatus.unread, label: 'Belum Dibaca'),
-            FilterOption(value: ParentRecStatus.active, label: 'Aktif'),
-            FilterOption(value: ParentRecStatus.completed, label: 'Selesai'),
+          options: [
+            FilterOption(value: ParentRecStatus.all, label: kRecAll.tr),
+            FilterOption(value: ParentRecStatus.unread, label: kRecUnread.tr),
+            FilterOption(value: ParentRecStatus.active, label: kRecActive.tr),
+            FilterOption(value: ParentRecStatus.completed, label: kRecCompleted.tr),
           ],
           onSelected: (v) => setState(() => _status = v ?? ParentRecStatus.all),
         ),
         const SizedBox(height: 16),
         FilterChipGrid<ParentRecPriority>(
-          title: 'Prioritas',
+          title: kRecPriority.tr,
           selectedColor: azure,
           selectedValue: _priority,
-          options: const [
-            FilterOption(value: ParentRecPriority.all, label: 'Semua'),
-            FilterOption(value: ParentRecPriority.high, label: 'Tinggi'),
-            FilterOption(value: ParentRecPriority.medium, label: 'Sedang'),
-            FilterOption(value: ParentRecPriority.low, label: 'Rendah'),
+          options: [
+            FilterOption(value: ParentRecPriority.all, label: kRecAll.tr),
+            FilterOption(value: ParentRecPriority.high, label: kRecHigh.tr),
+            FilterOption(value: ParentRecPriority.medium, label: kRecMedium.tr),
+            FilterOption(value: ParentRecPriority.low, label: kRecLow.tr),
           ],
           onSelected: (v) =>
               setState(() => _priority = v ?? ParentRecPriority.all),
@@ -186,7 +187,7 @@ class _ParentRecFilterBodyState extends State<_ParentRecFilterBody> {
         if (widget.availableSubjects.isNotEmpty) ...[
           const SizedBox(height: 16),
           FilterChipGrid<String>(
-            title: 'Mata Pelajaran',
+            title: kRecSubject.tr,
             selectedColor: azure,
             multiSelect: true,
             selectedValues: _subjects,

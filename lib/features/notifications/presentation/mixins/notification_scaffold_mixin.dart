@@ -5,6 +5,8 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/notifications/domain/models/notification_item.dart';
 import 'package:manajemensekolah/features/notifications/presentation/mixins/notification_widget_builder_mixin.dart';
 
+const _kNotErrorPrefix = {'en': 'Error', 'id': 'Kesalahan'};
+
 /// Mixin for scaffold/layout and async value handling.
 mixin NotificationScaffoldMixin on NotificationWidgetBuilderMixin {
   WidgetRef get ref;
@@ -44,7 +46,7 @@ mixin NotificationScaffoldMixin on NotificationWidgetBuilderMixin {
             : _buildNotificationList(notifications),
       ),
       loading: () => const SkeletonListLoading(itemCount: 8, infoTagCount: 1),
-      error: (e, _) => Center(child: Text('Kesalahan: $e')),
+      error: (e, _) => Center(child: Text('${_kNotErrorPrefix.tr}: $e')),
     );
   }
 

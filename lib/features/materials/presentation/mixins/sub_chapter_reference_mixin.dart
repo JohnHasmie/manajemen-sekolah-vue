@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/cache_key_builder.dart';
@@ -54,7 +55,7 @@ mixin SubChapterReferenceMixin on ConsumerState<SubBabDetailPage> {
         await _reloadMaterialFromApi(materialId);
         if (mounted) {
           setState(() => isRegeneratingRef = false);
-          SnackBarUtils.showSuccess(context, 'Referensi berhasil diperbarui');
+          SnackBarUtils.showSuccess(context, kMatReferencesUpdatedSuccessfully.tr);
         }
         return;
       }

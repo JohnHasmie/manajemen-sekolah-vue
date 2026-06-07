@@ -13,6 +13,7 @@ import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
@@ -33,8 +34,8 @@ class TeacherGradesHub extends ConsumerWidget {
       body: Column(
         children: [
           ShellTabHeader(
-            title: 'Nilai & Absensi',
-            subtitle: 'Rekap nilai, input, raport, dan presensi siswa',
+            title: kCorSheTeacherGradesAttendance.tr,
+            subtitle: kCorSheTeacherGradesSubtitle.tr,
             accentColor: accent,
           ),
           // Shared `DashboardListTile` — same card design as parent
@@ -46,8 +47,8 @@ class TeacherGradesHub extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Rekap Nilai',
-                    subtitle: 'Ringkasan nilai per kelas & mapel',
+                    title: kCorSheAdminGradeSummary.tr,
+                    subtitle: kCorSheAdminGradeSummarySubtitle.tr,
                     icon: DashboardModules.rekapNilai.icon,
                     color: DashboardModules.rekapNilai.color,
                     onTap: () => _openGradeRecap(context, ref),
@@ -56,8 +57,8 @@ class TeacherGradesHub extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Input Nilai',
-                    subtitle: 'Buku nilai per penilaian',
+                    title: kCorSheTeacherGradeInput.tr,
+                    subtitle: kCorSheTeacherGradeBookSubtitle.tr,
                     icon: DashboardModules.bukuNilai.icon,
                     color: DashboardModules.bukuNilai.color,
                     onTap: () => _openGradeInput(context, ref),
@@ -66,8 +67,8 @@ class TeacherGradesHub extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Absensi Siswa',
-                    subtitle: 'Catat kehadiran per sesi',
+                    title: kStudentAttendance.tr,
+                    subtitle: kCorSheTeacherAttendanceSubtitle.tr,
                     icon: DashboardModules.kehadiran.icon,
                     color: DashboardModules.kehadiran.color,
                     onTap: () => _openAttendance(context, ref),
@@ -76,8 +77,8 @@ class TeacherGradesHub extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Raport',
-                    subtitle: 'Isi & terbitkan raport siswa',
+                    title: kCorSheReportCards.tr,
+                    subtitle: kCorSheTeacherReportCardsSubtitle.tr,
                     icon: DashboardModules.raport.icon,
                     color: DashboardModules.raport.color,
                     onTap: () => _openReportCard(context, ref),
@@ -95,7 +96,7 @@ class TeacherGradesHub extends ConsumerWidget {
   void _openGradeRecap(BuildContext context, WidgetRef ref) {
     final teacherData = _resolveTeacherData(ref);
     if (teacherData == null) {
-      SnackBarUtils.showInfo(context, 'ID guru tidak ditemukan.');
+      SnackBarUtils.showInfo(context, kCorSheTeacherIdNotFound.tr);
       return;
     }
     AppNavigator.push(context, GradeRecapOverviewPage(teacher: teacherData));
@@ -104,7 +105,7 @@ class TeacherGradesHub extends ConsumerWidget {
   void _openGradeInput(BuildContext context, WidgetRef ref) {
     final teacherData = _resolveTeacherData(ref);
     if (teacherData == null) {
-      SnackBarUtils.showInfo(context, 'ID guru tidak ditemukan.');
+      SnackBarUtils.showInfo(context, kCorSheTeacherIdNotFound.tr);
       return;
     }
     AppNavigator.push(context, GradePage(teacher: teacherData));
@@ -113,7 +114,7 @@ class TeacherGradesHub extends ConsumerWidget {
   void _openAttendance(BuildContext context, WidgetRef ref) {
     final teacherData = _resolveTeacherData(ref);
     if (teacherData == null) {
-      SnackBarUtils.showInfo(context, 'ID guru tidak ditemukan.');
+      SnackBarUtils.showInfo(context, kCorSheTeacherIdNotFound.tr);
       return;
     }
     AppNavigator.push(context, AttendancePage(teacher: teacherData));
@@ -122,7 +123,7 @@ class TeacherGradesHub extends ConsumerWidget {
   void _openReportCard(BuildContext context, WidgetRef ref) {
     final teacherData = _resolveTeacherData(ref);
     if (teacherData == null) {
-      SnackBarUtils.showInfo(context, 'ID guru tidak ditemukan.');
+      SnackBarUtils.showInfo(context, kCorSheTeacherIdNotFound.tr);
       return;
     }
     AppNavigator.push(context, ReportCardOverviewPage(teacher: teacherData));

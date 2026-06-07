@@ -18,6 +18,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import { ScheduleService } from '@/services/schedule.service';
@@ -43,6 +44,7 @@ import { useQuickAction } from '@/composables/useQuickAction';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const { fromQuickAction } = useQuickAction();
+const { t } = useI18n();
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -68,8 +70,8 @@ const roleOptions = computed<RoleOption[]>(() => {
   const out: RoleOption[] = [
     {
       id: 'mengajar',
-      shortName: 'Mengajar',
-      subLabel: 'Jadwal mengajar',
+      shortName: t('teacher.schedule.teaching'),
+      subLabel: t('teacher.schedule.teachingSchedule'),
       avatarInitials: 'M',
     },
   ];
@@ -78,7 +80,7 @@ const roleOptions = computed<RoleOption[]>(() => {
     out.push({
       id: `wali:${hc.id}`,
       shortName: `Wali ${name}`,
-      subLabel: 'Kelas perwalian',
+      subLabel: t('teacher.schedule.homeroomClass'),
       avatarInitials:
         name.length === 0
           ? 'W'
@@ -230,36 +232,36 @@ const uniqueSubjects = computed(
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'calendar',
-    label: 'Sesi/Pekan',
+    label: t('teacher.schedule.sessionsWeek'),
     value: totalSessions.value,
     tone: 'brand',
   },
   {
     icon: 'check-circle',
-    label: 'Hari Ini',
+    label: t('common.today'),
     value: sessionsToday.value,
-    suffix: 'sesi',
+    suffix: t('common.sessions'),
     tone: 'brand',
     accented: true,
   },
   {
     icon: 'book',
-    label: 'Mapel',
+    label: t('teacher.schedule.subjects'),
     value: uniqueSubjects.value,
     tone: 'violet',
   },
   {
     icon: 'layers',
-    label: 'Kelas',
+    label: t('common.classes'),
     value: uniqueClasses.value,
     tone: 'green',
   },
 ]);
 
 // ── Live + next status ────────────────────────────────────────
-function parseTime(t?: string | null): number {
-  if (!t) return 0;
-  const [hh, mm] = t.split(':');
+function parseTime(time?: string | null): number {
+  if (!time) return 0;
+  const [hh, mm] = time.split(':');
   return (Number(hh) || 0) * 60 + (Number(mm) || 0);
 }
 
@@ -351,9 +353,9 @@ const todayDoneCount = computed(() => {
 });
 
 const todayProgressPct = computed(() => {
-  const t = todaySessions.value.length;
-  if (t === 0) return 0;
-  return Math.min(100, Math.round((todayDoneCount.value / t) * 100));
+  const total = todaySessions.value.length;
+  if (total === 0) return 0;
+  return Math.min(100, Math.round((todayDoneCount.value / total) * 100));
 });
 
 // ── Async state for AsyncView ──────────────────────────────────
@@ -475,12 +477,12 @@ function periodeLabel(s: ScheduleSession): string {
 function formatDay(d?: string | null): string {
   if (!d) return '';
   const raw = d.toLowerCase();
-  if (raw.startsWith('mon') || raw.startsWith('sen')) return 'Senin';
-  if (raw.startsWith('tue') || raw.startsWith('sel')) return 'Selasa';
-  if (raw.startsWith('wed') || raw.startsWith('rab')) return 'Rabu';
-  if (raw.startsWith('thu') || raw.startsWith('kam')) return 'Kamis';
-  if (raw.startsWith('fri') || raw.startsWith('jum')) return 'Jumat';
-  if (raw.startsWith('sat') || raw.startsWith('sab')) return 'Sabtu';
+  if (raw.startsWith('mon') || raw.startsWith('sen')) return t('common.monday');
+  if (raw.startsWith('tue') || raw.startsWith('sel')) return t('common.tuesday');
+  if (raw.startsWith('wed') || raw.startsWith('rab')) return t('common.wednesday');
+  if (raw.startsWith('thu') || raw.startsWith('kam')) return t('common.thursday');
+  if (raw.startsWith('fri') || raw.startsWith('jum')) return t('common.friday');
+  if (raw.startsWith('sat') || raw.startsWith('sab')) return t('common.saturday');
   return d;
 }
 
@@ -559,13 +561,13 @@ function openLiveSession() {
 
 // ── Picker option labels ───────────────────────────────────────
 const hariOptions = computed<{ key: 'all' | DayKey; label: string }[]>(() => [
-  { key: 'all', label: 'Semua hari' },
-  { key: 'mon', label: 'Senin' },
-  { key: 'tue', label: 'Selasa' },
-  { key: 'wed', label: 'Rabu' },
-  { key: 'thu', label: 'Kamis' },
-  { key: 'fri', label: 'Jumat' },
-  { key: 'sat', label: 'Sabtu' },
+  { key: 'all', label: t('teacher.schedule.allDays') },
+  { key: 'mon', label: t('common.monday') },
+  { key: 'tue', label: t('common.tuesday') },
+  { key: 'wed', label: t('common.wednesday') },
+  { key: 'thu', label: t('common.thursday') },
+  { key: 'fri', label: t('common.friday') },
+  { key: 'sat', label: t('common.saturday') },
 ]);
 
 const activeHari = computed(
@@ -600,7 +602,7 @@ onMounted(() => {
     <BrandPageHeader
       role="guru"
       :kicker="isWaliMode ? `Wali Kelas · ${activeHomeroom?.name ?? ''}` : 'Jadwal Mengajar · Realtime'"
-      :title="isWaliMode ? `Pekan Ini · ${activeHomeroom?.name ?? ''}` : 'Pekan Ini'"
+      :title="isWaliMode ? `${t('teacher.schedule.thisWeek')} · ${activeHomeroom?.name ?? ''}` : t('teacher.schedule.thisWeek')"
       :meta="`${totalSessions} sesi · ${uniqueClasses} kelas · ${sessionsToday} sesi hari ini`"
       :live-dot="!isWaliMode"
     >
@@ -612,7 +614,7 @@ onMounted(() => {
           :class="view === 'kartu' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/90 hover:text-white'"
           @click="view = 'kartu'"
         >
-          <NavIcon name="layers" :size="13" />Kartu
+          <NavIcon name="layers" :size="13" />{{ t('teacher.schedule.cards') }}
         </button>
         <button
           type="button"
@@ -620,7 +622,7 @@ onMounted(() => {
           :class="view === 'matrix' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/90 hover:text-white'"
           @click="view = 'matrix'"
         >
-          <NavIcon name="layers" :size="13" />Matrix
+          <NavIcon name="layers" :size="13" />{{ t('teacher.schedule.matrix') }}
         </button>
       </div>
 
@@ -643,12 +645,12 @@ onMounted(() => {
          this row only carries day + class + semester + search. -->
     <PageFilterToolbar
       :search="searchQuery"
-      search-placeholder="Cari mapel atau kelas..."
+      :search-placeholder="t('teacher.schedule.searchPlaceholder')"
       @update:search="(v) => (searchQuery = v)"
     >
       <template #chips>
         <AppFilterChip
-          label="Hari"
+          :label="t('common.day')"
           :value="activeHari.label"
           icon-name="calendar"
           tone="amber"
@@ -656,8 +658,8 @@ onMounted(() => {
         />
         <AppFilterChip
           v-if="!isWaliMode"
-          label="Kelas"
-          :value="activeClass?.name ?? 'Semua kelas'"
+          :label="t('common.class')"
+          :value="activeClass?.name ?? t('teacher.schedule.allClasses')"
           icon-name="layers"
           tone="violet"
           @click="showKelasPicker = true"
@@ -677,23 +679,23 @@ onMounted(() => {
       </div>
       <div class="flex-1 min-w-0">
         <p class="text-[10px] font-bold tracking-widest text-white/80 uppercase">
-          Hari Ini · {{ todayLong }}
+          {{ t('common.today') }} · {{ todayLong }}
         </p>
         <p class="text-base sm:text-lg font-black mt-1 leading-tight">
-          {{ todaySessions.length }} sesi
-          <span v-if="liveSession">· 1 sedang berlangsung</span>
-          <span v-else-if="nextSession">· {{ todayDoneCount }} selesai</span>
-          <span v-else>· hari sudah selesai</span>
+          {{ todaySessions.length }} {{ t('common.sessions') }}
+          <span v-if="liveSession">· 1 {{ t('common.inProgress') }}</span>
+          <span v-else-if="nextSession">· {{ todayDoneCount }} {{ t('common.completed') }}</span>
+          <span v-else>· {{ t('teacher.schedule.dayCompleted') }}</span>
         </p>
         <div class="text-[12px] text-white/85 mt-1 flex items-center gap-1.5 flex-wrap">
-          <span>Selesai</span>
+          <span>{{ t('common.completed') }}</span>
           <span class="bg-white/18 px-2 py-0.5 rounded-full text-white font-bold">
             {{ todayDoneCount }} / {{ todaySessions.length }}
           </span>
           <template v-if="nextSession">
-            · selanjutnya
+            · {{ t('common.next') }}
             <span class="text-white font-bold">{{ nextSession.subject_name }} {{ nextSession.class_name }}</span>
-            di
+            {{ t('common.at') }}
             <span class="text-white font-bold">{{ nextSession.start_time }}</span>
           </template>
         </div>
@@ -711,7 +713,7 @@ onMounted(() => {
         @click="openLiveSession"
       >
         <NavIcon name="check-square" :size="13" />
-        Buka sesi aktif
+        {{ t('teacher.schedule.openActiveSession') }}
       </button>
     </section>
 
@@ -725,10 +727,10 @@ onMounted(() => {
       </div>
       <div class="flex-1 min-w-0">
         <p class="text-[12.5px] font-bold text-slate-700">
-          Tidak ada sesi mengajar hari ini · {{ todayLong }}
+          {{ t('teacher.schedule.noTeachingSessions') }} · {{ todayLong }}
         </p>
         <p class="text-[11.5px] text-slate-500 mt-0.5">
-          Sesi berikutnya:
+          {{ t('teacher.schedule.nextSession') }}
           <span class="font-bold text-brand-cobalt">
             {{ DAY_LABELS[nextTeachingDay.day] }} {{ nextTeachingDay.firstSession.start_time }}
           </span>
@@ -740,8 +742,8 @@ onMounted(() => {
     <!-- ── 5/6. Body ────────────────────────────────────────── -->
     <AsyncView
       :state="state"
-      empty-title="Belum ada jadwal"
-      empty-description="Jadwal mengajar untuk filter aktif belum ada."
+      :empty-title="t('teacher.schedule.noScheduleYet')"
+      :empty-description="t('teacher.schedule.noScheduleForFilter')"
       @retry="reload"
     >
       <template #default>
@@ -772,7 +774,7 @@ onMounted(() => {
                 class="text-[10px] font-bold px-1.5 py-0.5 rounded"
                 :style="{ background: `${dayColor(d)}22`, color: dayColor(d) }"
               >
-                Hari ini
+                {{ t('common.today') }}
               </span>
               <div
                 class="flex-1 h-px"
@@ -782,7 +784,7 @@ onMounted(() => {
                 class="text-[10px] font-bold px-2 py-0.5 rounded-full"
                 :style="{ background: `${dayColor(d)}1a`, color: dayColor(d) }"
               >
-                {{ grouped[d]?.length ?? 0 }} sesi
+                {{ grouped[d]?.length ?? 0 }} {{ t('common.sessions') }}
               </span>
             </div>
 
@@ -811,7 +813,7 @@ onMounted(() => {
                 >
                   <div class="text-center leading-none">
                     <div class="text-[15px] font-black">{{ s.hour_index ?? '–' }}</div>
-                    <div class="text-[7px] font-bold tracking-widest opacity-90 mt-0.5">JP</div>
+                    <div class="text-[7px] font-bold tracking-widest opacity-90 mt-0.5">{{ t('teacher.schedule.hour') }}</div>
                   </div>
                 </div>
                 <div class="flex-1 min-w-0">
@@ -840,19 +842,19 @@ onMounted(() => {
                   class="inline-flex items-center gap-1 bg-red-500 text-white px-2 py-0.5 rounded-full text-[9.5px] font-bold tracking-wider flex-shrink-0"
                 >
                   <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                  SEDANG
+                  {{ t('common.live') }}
                 </span>
                 <span
                   v-else-if="nextSession?.id === s.id"
                   class="bg-brand-cobalt text-white px-2 py-0.5 rounded-full text-[9.5px] font-bold tracking-wider flex-shrink-0"
                 >
-                  SELANJUTNYA
+                  {{ t('common.nextBadge') }}
                 </span>
                 <span
                   v-else-if="liveStatusFor(s).isEnded"
                   class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-[9.5px] font-bold tracking-wider flex-shrink-0"
                 >
-                  SELESAI
+                  {{ t('common.completedBadge') }}
                 </span>
               </div>
 
@@ -871,7 +873,7 @@ onMounted(() => {
                   "
                   @click.stop="gotoAttendance(s)"
                 >
-                  <NavIcon name="check-square" :size="12" />Presensi
+                  <NavIcon name="check-square" :size="12" />{{ t('common.attendance') }}
                 </button>
                 <button
                   type="button"
@@ -883,14 +885,14 @@ onMounted(() => {
                   "
                   @click.stop="gotoActivity(s)"
                 >
-                  <NavIcon name="activity" :size="12" />Kegiatan
+                  <NavIcon name="activity" :size="12" />{{ t('common.activity') }}
                 </button>
                 <button
                   type="button"
                   class="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-bold transition-colors border border-slate-200 bg-white text-slate-600 hover:border-brand-cobalt"
                   @click.stop="gotoMaterial(s)"
                 >
-                  <NavIcon name="book" :size="12" />Materi
+                  <NavIcon name="book" :size="12" />{{ t('common.materials') }}
                 </button>
               </div>
             </button>
@@ -909,7 +911,7 @@ onMounted(() => {
             >
               <!-- Header row -->
               <div class="bg-slate-50 py-3 grid place-items-center">
-                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">JP</span>
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ t('teacher.schedule.hour') }}</span>
               </div>
               <div
                 v-for="d in DAY_ORDER"
@@ -927,10 +929,10 @@ onMounted(() => {
                   class="text-[10px] font-bold mt-0.5"
                   :style="{ color: dayColor(d) }"
                 >
-                  Hari ini
+                  {{ t('common.today') }}
                 </p>
                 <p v-else class="text-[10px] text-slate-400 mt-0.5">
-                  {{ grouped[d]?.length ?? 0 }} sesi
+                  {{ grouped[d]?.length ?? 0 }} {{ t('common.sessions') }}
                 </p>
               </div>
 
@@ -963,12 +965,12 @@ onMounted(() => {
                       v-if="liveStatusFor(findCell(d, slot.start)!).isLive"
                       class="inline-flex items-center gap-1 bg-red-500 text-white px-1.5 py-0.5 rounded text-[8.5px] font-bold tracking-wider mb-1"
                     >
-                      <span class="w-1 h-1 rounded-full bg-white animate-pulse"></span>SEDANG
+                      <span class="w-1 h-1 rounded-full bg-white animate-pulse"></span>{{ t('common.live') }}
                     </span>
                     <span
                       v-else-if="nextSession?.id === findCell(d, slot.start)?.id"
                       class="inline-block bg-brand-cobalt text-white px-1.5 py-0.5 rounded text-[8.5px] font-bold tracking-wider mb-1"
-                    >NEXT</span>
+                    >{{ t('common.nextBadge') }}</span>
                     <p class="text-[11px] font-bold text-slate-900 leading-tight truncate">
                       {{ findCell(d, slot.start)!.subject_name }}
                     </p>
@@ -993,18 +995,18 @@ onMounted(() => {
             <div class="flex items-center gap-4 px-2 pt-3 text-[11px] text-slate-500 flex-wrap">
               <span class="inline-flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-sm bg-red-50 border-[1.5px] border-red-500"></span>
-                Sedang berlangsung
+                {{ t('common.inProgress') }}
               </span>
               <span class="inline-flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-sm bg-brand-cobalt/5 border border-dashed border-brand-cobalt"></span>
-                Selanjutnya
+                {{ t('common.next') }}
               </span>
               <span class="inline-flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-sm" style="background: rgba(79,70,229,0.04);"></span>
-                Kolom hari ini
+                {{ t('teacher.schedule.todayColumn') }}
               </span>
               <span class="flex-1"></span>
-              <span class="text-slate-400">Klik sel untuk detail sesi</span>
+              <span class="text-slate-400">{{ t('teacher.schedule.clickForDetails') }}</span>
             </div>
           </div>
         </section>
@@ -1012,7 +1014,7 @@ onMounted(() => {
     </AsyncView>
 
     <!-- ── Hari picker ──────────────────────────────────────── -->
-    <Modal v-if="showHariPicker" title="Pilih Hari" @close="showHariPicker = false">
+    <Modal v-if="showHariPicker" :title="t('teacher.schedule.selectDay')" @close="showHariPicker = false">
       <ul class="space-y-1 max-h-[360px] overflow-y-auto">
         <li v-for="h in hariOptions" :key="h.key">
           <button
@@ -1022,14 +1024,14 @@ onMounted(() => {
             @click="pickHari(h.key)"
           >
             <span>{{ h.label }}</span>
-            <span v-if="h.key === dayFilter" class="text-[10px] font-bold uppercase tracking-wider">Aktif</span>
+            <span v-if="h.key === dayFilter" class="text-[10px] font-bold uppercase tracking-wider">{{ t('common.active') }}</span>
           </button>
         </li>
       </ul>
     </Modal>
 
     <!-- ── Kelas picker ─────────────────────────────────────── -->
-    <Modal v-if="showKelasPicker" title="Pilih Kelas" @close="showKelasPicker = false">
+    <Modal v-if="showKelasPicker" :title="t('teacher.schedule.selectClass')" @close="showKelasPicker = false">
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
         <li>
           <button
@@ -1038,7 +1040,7 @@ onMounted(() => {
             :class="{ 'bg-brand-cobalt/5 text-brand-cobalt font-bold': classFilter === '' }"
             @click="pickKelas('')"
           >
-            Semua kelas
+            {{ t('teacher.schedule.allClasses') }}
           </button>
         </li>
         <li v-for="c in classes" :key="c.id">
@@ -1049,7 +1051,7 @@ onMounted(() => {
             @click="pickKelas(c.id)"
           >
             <span>{{ c.name }}</span>
-            <span v-if="c.student_count" class="text-[10px] text-slate-400">{{ c.student_count }} siswa</span>
+            <span v-if="c.student_count" class="text-[10px] text-slate-400">{{ c.student_count }} {{ t('common.students') }}</span>
           </button>
         </li>
       </ul>
@@ -1072,11 +1074,11 @@ onMounted(() => {
               style="background: linear-gradient(135deg, #0F2A45 0%, #1B6FB8 100%);"
             >
               <p class="text-[20px] font-black leading-none">{{ detail.hour_index ?? '-' }}</p>
-              <p class="text-[8px] font-bold tracking-widest mt-0.5 opacity-90">JP</p>
+              <p class="text-[8px] font-bold tracking-widest mt-0.5 opacity-90">{{ t('teacher.schedule.hour') }}</p>
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-[10px] font-bold text-brand-cobalt uppercase tracking-widest mb-0.5">
-                Detail Sesi · {{ formatDay(detail.day_name ?? detail.day) }}
+                {{ t('teacher.schedule.sessionDetails') }} · {{ formatDay(detail.day_name ?? detail.day) }}
               </p>
               <h2 class="text-base font-black text-slate-900 leading-tight">
                 {{ detail.subject_name }}
@@ -1122,80 +1124,80 @@ onMounted(() => {
             </template>
 
             <section>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Aksi Cepat</p>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ t('teacher.schedule.quickActions') }}</p>
               <div class="grid grid-cols-2 gap-2">
                 <button type="button" class="text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm transition-all" @click="gotoAttendance()">
                   <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 grid place-items-center mb-2">
                     <NavIcon name="check-square" :size="16" />
                   </div>
-                  <p class="text-[13px] font-black text-slate-900 leading-tight">Ambil Presensi</p>
+                  <p class="text-[13px] font-black text-slate-900 leading-tight">{{ t('teacher.schedule.takeAttendance') }}</p>
                   <p class="text-[10.5px] font-medium text-slate-500 mt-0.5 leading-snug">{{ attLabel(detail) }}</p>
                 </button>
                 <button type="button" class="text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-amber-300 hover:shadow-sm transition-all" @click="gotoActivity()">
                   <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 grid place-items-center mb-2">
                     <NavIcon name="activity" :size="16" />
                   </div>
-                  <p class="text-[13px] font-black text-slate-900 leading-tight">Kegiatan Kelas</p>
+                  <p class="text-[13px] font-black text-slate-900 leading-tight">{{ t('teacher.schedule.classActivity') }}</p>
                   <p class="text-[10.5px] font-medium text-slate-500 mt-0.5 leading-snug">{{ actLabel(detail) }}</p>
                 </button>
                 <button type="button" class="text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-brand-cobalt/30 hover:shadow-sm transition-all" @click="gotoMaterial()">
                   <div class="w-9 h-9 rounded-xl bg-brand-cobalt/10 text-brand-cobalt grid place-items-center mb-2">
                     <NavIcon name="book" :size="16" />
                   </div>
-                  <p class="text-[13px] font-black text-slate-900 leading-tight">Materi & RPP</p>
+                  <p class="text-[13px] font-black text-slate-900 leading-tight">{{ t('teacher.schedule.materialsAndLessonPlan') }}</p>
                   <p class="text-[10.5px] font-medium text-slate-500 mt-0.5 leading-snug">{{ matLabel(detail) }}</p>
                 </button>
                 <button type="button" class="text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:border-violet-300 hover:shadow-sm transition-all" @click="gotoGradeBook">
                   <div class="w-9 h-9 rounded-xl bg-violet-100 text-violet-700 grid place-items-center mb-2">
                     <NavIcon name="bar-chart" :size="16" />
                   </div>
-                  <p class="text-[13px] font-black text-slate-900 leading-tight">Buku Nilai</p>
-                  <p class="text-[10.5px] font-medium text-slate-500 mt-0.5 leading-snug">Lihat & input nilai</p>
+                  <p class="text-[13px] font-black text-slate-900 leading-tight">{{ t('teacher.schedule.gradeBook') }}</p>
+                  <p class="text-[10.5px] font-medium text-slate-500 mt-0.5 leading-snug">{{ t('teacher.schedule.viewEnterGrades') }}</p>
                 </button>
               </div>
 
               <button type="button" class="mt-2 w-full text-center p-2.5 rounded-xl border border-dashed border-brand-cobalt/30 text-brand-cobalt text-[11.5px] font-bold hover:bg-brand-cobalt/5" @click="gotoLessonPlan">
                 <NavIcon name="file-text" :size="13" class="inline-block mr-1.5 -mt-0.5" />
-                Lihat RPP untuk sesi ini
+                {{ t('teacher.schedule.viewLessonPlan') }}
               </button>
             </section>
 
             <section>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Detail Sesi</p>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ t('teacher.schedule.sessionDetails') }}</p>
               <div class="space-y-2">
                 <div class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3">
                   <span class="w-9 h-9 rounded-lg bg-brand-cobalt/8 text-brand-cobalt grid place-items-center flex-shrink-0">
                     <NavIcon name="calendar" :size="14" />
                   </span>
-                  <p class="text-[12.5px] font-bold text-slate-800 flex-1">Waktu</p>
+                  <p class="text-[12.5px] font-bold text-slate-800 flex-1">{{ t('common.time') }}</p>
                   <p class="text-[12.5px] font-bold text-brand-cobalt">{{ detail.start_time }} – {{ detail.end_time }}</p>
                 </div>
                 <div class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3">
                   <span class="w-9 h-9 rounded-lg bg-brand-cobalt/8 text-brand-cobalt grid place-items-center flex-shrink-0">
                     <NavIcon name="layers" :size="14" />
                   </span>
-                  <p class="text-[12.5px] font-bold text-slate-800 flex-1">Hari</p>
+                  <p class="text-[12.5px] font-bold text-slate-800 flex-1">{{ t('common.day') }}</p>
                   <p class="text-[12.5px] font-bold text-brand-cobalt">{{ formatDay(detail.day_name ?? detail.day) }}</p>
                 </div>
                 <div v-if="detail.room" class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3">
                   <span class="w-9 h-9 rounded-lg bg-brand-cobalt/8 text-brand-cobalt grid place-items-center flex-shrink-0">
                     <NavIcon name="home" :size="14" />
                   </span>
-                  <p class="text-[12.5px] font-bold text-slate-800 flex-1">Ruangan</p>
+                  <p class="text-[12.5px] font-bold text-slate-800 flex-1">{{ t('common.room') }}</p>
                   <p class="text-[12.5px] font-bold text-brand-cobalt">{{ detail.room }}</p>
                 </div>
                 <div v-if="periodeLabel(detail)" class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3">
                   <span class="w-9 h-9 rounded-lg bg-brand-cobalt/8 text-brand-cobalt grid place-items-center flex-shrink-0">
                     <NavIcon name="book" :size="14" />
                   </span>
-                  <p class="text-[12.5px] font-bold text-slate-800 flex-1">Periode</p>
+                  <p class="text-[12.5px] font-bold text-slate-800 flex-1">{{ t('common.period') }}</p>
                   <p class="text-[12.5px] font-bold text-brand-cobalt text-right">{{ periodeLabel(detail) }}</p>
                 </div>
                 <div v-if="detail.teacher_name" class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3">
                   <span class="w-9 h-9 rounded-lg bg-brand-cobalt/8 text-brand-cobalt grid place-items-center flex-shrink-0">
                     <NavIcon name="users" :size="14" />
                   </span>
-                  <p class="text-[12.5px] font-bold text-slate-800 flex-1">Pengajar</p>
+                  <p class="text-[12.5px] font-bold text-slate-800 flex-1">{{ t('common.teacher') }}</p>
                   <p class="text-[12.5px] font-bold text-brand-cobalt truncate ml-2">{{ detail.teacher_name }}</p>
                 </div>
               </div>
@@ -1203,11 +1205,11 @@ onMounted(() => {
           </div>
 
           <footer class="px-5 py-3 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-2">
-            <Button variant="secondary" size="sm" @click="detail = null">Tutup</Button>
+            <Button variant="secondary" size="sm" @click="detail = null">{{ t('common.close') }}</Button>
             <span class="flex-1"></span>
             <Button variant="primary" size="sm" @click="gotoAttendance()">
               <NavIcon name="check-square" :size="13" />
-              Mulai Sesi
+              {{ t('teacher.schedule.startSession') }}
             </Button>
           </footer>
         </div>

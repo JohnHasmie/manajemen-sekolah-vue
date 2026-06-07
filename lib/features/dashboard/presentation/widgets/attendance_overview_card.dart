@@ -6,6 +6,7 @@
 // dashboard stat card showing today's attendance breakdown.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// A compact dashboard card showing today's attendance summary with a
@@ -105,7 +106,7 @@ class AttendanceOverviewCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Absensi Hari Ini',
+                          kDasTodayAttendance.tr,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -166,7 +167,7 @@ class AttendanceOverviewCard extends StatelessWidget {
                 ),
               ] else
                 Text(
-                  'Belum ada data absensi',
+                  kDasAttendanceNoData.tr,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,

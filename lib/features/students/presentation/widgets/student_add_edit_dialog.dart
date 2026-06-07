@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/students/presentation/widgets/student_dialog_dropdown.dart';
 import 'package:manajemensekolah/features/students/presentation/widgets/student_dialog_text_field.dart';
 import 'package:manajemensekolah/features/students/presentation/mixins/student_form_validation_mixin.dart';
@@ -331,7 +332,7 @@ class _StudentAddEditSheetContentState
                     final picked = await showModernDatePicker(
                       context: context,
                       initialDate: initialDate,
-                      title: 'Pilih Tanggal Lahir',
+                      title: kStuSelectBirthDate.tr,
                       firstDate: DateTime(1900),
                       lastDate: DateTime.now(),
                     );

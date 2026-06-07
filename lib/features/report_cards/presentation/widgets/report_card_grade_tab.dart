@@ -31,6 +31,7 @@ import 'package:flutter/services.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
@@ -667,7 +668,7 @@ class _RaportNilaiEditSheetState extends State<_RaportNilaiEditSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _NilaiSection(
-            title: 'Pengetahuan',
+            title: kRepCarKnowledge.tr,
             ki: 'KI 3',
             accent: cobalt,
             icon: Icons.menu_book_rounded,
@@ -684,7 +685,7 @@ class _RaportNilaiEditSheetState extends State<_RaportNilaiEditSheet> {
           ),
           const SizedBox(height: AppSpacing.md),
           _NilaiSection(
-            title: 'Keterampilan',
+            title: kRepCarSkills.tr,
             ki: 'KI 4',
             accent: const Color(0xFF7C3AED), // violet600
             icon: Icons.build_outlined,

@@ -17,6 +17,7 @@
 // changing visual behaviour.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Status filter keys used both by the pipeline strip and the chip
 /// strip. `'all'` means "show everything".
@@ -555,7 +556,7 @@ class _AdminRaportBulkPublishSheetState
                 ),
                 const SizedBox(height: 12),
                 _ImpactCard(
-                  title: 'Notifikasi otomatis',
+                  title: kRepCarAutoNotification.tr,
                   subtitle:
                       '${widget.studentCount} wali murid akan menerima push',
                   color: ColorUtils.slate100,
@@ -563,17 +564,17 @@ class _AdminRaportBulkPublishSheetState
                 ),
                 const SizedBox(height: 8),
                 _ImpactCard(
-                  title: 'Akses parent role',
-                  subtitle: 'Rapor lengkap + ringkasan terbuka',
+                  title: kRepCarParentAccess.tr,
+                  subtitle: kRepCarFullSummaryOpen.tr,
                   color: ColorUtils.slate100,
                   textColor: ColorUtils.slate900,
                 ),
                 const SizedBox(height: 8),
-                const _ImpactCard(
-                  title: 'Tindakan tidak dapat dibatalkan',
-                  subtitle: 'Ubah ke Diperiksa harus manual per kelas',
-                  color: Color(0xFFFFFBEB),
-                  textColor: Color(0xFF92400E),
+                _ImpactCard(
+                  title: kRepCarActionCannotUndo.tr,
+                  subtitle: kRepCarManualReview.tr,
+                  color: const Color(0xFFFFFBEB),
+                  textColor: const Color(0xFF92400E),
                 ),
                 const SizedBox(height: 16),
                 Container(

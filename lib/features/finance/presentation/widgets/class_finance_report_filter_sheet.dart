@@ -5,6 +5,7 @@
 // back to the parent immediately on each selection change.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
@@ -88,7 +89,7 @@ class _ClassFinanceReportFilterSheetState
     final uniqueTypes = _buildUniqueTypes();
 
     return AppFilterBottomSheet(
-      title: 'Filter Laporan',
+      title: kFinFilterReport.tr,
       icon: Icons.tune_rounded,
       primaryColor: widget.primaryColor,
       maxHeightFactor: 0.75,
@@ -98,18 +99,18 @@ class _ClassFinanceReportFilterSheetState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FilterSectionHeader(
-                title: 'Status Pembayaran',
+                title: kFinPaymentStatus.tr,
                 icon: Icons.check_circle_outline_rounded,
                 primaryColor: widget.primaryColor,
               ),
               FilterChipGrid<String>(
-                options: const [
+                options: [
                   FilterOption(value: 'Semua', label: 'Semua'),
                   FilterOption(value: 'Lunas', label: 'Lunas'),
                   FilterOption(value: 'Belum Dibayar', label: 'Belum Dibayar'),
                   FilterOption(
                     value: 'Belum Diverifikasi',
-                    label: 'Belum Diverifikasi',
+                    label: kFinNotVerified.tr,
                   ),
                 ],
                 selectedValue: _selectedStatus,
@@ -127,7 +128,7 @@ class _ClassFinanceReportFilterSheetState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FilterSectionHeader(
-                title: 'Bulan',
+                title: kFinMonth.tr,
                 icon: Icons.calendar_month_rounded,
                 primaryColor: widget.primaryColor,
               ),
@@ -151,7 +152,7 @@ class _ClassFinanceReportFilterSheetState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FilterSectionHeader(
-                title: 'Jenis Pembayaran',
+                title: kFinPaymentType.tr,
                 icon: Icons.payment_rounded,
                 primaryColor: widget.primaryColor,
               ),

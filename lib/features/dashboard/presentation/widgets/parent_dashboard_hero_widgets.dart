@@ -11,6 +11,7 @@
 // keeps the screen focused on the per-child slice carousel + the
 // quick-action grid.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Static dot rendered under the parent realtime pill — green + soft
 /// glow when [animate] is true, grey static otherwise.
@@ -90,11 +91,11 @@ class ParentDashboardRealtimePill extends StatelessWidget {
     if (isFresh) {
       final hh = lastSync.hour.toString().padLeft(2, '0');
       final mm = lastSync.minute.toString().padLeft(2, '0');
-      return 'Terhubung realtime · $hh:$mm';
+      return '${kDasConnectedRealtime.tr} · $hh:$mm';
     }
     final mins = DateTime.now().difference(lastSync).inMinutes;
-    if (mins <= 0) return 'Mencoba menyambungkan ulang…';
-    return 'Terakhir diperbarui $mins menit lalu';
+    if (mins <= 0) return kDasReconnecting.tr;
+    return '${kDasLastUpdated.tr} ($mins)';
   }
 }
 

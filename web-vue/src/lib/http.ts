@@ -56,6 +56,7 @@ function buildClient(baseURL: string): AxiosInstance {
   client.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = storage.get<string>(StorageKeys.token);
     const schoolId = storage.get<string>(StorageKeys.schoolId);
+    const locale = storage.get<string>(StorageKeys.language) ?? 'id';
 
     if (token) {
       config.headers.set('Authorization', `Bearer ${token}`);
@@ -63,6 +64,11 @@ function buildClient(baseURL: string): AxiosInstance {
     if (schoolId) {
       config.headers.set('X-School-ID', schoolId);
     }
+    // Tell the backend which locale to render server-side strings in
+    // (priority-inbox labels/subtitles, validator messages, mail
+    // bodies, etc.). The Laravel `SetLocaleFromHeader` middleware
+    // reads this header and calls `App::setLocale()` accordingly.
+    config.headers.set('Accept-Language', locale);
 
     // Auto-inject the selected academic year as a default param on
     // every request that targets a year-scoped endpoint. The caller

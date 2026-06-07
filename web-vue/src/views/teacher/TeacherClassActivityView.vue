@@ -24,6 +24,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { ClassActivityService } from '@/services/class-activity.service';
 import { ClassroomService } from '@/services/classrooms.service';
@@ -56,6 +57,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const auth = useAuthStore();
 const { fromQuickAction, queryString } = useQuickAction();
+const { t } = useI18n();
 
 // ── Filter state ──
 const classes = ref<Classroom[]>([]);
@@ -102,11 +104,11 @@ const isSaving = ref(false);
 
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
-const rangeOptions = [
-  { key: '7', label: '7 hari' },
-  { key: '30', label: '30 hari' },
-  { key: '90', label: '90 hari' },
-];
+const rangeOptions = computed(() => [
+  { key: '7', label: t('teacher.activity.sevenDays') },
+  { key: '30', label: t('teacher.activity.thirtyDays') },
+  { key: '90', label: t('teacher.activity.ninetyDays') },
+]);
 
 // ── Loaders ──
 async function loadReferences() {
@@ -232,11 +234,11 @@ const groupedItems = computed<ActivityGroup[]>(() => {
     else buckets.earlier.push(it);
   }
   const groups: ActivityGroup[] = [
-    { key: 'today', label: 'Hari Ini', items: buckets.today },
-    { key: 'yesterday', label: 'Kemarin', items: buckets.yesterday },
-    { key: 'thisWeek', label: 'Minggu Ini', items: buckets.thisWeek },
-    { key: 'thisMonth', label: 'Bulan Ini', items: buckets.thisMonth },
-    { key: 'earlier', label: 'Lebih Lama', items: buckets.earlier },
+    { key: 'today', label: t('common.today'), items: buckets.today },
+    { key: 'yesterday', label: t('teacher.activity.yesterday'), items: buckets.yesterday },
+    { key: 'thisWeek', label: t('teacher.activity.thisWeek'), items: buckets.thisWeek },
+    { key: 'thisMonth', label: t('teacher.activity.thisMonth'), items: buckets.thisMonth },
+    { key: 'earlier', label: t('teacher.activity.older'), items: buckets.earlier },
   ];
   return groups.filter((g) => g.items.length > 0);
 });

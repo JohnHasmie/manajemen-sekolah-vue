@@ -16,6 +16,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { AttendanceService } from '@/services/attendance.service';
@@ -44,6 +45,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 const auth = useAuthStore();
 const router = useRouter();
 const { fromQuickAction, queryString } = useQuickAction();
+const { t } = useI18n();
 
 // ── Role chip state ──
 const selectedRoleId = ref<string>('mengajar');
@@ -92,17 +94,17 @@ const showPeriodPicker = ref(false);
 const showClassPicker = ref(false);
 const showSubjectPicker = ref(false);
 
-const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
-  { key: 'today', label: 'Hari ini' },
-  { key: 'week', label: 'Minggu ini' },
-  { key: 'last7', label: '7 hari terakhir' },
-  { key: 'month', label: 'Bulan ini' },
-  { key: 'semester', label: 'Semester ini' },
-  { key: 'year', label: 'Tahun ini' },
-];
+const PERIOD_OPTIONS = computed<{ key: PeriodKey; label: string }[]>(() => [
+  { key: 'today', label: t('common.today') },
+  { key: 'week', label: t('teacher.attendance.thisWeek') },
+  { key: 'last7', label: t('teacher.attendance.last7Days') },
+  { key: 'month', label: t('teacher.attendance.thisMonth') },
+  { key: 'semester', label: t('teacher.attendance.thisSemester') },
+  { key: 'year', label: t('teacher.attendance.thisYear') },
+]);
 const activePeriod = computed(
   () =>
-    PERIOD_OPTIONS.find((p) => p.key === periodKey.value) ?? PERIOD_OPTIONS[1],
+    PERIOD_OPTIONS.value.find((p) => p.key === periodKey.value) ?? PERIOD_OPTIONS.value[1],
 );
 const activeClass = computed(
   () => classes.value.find((c) => c.id === classId.value) ?? null,
@@ -275,29 +277,29 @@ const rerataPct = computed(() => {
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'calendar',
-    label: 'Hari Ini',
+    label: t('common.today'),
     value: kpi.value.sessions_today || sessionsTodayClientCount.value,
-    suffix: 'sesi',
+    suffix: t('common.sessions'),
     tone: 'brand',
     accented: true,
   },
   {
     icon: 'check-circle',
-    label: 'Tercatat',
+    label: t('teacher.attendance.recorded'),
     value: kpi.value.sessions_completed || tercatatCount.value,
-    suffix: 'sesi',
+    suffix: t('common.sessions'),
     tone: 'green',
   },
   {
     icon: 'bell',
-    label: 'Belum',
+    label: t('common.pending'),
     value: kpi.value.sessions_pending || belumCount.value,
-    suffix: 'menunggu',
+    suffix: t('common.pending'),
     tone: 'amber',
   },
   {
     icon: 'bar-chart',
-    label: 'Rerata Hadir',
+    label: t('teacher.attendance.averagePresent'),
     value: kpi.value.avg_present_pct ?? rerataPct.value,
     suffix: '%',
     tone: 'violet',
@@ -376,7 +378,7 @@ function pctTone(r: SessionReport): {
       bg: 'bg-amber-50',
       text: 'text-amber-700',
       border: 'border-amber-200',
-      label: 'Menunggu',
+      label: t('common.pending'),
     };
   }
   if (r.percentage >= 90)
@@ -477,12 +479,12 @@ function pickSubject(id: string) {
     <!-- ── 3. Filter toolbar ─────────────────────────────────── -->
     <PageFilterToolbar
       :search="searchQuery"
-      search-placeholder="Cari kelas atau mapel..."
+      :search-placeholder="t('teacher.attendance.searchPlaceholder')"
       @update:search="(v) => (searchQuery = v)"
     >
       <template #chips>
         <AppFilterChip
-          label="Periode"
+          :label="t('common.period')"
           :value="activePeriod.label"
           icon-name="calendar"
           tone="amber"
@@ -490,15 +492,15 @@ function pickSubject(id: string) {
         />
         <AppFilterChip
           v-if="!isWaliMode"
-          label="Kelas"
-          :value="activeClass?.name ?? 'Semua kelas'"
+          :label="t('common.class')"
+          :value="activeClass?.name ?? t('teacher.attendance.allClasses')"
           icon-name="layers"
           tone="violet"
           @click="showClassPicker = true"
         />
         <AppFilterChip
-          label="Mapel"
-          :value="activeSubject?.name ?? 'Semua mapel'"
+          :label="t('common.subject')"
+          :value="activeSubject?.name ?? t('teacher.attendance.allSubjects')"
           icon-name="book"
           tone="brand"
           @click="showSubjectPicker = true"
@@ -509,8 +511,8 @@ function pickSubject(id: string) {
     <!-- ── 4. Body ───────────────────────────────────────────── -->
     <AsyncView
       :state="state"
-      empty-title="Belum ada laporan presensi"
-      empty-description="Belum ada sesi tercatat pada periode + filter aktif. Tambah sesi baru dengan tombol di kanan bawah."
+      :empty-title="t('teacher.attendance.noReportsYet')"
+      :empty-description="t('teacher.attendance.noSessionsHelp')"
       @retry="loadReports"
     >
       <template #default>
@@ -525,7 +527,7 @@ function pickSubject(id: string) {
                 class="text-[11px] font-bold uppercase tracking-widest"
                 :class="day.isToday ? 'text-brand-cobalt' : 'text-slate-500'"
               >
-                {{ day.isToday ? `Hari ini · ${day.label}` : day.label }}
+                {{ day.isToday ? `${t('common.today')} · ${day.label}` : day.label }}
               </span>
               <div
                 class="flex-1 h-px"
@@ -539,7 +541,7 @@ function pickSubject(id: string) {
                     : 'bg-slate-100 text-slate-600'
                 "
               >
-                {{ day.items.length }} sesi
+                {{ day.items.length }} {{ t('common.sessions') }}
               </span>
             </div>
 
@@ -583,13 +585,13 @@ function pickSubject(id: string) {
                       v-if="r.jam_ke"
                       class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                     >
-                      Jam ke-{{ r.jam_ke }}
+                      {{ t('teacher.attendance.hour') }} ke-{{ r.jam_ke }}
                     </span>
                     <span
                       v-if="r.total > 0"
                       class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                     >
-                      👥 {{ r.total }} siswa
+                      👥 {{ r.total }} {{ t('common.students') }}
                     </span>
                     <span
                       v-if="isWaliMode && r.teacher_name"
@@ -643,7 +645,7 @@ function pickSubject(id: string) {
                     class="text-[10px] font-bold uppercase tracking-widest"
                     :class="r.filled ? 'text-slate-500' : 'text-amber-700'"
                   >
-                    {{ r.filled ? 'Lihat detail ›' : 'Input sekarang →' }}
+                    {{ r.filled ? `${t('common.viewDetails')} ›` : `${t('teacher.attendance.enterNow')} →` }}
                   </span>
                 </div>
               </div>
@@ -660,13 +662,13 @@ function pickSubject(id: string) {
       @click="gotoNewInput"
     >
       <NavIcon name="plus" :size="16" />
-      Tambah presensi sesi
+      {{ t('teacher.attendance.addSessionAttendance') }}
     </button>
 
     <!-- ── Periode picker ────────────────────────────────────── -->
     <Modal
       v-if="showPeriodPicker"
-      title="Pilih Periode"
+      :title="t('teacher.attendance.selectPeriod')"
       @close="showPeriodPicker = false"
     >
       <ul class="space-y-1 max-h-[360px] overflow-y-auto">
@@ -684,7 +686,7 @@ function pickSubject(id: string) {
             <span
               v-if="p.key === periodKey"
               class="text-[10px] font-bold uppercase tracking-wider"
-              >Aktif</span
+              >{{ t('common.active') }}</span
             >
           </button>
         </li>
@@ -694,7 +696,7 @@ function pickSubject(id: string) {
     <!-- ── Class picker ──────────────────────────────────────── -->
     <Modal
       v-if="showClassPicker"
-      title="Pilih Kelas"
+      :title="t('teacher.attendance.selectClass')"
       @close="showClassPicker = false"
     >
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
@@ -707,7 +709,7 @@ function pickSubject(id: string) {
             }"
             @click="pickClass('')"
           >
-            Semua kelas
+            {{ t('teacher.attendance.allClasses') }}
           </button>
         </li>
         <li v-for="c in classes" :key="c.id">
@@ -721,7 +723,7 @@ function pickSubject(id: string) {
           >
             <span>{{ c.name }}</span>
             <span v-if="c.student_count" class="text-[10px] text-slate-400">
-              {{ c.student_count }} siswa
+              {{ c.student_count }} {{ t('common.students') }}
             </span>
           </button>
         </li>
@@ -731,7 +733,7 @@ function pickSubject(id: string) {
     <!-- ── Subject picker ────────────────────────────────────── -->
     <Modal
       v-if="showSubjectPicker"
-      title="Pilih Mata Pelajaran"
+      :title="t('teacher.attendance.selectSubject')"
       @close="showSubjectPicker = false"
     >
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
@@ -745,7 +747,7 @@ function pickSubject(id: string) {
             }"
             @click="pickSubject('')"
           >
-            Semua mapel
+            {{ t('teacher.attendance.allSubjects') }}
           </button>
         </li>
         <li v-for="s in subjects" :key="s.id">

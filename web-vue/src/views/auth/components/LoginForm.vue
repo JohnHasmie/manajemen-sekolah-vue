@@ -11,10 +11,12 @@
 -->
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
 import DemoCtaCard from './DemoCtaCard.vue';
 
+const { t } = useI18n();
 const auth = useAuthStore();
 
 const email = ref('');
@@ -42,15 +44,15 @@ watch(
 
 function validate(): boolean {
   if (!email.value.trim()) {
-    localError.value = 'Email wajib diisi.';
+    localError.value = t('auth.errors.emailRequired');
     return false;
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
-    localError.value = 'Format email tidak valid.';
+    localError.value = t('auth.errors.emailInvalid');
     return false;
   }
   if (!password.value) {
-    localError.value = 'Kata sandi wajib diisi.';
+    localError.value = t('auth.errors.passwordRequired');
     return false;
   }
   localError.value = null;
@@ -72,10 +74,10 @@ async function handleSubmit() {
   <div class="space-y-6">
     <header>
       <h2 class="text-[17px] font-black text-slate-900 tracking-[-0.3px]">
-        Selamat Datang Kembali
+        {{ t('auth.welcomeBack') }}
       </h2>
       <p class="text-[12px] text-slate-500 font-semibold mt-1 leading-relaxed">
-        Masuk untuk melanjutkan ke akun sekolah Anda.
+        {{ t('auth.signInSubtitle') }}
       </p>
     </header>
 
@@ -85,7 +87,7 @@ async function handleSubmit() {
       class="rounded-xl bg-red-50 px-md py-sm text-[11.5px] text-red-600 border border-red-100 flex items-center gap-2"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-      <span class="font-bold">Server tidak dapat dijangkau. Periksa koneksi Anda lalu coba lagi.</span>
+      <span class="font-bold">{{ t('auth.errors.serverOffline') }}</span>
     </div>
 
     <form class="space-y-md" novalidate @submit.prevent="handleSubmit">
@@ -105,7 +107,7 @@ async function handleSubmit() {
             type="email"
             autocomplete="email"
             inputmode="email"
-            placeholder="anda@sekolah.id"
+            :placeholder="t('auth.emailPlaceholder')"
             class="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-md py-[14px] text-[13px] font-medium text-slate-900 placeholder:text-slate-400 focus:border-brand-cobalt focus:ring-0 focus:outline-none transition-all"
             :disabled="auth.isLoading"
           />
@@ -127,7 +129,7 @@ async function handleSubmit() {
             v-model="password"
             :type="showPassword ? 'text' : 'password'"
             autocomplete="current-password"
-            placeholder="Masukkan kata sandi"
+            :placeholder="t('auth.passwordPlaceholder')"
             class="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-10 py-[14px] text-[13px] font-medium text-slate-900 placeholder:text-slate-400 focus:border-brand-cobalt focus:ring-0 focus:outline-none transition-all"
             :disabled="auth.isLoading"
           />
@@ -146,7 +148,7 @@ async function handleSubmit() {
             class="text-[12px] font-extrabold text-brand-cobalt hover:underline"
             @click="emit('forgot')"
           >
-            Lupa kata sandi?
+            {{ t('auth.forgotPassword') }}
           </button>
         </div>
       </div>
@@ -169,10 +171,10 @@ async function handleSubmit() {
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25" />
             <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
           </svg>
-          <span class="text-[13.5px] tracking-wide uppercase">Memverifikasi...</span>
+          <span class="text-[13.5px] tracking-wide uppercase">{{ t('auth.verifying') }}</span>
         </template>
         <template v-else>
-          <span class="text-[13.5px] tracking-wide">MASUK</span>
+          <span class="text-[13.5px] tracking-wide">{{ t('auth.signIn') }}</span>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </template>
       </button>
@@ -182,7 +184,7 @@ async function handleSubmit() {
     <div class="space-y-4">
       <div class="relative flex items-center">
         <div class="flex-grow border-t border-slate-200"></div>
-        <span class="flex-shrink mx-2.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">atau lanjutkan dengan</span>
+        <span class="flex-shrink mx-2.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{{ t('auth.or') }}</span>
         <div class="flex-grow border-t border-slate-200"></div>
       </div>
 
@@ -199,7 +201,7 @@ async function handleSubmit() {
           class="w-full rounded-xl border-1.5 border-slate-200 bg-slate-50 py-3 flex items-center justify-center gap-3 animate-pulse"
         >
           <div class="w-4 h-4 rounded-full bg-slate-200"></div>
-          <span class="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Menyiapkan Google...</span>
+          <span class="text-[12px] font-bold text-slate-400 uppercase tracking-widest">{{ t('auth.loadingGoogle') }}</span>
         </div>
       </div>
 
@@ -208,10 +210,10 @@ async function handleSubmit() {
         v-else
         type="button"
         class="w-full rounded-xl border-1.5 border-slate-200 bg-white py-3 flex items-center justify-center gap-2.5 text-[13px] font-extrabold text-slate-800 hover:bg-slate-50 transition-colors"
-        @click="localError = 'Fitur Google Login belum dikonfigurasi di server ini.'"
+        @click="localError = t('auth.errors.googleNotConfigured')"
       >
         <img src="/icon/google_logo.png" class="w-[18px] h-[18px]" alt="Google" />
-        Masuk dengan Google
+        {{ t('auth.continueWithGoogle') }}
       </button>
     </div>
 
@@ -227,7 +229,8 @@ async function handleSubmit() {
         @click="emit('forgot')"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
-        <span>Butuh bantuan? <span class="text-brand-cobalt font-extrabold">Bantuan masuk</span></span>
+        <!-- TODO(i18n): review -->
+        <span>{{ t('auth.needHelp') }}</span>
       </button>
 
       <a
@@ -235,7 +238,8 @@ async function handleSubmit() {
         target="_blank"
         class="text-[11.5px] font-semibold text-slate-500"
       >
-        Sekolah Anda sudah pakai KamilEdu? <span class="text-brand-cobalt font-extrabold">Hubungi admin sekolah</span>
+        <!-- TODO(i18n): review -->
+        {{ t('auth.contactAdmin') }}
       </a>
     </div>
   </div>

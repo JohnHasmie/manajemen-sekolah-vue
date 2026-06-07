@@ -64,11 +64,11 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
     return BrandEmptyState(
       icon: Icons.cloud_off_rounded,
       tone: BrandEmptyStateTone.danger,
-      kicker: 'Sambungan bermasalah',
-      title: 'Tidak dapat memuat pengumuman',
+      kicker: kAnnConnectionError.tr,
+      title: kAnnCannotLoad.tr,
       message: errorMessage,
       primaryAction: BrandEmptyStateAction(
-        label: 'Coba lagi',
+        label: kTryAgain.tr,
         icon: Icons.refresh_rounded,
         onTap: forceRefresh,
       ),
@@ -192,19 +192,19 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
   /// with the count of items in that month.
   List<_MonthListEntry> _groupByMonth(List<dynamic> items) {
     if (items.isEmpty) return const [];
-    const monthsId = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
+    final monthsId = [
+      kAnnMonthJanuary.tr,
+      kAnnMonthFebruary.tr,
+      kAnnMonthMarch.tr,
+      kAnnMonthApril.tr,
+      kAnnMonthMay.tr,
+      kAnnMonthJune.tr,
+      kAnnMonthJuly.tr,
+      kAnnMonthAugust.tr,
+      kAnnMonthSeptember.tr,
+      kAnnMonthOctober.tr,
+      kAnnMonthNovember.tr,
+      kAnnMonthDecember.tr,
     ];
     final byMonth = <String, List<Map<String, dynamic>>>{};
     final monthOrder = <String>[];
@@ -215,10 +215,10 @@ mixin ContentStateMixin on ConsumerState<ParentAnnouncementScreen> {
           ?.toString();
       String key;
       if (dateStr == null || dateStr.isEmpty) {
-        key = 'Lainnya';
+        key = kAnnOther.tr;
       } else {
         final dt = DateTime.tryParse(dateStr);
-        key = dt == null ? 'Lainnya' : '${monthsId[dt.month - 1]} ${dt.year}';
+        key = dt == null ? kAnnOther.tr : '${monthsId[dt.month - 1]} ${dt.year}';
       }
       if (!byMonth.containsKey(key)) {
         monthOrder.add(key);

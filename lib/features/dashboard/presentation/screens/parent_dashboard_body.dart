@@ -692,8 +692,8 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     final total = _priorityInboxTotal;
     final countLabel = total > count ? '$count/$total' : '$count';
     final title = count == 0
-        ? 'Perlu perhatian'
-        : 'Perlu perhatian · $countLabel';
+        ? kDasNeedsAttention.tr
+        : '${kDasNeedsAttention.tr} · $countLabel';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: PendingInboxCard.priorityItems(
@@ -701,7 +701,7 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
         items: _priorityInbox,
         accentColor: _parentBrandAzure,
         emptyStateTitle: 'Semua aman 🎉',
-        emptyStateSubtitle: 'Tidak ada hal yang perlu perhatian saat ini.',
+        emptyStateSubtitle: kDasNothingToAttend.tr,
         onPriorityTap: _navigateToParentInboxTarget,
         onSeeAll: _openInbox,
       ),
@@ -818,49 +818,49 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
     // consistent. Kehadiran is promoted into the visible strip
     // because parents reach for it as often as Raport / Kegiatan.
     return ModulLainStrip(
-      title: 'Modul lain',
-      totalLabel: '8 modul',
+      title: kDasOtherModules.tr,
+      totalLabel: kDas8Modules.tr,
       accentColor: _parentBrandAzureDeep,
       visibleItems: [
         ModulLainStripItem(
-          label: DashboardModules.rekomendasi.defaultLabel,
+          label: DashboardModules.rekomendasi.defaultLabel.tr,
           icon: DashboardModules.rekomendasi.icon,
           onTap: _openRecommendations,
         ),
         ModulLainStripItem(
-          label: DashboardModules.raport.defaultLabel,
+          label: DashboardModules.raport.defaultLabel.tr,
           icon: DashboardModules.raport.icon,
           onTap: _openReportCard,
         ),
         ModulLainStripItem(
-          label: 'Kegiatan\nKelas',
+          label: kDasClassActivityTwoLine.tr,
           icon: DashboardModules.kegiatanKelas.icon,
           onTap: _openClassActivity,
         ),
         ModulLainStripItem(
-          label: DashboardModules.kehadiran.defaultLabel,
+          label: DashboardModules.kehadiran.defaultLabel.tr,
           icon: DashboardModules.kehadiran.icon,
           onTap: _openAttendance,
         ),
       ],
       overflowItems: [
         ModulLainStripItem(
-          label: DashboardModules.nilai.defaultLabel,
+          label: DashboardModules.nilai.defaultLabel.tr,
           icon: DashboardModules.nilai.icon,
           onTap: _openGrades,
         ),
         ModulLainStripItem(
-          label: DashboardModules.pengumuman.defaultLabel,
+          label: DashboardModules.pengumuman.defaultLabel.tr,
           icon: DashboardModules.pengumuman.icon,
           onTap: _openAnnouncements,
         ),
         ModulLainStripItem(
-          label: DashboardModules.tagihan.defaultLabel,
+          label: DashboardModules.tagihan.defaultLabel.tr,
           icon: DashboardModules.tagihan.icon,
           onTap: _openBilling,
         ),
         ModulLainStripItem(
-          label: DashboardModules.akun.defaultLabel,
+          label: DashboardModules.akun.defaultLabel.tr,
           icon: DashboardModules.akun.icon,
           onTap: _openAccount,
         ),

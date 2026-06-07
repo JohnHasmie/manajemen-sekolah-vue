@@ -74,7 +74,7 @@ class AdminReportHeader extends StatelessWidget {
     return BrandPageHeader(
       key: infoKey,
       role: 'admin',
-      subtitle: 'Akademik · Kehadiran',
+      subtitle: kAttAcademicAttendance.tr,
       title: languageProvider.getTranslatedText({
         'en': 'Attendance Report',
         'id': 'Laporan Absensi',

@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/report_card_detail_screen.dart';
 
 /// Mixin for UI building methods shared across tabs.
@@ -21,7 +22,7 @@ mixin ReportCardUIMixin on ConsumerState<ReportCardDetailScreen> {
           icon: Icons.brightness_5_rounded,
           iconBg: ColorUtils.violet700.withValues(alpha: 0.10),
           iconFg: ColorUtils.violet700,
-          title: 'Sikap Spiritual',
+          title: kRepCarSpiritualAttitude.tr,
           chip: 'Wajib',
           children: [
             buildPredikatRow(spiritualPredicate, (v) {
@@ -33,7 +34,7 @@ mixin ReportCardUIMixin on ConsumerState<ReportCardDetailScreen> {
             const SizedBox(height: 6),
             buildDescInput(
               spiritualDescCtrl,
-              hint: 'Tulis deskripsi sikap spiritual siswa…',
+              hint: kRepCarSpiritualAttitudeHint.tr,
             ),
           ],
         ),
@@ -42,7 +43,7 @@ mixin ReportCardUIMixin on ConsumerState<ReportCardDetailScreen> {
           icon: Icons.people_alt_rounded,
           iconBg: ColorUtils.brandCobalt.withValues(alpha: 0.10),
           iconFg: ColorUtils.brandCobalt,
-          title: 'Sikap Sosial',
+          title: kRepCarSocialAttitude.tr,
           chip: 'Wajib',
           children: [
             buildPredikatRow(socialPredicate, (v) {
@@ -54,7 +55,7 @@ mixin ReportCardUIMixin on ConsumerState<ReportCardDetailScreen> {
             const SizedBox(height: 6),
             buildDescInput(
               socialDescCtrl,
-              hint: 'Tulis deskripsi sikap sosial siswa…',
+              hint: kRepCarSocialAttitudeHint.tr,
             ),
           ],
         ),

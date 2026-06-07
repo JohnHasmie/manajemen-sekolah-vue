@@ -3,6 +3,7 @@
 // for a list of quiz items in a single horizontal row.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/stat_summary_card.dart';
 
 /// Horizontal stats bar summarising a quiz list by type and difficulty.
@@ -52,19 +53,19 @@ class QuizStatsBar extends StatelessWidget {
             cards: [
               StatSummaryCard(
                 icon: Icons.functions_rounded,
-                label: 'Total Kuis',
+                label: kMatTotalQuizzes.tr,
                 value: '${quizzes.length}',
                 color: primaryColor,
               ),
               StatSummaryCard(
                 icon: Icons.check_circle_outline_rounded,
-                label: 'Pilihan Ganda',
+                label: kMatMultipleChoice.tr,
                 value: '$mc',
                 color: ColorUtils.corporateBlue600,
               ),
               StatSummaryCard(
                 icon: Icons.edit_note_rounded,
-                label: 'Essay',
+                label: kMatEssay.tr,
                 value: '$essay',
                 color: ColorUtils.info600,
               ),
@@ -87,7 +88,7 @@ class QuizStatsBar extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Tingkat Kesulitan:',
+                    kMatDifficultyLevel.tr,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,

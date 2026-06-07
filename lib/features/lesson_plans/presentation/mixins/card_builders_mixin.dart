@@ -24,6 +24,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan_format.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_admin_detail_page.dart';
@@ -63,7 +64,7 @@ mixin CardBuildersMixin on State<LessonPlanAdminDetailPage> {
           _topRow(fmt, model.status, accentFg, accentBg, kind),
           const SizedBox(height: 8),
           Text(
-            model.title.isNotEmpty ? model.title : 'RPP tanpa judul',
+            model.title.isNotEmpty ? model.title : kLesPlaNoTitle.tr,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
@@ -257,7 +258,7 @@ mixin CardBuildersMixin on State<LessonPlanAdminDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: _metaCell('Mata Pelajaran', mapel.isEmpty ? '—' : mapel),
+              child: _metaCell(kSubject.tr, mapel.isEmpty ? '—' : mapel),
             ),
             const SizedBox(width: 12),
             Expanded(child: _metaCell('Kelas', kelas.isEmpty ? '—' : kelas)),

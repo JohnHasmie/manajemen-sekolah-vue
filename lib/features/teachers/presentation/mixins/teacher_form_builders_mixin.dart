@@ -65,7 +65,7 @@ mixin TeacherFormBuildersMixin on TeacherFormUiMixin {
   Widget buildNipField() {
     return buildDialogTextField(
       controller: nipController,
-      label: 'NIP',
+      label: kTeaNip.tr,
       icon: Icons.badge,
     );
   }

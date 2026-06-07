@@ -16,6 +16,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
 
 class AnnouncementEventDetailHero extends StatefulWidget {
@@ -97,7 +98,7 @@ class _AnnouncementEventDetailHeroState
             children: [
               Text(
                 e.isLive
-                    ? 'BERLANGSUNG SEKARANG'
+                    ? kAnnHappeningNow.tr
                     : 'ACARA · ${e.countdownLabel}',
                 style: TextStyle(
                   fontSize: 10.5,
@@ -134,7 +135,7 @@ class _AnnouncementEventDetailHeroState
             widget.adminReminders!.isNotEmpty) ...[
           const SizedBox(height: 12),
           _ReminderStatusCard(
-            title: 'STATUS PERINGATAN',
+            title: kAnnReminderStatus.tr,
             rows: widget.adminReminders!,
             isAdmin: true,
           ),
@@ -175,28 +176,28 @@ class _AnnouncementEventDetailHeroState
   }
 
   static String _formatWhen(AnnouncementEvent e) {
-    const days = [
-      'Senin',
-      'Selasa',
-      'Rabu',
-      'Kamis',
-      'Jumat',
-      'Sabtu',
-      'Minggu',
+    final days = [
+      kAnnDayMonday.tr,
+      kAnnDayTuesday.tr,
+      kAnnDayWednesday.tr,
+      kAnnDayThursday.tr,
+      kAnnDayFriday.tr,
+      kAnnDaySaturday.tr,
+      kAnnDaySunday.tr,
     ];
-    const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
+    final months = [
+      kAnnMonthJanuary.tr,
+      kAnnMonthFebruary.tr,
+      kAnnMonthMarch.tr,
+      kAnnMonthApril.tr,
+      kAnnMonthMay.tr,
+      kAnnMonthJune.tr,
+      kAnnMonthJuly.tr,
+      kAnnMonthAugust.tr,
+      kAnnMonthSeptember.tr,
+      kAnnMonthOctober.tr,
+      kAnnMonthNovember.tr,
+      kAnnMonthDecember.tr,
     ];
     final d = e.eventAt;
     final dow = days[(d.weekday - 1).clamp(0, 6)];
@@ -234,19 +235,19 @@ class _CountdownRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _Cell(n: days, label: 'HARI', palette: palette),
+          child: _Cell(n: days, label: kAnnCountdownDays.tr, palette: palette),
         ),
         const SizedBox(width: 6),
         Expanded(
-          child: _Cell(n: hours, label: 'JAM', palette: palette),
+          child: _Cell(n: hours, label: kAnnCountdownHours.tr, palette: palette),
         ),
         const SizedBox(width: 6),
         Expanded(
-          child: _Cell(n: minutes, label: 'MENIT', palette: palette),
+          child: _Cell(n: minutes, label: kAnnCountdownMinutes.tr, palette: palette),
         ),
         const SizedBox(width: 6),
         Expanded(
-          child: _Cell(n: seconds, label: 'DETIK', palette: palette),
+          child: _Cell(n: seconds, label: kAnnCountdownSeconds.tr, palette: palette),
         ),
       ],
     );

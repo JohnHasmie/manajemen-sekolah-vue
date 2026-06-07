@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/parent_grade_header.dart';
@@ -56,8 +57,8 @@ mixin ParentGradeUiMixin on State<ParentGradeScreen> {
   Widget buildEmptyState(String message) => BrandEmptyState(
     icon: Icons.assignment_outlined,
     tone: BrandEmptyStateTone.info,
-    kicker: 'Belum ada data',
-    title: 'Belum ada nilai',
+    kicker: kGraNoDataYet.tr,
+    title: kGraNoGradesYet.tr,
     message: message,
   );
 
@@ -92,7 +93,7 @@ mixin ParentGradeUiMixin on State<ParentGradeScreen> {
   Widget buildGradeList() {
     final fallback = isLoading
         ? buildLoadingState()
-        : buildEmptyState('Data penilaian tidak tersedia');
+        : buildEmptyState(kGraAssessmentDataNotAvailable.tr);
 
     return ParentGradeListView(
       gradeList: gradeList,

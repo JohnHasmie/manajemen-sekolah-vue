@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/screens/admin_classroom_management_screen.dart';
 import 'package:manajemensekolah/features/students/presentation/screens/admin_student_management_screen.dart';
@@ -34,8 +35,8 @@ class AdminPeopleHub extends StatelessWidget {
       body: Column(
         children: [
           ShellTabHeader(
-            title: 'Orang',
-            subtitle: 'Kelola data siswa, guru, dan kelas',
+            title: kCorSheTabPeople.tr,
+            subtitle: kCorSheAdminPeopleSubtitle.tr,
             accentColor: accent,
           ),
           // Shared `DashboardListTile` — same card design as parent
@@ -49,8 +50,8 @@ class AdminPeopleHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Kelola Siswa',
-                    subtitle: 'Data siswa per kelas & tingkat',
+                    title: kCorSheAdminManageStudents.tr,
+                    subtitle: kCorSheAdminStudentsSubtitle.tr,
                     icon: DashboardModules.siswa.icon,
                     color: DashboardModules.siswa.color,
                     onTap: () => AppNavigator.push(
@@ -62,8 +63,8 @@ class AdminPeopleHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Kelola Guru',
-                    subtitle: 'Data guru & wali kelas',
+                    title: kCorSheAdminManageTeachers.tr,
+                    subtitle: kCorSheAdminTeachersSubtitle.tr,
                     icon: DashboardModules.guru.icon,
                     color: DashboardModules.guru.color,
                     onTap: () =>
@@ -73,8 +74,8 @@ class AdminPeopleHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Kelola Kelas',
-                    subtitle: 'Rombongan belajar & wali kelas',
+                    title: kCorSheAdminManageClasses.tr,
+                    subtitle: kCorSheAdminClassesSubtitle.tr,
                     icon: DashboardModules.kelas.icon,
                     color: DashboardModules.kelas.color,
                     onTap: () => AppNavigator.push(

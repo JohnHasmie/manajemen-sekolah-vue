@@ -123,7 +123,7 @@ class AttendanceInputForm extends StatelessWidget {
                     final picked = await showModernDatePicker(
                       context: context,
                       initialDate: selectedDate,
-                      title: 'Pilih Tanggal Presensi',
+                      title: kAttSelectAttendanceDate.tr,
                     );
                     if (picked != null) onDatePicked(picked);
                   },

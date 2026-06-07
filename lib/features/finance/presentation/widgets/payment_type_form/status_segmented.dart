@@ -26,7 +26,7 @@ class _StatusSegmented extends StatelessWidget {
         children: [
           Expanded(
             child: _StatusSegment(
-              label: 'Aktif',
+              label: kFinActive.tr,
               icon: Icons.check_circle_rounded,
               activeColor: const Color(0xFF059669),
               selected: value == 'active',
@@ -35,7 +35,7 @@ class _StatusSegmented extends StatelessWidget {
           ),
           Expanded(
             child: _StatusSegment(
-              label: 'Nonaktif',
+              label: kFinInactive.tr,
               icon: Icons.pause_circle_filled_rounded,
               activeColor: ColorUtils.slate600,
               selected: value == 'inactive',

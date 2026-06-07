@@ -13,6 +13,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/services/token_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_profile_components.dart';
 import 'package:manajemensekolah/features/account/data/profile_service.dart';
@@ -86,7 +87,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoggingOut = false);
-      SnackBarUtils.showError(context, 'Gagal keluar: $e');
+      SnackBarUtils.showError(context, kAccLogoutFailed.tr.replaceAll('\$e', '$e'));
     }
   }
 
@@ -122,11 +123,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     ),
                     const Spacer(),
-                    const Padding(
-                      padding: EdgeInsets.only(top: 20),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
                       child: Text(
-                        'Profil Saya',
-                        style: TextStyle(
+                        kAccMyProfile.tr,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -326,7 +327,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
               child: Text(
-                'Tap pensil di kanan atas untuk edit',
+                kAccTapPencilToEdit.tr,
                 style: TextStyle(fontSize: 10, color: ColorUtils.slate400),
               ),
             ),
@@ -334,14 +335,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Divider(color: Color(0xFFF1F5F9), height: 20),
             ),
-            _InfoRow(label: 'EMAIL', value: _email),
+            _InfoRow(label: kEmail.tr, value: _email),
             _InfoRow(
-              label: 'NO. TELEPON',
+              label: kAccPhoneNumberLabel.tr,
               value: _phone,
               trailing: _phone != '-'
                   ? null
                   : Text(
-                      'Verif',
+                      kVerify.tr,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
@@ -349,7 +350,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     ),
             ),
-            _InfoRow(label: 'ALAMAT', value: _address),
+            _InfoRow(label: kAccAddressLabel.tr, value: _address),
             const SizedBox(height: 12),
           ],
         ),
@@ -379,7 +380,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ChangePasswordDialog(primaryColor: _accentColor),
                 );
               } else {
-                SnackBarUtils.showError(context, 'Aksi belum tersedia: $route');
+                SnackBarUtils.showError(context, kAccActionNotAvailable.tr.replaceAll('\$route', route));
               }
             }),
           ),
@@ -442,9 +443,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _AccessRow(
               icon: Icons.person_outline,
               iconColor: _accentColor,
-              label: 'Peran aktif',
+              label: kActiveRole.tr,
               value: _roleLabel,
-              actionLabel: 'Ganti',
+              actionLabel: kChange.tr,
               onTap: () {
                 // TODO: role switch
               },
@@ -453,9 +454,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _AccessRow(
               icon: Icons.school_outlined,
               iconColor: ColorUtils.success600,
-              label: 'Sekolah aktif',
+              label: kActiveSchool.tr,
               value: _schoolName,
-              actionLabel: 'Ganti',
+              actionLabel: kChange.tr,
               onTap: () {
                 // TODO: school switch
               },

@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
@@ -38,10 +39,22 @@ import AttendanceDayRow from '@/components/feature/AttendanceDayRow.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Modal from '@/components/ui/Modal.vue';
 
+const { t, locale } = useI18n();
 const router = useRouter();
 const ayStore = useAcademicYearStore();
 const { activeChildId, activeChild } = useChildPicker();
 const attCache = useParentAttendance();
+
+// Localised version of the shared PARENT_ATTENDANCE_LABELS map. Computed
+// so it tracks the active locale (PARENT_ATTENDANCE_LABELS itself stays
+// Indonesian-only for data-layer code).
+const LOCALIZED_ATTENDANCE_LABELS = computed<Record<ParentAttendanceStatus, string>>(() => ({
+  hadir: t('parent.attendance.statusPresent'),
+  terlambat: t('parent.attendance.statusLate'),
+  izin: t('parent.attendance.statusExcused'),
+  sakit: t('parent.attendance.statusSick'),
+  alpha: t('parent.attendance.statusAbsent'),
+}));
 
 // ── Year-scoped cache ─────────────────────────────────────────
 const allEntries = ref<ParentAttendanceEntry[]>([]);
@@ -55,35 +68,36 @@ const month = ref(new Date().toISOString().slice(0, 7));
 type StatusFilter = 'all' | ParentAttendanceStatus;
 const statusFilter = ref<StatusFilter>('all');
 
-const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Semua status' },
-  { key: 'hadir', label: PARENT_ATTENDANCE_LABELS.hadir },
-  { key: 'terlambat', label: PARENT_ATTENDANCE_LABELS.terlambat },
-  { key: 'izin', label: PARENT_ATTENDANCE_LABELS.izin },
-  { key: 'sakit', label: PARENT_ATTENDANCE_LABELS.sakit },
-  { key: 'alpha', label: PARENT_ATTENDANCE_LABELS.alpha },
-];
+// Re-computed when the locale changes so the labels switch live.
+const STATUS_OPTIONS = computed<{ key: StatusFilter; label: string }[]>(() => [
+  { key: 'all', label: t('parent.attendance.statusAll') },
+  { key: 'hadir', label: LOCALIZED_ATTENDANCE_LABELS.value.hadir },
+  { key: 'terlambat', label: LOCALIZED_ATTENDANCE_LABELS.value.terlambat },
+  { key: 'izin', label: LOCALIZED_ATTENDANCE_LABELS.value.izin },
+  { key: 'sakit', label: LOCALIZED_ATTENDANCE_LABELS.value.sakit },
+  { key: 'alpha', label: LOCALIZED_ATTENDANCE_LABELS.value.alpha },
+]);
 const activeStatus = computed(
-  () => STATUS_OPTIONS.find((s) => s.key === statusFilter.value) ?? STATUS_OPTIONS[0],
+  () => STATUS_OPTIONS.value.find((s) => s.key === statusFilter.value) ?? STATUS_OPTIONS.value[0],
 );
 
 const showPeriodPicker = ref(false);
 const showStatusPicker = ref(false);
 
-const MONTH_OPTIONS = [
-  { val: '01', label: 'Januari' },
-  { val: '02', label: 'Februari' },
-  { val: '03', label: 'Maret' },
-  { val: '04', label: 'April' },
-  { val: '05', label: 'Mei' },
-  { val: '06', label: 'Juni' },
-  { val: '07', label: 'Juli' },
-  { val: '08', label: 'Agustus' },
-  { val: '09', label: 'September' },
-  { val: '10', label: 'Oktober' },
-  { val: '11', label: 'November' },
-  { val: '12', label: 'Desember' },
-];
+const MONTH_OPTIONS = computed(() => [
+  { val: '01', label: t('parent.attendance.monthJan') },
+  { val: '02', label: t('parent.attendance.monthFeb') },
+  { val: '03', label: t('parent.attendance.monthMar') },
+  { val: '04', label: t('parent.attendance.monthApr') },
+  { val: '05', label: t('parent.attendance.monthMay') },
+  { val: '06', label: t('parent.attendance.monthJun') },
+  { val: '07', label: t('parent.attendance.monthJul') },
+  { val: '08', label: t('parent.attendance.monthAug') },
+  { val: '09', label: t('parent.attendance.monthSep') },
+  { val: '10', label: t('parent.attendance.monthOct') },
+  { val: '11', label: t('parent.attendance.monthNov') },
+  { val: '12', label: t('parent.attendance.monthDec') },
+]);
 
 // ── Loaders ───────────────────────────────────────────────────
 async function reload(opts: { force?: boolean } = {}) {
@@ -159,7 +173,10 @@ const filteredEntries = computed<ParentAttendanceEntry[]>(() => {
 const monthLabel = computed(() => {
   const [yr, mo] = month.value.split('-').map(Number);
   if (!Number.isFinite(yr) || !Number.isFinite(mo)) return month.value;
-  return new Date(yr, mo - 1, 1).toLocaleDateString('id-ID', {
+  // BCP-47 tracks the active i18n locale so the long month name flips
+  // between "Juni" and "June" without forcing the host to pass it in.
+  const tag = locale.value === 'en' ? 'en-US' : 'id-ID';
+  return new Date(yr, mo - 1, 1).toLocaleDateString(tag, {
     month: 'long',
     year: 'numeric',
   });
@@ -167,7 +184,7 @@ const monthLabel = computed(() => {
 
 const derivedSemester = computed(() => {
   const mo = Number(month.value.split('-')[1]);
-  return mo >= 7 ? 'Ganjil' : 'Genap';
+  return mo >= 7 ? t('parent.attendance.semesterOdd') : t('parent.attendance.semesterEven');
 });
 
 const periodLabel = computed(() => `${monthLabel.value} · ${derivedSemester.value}`);
@@ -257,15 +274,17 @@ const state = computed<AsyncState<ParentAttendanceEntry[]>>(() => {
 // - Otherwise the child genuinely has nothing in this academic year.
 const emptyTitle = computed(() => {
   const hasUnfiltered = allEntries.value.length > 0;
-  if (hasUnfiltered) return 'Tidak ada catatan untuk filter ini';
-  return 'Belum ada catatan kehadiran';
+  if (hasUnfiltered) return t('parent.attendance.emptyFilteredTitle');
+  return t('parent.attendance.emptyTitle');
 });
 const emptyDescription = computed(() => {
   const hasUnfiltered = allEntries.value.length > 0;
   if (hasUnfiltered) {
-    return 'Coba ubah filter status.';
+    return t('parent.attendance.emptyFilteredDesc');
   }
-  return `${activeChild()?.name ?? 'Anak ini'} belum punya catatan presensi pada tahun ajaran ini.`;
+  return t('parent.attendance.emptyDesc', {
+    name: activeChild()?.name ?? t('parent.attendance.thisChildFallback'),
+  });
 });
 
 // ── IntersectionObserver mark-as-read ─────────────────────────
@@ -348,8 +367,8 @@ const SKELETON_ROWS = Array.from({ length: 5 });
   <div class="space-y-md pb-12">
     <!-- 1. Header -->
     <ParentPageHeader
-      kicker="Akademik · Anak"
-      title="Kehadiran"
+      :kicker="t('parent.shared.kickerAcademic')"
+      :title="t('parent.attendance.title')"
       :meta="`${activeChild()?.class_name ?? '—'}`"
     />
 
@@ -396,7 +415,7 @@ const SKELETON_ROWS = Array.from({ length: 5 });
           </div>
 
           <AppFilterChip
-            label="Status"
+            :label="t('parent.attendance.chipStatus')"
             :value="activeStatus.label"
             icon-name="check-circle"
             tone="violet"
@@ -432,9 +451,9 @@ const SKELETON_ROWS = Array.from({ length: 5 });
         v-if="state.status === 'content'"
         class="flex items-center justify-between mb-2"
       >
-        <h3 class="text-sm font-extrabold text-slate-900">Riwayat harian</h3>
+        <h3 class="text-sm font-extrabold text-slate-900">{{ t('parent.attendance.sectionDaily') }}</h3>
         <span class="text-[11px] font-bold text-slate-500">
-          {{ filteredEntries.length }} catatan
+          {{ t('parent.attendance.recordsCount', { count: filteredEntries.length }) }}
         </span>
       </header>
 
@@ -467,13 +486,13 @@ const SKELETON_ROWS = Array.from({ length: 5 });
       @click="openCalendar"
     >
       <NavIcon name="calendar" :size="16" />
-      Lihat kalender penuh →
+      {{ t('parent.attendance.fullCalendarCta') }}
     </button>
 
     <!-- Period picker modal -->
     <Modal
       v-if="showPeriodPicker"
-      title="Filter Bulan & Tahun"
+      :title="t('parent.attendance.modalPeriodTitle')"
       @close="showPeriodPicker = false"
     >
       <div class="space-y-md">
@@ -518,7 +537,7 @@ const SKELETON_ROWS = Array.from({ length: 5 });
     <!-- Status picker modal -->
     <Modal
       v-if="showStatusPicker"
-      title="Filter Status Kehadiran"
+      :title="t('parent.attendance.modalStatusTitle')"
       @close="showStatusPicker = false"
     >
       <ul class="space-y-1">

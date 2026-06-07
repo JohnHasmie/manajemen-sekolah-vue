@@ -142,7 +142,7 @@ class ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
         'en': 'Change Password',
         'id': 'Ubah Kata Sandi',
       }),
-      subtitle: 'Masukkan kata sandi baru Anda',
+      subtitle: kSetEnterNewPassword.tr,
       icon: Icons.lock_rounded,
       primaryColor: widget.primaryColor,
       content: Form(

@@ -75,7 +75,7 @@ mixin AdminDetailUiListMixin on ConsumerState<AdminAttendanceDetailPage> {
             'en': 'No Students Found',
             'id': 'Siswa Tidak Ditemukan',
           }),
-          subtitle: 'Tidak ada siswa yang ditemukan untuk kriteria ini',
+          subtitle: kAttNoStudentsForCriteria.tr,
         ),
       ),
     );

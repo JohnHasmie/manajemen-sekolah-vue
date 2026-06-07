@@ -1,55 +1,115 @@
 /**
- * Format helpers — Indonesian-locale formatting.
+ * Format helpers — locale-aware via the active vue-i18n locale.
  *
  * Mirrors `lib/utils/currency_formatter.dart` + `lib/utils/date_utils.dart`
- * from the Flutter app.
+ * from the Flutter app. The Intl formatters resolve their BCP-47 tag at
+ * call time from the i18n singleton, so calling code doesn't need to
+ * thread the locale through — switching language refreshes every
+ * formatted string on the next render.
  */
+import { i18n } from './i18n';
 
-const RUPIAH = new Intl.NumberFormat('id-ID', {
+// Currency stays as IDR formatted with Indonesian grouping. Switching to
+// English changes the grouping/decimal style but NOT the currency code —
+// the school's amounts stay in rupiah either way.
+const RUPIAH_ID = new Intl.NumberFormat('id-ID', {
+  style: 'currency',
+  currency: 'IDR',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
+const RUPIAH_EN = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'IDR',
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 });
 
-const NUMBER = new Intl.NumberFormat('id-ID');
+const NUMBER_ID = new Intl.NumberFormat('id-ID');
+const NUMBER_EN = new Intl.NumberFormat('en-US');
 
-const DATE_LONG = new Intl.DateTimeFormat('id-ID', {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
+// Cache per-locale formatters so we don't allocate on every call.
+const dateLongCache: Record<string, Intl.DateTimeFormat> = {};
+const dateShortCache: Record<string, Intl.DateTimeFormat> = {};
+const dateTimeCache: Record<string, Intl.DateTimeFormat> = {};
+const timeOnlyCache: Record<string, Intl.DateTimeFormat> = {};
 
-const DATE_SHORT = new Intl.DateTimeFormat('id-ID', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-});
+function activeBcp47(): string {
+  // `i18n.global.locale` is a Ref when legacy is false (our setup), a
+  // plain string otherwise. Handle both shapes defensively.
+  const raw = i18n.global.locale as unknown as { value?: string } | string;
+  const code = typeof raw === 'string' ? raw : raw?.value ?? 'id';
+  return code === 'en' ? 'en-US' : 'id-ID';
+}
 
-const DATE_TIME = new Intl.DateTimeFormat('id-ID', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-});
+function dateLong(): Intl.DateTimeFormat {
+  const tag = activeBcp47();
+  if (!dateLongCache[tag]) {
+    dateLongCache[tag] = new Intl.DateTimeFormat(tag, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }
+  return dateLongCache[tag];
+}
 
-const TIME_ONLY = new Intl.DateTimeFormat('id-ID', {
-  hour: '2-digit',
-  minute: '2-digit',
-});
+function dateShort(): Intl.DateTimeFormat {
+  const tag = activeBcp47();
+  if (!dateShortCache[tag]) {
+    dateShortCache[tag] = new Intl.DateTimeFormat(tag, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+  return dateShortCache[tag];
+}
+
+function dateTime(): Intl.DateTimeFormat {
+  const tag = activeBcp47();
+  if (!dateTimeCache[tag]) {
+    dateTimeCache[tag] = new Intl.DateTimeFormat(tag, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+  return dateTimeCache[tag];
+}
+
+function timeOnly(): Intl.DateTimeFormat {
+  const tag = activeBcp47();
+  if (!timeOnlyCache[tag]) {
+    timeOnlyCache[tag] = new Intl.DateTimeFormat(tag, {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+  return timeOnlyCache[tag];
+}
+
+function rupiah(): Intl.NumberFormat {
+  return activeBcp47() === 'en-US' ? RUPIAH_EN : RUPIAH_ID;
+}
+
+function number(): Intl.NumberFormat {
+  return activeBcp47() === 'en-US' ? NUMBER_EN : NUMBER_ID;
+}
 
 export function formatRupiah(value: number | string | null | undefined): string {
   if (value === null || value === undefined || value === '') return 'Rp 0';
   const n = typeof value === 'string' ? Number(value) : value;
   if (Number.isNaN(n)) return 'Rp 0';
-  return RUPIAH.format(n);
+  return rupiah().format(n);
 }
 
 export function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined) return '0';
-  return NUMBER.format(value);
+  return number().format(value);
 }
 
 /**
@@ -80,31 +140,31 @@ export function formatDateLong(value: Date | string | null | undefined): string 
   if (!value) return '';
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return '';
-  return DATE_LONG.format(d);
+  return dateLong().format(d);
 }
 
 export function formatDateShort(value: Date | string | null | undefined): string {
   if (!value) return '';
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return '';
-  return DATE_SHORT.format(d);
+  return dateShort().format(d);
 }
 
 export function formatDateTime(value: Date | string | null | undefined): string {
   if (!value) return '';
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return '';
-  return DATE_TIME.format(d);
+  return dateTime().format(d);
 }
 
 export function formatTime(value: Date | string | null | undefined): string {
   if (!value) return '';
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return '';
-  return TIME_ONLY.format(d);
+  return timeOnly().format(d);
 }
 
-/** Relative time: "2 jam lalu", "kemarin", "5 hari lalu". */
+/** Relative time: "2 hr ago" / "2 jam lalu", "yesterday" / "kemarin", etc. */
 export function formatRelative(value: Date | string | null | undefined): string {
   if (!value) return '';
   const d = value instanceof Date ? value : new Date(value);
@@ -115,10 +175,13 @@ export function formatRelative(value: Date | string | null | undefined): string 
   const hr = Math.round(diffMs / 3_600_000);
   const day = Math.round(diffMs / 86_400_000);
 
-  if (Math.abs(min) < 1) return 'Baru saja';
-  if (Math.abs(min) < 60) return `${min} menit lalu`;
-  if (Math.abs(hr) < 24) return `${hr} jam lalu`;
-  if (day === 1) return 'Kemarin';
-  if (day < 7) return `${day} hari lalu`;
+  // Pull strings from the i18n singleton — reusing the parent activity
+  // keys (already present in both locales) keeps the wording consistent.
+  const t = i18n.global.t.bind(i18n.global);
+  if (Math.abs(min) < 1) return t('parent.activity.timeJustNow');
+  if (Math.abs(min) < 60) return t('parent.activity.timeMinutesAgo', { n: min });
+  if (Math.abs(hr) < 24) return t('parent.activity.timeHoursAgo', { n: hr });
+  if (day === 1) return t('parent.activity.timeYesterday');
+  if (day < 7) return t('parent.activity.timeDaysAgo', { n: day });
   return formatDateShort(d);
 }

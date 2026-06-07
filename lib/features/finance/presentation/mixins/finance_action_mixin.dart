@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/action_confirm_sheet.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
@@ -69,14 +70,12 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
   Future<void> deletePaymentType(Map<String, dynamic> paymentType) async {
     final confirmed = await ActionConfirmSheet.show(
       context: context,
-      title: 'Hapus jenis pembayaran',
-      message:
-          'Yakin ingin menghapus jenis pembayaran '
-          '"${paymentType['name']}"?\n\n'
-          'Jika sudah ada tagihan untuk jenis ini, '
-          'jenis akan dinonaktifkan saja agar riwayat '
-          'pembayaran tetap aman.',
-      confirmText: 'Hapus',
+      title: kFinDeletePaymentType.tr,
+      message: kFinDeletePaymentTypeMsg.tr.replaceFirst(
+        '\${paymentType[\'name\']}',
+        '${paymentType['name']}',
+      ),
+      confirmText: kFinDelete.tr,
       isDestructive: true,
     );
 
@@ -87,13 +86,15 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
         SnackBarUtils.showSuccess(
           context,
           result.softDeleted
-              ? 'Jenis pembayaran dinonaktifkan '
-                    '— tagihan lama tetap tersimpan.'
-              : 'Jenis pembayaran berhasil dihapus.',
+              ? kFinTypeDisabled.tr
+              : kFinTypeDeletedSuccess.tr,
         );
         await loadDataAfterAction();
       } else {
-        SnackBarUtils.showError(context, 'Gagal menghapus: ${result.error}');
+        SnackBarUtils.showError(
+          context,
+          kFinDeleteError.tr.replaceFirst('\${result.error}', '${result.error}'),
+        );
       }
     }
   }
@@ -174,12 +175,14 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
     required int billsGenerated,
     required String? monthApplied,
   }) {
-    if (!active) return 'Jenis pembayaran dinonaktifkan.';
-    if (billsGenerated <= 0) return 'Jenis pembayaran diaktifkan.';
+    if (!active) return kFinTypeDisabledSuccess.tr;
+    if (billsGenerated <= 0) return kFinTypeEnabledSuccess.tr;
     final monthLabel = monthApplied != null
         ? ' untuk ${_humanMonthLabel(monthApplied)}'
         : '';
-    return 'Jenis diaktifkan, $billsGenerated tagihan baru$monthLabel.';
+    return kFinTypeEnabledWithBills.tr
+        .replaceFirst('\$billsGenerated', '$billsGenerated')
+        .replaceFirst('\$monthLabel', monthLabel);
   }
 
   /// Converts a `YYYY-MM` string into a human-readable
@@ -268,13 +271,11 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
 
     final confirmed = await ActionConfirmSheet.show(
       context: context,
-      title: 'Hapus Tagihan',
-      message:
-          'Apakah Anda yakin ingin menghapus SEMUA '
-          'tagihan untuk "$name" periode '
-          '$formattedMonth? Ini tidak akan menghapus '
-          'Jenis Pembayarannya.',
-      confirmText: 'Hapus Tagihan',
+      title: kFinDeleteBill.tr,
+      message: kFinDeleteBillMsg.tr
+          .replaceFirst('\$name', '$name')
+          .replaceFirst('\$formattedMonth', '$formattedMonth'),
+      confirmText: kFinDeleteBill.tr,
       icon: Icons.delete_rounded,
       isDestructive: true,
     );
@@ -289,8 +290,9 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
         if (error == null) {
           SnackBarUtils.showSuccess(
             context,
-            'Tagihan "$name" periode $formattedMonth '
-            'berhasil dihapus',
+            kFinBillDeletedSuccess.tr
+                .replaceFirst('\$name', '$name')
+                .replaceFirst('\$formattedMonth', '$formattedMonth'),
           );
           await loadDataAfterAction();
         } else {

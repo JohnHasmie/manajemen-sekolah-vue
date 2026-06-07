@@ -29,6 +29,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/confirmation_dialog.dart';
 import 'package:manajemensekolah/features/settings/data/settings_service.dart';
@@ -220,7 +221,7 @@ class _DaySessionManagementSheetState extends State<DaySessionManagementSheet> {
       context: context,
       barrierDismissible: !_isBulkDeleting,
       builder: (_) => ConfirmationDialog(
-        title: 'Hapus ${_selectedIds.length} sesi pelajaran?',
+        title: kSetDeleteSessions.tr.replaceAll('{count}', '${_selectedIds.length}'),
         content: message,
         confirmText: 'Hapus ${_selectedIds.length} sesi',
         confirmColor: const Color(0xFFDC2626),

@@ -29,8 +29,8 @@ mixin LessonPlanAiResultRegenerateMixin
     _promptController.clear();
     AppBottomSheet.show<void>(
       context: context,
-      title: 'Generate Ulang AI',
-      subtitle: 'Susun ulang konten RPP dengan instruksi tambahan',
+      title: kLesPlaRegenerateAiTitle.tr,
+      subtitle: kLesPlaRegenerateAiSubtitle.tr,
       icon: Icons.auto_awesome,
       primaryColor: ColorUtils.primary,
       content: _buildRegenerateBody(),
@@ -53,21 +53,19 @@ mixin LessonPlanAiResultRegenerateMixin
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Sistem akan menyusun ulang konten RPP berdasarkan '
-          'data saat ini. Anda dapat menambahkan instruksi '
-          'spesifik di bawah.',
+          kLesPlaRegenerateDescription.tr,
           style: TextStyle(color: ColorUtils.slate600, fontSize: 14),
         ),
         const SizedBox(height: AppSpacing.lg),
         LessonPlanDialogField(
-          label: 'Mata Pelajaran',
+          label: kSubject.tr,
           value: subjectNameController.text,
         ),
         const SizedBox(height: AppSpacing.md),
-        LessonPlanDialogField(label: 'Bab', value: chapterController.text),
+        LessonPlanDialogField(label: kLesPlaChapter.tr, value: chapterController.text),
         const SizedBox(height: AppSpacing.lg),
         Text(
-          'Instruksi / Prompt Tambahan (Opsional)',
+          kLesPlaAdditionalInstructions.tr,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             color: ColorUtils.slate800,

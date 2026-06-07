@@ -15,6 +15,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/finance/data/money_flow_service.dart';
 
 class FinanceKpiBlock extends ConsumerWidget {
@@ -104,7 +105,7 @@ class _Loaded extends StatelessWidget {
               children: [
                 Expanded(
                   child: _KpiColumn(
-                    label: 'Masuk',
+                    label: kFinIncoming.tr,
                     value: figures.incomingAmount,
                     captionText: '${figures.incomingCount} transaksi',
                     deltaText: figures.incomingDelta,
@@ -114,7 +115,7 @@ class _Loaded extends StatelessWidget {
                 _Divider(),
                 Expanded(
                   child: _KpiColumn(
-                    label: 'Terutang',
+                    label: kFinOutstanding.tr,
                     value: figures.outstandingAmount,
                     captionText: '${figures.outstandingCount} tagihan',
                     valueColor: const Color(0xFF0F172A),
@@ -123,13 +124,18 @@ class _Loaded extends StatelessWidget {
                 _Divider(),
                 Expanded(
                   child: _KpiColumn(
-                    label: 'Jatuh tempo',
+                    label: kFinOverdueLabel.tr,
                     value: figures.overdueAmount,
                     valueColor: figures.overdueCount > 0
                         ? const Color(0xFFDC2626)
                         : const Color(0xFF0F172A),
                     chip: figures.overdueCount > 0
-                        ? _AlertChip(label: '${figures.overdueCount} wali')
+                        ? _AlertChip(
+                            label: kFinOverdueGuardians.tr.replaceFirst(
+                              '\${figures.overdueCount}',
+                              '${figures.overdueCount}',
+                            ),
+                          )
                         : null,
                     onTap: figures.overdueCount > 0 ? onOverdueTap : null,
                   ),
@@ -334,7 +340,7 @@ class _AliranBar extends StatelessWidget {
         Icon(Icons.water_drop_outlined, size: 11, color: ColorUtils.slate500),
         const SizedBox(width: 4),
         Text(
-          'ALIRAN',
+          kFinFlow.tr,
           style: TextStyle(
             fontSize: 9,
             fontWeight: FontWeight.w800,

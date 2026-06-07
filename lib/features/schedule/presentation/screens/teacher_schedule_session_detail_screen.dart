@@ -127,7 +127,7 @@ class TeacherScheduleSessionDetailScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        'DETAIL SESI',
+                        kSchSessionDetails.tr,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -143,26 +143,26 @@ class TeacherScheduleSessionDetailScreen extends StatelessWidget {
                         children: [
                           _detailRow(
                             Icons.access_time_rounded,
-                            'Waktu',
+                            kSchTime.tr,
                             '${formatTimeStr(m.startTime)} – '
                                 '${formatTimeStr(m.endTime)}',
                           ),
                           if ((m.dayName ?? '').isNotEmpty)
                             _detailRow(
                               Icons.calendar_today_rounded,
-                              'Hari',
+                              kDay.tr,
                               _formatDay(m.dayName!),
                             ),
                           if (_periodeLabel().isNotEmpty)
                             _detailRow(
                               Icons.school_rounded,
-                              'Periode',
+                              kSchPeriod.tr,
                               _periodeLabel(),
                             ),
                           if ((m.teacherName ?? '').isNotEmpty)
                             _detailRow(
                               Icons.person_rounded,
-                              'Pengajar',
+                              kTeacher.tr,
                               m.teacherName!,
                             ),
                         ],
@@ -425,7 +425,7 @@ class TeacherScheduleSessionDetailScreen extends StatelessWidget {
             Expanded(
               child: _actionTile(
                 icon: Icons.fact_check_rounded,
-                title: 'Ambil Presensi',
+                title: kSchTakeAttendance.tr,
                 sub: attCount,
                 color: ColorUtils.success600,
                 onTap: onAttendanceTap,
@@ -435,7 +435,7 @@ class TeacherScheduleSessionDetailScreen extends StatelessWidget {
             Expanded(
               child: _actionTile(
                 icon: Icons.assignment_rounded,
-                title: 'Kegiatan Kelas',
+                title: kClassActivities.tr,
                 sub: actCount,
                 color: ColorUtils.warning600,
                 onTap: onActivityTap,
@@ -449,7 +449,7 @@ class TeacherScheduleSessionDetailScreen extends StatelessWidget {
             Expanded(
               child: _actionTile(
                 icon: Icons.library_books_rounded,
-                title: 'Materi & RPP',
+                title: kSchMaterialsAndLessonPlan.tr,
                 sub: matCount,
                 color: ColorUtils.brandCobalt,
                 onTap: onMaterialTap,
@@ -459,8 +459,8 @@ class TeacherScheduleSessionDetailScreen extends StatelessWidget {
             Expanded(
               child: _actionTile(
                 icon: Icons.grade_rounded,
-                title: 'Buku Nilai',
-                sub: 'Lihat & input nilai',
+                title: kSchGradeBook.tr,
+                sub: kSchViewInputGrades.tr,
                 color: const Color(0xFF7C3AED),
                 onTap: onGradeBookTap ?? () {},
               ),

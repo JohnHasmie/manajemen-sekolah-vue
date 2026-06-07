@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
@@ -49,7 +50,7 @@ class AssignWaliKelasSheet extends StatefulWidget {
   }) {
     return AppBottomSheet.show<bool>(
       context: context,
-      title: 'Tetapkan Wali Kelas',
+      title: kClaAssignWaliKelas.tr,
       subtitle: subjectName != null
           ? 'Kelas $className · $subjectName'
           : 'Kelas $className',
@@ -121,7 +122,7 @@ class _AssignWaliKelasSheetState extends State<AssignWaliKelasSheet> {
     } catch (e) {
       setState(() {
         _loading = false;
-        _loadError = 'Gagal memuat daftar guru: $e';
+        _loadError = '${kClaFailedToLoadTeachers.tr}: $e';
       });
     }
   }
@@ -141,13 +142,13 @@ class _AssignWaliKelasSheetState extends State<AssignWaliKelasSheet> {
       SnackBarUtils.showSuccess(
         context,
         _selectedTeacherId == null
-            ? 'Wali kelas berhasil dihapus'
-            : 'Wali kelas berhasil diperbarui',
+            ? kClaWaliRemovedSuccess.tr
+            : kClaWaliUpdatedSuccess.tr,
       );
       AppNavigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      SnackBarUtils.showError(context, 'Gagal menyimpan wali kelas: $e');
+      SnackBarUtils.showError(context, '${kClaFailedToSaveWali.tr}: $e');
       setState(() => _saving = false);
     }
   }
@@ -176,11 +177,11 @@ class _AssignWaliKelasSheetState extends State<AssignWaliKelasSheet> {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: EmptyState(
-          title: 'Gagal memuat',
+          title: kClaFailedToLoad.tr,
           subtitle: _loadError!,
           icon: Icons.error_outline_rounded,
           onPressed: _fetch,
-          buttonText: 'Coba lagi',
+          buttonText: kClaTryAgain.tr,
         ),
       );
     }
@@ -196,7 +197,7 @@ class _AssignWaliKelasSheetState extends State<AssignWaliKelasSheet> {
         _Search(controller: _searchController, primary: primary),
         const SizedBox(height: AppSpacing.md),
         if (_currentWali != null) ...[
-          _SectionHeader(title: 'Saat ini', accent: primary),
+          _SectionHeader(title: kClaCurrently.tr, accent: primary),
           _TeacherRow(
             teacher: _currentWali!,
             isSelected: _selectedTeacherId == _currentWali!['id'],
@@ -222,7 +223,7 @@ class _AssignWaliKelasSheetState extends State<AssignWaliKelasSheet> {
                 color: ColorUtils.error600,
               ),
               label: Text(
-                'Lepas wali kelas',
+                kClaRemoveWaliKelas.tr,
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
@@ -235,7 +236,7 @@ class _AssignWaliKelasSheetState extends State<AssignWaliKelasSheet> {
           const SizedBox(height: AppSpacing.sm),
         ],
         if (filteredAvailable.isNotEmpty) ...[
-          _SectionHeader(title: 'Tersedia', accent: primary),
+          _SectionHeader(title: kClaAvailable.tr, accent: primary),
           for (final t in filteredAvailable)
             _TeacherRow(
               teacher: t,
@@ -247,7 +248,7 @@ class _AssignWaliKelasSheetState extends State<AssignWaliKelasSheet> {
         ],
         if (filteredAlready.isNotEmpty) ...[
           _SectionHeader(
-            title: 'Sudah jadi wali',
+            title: kClaAlreadyWali.tr,
             accent: primary,
             warning: true,
           ),
@@ -263,18 +264,18 @@ class _AssignWaliKelasSheetState extends State<AssignWaliKelasSheet> {
         if (filteredAvailable.isEmpty &&
             filteredAlready.isEmpty &&
             _currentWali == null) ...[
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
             child: EmptyState(
-              title: 'Tidak ada guru',
-              subtitle: 'Tidak ada guru yang cocok dengan pencarian',
+              title: kClaNoTeachers.tr,
+              subtitle: kClaNoTeachersMatch.tr,
               icon: Icons.search_off_rounded,
             ),
           ),
         ],
         const SizedBox(height: AppSpacing.md),
         BottomSheetFooter(
-          primaryLabel: _saving ? 'Menyimpan...' : 'Simpan',
+          primaryLabel: _saving ? kClaSaving.tr : 'Simpan',
           primaryColor: primary,
           primaryEnabled: !_saving && _selectionDirty,
           onPrimary: _save,

@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_crud_scaffold.dart';
 import 'package:manajemensekolah/core/widgets/admin_data_menu.dart';
@@ -341,7 +342,10 @@ class StudentManagementScreenState
               title: (s['name'] ?? '?').toString(),
               subtitle: (s['class_name'] ?? '').toString().isEmpty
                   ? null
-                  : 'Kelas ${s['class_name']}',
+                  : kStuClassLabel.tr.replaceAll(
+                      '{className}',
+                      s['class_name'].toString(),
+                    ),
             ),
           )
           .toList(),

@@ -8,6 +8,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { api } from '@/lib/http';
 import { ParentService } from '@/services/parent.service';
 import { AnnouncementService } from '@/services/announcements.service';
@@ -31,6 +32,8 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Modal from '@/components/ui/Modal.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
+const { t } = useI18n();
+
 const items = ref<Announcement[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
@@ -47,31 +50,32 @@ const searchQuery = ref('');
 const showPriorityPicker = ref(false);
 const showStatusPicker = ref(false);
 
-const PRIORITY_OPTIONS: { key: PriorityFilter; label: string }[] = [
-  { key: 'all', label: 'Semua prioritas' },
-  { key: 'urgent', label: 'Mendesak' },
-  { key: 'high', label: 'Penting' },
-  { key: 'normal', label: 'Biasa' },
-  { key: 'low', label: 'Rendah' },
-];
+// Labels are computed so they re-render when the locale switches.
+const PRIORITY_OPTIONS = computed<{ key: PriorityFilter; label: string }[]>(() => [
+  { key: 'all', label: t('parent.announcements.priorityAll') },
+  { key: 'urgent', label: t('parent.announcements.priorityUrgent') },
+  { key: 'high', label: t('parent.announcements.priorityHigh') },
+  { key: 'normal', label: t('parent.announcements.priorityNormal') },
+  { key: 'low', label: t('parent.announcements.priorityLow') },
+]);
 
-const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Semua status' },
-  { key: 'active', label: 'Aktif' },
-  { key: 'scheduled', label: 'Terjadwal' },
-  { key: 'expired', label: 'Kedaluwarsa' },
-];
+const STATUS_OPTIONS = computed<{ key: StatusFilter; label: string }[]>(() => [
+  { key: 'all', label: t('parent.announcements.statusAll') },
+  { key: 'active', label: t('parent.announcements.statusActive') },
+  { key: 'scheduled', label: t('parent.announcements.statusScheduled') },
+  { key: 'expired', label: t('parent.announcements.statusExpired') },
+]);
 
 const activePriority = computed(
   () =>
-    PRIORITY_OPTIONS.find((p) => p.key === priorityFilter.value) ??
-    PRIORITY_OPTIONS[0],
+    PRIORITY_OPTIONS.value.find((p) => p.key === priorityFilter.value) ??
+    PRIORITY_OPTIONS.value[0],
 );
 
 const activeStatus = computed(
   () =>
-    STATUS_OPTIONS.find((s) => s.key === statusFilter.value) ??
-    STATUS_OPTIONS[0],
+    STATUS_OPTIONS.value.find((s) => s.key === statusFilter.value) ??
+    STATUS_OPTIONS.value[0],
 );
 
 // ── Event Banner Data & State ──
@@ -255,26 +259,26 @@ const acaraCount = computed(
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'megaphone',
-    label: 'Total',
+    label: t('parent.announcements.kpiTotal'),
     value: items.value.length,
     tone: 'violet',
   },
   {
     icon: 'bell',
-    label: 'Belum Dibaca',
+    label: t('parent.announcements.kpiUnread'),
     value: unreadCount.value,
     tone: unreadCount.value > 0 ? 'amber' : 'green',
     accented: unreadCount.value > 0,
   },
   {
     icon: 'star',
-    label: 'Penting',
+    label: t('parent.announcements.kpiImportant'),
     value: pentingCount.value,
     tone: 'red',
   },
   {
     icon: 'calendar',
-    label: 'Acara',
+    label: t('parent.announcements.kpiEvents'),
     value: acaraCount.value,
     tone: 'brand',
   },
@@ -350,10 +354,10 @@ function pickStatus(k: StatusFilter) {
   <div class="space-y-md pb-12">
     <!-- ── 1. Header ────────────────────────────────────────── -->
     <ParentPageHeader
-      kicker="Komunikasi · Pengumuman Sekolah"
-      title="Pengumuman"
+      :kicker="t('parent.announcements.kicker')"
+      :title="t('parent.announcements.title')"
       :interpolate-child="false"
-      :meta="`${items.length} pengumuman · ${unreadCount} belum dibaca`"
+      :meta="t('parent.announcements.metaCounts', { count: items.length, unread: unreadCount })"
     />
 
     <!-- ── 2. KPI strip ─────────────────────────────────────── -->
@@ -362,19 +366,19 @@ function pickStatus(k: StatusFilter) {
     <!-- ── 3. Filter toolbar ────────────────────────────────── -->
     <PageFilterToolbar
       :search="searchQuery"
-      search-placeholder="Cari judul, isi, atau sumber…"
+      :search-placeholder="t('parent.announcements.searchPlaceholder')"
       @update:search="(v) => (searchQuery = v)"
     >
       <template #chips>
         <AppFilterChip
-          label="Prioritas"
+          :label="t('parent.announcements.chipPriority')"
           :value="activePriority.label"
           icon-name="bell"
           tone="amber"
           @click="showPriorityPicker = true"
         />
         <AppFilterChip
-          label="Status"
+          :label="t('parent.announcements.chipStatus')"
           :value="activeStatus.label"
           icon-name="calendar"
           tone="violet"
@@ -442,8 +446,8 @@ function pickStatus(k: StatusFilter) {
     <!-- ── 5. Body ──────────────────────────────────────────── -->
     <AsyncView
       :state="state"
-      empty-title="Belum ada pengumuman"
-      empty-description="Pengumuman sekolah akan muncul di sini."
+      :empty-title="t('parent.announcements.emptyTitle')"
+      :empty-description="t('parent.announcements.emptyDesc')"
       @retry="reload"
     >
       <template #default>
@@ -476,7 +480,7 @@ function pickStatus(k: StatusFilter) {
     <!-- ── Priority picker ──────────────────────────────────── -->
     <Modal
       v-if="showPriorityPicker"
-      title="Filter Prioritas"
+      :title="t('parent.announcements.filterPriorityTitle')"
       @close="showPriorityPicker = false"
     >
       <ul class="space-y-1">
@@ -499,7 +503,7 @@ function pickStatus(k: StatusFilter) {
     <!-- ── Status picker ────────────────────────────────────── -->
     <Modal
       v-if="showStatusPicker"
-      title="Filter Status"
+      :title="t('parent.announcements.filterStatusTitle')"
       @close="showStatusPicker = false"
     >
       <ul class="space-y-1">

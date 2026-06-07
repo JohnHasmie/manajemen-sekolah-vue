@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/teacher_announcement_screen.dart';
@@ -37,8 +38,8 @@ class TeacherOtherHub extends ConsumerWidget {
       body: Column(
         children: [
           ShellTabHeader(
-            title: 'Lainnya',
-            subtitle: 'Pengumuman, rekomendasi belajar, dan akun',
+            title: kCorSheTabOther.tr,
+            subtitle: kCorSheTeacherOtherSubtitle.tr,
             accentColor: accent,
           ),
           // Shared `DashboardListTile` — same card design as parent
@@ -50,8 +51,8 @@ class TeacherOtherHub extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Pengumuman',
-                    subtitle: 'Pengumuman resmi sekolah',
+                    title: kAnnouncements.tr,
+                    subtitle: kCorSheAdminAnnouncementsSubtitle.tr,
                     icon: DashboardModules.pengumuman.icon,
                     color: DashboardModules.pengumuman.color,
                     onTap: () => AppNavigator.push(
@@ -64,8 +65,8 @@ class TeacherOtherHub extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: DashboardListTile(
-                      title: 'Rekomendasi Belajar',
-                      subtitle: 'Saran belajar AI untuk wali murid',
+                      title: kCorSheTeacherRecommendations.tr,
+                      subtitle: kCorSheTeacherRecommendationsSubtitle.tr,
                       icon: DashboardModules.rekomendasi.icon,
                       color: DashboardModules.rekomendasi.color,
                       onTap: () => _openRecommendation(context, ref),
@@ -74,8 +75,8 @@ class TeacherOtherHub extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Akun',
-                    subtitle: 'Profil & pengaturan',
+                    title: kCorSheAccount.tr,
+                    subtitle: kCorSheProfileSettings.tr,
                     icon: DashboardModules.akun.icon,
                     color: DashboardModules.akun.color,
                     onTap: () =>
@@ -94,13 +95,13 @@ class TeacherOtherHub extends ConsumerWidget {
   void _openRecommendation(BuildContext context, WidgetRef ref) {
     final state = ref.read(dashboardProvider).asData?.value;
     if (state == null) {
-      SnackBarUtils.showInfo(context, 'Data dashboard belum termuat.');
+      SnackBarUtils.showInfo(context, kCorSheDashboardNotLoaded.tr);
       return;
     }
     final tp = ref.read(teacherRiverpod);
     final id = tp.teacherId;
     if (id == null || id.isEmpty) {
-      SnackBarUtils.showInfo(context, 'ID guru tidak ditemukan.');
+      SnackBarUtils.showInfo(context, kCorSheTeacherIdNotFound.tr);
       return;
     }
     final teacherData = <String, String>{

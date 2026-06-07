@@ -27,6 +27,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_layout.dart';
@@ -91,7 +92,7 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
       setState(() => _isLoading = false);
       SnackBarUtils.showError(
         context,
-        'Gagal memuat data: ${ErrorUtils.getFriendlyMessage(e)}',
+        '${kSetFailedLoadData.tr}${ErrorUtils.getFriendlyMessage(e)}',
       );
     }
   }
@@ -168,8 +169,8 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
           kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
           showBackButton: true,
           onBackPressed: () => AppNavigator.pop(context),
-          subtitle: 'WAKTU PEMBELAJARAN',
-          title: 'Pengaturan Waktu',
+          subtitle: kSetLearningTime.tr,
+          title: kSetTimeSettings.tr,
         ),
         kpiCard: _isLoading ? null : _kpiCard(),
         onRefresh: _loadInitialData,
@@ -223,9 +224,9 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
           children: [
             Expanded(
               child: _kpiCell(
-                label: 'Hari aktif',
+                label: kSetActiveDays.tr,
                 value: '$_activeDayCount',
-                pillLabel: 'dari ${_days.length}',
+                pillLabel: '${kSetFrom.tr}${_days.length}',
                 pillBg: const Color(0xFFDCFCE7),
                 pillFg: const Color(0xFF15803D),
               ),
@@ -233,9 +234,9 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
             Container(width: 1, height: 36, color: ColorUtils.slate100),
             Expanded(
               child: _kpiCell(
-                label: 'Total jam',
+                label: kSetTotalHours.tr,
                 value: '$_totalSessionCount',
-                pillLabel: 'sesi/minggu',
+                pillLabel: kSetSessionsPerWeek.tr,
                 pillBg: ColorUtils.brandCobalt.withValues(alpha: 0.10),
                 pillFg: ColorUtils.brandCobalt,
               ),
@@ -243,11 +244,11 @@ class _TimeSettingsScreenState extends State<TimeSettingsScreen> {
             Container(width: 1, height: 36, color: ColorUtils.slate100),
             Expanded(
               child: _kpiCell(
-                label: 'Durasi',
+                label: kSetDuration.tr,
                 value: _averageDurationMinutes == 0
                     ? '–'
                     : "$_averageDurationMinutes'",
-                pillLabel: 'rata-rata',
+                pillLabel: kSetAverage.tr,
                 pillBg: const Color(0xFFFEF3C7),
                 pillFg: const Color(0xFFB45309),
               ),

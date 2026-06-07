@@ -23,6 +23,7 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
@@ -106,11 +107,11 @@ class _KelolaTahunAjaranScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => ConfirmationDialog(
-        title: 'Arsipkan Tahun Ajaran',
+        title: kSetArchiveYear.tr,
         content:
             'Arsipkan tahun ajaran ${year['year']}? '
             'Tahun arsip menjadi read-only dan tidak bisa diubah.',
-        confirmText: 'Ya, Arsipkan',
+        confirmText: kSetYesArchive.tr,
         confirmColor: ColorUtils.warning600,
       ),
     );
@@ -174,11 +175,11 @@ class _KelolaTahunAjaranScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => ConfirmationDialog(
-        title: 'Hapus Tahun Ajaran',
+        title: kSetDeleteYear.tr,
         content:
             'Hapus tahun ajaran ${year['year']}? '
             'Tindakan ini tidak dapat dibatalkan.',
-        confirmText: 'Ya, Hapus',
+        confirmText: kSetYesDelete.tr,
         confirmColor: ColorUtils.error600,
       ),
     );
@@ -219,8 +220,8 @@ class _KelolaTahunAjaranScreenState
 
     AppBottomSheet.show(
       context: context,
-      title: year['year']?.toString() ?? 'Tahun Ajaran',
-      subtitle: 'Pilih tindakan',
+      title: year['year']?.toString() ?? kSetAcademicYear.tr,
+      subtitle: kSetChooseAction.tr,
       icon: Icons.tune_rounded,
       primaryColor: _accent,
       content: Column(
@@ -229,8 +230,8 @@ class _KelolaTahunAjaranScreenState
           if (!isCurrent && !isArchived)
             _QuickActionRow(
               icon: Icons.check_circle_rounded,
-              label: 'Aktifkan',
-              subtitle: 'Jadikan tahun ajaran ini sebagai "Saat Ini"',
+              label: kSetActivate.tr,
+              subtitle: kSetMakeCurrent.tr,
               tint: ColorUtils.green600,
               onTap: () {
                 Navigator.pop(context);
@@ -240,8 +241,8 @@ class _KelolaTahunAjaranScreenState
           if (!isArchived)
             _QuickActionRow(
               icon: Icons.edit_rounded,
-              label: 'Edit',
-              subtitle: 'Ubah periode atau semester',
+              label: kEdit.tr,
+              subtitle: kSetChangePeriodSemester.tr,
               tint: _accent,
               onTap: () {
                 Navigator.pop(context);
@@ -251,8 +252,8 @@ class _KelolaTahunAjaranScreenState
           if (!isCurrent && !isArchived)
             _QuickActionRow(
               icon: Icons.archive_outlined,
-              label: 'Arsipkan',
-              subtitle: 'Lock sebagai arsip read-only',
+              label: kSetArchiveAction.tr,
+              subtitle: kSetLockArchive.tr,
               tint: ColorUtils.warning600,
               onTap: () {
                 Navigator.pop(context);
@@ -262,8 +263,8 @@ class _KelolaTahunAjaranScreenState
           if (isArchived)
             _QuickActionRow(
               icon: Icons.unarchive_outlined,
-              label: 'Pulihkan',
-              subtitle: 'Kembalikan ke status nonaktif',
+              label: kSetRestore.tr,
+              subtitle: kSetReturnInactive.tr,
               tint: _accent,
               onTap: () {
                 Navigator.pop(context);
@@ -273,8 +274,8 @@ class _KelolaTahunAjaranScreenState
           if (!isCurrent)
             _QuickActionRow(
               icon: Icons.delete_outline_rounded,
-              label: 'Hapus',
-              subtitle: 'Tindakan tidak dapat dibatalkan',
+              label: kDelete.tr,
+              subtitle: kSetActionIrreversible.tr,
               tint: ColorUtils.error600,
               onTap: () {
                 Navigator.pop(context);
@@ -314,27 +315,27 @@ class _KelolaTahunAjaranScreenState
       body: BrandPageLayout(
         role: 'admin',
         onRefresh: _handleRefresh,
-        header: const BrandPageHeader(
+        header: BrandPageHeader(
           role: 'admin',
           subtitle: 'SISTEM · KONFIGURASI',
-          title: 'Tahun Ajaran',
+          title: kSetAcademicYear.tr,
           kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
         ),
         kpiCard: BrandKpiStrip(
           columns: [
             BrandKpiColumn(
-              label: 'Total',
+              label: kSetTotal.tr,
               value: '${years.length}',
               sub: 'Tahun Ajaran',
             ),
             BrandKpiColumn(
-              label: 'Saat Ini',
+              label: kSetCurrent.tr,
               value: activeYear != null ? '1' : '0',
               sub: 'Aktif berjalan',
               valueColor: ColorUtils.green600,
             ),
             BrandKpiColumn(
-              label: 'Arsip',
+              label: kSetArchive.tr,
               value: '${archivedYears.length}',
               sub: 'Tahun Ajaran lalu',
               valueColor: ColorUtils.slate500,
@@ -351,7 +352,7 @@ class _KelolaTahunAjaranScreenState
           else ...[
             // Tahun Ajaran Saat Ini — pinned section above the
             // archived list. Mockup renders the section title in caps.
-            const _SectionTitle(label: 'Tahun Ajaran Saat Ini'),
+            _SectionTitle(label: kSetCurrentAcademicYear.tr),
             const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -366,7 +367,7 @@ class _KelolaTahunAjaranScreenState
             ),
             const SizedBox(height: 22),
             _SectionTitle(
-              label: 'Riwayat (Arsip)',
+              label: kSetHistoryArchive.tr,
               trailing: archivedYears.isEmpty
                   ? null
                   : '${archivedYears.length}',
@@ -797,7 +798,7 @@ class _MetaStatRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _stat(icon: Icons.menu_book_rounded, value: classCount, label: 'Kelas'),
+        _stat(icon: Icons.menu_book_rounded, value: classCount, label: kSetClasses.tr),
         const SizedBox(width: 12),
         _stat(
           icon: Icons.people_alt_rounded,
@@ -805,7 +806,7 @@ class _MetaStatRow extends StatelessWidget {
           label: 'Siswa',
         ),
         const SizedBox(width: 12),
-        _stat(icon: Icons.person_rounded, value: teacherCount, label: 'Guru'),
+        _stat(icon: Icons.person_rounded, value: teacherCount, label: kSetTeachers.tr),
       ],
     );
   }

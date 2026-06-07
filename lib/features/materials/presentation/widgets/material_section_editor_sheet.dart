@@ -18,6 +18,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 
 /// Result returned to the parent screen after the sheet closes.
@@ -125,19 +126,19 @@ class _MaterialSectionEditorSheetState
     final discard = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Batalkan perubahan?'),
+        title: Text(kMatCancelChanges.tr),
         content: Text(
-          'Perubahan pada ${widget.fieldLabel} belum disimpan dan akan hilang.',
+          kMatChangesNotSaved.tr.replaceAll('{label}', widget.fieldLabel),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Lanjut edit'),
+            child: Text(kMatKeepEditing.tr),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(foregroundColor: ColorUtils.error600),
-            child: const Text('Buang'),
+            child: Text(kMatDiscard.tr),
           ),
         ],
       ),
@@ -171,7 +172,7 @@ class _MaterialSectionEditorSheetState
                     color: ColorUtils.slate800,
                   ),
                   decoration: InputDecoration(
-                    hintText: widget.hint ?? 'Tulis isi ${widget.fieldLabel}…',
+                    hintText: widget.hint ?? kMatWriteContent.tr.replaceAll('{label}', widget.fieldLabel),
                     hintStyle: TextStyle(
                       fontSize: 14,
                       color: ColorUtils.slate400,
@@ -238,7 +239,7 @@ class _MaterialSectionEditorSheetState
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'MATERI · EDIT BAGIAN',
+                      kMatEditSection.tr,
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w800,
@@ -327,9 +328,9 @@ class _MaterialSectionEditorSheetState
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Batal',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+                child: Text(
+                  kCancel.tr,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
                 ),
               ),
             ),
@@ -339,9 +340,9 @@ class _MaterialSectionEditorSheetState
               child: ElevatedButton.icon(
                 onPressed: canSave ? _save : null,
                 icon: const Icon(Icons.check_rounded, size: 16),
-                label: const Text(
-                  'Simpan',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+                label: Text(
+                  kSave.tr,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _accent,

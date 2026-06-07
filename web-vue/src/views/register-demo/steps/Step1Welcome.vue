@@ -5,7 +5,10 @@
   dashboard surprise.
 -->
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import NavIcon from '@/components/feature/NavIcon.vue';
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -14,22 +17,22 @@ import NavIcon from '@/components/feature/NavIcon.vue';
       <NavIcon name="school" :size="32" class="text-role-admin" />
     </div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Selamat datang
+      {{ t('registerDemo.step1Label') }}
     </p>
     <h2 class="text-[22px] font-black text-slate-900 mb-2 leading-tight">
-      Bangun sekolah demo Anda
+      {{ t('registerDemo.step1Title') }}
     </h2>
     <p class="text-[13.5px] text-slate-600 leading-relaxed">
-      11 pertanyaan singkat. Sekitar 2 menit. Semua bisa diubah nanti.
+      {{ t('registerDemo.step1Subtitle') }}
     </p>
 
     <ul class="text-left mt-6 space-y-3 max-w-sm mx-auto">
       <li
         v-for="bullet in [
-          'Data realistis dengan nama Indonesia',
-          'Cek dulu sekolah Anda — jangan sampai dobel',
-          'Akun untuk admin, guru, dan wali — bisa coba semua',
-          'Bisa lanjut nanti — progress tersimpan',
+          t('registerDemo.step1Bullet1'),
+          t('registerDemo.step1Bullet2'),
+          t('registerDemo.step1Bullet3'),
+          t('registerDemo.step1Bullet4'),
         ]"
         :key="bullet"
         class="flex items-start gap-2.5 text-[13px] text-slate-700"

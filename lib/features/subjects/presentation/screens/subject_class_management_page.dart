@@ -231,7 +231,7 @@ class SubjectClassManagementPageState
   Widget buildSearchBar() {
     return SearchFilterBar(
       controller: searchController,
-      hintText: 'Cari kelas...',
+      hintText: kSearchClasses.tr,
       transparentStyle: false,
       primaryColor: getPrimaryColor(),
       onChanged: (_) => setState(() {}),
@@ -269,8 +269,7 @@ class SubjectClassManagementPageState
     if (unassignedClasses.isEmpty) {
       SnackBarUtils.showWarning(
         context,
-        'Semua kelas sudah ditambahkan ke '
-        'mata pelajaran ini',
+        kSubAllClassesAdded.tr,
       );
       return;
     }
@@ -288,15 +287,18 @@ class SubjectClassManagementPageState
 
   /// Builds empty state for unassigned classes
   Widget buildEmptyState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.check_circle, size: 48, color: Colors.green),
-          SizedBox(height: AppSpacing.sm),
+          const Icon(Icons.check_circle, size: 48, color: Colors.green),
+          const SizedBox(height: AppSpacing.sm),
           Text(
-            'Semua kelas sudah ditambahkan',
-            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+            kSubAllClassesAddedShort.tr,
+            style: const TextStyle(
+              color: Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

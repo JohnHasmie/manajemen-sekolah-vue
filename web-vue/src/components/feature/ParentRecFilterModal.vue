@@ -12,7 +12,8 @@
   (the parent screen treats no event as "kept previous filter").
 -->
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import type {
@@ -22,6 +23,8 @@ import type {
   ParentRecPeriod,
 } from '@/types/recommendations';
 import { DEFAULT_PARENT_REC_FILTER } from '@/types/recommendations';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   current: ParentRecFilter;
@@ -71,32 +74,32 @@ function apply() {
   });
 }
 
-const STATUS_OPTIONS: { value: ParentRecStatus; label: string }[] = [
-  { value: 'all', label: 'Semua' },
-  { value: 'unread', label: 'Belum Dibaca' },
-  { value: 'active', label: 'Aktif' },
-  { value: 'completed', label: 'Selesai' },
-];
-const PRIORITY_OPTIONS: { value: ParentRecPriority; label: string }[] = [
-  { value: 'all', label: 'Semua' },
-  { value: 'high', label: 'Tinggi' },
-  { value: 'medium', label: 'Sedang' },
-  { value: 'low', label: 'Rendah' },
-];
-const PERIOD_OPTIONS: { value: ParentRecPeriod; label: string }[] = [
-  { value: 'last7', label: '7 Hari' },
-  { value: 'last30', label: '30 Hari' },
-  { value: 'all', label: 'Semua' },
-];
+const STATUS_OPTIONS = computed<{ value: ParentRecStatus; label: string }[]>(() => [
+  { value: 'all', label: t('parent.recommendations.statusAll') },
+  { value: 'unread', label: t('parent.recommendations.statusUnread') },
+  { value: 'active', label: t('parent.recommendations.statusActive') },
+  { value: 'completed', label: t('parent.recommendations.statusCompleted') },
+]);
+const PRIORITY_OPTIONS = computed<{ value: ParentRecPriority; label: string }[]>(() => [
+  { value: 'all', label: t('parent.recommendations.priorityAll') },
+  { value: 'high', label: t('parent.recommendations.priorityHigh') },
+  { value: 'medium', label: t('parent.recommendations.priorityMedium') },
+  { value: 'low', label: t('parent.recommendations.priorityLow') },
+]);
+const PERIOD_OPTIONS = computed<{ value: ParentRecPeriod; label: string }[]>(() => [
+  { value: 'last7', label: t('parent.recommendations.period7d') },
+  { value: 'last30', label: t('parent.recommendations.period30d') },
+  { value: 'all', label: t('parent.recommendations.periodAll') },
+]);
 </script>
 
 <template>
-  <Modal title="Filter Rekomendasi" size="lg" @close="emit('close')">
+  <Modal :title="t('parent.recommendations.filterModalTitle')" size="lg" @close="emit('close')">
     <div class="space-y-5">
       <!-- Status -->
       <section>
         <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">
-          Status
+          {{ t('parent.recommendations.sectionStatus') }}
         </p>
         <div class="flex flex-wrap gap-2">
           <button
@@ -119,7 +122,7 @@ const PERIOD_OPTIONS: { value: ParentRecPeriod; label: string }[] = [
       <!-- Prioritas -->
       <section>
         <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">
-          Prioritas
+          {{ t('parent.recommendations.sectionPriority') }}
         </p>
         <div class="flex flex-wrap gap-2">
           <button
@@ -142,9 +145,9 @@ const PERIOD_OPTIONS: { value: ParentRecPeriod; label: string }[] = [
       <!-- Mata Pelajaran (multi-select) -->
       <section v-if="availableSubjects.length > 0">
         <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">
-          Mata Pelajaran
+          {{ t('parent.recommendations.sectionSubjects') }}
           <span class="text-slate-400 normal-case font-medium tracking-normal">
-            · pilih beberapa
+            {{ t('parent.recommendations.sectionSubjectsHint') }}
           </span>
         </p>
         <div class="flex flex-wrap gap-2">
@@ -168,7 +171,7 @@ const PERIOD_OPTIONS: { value: ParentRecPeriod; label: string }[] = [
       <!-- Periode -->
       <section>
         <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">
-          Periode
+          {{ t('parent.recommendations.sectionPeriod') }}
         </p>
         <div class="flex flex-wrap gap-2">
           <button
@@ -190,8 +193,8 @@ const PERIOD_OPTIONS: { value: ParentRecPeriod; label: string }[] = [
 
       <!-- Footer actions -->
       <div class="flex gap-2 pt-2 border-t border-slate-100">
-        <Button variant="secondary" @click="reset">Reset</Button>
-        <Button block @click="apply">Terapkan Filter</Button>
+        <Button variant="secondary" @click="reset">{{ t('parent.recommendations.resetButton') }}</Button>
+        <Button block @click="apply">{{ t('parent.recommendations.applyButton') }}</Button>
       </div>
     </div>
   </Modal>

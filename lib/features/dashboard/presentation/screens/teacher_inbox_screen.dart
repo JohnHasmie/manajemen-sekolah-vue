@@ -29,6 +29,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
@@ -44,10 +45,10 @@ enum _InboxFilter { all, critical, warning, info }
 
 extension on _InboxFilter {
   String get label => switch (this) {
-    _InboxFilter.all => 'Semua',
-    _InboxFilter.critical => 'Kritis',
-    _InboxFilter.warning => 'Peringatan',
-    _InboxFilter.info => 'Info',
+    _InboxFilter.all => kDasFilterAll.tr,
+    _InboxFilter.critical => kDasFilterCritical.tr,
+    _InboxFilter.warning => kDasFilterWarning.tr,
+    _InboxFilter.info => kDasFilterInfo.tr,
   };
 
   bool matches(PriorityInboxItem item) => switch (this) {
@@ -209,13 +210,13 @@ class _TeacherInboxScreenState extends ConsumerState<TeacherInboxScreen> {
                   child: BrandEmptyState(
                     icon: Icons.inbox_outlined,
                     tone: BrandEmptyStateTone.info,
-                    kicker: 'Tidak ada item',
+                    kicker: kDasInboxNoItems.tr,
                     title: _filter == _InboxFilter.all
-                        ? 'Semua aman 🎉'
-                        : 'Bersih untuk filter ini',
+                        ? kDasAllClear.tr
+                        : kDasInboxCleanForFilter.tr,
                     message: _filter == _InboxFilter.all
-                        ? 'Tidak ada hal yang perlu perhatian Anda saat ini.'
-                        : 'Coba kategori lain untuk melihat item lainnya.',
+                        ? kDasInboxNoAttention.tr
+                        : kDasInboxTryOtherCategory.tr,
                   ),
                 ),
               )
@@ -246,7 +247,7 @@ class _TeacherInboxScreenState extends ConsumerState<TeacherInboxScreen> {
               borderRadius: BorderRadius.circular(11),
             ),
             child: Text(
-              total > 0 ? '$total item perlu tindak lanjut' : 'Tidak ada item',
+              total > 0 ? '$total ${kDasInboxItemsNeedAction.tr}' : kDasInboxNoItems.tr,
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -299,10 +300,10 @@ class _TeacherInboxScreenState extends ConsumerState<TeacherInboxScreen> {
     final weekStart = today.subtract(const Duration(days: 7));
 
     final groups = <String, List<PriorityInboxItem>>{
-      'HARI INI': [],
-      'KEMARIN': [],
-      'MINGGU INI': [],
-      'LEBIH LAMA': [],
+      kDasDateGroupToday.tr: [],
+      kDasDateGroupYesterday.tr: [],
+      kDasDateGroupThisWeek.tr: [],
+      kDasDateGroupOlder.tr: [],
     };
 
     for (final item in items) {
@@ -312,13 +313,13 @@ class _TeacherInboxScreenState extends ConsumerState<TeacherInboxScreen> {
         item.occurredAt.day,
       );
       if (d == today) {
-        groups['HARI INI']!.add(item);
+        groups[kDasDateGroupToday.tr]!.add(item);
       } else if (d == yesterday) {
-        groups['KEMARIN']!.add(item);
+        groups[kDasDateGroupYesterday.tr]!.add(item);
       } else if (d.isAfter(weekStart)) {
-        groups['MINGGU INI']!.add(item);
+        groups[kDasDateGroupThisWeek.tr]!.add(item);
       } else {
-        groups['LEBIH LAMA']!.add(item);
+        groups[kDasDateGroupOlder.tr]!.add(item);
       }
     }
 
