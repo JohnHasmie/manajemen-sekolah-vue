@@ -114,6 +114,12 @@ const ParentAnnouncementView = () =>
   import('@/views/parent/ParentAnnouncementView.vue');
 const ParentRecommendationView = () =>
   import('@/views/parent/ParentRecommendationView.vue');
+const AdminTeacherAttendanceView = () =>
+  import('@/views/admin/AdminTeacherAttendanceView.vue');
+const TeacherPresensiView = () =>
+  import('@/views/teacher/TeacherPresensiView.vue');
+const TeacherPresensiHistoryView = () =>
+  import('@/views/teacher/TeacherPresensiHistoryView.vue');
 const TeacherDashboardView = () =>
   import('@/views/teacher/TeacherDashboardView.vue');
 const TeacherAttendanceView = () =>
@@ -438,6 +444,14 @@ const routes: RouteRecordRaw[] = [
         component: AdminKelolaTahunAjaranView,
         meta: { role: 'admin' satisfies Role },
       },
+      {
+        // PRESENSI GURU — admin config + report for teacher daily
+        // attendance (camera/location/geofence settings + report list).
+        path: 'admin/presensi-guru',
+        name: 'admin.teacher-attendance',
+        component: AdminTeacherAttendanceView,
+        meta: { role: 'admin' satisfies Role },
+      },
 
       // Teacher / Wali Kelas subtree
       {
@@ -451,6 +465,22 @@ const routes: RouteRecordRaw[] = [
         name: 'teacher.inbox',
         component: PriorityInboxView,
         props: { role: 'teacher' },
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        // PRESENSI GURU — the teacher's own daily check-in/out flow
+        // (webcam selfie + GPS geofence). Distinct from
+        // `teacher/attendance`, which is the per-session STUDENT
+        // attendance ("kehadiran siswa").
+        path: 'teacher/presensi',
+        name: 'teacher.presensi',
+        component: TeacherPresensiView,
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/presensi/riwayat',
+        name: 'teacher.presensi.history',
+        component: TeacherPresensiHistoryView,
         meta: { role: 'guru' satisfies Role },
       },
       {

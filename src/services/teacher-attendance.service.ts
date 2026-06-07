@@ -1,0 +1,334 @@
+/**
+ * TeacherAttendanceService — PRESENSI GURU (teacher daily attendance).
+ *
+ * Wraps the App\Modules\Attendance TeacherAttendance endpoints
+ * (backend MR !108). All routes sit under `auth:sanctum` + the
+ * `X-School-ID` school context, both injected by the axios interceptor
+ * in `@/lib/http`.
+ *
+ * Teacher-facing:
+ *   GET  /teacher-attendance/config    → config()
+ *   POST /teacher-attendance/check-in  → checkIn()  (multipart)
+ *   POST /teacher-attendance/check-out → checkOut() (multipart)
+ *   GET  /teacher-attendance/history   → history()
+ *
+ * Admin-facing:
+ *   GET  /teacher-attendance/settings  → getSettings()
+ *   PUT  /teacher-attendance/settings  → updateSettings() (partial)
+ *   GET  /teacher-attendance/admin     → adminReport()
+ *
+ * The check-in/out payload is `multipart/form-data` because it carries
+ * a live camera photo. We build a FormData and let the browser set the
+ * boundary — DON'T set Content-Type manually. The server stamps the
+ * timestamps; the client clock is never trusted.
+ */
+import { api } from '@/lib/http';
+import type {
+  TeacherAttendanceAdminFilters,
+  TeacherAttendanceConfig,
+  TeacherAttendanceHistoryFilters,
+  TeacherAttendanceListResult,
+  TeacherAttendancePageMeta,
+  TeacherAttendanceRecord,
+  TeacherAttendanceSettings,
+  TeacherAttendanceSubmission,
+} from '@/types/teacher-attendance';
+
+const Endpoints = {
+  config: '/teacher-attendance/config',
+  checkIn: '/teacher-attendance/check-in',
+  checkOut: '/teacher-attendance/check-out',
+  history: '/teacher-attendance/history',
+  settings: '/teacher-attendance/settings',
+  admin: '/teacher-attendance/admin',
+} as const;
+
+/**
+ * Pull a human Indonesian message out of a Laravel error. The backend
+ * uses the keys `photo` / `latitude` / `location` / `check_in` /
+ * `check_out` for validation errors and `message` for action errors
+ * (geofence reject, double check-in, etc.).
+ */
+function humanError(e: unknown, fallback: string): string {
+  const ax = e as {
+    response?: {
+      data?: {
+        message?: string;
+        error?: string;
+        errors?: Record<string, string[]>;
+      };
+    };
+  };
+  const d = ax?.response?.data;
+  if (d) {
+    if (d.message) return String(d.message);
+    if (d.error) return String(d.error);
+    if (d.errors && typeof d.errors === 'object') {
+      const first = Object.values(d.errors)[0];
+      if (Array.isArray(first) && first.length > 0) return String(first[0]);
+    }
+  }
+  if (e instanceof Error) return e.message;
+  return fallback;
+}
+
+/** Coerce any backend boolean-ish value to a real boolean. */
+function asBool(v: unknown, fallback = false): boolean {
+  if (typeof v === 'boolean') return v;
+  if (v === 1 || v === '1' || v === 'true') return true;
+  if (v === 0 || v === '0' || v === 'false') return false;
+  return fallback;
+}
+
+/** Coerce to a finite number or null. */
+function asNumOrNull(v: unknown): number | null {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Coerce to an integer with a fallback. */
+function asInt(v: unknown, fallback: number): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.round(n) : fallback;
+}
+
+/** Normalize a raw settings object (handles 0/1 + missing keys). */
+function settingsFromJson(
+  raw: Record<string, unknown>,
+): TeacherAttendanceSettings {
+  return {
+    camera_required: asBool(raw.camera_required, true),
+    location_required: asBool(raw.location_required, true),
+    checkout_enabled: asBool(raw.checkout_enabled, false),
+    geofence_lat: asNumOrNull(raw.geofence_lat),
+    geofence_lng: asNumOrNull(raw.geofence_lng),
+    geofence_radius_m: asInt(raw.geofence_radius_m, 150),
+    reject_outside_geofence: asBool(raw.reject_outside_geofence, true),
+    late_grace_minutes: asInt(raw.late_grace_minutes, 0),
+    effective_geofence_lat: asNumOrNull(raw.effective_geofence_lat),
+    effective_geofence_lng: asNumOrNull(raw.effective_geofence_lng),
+    school_latitude: asNumOrNull(raw.school_latitude),
+    school_longitude: asNumOrNull(raw.school_longitude),
+  };
+}
+
+/** Pull `{ data, meta }` out of a Laravel paginated resource collection. */
+function listFromJson(body: unknown): TeacherAttendanceListResult {
+  const b = (body ?? {}) as {
+    data?: TeacherAttendanceRecord[];
+    meta?: Partial<TeacherAttendancePageMeta>;
+  };
+  const items = Array.isArray(b.data) ? b.data : [];
+  const meta = b.meta ?? {};
+  return {
+    items,
+    meta: {
+      current_page: asInt(meta.current_page, 1),
+      last_page: asInt(meta.last_page, 1),
+      per_page: asInt(meta.per_page, items.length || 20),
+      total: asInt(meta.total, items.length),
+    },
+  };
+}
+
+/**
+ * Build the multipart body for check-in / check-out. Only appends keys
+ * that are actually present so the backend's conditional-required rules
+ * (camera_required / location_required) see "missing" rather than empty
+ * strings.
+ */
+function buildSubmission(payload: TeacherAttendanceSubmission): FormData {
+  const fd = new FormData();
+  if (payload.photo) {
+    // Stable filename — the server derives the extension from the mime.
+    fd.append('photo', payload.photo, 'selfie.jpg');
+  }
+  if (payload.latitude !== undefined && payload.latitude !== null) {
+    fd.append('latitude', String(payload.latitude));
+  }
+  if (payload.longitude !== undefined && payload.longitude !== null) {
+    fd.append('longitude', String(payload.longitude));
+  }
+  if (
+    payload.notes !== undefined &&
+    payload.notes !== null &&
+    payload.notes !== ''
+  ) {
+    fd.append('notes', payload.notes);
+  }
+  return fd;
+}
+
+export const TeacherAttendanceService = {
+  /**
+   * GET /teacher-attendance/config — teacher bootstrap: settings +
+   * today's teaching schedule + today's check-in/out state. 403 when
+   * the user isn't a teacher; 400 when school context is missing.
+   */
+  async config(): Promise<TeacherAttendanceConfig> {
+    try {
+      const res = await api.get(Endpoints.config);
+      const data = (res.data?.data ?? res.data ?? {}) as Record<
+        string,
+        unknown
+      >;
+      return {
+        teacher: (data.teacher ?? {}) as TeacherAttendanceConfig['teacher'],
+        date: String(data.date ?? ''),
+        server_time: String(data.server_time ?? ''),
+        settings: settingsFromJson(
+          (data.settings ?? {}) as Record<string, unknown>,
+        ),
+        today_schedule: Array.isArray(data.today_schedule)
+          ? (data.today_schedule as TeacherAttendanceConfig['today_schedule'])
+          : [],
+        first_teaching_start:
+          (data.first_teaching_start as string | null) ?? null,
+        late_after: (data.late_after as string | null) ?? null,
+        state: (data.state ?? {
+          has_checked_in: false,
+          has_checked_out: false,
+          can_check_out: false,
+          record: null,
+        }) as TeacherAttendanceConfig['state'],
+      };
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat data presensi.'));
+    }
+  },
+
+  /**
+   * POST /teacher-attendance/check-in — multipart. Returns the created
+   * record. Throws an Indonesian error on geofence reject / double
+   * check-in / missing-required-field (422).
+   */
+  async checkIn(
+    payload: TeacherAttendanceSubmission,
+  ): Promise<TeacherAttendanceRecord> {
+    try {
+      const res = await api.post(Endpoints.checkIn, buildSubmission(payload), {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return (res.data?.data ?? res.data) as TeacherAttendanceRecord;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal melakukan presensi masuk.'));
+    }
+  },
+
+  /**
+   * POST /teacher-attendance/check-out — multipart. Requires an
+   * existing same-day check-in and checkout_enabled. Returns the
+   * updated record.
+   */
+  async checkOut(
+    payload: TeacherAttendanceSubmission,
+  ): Promise<TeacherAttendanceRecord> {
+    try {
+      const res = await api.post(Endpoints.checkOut, buildSubmission(payload), {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return (res.data?.data ?? res.data) as TeacherAttendanceRecord;
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal melakukan presensi pulang.'));
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/history — the authenticated teacher's own
+   * paginated records.
+   */
+  async history(
+    filters: TeacherAttendanceHistoryFilters = {},
+  ): Promise<TeacherAttendanceListResult> {
+    try {
+      const params: Record<string, unknown> = {};
+      if (filters.start_date) params.start_date = filters.start_date;
+      if (filters.end_date) params.end_date = filters.end_date;
+      if (filters.per_page) params.per_page = filters.per_page;
+      if (filters.page) params.page = filters.page;
+      const res = await api.get(Endpoints.history, { params });
+      return listFromJson(res.data);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat riwayat presensi.'));
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/settings — per-school admin config. Includes
+   * the school pin (school_latitude / school_longitude) as the geofence
+   * fallback.
+   */
+  async getSettings(): Promise<TeacherAttendanceSettings> {
+    try {
+      const res = await api.get(Endpoints.settings);
+      const data = (res.data?.data ?? res.data ?? {}) as Record<
+        string,
+        unknown
+      >;
+      return settingsFromJson(data);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat pengaturan presensi guru.'));
+    }
+  },
+
+  /**
+   * PUT /teacher-attendance/settings — partial update. Only the keys
+   * present in `patch` are sent; the backend patches just those (the
+   * rules are all `sometimes`).
+   */
+  async updateSettings(
+    patch: Partial<TeacherAttendanceSettings>,
+  ): Promise<TeacherAttendanceSettings> {
+    try {
+      const body: Record<string, unknown> = {};
+      const keys: (keyof TeacherAttendanceSettings)[] = [
+        'camera_required',
+        'location_required',
+        'checkout_enabled',
+        'geofence_lat',
+        'geofence_lng',
+        'geofence_radius_m',
+        'reject_outside_geofence',
+        'late_grace_minutes',
+      ];
+      for (const k of keys) {
+        if (patch[k] !== undefined) body[k] = patch[k];
+      }
+      const res = await api.put(Endpoints.settings, body);
+      const data = (res.data?.data ?? res.data ?? body) as Record<
+        string,
+        unknown
+      >;
+      return settingsFromJson(data);
+    } catch (e) {
+      throw new Error(
+        humanError(e, 'Gagal menyimpan pengaturan presensi guru.'),
+      );
+    }
+  },
+
+  /**
+   * GET /teacher-attendance/admin — school-scoped report list. The
+   * `teacher_id` filter accepts a Teacher ID OR a User ID; the server
+   * resolves it within the active school.
+   */
+  async adminReport(
+    filters: TeacherAttendanceAdminFilters = {},
+  ): Promise<TeacherAttendanceListResult> {
+    try {
+      const params: Record<string, unknown> = {};
+      if (filters.date) params.date = filters.date;
+      if (filters.start_date) params.start_date = filters.start_date;
+      if (filters.end_date) params.end_date = filters.end_date;
+      if (filters.teacher_id) params.teacher_id = filters.teacher_id;
+      if (filters.status) params.status = filters.status;
+      if (filters.per_page) params.per_page = filters.per_page;
+      if (filters.page) params.page = filters.page;
+      const res = await api.get(Endpoints.admin, { params });
+      return listFromJson(res.data);
+    } catch (e) {
+      throw new Error(humanError(e, 'Gagal memuat laporan presensi guru.'));
+    }
+  },
+};

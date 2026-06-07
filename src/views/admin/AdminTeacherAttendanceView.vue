@@ -1,0 +1,738 @@
+<!--
+  AdminTeacherAttendanceView.vue — admin config + report for PRESENSI GURU.
+
+  Two tabs:
+    (a) Pengaturan — toggle camera_required / location_required /
+        checkout_enabled, set the geofence centre (lat/lng), radius,
+        out-of-radius behaviour, and the late grace. The geofence centre
+        falls back to the school pin (school_latitude/longitude) when
+        left blank. Partial PUT — only changed keys are sent.
+    (b) Laporan — the school-scoped report list (GET …/admin) with a
+        date + teacher filter and present/late breakdown per row.
+-->
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
+import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
+import { useToast } from '@/composables/useToast';
+import type {
+  TeacherAttendanceListResult,
+  TeacherAttendanceRecord,
+  TeacherAttendanceSettings,
+} from '@/types/teacher-attendance';
+import {
+  DEFAULT_TEACHER_ATTENDANCE_SETTINGS,
+  teacherAttendanceStatusLabel,
+} from '@/types/teacher-attendance';
+import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
+import Button from '@/components/ui/Button.vue';
+import Spinner from '@/components/ui/Spinner.vue';
+
+const toast = useToast();
+
+type Tab = 'settings' | 'report';
+const tab = ref<Tab>('settings');
+
+// ─────────────────────────────────────────────────────────────────
+// Settings tab
+// ─────────────────────────────────────────────────────────────────
+/** Working copy edited by the form. */
+const form = ref<TeacherAttendanceSettings>({
+  ...DEFAULT_TEACHER_ATTENDANCE_SETTINGS,
+});
+const settingsLoading = ref(true);
+const settingsError = ref<string | null>(null);
+const saving = ref(false);
+
+/**
+ * lat/lng are bound as strings so an empty field reads as "use the
+ * school pin" (null) rather than 0. We convert on save.
+ */
+const geofenceLatStr = ref('');
+const geofenceLngStr = ref('');
+
+function syncGeofenceStrings(s: TeacherAttendanceSettings) {
+  geofenceLatStr.value = s.geofence_lat != null ? String(s.geofence_lat) : '';
+  geofenceLngStr.value = s.geofence_lng != null ? String(s.geofence_lng) : '';
+}
+
+const schoolPinLabel = computed(() => {
+  const lat = form.value.school_latitude;
+  const lng = form.value.school_longitude;
+  if (lat == null || lng == null) return 'Belum diatur';
+  return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+});
+
+async function loadSettings() {
+  settingsLoading.value = true;
+  settingsError.value = null;
+  try {
+    const s = await TeacherAttendanceService.getSettings();
+    form.value = s;
+    syncGeofenceStrings(s);
+  } catch (e) {
+    settingsError.value = (e as Error).message;
+  } finally {
+    settingsLoading.value = false;
+  }
+}
+
+function parseCoord(raw: string): number | null {
+  const t = raw.trim();
+  if (t === '') return null;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function saveSettings() {
+  // Validate ranges client-side for a friendly message before the
+  // backend's 422 (which uses the same bounds).
+  const lat = parseCoord(geofenceLatStr.value);
+  const lng = parseCoord(geofenceLngStr.value);
+  if (lat != null && (lat < -90 || lat > 90)) {
+    toast.error('Latitude geofence harus antara -90 dan 90.');
+    return;
+  }
+  if (lng != null && (lng < -180 || lng > 180)) {
+    toast.error('Longitude geofence harus antara -180 dan 180.');
+    return;
+  }
+  if (
+    form.value.geofence_radius_m < 10 ||
+    form.value.geofence_radius_m > 5000
+  ) {
+    toast.error('Radius geofence harus antara 10 dan 5000 meter.');
+    return;
+  }
+  if (
+    form.value.late_grace_minutes < 0 ||
+    form.value.late_grace_minutes > 600
+  ) {
+    toast.error('Toleransi keterlambatan harus antara 0 dan 600 menit.');
+    return;
+  }
+
+  saving.value = true;
+  try {
+    const saved = await TeacherAttendanceService.updateSettings({
+      camera_required: form.value.camera_required,
+      location_required: form.value.location_required,
+      checkout_enabled: form.value.checkout_enabled,
+      geofence_lat: lat,
+      geofence_lng: lng,
+      geofence_radius_m: form.value.geofence_radius_m,
+      reject_outside_geofence: form.value.reject_outside_geofence,
+      late_grace_minutes: form.value.late_grace_minutes,
+    });
+    form.value = saved;
+    syncGeofenceStrings(saved);
+    toast.success('Pengaturan presensi guru tersimpan.');
+  } catch (e) {
+    toast.error((e as Error).message);
+  } finally {
+    saving.value = false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Report tab
+// ─────────────────────────────────────────────────────────────────
+const filterDate = ref('');
+const filterStartDate = ref('');
+const filterEndDate = ref('');
+const filterTeacher = ref('');
+const filterStatus = ref<'' | 'present' | 'late'>('');
+const reportPage = ref(1);
+const reportPerPage = 25;
+
+const report = ref<TeacherAttendanceListResult | null>(null);
+const reportLoading = ref(false);
+const reportError = ref<string | null>(null);
+const reportLoaded = ref(false);
+
+const reportRows = computed<TeacherAttendanceRecord[]>(
+  () => report.value?.items ?? [],
+);
+const reportMeta = computed(() => report.value?.meta ?? null);
+
+const presentCount = computed(
+  () => reportRows.value.filter((r) => r.status === 'present').length,
+);
+const lateCount = computed(
+  () => reportRows.value.filter((r) => r.status === 'late').length,
+);
+
+const reportState = computed<AsyncState<TeacherAttendanceRecord[]>>(() => {
+  if (reportLoading.value && reportRows.value.length === 0)
+    return { status: 'loading' };
+  if (reportError.value) return { status: 'error', error: reportError.value };
+  if (reportRows.value.length === 0) return { status: 'empty' };
+  return { status: 'content', data: reportRows.value };
+});
+
+async function loadReport() {
+  reportLoading.value = true;
+  reportError.value = null;
+  try {
+    report.value = await TeacherAttendanceService.adminReport({
+      date: filterDate.value || undefined,
+      start_date: filterStartDate.value || undefined,
+      end_date: filterEndDate.value || undefined,
+      teacher_id: filterTeacher.value.trim() || undefined,
+      status: filterStatus.value || undefined,
+      per_page: reportPerPage,
+      page: reportPage.value,
+    });
+    reportLoaded.value = true;
+  } catch (e) {
+    reportError.value = (e as Error).message;
+  } finally {
+    reportLoading.value = false;
+  }
+}
+
+function applyReportFilters() {
+  reportPage.value = 1;
+  loadReport();
+}
+
+function clearReportFilters() {
+  filterDate.value = '';
+  filterStartDate.value = '';
+  filterEndDate.value = '';
+  filterTeacher.value = '';
+  filterStatus.value = '';
+  reportPage.value = 1;
+  loadReport();
+}
+
+function goReportPage(n: number) {
+  if (!reportMeta.value) return;
+  if (
+    n < 1 ||
+    n > reportMeta.value.last_page ||
+    n === reportMeta.value.current_page
+  )
+    return;
+  reportPage.value = n;
+  loadReport();
+}
+
+function switchTab(t: Tab) {
+  tab.value = t;
+  if (t === 'report' && !reportLoaded.value) loadReport();
+}
+
+function fmtDate(d: string): string {
+  if (!d) return '-';
+  return new Date(d).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function fmtTime(iso?: string | null): string {
+  if (!iso) return '-';
+  return new Date(iso).toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+onMounted(loadSettings);
+</script>
+
+<template>
+  <div class="space-y-md">
+    <BrandPageHeader
+      role="admin"
+      kicker="Presensi Guru · Konfigurasi & Laporan"
+      title="Presensi Guru"
+      meta="Atur metode presensi, geofence, dan lihat laporan harian guru"
+    >
+      <div
+        class="inline-flex gap-0.5 p-0.5 rounded-xl bg-white/20 border border-white/25 backdrop-blur-sm"
+      >
+        <button
+          type="button"
+          class="px-3 py-1 rounded-lg text-[11.5px] font-bold inline-flex items-center gap-1.5 transition-all"
+          :class="
+            tab === 'settings'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-white/90 hover:text-white'
+          "
+          @click="switchTab('settings')"
+        >
+          <NavIcon name="settings" :size="13" />Pengaturan
+        </button>
+        <button
+          type="button"
+          class="px-3 py-1 rounded-lg text-[11.5px] font-bold inline-flex items-center gap-1.5 transition-all"
+          :class="
+            tab === 'report'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-white/90 hover:text-white'
+          "
+          @click="switchTab('report')"
+        >
+          <NavIcon name="bar-chart" :size="13" />Laporan
+        </button>
+      </div>
+    </BrandPageHeader>
+
+    <!-- ════════════════════ SETTINGS TAB ════════════════════ -->
+    <template v-if="tab === 'settings'">
+      <div
+        v-if="settingsLoading"
+        class="flex items-center justify-center py-xl text-slate-400"
+      >
+        <Spinner size="md" />
+      </div>
+
+      <div
+        v-else-if="settingsError"
+        class="bg-red-50 border border-red-200 rounded-2xl p-4 text-center"
+      >
+        <p class="text-[13px] font-bold text-red-700">{{ settingsError }}</p>
+        <Button
+          variant="secondary"
+          size="sm"
+          class="mt-3"
+          @click="loadSettings"
+        >
+          Coba lagi
+        </Button>
+      </div>
+
+      <template v-else>
+        <!-- Metode presensi -->
+        <section
+          class="bg-white border border-slate-200 rounded-2xl overflow-hidden"
+        >
+          <div class="px-4 py-3 border-b border-slate-100">
+            <h3 class="text-[13px] font-black text-slate-900">
+              Metode Presensi
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">
+              Tentukan syarat yang wajib dipenuhi guru saat presensi.
+            </p>
+          </div>
+
+          <label
+            class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50"
+          >
+            <div
+              class="w-9 h-9 rounded-lg bg-brand-cobalt/10 text-brand-cobalt grid place-items-center flex-shrink-0"
+            >
+              <NavIcon name="camera" :size="16" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold text-slate-900">
+                Wajib foto selfie
+              </p>
+              <p class="text-[11px] text-slate-500">
+                Guru harus mengambil foto kamera langsung.
+              </p>
+            </div>
+            <input
+              v-model="form.camera_required"
+              type="checkbox"
+              class="w-5 h-5 accent-brand-cobalt"
+            />
+          </label>
+
+          <label
+            class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 border-t border-slate-100"
+          >
+            <div
+              class="w-9 h-9 rounded-lg bg-brand-cobalt/10 text-brand-cobalt grid place-items-center flex-shrink-0"
+            >
+              <NavIcon name="map-pin" :size="16" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold text-slate-900">
+                Wajib lokasi GPS
+              </p>
+              <p class="text-[11px] text-slate-500">
+                Verifikasi jarak ke sekolah (geofence).
+              </p>
+            </div>
+            <input
+              v-model="form.location_required"
+              type="checkbox"
+              class="w-5 h-5 accent-brand-cobalt"
+            />
+          </label>
+
+          <label
+            class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 border-t border-slate-100"
+          >
+            <div
+              class="w-9 h-9 rounded-lg bg-violet-100 text-violet-700 grid place-items-center flex-shrink-0"
+            >
+              <NavIcon name="log-out" :size="16" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold text-slate-900">
+                Aktifkan presensi pulang
+              </p>
+              <p class="text-[11px] text-slate-500">
+                Guru juga melakukan check-out di akhir hari.
+              </p>
+            </div>
+            <input
+              v-model="form.checkout_enabled"
+              type="checkbox"
+              class="w-5 h-5 accent-brand-cobalt"
+            />
+          </label>
+        </section>
+
+        <!-- Geofence -->
+        <section
+          class="bg-white border border-slate-200 rounded-2xl p-4 space-y-md"
+        >
+          <div>
+            <h3 class="text-[13px] font-black text-slate-900">
+              Geofence Sekolah
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">
+              Titik pusat &amp; radius area presensi. Kosongkan koordinat untuk
+              memakai pin sekolah ({{ schoolPinLabel }}).
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label
+                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+              >
+                Latitude
+              </label>
+              <input
+                v-model="geofenceLatStr"
+                type="number"
+                step="any"
+                placeholder="mis. -6.200000"
+                class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+              />
+            </div>
+            <div>
+              <label
+                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+              >
+                Longitude
+              </label>
+              <input
+                v-model="geofenceLngStr"
+                type="number"
+                step="any"
+                placeholder="mis. 106.816666"
+                class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label
+                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+              >
+                Radius (meter)
+              </label>
+              <input
+                v-model.number="form.geofence_radius_m"
+                type="number"
+                min="10"
+                max="5000"
+                class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+              />
+              <p class="text-[10px] text-slate-400 mt-1">
+                Rentang 10 – 5000 m.
+              </p>
+            </div>
+            <div>
+              <label
+                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+              >
+                Toleransi terlambat (menit)
+              </label>
+              <input
+                v-model.number="form.late_grace_minutes"
+                type="number"
+                min="0"
+                max="600"
+                class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+              />
+              <p class="text-[10px] text-slate-400 mt-1">
+                Terlambat dihitung setelah jam mengajar pertama + toleransi.
+              </p>
+            </div>
+          </div>
+
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input
+              v-model="form.reject_outside_geofence"
+              type="checkbox"
+              class="w-5 h-5 accent-brand-cobalt"
+            />
+            <span class="text-[12.5px] text-slate-700">
+              <span class="font-bold">Tolak presensi di luar radius.</span>
+              Jika dimatikan, presensi di luar area tetap dicatat namun
+              ditandai.
+            </span>
+          </label>
+        </section>
+
+        <div class="flex justify-end">
+          <Button variant="primary" :loading="saving" @click="saveSettings">
+            <NavIcon name="check" :size="15" />Simpan Pengaturan
+          </Button>
+        </div>
+      </template>
+    </template>
+
+    <!-- ════════════════════ REPORT TAB ════════════════════ -->
+    <template v-else>
+      <!-- Filter toolbar -->
+      <section
+        class="bg-white border border-slate-200 rounded-2xl p-3 flex flex-wrap items-end gap-3"
+      >
+        <div>
+          <label
+            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+          >
+            Tanggal
+          </label>
+          <input
+            v-model="filterDate"
+            type="date"
+            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+          />
+        </div>
+        <div>
+          <label
+            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+          >
+            Dari
+          </label>
+          <input
+            v-model="filterStartDate"
+            type="date"
+            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+          />
+        </div>
+        <div>
+          <label
+            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+          >
+            Sampai
+          </label>
+          <input
+            v-model="filterEndDate"
+            type="date"
+            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+          />
+        </div>
+        <div>
+          <label
+            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+          >
+            ID Guru
+          </label>
+          <input
+            v-model="filterTeacher"
+            type="text"
+            placeholder="Teacher / User ID"
+            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 w-44 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+          />
+        </div>
+        <div>
+          <label
+            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+          >
+            Status
+          </label>
+          <select
+            v-model="filterStatus"
+            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+          >
+            <option value="">Semua</option>
+            <option value="present">Tepat Waktu</option>
+            <option value="late">Terlambat</option>
+          </select>
+        </div>
+        <Button variant="primary" size="sm" @click="applyReportFilters">
+          <NavIcon name="filter" :size="13" />Terapkan
+        </Button>
+        <Button
+          v-if="
+            filterDate ||
+            filterStartDate ||
+            filterEndDate ||
+            filterTeacher ||
+            filterStatus
+          "
+          variant="ghost"
+          size="sm"
+          @click="clearReportFilters"
+        >
+          Reset
+        </Button>
+      </section>
+
+      <!-- Summary chips -->
+      <div
+        v-if="reportRows.length > 0"
+        class="flex items-center gap-2 flex-wrap"
+      >
+        <span
+          class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600"
+        >
+          {{ reportMeta?.total ?? reportRows.length }} catatan
+        </span>
+        <span
+          class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700"
+        >
+          {{ presentCount }} tepat waktu (hal. ini)
+        </span>
+        <span
+          class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700"
+        >
+          {{ lateCount }} terlambat (hal. ini)
+        </span>
+      </div>
+
+      <!-- List -->
+      <AsyncView
+        :state="reportState"
+        empty-title="Belum ada data presensi"
+        empty-description="Tidak ada catatan presensi guru untuk filter ini."
+        @retry="loadReport"
+      >
+        <template #default>
+          <div
+            class="bg-white border border-slate-200 rounded-2xl overflow-hidden"
+          >
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[720px] text-left">
+                <thead>
+                  <tr
+                    class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                  >
+                    <th class="px-4 py-2.5">Guru</th>
+                    <th class="px-4 py-2.5">Tanggal</th>
+                    <th class="px-4 py-2.5">Status</th>
+                    <th class="px-4 py-2.5">Masuk</th>
+                    <th class="px-4 py-2.5">Pulang</th>
+                    <th class="px-4 py-2.5">Lokasi</th>
+                    <th class="px-4 py-2.5">Foto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="r in reportRows"
+                    :key="r.id"
+                    class="border-t border-slate-100 text-[12.5px] hover:bg-slate-50"
+                  >
+                    <td class="px-4 py-2.5">
+                      <p class="font-bold text-slate-900">
+                        {{ r.teacher?.name ?? '-' }}
+                      </p>
+                      <p
+                        v-if="r.teacher?.employee_number"
+                        class="text-[10.5px] text-slate-400"
+                      >
+                        {{ r.teacher.employee_number }}
+                      </p>
+                    </td>
+                    <td class="px-4 py-2.5 text-slate-600">
+                      {{ fmtDate(r.date) }}
+                    </td>
+                    <td class="px-4 py-2.5">
+                      <span
+                        class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                        :class="
+                          r.status === 'late'
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-emerald-100 text-emerald-700'
+                        "
+                      >
+                        {{ teacherAttendanceStatusLabel(r.status) }}
+                      </span>
+                    </td>
+                    <td
+                      class="px-4 py-2.5 text-slate-700 font-bold tabular-nums"
+                    >
+                      {{ fmtTime(r.check_in_at) }}
+                    </td>
+                    <td
+                      class="px-4 py-2.5 text-slate-700 font-bold tabular-nums"
+                    >
+                      {{ fmtTime(r.check_out_at) }}
+                    </td>
+                    <td class="px-4 py-2.5">
+                      <span
+                        v-if="r.check_in_outside_geofence"
+                        class="text-[11px] font-bold text-red-600"
+                      >
+                        Luar area
+                      </span>
+                      <span
+                        v-else-if="r.check_in_distance_m != null"
+                        class="text-[11px] text-slate-500"
+                      >
+                        {{ r.check_in_distance_m }} m
+                      </span>
+                      <span v-else class="text-[11px] text-slate-300">-</span>
+                    </td>
+                    <td class="px-4 py-2.5">
+                      <a
+                        v-if="r.check_in_photo_url"
+                        :href="r.check_in_photo_url"
+                        target="_blank"
+                        rel="noopener"
+                        class="inline-flex items-center gap-1 text-brand-cobalt text-[11px] font-bold hover:underline"
+                      >
+                        <NavIcon name="camera" :size="12" />Lihat
+                      </a>
+                      <span v-else class="text-[11px] text-slate-300">-</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pagination -->
+          <div
+            v-if="reportMeta && reportMeta.last_page > 1"
+            class="flex items-center justify-center gap-2 pt-3"
+          >
+            <Button
+              variant="secondary"
+              size="sm"
+              :disabled="reportMeta.current_page <= 1"
+              @click="goReportPage(reportMeta.current_page - 1)"
+            >
+              <NavIcon name="chevron-left" :size="13" />
+            </Button>
+            <span class="text-[12px] text-slate-500 font-bold px-2">
+              Hal {{ reportMeta.current_page }} / {{ reportMeta.last_page }}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              :disabled="reportMeta.current_page >= reportMeta.last_page"
+              @click="goReportPage(reportMeta.current_page + 1)"
+            >
+              <NavIcon name="chevron-right" :size="13" />
+            </Button>
+          </div>
+        </template>
+      </AsyncView>
+    </template>
+  </div>
+</template>
