@@ -5,6 +5,11 @@
   records (GET /teacher-attendance/history) with a date-range filter.
   Each row shows the date, status (Tepat Waktu / Terlambat), masuk/pulang
   times, the geofence distance, and a thumbnail of the check-in selfie.
+
+  Above the log sits a PERIOD SUMMARY header (X Hadir · Y Telat ·
+  % Kehadiran) for the selected periode, from the teacher own-summary
+  endpoint (GET /teacher-attendance/history/summary, backend MR !110).
+  Status chips are DYNAMIC — driven by meta.statuses.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -12,9 +17,13 @@ import { useRouter } from 'vue-router';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import type {
   TeacherAttendanceListResult,
+  TeacherAttendanceOwnSummary,
   TeacherAttendanceRecord,
 } from '@/types/teacher-attendance';
-import { teacherAttendanceStatusLabel } from '@/types/teacher-attendance';
+import {
+  teacherAttendanceStatusColumnLabel,
+  teacherAttendanceStatusLabel,
+} from '@/types/teacher-attendance';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -44,9 +53,50 @@ const state = computed<AsyncState<TeacherAttendanceRecord[]>>(() => {
   return { status: 'content', data: records.value };
 });
 
+// ── Period summary header (history/summary) ─────────────────────────
+const summary = ref<TeacherAttendanceOwnSummary | null>(null);
+const summaryLoading = ref(false);
+
+/** Status keys to render as chips (dynamic — from meta.statuses). */
+const summaryStatuses = computed<string[]>(
+  () => summary.value?.meta.statuses ?? ['present', 'late'],
+);
+
+/** Period label shown beside the chips, when the server echoes a range. */
+const summaryRangeLabel = computed(() => {
+  const m = summary.value?.meta;
+  if (!m) return '';
+  return `${fmtDate(m.start_date)} – ${fmtDate(m.end_date)}`;
+});
+
+/** Tailwind classes for a status chip — green leads, amber for late. */
+function chipClass(status: string): string {
+  if (status === 'present') return 'bg-emerald-100 text-emerald-700';
+  if (status === 'late') return 'bg-amber-100 text-amber-700';
+  return 'bg-slate-100 text-slate-600';
+}
+
+async function loadSummary() {
+  summaryLoading.value = true;
+  try {
+    summary.value = await TeacherAttendanceService.historySummary({
+      start_date: startDate.value || undefined,
+      end_date: endDate.value || undefined,
+    });
+  } catch {
+    // The summary is a non-critical header — keep the log usable even
+    // if the rekap endpoint hiccups. Errors surface on the list itself.
+    summary.value = null;
+  } finally {
+    summaryLoading.value = false;
+  }
+}
+
 async function reload() {
   isLoading.value = true;
   error.value = null;
+  // Refresh the header alongside the log so both reflect the same periode.
+  loadSummary();
   try {
     result.value = await TeacherAttendanceService.history({
       start_date: startDate.value || undefined,
@@ -158,6 +208,47 @@ onMounted(reload);
       >
         Reset
       </Button>
+    </section>
+
+    <!-- Period summary header (Hadir · Telat · % Kehadiran) -->
+    <section
+      v-if="summary"
+      class="bg-white border border-slate-200 rounded-2xl p-4"
+    >
+      <div
+        class="flex items-center justify-between gap-3 flex-wrap mb-3"
+      >
+        <h3 class="text-[13px] font-black text-slate-900">Ringkasan Periode</h3>
+        <span v-if="summaryRangeLabel" class="text-[11px] text-slate-500">
+          {{ summaryRangeLabel }}
+        </span>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div
+          v-for="s in summaryStatuses"
+          :key="s"
+          class="rounded-xl px-3 py-2.5"
+          :class="chipClass(s)"
+        >
+          <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">
+            {{ teacherAttendanceStatusColumnLabel(s) }}
+          </p>
+          <p class="text-[20px] font-black leading-tight tabular-nums">
+            {{ summary.summary[s] ?? 0 }}
+          </p>
+        </div>
+        <div class="rounded-xl px-3 py-2.5 bg-brand-cobalt/10 text-brand-cobalt">
+          <p class="text-[10px] font-bold uppercase tracking-widest opacity-80">
+            % Kehadiran
+          </p>
+          <p class="text-[20px] font-black leading-tight tabular-nums">
+            {{ summary.summary.present_pct }}%
+          </p>
+          <p class="text-[10px] opacity-70 tabular-nums">
+            {{ summary.summary.total }} hari tercatat
+          </p>
+        </div>
+      </div>
     </section>
 
     <!-- List -->

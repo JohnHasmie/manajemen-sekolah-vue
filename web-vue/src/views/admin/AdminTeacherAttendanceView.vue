@@ -7,20 +7,29 @@
         out-of-radius behaviour, and the late grace. The geofence centre
         falls back to the school pin (school_latitude/longitude) when
         left blank. Partial PUT — only changed keys are sent.
-    (b) Laporan — the school-scoped report list (GET …/admin) with a
-        date + teacher filter and present/late breakdown per row.
+    (b) Laporan — two stacked sections sharing one periode (date-range)
+        filter:
+          · REKAP per-guru — aggregated Hadir/Telat/(Alpa/Izin…)/Total/%
+            table (GET …/admin/summary) with an Export Excel (CSV) button.
+            Status columns are DYNAMIC — driven by meta.statuses.
+          · Detail per-baris — the school-scoped per-row list
+            (GET …/admin) with the existing date/teacher/status filters,
+            collapsible below the rekap.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import { useToast } from '@/composables/useToast';
 import type {
+  TeacherAttendanceAdminSummary,
   TeacherAttendanceListResult,
   TeacherAttendanceRecord,
   TeacherAttendanceSettings,
+  TeacherAttendanceSummaryRow,
 } from '@/types/teacher-attendance';
 import {
   DEFAULT_TEACHER_ATTENDANCE_SETTINGS,
+  teacherAttendanceStatusColumnLabel,
   teacherAttendanceStatusLabel,
 } from '@/types/teacher-attendance';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
@@ -136,15 +145,135 @@ async function saveSettings() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Report tab
+// Report tab — shared periode (date range) filter
+//
+// The periode drives BOTH the per-guru rekap (admin/summary) and the
+// detail per-row list (admin). Empty bounds let the backend default to
+// start-of-month → today.
 // ─────────────────────────────────────────────────────────────────
-const filterDate = ref('');
 const filterStartDate = ref('');
 const filterEndDate = ref('');
 const filterTeacher = ref('');
+/** Detail-only filters (the rekap ignores these). */
+const filterDate = ref('');
 const filterStatus = ref<'' | 'present' | 'late'>('');
 const reportPage = ref(1);
 const reportPerPage = 25;
+/** Detail per-row list is collapsed by default — rekap leads. */
+const showDetail = ref(false);
+
+// ── Per-guru REKAP (admin/summary) ──────────────────────────────────
+const summary = ref<TeacherAttendanceAdminSummary | null>(null);
+const summaryLoading = ref(false);
+const summaryError = ref<string | null>(null);
+const summaryLoaded = ref(false);
+
+const summaryRows = computed<TeacherAttendanceSummaryRow[]>(
+  () => summary.value?.data ?? [],
+);
+const summaryStatuses = computed<string[]>(
+  () => summary.value?.meta.statuses ?? ['present', 'late'],
+);
+const summaryTotals = computed(() => summary.value?.totals ?? null);
+
+const summaryState = computed<AsyncState<TeacherAttendanceSummaryRow[]>>(() => {
+  if (summaryLoading.value && summaryRows.value.length === 0)
+    return { status: 'loading' };
+  if (summaryError.value)
+    return { status: 'error', error: summaryError.value };
+  if (summaryRows.value.length === 0) return { status: 'empty' };
+  return { status: 'content', data: summaryRows.value };
+});
+
+async function loadSummary() {
+  summaryLoading.value = true;
+  summaryError.value = null;
+  try {
+    summary.value = await TeacherAttendanceService.adminSummary({
+      start_date: filterStartDate.value || undefined,
+      end_date: filterEndDate.value || undefined,
+      teacher_id: filterTeacher.value.trim() || undefined,
+    });
+    summaryLoaded.value = true;
+  } catch (e) {
+    summaryError.value = (e as Error).message;
+  } finally {
+    summaryLoading.value = false;
+  }
+}
+
+/** Pretty range label for the rekap card subtitle. */
+const summaryRangeLabel = computed(() => {
+  const m = summary.value?.meta;
+  if (!m) return '';
+  return `${fmtDate(m.start_date)} – ${fmtDate(m.end_date)}`;
+});
+
+// ── Export Excel (client-side CSV, opens in Excel) ──────────────────
+function csvEscape(v: unknown): string {
+  const s = v === null || v === undefined ? '' : String(v);
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+function exportRekapCsv() {
+  if (summaryRows.value.length === 0) {
+    toast.error('Belum ada data rekap untuk diekspor.');
+    return;
+  }
+  const statuses = summaryStatuses.value;
+  const header = [
+    'Nama Guru',
+    'NIP',
+    ...statuses.map(teacherAttendanceStatusColumnLabel),
+    'Total',
+    '% Kehadiran',
+  ];
+  const body = summaryRows.value.map((row) =>
+    [
+      row.teacher_name,
+      row.employee_number ?? '',
+      ...statuses.map((s) => row[s] ?? 0),
+      row.total,
+      `${row.present_pct}%`,
+    ]
+      .map(csvEscape)
+      .join(','),
+  );
+  const t = summaryTotals.value;
+  const footer = t
+    ? [
+        'TOTAL',
+        '',
+        ...statuses.map((s) => t[s] ?? 0),
+        t.total,
+        `${t.present_pct}%`,
+      ]
+        .map(csvEscape)
+        .join(',')
+    : null;
+  const lines = [header.map(csvEscape).join(','), ...body];
+  if (footer) lines.push(footer);
+  const csv = lines.join('\n');
+  // Prepend a UTF-8 BOM so Excel renders Indonesian characters.
+  const blob = new Blob(['﻿' + csv], {
+    type: 'text/csv;charset=utf-8;',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const range = summary.value
+    ? `${summary.value.meta.start_date}_${summary.value.meta.end_date}`
+    : new Date().toISOString().slice(0, 10);
+  a.download = `rekap_presensi_guru_${range}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast.success('Rekap presensi guru ter-export.');
+}
 
 const report = ref<TeacherAttendanceListResult | null>(null);
 const reportLoading = ref(false);
@@ -192,9 +321,15 @@ async function loadReport() {
   }
 }
 
+/**
+ * Apply the shared periode/teacher filter: always refresh the rekap;
+ * refresh the detail list only when it's expanded (lazy — no wasted
+ * request while collapsed).
+ */
 function applyReportFilters() {
   reportPage.value = 1;
-  loadReport();
+  loadSummary();
+  if (showDetail.value) loadReport();
 }
 
 function clearReportFilters() {
@@ -204,7 +339,14 @@ function clearReportFilters() {
   filterTeacher.value = '';
   filterStatus.value = '';
   reportPage.value = 1;
-  loadReport();
+  loadSummary();
+  if (showDetail.value) loadReport();
+}
+
+/** Expand/collapse the detail per-row list; load it on first open. */
+function toggleDetail() {
+  showDetail.value = !showDetail.value;
+  if (showDetail.value && !reportLoaded.value) loadReport();
 }
 
 function goReportPage(n: number) {
@@ -221,7 +363,9 @@ function goReportPage(n: number) {
 
 function switchTab(t: Tab) {
   tab.value = t;
-  if (t === 'report' && !reportLoaded.value) loadReport();
+  // The rekap leads the report tab — load it on first entry. The
+  // detail list stays lazy until the admin expands it.
+  if (t === 'report' && !summaryLoaded.value) loadSummary();
 }
 
 function fmtDate(d: string): string {
@@ -496,7 +640,7 @@ onMounted(loadSettings);
 
     <!-- ════════════════════ REPORT TAB ════════════════════ -->
     <template v-else>
-      <!-- Filter toolbar -->
+      <!-- Periode filter (drives BOTH rekap + detail) -->
       <section
         class="bg-white border border-slate-200 rounded-2xl p-3 flex flex-wrap items-end gap-3"
       >
@@ -504,19 +648,7 @@ onMounted(loadSettings);
           <label
             class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
           >
-            Tanggal
-          </label>
-          <input
-            v-model="filterDate"
-            type="date"
-            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
-          />
-        </div>
-        <div>
-          <label
-            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
-          >
-            Dari
+            Dari (periode)
           </label>
           <input
             v-model="filterStartDate"
@@ -528,7 +660,7 @@ onMounted(loadSettings);
           <label
             class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
           >
-            Sampai
+            Sampai (periode)
           </label>
           <input
             v-model="filterEndDate"
@@ -549,41 +681,212 @@ onMounted(loadSettings);
             class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 w-44 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
           />
         </div>
-        <div>
-          <label
-            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
-          >
-            Status
-          </label>
-          <select
-            v-model="filterStatus"
-            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
-          >
-            <option value="">Semua</option>
-            <option value="present">Tepat Waktu</option>
-            <option value="late">Terlambat</option>
-          </select>
-        </div>
         <Button variant="primary" size="sm" @click="applyReportFilters">
           <NavIcon name="filter" :size="13" />Terapkan
         </Button>
         <Button
-          v-if="
-            filterDate ||
-            filterStartDate ||
-            filterEndDate ||
-            filterTeacher ||
-            filterStatus
-          "
+          v-if="filterStartDate || filterEndDate || filterTeacher"
           variant="ghost"
           size="sm"
           @click="clearReportFilters"
         >
           Reset
         </Button>
+        <p class="basis-full text-[10.5px] text-slate-400">
+          Kosongkan tanggal untuk memakai periode default (awal bulan ini
+          sampai hari ini).
+        </p>
       </section>
 
-      <!-- Summary chips -->
+      <!-- ─────────────── REKAP PER-GURU (admin/summary) ─────────────── -->
+      <section
+        class="bg-white border border-slate-200 rounded-2xl overflow-hidden"
+      >
+        <div
+          class="px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap"
+        >
+          <div>
+            <h3 class="text-[13px] font-black text-slate-900">
+              Rekap Kehadiran per Guru
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">
+              <template v-if="summaryRangeLabel"
+                >Periode {{ summaryRangeLabel }} ·
+              </template>
+              {{ summaryTotals?.teacher_count ?? summaryRows.length }} guru
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            :disabled="summaryRows.length === 0"
+            @click="exportRekapCsv"
+          >
+            <NavIcon name="download" :size="13" />Export Excel
+          </Button>
+        </div>
+
+        <AsyncView
+          :state="summaryState"
+          empty-title="Belum ada rekap presensi"
+          empty-description="Tidak ada data presensi guru untuk periode ini."
+          @retry="loadSummary"
+        >
+          <template #default>
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[640px] text-left">
+                <thead>
+                  <tr
+                    class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                  >
+                    <th class="px-4 py-2.5">Nama</th>
+                    <th
+                      v-for="s in summaryStatuses"
+                      :key="s"
+                      class="px-4 py-2.5 text-right tabular-nums"
+                    >
+                      {{ teacherAttendanceStatusColumnLabel(s) }}
+                    </th>
+                    <th class="px-4 py-2.5 text-right tabular-nums">Total</th>
+                    <th class="px-4 py-2.5 text-right tabular-nums">
+                      % Kehadiran
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="row in summaryRows"
+                    :key="row.teacher_id"
+                    class="border-t border-slate-100 text-[12.5px] hover:bg-slate-50"
+                  >
+                    <td class="px-4 py-2.5">
+                      <p class="font-bold text-slate-900">
+                        {{ row.teacher_name }}
+                      </p>
+                      <p
+                        v-if="row.employee_number"
+                        class="text-[10.5px] text-slate-400"
+                      >
+                        {{ row.employee_number }}
+                      </p>
+                    </td>
+                    <td
+                      v-for="s in summaryStatuses"
+                      :key="s"
+                      class="px-4 py-2.5 text-right tabular-nums text-slate-700"
+                    >
+                      {{ row[s] ?? 0 }}
+                    </td>
+                    <td
+                      class="px-4 py-2.5 text-right tabular-nums font-bold text-slate-900"
+                    >
+                      {{ row.total }}
+                    </td>
+                    <td class="px-4 py-2.5 text-right">
+                      <span
+                        class="text-[11px] font-bold px-1.5 py-0.5 rounded-full tabular-nums"
+                        :class="
+                          row.present_pct >= 90
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : row.present_pct >= 75
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-red-100 text-red-700'
+                        "
+                      >
+                        {{ row.present_pct }}%
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot v-if="summaryTotals">
+                  <tr
+                    class="border-t-2 border-slate-200 bg-slate-50 text-[12.5px] font-black text-slate-900"
+                  >
+                    <td class="px-4 py-2.5">Total</td>
+                    <td
+                      v-for="s in summaryStatuses"
+                      :key="s"
+                      class="px-4 py-2.5 text-right tabular-nums"
+                    >
+                      {{ summaryTotals[s] ?? 0 }}
+                    </td>
+                    <td class="px-4 py-2.5 text-right tabular-nums">
+                      {{ summaryTotals.total }}
+                    </td>
+                    <td class="px-4 py-2.5 text-right tabular-nums">
+                      {{ summaryTotals.present_pct }}%
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </template>
+        </AsyncView>
+      </section>
+
+      <!-- ─────────────── DETAIL PER-BARIS (collapsible) ─────────────── -->
+      <section
+        class="bg-white border border-slate-200 rounded-2xl overflow-hidden"
+      >
+        <button
+          type="button"
+          class="w-full px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors"
+          @click="toggleDetail"
+        >
+          <div class="text-left">
+            <h3 class="text-[13px] font-black text-slate-900">
+              Detail per Baris
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">
+              Catatan presensi harian guru (masuk/pulang, lokasi, foto).
+            </p>
+          </div>
+          <NavIcon
+            :name="showDetail ? 'chevron-up' : 'chevron-down'"
+            :size="16"
+            class="text-slate-400 flex-shrink-0"
+          />
+        </button>
+      </section>
+
+      <template v-if="showDetail">
+        <!-- Detail-only filters (tanggal tunggal + status) -->
+        <section
+          class="bg-white border border-slate-200 rounded-2xl p-3 flex flex-wrap items-end gap-3"
+        >
+          <div>
+            <label
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+            >
+              Tanggal (1 hari)
+            </label>
+            <input
+              v-model="filterDate"
+              type="date"
+              class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+            />
+          </div>
+          <div>
+            <label
+              class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1"
+            >
+              Status
+            </label>
+            <select
+              v-model="filterStatus"
+              class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30"
+            >
+              <option value="">Semua</option>
+              <option value="present">Tepat Waktu</option>
+              <option value="late">Terlambat</option>
+            </select>
+          </div>
+          <Button variant="primary" size="sm" @click="applyReportFilters">
+            <NavIcon name="filter" :size="13" />Terapkan
+          </Button>
+        </section>
+
+        <!-- Summary chips -->
       <div
         v-if="reportRows.length > 0"
         class="flex items-center gap-2 flex-wrap"
@@ -733,6 +1036,7 @@ onMounted(loadSettings);
           </div>
         </template>
       </AsyncView>
+      </template>
     </template>
   </div>
 </template>
