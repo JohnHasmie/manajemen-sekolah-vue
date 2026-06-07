@@ -58,6 +58,7 @@ import 'package:manajemensekolah/features/report_cards/presentation/screens/teac
 import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
+import 'package:manajemensekolah/features/teacher_attendance/presentation/screens/teacher_presensi_screen.dart';
 
 // Teacher = "between admin and parent" in the brand. The hero gradient
 // literally combines both brand colors (Dark Blue → Azzure Blue), which
@@ -319,6 +320,13 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   /// Akun → settings screen (same destination as the app-bar avatar
   /// and the Lainnya hub's Akun row).
   void _openAccount() => AppNavigator.push(context, const SettingsScreen());
+
+  /// Presensi Guru → the teacher's OWN daily check-in / check-out.
+  /// Distinct from `_openAttendance` (which opens the student-attendance
+  /// taker). The screen bootstraps itself from the config endpoint, so
+  /// no payload is needed here.
+  void _openTeacherPresensi() =>
+      AppNavigator.push(context, const TeacherPresensiScreen());
 
   void _openReportCards() {
     final tp = ref.read(teacherRiverpod);
@@ -942,9 +950,17 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   Widget _buildModulLain() {
     return ModulLainStrip(
       title: AppLocalizations.dbOtherModules.tr,
-      totalLabel: '7 ${AppLocalizations.dbOtherModules.tr.toLowerCase()}',
+      totalLabel: '8 ${AppLocalizations.dbOtherModules.tr.toLowerCase()}',
       accentColor: _teacherCobalt,
       visibleItems: [
+        // Presensi Guru — the teacher's own daily check-in/out. Uses the
+        // shared Kehadiran (violet) module icon; the "Presensi Guru"
+        // label sets it apart from the student "Absensi" quick action.
+        ModulLainStripItem(
+          label: 'Presensi Guru',
+          icon: DashboardModules.kehadiran.icon,
+          onTap: _openTeacherPresensi,
+        ),
         ModulLainStripItem(
           label: DashboardModules.materi.defaultLabel,
           icon: DashboardModules.materi.icon,

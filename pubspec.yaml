@@ -55,6 +55,14 @@ dependencies:
   file_saver: ^0.3.1
   permission_handler: ^12.0.1
   image_picker: ^1.2.0
+  # Teacher daily attendance (Presensi Guru) needs the device GPS fix
+  # so the server can verify the selfie was taken inside the school's
+  # geofence (haversine vs the school pin). geolocator is the de-facto
+  # standard cross-platform location plugin; permission_handler (already
+  # a dep) covers the runtime camera/location prompts. image_picker
+  # (already a dep, with source: camera) gives us the LIVE front-camera
+  # capture without ever exposing the gallery.
+  geolocator: ^14.0.2
   jwt_decoder: ^2.0.1
   firebase_core: ^4.0.0
   firebase_messaging: ^16.0.0

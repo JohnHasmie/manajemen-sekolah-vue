@@ -28,4 +28,12 @@
   </queries>
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+  <!-- Teacher daily attendance (Presensi Guru): the check-in flow takes a
+       LIVE selfie (CAMERA) and reads the device GPS so the server can
+       verify the teacher is inside the school geofence. FINE + COARSE
+       cover precise and approximate fixes; geolocator falls back to
+       coarse if the user only grants approximate location. -->
+  <uses-permission android:name="android.permission.CAMERA"/>
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 </manifest>
