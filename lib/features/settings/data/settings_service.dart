@@ -7,6 +7,7 @@ library;
 
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Service for user profile and school settings API calls.
 /// Like a combined Laravel controller handling /profile and /school/settings routes.
@@ -36,13 +37,68 @@ class ApiSettingsService {
   }
 
   /// Fetches the current user's profile. Like `auth()->user()` in Laravel.
+  ///
+  /// Side-effect: hydrates the global [LanguageProvider] from the
+  /// `preferred_language` field in the response. This means a user
+  /// who picked English on their phone gets English on a freshly-
+  /// installed tablet as soon as they open the app and the profile
+  /// loads — no manual re-pick needed. `hydrateFromServer` is a
+  /// no-op when the value is null, unsupported, or already matches,
+  /// and crucially does NOT push the same value back to the server,
+  /// so there's no infinite-PATCH loop.
   Future<Map<String, dynamic>> getProfile() async {
     try {
       final response = await dioClient.get('/profile');
-      return response.data;
+      final data = response.data;
+
+      // Pipe the server's saved preference into the global provider.
+      // Wrapped in a try/catch so a malformed payload (older API
+      // version, network proxy stripping fields, etc.) never breaks
+      // the profile screen itself.
+      try {
+        if (data is Map<String, dynamic>) {
+          final code = data['preferred_language'];
+          await languageProvider.hydrateFromServer(
+            code is String ? code : null,
+          );
+        }
+      } catch (e) {
+        AppLogger.warning('settings', 'Language hydrate failed: $e');
+      }
+
+      return data;
     } catch (e) {
       AppLogger.error('settings', e);
       rethrow;
+    }
+  }
+
+  /// Persists the user's UI-language preference server-side so it
+  /// follows them across devices and survives logout.
+  ///
+  /// Why this exists alongside the local SharedPreferences write
+  /// in `LanguageProvider.setLanguage`:
+  /// - SharedPreferences is per-device. If the user installs the app
+  ///   on a tablet at school, they shouldn't have to re-pick.
+  /// - The backend reads this column on every API request (see
+  ///   `SetLocaleFromHeader` middleware) to localise inbox labels,
+  ///   validation messages, and mail templates.
+  ///
+  /// Pass [code] = 'id' or 'en' to pin, or `null` to clear the saved
+  /// choice and let the server fall back to the `Accept-Language`
+  /// header. Returns silently on failure — the local prefs write
+  /// already happened, so UX continues; we just log so it surfaces
+  /// in monitoring if backend sync breaks.
+  Future<void> updatePreferredLanguage(String? code) async {
+    try {
+      await dioClient.patch(
+        '/profile/language',
+        data: {'preferred_language': code},
+      );
+    } catch (e) {
+      // Non-fatal: local prefs already updated, app UX unaffected.
+      // Server will catch up on next explicit pick or manual sync.
+      AppLogger.error('settings', e);
     }
   }
 
