@@ -6,6 +6,7 @@ import 'package:manajemensekolah/core/widgets/skeleton_loading.dart';
 import 'package:manajemensekolah/core/utils/academic_year_utils.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/date_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/features/settings/presentation/mixins/school_level_data_mixin.dart';
 import 'package:manajemensekolah/features/settings/presentation/mixins/school_level_dialog_mixin.dart';
@@ -130,10 +131,10 @@ class _SchoolLevelSettingsScreenState
     // live inside each section header ("Edit ›" link). The cog opens
     // the full system settings flow if the admin wants more controls
     // (currently no-op — reserved hook).
-    return const BrandPageHeader(
+    return BrandPageHeader(
       role: 'admin',
       subtitle: 'SISTEM · KONFIGURASI',
-      title: 'Pengaturan Umum',
+      title: kSetGeneralSettings.tr,
     );
   }
 
@@ -153,8 +154,8 @@ class _SchoolLevelSettingsScreenState
             _SectionHeader(
               icon: Icons.school_rounded,
               tint: ColorUtils.brandDarkBlue,
-              title: 'Informasi Sekolah',
-              subtitle: 'Identitas & profil sekolah Anda',
+              title: kSetSchoolInfo.tr,
+              subtitle: kSetSchoolIdentityProfile.tr,
               actionLabel: 'Edit',
               actionIcon: Icons.edit_outlined,
               onAction: _showEditDialog,
@@ -162,21 +163,21 @@ class _SchoolLevelSettingsScreenState
             const SizedBox(height: 10),
             buildInfoTileGroup([
               InfoTileRow(
-                label: 'Nama Sekolah',
+                label: kSetSchoolName.tr,
                 value: _schoolName,
                 icon: Icons.school_rounded,
                 iconColor: ColorUtils.brandDarkBlue,
                 onTap: _showEditDialog,
               ),
               InfoTileRow(
-                label: 'Alamat Sekolah',
+                label: kSetSchoolAddress.tr,
                 value: _schoolAddress,
                 icon: Icons.location_on_rounded,
                 iconColor: _violetAccent,
                 onTap: _showEditDialog,
               ),
               InfoTileRow(
-                label: 'Jenjang Pendidikan',
+                label: kSetEducationLevel.tr,
                 value: _jenjangFullLabel(_selectedJenjang),
                 icon: Icons.stairs_rounded,
                 iconColor: ColorUtils.brandDarkBlue,
@@ -190,8 +191,8 @@ class _SchoolLevelSettingsScreenState
             _SectionHeader(
               icon: Icons.calendar_today_rounded,
               tint: ColorUtils.green600,
-              title: 'Tahun Ajaran',
-              subtitle: 'Periode aktif & arsip',
+              title: kSetAcademicYear.tr,
+              subtitle: kSetActivePeriodArchive.tr,
               actionLabel: 'Kelola',
               actionIcon: Icons.chevron_right_rounded,
               onAction: _openKelolaTahunAjaran,
@@ -219,13 +220,13 @@ class _SchoolLevelSettingsScreenState
   String _jenjangFullLabel(String code) {
     switch (code) {
       case 'SD':
-        return 'SD · Sekolah Dasar';
+        return kSetSDSchoolLabel.tr;
       case 'SMP':
-        return 'SMP · Sekolah Menengah Pertama';
+        return kSetSMPSchoolLabel.tr;
       case 'SMA':
-        return 'SMA · Sekolah Menengah Atas';
+        return kSetSMASchoolLabel.tr;
       case 'SMK':
-        return 'SMK · Sekolah Menengah Kejuruan';
+        return kSetSMKSchoolLabel.tr;
       default:
         return code;
     }
@@ -406,7 +407,7 @@ class _ActiveYearHero extends StatelessWidget {
         : null;
     final periodSubtitle = (startDateStr != null && endDateStr != null)
         ? '$startDateStr — $endDateStr'
-        : 'Periode belum diatur';
+        : kSetPeriodNotSet.tr;
 
     // Counts surfaced by the AcademicController.appendCounts() helper.
     final studentCount = '${activeYear['student_count'] ?? 0}';
@@ -446,7 +447,7 @@ class _ActiveYearHero extends StatelessWidget {
               // Top pill row — green "Saat Ini" + transparent semester
               Row(
                 children: [
-                  const _HeroPill.live(label: 'Saat Ini'),
+                  _HeroPill.live(label: kSetCurrent.tr),
                   if (semesterName != null) ...[
                     const SizedBox(width: 6),
                     _HeroPill(label: semesterName.toUpperCase()),
@@ -482,13 +483,13 @@ class _ActiveYearHero extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: _HeroMeta(label: 'Siswa', value: studentCount),
+                    child: _HeroMeta(label: kSetStudents.tr, value: studentCount),
                   ),
                   Expanded(
-                    child: _HeroMeta(label: 'Kelas', value: classCount),
+                    child: _HeroMeta(label: kSetClasses.tr, value: classCount),
                   ),
                   Expanded(
-                    child: _HeroMeta(label: 'Guru', value: teacherCount),
+                    child: _HeroMeta(label: kSetTeachers.tr, value: teacherCount),
                   ),
                 ],
               ),
@@ -626,7 +627,7 @@ class _ArsipDrillTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Arsip',
+                      kSetArchive.tr,
                       style: TextStyle(
                         fontSize: 11,
                         color: ColorUtils.slate500,
@@ -635,7 +636,7 @@ class _ArsipDrillTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Lihat tahun ajaran sebelumnya',
+                      kSetViewPreviousYears.tr,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -688,7 +689,7 @@ class _EmptyActiveYearCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Belum ada tahun ajaran aktif',
+            kSetNoActiveYear.tr,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
@@ -697,7 +698,7 @@ class _EmptyActiveYearCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Silakan tambahkan tahun ajaran baru di Kelola.',
+            kSetAddNewYearManage.tr,
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: ColorUtils.slate500),
           ),
@@ -705,7 +706,7 @@ class _EmptyActiveYearCard extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: onTap,
             icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('Buka Kelola'),
+            label: Text(kSetOpenManage.tr),
             style: OutlinedButton.styleFrom(
               foregroundColor: ColorUtils.brandDarkBlue,
               side: BorderSide(color: ColorUtils.brandDarkBlue),

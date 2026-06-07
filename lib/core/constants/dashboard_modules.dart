@@ -32,7 +32,7 @@ class DashboardModule {
   final Color color;
 
   /// Default label shown to the user if the caller doesn't override.
-  final String defaultLabel;
+  final Map<String, String> defaultLabel;
 
   const DashboardModule({
     required this.icon,
@@ -50,28 +50,28 @@ abstract final class DashboardModules {
   static final DashboardModule nilai = DashboardModule(
     icon: Icons.star_rounded,
     color: ColorUtils.success600,
-    defaultLabel: 'Nilai',
+    defaultLabel: {'en': 'Grades', 'id': 'Nilai'},
   );
 
   /// Raport (report card) — blue `Icons.assignment_turned_in_outlined`.
   static final DashboardModule raport = DashboardModule(
     icon: Icons.assignment_turned_in_outlined,
     color: ColorUtils.brandAzure,
-    defaultLabel: 'Raport',
+    defaultLabel: {'en': 'Report Card', 'id': 'Raport'},
   );
 
   /// Kegiatan Kelas (class activity) — amber `Icons.menu_book_rounded`.
   static final DashboardModule kegiatanKelas = DashboardModule(
     icon: Icons.menu_book_rounded,
     color: ColorUtils.warning600,
-    defaultLabel: 'Kegiatan Kelas',
+    defaultLabel: {'en': 'Class Activity', 'id': 'Kegiatan Kelas'},
   );
 
   /// Pengumuman (announcement) — cyan `Icons.campaign_outlined`.
   static final DashboardModule pengumuman = DashboardModule(
     icon: Icons.campaign_outlined,
     color: ColorUtils.info600,
-    defaultLabel: 'Pengumuman',
+    defaultLabel: {'en': 'Announcement', 'id': 'Pengumuman'},
   );
 
   /// Kehadiran / Presensi — violet `Icons.fact_check_outlined`.
@@ -79,21 +79,21 @@ abstract final class DashboardModules {
   static final DashboardModule kehadiran = DashboardModule(
     icon: Icons.fact_check_outlined,
     color: ColorUtils.violet700,
-    defaultLabel: 'Kehadiran',
+    defaultLabel: {'en': 'Attendance', 'id': 'Kehadiran'},
   );
 
   /// Tagihan (billing / finance) — red `Icons.account_balance_wallet_outlined`.
   static final DashboardModule tagihan = DashboardModule(
     icon: Icons.account_balance_wallet_outlined,
     color: ColorUtils.error600,
-    defaultLabel: 'Tagihan',
+    defaultLabel: {'en': 'Bills', 'id': 'Tagihan'},
   );
 
   /// Rekomendasi (teacher → parent) — indigo `Icons.lightbulb_outline_rounded`.
   static final DashboardModule rekomendasi = DashboardModule(
     icon: Icons.lightbulb_outline_rounded,
     color: ColorUtils.indigo600,
-    defaultLabel: 'Rekomendasi',
+    defaultLabel: {'en': 'Recommendations', 'id': 'Rekomendasi'},
   );
 
   // ── Teacher-only operational ───────────────────────────────────
@@ -101,14 +101,14 @@ abstract final class DashboardModules {
   static final DashboardModule materi = DashboardModule(
     icon: Icons.article_outlined,
     color: ColorUtils.indigo500,
-    defaultLabel: 'Materi',
+    defaultLabel: {'en': 'Materials', 'id': 'Materi'},
   );
 
   /// RPP (lesson plan) — cobalt `Icons.description_outlined`.
   static final DashboardModule rpp = DashboardModule(
     icon: Icons.description_outlined,
     color: ColorUtils.brandCobalt,
-    defaultLabel: 'RPP',
+    defaultLabel: {'en': 'Lesson Plan', 'id': 'RPP'},
   );
 
   /// Rekap Nilai (grade summary) — green `Icons.assessment_outlined`.
@@ -116,14 +116,14 @@ abstract final class DashboardModules {
   static final DashboardModule rekapNilai = DashboardModule(
     icon: Icons.assessment_outlined,
     color: ColorUtils.success600,
-    defaultLabel: 'Rekap Nilai',
+    defaultLabel: {'en': 'Grade Summary', 'id': 'Rekap Nilai'},
   );
 
   /// Buku Nilai (gradebook entry) — green `Icons.bookmark_outline_rounded`.
   static final DashboardModule bukuNilai = DashboardModule(
     icon: Icons.bookmark_outline_rounded,
     color: ColorUtils.success600,
-    defaultLabel: 'Buku Nilai',
+    defaultLabel: {'en': 'Gradebook', 'id': 'Buku Nilai'},
   );
 
   // ── Schedule / Calendar ────────────────────────────────────────
@@ -131,7 +131,7 @@ abstract final class DashboardModules {
   static final DashboardModule jadwal = DashboardModule(
     icon: Icons.calendar_today_outlined,
     color: ColorUtils.brandCobalt,
-    defaultLabel: 'Jadwal',
+    defaultLabel: {'en': 'Schedule', 'id': 'Jadwal'},
   );
 
   // ── Admin operational ──────────────────────────────────────────
@@ -139,7 +139,7 @@ abstract final class DashboardModules {
   static final DashboardModule siswa = DashboardModule(
     icon: Icons.people_alt_outlined,
     color: ColorUtils.corporateBlue600,
-    defaultLabel: 'Siswa',
+    defaultLabel: {'en': 'Students', 'id': 'Siswa'},
   );
 
   /// Guru (teachers) — violet `Icons.person_outline`.
@@ -147,14 +147,14 @@ abstract final class DashboardModules {
   static final DashboardModule guru = DashboardModule(
     icon: Icons.person_outline,
     color: ColorUtils.violet700,
-    defaultLabel: 'Guru',
+    defaultLabel: {'en': 'Teachers', 'id': 'Guru'},
   );
 
   /// Kelas (classes) — amber `Icons.class_outlined`.
   static final DashboardModule kelas = DashboardModule(
     icon: Icons.class_outlined,
     color: ColorUtils.warning600,
-    defaultLabel: 'Kelas',
+    defaultLabel: {'en': 'Classes', 'id': 'Kelas'},
   );
 
   /// Mata Pelajaran (subjects) — indigo `Icons.book_outlined`.
@@ -163,21 +163,21 @@ abstract final class DashboardModules {
   static final DashboardModule mataPelajaran = DashboardModule(
     icon: Icons.book_outlined,
     color: ColorUtils.indigo500,
-    defaultLabel: 'Mata Pelajaran',
+    defaultLabel: {'en': 'Subjects', 'id': 'Mata Pelajaran'},
   );
 
   /// Keuangan (finance dashboard) — red wallet — same accent as Tagihan.
   static final DashboardModule keuangan = DashboardModule(
     icon: Icons.account_balance_wallet_outlined,
     color: ColorUtils.error600,
-    defaultLabel: 'Keuangan',
+    defaultLabel: {'en': 'Finance', 'id': 'Keuangan'},
   );
 
   /// Laporan / Reports overview — amber `Icons.summarize_outlined`.
   static final DashboardModule laporan = DashboardModule(
     icon: Icons.summarize_outlined,
     color: ColorUtils.warning600,
-    defaultLabel: 'Laporan',
+    defaultLabel: {'en': 'Reports', 'id': 'Laporan'},
   );
 
   // ── Settings / Account ─────────────────────────────────────────
@@ -185,14 +185,14 @@ abstract final class DashboardModules {
   static final DashboardModule pengaturan = DashboardModule(
     icon: Icons.settings_outlined,
     color: ColorUtils.slate600,
-    defaultLabel: 'Pengaturan',
+    defaultLabel: {'en': 'Settings', 'id': 'Pengaturan'},
   );
 
   /// Akun (account / profile) — slate `Icons.account_circle_outlined`.
   static final DashboardModule akun = DashboardModule(
     icon: Icons.account_circle_outlined,
     color: ColorUtils.slate600,
-    defaultLabel: 'Akun',
+    defaultLabel: {'en': 'Account', 'id': 'Akun'},
   );
 
   // ── Admin Sistem sub-modules ───────────────────────────────────
@@ -200,41 +200,41 @@ abstract final class DashboardModules {
   static final DashboardModule tahunAjaran = DashboardModule(
     icon: Icons.calendar_today_outlined,
     color: ColorUtils.indigo600,
-    defaultLabel: 'Tahun Ajaran',
+    defaultLabel: {'en': 'Academic Year', 'id': 'Tahun Ajaran'},
   );
 
   /// Waktu Pembelajaran — amber clock.
   static final DashboardModule waktuPembelajaran = DashboardModule(
     icon: Icons.access_time_rounded,
     color: ColorUtils.warning600,
-    defaultLabel: 'Waktu Pembelajaran',
+    defaultLabel: {'en': 'Learning Time', 'id': 'Waktu Pembelajaran'},
   );
 
   /// Manajemen Data — green dataset.
   static final DashboardModule manajemenData = DashboardModule(
     icon: Icons.dataset_outlined,
     color: ColorUtils.success600,
-    defaultLabel: 'Manajemen Data',
+    defaultLabel: {'en': 'Data Management', 'id': 'Manajemen Data'},
   );
 
   /// Bahasa — violet language.
   static final DashboardModule bahasa = DashboardModule(
     icon: Icons.language_rounded,
     color: ColorUtils.violet700,
-    defaultLabel: 'Bahasa',
+    defaultLabel: {'en': 'Language', 'id': 'Bahasa'},
   );
 
   /// Notifikasi — red bell.
   static final DashboardModule notifikasi = DashboardModule(
     icon: Icons.notifications_outlined,
     color: ColorUtils.error600,
-    defaultLabel: 'Notifikasi',
+    defaultLabel: {'en': 'Notifications', 'id': 'Notifikasi'},
   );
 
   /// Backup & Audit — indigo cloud-upload.
   static final DashboardModule backupAudit = DashboardModule(
     icon: Icons.backup_outlined,
     color: ColorUtils.indigo500,
-    defaultLabel: 'Backup & Audit',
+    defaultLabel: {'en': 'Backup & Audit', 'id': 'Backup & Audit'},
   );
 }

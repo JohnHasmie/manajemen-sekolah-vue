@@ -46,7 +46,7 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
 
     showFilterSheet(
       context: context,
-      title: 'Filter Nilai',
+      title: kGraFilterTitle.tr,
       primaryColor: primaryColor,
       onApply: () =>
           _applyFilter(context, tClassId, tClassName, tSubjectId, tSubjectName),
@@ -109,7 +109,7 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     FilterSectionHeader(
-                      title: 'Kelas',
+                      title: kClass.tr,
                       icon: Icons.class_outlined,
                       primaryColor: primaryColor,
                     ),
@@ -166,7 +166,7 @@ mixin GradeInputFilterDialogMixin on ConsumerState<GradePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     FilterSectionHeader(
-                      title: 'Mata Pelajaran',
+                      title: kSubject.tr,
                       icon: Icons.book_outlined,
                       primaryColor: primaryColor,
                     ),

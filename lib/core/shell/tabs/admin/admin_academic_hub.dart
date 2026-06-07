@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/admin_announcement_screen.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/admin_attendance_dashboard_screen.dart';
@@ -35,8 +36,8 @@ class AdminAcademicHub extends StatelessWidget {
       body: Column(
         children: [
           ShellTabHeader(
-            title: 'Akademik',
-            subtitle: 'Mata pelajaran, jadwal, nilai, dan komunikasi',
+            title: kCorSheTabAcademic.tr,
+            subtitle: kCorSheAdminAcademicSubtitle.tr,
             accentColor: accent,
           ),
           // Shared `DashboardListTile` — same card design as parent
@@ -49,8 +50,8 @@ class AdminAcademicHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Mata Pelajaran',
-                    subtitle: 'Daftar mapel & beban jam',
+                    title: kManageSubjects.tr,
+                    subtitle: kCorSheAdminSubjectsSubtitle.tr,
                     icon: DashboardModules.mataPelajaran.icon,
                     color: DashboardModules.mataPelajaran.color,
                     onTap: () => AppNavigator.push(
@@ -62,8 +63,8 @@ class AdminAcademicHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Jadwal Mengajar',
-                    subtitle: 'Atur jadwal per kelas & guru',
+                    title: kManageTeachingSchedule.tr,
+                    subtitle: kCorSheAdminScheduleSubtitle.tr,
                     icon: DashboardModules.jadwal.icon,
                     color: DashboardModules.jadwal.color,
                     onTap: () => AppNavigator.push(
@@ -75,8 +76,8 @@ class AdminAcademicHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Rekap Nilai',
-                    subtitle: 'Ringkasan nilai per kelas & mapel',
+                    title: kCorSheAdminGradeSummary.tr,
+                    subtitle: kCorSheAdminGradeSummarySubtitle.tr,
                     icon: DashboardModules.rekapNilai.icon,
                     color: DashboardModules.rekapNilai.color,
                     // The "Rekap Nilai" tile must open the Rekap Nilai
@@ -92,8 +93,8 @@ class AdminAcademicHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Kelola RPP',
-                    subtitle: 'Antrian review & persetujuan RPP',
+                    title: kManageLessonPlans.tr,
+                    subtitle: kCorSheAdminLessonPlansSubtitle.tr,
                     icon: DashboardModules.rpp.icon,
                     color: DashboardModules.rpp.color,
                     onTap: () => AppNavigator.push(
@@ -105,8 +106,8 @@ class AdminAcademicHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Raport Siswa',
-                    subtitle: 'Pipeline raport tiap kelas',
+                    title: kCorSheAdminReportCards.tr,
+                    subtitle: kCorSheAdminReportCardsSubtitle.tr,
                     icon: DashboardModules.raport.icon,
                     color: DashboardModules.raport.color,
                     onTap: () => AppNavigator.push(
@@ -118,8 +119,8 @@ class AdminAcademicHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Pengumuman',
-                    subtitle: 'Pengumuman resmi sekolah',
+                    title: kAnnouncements.tr,
+                    subtitle: kCorSheAdminAnnouncementsSubtitle.tr,
                     icon: DashboardModules.pengumuman.icon,
                     color: DashboardModules.pengumuman.color,
                     onTap: () => AppNavigator.push(
@@ -131,8 +132,8 @@ class AdminAcademicHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Kegiatan Kelas',
-                    subtitle: 'Tugas & aktivitas dari guru',
+                    title: kClassActivities.tr,
+                    subtitle: kCorSheAdminActivitiesSubtitle.tr,
                     icon: DashboardModules.kegiatanKelas.icon,
                     color: DashboardModules.kegiatanKelas.color,
                     onTap: () => AppNavigator.push(
@@ -144,8 +145,8 @@ class AdminAcademicHub extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Laporan Presensi',
-                    subtitle: 'Rekap kehadiran siswa sekolah',
+                    title: kCorSheAdminAttendanceReport.tr,
+                    subtitle: kCorSheAdminAttendanceReportSubtitle.tr,
                     icon: DashboardModules.kehadiran.icon,
                     color: DashboardModules.kehadiran.color,
                     onTap: () => AppNavigator.push(

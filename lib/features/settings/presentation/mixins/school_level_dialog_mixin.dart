@@ -16,6 +16,7 @@ import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
@@ -43,8 +44,8 @@ mixin SchoolLevelDialogMixin {
 
     await AppBottomSheet.show(
       context: context,
-      title: 'Edit Informasi Sekolah',
-      subtitle: 'Perbarui identitas & profil sekolah',
+      title: kSetEditSchoolInfo.tr,
+      subtitle: kSetUpdateSchoolProfile.tr,
       icon: Icons.school_rounded,
       primaryColor: ColorUtils.brandDarkBlue,
       // Per-field 14px gaps + 18px footer breathing room. Drops the
@@ -58,17 +59,17 @@ mixin SchoolLevelDialogMixin {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               BrandTextFormField(
-                label: 'Nama Sekolah',
+                label: kSetSchoolName.tr,
                 controller: nameController,
                 prefixIcon: Icons.school_rounded,
-                hintText: 'Masukkan nama sekolah',
+                hintText: kSetEnterSchoolName.tr,
               ),
               const SizedBox(height: 14),
               BrandTextFormField(
-                label: 'Alamat Sekolah',
+                label: kSetSchoolAddress.tr,
                 controller: addressController,
                 prefixIcon: Icons.location_on_outlined,
-                hintText: 'Jl. … , Kota',
+                hintText: kSetAddressExample.tr,
                 maxLines: 2,
               ),
               const SizedBox(height: 14),
@@ -84,7 +85,7 @@ mixin SchoolLevelDialogMixin {
       footer: StatefulBuilder(
         builder: (context, setFooterState) {
           return BottomSheetFooter(
-            primaryLabel: isSaving ? 'Menyimpan…' : 'Simpan',
+            primaryLabel: isSaving ? kSetSaving.tr : 'Simpan',
             primaryColor: ColorUtils.brandDarkBlue,
             primaryEnabled: !isSaving,
             secondaryLabel: 'Batal',
@@ -93,7 +94,7 @@ mixin SchoolLevelDialogMixin {
               if (name.length < 3) {
                 SnackBarUtils.showError(
                   context,
-                  'Nama sekolah minimal 3 karakter',
+                  kSetSchoolNameMinLength.tr,
                 );
                 return;
               }
@@ -109,7 +110,7 @@ mixin SchoolLevelDialogMixin {
                 onLoadSettings();
                 SnackBarUtils.showSuccess(
                   context,
-                  'Informasi sekolah berhasil disimpan',
+                  kSetSchoolInfoSavedSuccess.tr,
                 );
               } catch (e) {
                 AppLogger.error('school_settings_save', e);
@@ -150,7 +151,7 @@ class _JenjangChipGrid extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'JENJANG PENDIDIKAN',
+          kSetEducationLevelUpper.tr,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w700,

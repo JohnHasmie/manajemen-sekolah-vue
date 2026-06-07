@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_form_sheet.dart';
 
@@ -13,7 +14,7 @@ mixin AnnouncementFormDateMixin on State<AnnouncementFormSheet> {
     final DateTime? picked = await showModernDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      title: isStartDate ? 'Pilih Tanggal Mulai' : 'Pilih Tanggal Selesai',
+      title: isStartDate ? kAnnChooseStartDate.tr : kAnnChooseEndDate.tr,
     );
 
     if (picked != null) {

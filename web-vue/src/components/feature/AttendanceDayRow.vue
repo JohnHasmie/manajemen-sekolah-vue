@@ -9,12 +9,12 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import type {
   ParentAttendanceEntry,
   ParentAttendanceStatus,
 } from '@/types/parent';
-import { PARENT_ATTENDANCE_LABELS } from '@/types/parent';
 
 const props = defineProps<{
   entry: ParentAttendanceEntry;
@@ -22,18 +22,34 @@ const props = defineProps<{
 
 defineEmits<{ click: [ParentAttendanceEntry] }>();
 
+const { t, locale } = useI18n();
+
+// Locale-aware date formatter — switches BCP-47 tag with the i18n locale
+// so "Senin/Sen" becomes "Monday/Mon" when the user picks English.
+const intlLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'id-ID'));
+
+// Status labels track the live locale via i18n — must be a computed map
+// (not a const lookup) so re-render happens on language switch.
+const STATUS_LABELS = computed<Record<ParentAttendanceStatus, string>>(() => ({
+  hadir: t('parent.attendance.statusPresent'),
+  terlambat: t('parent.attendance.statusLate'),
+  izin: t('parent.attendance.statusExcused'),
+  sakit: t('parent.attendance.statusSick'),
+  alpha: t('parent.attendance.statusAbsent'),
+}));
+
 const dt = computed(() => new Date(props.entry.date));
 
 const dayOfMonth = computed(() => (Number.isFinite(dt.value.getTime()) ? dt.value.getDate() : '?'));
 
 const shortDay = computed(() => {
   if (!Number.isFinite(dt.value.getTime())) return '';
-  return dt.value.toLocaleDateString('id-ID', { weekday: 'short' });
+  return dt.value.toLocaleDateString(intlLocale.value, { weekday: 'short' });
 });
 
 const longDate = computed(() => {
   if (!Number.isFinite(dt.value.getTime())) return props.entry.date;
-  return dt.value.toLocaleDateString('id-ID', {
+  return dt.value.toLocaleDateString(intlLocale.value, {
     weekday: 'long',
     day: 'numeric',
     month: 'short',
@@ -41,7 +57,7 @@ const longDate = computed(() => {
   });
 });
 
-const statusLabel = computed(() => PARENT_ATTENDANCE_LABELS[props.entry.status]);
+const statusLabel = computed(() => STATUS_LABELS.value[props.entry.status]);
 
 function statusTone(s: ParentAttendanceStatus): {
   bg: string;
@@ -70,9 +86,20 @@ const headline = computed(() => {
   return subject ? `${statusLabel.value} · ${subject}` : statusLabel.value;
 });
 
+// Backend ships `lesson_hour_name` as "Jam ke-4" (Indonesian only). When
+// the user is in English mode, re-format it via the locale key so the
+// row reads "Hour 4 · Tuesday, May 12, 2026" instead of mixing
+// languages. Falls back to the raw string for any unexpected shape.
+function localiseHourName(raw: string): string {
+  const m = raw.match(/^Jam\s+ke-(\d+)$/i);
+  if (m) return t('common.lessonHour', { n: Number(m[1]) });
+  return raw;
+}
+
 const secondary = computed(() => {
   const parts: string[] = [];
-  if (props.entry.lesson_hour_name) parts.push(props.entry.lesson_hour_name);
+  if (props.entry.lesson_hour_name)
+    parts.push(localiseHourName(props.entry.lesson_hour_name));
   else if (props.entry.session) parts.push(props.entry.session);
   parts.push(longDate.value);
   return parts.filter(Boolean).join(' · ');

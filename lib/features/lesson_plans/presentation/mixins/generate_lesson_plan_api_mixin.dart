@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider, Consumer;
 import 'package:manajemensekolah/core/config/ai_config.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_alert_dialog.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_ai_result_screen.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/generate_lesson_plan_form_dialog.dart';
@@ -132,10 +133,10 @@ mixin GenerateLessonPlanApiMixin
     if (mounted) {
       AppAlertDialog.show(
         context: context,
-        title: 'Batas Tercapai',
+        title: kLesPlaLimitReached.tr,
         message: message,
         icon: Icons.timer_off_rounded,
-        confirmText: 'Mengerti',
+        confirmText: kLesPlaUnderstood.tr,
         showCancel: false,
       );
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Mixin for building the search input section.
 mixin SearchBarMixin {
@@ -21,7 +22,7 @@ mixin SearchBarMixin {
         },
         style: const TextStyle(fontSize: 13),
         decoration: InputDecoration(
-          hintText: 'Cari siswa...',
+          hintText: kRepCarSearchStudents.tr,
           hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
           prefixIcon: Icon(Icons.search, size: 18, color: ColorUtils.slate400),
           isDense: true,

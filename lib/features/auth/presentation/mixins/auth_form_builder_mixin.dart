@@ -95,16 +95,16 @@ mixin AuthFormBuilderMixin on ConsumerState<LoginScreen> {
     switch (role.toLowerCase()) {
       case 'admin':
       case 'administrator':
-        return const ['Kelola siswa, guru, jadwal', 'Akses laporan keuangan'];
+        return [kAutAdminStat1.tr, kAutAdminStat2.tr];
       case 'guru':
       case 'teacher':
-        return const ['Ajar & nilai', 'Tulis rekomendasi'];
+        return [kAutTeacherStat1.tr, kAutTeacherStat2.tr];
       case 'wali':
       case 'parent':
       case 'orang_tua':
-        return const ['Pantau anak', 'Terima rekomendasi'];
+        return [kAutParentStat1.tr, kAutParentStat2.tr];
       case 'staff':
-        return const ['Akses tugas staf'];
+        return [kAutStaffStat1.tr];
       default:
         return const [];
     }

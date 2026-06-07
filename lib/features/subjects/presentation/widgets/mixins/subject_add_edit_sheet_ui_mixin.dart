@@ -37,10 +37,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           AdminFormSection(
-            label: lang.getTranslatedText({
-              'en': 'BASIC DATA',
-              'id': 'DATA POKOK',
-            }),
+            label: kSubBasicData.tr,
             children: [
               _buildCodeField(lang),
               _buildMasterSubjectAutocomplete(lang),
@@ -110,10 +107,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
     final lang = ref.watch(languageRiverpod);
     final danger = ColorUtils.error600;
     return AdminFormSection(
-      label: lang.getTranslatedText({
-        'en': 'DANGER ZONE',
-        'id': 'ZONA BERBAHAYA',
-      }),
+      label: kSubDangerZone.tr,
       bottomGap: 4,
       children: [
         Column(
@@ -167,10 +161,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => ConfirmationDialog(
-        title: lang.getTranslatedText({
-          'en': 'Hide subject?',
-          'id': 'Sembunyikan mapel?',
-        }),
+        title: kSubHideSubject.tr,
         content: lang.getTranslatedText({
           'en':
               'The subject will be hidden from this year and future years. '
@@ -217,10 +208,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => ConfirmationDialog(
-        title: lang.getTranslatedText({
-          'en': 'Delete subject permanently?',
-          'id': 'Hapus mapel permanen?',
-        }),
+        title: kSubDeleteSubjectPermanent.tr,
         content: lang.getTranslatedText({
           'en':
               'This cannot be undone. If the subject is referenced by grades / RPP / attendance the deletion will be rejected.',
@@ -384,7 +372,7 @@ mixin SubjectAddEditSheetUiMixin on ConsumerState<SubjectAddEditSheet> {
       onTap: () => onSelected(opt),
       child: ListTile(
         title: Text(opt['name']),
-        subtitle: Text('Kelas ${opt['grade']}'),
+        subtitle: Text('${kSubClassPrefix.tr}${opt['grade']}'),
       ),
     );
   }

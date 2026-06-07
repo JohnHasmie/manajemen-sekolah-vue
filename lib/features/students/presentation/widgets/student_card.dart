@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_list_row.dart';
 import 'package:manajemensekolah/core/widgets/initials_avatar.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
@@ -59,8 +60,8 @@ class StudentCard extends StatelessWidget {
         borderRadius: 12,
       ),
       topMeta: topMeta,
-      title: model.name.isNotEmpty ? model.name : 'No Name',
-      status: const BrandRowStatus.success('Aktif'),
+      title: model.name.isNotEmpty ? model.name : kStuNoName.tr,
+      status: BrandRowStatus.success(kStuActive.tr),
       trailingActionLabel: selected ? null : 'Detail',
       trailingActionColor: accent,
       onTap: onTap,

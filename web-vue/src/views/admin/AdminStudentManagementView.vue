@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, shallowRef } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { StudentService } from '@/services/students.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { AdminDataExcelService } from '@/services/admin-data-excel.service';
@@ -40,6 +41,7 @@ import type { AsyncState } from '@/components/data/AsyncView.vue';
 import type { KpiCard } from '@/components/feature/KpiStripCards.vue';
 
 const route = useRoute();
+const { t } = useI18n();
 const primaryColor = useRoleHex();
 const ayStore = useAcademicYearStore();
 const ayReadOnly = computed(() => ayStore.isReadOnly);
@@ -141,15 +143,15 @@ const state = computed<AsyncState<Student[]>>(() => {
 });
 
 // ── Facet option lists ─────────────────────────────────────────────
-const STATUS_OPTIONS: FacetOption[] = [
-  { key: 'active', label: 'Aktif' },
-  { key: 'inactive', label: 'Tidak aktif' },
-  { key: 'unverified', label: 'Belum verifikasi' },
-];
-const GENDER_OPTIONS: FacetOption[] = [
-  { key: 'L', label: 'Laki-laki' },
-  { key: 'P', label: 'Perempuan' },
-];
+const STATUS_OPTIONS = computed<FacetOption[]>(() => [
+  { key: 'active', label: t('status.Active') },
+  { key: 'inactive', label: t('status.Inactive') },
+  { key: 'unverified', label: t('admin.student.unverified') },
+]);
+const GENDER_OPTIONS = computed<FacetOption[]>(() => [
+  { key: 'L', label: t('admin.gender.male') },
+  { key: 'P', label: t('admin.gender.female') },
+]);
 const classOptions = computed<FacetOption[]>(() =>
   classes.value.map((c) => ({
     key: c.id,
@@ -160,8 +162,8 @@ const classOptions = computed<FacetOption[]>(() =>
 
 // ── Chip values ─────────────────────────────────────────────────────
 const statusChipValue = computed(() => {
-  if (!filters.status) return 'Semua';
-  return STATUS_OPTIONS.find((o) => o.key === filters.status)?.label ?? '—';
+  if (!filters.status) return t('common.all');
+  return STATUS_OPTIONS.value.find((o) => o.key === filters.status)?.label ?? '—';
 });
 
 /**
@@ -180,19 +182,19 @@ const statusChipTone = computed<
   }
 });
 const classChipValue = computed(() => {
-  if (filters.class_ids.length === 0) return 'Semua';
+  if (filters.class_ids.length === 0) return t('common.all');
   if (filters.class_ids.length === 1) {
     return classes.value.find((c) => c.id === filters.class_ids[0])?.name ?? '—';
   }
-  return `${filters.class_ids.length} kelas`;
+  return `${filters.class_ids.length} ${t('admin.student.classCount')}`;
 });
 const genderChipValue = computed(() => {
-  if (!filters.gender) return 'Semua';
-  return filters.gender === 'L' ? 'Laki-laki' : 'Perempuan';
+  if (!filters.gender) return t('common.all');
+  return filters.gender === 'L' ? t('admin.gender.male') : t('admin.gender.female');
 });
 const guardianChipValue = computed(() => {
   const v = filters.guardian_name?.trim();
-  return v ? v : 'Semua';
+  return v ? v : t('common.all');
 });
 
 const activeFilterCount = computed(() => {
@@ -307,35 +309,37 @@ const pageFemaleCount = computed(
 );
 
 const kpiCards = computed<KpiCard[]>(() => [
-  { icon: 'users', label: 'Total Siswa', value: totalStudents.value, tone: 'brand' },
+  { icon: 'users', label: t('admin.student.totalStudents'), value: totalStudents.value, tone: 'brand' },
   {
     icon: 'check-circle',
-    label: 'Punya Wali',
+    label: t('admin.student.haveGuardian'),
     value: pageWithGuardian.value,
-    suffix: '/halaman',
+    suffix: t('admin.pagination.perPage'),
     tone: 'green',
   },
   {
     icon: 'alert-triangle',
-    label: 'Tanpa Wali',
+    label: t('admin.student.noGuardian'),
     value: pageWithoutGuardian.value,
-    suffix: '/halaman',
+    suffix: t('admin.pagination.perPage'),
     tone: pageWithoutGuardian.value > 0 ? 'amber' : 'slate',
     accented: pageWithoutGuardian.value > 0,
   },
   {
     icon: 'user',
-    label: 'Perempuan',
+    label: t('admin.gender.female'),
     value: pageFemaleCount.value,
-    suffix: '/halaman',
+    suffix: t('admin.pagination.perPage'),
     tone: 'violet',
   },
 ]);
 
-const headerMeta = computed(() => {
-  const total = totalStudents.value;
-  return `${total.toLocaleString('id-ID')} siswa terdaftar · TP ${ayStore.yearLabel}`;
-});
+const headerMeta = computed(() =>
+  t('admin.student.meta', {
+    count: totalStudents.value.toLocaleString(),
+    year: ayStore.yearLabel,
+  }),
+);
 
 // ── Bulk select ──
 function toggleSelect(id: string) {
@@ -492,24 +496,24 @@ function onImportDone(res: { imported: number; failed: number }) {
 function topMeta(s: Student): string {
   const cls = s.class_name || '-';
   const nis = s.student_number;
-  return nis ? `${cls} · NIS ${nis}` : cls;
+  return nis ? t('admin.student.rowPrefix', { class: cls, nis }) : cls;
 }
 </script>
 
 <template>
   <AdminCrudScaffold
-    title="Manajemen Siswa"
-    kicker="Admin · Manajemen Data"
+    :title="t('admin.student.title')"
+    :kicker="t('admin.breadcrumb.dataManagement')"
     :meta="headerMeta"
     :kpi-cards="kpiCards"
     :state="state"
     :selected-count="selectedIds.size"
     :active-filter-count="activeFilterCount"
     :hide-add-fab="ayReadOnly"
-    search-placeholder="Cari nama atau NIS siswa..."
-    empty-title="Belum ada siswa"
-    empty-description="Tap tombol + untuk menambahkan siswa baru."
-    fab-label="Tambah Siswa"
+    :search-placeholder="t('admin.student.searchPlaceholder')"
+    :empty-title="t('admin.student.empty')"
+    :empty-description="t('admin.student.emptyDescription')"
+    :fab-label="t('admin.student.add')"
     @search="onSearch"
     @clear-all-filters="clearAll"
     @add-click="openAdd"
@@ -529,28 +533,28 @@ function topMeta(s: Student): string {
     <template #filter-chips>
       <AppFilterChip
         icon-name="check-circle"
-        label="Status"
+        :label="t('admin.student.filterStatus')"
         :value="statusChipValue"
         :tone="statusChipTone"
         @click="showStatusPicker = true"
       />
       <AppFilterChip
         icon-name="layers"
-        label="Kelas"
+        :label="t('admin.student.filterClass')"
         :value="classChipValue"
         tone="brand"
         @click="showClassPicker = true"
       />
       <AppFilterChip
         icon-name="user"
-        label="Gender"
+        :label="t('admin.student.filterGender')"
         :value="genderChipValue"
         tone="violet"
         @click="showGenderPicker = true"
       />
       <AppFilterChip
         icon-name="users"
-        label="Wali"
+        :label="t('admin.student.filterGuardian')"
         :value="guardianChipValue"
         tone="amber"
         @click="openGuardianPicker"
@@ -560,10 +564,10 @@ function topMeta(s: Student): string {
     <ul class="space-y-2">
       <li v-for="(s, idx) in students" :key="s.id">
         <BrandListRow
-          :title="s.name || 'Tanpa nama'"
+          :title="s.name || t('admin.student.noName')"
           :top-meta="topMeta(s)"
-          :status="{ tone: 'success', label: 'Aktif' }"
-          :trailing-action-label="selectedIds.has(s.id) ? '' : 'Detail'"
+          :status="{ tone: 'success', label: t('admin.student.statusActive') }"
+          :trailing-action-label="selectedIds.has(s.id) ? '' : t('admin.shared.detail')"
           :trailing-action-color="primaryColor"
           :selected="selectedIds.has(s.id)"
           bulk-selectable
@@ -583,7 +587,7 @@ function topMeta(s: Student): string {
             v-if="selectedIds.size === 0"
             class="mt-2 flex items-center gap-2 text-xs text-slate-500"
           >
-            <span class="truncate">{{ s.guardian_name || 'Wali belum diisi' }}</span>
+            <span class="truncate">{{ s.guardian_name || t('admin.student.guardianNotFilled') }}</span>
             <span v-if="s.phone_number" class="text-slate-300">·</span>
             <span v-if="s.phone_number">{{ s.phone_number }}</span>
             <button
@@ -591,7 +595,7 @@ function topMeta(s: Student): string {
               class="ml-auto text-status-danger hover:underline"
               @click.stop="deleteTarget = s"
             >
-              Hapus
+              {{ t('common.delete') }}
             </button>
           </div>
         </BrandListRow>
@@ -608,7 +612,7 @@ function topMeta(s: Student): string {
 
     <template #bulk-actions>
       <Button variant="danger" size="sm" @click="bulkDeleteOpen = true">
-        Hapus ({{ selectedIds.size }})
+        {{ t('common.delete') }} ({{ selectedIds.size }})
       </Button>
     </template>
   </AdminCrudScaffold>
@@ -616,16 +620,16 @@ function topMeta(s: Student): string {
   <!-- Per-facet pickers -->
   <FilterFacetPickerModal
     v-if="showStatusPicker"
-    title="Filter Status"
+    :title="t('admin.student.filterStatus')"
     :options="STATUS_OPTIONS"
     :selected="filters.status ?? ''"
-    all-label="Semua status"
+    :all-label="t('admin.student.allStatuses')"
     @close="showStatusPicker = false"
     @apply="(v) => { filters.status = (v as 'active' | 'inactive' | 'unverified' | '') || null; reload(1); }"
   />
   <FilterFacetPickerModal
     v-if="showClassPicker"
-    title="Filter Kelas"
+    :title="t('admin.student.filterClass')"
     multi
     :options="classOptions"
     :selected-keys="filters.class_ids"
@@ -634,10 +638,10 @@ function topMeta(s: Student): string {
   />
   <FilterFacetPickerModal
     v-if="showGenderPicker"
-    title="Filter Jenis Kelamin"
+    :title="t('admin.student.filterGender')"
     :options="GENDER_OPTIONS"
     :selected="filters.gender ?? ''"
-    all-label="Semua"
+    :all-label="t('common.all')"
     @close="showGenderPicker = false"
     @apply="(v) => { filters.gender = (v as 'L' | 'P' | '') || null; reload(1); }"
   />
@@ -651,20 +655,20 @@ function topMeta(s: Student): string {
   -->
   <Modal
     v-if="showGuardianPicker"
-    title="Cari Wali"
-    subtitle="Ketik nama wali murid untuk memfilter daftar siswa."
+    :title="t('admin.student.searchGuardian')"
+    :subtitle="t('admin.student.guardianSearchHint')"
     size="sm"
     @close="showGuardianPicker = false"
   >
     <form class="space-y-4" @submit.prevent="applyGuardianFilter">
       <label class="block">
-        <span class="sr-only">Nama wali</span>
+        <span class="sr-only">{{ t('admin.student.guardianName') }}</span>
         <input
           v-model="guardianNameDraft"
           type="search"
           autofocus
           autocomplete="off"
-          placeholder="Mis. Ibu Ahmad"
+          :placeholder="t('admin.student.guardianExample')"
           role="combobox"
           aria-expanded="true"
           aria-autocomplete="list"
@@ -710,13 +714,13 @@ function topMeta(s: Student): string {
           class="text-[11px] font-black uppercase tracking-wider text-slate-500 hover:text-slate-900"
           @click="clearGuardianFilter"
         >
-          Hapus filter
+          {{ t('common.clearFilter') }}
         </button>
         <div class="flex items-center gap-2">
           <Button variant="ghost" type="button" @click="showGuardianPicker = false">
-            Batal
+            {{ t('common.cancel') }}
           </Button>
-          <Button variant="primary" type="submit">Terapkan</Button>
+          <Button variant="primary" type="submit">{{ t('common.apply') }}</Button>
         </div>
       </div>
     </form>
@@ -735,9 +739,9 @@ function topMeta(s: Student): string {
 
   <ConfirmationDialog
     v-if="deleteTarget"
-    :title="`Hapus ${deleteTarget.name}?`"
-    message="Tindakan ini tidak dapat dibatalkan. Semua data terkait siswa ini akan ikut terhapus."
-    confirm-label="Hapus"
+    :title="t('admin.student.deleteConfirm').replace('{{deleteTarget.name}}', deleteTarget.name)"
+    :message="t('admin.student.deleteWarning')"
+    :confirm-label="t('common.delete')"
     danger
     :loading="isSaving"
     @confirm="confirmDelete"
@@ -746,9 +750,9 @@ function topMeta(s: Student): string {
 
   <ConfirmationDialog
     v-if="bulkDeleteOpen"
-    :title="`Hapus ${selectedIds.size} siswa?`"
-    message="Tindakan ini tidak dapat dibatalkan. Semua data terkait siswa terpilih akan ikut terhapus."
-    confirm-label="Hapus semua"
+    :title="t('admin.student.bulkDeleteTitle', { count: selectedIds.size })"
+    :message="t('admin.student.deleteWarning')"
+    :confirm-label="t('admin.student.bulkDeleteConfirm')"
     danger
     :loading="isSaving"
     @confirm="performBulkDelete"
@@ -757,12 +761,12 @@ function topMeta(s: Student): string {
 
   <AdminEntityDetailSheet
     v-if="detailTarget"
-    :title="detailTarget.name || 'Siswa'"
+    :title="detailTarget.name || t('admin.student.fallbackTitle')"
     :subtitle="detailTarget.class_name ?? null"
     :avatar-name="detailTarget.name"
     :avatar-color="primaryColor"
     :sections="detailSections"
-    :status-pill="{ label: 'Aktif', tone: 'green' }"
+    :status-pill="{ label: t('admin.student.statusActive'), tone: 'green' }"
     :read-only="ayReadOnly"
     @close="detailTarget = null"
     @edit="detailEdit"
@@ -772,7 +776,7 @@ function topMeta(s: Student): string {
   <AdminImportExcelModal
     v-if="showImport"
     entity="student"
-    title="Import Siswa dari Excel"
+    :title="t('admin.student.importTitle')"
     @close="showImport = false"
     @done="onImportDone"
   />

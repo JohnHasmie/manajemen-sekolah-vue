@@ -22,6 +22,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_announcement_components.dart';
 import 'package:manajemensekolah/core/widgets/admin_form_components.dart';
@@ -253,7 +254,7 @@ class _AdminAnnouncementComposeSheetState
     final picked = await showModernDatePicker(
       context: context,
       initialDate: _startDate ?? DateTime.now(),
-      title: 'Pilih Tanggal Mulai Tayang',
+      title: kAnnChooseStartBroadcast.tr,
     );
     if (picked != null) {
       setState(() {
@@ -269,7 +270,7 @@ class _AdminAnnouncementComposeSheetState
     final picked = await showModernDatePicker(
       context: context,
       initialDate: _endDate ?? _startDate ?? DateTime.now(),
-      title: 'Pilih Tanggal Selesai Tayang',
+      title: kAnnChooseEndBroadcast.tr,
     );
     if (picked != null) {
       setState(() {
@@ -305,7 +306,7 @@ class _AdminAnnouncementComposeSheetState
       return;
     }
     if (_selection.isEmpty) {
-      SnackBarUtils.showError(context, 'Pilih minimal 1 audiens.');
+      SnackBarUtils.showError(context, kAnnSelectAudience.tr);
       return;
     }
     if (_hasEvent && _eventDate == null) {
@@ -412,7 +413,7 @@ class _AdminAnnouncementComposeSheetState
             mainAxisSize: MainAxisSize.min,
             children: [
               AdminFormSheetHeader(
-                title: _isEdit ? 'Edit Pengumuman' : 'Tulis Pengumuman',
+                title: _isEdit ? kAnnEditTitle.tr : kAnnWriteTitle.tr,
                 kicker: _isEdit ? 'EDIT DATA' : 'TULIS BARU',
                 isEditMode: _isEdit,
               ),
@@ -428,22 +429,22 @@ class _AdminAnnouncementComposeSheetState
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const _SectionLabel(text: 'JUDUL'),
+                      _SectionLabel(text: kAnnSectionTitleLabel.tr),
                       const SizedBox(height: 6),
                       TextField(
                         controller: _titleController,
-                        decoration: _inputDecoration('Misal: Persiapan PAS'),
+                        decoration: _inputDecoration(kAnnExampleTitle.tr),
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      const _SectionLabel(text: 'ISI'),
+                      _SectionLabel(text: kAnnSectionContentLabel.tr),
                       const SizedBox(height: 6),
                       TextField(
                         controller: _contentController,
                         maxLines: 5,
-                        decoration: _inputDecoration('Tulis isi pengumuman…'),
+                        decoration: _inputDecoration(kAnnContentPlaceholder.tr),
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      const _SectionLabel(text: 'AUDIENS · matriks'),
+                      _SectionLabel(text: kAnnAudienceMatrixLabel.tr),
                       const SizedBox(height: 6),
                       AudienceMatrix(
                         columns: _columns,
@@ -451,18 +452,18 @@ class _AdminAnnouncementComposeSheetState
                         onToggle: _onCellToggle,
                         onCustomTap: () => SnackBarUtils.showInfo(
                           context,
-                          'Pemilih kelas spesifik segera hadir.',
+                          kAnnClassSelectorComingSoon.tr,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       AudienceSummaryStrip(
                         caption: _previewLoading
-                            ? 'Menghitung audiens…'
+                            ? kAnnCalculatingAudience.tr
                             : _preview.caption,
                         hasAudience: _preview.hasAudience,
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      const _SectionLabel(text: 'HARI TAYANG'),
+                      _SectionLabel(text: kAnnBroadcastPeriodLabel.tr),
                       const SizedBox(height: 6),
                       _BroadcastDateTimeRow(
                         startDate: _startDate,
@@ -472,13 +473,11 @@ class _AdminAnnouncementComposeSheetState
                         onClearEndDate: () => setState(() => _endDate = null),
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      const _SectionLabel(text: 'ACARA · opsional'),
+                      _SectionLabel(text: kAnnEventSectionLabel.tr),
                       const SizedBox(height: 6),
                       AdminFormToggle(
-                        title: 'Tambahkan Acara',
-                        subtitle:
-                            'Tanggal kejadian + reminder otomatis '
-                            'sebelum mulai',
+                        title: kAnnAddEvent.tr,
+                        subtitle: kAnnAddEventDescription.tr,
                         value: _hasEvent,
                         onChanged: (v) => setState(() => _hasEvent = v),
                       ),
@@ -499,11 +498,11 @@ class _AdminAnnouncementComposeSheetState
                         TextField(
                           controller: _eventLocationController,
                           decoration: _inputDecoration(
-                            'Lokasi (opsional) · misal Aula Lt. 2',
+                            kAnnLocationPlaceholder.tr,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.sm),
-                        const _SectionLabel(text: 'KIRIM PERINGATAN'),
+                        _SectionLabel(text: kAnnSendRemindersLabel.tr),
                         const SizedBox(height: 6),
                         _ReminderChipRow(
                           selected: _reminderOffsets,
@@ -519,18 +518,18 @@ class _AdminAnnouncementComposeSheetState
                         ),
                       ],
                       const SizedBox(height: AppSpacing.lg),
-                      const _SectionLabel(text: 'PENJADWALAN'),
+                      _SectionLabel(text: kAnnSchedulingLabel.tr),
                       const SizedBox(height: 6),
                       AdminFormToggle(
-                        title: 'Kirim sekarang',
-                        subtitle: 'Notifikasi push langsung dikirim',
+                        title: kAnnSendNow.tr,
+                        subtitle: kAnnSendNowDescription.tr,
                         value: _sendNow,
                         onChanged: (v) => setState(() => _sendNow = v),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       AdminFormToggle(
-                        title: '📌 Sematkan',
-                        subtitle: 'Tampil di atas list selama 7 hari',
+                        title: kAnnPin.tr,
+                        subtitle: kAnnPinDescription.tr,
                         tone: AdminToggleTone.warning,
                         value: _pin,
                         onChanged: (v) => setState(() => _pin = v),
@@ -541,9 +540,9 @@ class _AdminAnnouncementComposeSheetState
               ),
               AdminFormFooter(
                 primaryLabel: _isEdit
-                    ? 'Simpan'
+                    ? kSave.tr
                     : (_preview.total > 0
-                          ? 'Kirim ke ${_preview.total} orang'
+                          ? '${kAnnSendTo.tr} ${_preview.total} orang'
                           : 'Kirim'),
                 onPrimary: _preview.hasAudience ? _save : null,
                 isSaving: _isSaving,

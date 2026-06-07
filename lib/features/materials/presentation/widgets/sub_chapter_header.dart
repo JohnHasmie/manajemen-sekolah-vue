@@ -181,14 +181,14 @@ class _HeroCard extends StatelessWidget {
               if (isChecked)
                 _MetaPill(
                   icon: Icons.check_rounded,
-                  label: 'Tercatat',
+                  label: kMatMarked.tr,
                   color: ColorUtils.success600,
                 ),
               if (hasAi)
-                const _MetaPill(
+                _MetaPill(
                   icon: Icons.auto_awesome_rounded,
-                  label: 'AI Siap',
-                  color: Color(0xFF7C3AED),
+                  label: kMatAiReady.tr,
+                  color: const Color(0xFF7C3AED),
                 ),
               _MetaPill(
                 icon: Icons.access_time_rounded,

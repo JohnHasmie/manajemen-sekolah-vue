@@ -23,6 +23,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/features/dashboard/data/dashboard_service.dart';
@@ -95,12 +96,11 @@ class _ParentInboxScreenState extends ConsumerState<ParentInboxScreen> {
                   child: BrandEmptyState(
                     icon: Icons.inbox_outlined,
                     tone: BrandEmptyStateTone.info,
-                    kicker: 'Tidak ada item',
-                    title: 'Bersih untuk sekarang',
+                    kicker: kDasInboxNoItems.tr,
+                    title: kDasInboxAllClearNow.tr,
                     message: _category == 'all'
-                        ? 'Belum ada hal yang perlu perhatian Anda '
-                              'di sekolah ini.'
-                        : 'Tidak ada item di kategori ini.',
+                        ? kDasParentInboxNoAttention.tr
+                        : kDasInboxNoItemsInCategory.tr,
                   ),
                 ),
               )
@@ -163,7 +163,7 @@ class _ParentInboxScreenState extends ConsumerState<ParentInboxScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Beranda · Anak',
+            kDasParentInboxHeader.tr,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
@@ -190,7 +190,7 @@ class _ParentInboxScreenState extends ConsumerState<ParentInboxScreen> {
             ),
             child: Text(
               totalUnread > 0
-                  ? '$totalUnread belum dibaca'
+                  ? '$totalUnread ${kDasInboxUnread.tr}'
                   : 'Tidak ada item baru',
               style: const TextStyle(
                 fontSize: 11,
@@ -206,13 +206,13 @@ class _ParentInboxScreenState extends ConsumerState<ParentInboxScreen> {
 
   Widget _buildFilterChips() {
     final chips = <(String key, String label)>[
-      ('all', 'Semua'),
-      ('tagihan', 'Tagihan'),
-      ('nilai', 'Nilai'),
-      ('pengumuman', 'Pengumuman'),
-      ('kehadiran', 'Kehadiran'),
-      ('aktivitas', 'Aktivitas'),
-      ('raport', 'Raport'),
+      ('all', kDasFilterAll.tr),
+      ('tagihan', kDasInboxCategoryBills.tr),
+      ('nilai', kDasInboxCategoryGrades.tr),
+      ('pengumuman', kDasInboxCategoryAnnouncements.tr),
+      ('kehadiran', kDasInboxCategoryAttendance.tr),
+      ('aktivitas', kDasInboxCategoryActivities.tr),
+      ('raport', kDasInboxCategoryReportCard.tr),
     ];
     return SizedBox(
       height: 56,
@@ -253,27 +253,27 @@ class _ParentInboxScreenState extends ConsumerState<ParentInboxScreen> {
     final weekStart = today.subtract(const Duration(days: 7));
 
     final groups = <String, List<_InboxItem>>{
-      'HARI INI': [],
-      'KEMARIN': [],
-      'MINGGU INI': [],
-      'LEBIH LAMA': [],
+      kDasDateGroupToday.tr: [],
+      kDasDateGroupYesterday.tr: [],
+      kDasDateGroupThisWeek.tr: [],
+      kDasDateGroupOlder.tr: [],
     };
 
     for (final item in items) {
       final created = item.createdAt;
       if (created == null) {
-        groups['LEBIH LAMA']!.add(item);
+        groups[kDasDateGroupOlder.tr]!.add(item);
         continue;
       }
       final d = DateTime(created.year, created.month, created.day);
       if (d == today) {
-        groups['HARI INI']!.add(item);
+        groups[kDasDateGroupToday.tr]!.add(item);
       } else if (d == yesterday) {
-        groups['KEMARIN']!.add(item);
+        groups[kDasDateGroupYesterday.tr]!.add(item);
       } else if (d.isAfter(weekStart)) {
-        groups['MINGGU INI']!.add(item);
+        groups[kDasDateGroupThisWeek.tr]!.add(item);
       } else {
-        groups['LEBIH LAMA']!.add(item);
+        groups[kDasDateGroupOlder.tr]!.add(item);
       }
     }
     // Drop empty groups so the UI doesn't render dead headers.

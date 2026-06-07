@@ -14,6 +14,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 // =====================================================================
 // Status palette (shared across both Mockup #11 and #12)
@@ -74,12 +75,12 @@ class AttendanceRingHero extends StatelessWidget {
           _LegendColumn(
             entries: [
               _LegendEntry(
-                label: 'Hadir',
+                label: kCorWidPresent.tr,
                 value: breakdown.present.toString(),
                 color: AttendancePalette.present,
               ),
               _LegendEntry(
-                label: 'Izin',
+                label: kCorWidExcused.tr,
                 value: breakdown.excused.toString(),
                 color: AttendancePalette.excused,
               ),
@@ -125,12 +126,12 @@ class AttendanceRingHero extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             entries: [
               _LegendEntry(
-                label: 'Sakit',
+                label: kCorWidSick.tr,
                 value: breakdown.sick.toString(),
                 color: AttendancePalette.sick,
               ),
               _LegendEntry(
-                label: 'Alpa',
+                label: kCorWidAbsent.tr,
                 value: breakdown.alpha.toString(),
                 color: AttendancePalette.alpha,
               ),
@@ -468,13 +469,13 @@ extension CellStateColor on CellState {
   String get labelId {
     switch (this) {
       case CellState.present:
-        return 'Hadir';
+        return kCorWidPresent.tr;
       case CellState.excused:
-        return 'Izin';
+        return kCorWidExcused.tr;
       case CellState.sick:
-        return 'Sakit';
+        return kCorWidSick.tr;
       case CellState.alpha:
-        return 'Alpa';
+        return kCorWidAbsent.tr;
       case CellState.holiday:
         return 'Libur';
       case CellState.none:

@@ -22,6 +22,28 @@ part 'language_utils_lesson_plans.dart';
 part 'language_utils_parent_dashboard.dart';
 part 'language_utils_settings_auth.dart';
 part 'language_utils_settings_auth_2.dart';
+part 'language_utils_sweep_lesson_plans.dart';
+part 'language_utils_sweep_finance.dart';
+part 'language_utils_sweep_schedule.dart';
+part 'language_utils_sweep_class_activity.dart';
+part 'language_utils_sweep_attendance.dart';
+part 'language_utils_sweep_grades.dart';
+part 'language_utils_sweep_report_cards.dart';
+part 'language_utils_sweep_classrooms.dart';
+part 'language_utils_sweep_recommendations.dart';
+part 'language_utils_sweep_announcements.dart';
+part 'language_utils_sweep_settings.dart';
+part 'language_utils_sweep_subjects.dart';
+part 'language_utils_sweep_materials.dart';
+part 'language_utils_sweep_dashboard.dart';
+part 'language_utils_sweep_students.dart';
+part 'language_utils_sweep_teachers.dart';
+part 'language_utils_sweep_auth.dart';
+part 'language_utils_sweep_notifications.dart';
+part 'language_utils_sweep_account.dart';
+part 'language_utils_sweep_core_widgets.dart';
+part 'language_utils_sweep_core_shell.dart';
+part 'language_utils_sweep_legacy_aliases.dart';
 
 /// Manages the app's current language and notifies listeners on change.
 /// Like a Vuex store module - holds reactive global state that widgets can

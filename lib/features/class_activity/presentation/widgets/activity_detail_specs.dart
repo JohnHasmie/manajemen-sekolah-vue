@@ -7,6 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Icon + tint + foreground + label for an activity type chip
 /// (Tugas / Ujian / Catatan / Aktivitas).
@@ -45,7 +46,7 @@ ActivityTypeSpec activityTypeSpec(String type) {
         icon: Icons.assignment_turned_in_rounded,
         tint: const Color(0xFFDBEAFE),
         fg: ColorUtils.info600,
-        label: 'Tugas',
+        label: kClaActTypeAssignment.tr,
       );
     case 'ujian':
     case 'exam':
@@ -55,7 +56,7 @@ ActivityTypeSpec activityTypeSpec(String type) {
         icon: Icons.science_rounded,
         tint: const Color(0xFFFEF3C7),
         fg: ColorUtils.warning600,
-        label: 'Ujian',
+        label: kClaActTypeExam.tr,
       );
     case 'catatan':
     case 'note':
@@ -63,7 +64,7 @@ ActivityTypeSpec activityTypeSpec(String type) {
         icon: Icons.sticky_note_2_rounded,
         tint: ColorUtils.slate100,
         fg: ColorUtils.slate600,
-        label: 'Catatan',
+        label: kClaActTypeNote.tr,
       );
     case 'aktivitas':
     case 'activity':
@@ -72,7 +73,7 @@ ActivityTypeSpec activityTypeSpec(String type) {
         icon: Icons.groups_2_rounded,
         tint: const Color(0xFFEDE9FE),
         fg: ColorUtils.violet700,
-        label: 'Aktivitas',
+        label: kClaActTypeActivity.tr,
       );
   }
 }
@@ -82,26 +83,26 @@ ActivityStatusSpec activityStatusSpec(String s) {
   switch (s) {
     case 'submitted':
       return ActivityStatusSpec(
-        label: 'Sudah',
+        label: kClaActStatusSubmitted.tr,
         tint: ColorUtils.success600.withValues(alpha: 0.12),
         fg: ColorUtils.success600,
       );
     case 'late':
       return ActivityStatusSpec(
-        label: 'Telat',
+        label: kClaActStatusLate.tr,
         tint: ColorUtils.warning600.withValues(alpha: 0.14),
         fg: ColorUtils.warning600,
       );
     case 'excused':
       return ActivityStatusSpec(
-        label: 'Izin',
+        label: kClaActStatusExcused.tr,
         tint: ColorUtils.info600.withValues(alpha: 0.12),
         fg: ColorUtils.info600,
       );
     case 'pending':
     default:
       return ActivityStatusSpec(
-        label: 'Belum',
+        label: kClaActStatusPending.tr,
         tint: ColorUtils.slate100,
         fg: ColorUtils.slate700,
       );

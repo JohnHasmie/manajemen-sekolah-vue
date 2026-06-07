@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
@@ -37,8 +38,8 @@ Future<TagihReminderResult?> showTagihReminderSheet(
 }) {
   return AppBottomSheet.show<TagihReminderResult>(
     context: context,
-    title: 'Kirim pengingat tagihan',
-    subtitle: 'Pilih saluran lalu konfirmasi.',
+    title: kFinSendBillReminder.tr,
+    subtitle: kFinSelectChannelConfirm.tr,
     icon: Icons.campaign_rounded,
     primaryColor: ColorUtils.getRoleColor('admin'),
     content: _TagihReminderContent(bill: bill),
@@ -185,7 +186,7 @@ class _TagihReminderContentState extends State<_TagihReminderContent> {
             Expanded(
               child: _ChannelTile(
                 icon: Icons.chat_bubble_rounded,
-                label: 'WhatsApp',
+                label: kFinWhatsApp.tr,
                 hint: 'Pesan ke wali',
                 active: _channel == TagihReminderChannel.whatsapp,
                 accent: navy,
@@ -197,7 +198,7 @@ class _TagihReminderContentState extends State<_TagihReminderContent> {
             Expanded(
               child: _ChannelTile(
                 icon: Icons.alternate_email_rounded,
-                label: 'Email',
+                label: kFinEmail.tr,
                 hint: 'Surat resmi',
                 active: _channel == TagihReminderChannel.email,
                 accent: navy,

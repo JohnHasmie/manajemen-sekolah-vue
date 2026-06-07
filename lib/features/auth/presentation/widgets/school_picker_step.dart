@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:manajemensekolah/features/auth/presentation/widgets/auth_picker_shared.dart';
 
@@ -87,27 +88,32 @@ class _SchoolPickerStepState extends State<SchoolPickerStep> {
       mainAxisSize: MainAxisSize.min,
       children: [
         PickerHeader(
-          kicker: 'HALO, ${userName.toString().toUpperCase()}',
-          title: 'Pilih Sekolah',
+          kicker: '${kAutHello.tr}${userName.toString().toUpperCase()}',
+          title: kAutSelectSchoolTitle.tr,
           subtitle: total <= 1
-              ? 'Lanjutkan ke sekolah Anda'
-              : 'Anda terdaftar di $total sekolah · pilih untuk melanjutkan',
+              ? kAutProceedSchool.tr
+              : kAutRegisteredSchools.tr.replaceAll(
+                  '\$total',
+                  total.toString(),
+                ),
           stepDots: const StepDots(active: 1, total: 3),
         ),
         const SizedBox(height: 14),
         PickerSearchBar(
-          hint: 'Cari nama sekolah...',
+          hint: kAutSearchSchool.tr,
           onChanged: (v) => setState(() => _query = v),
         ),
         if (utama.isNotEmpty) ...[
           const SizedBox(height: 14),
-          const SectionLabel('UTAMA'),
+          SectionLabel(kAutMainSchool.tr),
           const SizedBox(height: 6),
           for (final s in utama) _SchoolCard(school: s, active: true),
         ],
         if (lainnya.isNotEmpty) ...[
           const SizedBox(height: 14),
-          SectionLabel(utama.isEmpty ? 'PILIH SEKOLAH' : 'SEKOLAH LAIN'),
+          SectionLabel(
+            utama.isEmpty ? kAutSelectSchoolSection.tr : kAutOtherSchools.tr,
+          ),
           const SizedBox(height: 6),
           for (final s in lainnya)
             _SchoolCard(
@@ -121,8 +127,8 @@ class _SchoolPickerStepState extends State<SchoolPickerStep> {
         const SizedBox(height: 12),
         PickerFooterCta(
           primaryLabel: candidateName == null
-              ? 'Lanjutkan'
-              : 'Lanjutkan ke ${_shorten(candidateName)}',
+              ? kAutContinue.tr
+              : '${kAutContinueTo.tr}${_shorten(candidateName)}',
           primaryEnabled: candidateId != null && !widget.authState.isLoading,
           isLoading: widget.authState.isLoading,
           onPrimary: () async {
@@ -163,7 +169,7 @@ class _SchoolCard extends StatelessWidget {
       parts.add(addr);
     }
     if (year != null && year.isNotEmpty) {
-      parts.add('TP $year');
+      parts.add('${kAutAcademicYear.tr}$year');
     }
     return parts.join(' · ');
   }
@@ -345,12 +351,12 @@ class _RolePill extends StatelessWidget {
   String _label() {
     switch (role.toLowerCase()) {
       case 'administrator':
-        return 'ADMIN';
+        return kAutRoleAdmin.tr;
       case 'teacher':
-        return 'GURU';
+        return kAutRoleTeacher.tr;
       case 'parent':
       case 'orang_tua':
-        return 'WALI';
+        return kAutRoleParent.tr;
       default:
         return role.toUpperCase();
     }

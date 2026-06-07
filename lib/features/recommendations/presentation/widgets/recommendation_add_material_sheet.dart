@@ -21,6 +21,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 
 class RecommendationAddMaterialSheet extends StatefulWidget {
@@ -214,7 +215,7 @@ class _RecommendationAddMaterialSheetState
                         Text(
                           _isCurriculumMode
                               ? 'Pilih Bab atau Sub-bab dari kurikulum mapel'
-                              : 'Tambahkan referensi belajar bebas',
+                              : kRecAddFreeReference.tr,
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w600,
@@ -601,7 +602,7 @@ class _RecommendationAddMaterialSheetState
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Rekomendasi ini belum tertaut ke mapel — isi materi bebas.',
+                  kRecNotLinkedToSubject.tr,
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
@@ -626,7 +627,7 @@ class _RecommendationAddMaterialSheetState
             fontWeight: FontWeight.w700,
           ),
           decoration: InputDecoration(
-            hintText: 'mis. Latihan tambahan pecahan campuran',
+            hintText: kRecExampleExtraFractionPractice.tr,
             hintStyle: TextStyle(
               fontSize: 13,
               color: ColorUtils.slate400,
@@ -662,7 +663,7 @@ class _RecommendationAddMaterialSheetState
           minLines: 2,
           style: TextStyle(fontSize: 12.5, color: ColorUtils.slate800),
           decoration: InputDecoration(
-            hintText: 'Catatan untuk siswa atau orang tua…',
+            hintText: kRecNotesForStudentOrParent.tr,
             hintStyle: TextStyle(fontSize: 12.5, color: ColorUtils.slate400),
             filled: true,
             fillColor: ColorUtils.slate50,

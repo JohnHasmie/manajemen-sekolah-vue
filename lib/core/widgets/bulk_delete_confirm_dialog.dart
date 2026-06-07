@@ -26,6 +26,7 @@ import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/initials_avatar.dart';
 
 /// One row in the bulk-delete preview list.
@@ -153,7 +154,9 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Hapus $count ${widget.entityNoun} sekaligus?',
+                kCorWidBulkDeleteConfirmation.tr
+                    .replaceAll('\$count', '$count')
+                    .replaceAll('\$entityNoun', widget.entityNoun),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 17,
@@ -166,8 +169,7 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Tindakan ini tidak bisa dibatalkan dan akan menghapus '
-                'semua data terkait.',
+                kCorWidBulkDeleteWarning.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
@@ -183,7 +185,8 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  '${widget.entityNoun.toUpperCase()} YANG AKAN DIHAPUS',
+                  kCorWidToBeDeleted.tr
+                      .replaceAll('\$ENTITY', widget.entityNoun.toUpperCase()),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -212,7 +215,8 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'KETIK "${widget.confirmKeyword}" UNTUK KONFIRMASI',
+                  kCorWidTypeToConfirm.tr
+                      .replaceAll('\$KEYWORD', widget.confirmKeyword),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -282,7 +286,7 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
                       ),
                       onPressed: () => AppNavigator.pop(context, false),
                       child: Text(
-                        'Batal',
+                        kCancel.tr,
                         style: TextStyle(
                           color: ColorUtils.slate600,
                           fontWeight: FontWeight.w700,
@@ -306,7 +310,7 @@ class _BulkDeleteConfirmDialogState extends State<_BulkDeleteConfirmDialog> {
                           ? () => AppNavigator.pop(context, true)
                           : null,
                       child: Text(
-                        'Hapus $count',
+                        kCorWidDeleteCount.tr.replaceAll('\$count', '$count'),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,

@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { BillingService } from '@/services/billing.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import {
@@ -34,6 +35,7 @@ import Toast from '@/components/ui/Toast.vue';
 import { formatRupiah } from '@/lib/format';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
+const { t } = useI18n();
 const router = useRouter();
 const { children, activeChildId, activeChild, setActive } = useChildPicker();
 
@@ -52,25 +54,25 @@ const search = ref('');
 const showStatusSheet = ref(false);
 const showPeriodeSheet = ref(false);
 
-const STATUS_OPTS: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Semua status' },
-  { key: 'unpaid', label: 'Belum lunas' },
-  { key: 'pending', label: 'Menunggu verifikasi' },
-  { key: 'paid', label: 'Lunas' },
-];
+const STATUS_OPTS = computed<{ key: StatusFilter; label: string }[]>(() => [
+  { key: 'all', label: t('parent.billing.statusAll') },
+  { key: 'unpaid', label: t('parent.billing.statusUnpaid') },
+  { key: 'pending', label: t('parent.billing.statusPending') },
+  { key: 'paid', label: t('parent.billing.statusPaid') },
+]);
 
 // Backend `payment_types.period` values are canonical English.
-const PERIODE_OPTS: { key: PeriodeFilter; label: string }[] = [
-  { key: 'all', label: 'Semua periode' },
-  { key: 'monthly', label: 'Bulanan' },
-  { key: 'yearly', label: 'Tahunan' },
-  { key: 'once', label: 'Sekali bayar' },
-];
+const PERIODE_OPTS = computed<{ key: PeriodeFilter; label: string }[]>(() => [
+  { key: 'all', label: t('parent.billing.periodAll') },
+  { key: 'monthly', label: t('parent.billing.periodMonthly') },
+  { key: 'yearly', label: t('parent.billing.periodYearly') },
+  { key: 'once', label: t('parent.billing.periodOnce') },
+]);
 
 const childOptions = computed(() =>
   children.value.map((c) => ({
     key: c.student_id,
-    label: c.name || 'Anak',
+    label: c.name || t('parent.dashboard.childFallback'),
     meta: c.class_name || undefined,
   })),
 );
@@ -127,29 +129,29 @@ const paidThisYear = computed(() =>
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'credit-card',
-    label: 'Tertunggak',
+    label: t('parent.billing.kpiOverdue'),
     value: formatRupiah(outstanding.value),
     tone: outstanding.value > 0 ? 'amber' : 'slate',
     accented: outstanding.value > 0,
   },
   {
     icon: 'alert-triangle',
-    label: 'Telat',
+    label: t('parent.billing.kpiLate'),
     value: overdueBills.value.length,
-    suffix: 'tagihan',
+    suffix: t('parent.billing.kpiBillsSuffix'),
     tone: overdueBills.value.length > 0 ? 'red' : 'slate',
     accented: overdueBills.value.length > 0,
   },
   {
     icon: 'clock',
-    label: 'Segera',
+    label: t('parent.billing.kpiSoon'),
     value: soonBills.value.length,
-    suffix: 'tagihan',
+    suffix: t('parent.billing.kpiBillsSuffix'),
     tone: soonBills.value.length > 0 ? 'amber' : 'slate',
   },
   {
     icon: 'check-circle',
-    label: 'Lunas tahun ini',
+    label: t('parent.billing.kpiLunasYear'),
     value: formatRupiah(paidThisYear.value),
     tone: 'green',
   },
@@ -164,10 +166,10 @@ const listState = computed<AsyncState<Bill[]>>(() => {
 });
 
 const statusChipValue = computed(
-  () => STATUS_OPTS.find((o) => o.key === statusFilter.value)?.label ?? 'Semua',
+  () => STATUS_OPTS.value.find((o) => o.key === statusFilter.value)?.label ?? t('common.all'),
 );
 const periodeChipValue = computed(
-  () => PERIODE_OPTS.find((o) => o.key === periodeFilter.value)?.label ?? 'Semua',
+  () => PERIODE_OPTS.value.find((o) => o.key === periodeFilter.value)?.label ?? t('common.all'),
 );
 
 function openBill(b: Bill) {
@@ -186,18 +188,20 @@ function openBill(b: Bill) {
 }
 
 const headerMeta = computed(() => {
-  if (!child.value) return 'Pilih anak untuk melihat tagihan';
-  const total = bills.value.length;
-  const unpaidCount = unpaidBills.value.length;
-  return `${child.value.name} · ${total} tagihan · ${unpaidCount} belum lunas`;
+  if (!child.value) return t('parent.billing.headerNoChild');
+  return t('parent.billing.metaCounts', {
+    name: child.value.name,
+    count: bills.value.length,
+    unpaid: unpaidBills.value.length,
+  });
 });
 </script>
 
 <template>
   <div class="space-y-md pb-12">
     <ParentPageHeader
-      kicker="Wali Murid · Keuangan"
-      title="Tagihan & Pembayaran"
+      :kicker="t('parent.billing.kicker')"
+      :title="t('parent.billing.title')"
       :interpolate-child="false"
       :meta="headerMeta"
     />
@@ -206,20 +210,20 @@ const headerMeta = computed(() => {
 
     <PageFilterToolbar
       v-model:search="search"
-      search-placeholder="Cari tagihan..."
+      :search-placeholder="t('parent.billing.searchPlaceholder')"
       :search-min-width="220"
     >
       <template #chips>
         <AppFilterChip
           icon-name="bell"
-          label="Status"
+          :label="t('parent.billing.chipStatus')"
           :value="statusChipValue"
           tone="amber"
           @click="showStatusSheet = true"
         />
         <AppFilterChip
           icon-name="calendar"
-          label="Periode"
+          :label="t('parent.billing.chipPeriod')"
           :value="periodeChipValue"
           tone="violet"
           @click="showPeriodeSheet = true"
@@ -229,8 +233,8 @@ const headerMeta = computed(() => {
 
     <AsyncView
       :state="listState"
-      empty-title="Belum ada tagihan"
-      empty-description="Saat ada tagihan baru dari sekolah, daftar akan muncul di sini."
+      :empty-title="t('parent.billing.emptyTitle')"
+      :empty-description="t('parent.billing.emptyDesc')"
       empty-icon="credit-card"
       @retry="load"
     >
@@ -242,7 +246,7 @@ const headerMeta = computed(() => {
         >
           <header class="flex items-center justify-between px-3 pt-2 pb-1">
             <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              Belum lunas · {{ unpaidBills.length }}
+              {{ t('parent.billing.sectionUnpaidHeader', { count: unpaidBills.length }) }}
             </h3>
             <span class="text-[11px] font-bold text-amber-700">
               {{ formatRupiah(outstanding) }}
@@ -266,7 +270,7 @@ const headerMeta = computed(() => {
         >
           <header class="flex items-center justify-between px-3 pt-2 pb-1">
             <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              Lunas · riwayat
+              {{ t('parent.billing.sectionPaidHeader') }}
             </h3>
             <span class="text-[11px] font-bold text-emerald-700">
               {{ formatRupiah(paidThisYear) }}
@@ -288,8 +292,8 @@ const headerMeta = computed(() => {
     <!-- Status filter sheet -->
     <Modal
       v-if="showStatusSheet"
-      title="Filter Status"
-      subtitle="Pilih status tagihan"
+      :title="t('parent.billing.modalStatusTitle')"
+      :subtitle="t('parent.billing.modalStatusSubtitle')"
       size="sm"
       @close="showStatusSheet = false"
     >
@@ -317,8 +321,8 @@ const headerMeta = computed(() => {
     <!-- Periode filter sheet -->
     <Modal
       v-if="showPeriodeSheet"
-      title="Filter Periode"
-      subtitle="Pilih jenis tagihan"
+      :title="t('parent.billing.modalPeriodTitle')"
+      :subtitle="t('parent.billing.modalPeriodSubtitle')"
       size="sm"
       @close="showPeriodeSheet = false"
     >

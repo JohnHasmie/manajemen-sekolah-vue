@@ -29,7 +29,7 @@ mixin ParentGradeDetailMixin on ConsumerState<ParentGradeScreen> {
 
     AppBottomSheet.show(
       context: context,
-      title: 'Detail Nilai',
+      title: kGraGradeDetails.tr,
       subtitle:
           grade['subject_name'] ??
           grade['mata_pelajaran'] ??
@@ -183,16 +183,16 @@ class _DetailContent extends StatelessWidget {
       _detailRow(
         Icons.person_rounded,
         AppLocalizations.teacher.tr,
-        grade['teacher_name'] ?? 'Tidak Diketahui',
+        grade['teacher_name'] ?? kGraUnknown.tr,
       ),
       _detailRow(
         Icons.calendar_today_rounded,
-        'Tanggal Penilaian',
+        kGraAssessmentDate.tr,
         formatDate(grade['date']),
       ),
       _detailRow(
         Icons.category_rounded,
-        'Penilaian',
+        kGraAssessment.tr,
         type.toUpperCase(),
         iconColor: typeColor,
       ),
@@ -204,7 +204,7 @@ class _DetailContent extends StatelessWidget {
       rows.add(
         _detailRow(
           Icons.notes_rounded,
-          'Catatan Guru',
+          kGraTeacherNotes.tr,
           grade['notes'].toString(),
         ),
       );

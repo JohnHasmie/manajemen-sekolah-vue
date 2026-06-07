@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/schedule/exports/schedule_print_pdf_service.dart';
@@ -43,8 +44,8 @@ class SchedulePrintScopeSheet extends StatefulWidget {
   }) {
     return AppBottomSheet.show(
       context: context,
-      title: 'Cetak PDF Jadwal',
-      subtitle: 'Pilih bagaimana jadwal dikelompokkan dalam PDF.',
+      title: kSchPrintPDF.tr,
+      subtitle: kSchPrintInstructions.tr,
       icon: Icons.picture_as_pdf_rounded,
       primaryColor: ColorUtils.getRoleColor('admin'),
       content: SchedulePrintScopeSheet(
@@ -137,7 +138,7 @@ class _SchedulePrintScopeSheetState extends State<SchedulePrintScopeSheet> {
         ],
         const SizedBox(height: AppSpacing.sm),
         BottomSheetFooter(
-          primaryLabel: 'Cetak PDF',
+          primaryLabel: kSchPrintButton.tr,
           primaryColor: primary,
           onPrimary: () {
             AppNavigator.pop(context);

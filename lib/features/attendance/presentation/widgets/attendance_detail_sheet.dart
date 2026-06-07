@@ -156,7 +156,7 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Batal'),
+              child: Text(kCancel.tr),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -175,7 +175,7 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
                         )
                       : const Icon(Icons.delete_outline, size: 20),
                   label: Text(
-                    'Hapus ${_selectedKeys.length} sesi',
+                    '${kDelete.tr} ${_selectedKeys.length} sesi',
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -253,7 +253,7 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Kelas: ${widget.className}',
+          '${kAttClassLabel.tr} ${widget.className}',
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -371,11 +371,9 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => ConfirmationDialog(
-        title: 'Hapus presensi',
-        content:
-            'Yakin ingin menghapus ${_selectedKeys.length} sesi presensi? '
-            'Tindakan ini tidak dapat dibatalkan.',
-        confirmText: 'Hapus',
+        title: kAttDeleteAttendance.tr,
+        content: kAttDeleteAttendanceConfirm.tr,
+        confirmText: kDelete.tr,
         confirmColor: ColorUtils.error600,
       ),
     );
@@ -411,11 +409,11 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
       _selectedKeys.clear();
     });
     if (fail == 0) {
-      SnackBarUtils.showSuccess(context, '$ok sesi presensi dihapus.');
+      SnackBarUtils.showSuccess(context, '$ok ${kAttSessionsDeleted.tr}.');
     } else {
       SnackBarUtils.showError(
         context,
-        '$ok berhasil, $fail gagal dihapus. Coba ulang yang gagal.',
+        '$ok ${kAttDeletePartialFailure.tr.replaceFirst('\$fail', '$fail')}',
       );
     }
     _loadSessions();
@@ -432,9 +430,9 @@ class _AttendanceDetailSheetState extends State<AttendanceDetailSheet> {
           child: ElevatedButton.icon(
             onPressed: _openEmbeddedInput,
             icon: const Icon(Icons.add_rounded, size: 20),
-            label: const Text(
-              'Ambil Presensi',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            label: Text(
+              kAttTakeAttendance.tr,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: widget.primaryColor,

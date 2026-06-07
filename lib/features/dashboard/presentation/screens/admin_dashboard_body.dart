@@ -341,8 +341,8 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
   /// Mirrors the dashboard hero so the same context carries across surfaces.
   String get _pengaturanSubtitle {
     final year = widget.state.userData['academic_year']?.toString();
-    if (year == null || year.isEmpty) return 'Admin sekolah';
-    return '$year · Admin sekolah';
+    if (year == null || year.isEmpty) return kDasAdminSettingsSubtitle.tr;
+    return '$year · ${kDasAdminSettingsSubtitle.tr}';
   }
 
   // ── Build ────────────────────────────────────
@@ -607,7 +607,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
           // 'Belum ada data' to AppLocalizations once the EN copy
           // is signed off.
           HeroStatsCard(
-            label: 'Rata-rata Nilai',
+            label: kDasAverageGrade.tr,
             sliceLabel: ctxLabel,
             sliceLabelMuted: slice.isAggregate,
             value: slice.avgGrade != null
@@ -615,22 +615,22 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
                 : '—',
             icon: Icons.bar_chart_rounded,
             accentColor: const Color(0xFF6366F1),
-            caption: slice.avgGrade != null ? 'Semester ini' : 'Belum ada data',
+            caption: slice.avgGrade != null ? kDasThisSemester.tr : kDasNoDataYet.tr,
             onTap: _openNilai,
           ),
           // 4. RPP menunggu persetujuan
           // TODO(i18n): promote 'RPP Menunggu', 'Perlu ditinjau',
           // 'Semua disetujui' to AppLocalizations.
           HeroStatsCard(
-            label: 'RPP Menunggu',
+            label: kDasPendingLessonPlans.tr,
             sliceLabel: ctxLabel,
             sliceLabelMuted: slice.isAggregate,
             value: _formatNumber(slice.pendingLessonPlans),
             icon: Icons.assignment_outlined,
             accentColor: ColorUtils.warning600,
             caption: slice.pendingLessonPlans > 0
-                ? 'Perlu ditinjau'
-                : 'Semua disetujui',
+                ? kDasNeedsReview.tr
+                : kDasAllApproved.tr,
             onTap: _openLessonPlanReview,
           ),
         ];
@@ -659,7 +659,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     return [
       _AdminSlice(
         key: 'all',
-        label: 'Semua tingkat',
+        label: kDasAllGrades.tr,
         attendanceRate: _asInt(stats['attendance_rate_today']),
         attendanceDelta: _asInt(stats['attendance_delta_pct']),
         totalStudents: _asInt(stats['total_students']),
@@ -713,8 +713,8 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
         title: title,
         items: _priorityInbox,
         accentColor: _adminNavy,
-        emptyStateTitle: 'Semua aman 🎉',
-        emptyStateSubtitle: 'Tidak ada yang perlu perhatian saat ini.',
+        emptyStateTitle: kDasAllClear.tr,
+        emptyStateSubtitle: kDasNothingToAttend.tr,
         onPriorityTap: _navigateToAdminInboxTarget,
         // B.5 — full-screen Lihat semua surface.
         onSeeAll: _openFullAdminInbox,
@@ -864,7 +864,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
           onTap: _openJadwal,
         ),
         ModulLainStripItem(
-          label: DashboardModules.bukuNilai.defaultLabel,
+          label: DashboardModules.bukuNilai.defaultLabel.tr,
           icon: DashboardModules.bukuNilai.icon,
           onTap: _openNilai,
         ),
@@ -872,35 +872,35 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
         // aggregator screen is one tap from the dashboard. Rapor moves
         // to overflow.
         ModulLainStripItem(
-          label: DashboardModules.rekapNilai.defaultLabel,
+          label: DashboardModules.rekapNilai.defaultLabel.tr,
           icon: DashboardModules.rekapNilai.icon,
           onTap: _openRekapNilai,
         ),
         ModulLainStripItem(
-          label: 'Presensi',
+          label: kDasAttendanceModule.tr,
           icon: DashboardModules.kehadiran.icon,
           onTap: _openPresensi,
         ),
       ],
       overflowItems: [
         ModulLainStripItem(
-          label: 'Rapor',
+          label: kDasReportCardModule.tr,
           icon: DashboardModules.raport.icon,
           onTap: _openLaporanRaport,
         ),
         ModulLainStripItem(
-          label: DashboardModules.pengumuman.defaultLabel,
+          label: DashboardModules.pengumuman.defaultLabel.tr,
           icon: DashboardModules.pengumuman.icon,
           onTap: () =>
               AppNavigator.push(context, const AdminAnnouncementScreen()),
         ),
         ModulLainStripItem(
-          label: DashboardModules.kegiatanKelas.defaultLabel,
+          label: DashboardModules.kegiatanKelas.defaultLabel.tr,
           icon: DashboardModules.kegiatanKelas.icon,
           onTap: _openAktivitasKelas,
         ),
         ModulLainStripItem(
-          label: DashboardModules.rpp.defaultLabel,
+          label: DashboardModules.rpp.defaultLabel.tr,
           icon: DashboardModules.rpp.icon,
           // Mockup #09 v3 — review queue with 3-tier hero counts
           // and inline approve. Old AdminLessonPlanScreen still
@@ -909,7 +909,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
               AppNavigator.push(context, const AdminRppReviewHubScreen()),
         ),
         ModulLainStripItem(
-          label: DashboardModules.akun.defaultLabel,
+          label: DashboardModules.akun.defaultLabel.tr,
           icon: DashboardModules.akun.icon,
           onTap: widget.onAccountTap,
         ),

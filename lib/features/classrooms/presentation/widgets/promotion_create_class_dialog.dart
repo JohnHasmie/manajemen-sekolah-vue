@@ -236,7 +236,8 @@ class _PromotionCreateClassDialogState
 
   Future<void> _submit() async {
     if (_nameController.text.isEmpty || _selectedGradeLevel == null) {
-      SnackBarUtils.showWarning(context, 'Please fill required fields');
+      // TODO(i18n): review
+      SnackBarUtils.showWarning(context, kClaPleaseRequired.tr);
       return;
     }
 
@@ -253,7 +254,8 @@ class _PromotionCreateClassDialogState
       AppNavigator.pop(context);
       widget.onClassCreated();
       // ignore: use_build_context_synchronously
-      SnackBarUtils.showSuccess(context, 'Class Created');
+      // TODO(i18n): review
+      SnackBarUtils.showSuccess(context, kClaClassCreated.tr);
     } catch (e) {
       AppLogger.error('classroom', e);
       if (mounted) {

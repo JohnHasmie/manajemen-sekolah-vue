@@ -36,7 +36,6 @@ mixin ParentGradeFilterMixin
   }
 
   void showFilterSheet() {
-    final languageProvider = ref.read(languageRiverpod);
     final primaryColor = ColorUtils.brandAzureDeep;
 
     String? tempGradeTypeFilter = selectedGradeTypeFilter;
@@ -49,10 +48,7 @@ mixin ParentGradeFilterMixin
       builder: (sheetCtx) => StatefulBuilder(
         builder: (ctx, setSS) {
           return AppFilterBottomSheet(
-            title: languageProvider.getTranslatedText({
-              'en': 'Filter Grades',
-              'id': 'Filter Nilai',
-            }),
+            title: kGraFilterTitle.tr,
             primaryColor: primaryColor,
             maxHeightFactor: 0.75,
             onApply: () {
@@ -71,10 +67,7 @@ mixin ParentGradeFilterMixin
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     FilterSectionHeader(
-                      title: languageProvider.getTranslatedText({
-                        'en': 'Grade Type',
-                        'id': 'Tipe Nilai',
-                      }),
+                      title: kGraGradeType.tr,
                       icon: Icons.category_outlined,
                       primaryColor: primaryColor,
                     ),
@@ -82,10 +75,7 @@ mixin ParentGradeFilterMixin
                       options: gradeTypes.map((t) {
                         return FilterOption<String>(
                           value: t['val']!,
-                          label: languageProvider.getTranslatedText({
-                            'en': t['en']!,
-                            'id': t['id']!,
-                          }),
+                          label: t['label']!,
                         );
                       }).toList(),
                       selectedValue: tempGradeTypeFilter,
@@ -108,13 +98,13 @@ mixin ParentGradeFilterMixin
 
   List<Map<String, String>> getGradeTypeList() {
     return [
-      {'en': 'Assignment', 'id': 'Tugas', 'val': 'Tugas'},
-      {'en': 'Quiz', 'id': 'Ulangan Harian', 'val': 'UH'},
-      {'en': 'Midterm', 'id': 'PTS', 'val': 'PTS'},
-      {'en': 'Finals', 'id': 'PAS', 'val': 'PAS'},
-      {'en': 'Practice', 'id': 'Praktek', 'val': 'Praktek'},
-      {'en': 'Portfolio', 'id': 'Portofolio', 'val': 'Portofolio'},
-      {'en': 'Project', 'id': 'Proyek', 'val': 'Proyek'},
+      {'label': kGraAssignment.tr, 'val': 'Tugas'},
+      {'label': kGraDailyQuiz.tr, 'val': 'UH'},
+      {'label': kGraMidterm.tr, 'val': 'PTS'},
+      {'label': kGraFinalExam.tr, 'val': 'PAS'},
+      {'label': kGraPractice.tr, 'val': 'Praktek'},
+      {'label': kGraPortfolio.tr, 'val': 'Portofolio'},
+      {'label': kGraProject.tr, 'val': 'Proyek'},
     ];
   }
 }

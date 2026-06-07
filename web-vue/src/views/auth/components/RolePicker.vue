@@ -4,9 +4,11 @@
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import type { Role } from '@/types/auth';
 
+const { t } = useI18n();
 const auth = useAuthStore();
 
 const candidateRole = ref<Role | null>(null);
@@ -25,16 +27,16 @@ const schoolName = computed(() =>
 const roles = computed(() => auth.roles || []);
 const activeRole = computed(() => candidateRole.value || roles.value[0]);
 
-const labels: Record<string, string> = {
-  admin: 'Administrator',
-  administrator: 'Administrator',
-  guru: 'Guru / Pengajar',
-  teacher: 'Guru / Pengajar',
-  wali: 'Wali Murid',
-  parent: 'Wali Murid',
-  orang_tua: 'Wali Murid',
-  staff: 'Staf Administrasi',
-};
+const labels = computed<Record<string, string>>(() => ({
+  admin: t('auth.role.adminLabel'),
+  administrator: t('auth.role.adminLabel'),
+  guru: t('auth.role.teacherLabel'),
+  teacher: t('auth.role.teacherLabel'),
+  wali: t('auth.role.parentLabel'),
+  parent: t('auth.role.parentLabel'),
+  orang_tua: t('auth.role.parentLabel'),
+  staff: t('auth.role.staffLabel'),
+}));
 
 const shortLabels: Record<string, string> = {
   admin: 'ADMIN',
@@ -47,23 +49,23 @@ const shortLabels: Record<string, string> = {
   staff: 'STAF',
 };
 
-const descriptions: Record<string, string> = {
-  admin: 'Kelola sekolah, guru, siswa, dan laporan keuangan.',
-  administrator: 'Kelola sekolah, guru, siswa, dan laporan keuangan.',
-  guru: 'Kelola absensi, nilai, RPP, dan materi pembelajaran.',
-  teacher: 'Kelola absensi, nilai, RPP, dan materi pembelajaran.',
-  wali: 'Pantau kehadiran, nilai, dan tagihan sekolah anak.',
-  parent: 'Pantau kehadiran, nilai, dan tagihan sekolah anak.',
-  orang_tua: 'Pantau kehadiran, nilai, dan tagihan sekolah anak.',
-  staff: 'Pengelolaan administrasi dan dokumen operasional.',
-};
+const descriptions = computed<Record<string, string>>(() => ({
+  admin: t('auth.role.adminDescription'),
+  administrator: t('auth.role.adminDescription'),
+  guru: t('auth.role.teacherDescription'),
+  teacher: t('auth.role.teacherDescription'),
+  wali: t('auth.role.parentDescription'),
+  parent: t('auth.role.parentDescription'),
+  orang_tua: t('auth.role.parentDescription'),
+  staff: t('auth.role.staffDescription'),
+}));
 
-const stats: Record<string, string[]> = {
-  admin: ['Kelola siswa, guru, jadwal', 'Akses laporan keuangan'],
-  guru: ['Ajar & nilai', 'Tulis rekomendasi'],
-  wali: ['Pantau anak', 'Terima rekomendasi'],
-  staff: ['Akses tugas staf'],
-};
+const stats = computed<Record<string, string[]>>(() => ({
+  admin: [t('auth.role.adminStat1'), t('auth.role.adminStat2')],
+  guru: [t('auth.role.teacherStat1'), t('auth.role.teacherStat2')],
+  wali: [t('auth.role.parentStat1'), t('auth.role.parentStat2')],
+  staff: [t('auth.role.staffStat1')],
+}));
 
 function getRoleColor(role: string) {
   const r = role.toLowerCase();
@@ -118,10 +120,10 @@ async function handleConfirm() {
         {{ schoolName.toUpperCase() }}
       </div>
       <h2 class="text-[17px] font-black text-slate-900 tracking-[-0.3px]">
-        Pilih Peran
+        {{ t('auth.role.title') }}
       </h2>
       <p class="text-[12px] text-slate-500 font-semibold mt-0.5">
-        {{ roles.length <= 1 ? 'Lanjutkan sebagai…' : `Anda memiliki ${roles.length} peran di sekolah ini.` }}
+        {{ roles.length <= 1 ? t('auth.role.subtitleSingle') : t('auth.role.subtitleMultiple', { count: roles.length }) }}
       </p>
       
       <!-- Step Dots -->
@@ -165,7 +167,7 @@ async function handleConfirm() {
             <p class="text-[11px] font-semibold text-slate-500 mt-1 leading-relaxed">
               {{ descriptions[r] || '' }}
             </p>
-            
+
             <!-- Stats Row -->
             <div v-if="stats[r]" class="flex flex-wrap gap-x-3 gap-y-1 mt-2.5">
               <div v-for="s in stats[r]" :key="s" class="flex items-center gap-1">
@@ -182,7 +184,7 @@ async function handleConfirm() {
     <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-start gap-3">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 mt-0.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
       <p class="text-[11px] font-semibold text-slate-600 leading-relaxed">
-        Anda dapat berpindah peran kapan saja dari menu profil di dalam dashboard.
+        {{ t('auth.role.switchInfo') }}
       </p>
     </div>
 
@@ -200,11 +202,11 @@ async function handleConfirm() {
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25" />
             <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
           </svg>
-          <span class="text-[13.5px] tracking-wide uppercase">Memproses…</span>
+          <span class="text-[13.5px] tracking-wide uppercase">{{ t('auth.processing') }}</span>
         </template>
         <template v-else>
           <span class="text-[13.5px] tracking-wide uppercase">
-            {{ activeRole ? `LANJUT SEBAGAI ${shortLabels[activeRole] || activeRole.toUpperCase()}` : 'LANJUTKAN' }}
+            {{ activeRole ? t('auth.role.continueButton', { role: shortLabels[activeRole] || activeRole.toUpperCase() }) : 'LANJUTKAN' }}
           </span>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </template>
@@ -215,7 +217,7 @@ async function handleConfirm() {
         class="w-full text-center text-[12px] font-extrabold text-slate-500 hover:text-slate-800"
         @click="auth.goBack()"
       >
-        Bukan akun Anda? <span class="text-brand-cobalt uppercase">Keluar</span>
+        {{ t('auth.notYourAccountLogout') }}
       </button>
     </div>
   </div>

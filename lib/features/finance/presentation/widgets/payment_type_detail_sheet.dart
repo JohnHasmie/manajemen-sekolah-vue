@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
@@ -83,7 +84,7 @@ class PaymentTypeDetailSheet extends StatelessWidget {
 
     return AppBottomSheet(
       title: name,
-      subtitle: 'Detail jenis pembayaran',
+      subtitle: kFinPaymentTypeDetails.tr,
       icon: Icons.credit_card_rounded,
       primaryColor: navy,
       maxHeightFactor: 0.85,
@@ -150,20 +151,20 @@ class PaymentTypeDetailSheet extends StatelessWidget {
           const SizedBox(height: 10),
           _DetailRow(
             icon: Icons.schedule_rounded,
-            label: 'Periode penagihan',
+            label: kFinBillingPeriod.tr,
             value: periodLabel.isEmpty ? '—' : periodLabel,
           ),
           const SizedBox(height: 8),
           _DetailRow(
             icon: Icons.groups_rounded,
-            label: 'Target penerima',
+            label: kFinRecipientTarget.tr,
             value: goalLabel,
           ),
           if (description.isNotEmpty) ...[
             const SizedBox(height: 8),
             _DetailRow(
               icon: Icons.notes_rounded,
-              label: 'Deskripsi',
+              label: kFinDescription.tr,
               value: description,
               multiline: true,
             ),

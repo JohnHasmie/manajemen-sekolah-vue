@@ -15,6 +15,7 @@ import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/shell/widgets/shell_tab_header.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/dashboard_list_tile.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
@@ -35,8 +36,8 @@ class TeacherTeachingHub extends ConsumerWidget {
       body: Column(
         children: [
           ShellTabHeader(
-            title: 'Mengajar',
-            subtitle: 'Jadwal, materi, RPP, dan kegiatan kelas',
+            title: kCorSheTabTeaching.tr,
+            subtitle: kCorSheTeacherTeachingSubtitle.tr,
             accentColor: accent,
           ),
           // Shared `DashboardListTile` — same card design as parent
@@ -48,8 +49,8 @@ class TeacherTeachingHub extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Jadwal Mengajar',
-                    subtitle: 'Jadwal kelas yang Anda ampu',
+                    title: kManageTeachingSchedule.tr,
+                    subtitle: kCorSheTeacherScheduleSubtitle.tr,
                     icon: DashboardModules.jadwal.icon,
                     color: DashboardModules.jadwal.color,
                     onTap: () => AppNavigator.push(
@@ -61,8 +62,8 @@ class TeacherTeachingHub extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Kegiatan Kelas',
-                    subtitle: 'Tugas & aktivitas untuk siswa',
+                    title: kClassActivities.tr,
+                    subtitle: kCorSheTeacherActivitiesSubtitle.tr,
                     icon: DashboardModules.kegiatanKelas.icon,
                     color: DashboardModules.kegiatanKelas.color,
                     onTap: () => AppNavigator.push(
@@ -74,8 +75,8 @@ class TeacherTeachingHub extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'Materi Pembelajaran',
-                    subtitle: 'Bab, sub-bab & sumber belajar',
+                    title: kLessonPlanLearningMaterials.tr,
+                    subtitle: kCorSheTeacherMaterialsSubtitle.tr,
                     icon: DashboardModules.materi.icon,
                     color: DashboardModules.materi.color,
                     onTap: () => _openMaterials(context, ref),
@@ -84,8 +85,8 @@ class TeacherTeachingHub extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: DashboardListTile(
-                    title: 'RPP Saya',
-                    subtitle: 'Rencana pembelajaran per pertemuan',
+                    title: kMyLessonPlans.tr,
+                    subtitle: kCorSheTeacherLessonPlansSubtitle.tr,
                     icon: DashboardModules.rpp.icon,
                     color: DashboardModules.rpp.color,
                     onTap: () => _openLessonPlans(context, ref),
@@ -103,7 +104,7 @@ class TeacherTeachingHub extends ConsumerWidget {
   void _openMaterials(BuildContext context, WidgetRef ref) {
     final teacherData = _resolveTeacherData(ref);
     if (teacherData == null) {
-      SnackBarUtils.showInfo(context, 'ID guru tidak ditemukan.');
+      SnackBarUtils.showInfo(context, kCorSheTeacherIdNotFound.tr);
       return;
     }
     AppNavigator.push(context, TeacherMaterialScreen(teacher: teacherData));
@@ -112,7 +113,7 @@ class TeacherTeachingHub extends ConsumerWidget {
   void _openLessonPlans(BuildContext context, WidgetRef ref) {
     final teacherData = _resolveTeacherData(ref);
     if (teacherData == null) {
-      SnackBarUtils.showInfo(context, 'ID guru tidak ditemukan.');
+      SnackBarUtils.showInfo(context, kCorSheTeacherIdNotFound.tr);
       return;
     }
     AppNavigator.push(

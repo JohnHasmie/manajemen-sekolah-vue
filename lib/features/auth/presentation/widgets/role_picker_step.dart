@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:manajemensekolah/features/auth/presentation/widgets/auth_picker_shared.dart';
 
@@ -72,10 +73,13 @@ class _RolePickerStepState extends State<RolePickerStep> {
       children: [
         PickerHeader(
           kicker: schoolName.toString().toUpperCase(),
-          title: 'Pilih Peran',
+          title: kAutSelectRoleTitle.tr,
           subtitle: roles.length <= 1
-              ? 'Lanjutkan sebagai…'
-              : 'Anda memiliki ${roles.length} peran di sekolah ini.',
+              ? kAutContinueAs.tr
+              : kAutMultipleRoles.tr.replaceAll(
+                  '\${roles.length}',
+                  roles.length.toString(),
+                ),
           stepDots: const StepDots(active: 2, total: 3),
         ),
         const SizedBox(height: 14),
@@ -111,7 +115,7 @@ class _RolePickerStepState extends State<RolePickerStep> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Anda dapat berpindah peran kapan saja dari menu profil.',
+                  kAutSwitchRoleInfo.tr,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -126,8 +130,8 @@ class _RolePickerStepState extends State<RolePickerStep> {
         const SizedBox(height: 14),
         PickerFooterCta(
           primaryLabel: candidate == null
-              ? 'Lanjutkan'
-              : 'Lanjut Sebagai ${widget.getRoleDisplayName(candidate)}',
+              ? kAutContinue.tr
+              : '${kAutContinueAsRole.tr}${widget.getRoleDisplayName(candidate)}',
           primaryEnabled: candidate != null && !widget.authState.isLoading,
           primaryColor: candidateColor,
           isLoading: widget.authState.isLoading,

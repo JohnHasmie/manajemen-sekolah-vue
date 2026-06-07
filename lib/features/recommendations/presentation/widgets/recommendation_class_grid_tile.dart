@@ -18,6 +18,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 class RecommendationClassGridTile extends StatelessWidget {
   final Color primaryColor;
@@ -337,19 +338,19 @@ class RecommendationClassGridTile extends StatelessWidget {
           children: [
             _gridStatusPill(
               icon: Icons.check_circle_rounded,
-              label: '$completed diterapkan',
+              label: '$completed ${kRecApplied.tr}',
               color: const Color(0xFF16A34A), // green-600
             ),
             if (pending > 0)
               _gridStatusPill(
                 icon: Icons.schedule_rounded,
-                label: '$pending pending',
+                label: '$pending ${kRecPendingLower.tr}',
                 color: const Color(0xFFD97706), // amber-600
               ),
             if (highPriority > 0)
               _gridStatusPill(
                 icon: Icons.priority_high_rounded,
-                label: '$highPriority penting',
+                label: '$highPriority ${kRecImportant.tr}',
                 color: const Color(0xFFDC2626), // red-600
               ),
           ],
@@ -448,7 +449,7 @@ class RecommendationClassGridTile extends StatelessWidget {
         const SizedBox(width: 6),
         Flexible(
           child: Text(
-            isGenerating ? 'Memproses...' : 'Generate',
+            isGenerating ? kRecProcessing.tr : 'Generate',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

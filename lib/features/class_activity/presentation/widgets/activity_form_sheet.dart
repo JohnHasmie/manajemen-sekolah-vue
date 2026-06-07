@@ -14,6 +14,7 @@ import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
@@ -40,10 +41,10 @@ Future<ActivityFormResult?> showActivityFormSheet({
       initial != null && (initial['id']?.toString().isNotEmpty ?? false);
   return AppBottomSheet.show<ActivityFormResult>(
     context: context,
-    title: isEdit ? 'Edit Kegiatan' : 'Tambah Kegiatan',
+    title: isEdit ? kClaActEditActivity.tr : kClaActAddActivity.tr,
     subtitle: isEdit
-        ? 'Ubah judul / deskripsi / tipe / waktu. Kelas + mapel terkunci.'
-        : 'Pilih kelas + mapel + tipe, isi judul dan deskripsi, lalu Simpan.',
+        ? kClaActEditActivitySubtitle.tr
+        : kClaActAddActivitySubtitle.tr,
     icon: isEdit ? Icons.edit_rounded : Icons.add_circle_outline_rounded,
     primaryColor: ColorUtils.getRoleColor('guru'),
     contentPadding: EdgeInsets.zero,
@@ -97,24 +98,24 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
   bool _loadingChapters = false;
   bool _loadingSubChapters = false;
 
-  static const _types = <_TypeOption>[
+  static List<_TypeOption> get _types => <_TypeOption>[
     _TypeOption(
       'tugas',
       'Tugas',
-      'Pemberian tugas / PR',
+      kClaActTypeAssignmentDesc.tr,
       Icons.assignment_turned_in_rounded,
     ),
     _TypeOption(
       'aktivitas',
       'Aktivitas',
-      'Diskusi / praktik',
+      kClaActTypeActivityDesc.tr,
       Icons.groups_2_rounded,
     ),
-    _TypeOption('ujian', 'Ujian', 'Kuis / penilaian', Icons.science_rounded),
+    _TypeOption('ujian', 'Ujian', kClaActTypeExamDesc.tr, Icons.science_rounded),
     _TypeOption(
       'catatan',
       'Catatan',
-      'Catatan kelas umum',
+      kClaActTypeNoteDesc.tr,
       Icons.sticky_note_2_rounded,
     ),
   ];
@@ -314,7 +315,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _label('Kelas & Mapel'),
+              _label(kClaActClassAndSubject.tr),
               Row(
                 children: [
                   Expanded(
@@ -337,7 +338,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
                 ],
               ),
               const SizedBox(height: 12),
-              _label('Tipe Kegiatan'),
+              _label(kClaActActivityType.tr),
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -352,7 +353,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
               // picked (otherwise the chapter list has nothing to query).
               // Both fields are optional in the payload.
               if (_subjectId != null && _subjectId!.isNotEmpty) ...[
-                _label('Bab Materi (opsional)'),
+                _label(kClaActChapterOptional.tr),
                 ActivityChapterSelector(
                   chapters: _chapters,
                   isLoading: _loadingChapters,
@@ -362,7 +363,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
                 ),
                 if (_chapterId != null) ...[
                   const SizedBox(height: 10),
-                  _label('Sub-bab (opsional)'),
+                  _label(kClaActSubChapterOptional.tr),
                   if (_loadingSubChapters)
                     Container(
                       height: 32,
@@ -402,7 +403,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Tidak ada sub-bab tersedia',
+                            kClaActNoSubChaptersAvailable.tr,
                             style: TextStyle(
                               fontSize: 12,
                               color: ColorUtils.slate500,
@@ -452,10 +453,10 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
                 ],
                 const SizedBox(height: 12),
               ],
-              _label('Judul'),
-              _textField(_titleCtrl, hint: 'Mis. Tugas Trigonometri'),
+              _label(kClaActTitle.tr),
+              _textField(_titleCtrl, hint: kClaActTitleHint.tr),
               const SizedBox(height: 12),
-              _label('Tanggal & Waktu'),
+              _label(kClaActDateAndTime.tr),
               Row(
                 children: [
                   Expanded(
@@ -471,7 +472,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
                     child: _picker(
                       icon: Icons.schedule_rounded,
                       label: _time == null
-                          ? 'Pilih jam'
+                          ? kClaActChooseTime.tr
                           : _time!.format(context),
                       enabled: !_saving,
                       onTap: _pickTime,
@@ -480,10 +481,10 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
                 ],
               ),
               const SizedBox(height: 12),
-              _label('Deskripsi'),
+              _label(kClaActDescription.tr),
               _textField(
                 _descCtrl,
-                hint: 'Jelaskan kegiatan / instruksi tugas …',
+                hint: kClaActDescriptionHint.tr,
                 minLines: 3,
                 maxLines: 6,
               ),
@@ -689,7 +690,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
   }
 
   String _classLabel() {
-    if (_classId == null) return 'Pilih kelas';
+    if (_classId == null) return kClaActChooseClass.tr;
     for (final c in widget.classes) {
       if ((c['id'] ?? '').toString() == _classId) {
         return (c['name'] ?? '-').toString();
@@ -700,7 +701,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
   }
 
   String _subjectLabel() {
-    if (_subjectId == null) return 'Pilih mapel';
+    if (_subjectId == null) return kClaActChooseSubject.tr;
     for (final s in widget.subjects) {
       if ((s['id'] ?? '').toString() == _subjectId) {
         return (s['name'] ?? '-').toString();
@@ -714,7 +715,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
 
   Future<void> _pickClass() async {
     final picked = await _showOptionSheet(
-      title: 'Pilih kelas',
+      title: kClaActChooseClass.tr,
       options: widget.classes,
     );
     if (picked != null) setState(() => _classId = picked);
@@ -722,7 +723,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
 
   Future<void> _pickSubject() async {
     final picked = await _showOptionSheet(
-      title: 'Pilih mapel',
+      title: kClaActChooseSubject.tr,
       options: widget.subjects,
     );
     if (picked != null && picked != _subjectId) {
@@ -810,7 +811,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
     final picked = await showModernDatePicker(
       context: context,
       initialDate: _date,
-      title: 'Pilih tanggal',
+      title: kClaActChooseDate.tr,
     );
     if (picked != null) setState(() => _date = picked);
   }

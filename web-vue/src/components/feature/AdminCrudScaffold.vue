@@ -20,7 +20,8 @@
   of the rest of the admin app.
 -->
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import KpiStripCards, { type KpiCard } from '@/components/feature/KpiStripCards.vue';
@@ -28,7 +29,7 @@ import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     title: string;
     kicker?: string;
@@ -50,14 +51,24 @@ withDefaults(
     kicker: '',
     meta: '',
     kpiCards: () => [],
-    searchPlaceholder: 'Cari…',
-    emptyTitle: 'Belum ada data',
     emptyDescription: '',
     selectedCount: 0,
     hideAddFab: false,
-    fabLabel: 'Tambah',
     activeFilterCount: 0,
   },
+);
+
+const { t } = useI18n();
+// Translated default placeholders — only kick in when the host page
+// doesn't pass an explicit value.
+const searchPlaceholderText = computed(() =>
+  props.searchPlaceholder?.trim() ? props.searchPlaceholder : `${t('common.search')}…`,
+);
+const emptyTitleText = computed(() =>
+  props.emptyTitle?.trim() ? props.emptyTitle : t('common.emptyTitle'),
+);
+const fabLabelText = computed(() =>
+  props.fabLabel?.trim() ? props.fabLabel : t('common.add'),
 );
 
 const emit = defineEmits<{
@@ -95,7 +106,7 @@ watch(searchValue, (v) => {
     <!-- Toolbar — per-facet chips on the left, search on the right -->
     <PageFilterToolbar
       v-model:search="searchValue"
-      :search-placeholder="searchPlaceholder"
+      :search-placeholder="searchPlaceholderText"
       :search-min-width="240"
     >
       <template #chips>
@@ -106,7 +117,7 @@ watch(searchValue, (v) => {
           class="text-[11px] font-bold text-slate-500 hover:text-role-admin px-2"
           @click="emit('clearAllFilters')"
         >
-          Bersihkan ({{ activeFilterCount }})
+          {{ t('common.reset') }} ({{ activeFilterCount }})
         </button>
       </template>
     </PageFilterToolbar>
@@ -114,7 +125,7 @@ watch(searchValue, (v) => {
     <!-- Body -->
     <AsyncView
       :state="state"
-      :empty-title="emptyTitle"
+      :empty-title="emptyTitleText"
       :empty-description="emptyDescription"
       min-height="20rem"
       @retry="emit('retry')"
@@ -130,10 +141,10 @@ watch(searchValue, (v) => {
       class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-white border border-slate-200 rounded-2xl shadow-lg p-3 flex items-center gap-2 max-w-2xl w-[calc(100%-2rem)]"
     >
       <p class="text-[11px] font-bold text-slate-700 flex-1">
-        {{ selectedCount }} dipilih
+        {{ t('common.selected', { count: selectedCount }) }}
       </p>
       <Button variant="secondary" size="sm" @click="emit('bulkClear')">
-        Batal
+        {{ t('common.cancel') }}
       </Button>
       <slot name="bulk-actions" />
     </section>
@@ -146,7 +157,7 @@ watch(searchValue, (v) => {
       @click="emit('addClick')"
     >
       <NavIcon name="plus" :size="14" />
-      {{ fabLabel }}
+      {{ fabLabelText }}
     </Button>
   </div>
 </template>

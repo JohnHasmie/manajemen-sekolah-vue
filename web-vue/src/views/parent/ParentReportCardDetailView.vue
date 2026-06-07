@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { ReportCardService } from '@/services/report-card.service';
 import {
   STATUS_LABELS,
@@ -41,6 +42,7 @@ import ParentRaporDeskripsiSheet from '@/components/feature/ParentRaporDeskripsi
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const studentClassId = computed(() => String(route.params.studentClassId ?? ''));
 
@@ -152,7 +154,7 @@ const attendanceTotal = computed(() => {
 async function downloadPdf(variant: 'certificate' | 'raport' = 'certificate') {
   if (!row.value || !isPublished.value) {
     toast.value = {
-      message: 'Rapor masih draft — cetak PDF belum tersedia.',
+      message: t('reportCard.stillDraftNoPrint'),
       tone: 'info',
     };
     return;
@@ -173,7 +175,7 @@ async function downloadPdf(variant: 'certificate' | 'raport' = 'certificate') {
     } else {
       await ReportCardService.exportSinglePdf(args);
     }
-    toast.value = { message: 'PDF terdownload.', tone: 'success' };
+    toast.value = { message: t('common.pdfDownloaded'), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -187,7 +189,7 @@ function share() {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(() => {
         toast.value = {
-          message: 'Tautan rapor disalin ke clipboard.',
+          message: t('reportCard.linkCopied'),
           tone: 'success',
         };
       });
@@ -201,7 +203,7 @@ function toggleAssessment(which: 'uts' | 'uas') {
   assessmentFilter.value = assessmentFilter.value === which ? null : which;
   const label = which === 'uts' ? 'UTS' : 'UAS';
   toast.value = {
-    message: `Rapor ini sudah merangkum capaian UTS + UAS. Untuk skor per ujian ${label}, buka Buku Nilai.`,
+    message: t('reportCard.assessmentFilterHint', { label }),
     tone: 'info',
   };
 }
@@ -242,11 +244,11 @@ const heroChipLabel = computed(() => {
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Daftar Rapor
+        {{ t('reportCard.list') }}
       </button>
     </div>
 
-    <AsyncView :state="state" empty-title="Rapor tidak ditemukan" @retry="load">
+    <AsyncView :state="state" :empty-title="t('reportCard.notFound')" @retry="load">
       <template #default>
         <div v-if="row" class="space-y-4">
           <!-- HEADER -->
@@ -383,7 +385,7 @@ const heroChipLabel = computed(() => {
               <div>
                 <div class="flex items-center gap-2 mb-1">
                   <span class="text-[11.5px] font-bold text-slate-700">
-                    Spiritual
+                    {{ t('reportCard.spiritual') }}
                   </span>
                   <span
                     v-if="row.reportCard.spiritual_predicate"
@@ -401,7 +403,7 @@ const heroChipLabel = computed(() => {
               <div>
                 <div class="flex items-center gap-2 mb-1">
                   <span class="text-[11.5px] font-bold text-slate-700">
-                    Sosial
+                    {{ t('reportCard.social') }}
                   </span>
                   <span
                     v-if="row.reportCard.social_predicate"
@@ -425,10 +427,10 @@ const heroChipLabel = computed(() => {
               <p
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
               >
-                Nilai per Mata Pelajaran
+                {{ t('reportCard.gradesBySubject') }}
               </p>
               <p class="text-[10px] font-bold text-slate-400">
-                {{ row.reportCard.subjects.length }} mapel
+                {{ row.reportCard.subjects.length }} {{ t('common.subjects') }}
               </p>
             </header>
             <div class="space-y-2">
@@ -442,7 +444,7 @@ const heroChipLabel = computed(() => {
                 v-if="row.reportCard.subjects.length === 0"
                 class="text-[12px] text-slate-500 italic text-center py-4"
               >
-                Belum ada nilai mata pelajaran.
+                {{ t('reportCard.noSubjectGrades') }}
               </p>
             </div>
           </section>
@@ -453,10 +455,10 @@ const heroChipLabel = computed(() => {
               <p
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
               >
-                Ekstrakurikuler
+                {{ t('reportCard.extracurricular') }}
               </p>
               <p class="text-[10px] font-bold text-slate-400">
-                {{ row.reportCard.extras.length }} kegiatan
+                {{ row.reportCard.extras.length }} {{ t('common.activities') }}
               </p>
             </header>
             <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
@@ -487,10 +489,10 @@ const heroChipLabel = computed(() => {
               <p
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
               >
-                Prestasi
+                {{ t('reportCard.achievements') }}
               </p>
               <p class="text-[10px] font-bold text-slate-400">
-                {{ row.reportCard.achievements.length }} prestasi
+                {{ row.reportCard.achievements.length }} {{ t('reportCard.achievementsPlural') }}
               </p>
             </header>
             <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
@@ -523,10 +525,10 @@ const heroChipLabel = computed(() => {
               <p
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
               >
-                Kehadiran
+                {{ t('nav.attendance') }}
               </p>
               <p class="text-[10px] font-bold text-slate-400">
-                {{ attendanceTotal > 0 ? `${attendanceTotal} hari efektif` : 'Belum dihitung' }}
+                {{ attendanceTotal > 0 ? `${attendanceTotal} ${t('attendance.effectiveDays')}` : t('common.notCalculated') }}
               </p>
             </header>
             <div class="grid grid-cols-4 gap-2">
@@ -536,7 +538,7 @@ const heroChipLabel = computed(() => {
                 <p
                   class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
                 >
-                  Hadir
+                  {{ t('attendance.present') }}
                 </p>
                 <p class="text-base font-black mt-1 tabular-nums text-emerald-700">
                   {{ row.reportCard.attendance_present ?? 0 }}
@@ -548,7 +550,7 @@ const heroChipLabel = computed(() => {
                 <p
                   class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
                 >
-                  Sakit
+                  {{ t('attendance.sick') }}
                 </p>
                 <p class="text-base font-black mt-1 tabular-nums text-orange-700">
                   {{ row.reportCard.attendance_sick ?? 0 }}
@@ -560,7 +562,7 @@ const heroChipLabel = computed(() => {
                 <p
                   class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
                 >
-                  Izin
+                  {{ t('attendance.permitted') }}
                 </p>
                 <p class="text-base font-black mt-1 tabular-nums text-blue-700">
                   {{ row.reportCard.attendance_permit ?? 0 }}
@@ -572,7 +574,7 @@ const heroChipLabel = computed(() => {
                 <p
                   class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
                 >
-                  Alpa
+                  {{ t('attendance.absent') }}
                 </p>
                 <p class="text-base font-black mt-1 tabular-nums text-red-700">
                   {{ row.reportCard.attendance_absent ?? 0 }}
@@ -587,7 +589,7 @@ const heroChipLabel = computed(() => {
               <p
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
               >
-                Catatan Wali Kelas
+                {{ t('reportCard.homeRoomNotes') }}
               </p>
               <p
                 v-if="row.reportCard.homeroom_teacher"
@@ -621,7 +623,7 @@ const heroChipLabel = computed(() => {
               class="text-[10px] font-bold uppercase tracking-widest mb-1"
               :class="isNaikKelas ? 'text-emerald-700' : 'text-red-700'"
             >
-              Keputusan Kenaikan Kelas
+              {{ t('reportCard.promotionDecision') }}
             </p>
             <p
               class="text-[14px] font-black"
@@ -635,15 +637,15 @@ const heroChipLabel = computed(() => {
             class="rounded-2xl p-4 bg-slate-50 border border-slate-200"
           >
             <p class="text-[11.5px] text-slate-600 leading-relaxed">
-              Keputusan kenaikan kelas akan diumumkan setelah
-              <strong>Semester Genap</strong>.
+              {{ t('reportCard.promotionAnnouncementLater') }}
+              <strong>{{ t('common.semesterGenap') }}</strong>.
             </p>
           </section>
 
           <!-- EXPORT NOTE -->
           <p class="text-[10.5px] text-slate-400 italic px-1 leading-relaxed">
-            File PDF akan tersimpan di folder unduhan perangkat Anda. Hanya
-            rapor berstatus <em>Diterbitkan</em> yang dapat dicetak.
+            {{ t('reportCard.pdfExportNote') }}
+            <em>{{ t('common.published') }}</em> yang dapat dicetak.
           </p>
 
           <!-- STICKY FOOTER -->
@@ -652,7 +654,7 @@ const heroChipLabel = computed(() => {
           >
             <Button variant="secondary" block @click="share">
               <NavIcon name="send" :size="13" />
-              Bagikan
+              {{ t('common.share') }}
             </Button>
             <Button
               variant="primary"
@@ -662,7 +664,7 @@ const heroChipLabel = computed(() => {
               @click="downloadPdf('certificate')"
             >
               <NavIcon name="download" :size="13" />
-              {{ isPublished ? 'Cetak E-Raport' : 'Belum Terbit' }}
+              {{ isPublished ? t('reportCard.printEReport') : t('common.notPublished') }}
             </Button>
           </div>
         </div>
@@ -677,14 +679,14 @@ const heroChipLabel = computed(() => {
     />
 
     <!-- Semester sheet (mirrors mobile — confirms back to list to change sem) -->
-    <Modal v-if="semesterSheetOpen" title="Pilih semester" @close="semesterSheetOpen = false">
+    <Modal v-if="semesterSheetOpen" :title="t('common.chooseSemester')" @close="semesterSheetOpen = false">
       <div class="space-y-3">
         <p class="text-[12px] text-slate-600 leading-relaxed">
-          Untuk membuka rapor semester lain, kembali ke
-          <strong>Daftar E-Raport</strong> lalu ubah pilihan semester pada
+          {{ t('reportCard.chooseOtherSemesterNote') }}
+          <strong>{{ t('reportCard.eReportList') }}</strong> lalu ubah pilihan semester pada
           filter di atas.
         </p>
-        <Button block @click="returnToList">Kembali ke daftar E-Raport</Button>
+        <Button block @click="returnToList">{{ t('reportCard.backToList') }}</Button>
       </div>
     </Modal>
 

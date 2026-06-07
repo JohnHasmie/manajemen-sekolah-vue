@@ -5,9 +5,11 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
 const mode = computed({
@@ -24,13 +26,13 @@ const studentCount = computed(() => {
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Langkah 8 dari 12 · Wali murid
+      {{ t('registerDemo.step8Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
-      Tautkan wali murid?
+      {{ t('registerDemo.step8Title') }}
     </h2>
     <p class="text-[13px] text-slate-600 mb-4">
-      Wali butuh akun untuk lihat nilai, presensi, dan tagihan anaknya.
+      {{ t('registerDemo.step8Subtitle') }}
     </p>
 
     <div class="grid grid-cols-2 gap-3 mb-4">
@@ -45,9 +47,9 @@ const studentCount = computed(() => {
         @click="mode = 'auto_link'"
       >
         <NavIcon name="link" :size="22" :class="mode === 'auto_link' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
-        <div class="text-[13px] font-bold">Tautkan otomatis</div>
+        <div class="text-[13px] font-bold">{{ t('registerDemo.step8AutoLink') }}</div>
         <div class="text-[11px]" :class="mode === 'auto_link' ? 'text-role-admin' : 'text-slate-500'">
-          1 wali / siswa · Rekomendasi
+          {{ t('registerDemo.step8AutoLinkHint') }}
         </div>
       </button>
       <button
@@ -61,15 +63,15 @@ const studentCount = computed(() => {
         @click="mode = 'skip'"
       >
         <NavIcon name="clock" :size="22" :class="mode === 'skip' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
-        <div class="text-[13px] font-bold">Atur nanti</div>
+        <div class="text-[13px] font-bold">{{ t('registerDemo.step8SetLater') }}</div>
         <div class="text-[11px]" :class="mode === 'skip' ? 'text-role-admin' : 'text-slate-500'">
-          Lewati untuk sekarang
+          {{ t('registerDemo.step8SkipNow') }}
         </div>
       </button>
     </div>
 
     <div class="border border-dashed border-slate-300 rounded-lg p-3 text-[12px] text-slate-600 leading-relaxed">
-      <strong class="text-slate-900 font-bold">Contoh:</strong>
+      <strong class="text-slate-900 font-bold">{{ t('registerDemo.step8ExampleLabel') }}</strong>
       Aulia Putri (7A) → Bapak Hendra Putri ·
       Bayu Saputra (7B) → Ibu Lina Saputra
       <span class="text-slate-400">+ {{ Math.max(0, studentCount - 2) }} lagi</span>

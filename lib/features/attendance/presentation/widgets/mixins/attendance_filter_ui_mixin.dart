@@ -166,7 +166,7 @@ mixin AttendanceFilterUiMixin implements _FilterSheetStateGetter {
   Widget buildLessonHourChips() {
     final options = filterLessonHours.map((lh) {
       final lhId = lh['id'].toString();
-      return FilterOption<String>(value: lhId, label: lh['name'] ?? 'Jam');
+      return FilterOption<String>(value: lhId, label: lh['name'] ?? kAttHour.tr);
     }).toList();
 
     return FilterChipGrid<String>(

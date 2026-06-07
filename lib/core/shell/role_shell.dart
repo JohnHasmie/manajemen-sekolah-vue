@@ -33,6 +33,7 @@ import 'package:manajemensekolah/core/providers/school_epoch_provider.dart';
 import 'package:manajemensekolah/core/shell/shell_controller.dart';
 import 'package:manajemensekolah/core/shell/shell_tab.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// The persistent shell. Renders one bottom-nav tab strip and an
 /// `IndexedStack` of per-tab `Navigator` branches.
@@ -119,9 +120,9 @@ class _RoleShellState extends ConsumerState<RoleShell> {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
-                const SnackBar(
-                  content: Text('Tekan kembali sekali lagi untuk keluar'),
-                  duration: Duration(seconds: 2),
+                SnackBar(
+                  content: Text(kCorSheExitConfirmSnackbar.tr),
+                  duration: const Duration(seconds: 2),
                   behavior: SnackBarBehavior.floating,
                 ),
               );

@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
@@ -37,8 +38,8 @@ Future<LessonPlanApproveResult?> showLessonPlanAdminApproveSheet({
 }) {
   return AppBottomSheet.show<LessonPlanApproveResult>(
     context: context,
-    title: 'Setujui RPP ini?',
-    subtitle: 'Status berubah menjadi Disetujui & guru menerima notifikasi.',
+    title: kLesPlaApproveConfirm.tr,
+    subtitle: kLesPlaApproveSubtitle.tr,
     icon: Icons.check_circle_rounded,
     primaryColor: ColorUtils.green600,
     content: _ApproveSheetBody(

@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Horizontal tab-bar that sits at the top of the finance screen body.
 ///
@@ -50,13 +51,13 @@ class FinanceNavigationBar extends StatelessWidget {
     final items = <_NavItem>[
       _NavItem(
         icon: Icons.receipt_long_rounded,
-        label: 'Tagihan',
+        label: kFinBills.tr,
         badge: overdueCount,
         badgeColor: const Color(0xFFDC2626),
       ),
       _NavItem(
         icon: Icons.verified_rounded,
-        label: 'Pembayaran',
+        label: kFinPayments.tr,
         badge: pendingCount,
         badgeColor: const Color(0xFFF59E0B),
       ),

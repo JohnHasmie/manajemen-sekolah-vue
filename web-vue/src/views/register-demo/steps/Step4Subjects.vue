@@ -7,10 +7,12 @@
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { defaultSubjectsFor, SUBJECTS_TEMPLATE, type Jenjang } from '@/types/demo';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
 const jenjang = computed<Jenjang>(() => wizard.payload.school.education_level);
@@ -72,19 +74,19 @@ function resetToTemplate() {
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Langkah 4 dari 12 · Mata pelajaran
+      {{ t('registerDemo.step4Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
-      Pilih mata pelajaran yang diajar
+      {{ t('registerDemo.step4Title') }}
     </h2>
     <p class="text-[13px] text-slate-600 mb-4">
-      Daftar awal otomatis berdasarkan jenjang
+      {{ t('registerDemo.step4Subtitle1') }}
       <span class="font-bold text-slate-800">{{ jenjang }}</span>.
-      Klik untuk un/select. Bisa tambah mapel custom (mulok, program keahlian, dst).
+      {{ t('registerDemo.step4Subtitle2') }}
     </p>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Template {{ jenjang }} ({{ templateNames.length }} mapel)
+      {{ t('registerDemo.step4TemplateLabel', { jenjang, count: templateNames.length }) }}
     </p>
     <div class="flex flex-wrap gap-1.5 mb-1">
       <button
@@ -106,7 +108,7 @@ function resetToTemplate() {
 
     <div v-if="customNames.length > 0">
       <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mt-4 mb-2">
-        Custom ({{ customNames.length }})
+        {{ t('registerDemo.step4CustomLabel', { count: customNames.length }) }}
       </p>
       <div class="flex flex-wrap gap-1.5">
         <span
@@ -118,7 +120,7 @@ function resetToTemplate() {
           <button
             type="button"
             class="hover:text-amber-900"
-            aria-label="Hapus mapel"
+            :aria-label="t('registerDemo.step4DeleteSubject')"
             @click="removeCustom(name)"
           >
             <NavIcon name="x" :size="11" />
@@ -128,13 +130,13 @@ function resetToTemplate() {
     </div>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mt-5 mb-2">
-      Tambah mapel custom
+      {{ t('registerDemo.step4AddCustomLabel') }}
     </p>
     <div class="flex items-center gap-2">
       <input
         v-model="newCustom"
         type="text"
-        placeholder="Contoh: Bahasa Sunda, Tahfidz, Robotika"
+        :placeholder="t('registerDemo.step4AddCustomPlaceholder')"
         class="flex-1 border border-slate-300 rounded-lg px-3 py-2.5 text-[13px] outline-none focus:border-role-admin"
         @keydown.enter.prevent="addCustom"
       />
@@ -145,14 +147,14 @@ function resetToTemplate() {
         @click="addCustom"
       >
         <NavIcon name="plus" :size="13" />
-        Tambah
+        {{ t('common.add') }}
       </button>
     </div>
 
     <div class="flex items-center justify-between mt-5 pt-4 border-t border-slate-100">
       <div class="text-[13px]">
         <strong class="font-bold text-slate-900">{{ names.length }} mapel</strong>
-        <span class="text-slate-500"> akan dibuat untuk sekolah ini.</span>
+        <span class="text-slate-500"> {{ t('registerDemo.step4Summary') }}</span>
       </div>
       <button
         type="button"
@@ -160,7 +162,7 @@ function resetToTemplate() {
         @click="resetToTemplate"
       >
         <NavIcon name="refresh-cw" :size="11" class="inline-block -mt-0.5 mr-1" />
-        Reset ke default
+        {{ t('registerDemo.step4ResetButton') }}
       </button>
     </div>
   </div>

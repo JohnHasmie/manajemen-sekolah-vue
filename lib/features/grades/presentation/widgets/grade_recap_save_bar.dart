@@ -123,12 +123,7 @@ class GradeRecapSaveBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              isSaving
-                  ? lp.getTranslatedText({
-                      'en': 'Saving...',
-                      'id': 'Menyimpan...',
-                    })
-                  : lp.getTranslatedText({'en': 'Save', 'id': 'Simpan'}),
+              isSaving ? kGraSaving.tr : kSave.tr,
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -181,10 +176,7 @@ class _AddBabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cobalt = ColorUtils.brandCobalt;
-    final tooltip = lp.getTranslatedText({
-      'en': 'Add chapter',
-      'id': 'Tambah Bab',
-    });
+    final tooltip = kGraAddChapter.tr;
     return Tooltip(
       message: tooltip,
       child: SizedBox(

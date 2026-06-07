@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/quiz_stats_bar.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/mc_quiz_card.dart';
@@ -40,7 +41,7 @@ class SubChapterQuizList extends StatelessWidget {
     return [
       _buildSubSectionHeader(
         icon: Icons.check_circle_outline_rounded,
-        title: 'Pilihan Ganda',
+        title: kMatMultipleChoice.tr,
         count: mcQuizzes.length,
         color: primaryColor,
       ),
@@ -60,7 +61,7 @@ class SubChapterQuizList extends StatelessWidget {
       const SizedBox(height: AppSpacing.lg),
       _buildSubSectionHeader(
         icon: Icons.edit_note_rounded,
-        title: 'Essay',
+        title: kMatEssay.tr,
         count: essayQuizzes.length,
         color: ColorUtils.violet500,
       ),

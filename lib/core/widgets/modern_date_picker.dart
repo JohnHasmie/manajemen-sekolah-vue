@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Shows a modern themed date picker as a bottom sheet.
 /// Matches the pattern used in add_activity_dialog.dart.
@@ -148,9 +149,9 @@ Future<DateTime?> showModernDatePicker({
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Pilih Tanggal',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                child: Text(
+                  kCorWidSelectDate.tr,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

@@ -10,8 +10,10 @@
 -->
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 
+const { t } = useI18n();
 const auth = useAuthStore();
 
 const digits = ref<string[]>(['', '', '', '', '', '']);
@@ -87,10 +89,10 @@ async function handleResend() {
   <div class="space-y-6">
     <header>
       <h2 class="text-[17px] font-black text-slate-900 tracking-[-0.3px]">
-        Verifikasi OTP
+        {{ t('auth.otp.title') }}
       </h2>
       <p class="text-[12px] text-slate-500 font-semibold mt-1 leading-relaxed">
-        Kode OTP telah dikirim ke
+        {{ t('auth.otp.sentTo') }}
         <span class="font-bold text-slate-700">{{ auth.pendingEmail }}</span>.
       </p>
       <div
@@ -104,7 +106,7 @@ async function handleResend() {
     <form @submit.prevent="handleSubmit" class="space-y-6">
       <div class="space-y-2">
         <label class="block text-[11px] font-extrabold text-slate-700 tracking-[0.4px] uppercase">
-          Masukkan 6 digit kode
+          {{ t('auth.otp.label') }}
         </label>
         <div class="flex justify-between gap-2" @paste="onPaste">
           <input
@@ -150,7 +152,7 @@ async function handleResend() {
             stroke-linecap="round"
           />
         </svg>
-        <span class="text-[13.5px] tracking-wide uppercase">{{ auth.isLoading ? 'Memverifikasi…' : 'Verifikasi' }}</span>
+        <span class="text-[13.5px] tracking-wide uppercase">{{ auth.isLoading ? t('auth.otp.verifying') : t('auth.otp.submit') }}</span>
       </button>
     </form>
 
@@ -161,8 +163,8 @@ async function handleResend() {
         class="text-[12px] font-extrabold text-brand-cobalt hover:underline disabled:text-slate-400 disabled:no-underline"
         @click="handleResend"
       >
-        <span v-if="countdown > 0">Kirim ulang ({{ countdown }}s)</span>
-        <span v-else>Kirim ulang kode OTP</span>
+        <span v-if="countdown > 0">{{ t('auth.otp.resendCountdown', { countdown }) }}</span>
+        <span v-else>{{ t('auth.otp.resend') }}</span>
       </button>
 
       <button
@@ -170,7 +172,7 @@ async function handleResend() {
         class="text-[12px] font-extrabold text-slate-500 hover:text-slate-800"
         @click="auth.goBack()"
       >
-        Kembali ke Login
+        {{ t('auth.backToLogin') }}
       </button>
     </div>
   </div>

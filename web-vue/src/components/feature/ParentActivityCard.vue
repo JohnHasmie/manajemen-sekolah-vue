@@ -19,11 +19,31 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { ClassActivity } from '@/types/class-activity';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const props = defineProps<{ activity: ClassActivity }>();
 defineEmits<{ click: [ClassActivity] }>();
+
+const { t } = useI18n();
+
+// Three-letter month abbreviations driven by the active locale —
+// switches between Jan/Feb/Mar… and Mei/Agu/Okt/Des etc.
+const SHORT_MONTHS = computed<string[]>(() => [
+  t('parent.activity.month.jan'),
+  t('parent.activity.month.feb'),
+  t('parent.activity.month.mar'),
+  t('parent.activity.month.apr'),
+  t('parent.activity.month.may'),
+  t('parent.activity.month.jun'),
+  t('parent.activity.month.jul'),
+  t('parent.activity.month.aug'),
+  t('parent.activity.month.sep'),
+  t('parent.activity.month.oct'),
+  t('parent.activity.month.nov'),
+  t('parent.activity.month.dec'),
+]);
 
 const isAssignment = computed(() => parentKind(props.activity) === 'tugas');
 
@@ -33,13 +53,17 @@ const palette = computed(() =>
     : { bg: 'bg-emerald-100', fg: 'text-emerald-700' },
 );
 
-// Caption: "Subject · Kelas X · Teacher" (skip blanks).
+// Caption: "Subject · Class X · Teacher" (skip blanks).
 const caption = computed(() => {
   const parts: string[] = [];
   if (props.activity.subject_name) parts.push(props.activity.subject_name);
-  if (props.activity.class_name) parts.push(`Kelas ${props.activity.class_name}`);
+  if (props.activity.class_name)
+    parts.push(t('parent.activity.classPrefix', { name: props.activity.class_name }));
   if (props.activity.teacher_name) parts.push(props.activity.teacher_name);
-  if (parts.length === 0) return isAssignment.value ? 'Tugas' : 'Materi';
+  if (parts.length === 0)
+    return isAssignment.value
+      ? t('parent.activity.typeTask')
+      : t('parent.activity.typeMaterial');
   return parts.join(' · ');
 });
 
@@ -77,8 +101,8 @@ const timeAgo = computed(() => {
   const now = new Date();
   const diffMs = now.getTime() - parsed.getTime();
   const diffMin = Math.floor(diffMs / 60_000);
-  if (diffMin < 1) return 'Baru saja';
-  if (diffMin < 60) return `${diffMin} menit lalu`;
+  if (diffMin < 1) return t('parent.activity.timeJustNow');
+  if (diffMin < 60) return t('parent.activity.timeMinutesAgo', { n: diffMin });
   const diffHr = Math.floor(diffMs / 3_600_000);
   if (diffHr < 24) {
     const sameDay =
@@ -88,15 +112,14 @@ const timeAgo = computed(() => {
     if (sameDay) {
       const hh = String(parsed.getHours()).padStart(2, '0');
       const mm = String(parsed.getMinutes()).padStart(2, '0');
-      return `Hari ini · ${hh}:${mm}`;
+      return t('parent.activity.timeTodayAt', { time: `${hh}:${mm}` });
     }
-    return `${diffHr} jam lalu`;
+    return t('parent.activity.timeHoursAgo', { n: diffHr });
   }
   const diffDays = Math.floor(diffMs / 86_400_000);
-  if (diffDays === 1) return 'Kemarin';
-  if (diffDays < 7) return `${diffDays} hari lalu`;
-  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-  return `${parsed.getDate()} ${MONTHS[parsed.getMonth()]}`;
+  if (diffDays === 1) return t('parent.activity.timeYesterday');
+  if (diffDays < 7) return t('parent.activity.timeDaysAgo', { n: diffDays });
+  return `${parsed.getDate()} ${SHORT_MONTHS.value[parsed.getMonth()]}`;
 });
 
 const hasDescription = computed(() => {
@@ -117,8 +140,7 @@ function fmtDeadlineShort(iso?: string | null): string {
   if (!iso) return '';
   const d = new Date(iso);
   if (!Number.isFinite(d.getTime())) return iso;
-  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  return `${d.getDate()} ${SHORT_MONTHS.value[d.getMonth()]}`;
 }
 
 // `kind` = mobile-app `jenis`. Returns 'tugas' for assignment-like
@@ -185,7 +207,7 @@ function parentKind(a: ClassActivity): 'tugas' | 'materi' {
           class="inline-block mt-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide"
           :class="`${palette.bg} ${palette.fg}`"
         >
-          {{ isAssignment ? 'Tugas' : 'Materi' }}
+          {{ isAssignment ? t('parent.activity.typeTask') : t('parent.activity.typeMaterial') }}
         </span>
 
         <!-- Description -->
@@ -214,21 +236,21 @@ function parentKind(a: ClassActivity): 'tugas' | 'materi' {
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-100 text-sky-700"
             >
               <NavIcon name="shield" :size="11" />
-              Khusus
+              {{ t('parent.activity.badgeSpecial') }}
             </span>
             <span
               v-if="activity.is_specific_target && isForThisChild"
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700"
             >
               <NavIcon name="star" :size="11" />
-              Untuk anak ini
+              {{ t('parent.activity.badgeForThisChild') }}
             </span>
             <span
               v-if="isAssignment && activity.deadline"
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700"
             >
               <NavIcon name="clock" :size="11" />
-              Batas: {{ fmtDeadlineShort(activity.deadline) }}
+              {{ t('parent.activity.deadline', { date: fmtDeadlineShort(activity.deadline) }) }}
             </span>
           </div>
         </template>

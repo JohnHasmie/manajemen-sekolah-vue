@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
@@ -30,10 +31,10 @@ enum _AdminInboxFilter { all, critical, warning, info }
 
 extension on _AdminInboxFilter {
   String get label => switch (this) {
-    _AdminInboxFilter.all => 'Semua',
-    _AdminInboxFilter.critical => 'Kritis',
-    _AdminInboxFilter.warning => 'Peringatan',
-    _AdminInboxFilter.info => 'Info',
+    _AdminInboxFilter.all => kDasFilterAll.tr,
+    _AdminInboxFilter.critical => kDasFilterCritical.tr,
+    _AdminInboxFilter.warning => kDasFilterWarning.tr,
+    _AdminInboxFilter.info => kDasFilterInfo.tr,
   };
 
   bool matches(PriorityInboxItem item) => switch (this) {
@@ -175,13 +176,13 @@ class _AdminInboxScreenState extends ConsumerState<AdminInboxScreen>
                   child: BrandEmptyState(
                     icon: Icons.inbox_outlined,
                     tone: BrandEmptyStateTone.info,
-                    kicker: 'Tidak ada item',
+                    kicker: kDasInboxNoItems.tr,
                     title: _filter == _AdminInboxFilter.all
-                        ? 'Semua aman 🎉'
-                        : 'Bersih untuk filter ini',
+                        ? kDasAllClear.tr
+                        : kDasInboxCleanForFilter.tr,
                     message: _filter == _AdminInboxFilter.all
-                        ? 'Tidak ada hal yang perlu perhatian admin saat ini.'
-                        : 'Coba kategori lain untuk melihat item lainnya.',
+                        ? kDasInboxAdminNoAttention.tr
+                        : kDasInboxTryOtherCategory.tr,
                   ),
                 ),
               )
@@ -236,7 +237,7 @@ class _AdminInboxScreenState extends ConsumerState<AdminInboxScreen>
               borderRadius: BorderRadius.circular(11),
             ),
             child: Text(
-              total > 0 ? '$total item perlu tindak lanjut' : 'Tidak ada item',
+              total > 0 ? '$total ${kDasInboxItemsNeedAction.tr}' : kDasInboxNoItems.tr,
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,

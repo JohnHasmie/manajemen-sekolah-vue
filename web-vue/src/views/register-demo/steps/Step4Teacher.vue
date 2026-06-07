@@ -4,9 +4,11 @@
 -->
 <script setup lang="ts">
 import { computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
 const count = computed({
@@ -62,12 +64,12 @@ watch(
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Langkah 5 dari 12 · Guru
+      {{ t('registerDemo.step5Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
-      Berapa guru di sekolah Anda?
+      {{ t('registerDemo.step5Title') }}
     </h2>
-    <p class="text-[13px] text-slate-600 mb-4">Geser perkiraan. Bisa tambah nanti.</p>
+    <p class="text-[13px] text-slate-600 mb-4">{{ t('registerDemo.step5Subtitle') }}</p>
 
     <div class="flex items-center gap-4 mb-5">
       <input
@@ -82,7 +84,7 @@ watch(
     </div>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Cara isi nama
+      {{ t('registerDemo.step5FillModeLabel') }}
     </p>
     <div class="grid grid-cols-2 gap-3">
       <button
@@ -96,9 +98,9 @@ watch(
         @click="fillMode = 'random'"
       >
         <NavIcon name="zap" :size="20" :class="fillMode === 'random' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
-        <div class="text-[13px] font-bold">Acak otomatis</div>
+        <div class="text-[13px] font-bold">{{ t('registerDemo.step5RandomMode') }}</div>
         <div class="text-[11px]" :class="fillMode === 'random' ? 'text-role-admin' : 'text-slate-500'">
-          Rekomendasi · 5 detik
+          {{ t('registerDemo.step5RandomHint') }}
         </div>
       </button>
       <button
@@ -112,24 +114,25 @@ watch(
         @click="fillMode = 'manual'; syncManualLength()"
       >
         <NavIcon name="edit" :size="20" :class="fillMode === 'manual' ? 'text-role-admin' : 'text-slate-500'" class="mx-auto mb-1" />
-        <div class="text-[13px] font-bold">Atur manual</div>
+        <div class="text-[13px] font-bold">{{ t('registerDemo.step5ManualMode') }}</div>
         <div class="text-[11px]" :class="fillMode === 'manual' ? 'text-role-admin' : 'text-slate-500'">
-          Ketik nama + mapel
+          {{ t('registerDemo.step5ManualHint') }}
         </div>
       </button>
     </div>
 
     <div v-if="fillMode === 'random'" class="mt-4 border border-dashed border-slate-300 rounded-lg p-3 text-[12px] text-slate-600">
-      <strong class="text-slate-900 font-bold">Pratinjau:</strong>
-      Budi Santoso (Mat), Siti Rahmawati (IPA), Andi Pratama (B.Ind)
-      <span class="text-slate-400"> + {{ Math.max(0, count - 3) }} lagi</span>
+      <strong class="text-slate-900 font-bold">{{ t('registerDemo.step5PreviewLabel') }}</strong>
+      <!-- TODO(i18n): review -->
+      {{ t('registerDemo.step5PreviewNames') }}
+      <span class="text-slate-400"> + {{ Math.max(0, count - 3) }} {{ t('registerDemo.step5PreviewMore') }}</span>
     </div>
 
     <div v-else>
       <p class="text-[11.5px] text-slate-500 mt-4 mb-2">
-        Isi nama yang Anda tahu — sisanya akan di-generate acak otomatis.
-        Mapel dipilih dari daftar di
-        <span class="font-bold text-slate-700">Langkah 4</span>.
+        {{ t('registerDemo.step5ManualInstruction1') }}
+        {{ t('registerDemo.step5ManualInstruction2') }}
+        <span class="font-bold text-slate-700">{{ t('registerDemo.step5Step4Ref') }}</span>.
       </p>
 
       <p
@@ -137,30 +140,30 @@ watch(
         class="text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5 mb-2"
       >
         <NavIcon name="alert-circle" :size="13" class="inline-block -mt-0.5 mr-1" />
-        Belum ada mapel yang dipilih. Kembali ke Langkah 4 untuk pilih dulu.
+        {{ t('registerDemo.step5NoSubjects') }}
       </p>
 
       <div class="max-h-[280px] overflow-y-auto border border-slate-200 rounded-lg p-2 space-y-1.5">
         <div
-          v-for="(t, idx) in manualList"
+          v-for="(teacher, idx) in manualList"
           :key="idx"
           class="flex items-center gap-2"
         >
           <span class="w-6 text-[11px] text-slate-400 text-right">{{ idx + 1 }}.</span>
           <input
-            :value="t.name"
+            :value="teacher.name"
             type="text"
-            :placeholder="`Nama guru ${idx + 1} (opsional)`"
+            :placeholder="t('registerDemo.step5NamePlaceholder', { idx: idx + 1 })"
             class="flex-1 border border-slate-300 rounded px-2 py-1.5 text-[12.5px] outline-none focus:border-role-admin"
             @input="updateManual(idx, 'name', ($event.target as HTMLInputElement).value)"
           />
           <select
-            :value="t.subject ?? ''"
+            :value="teacher.subject ?? ''"
             class="w-40 border border-slate-300 rounded px-2 py-1.5 text-[12.5px] outline-none focus:border-role-admin bg-white"
             :disabled="subjectsList.length === 0"
             @change="updateManual(idx, 'subject', ($event.target as HTMLSelectElement).value)"
           >
-            <option value="">— acak —</option>
+            <option value="">{{ t('registerDemo.step5RandomOption') }}</option>
             <option v-for="name in subjectsList" :key="name" :value="name">
               {{ name }}
             </option>
@@ -169,9 +172,9 @@ watch(
       </div>
 
       <p class="text-[11px] text-slate-500 mt-2">
-        Tip: pilih
-        <code class="bg-slate-100 px-1.5 py-0.5 rounded text-[10.5px]">— acak —</code>
-        di kolom Mapel untuk round-robin distribusi otomatis.
+        {{ t('registerDemo.step5TipPrefix') }}
+        <code class="bg-slate-100 px-1.5 py-0.5 rounded text-[10.5px]">{{ t('registerDemo.step5RandomOption') }}</code>
+        {{ t('registerDemo.step5TipSuffix') }}
       </p>
     </div>
   </div>

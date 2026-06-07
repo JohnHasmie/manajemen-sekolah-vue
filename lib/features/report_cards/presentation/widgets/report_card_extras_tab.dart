@@ -13,6 +13,7 @@
 // through callbacks.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 class ReportCardExtrasTab extends StatelessWidget {
   final List<Map<String, dynamic>> extras;
@@ -48,14 +49,14 @@ class ReportCardExtrasTab extends StatelessWidget {
           icon: Icons.sports_soccer_rounded,
           iconBg: ColorUtils.success600.withValues(alpha: 0.10),
           iconFg: ColorUtils.success600,
-          title: 'Ekstrakurikuler',
+          title: kRepCarExtracurricular.tr,
           chip: '${extras.length} aktif',
           children: [
             for (var i = 0; i < extras.length; i++)
               _ExtraRow(
                 icon: Icons.star_rounded,
                 accent: ColorUtils.success600,
-                title: extras[i]['name']?.toString() ?? '(Tanpa nama)',
+                title: extras[i]['name']?.toString() ?? kRepCarNoName.tr,
                 subtitle: extras[i]['description']?.toString() ?? '',
                 gradeLabel: extras[i]['score']?.toString(),
                 onTap: () => _editExtra(context, i),
@@ -65,8 +66,8 @@ class ReportCardExtrasTab extends StatelessWidget {
                 },
               ),
             _AddCard(
-              title: 'Tambah Ekstrakurikuler',
-              subtitle: 'Catat kegiatan rutin & nilai',
+              title: kRepCarAddExtracurricular.tr,
+              subtitle: kRepCarRecordActivities.tr,
               onTap: () {
                 onAddExtra();
                 onMarkUnsaved();
@@ -86,14 +87,14 @@ class ReportCardExtrasTab extends StatelessWidget {
           icon: Icons.emoji_events_rounded,
           iconBg: ColorUtils.warning600.withValues(alpha: 0.10),
           iconFg: ColorUtils.warning600,
-          title: 'Prestasi',
+          title: kRepCarAchievement.tr,
           chip: '${achievements.length} prestasi',
           children: [
             for (var i = 0; i < achievements.length; i++)
               _ExtraRow(
                 icon: Icons.workspace_premium_rounded,
                 accent: ColorUtils.warning600,
-                title: achievements[i]['name']?.toString() ?? '(Tanpa nama)',
+                title: achievements[i]['name']?.toString() ?? kRepCarNoName.tr,
                 subtitle:
                     achievements[i]['type']?.toString() ??
                     achievements[i]['description']?.toString() ??
@@ -106,8 +107,8 @@ class ReportCardExtrasTab extends StatelessWidget {
                 },
               ),
             _AddCard(
-              title: 'Tambah Prestasi',
-              subtitle: 'Akademik / Non-akademik',
+              title: kRepCarAddAchievement.tr,
+              subtitle: kRepCarAcademicNonAcademic.tr,
               onTap: () {
                 onAddAchievement();
                 onMarkUnsaved();
@@ -128,7 +129,7 @@ class ReportCardExtrasTab extends StatelessWidget {
   Future<void> _editExtra(BuildContext context, int index) async {
     final result = await _showEditSheet(
       context,
-      title: 'Ekstrakurikuler',
+      title: kRepCarExtracurricular.tr,
       initialName: extras[index]['name']?.toString() ?? '',
       initialGrade: extras[index]['score']?.toString() ?? '',
       initialNote: extras[index]['description']?.toString() ?? '',
@@ -145,7 +146,7 @@ class ReportCardExtrasTab extends StatelessWidget {
   Future<void> _editAchievement(BuildContext context, int index) async {
     final result = await _showEditSheet(
       context,
-      title: 'Prestasi',
+      title: kRepCarAchievement.tr,
       initialName: achievements[index]['name']?.toString() ?? '',
       initialGrade: achievements[index]['type']?.toString() ?? '',
       initialNote: achievements[index]['description']?.toString() ?? '',
@@ -211,12 +212,12 @@ class ReportCardExtrasTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
-                _SheetField(label: 'Nama', controller: nameCtrl),
+                _SheetField(label: AppLocalizations.name.tr, controller: nameCtrl),
                 const SizedBox(height: 10),
                 _SheetField(label: gradeLabel, controller: gradeCtrl),
                 const SizedBox(height: 10),
                 _SheetField(
-                  label: 'Keterangan',
+                  label: kRepCarDescription.tr,
                   controller: noteCtrl,
                   maxLines: 3,
                 ),
@@ -234,7 +235,7 @@ class ReportCardExtrasTab extends StatelessWidget {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            'Batal',
+                            AppLocalizations.cancel.tr,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -269,9 +270,9 @@ class ReportCardExtrasTab extends StatelessWidget {
                             ],
                           ),
                           alignment: Alignment.center,
-                          child: const Text(
-                            'Simpan',
-                            style: TextStyle(
+                          child: Text(
+                            AppLocalizations.save.tr,
+                            style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,

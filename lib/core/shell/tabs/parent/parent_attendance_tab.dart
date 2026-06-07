@@ -24,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/parent_attendance_screen.dart';
 import 'package:manajemensekolah/features/students/data/student_service.dart';
 
@@ -59,7 +60,7 @@ class _ParentAttendanceTabState extends ConsumerState<ParentAttendanceTab> {
         if (mounted) {
           setState(() {
             _loading = false;
-            _error = 'Email akun tidak ditemukan.';
+            _error = kCorSheEmailNotFound.tr;
           });
         }
         return;
@@ -77,7 +78,7 @@ class _ParentAttendanceTabState extends ConsumerState<ParentAttendanceTab> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = 'Gagal memuat data anak: $e';
+        _error = kCorSheFailedToLoadChildData.tr.replaceAll(r'$e', '$e');
       });
     }
   }
@@ -89,7 +90,7 @@ class _ParentAttendanceTabState extends ConsumerState<ParentAttendanceTab> {
     }
     if (_error != null) {
       return _ErrorOrEmpty(
-        title: 'Tidak dapat memuat',
+        title: kCorSheUnableToLoad.tr,
         subtitle: _error!,
         onRetry: () {
           setState(() {
@@ -101,11 +102,9 @@ class _ParentAttendanceTabState extends ConsumerState<ParentAttendanceTab> {
       );
     }
     if (_students.isEmpty) {
-      return const _ErrorOrEmpty(
-        title: 'Belum ada anak terdaftar',
-        subtitle:
-            'Akun ini belum tertaut dengan siswa manapun. Hubungi admin '
-            'sekolah untuk menautkan.',
+      return _ErrorOrEmpty(
+        title: kCorSheNoChildrenRegistered.tr,
+        subtitle: kCorSheNoChildrenLinked.tr,
       );
     }
 
@@ -175,7 +174,7 @@ class _ErrorOrEmpty extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('Coba lagi'),
+                  label: Text(kTryAgain.tr),
                 ),
               ],
             ],

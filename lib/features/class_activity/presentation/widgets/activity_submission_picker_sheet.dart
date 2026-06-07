@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 import 'package:manajemensekolah/features/class_activity/data/class_activity_service.dart';
@@ -156,7 +157,7 @@ class _ActivitySubmissionPickerSheetState
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = 'Gagal memuat daftar siswa: $e';
+        _error = '${kClaActErrorLoadingStudents.tr} $e';
       });
     }
   }
@@ -195,9 +196,9 @@ class _ActivitySubmissionPickerSheetState
     final saved = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text(
-          'Catatan',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        title: Text(
+          kClaActTypeNote.tr,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
         contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
         content: Column(
@@ -219,7 +220,7 @@ class _ActivitySubmissionPickerSheetState
               maxLines: 3,
               maxLength: 200,
               decoration: InputDecoration(
-                hintText: 'Sakit, lupa bawa, izin pulang…',
+                hintText: kClaActNoteHintText.tr,
                 hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -231,7 +232,7 @@ class _ActivitySubmissionPickerSheetState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
+            child: Text(kCancel.tr),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
@@ -240,7 +241,7 @@ class _ActivitySubmissionPickerSheetState
               foregroundColor: Colors.white,
               elevation: 0,
             ),
-            child: const Text('Simpan'),
+            child: Text(kSave.tr),
           ),
         ],
       ),
@@ -289,13 +290,13 @@ class _ActivitySubmissionPickerSheetState
       SnackBarUtils.showSuccess(
         context,
         _isScored
-            ? 'Submit tersimpan · nilai disinkron ke Buku Nilai'
-            : 'Submit tersimpan',
+            ? kClaActSubmissionSavedWithGrades.tr
+            : kClaActSubmissionSaved.tr,
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      SnackBarUtils.showError(context, 'Gagal menyimpan: $e');
+      SnackBarUtils.showError(context, '${kClaActFailedToSave.tr} $e');
     }
   }
 
@@ -372,7 +373,7 @@ class _ActivitySubmissionPickerSheetState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Catat Submit',
+                      kClaActRecordSubmission.tr,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
@@ -395,7 +396,7 @@ class _ActivitySubmissionPickerSheetState
               ),
               if (!_loading && _rows.isNotEmpty)
                 PopupMenuButton<String>(
-                  tooltip: 'Aksi massal',
+                  tooltip: kClaActBulkActions.tr,
                   onSelected: _bulkSet,
                   itemBuilder: (ctx) {
                     // Header line — explains what "filter" means in this
@@ -404,13 +405,13 @@ class _ActivitySubmissionPickerSheetState
                     final statusLabel =
                         _statusLabels[_statusFilter] ?? _statusFilter;
                     final scope = _statusFilter == null
-                        ? 'semua siswa'
+                        ? kClaActAllStudents.tr
                         : 'siswa "$statusLabel"';
                     return [
                       PopupMenuItem<String>(
                         enabled: false,
                         child: Text(
-                          'Ubah $scope:',
+                          '${kClaActChange.tr} $scope:',
                           style: TextStyle(
                             fontSize: 11,
                             color: ColorUtils.slate500,
@@ -419,21 +420,21 @@ class _ActivitySubmissionPickerSheetState
                         ),
                       ),
                       const PopupMenuDivider(),
-                      const PopupMenuItem<String>(
+                      PopupMenuItem<String>(
                         value: _statusSudah,
-                        child: Text('Tandai sebagai Sudah'),
+                        child: Text(kClaActMarkAsSubmitted.tr),
                       ),
-                      const PopupMenuItem<String>(
+                      PopupMenuItem<String>(
                         value: _statusTelat,
-                        child: Text('Tandai sebagai Telat'),
+                        child: Text(kClaActMarkAsLate.tr),
                       ),
-                      const PopupMenuItem<String>(
+                      PopupMenuItem<String>(
                         value: _statusIzin,
-                        child: Text('Tandai sebagai Izin'),
+                        child: Text(kClaActMarkAsExcused.tr),
                       ),
-                      const PopupMenuItem<String>(
+                      PopupMenuItem<String>(
                         value: _statusBelum,
-                        child: Text('Reset ke Belum'),
+                        child: Text(kClaActResetToPending.tr),
                       ),
                     ];
                   },
@@ -446,7 +447,7 @@ class _ActivitySubmissionPickerSheetState
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Aksi',
+                          kClaActActions.tr,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -507,7 +508,7 @@ class _ActivitySubmissionPickerSheetState
       child: TextField(
         controller: _searchCtrl,
         decoration: InputDecoration(
-          hintText: 'Cari nama siswa…',
+          hintText: kClaActSearchStudentName.tr,
           hintStyle: TextStyle(color: ColorUtils.slate400, fontSize: 13),
           prefixIcon: Icon(
             Icons.search_rounded,
@@ -542,7 +543,7 @@ class _ActivitySubmissionPickerSheetState
     final c = _counts;
     final chips = <Widget>[
       _filterChip(
-        label: 'Semua',
+        label: kAll.tr,
         count: _rows.length,
         active: _statusFilter == null,
         onTap: () => setState(() => _statusFilter = null),
@@ -675,7 +676,7 @@ class _ActivitySubmissionPickerSheetState
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'Tidak ada siswa pada audiens kegiatan ini.',
+            kClaActNoStudentsInAudience.tr,
             textAlign: TextAlign.center,
             style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
           ),
@@ -691,8 +692,8 @@ class _ActivitySubmissionPickerSheetState
           padding: const EdgeInsets.all(24),
           child: Text(
             _statusFilter != null
-                ? 'Tidak ada siswa berstatus "$statusLabel".'
-                : 'Tidak ada siswa cocok dengan pencarian.',
+                ? '${kClaActNoStudentsWithStatus.tr} "$statusLabel".'
+                : kClaActNoStudentsMatch.tr,
             textAlign: TextAlign.center,
             style: TextStyle(color: ColorUtils.slate500, fontSize: 13),
           ),
@@ -767,7 +768,7 @@ class _ActivitySubmissionPickerSheetState
                     minHeight: 32,
                   ),
                   onPressed: () => _editNote(r),
-                  tooltip: note.isEmpty ? 'Beri catatan' : 'Edit catatan',
+                  tooltip: note.isEmpty ? kClaActAddNote.tr : kClaActEditNote.tr,
                   icon: Icon(
                     note.isEmpty
                         ? Icons.edit_note_rounded
@@ -847,7 +848,7 @@ class _ActivitySubmissionPickerSheetState
           color: ColorUtils.slate900,
         ),
         decoration: InputDecoration(
-          hintText: 'Nilai',
+          hintText: kClaActScore.tr,
           hintStyle: TextStyle(
             fontSize: 11.5,
             color: ColorUtils.slate400,
@@ -948,7 +949,7 @@ class _ActivitySubmissionPickerSheetState
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  child: const Text('Batal'),
+                  child: Text(kCancel.tr),
                 ),
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 
 /// Floating action button for sub-chapter detail screen.
@@ -67,7 +68,7 @@ class SubChapterFAB extends StatelessWidget {
                   size: 20,
                 ),
           label: Text(
-            isRegeneratingMateri ? 'Memproses...' : 'Ganti Materi',
+            isRegeneratingMateri ? kMatProcessing.tr : kMatReplaceMaterial.tr,
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -84,14 +85,14 @@ class SubChapterFAB extends StatelessWidget {
           return FloatingActionButton.extended(
             onPressed: () => SnackBarUtils.showInfo(
               this.context,
-              'Batas tambah kuis telah tercapai (${quizMax}x)',
+              kMatQuizLimitReached.tr,
             ),
             backgroundColor: ColorUtils.slate400,
             elevation: 2,
             icon: const Icon(Icons.info_outline, color: Colors.white, size: 18),
-            label: const Text(
-              'Batas Tercapai',
-              style: TextStyle(
+            label: Text(
+              kMatLimitReached.tr,
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
@@ -117,7 +118,7 @@ class SubChapterFAB extends StatelessWidget {
                 )
               : const Icon(Icons.add_rounded, color: Colors.white, size: 20),
           label: Text(
-            isAddingQuiz ? 'Memproses...' : 'Tambah Kuis',
+            isAddingQuiz ? kMatProcessing.tr : kMatAddQuiz.tr,
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -134,14 +135,14 @@ class SubChapterFAB extends StatelessWidget {
           return FloatingActionButton.extended(
             onPressed: () => SnackBarUtils.showInfo(
               this.context,
-              'Batas ganti referensi telah tercapai (${refMax}x)',
+              kMatReferenceLimitReached.tr,
             ),
             backgroundColor: ColorUtils.slate400,
             elevation: 2,
             icon: const Icon(Icons.info_outline, color: Colors.white, size: 18),
-            label: const Text(
-              'Batas Tercapai',
-              style: TextStyle(
+            label: Text(
+              kMatLimitReached.tr,
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
@@ -175,7 +176,7 @@ class SubChapterFAB extends StatelessWidget {
                   size: 20,
                 ),
           label: Text(
-            isRegeneratingRef ? 'Memproses...' : 'Ganti Referensi',
+            isRegeneratingRef ? kMatProcessing.tr : kMatReplaceReferences.tr,
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w600,

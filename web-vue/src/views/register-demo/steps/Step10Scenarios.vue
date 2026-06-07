@@ -16,6 +16,7 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import {
   SCENARIO_DEFINITIONS,
@@ -23,6 +24,7 @@ import {
 } from '@/types/demo';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 
 const enabled = computed(() => wizard.payload.scenarios.enabled);
@@ -56,19 +58,18 @@ const allOn = computed(
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Langkah 11 dari 12 · Skenario
+      {{ t('registerDemo.step12Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
-      Skenario apa yang ingin Anda uji?
+      {{ t('registerDemo.step12Title') }}
     </h2>
     <p class="text-[13px] text-slate-600 mb-4">
-      Centang skenario yang ingin kami isikan ke sekolah demo. Anda bisa
-      mematikan yang tidak diperlukan supaya data lebih ringan.
+      {{ t('registerDemo.step12Subtitle') }}
     </p>
 
     <div class="flex items-center justify-between mb-3">
       <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase">
-        {{ enabled.length }} dari {{ SCENARIO_DEFINITIONS.length }} dipilih
+        {{ enabled.length }} {{ t('registerDemo.step12CountLabel', { count: SCENARIO_DEFINITIONS.length }) }}
       </p>
       <div class="flex gap-1.5">
         <button
@@ -77,7 +78,7 @@ const allOn = computed(
           :disabled="allOn"
           @click="selectAll"
         >
-          Pilih semua
+          {{ t('registerDemo.step12SelectAll') }}
         </button>
         <button
           type="button"
@@ -85,7 +86,7 @@ const allOn = computed(
           :disabled="enabled.length === 0"
           @click="selectNone"
         >
-          Kosongkan
+          {{ t('registerDemo.step12ClearAll') }}
         </button>
       </div>
     </div>
@@ -122,7 +123,7 @@ const allOn = computed(
               v-if="isOn(s.key)"
               class="text-[10px] font-bold uppercase tracking-wider text-role-admin bg-role-admin/10 px-1.5 py-0.5 rounded"
             >
-              Aktif
+              {{ t('registerDemo.step12ActiveBadge') }}
             </span>
           </div>
           <p class="text-[12px] text-slate-600 leading-snug mt-0.5">
@@ -143,10 +144,7 @@ const allOn = computed(
     </div>
 
     <p class="text-[11.5px] text-slate-500 mt-4 leading-snug">
-      Setelah Anda klik <span class="font-bold">Buat sekolah demo</span>,
-      backend akan menyiapkan data dasar (sekolah, guru, kelas, siswa,
-      jadwal) lalu menjalankan tiap skenario yang dicentang. Proses ini
-      memerlukan 30–90 detik.
+      {{ t('registerDemo.step12FinalNote') }}
     </p>
   </div>
 </template>

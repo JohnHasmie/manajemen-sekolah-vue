@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 
 class ClassFinancePaymentOptionsSheet extends StatelessWidget {
@@ -51,7 +52,7 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
         status == 'paid' || status == 'verified' || status == 'success';
 
     return AppBottomSheet(
-      title: 'Opsi Pembayaran',
+      title: kFinPaymentOptions.tr,
       subtitle: isPaid ? 'Status: Lunas' : 'Status: Belum Lunas',
       icon: Icons.account_balance_wallet_rounded,
       primaryColor: primaryColor,
@@ -63,7 +64,7 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
           if (!isPaid)
             _OptionTile(
               icon: Icons.payments_rounded,
-              title: 'Bayar Manual',
+              title: kFinManualPayment.tr,
               subtitle: 'Catat pembayaran tunai / transfer',
               tone: _OptionTone.success,
               onTap: () {
@@ -74,8 +75,8 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
           if (!isPaid) const SizedBox(height: AppSpacing.sm),
           _OptionTile(
             icon: Icons.receipt_long_rounded,
-            title: 'Lihat Detail',
-            subtitle: 'Info tagihan & riwayat pembayaran',
+            title: kFinViewDetails.tr,
+            subtitle: kFinBillInfoHistory.tr,
             tone: _OptionTone.neutral,
             onTap: () {
               AppNavigator.pop(context);
@@ -86,8 +87,8 @@ class ClassFinancePaymentOptionsSheet extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             _OptionTile(
               icon: Icons.undo_rounded,
-              title: 'Batalkan Pembayaran',
-              subtitle: 'Kembalikan status ke belum lunas',
+              title: kFinCancelPaymentBtn.tr,
+              subtitle: kFinRevertToUnpaid.tr,
               tone: _OptionTone.danger,
               onTap: () {
                 AppNavigator.pop(context);

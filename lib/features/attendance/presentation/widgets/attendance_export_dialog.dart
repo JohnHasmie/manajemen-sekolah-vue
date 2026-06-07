@@ -11,6 +11,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
@@ -104,7 +105,7 @@ class _AttendanceExportDialogState
         'en': 'Export Attendance',
         'id': 'Export Absensi',
       }),
-      subtitle: 'Tahun Ajaran ${widget.activeYearName}',
+      subtitle: '${kAttAcademicYear.tr} ${widget.activeYearName}',
       icon: Icons.file_download_outlined,
       primaryColor: ColorUtils.getRoleColor('admin'),
       content: Column(
@@ -127,7 +128,7 @@ class _AttendanceExportDialogState
         ],
       ),
       footer: BottomSheetFooter(
-        primaryLabel: 'Export',
+        primaryLabel: kAttExport.tr,
         secondaryLabel: languageProvider.getTranslatedText({
           'en': 'Cancel',
           'id': 'Batal',

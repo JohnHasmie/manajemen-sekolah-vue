@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
@@ -32,7 +33,7 @@ Future<void> showPerStudentStatusPicker({
     title: student.name,
     subtitle:
         '$className · NIS ${student.studentNumber} · '
-        'Tap status di bawah untuk ubah, isi catatan opsional.',
+        '${kAttTapStatusToChange.tr}',
     icon: Icons.edit_note_rounded,
     primaryColor: ColorUtils.getRoleColor('guru'),
     contentPadding: EdgeInsets.zero,
@@ -168,7 +169,7 @@ class _PerStudentStatusPickerBodyState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'CATATAN (OPSIONAL)',
+                kAttNotesOptional.tr,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
@@ -188,7 +189,7 @@ class _PerStudentStatusPickerBodyState
                   height: 1.4,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Surat dari orang tua, demam tinggi…',
+                  hintText: kAttNotesPlaceholder.tr,
                   hintStyle: TextStyle(
                     fontSize: 12,
                     color: ColorUtils.slate400,
@@ -214,7 +215,7 @@ class _PerStudentStatusPickerBodyState
           ),
         ),
         BottomSheetFooter(
-          primaryLabel: _saving ? 'Menyimpan…' : 'Terapkan',
+          primaryLabel: _saving ? kAttSaving.tr : kAttApply.tr,
           primaryColor: primary,
           primaryEnabled: !_saving,
           onPrimary: _onApply,

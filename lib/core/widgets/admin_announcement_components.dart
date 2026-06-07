@@ -15,6 +15,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 // =====================================================================
 // AudienceMatrix
@@ -27,11 +28,11 @@ extension AudienceRoleLabel on AudienceRole {
   String get label {
     switch (this) {
       case AudienceRole.guru:
-        return 'Guru';
+        return kCorWidTeacher.tr;
       case AudienceRole.waliKelas:
-        return 'Wali Kelas';
+        return kHomeroomTeacher.tr;
       case AudienceRole.waliMurid:
-        return 'Wali Murid';
+        return kCorWidParent.tr;
     }
   }
 

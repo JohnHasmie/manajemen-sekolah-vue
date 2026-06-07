@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 import 'package:manajemensekolah/core/widgets/filter_section_header.dart';
@@ -165,10 +166,10 @@ class _AdminActivityFilterSheetState extends State<AdminActivityFilterSheet> {
     final primary = ColorUtils.getRoleColor('admin');
     final count = _activeFilterCount;
     return AppFilterBottomSheet(
-      title: 'Filter Kegiatan',
+      title: kClaActFilterActivities.tr,
       icon: Icons.event_note_rounded,
       headerSubtitle:
-          'Periode ${_period.labelId} · ${widget.previewCount} kegiatan',
+          'Periode ${_period.labelId} · ${widget.previewCount} ${kClaActActivities.tr}',
       primaryColor: primary,
       applyLabel: count > 0 ? 'Terapkan ($count)' : 'Terapkan Filter',
       onApply: () {
@@ -189,7 +190,7 @@ class _AdminActivityFilterSheetState extends State<AdminActivityFilterSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           FilterSectionHeader(
-            title: 'Periode',
+            title: kClaActPeriod.tr,
             icon: Icons.calendar_month_rounded,
             primaryColor: primary,
           ),
@@ -211,7 +212,7 @@ class _AdminActivityFilterSheetState extends State<AdminActivityFilterSheet> {
           ),
           const SizedBox(height: 16),
           FilterSectionHeader(
-            title: 'Kelas',
+            title: kClass.tr,
             icon: Icons.class_outlined,
             primaryColor: primary,
           ),
@@ -230,7 +231,7 @@ class _AdminActivityFilterSheetState extends State<AdminActivityFilterSheet> {
           ),
           const SizedBox(height: 16),
           FilterSectionHeader(
-            title: 'Mata Pelajaran',
+            title: kSubject.tr,
             icon: Icons.menu_book_outlined,
             primaryColor: primary,
           ),
@@ -249,7 +250,7 @@ class _AdminActivityFilterSheetState extends State<AdminActivityFilterSheet> {
           ),
           const SizedBox(height: 16),
           FilterSectionHeader(
-            title: 'Guru',
+            title: kTeacher.tr,
             icon: Icons.person_outline_rounded,
             primaryColor: primary,
           ),
@@ -261,7 +262,7 @@ class _AdminActivityFilterSheetState extends State<AdminActivityFilterSheet> {
           ),
           const SizedBox(height: 16),
           FilterSectionHeader(
-            title: 'Tipe Kegiatan',
+            title: kClaActActivityType.tr,
             icon: Icons.label_outline_rounded,
             primaryColor: primary,
           ),
@@ -335,7 +336,7 @@ class _TeacherAutocomplete extends StatelessWidget {
           controller: ctrl,
           focusNode: focusNode,
           decoration: InputDecoration(
-            hintText: 'Cari guru…',
+            hintText: kClaActSearchTeachers.tr,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 12,

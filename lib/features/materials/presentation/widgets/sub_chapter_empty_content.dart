@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/features/materials/presentation/widgets/material_ai_polling_view.dart';
 
@@ -44,7 +45,7 @@ class SubChapterEmptyContent extends StatelessWidget {
         pollingError!.toLowerCase().contains('menit') ||
         pollingError!.toLowerCase().contains('batas');
 
-    final title = isRateLimit ? 'Istirahat Sejenak' : 'Mohon Maaf, Ada Kendala';
+    final title = isRateLimit ? kMatTakeBreak.tr : kMatErrorTitle.tr;
     final icon = isRateLimit
         ? Icons.hourglass_empty_rounded
         : Icons.info_outline_rounded;
@@ -56,7 +57,7 @@ class SubChapterEmptyContent extends StatelessWidget {
     String displayMessage = pollingError!;
     if (isRateLimit) {
       displayMessage =
-          'Sistem membutuhkan sedikit waktu pemulihan untuk hasil terbaik. '
+          '${kMatRecoveryMsg.tr} '
           '$pollingError';
     }
 
@@ -121,9 +122,9 @@ class SubChapterEmptyContent extends StatelessWidget {
                     ),
                   ),
                   icon: const Icon(Icons.refresh_rounded, size: 20),
-                  label: const Text(
-                    'Coba Lagi',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  label: Text(
+                    kMatTryAgain.tr,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   onPressed: onGenerateTap,
                 ),
@@ -154,7 +155,7 @@ class SubChapterEmptyContent extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
           Text(
-            'Belum Ada Konten',
+            kMatNoContent.tr,
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w800,
@@ -166,7 +167,7 @@ class SubChapterEmptyContent extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              'Materi, soal, dan referensi belum tersedia untuk sub-bab ini.',
+              kMatNoContentMsg.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -194,7 +195,7 @@ class SubChapterEmptyContent extends StatelessWidget {
                       )
                     : const Icon(Icons.auto_awesome_rounded, size: 22),
                 label: Text(
-                  isLoadingAi ? ' Sedang Memproses...' : ' Generate Materi AI',
+                  isLoadingAi ? ' ${kMatProcessingLong.tr}' : ' ${kMatGenerateAi.tr}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

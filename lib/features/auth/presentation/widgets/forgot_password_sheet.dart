@@ -14,6 +14,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
@@ -29,8 +30,8 @@ Future<bool> showForgotPasswordSheet({
 }) async {
   final result = await AppBottomSheet.show<bool>(
     context: context,
-    title: 'Lupa Kata Sandi',
-    subtitle: 'Kami akan mengirim tautan reset ke email Anda.',
+    title: kAutForgotPasswordTitle.tr,
+    subtitle: kAutForgotPasswordSubtitle.tr,
     icon: Icons.lock_reset_rounded,
     primaryColor: ColorUtils.brandCobalt,
     contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
@@ -80,7 +81,7 @@ class _ForgotPasswordSheetBodyState extends State<_ForgotPasswordSheetBody> {
   Future<void> _submit() async {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty || !_canSubmit) {
-      setState(() => _inlineError = 'Format email tidak valid.');
+      setState(() => _inlineError = kAutEmailFormatInvalid.tr);
       return;
     }
     setState(() {
@@ -99,8 +100,7 @@ class _ForgotPasswordSheetBodyState extends State<_ForgotPasswordSheetBody> {
           context,
           (result['message']?.toString().trim().isNotEmpty == true
               ? result['message'].toString()
-              : 'Jika email terdaftar, tautan reset akan dikirim. '
-                    'Periksa kotak masuk Anda.'),
+              : kAutForgotPasswordSuccess.tr),
         );
       });
     } catch (e) {
@@ -123,7 +123,7 @@ class _ForgotPasswordSheetBodyState extends State<_ForgotPasswordSheetBody> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _label('Email Terdaftar', required: true),
+          _label(kAutRegisteredEmail.tr, required: true),
           const SizedBox(height: 8),
           TextField(
             controller: _emailCtrl,
@@ -195,7 +195,7 @@ class _ForgotPasswordSheetBodyState extends State<_ForgotPasswordSheetBody> {
           ] else ...[
             const SizedBox(height: 6),
             Text(
-              'Tautan akan kedaluwarsa setelah 30 menit.',
+              kAutLinkExpiry.tr,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -225,8 +225,7 @@ class _ForgotPasswordSheetBodyState extends State<_ForgotPasswordSheetBody> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Jika Anda tidak menerima email dalam 5 menit, '
-                    'periksa folder spam atau hubungi admin sekolah.',
+                    kAutCheckSpam.tr,
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,
@@ -240,8 +239,8 @@ class _ForgotPasswordSheetBodyState extends State<_ForgotPasswordSheetBody> {
           ),
           const SizedBox(height: 16),
           BottomSheetFooter(
-            primaryLabel: _busy ? 'Mengirim…' : 'Kirim Tautan',
-            secondaryLabel: 'Batal',
+            primaryLabel: _busy ? kAutSending.tr : kAutSendLink.tr,
+            secondaryLabel: kCancel.tr,
             primaryColor: cobalt,
             primaryEnabled: _canSubmit && !_busy,
             onPrimary: () {

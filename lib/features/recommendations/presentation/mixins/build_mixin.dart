@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
 import 'package:manajemensekolah/core/widgets/empty_state.dart';
@@ -176,14 +177,14 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
     if (_statusFilter == _filterActive) {
       filters.add(
         ActiveFilter(
-          label: 'Sudah ada rekomendasi',
+          label: kRecRecommendationsExist.tr,
           onRemove: () => setState(() => _statusFilter = null),
         ),
       );
     } else if (_statusFilter == _filterEmpty) {
       filters.add(
         ActiveFilter(
-          label: 'Belum ada rekomendasi',
+          label: kRecNoRecommendationsLong.tr,
           onRemove: () => setState(() => _statusFilter = null),
         ),
       );
@@ -259,8 +260,8 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
 
     return BrandPageHeader(
       role: 'guru',
-      subtitle: 'Guru · Rekomendasi',
-      title: 'Rekomendasi AI',
+      subtitle: kRecHubSubtitle.tr,
+      title: kRecAITitle.tr,
       isRealtimeFresh: true,
       kpiOverlayHeight: 45,
       onBackPressed: () => AppNavigator.pop(context),
@@ -276,11 +277,11 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
     final homeroom = _homeroomClassName;
     return RoleToggleChipRow(
       roles: [
-        RoleOption.mengajar(subLabel: 'Mengajar'),
+        RoleOption.mengajar(subLabel: kRecTeaching.tr),
         RoleOption.waliKelas(
           classId: homeroom ?? 'wali',
           className: homeroom ?? 'Wali',
-          subLabel: homeroom != null ? 'Kelas $homeroom' : 'Wali Kelas',
+          subLabel: homeroom != null ? kRecClass.tr : 'Wali Kelas',
         ),
       ],
       selectedRoleId: isHomeroomView
@@ -403,7 +404,7 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
                 onChanged: (v) => setState(() => _searchQuery = v),
                 style: TextStyle(fontSize: 12.5, color: ColorUtils.slate900),
                 decoration: InputDecoration(
-                  hintText: 'Cari kelas atau mata pelajaran…',
+                  hintText: kRecSearchClassesOrSubjects.tr,
                   hintStyle: TextStyle(
                     fontSize: 12,
                     color: ColorUtils.slate400,
@@ -439,11 +440,11 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
 
   Widget _buildBody(BuildContext context) {
     final emptyTitle = isHomeroomView
-        ? 'Belum Ada Kelas Perwalian'
-        : 'Belum Ada Kelas';
+        ? kRecNoHomeroomClasses.tr
+        : kRecNoClasses.tr;
     final emptySubtitle = isHomeroomView
-        ? 'Anda belum ditugaskan sebagai wali kelas'
-        : 'Tidak ada kelas mengajar yang ditugaskan';
+        ? kRecNotAssignedAsHomeroom.tr
+        : kRecNoTeachingClasses.tr;
     return TeacherAsyncView(
       isLoading: isInitialLoading,
       errorMessage: initialErrorMessage,
@@ -475,7 +476,7 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
 
     showFilterSheet(
       context: context,
-      title: 'Filter Kelas',
+      title: kRecFilterClasses.tr,
       primaryColor: primaryColor,
       onApply: () {
         Navigator.of(context).pop();
@@ -493,19 +494,19 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   FilterSectionHeader(
-                    title: 'Status Rekomendasi',
+                    title: kRecRecommendationStatus.tr,
                     icon: Icons.checklist_rounded,
                     primaryColor: primaryColor,
                   ),
                   FilterChipGrid<String>(
-                    options: const [
+                    options: [
                       FilterOption<String>(
                         value: _filterActive,
-                        label: 'Sudah ada',
+                        label: kRecHasRecommendations.tr,
                       ),
                       FilterOption<String>(
                         value: _filterEmpty,
-                        label: 'Belum ada',
+                        label: kRecNoRecommendationsShort.tr,
                       ),
                     ],
                     selectedValue: tStatus,
@@ -561,11 +562,11 @@ mixin BuildMixin on ConsumerState<LearningRecommendationClassScreen> {
           height: constraints.maxHeight,
           child: EmptyState(
             icon: Icons.search_off_rounded,
-            title: 'Tidak Ada Hasil',
+            title: kRecNoResults.tr,
             subtitle: _searchQuery.isNotEmpty
-                ? 'Tidak ada kelas cocok dengan "$_searchQuery"'
-                : 'Tidak ada kelas yang cocok dengan filter',
-            buttonText: 'Reset Filter',
+                ? kRecNoClassesMatch.tr
+                : kRecNoClassesMatchFilter.tr,
+            buttonText: kRecResetFilter.tr,
             onPressed: _clearAllFilters,
           ),
         ),

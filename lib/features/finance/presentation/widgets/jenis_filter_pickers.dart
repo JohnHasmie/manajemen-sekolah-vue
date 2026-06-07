@@ -21,6 +21,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
@@ -77,8 +78,8 @@ class _JenisStatusPickerSheetState extends State<_JenisStatusPickerSheet> {
   Widget build(BuildContext context) {
     final navy = widget.primaryColor;
     return AppBottomSheet(
-      title: 'Status jenis',
-      subtitle: 'Pilih jenis pembayaran berdasarkan status aktivasi.',
+      title: kFinTypeStatus.tr,
+      subtitle: kFinTypeStatusDesc.tr,
       icon: Icons.toggle_on_rounded,
       primaryColor: navy,
       maxHeightFactor: 0.5,
@@ -89,8 +90,8 @@ class _JenisStatusPickerSheetState extends State<_JenisStatusPickerSheet> {
           const SizedBox(height: 4),
           _Option(
             icon: Icons.list_rounded,
-            label: 'Semua',
-            description: 'Tampilkan semua jenis tanpa filter status.',
+            label: kFinAll.tr,
+            description: kFinAllTypesDesc.tr,
             iconColor: ColorUtils.slate500,
             primaryColor: navy,
             selected: _value == null,
@@ -99,8 +100,8 @@ class _JenisStatusPickerSheetState extends State<_JenisStatusPickerSheet> {
           const SizedBox(height: 8),
           _Option(
             icon: Icons.check_circle_rounded,
-            label: 'Aktif',
-            description: 'Hanya jenis yang sedang aktif menagih.',
+            label: kFinActive.tr,
+            description: kFinActiveTypesDesc.tr,
             iconColor: const Color(0xFF059669),
             primaryColor: navy,
             selected: _value == 'active',
@@ -109,8 +110,8 @@ class _JenisStatusPickerSheetState extends State<_JenisStatusPickerSheet> {
           const SizedBox(height: 8),
           _Option(
             icon: Icons.pause_circle_filled_rounded,
-            label: 'Nonaktif',
-            description: 'Jenis yang dijeda dan tidak membuat tagihan baru.',
+            label: kFinInactive.tr,
+            description: kFinInactiveTypesDesc.tr,
             iconColor: ColorUtils.slate500,
             primaryColor: navy,
             selected: _value == 'inactive',
@@ -120,9 +121,9 @@ class _JenisStatusPickerSheetState extends State<_JenisStatusPickerSheet> {
         ],
       ),
       footer: BottomSheetFooter(
-        primaryLabel: 'Terapkan',
+        primaryLabel: kFinApply.tr,
         primaryColor: navy,
-        secondaryLabel: 'Batal',
+        secondaryLabel: kFinCancel.tr,
         onPrimary: () => AppNavigator.pop(context, JenisFilterResult(_value)),
         onSecondary: () => AppNavigator.pop(context),
       ),
@@ -175,8 +176,8 @@ class _JenisPeriodPickerSheetState extends State<_JenisPeriodPickerSheet> {
   Widget build(BuildContext context) {
     final navy = widget.primaryColor;
     return AppBottomSheet(
-      title: 'Periode penagihan',
-      subtitle: 'Pilih jenis pembayaran berdasarkan frekuensi penagihan.',
+      title: kFinBillingPeriod.tr,
+      subtitle: kFinBillingPeriodDesc.tr,
       icon: Icons.schedule_rounded,
       primaryColor: navy,
       maxHeightFactor: 0.7,
@@ -187,8 +188,8 @@ class _JenisPeriodPickerSheetState extends State<_JenisPeriodPickerSheet> {
           const SizedBox(height: 4),
           _Option(
             icon: Icons.list_rounded,
-            label: 'Semua periode',
-            description: 'Tanpa filter frekuensi.',
+            label: kFinAllPeriods.tr,
+            description: kFinNoFrequencyFilter.tr,
             iconColor: ColorUtils.slate500,
             primaryColor: navy,
             selected: _value == null,
@@ -197,8 +198,8 @@ class _JenisPeriodPickerSheetState extends State<_JenisPeriodPickerSheet> {
           const SizedBox(height: 8),
           _Option(
             icon: Icons.looks_one_rounded,
-            label: 'Sekali',
-            description: 'Tagihan sekali jalan tanpa pengulangan.',
+            label: kFinOnce.tr,
+            description: kFinOnceDesc.tr,
             iconColor: navy,
             primaryColor: navy,
             selected: _value == 'sekali bayar',
@@ -207,8 +208,8 @@ class _JenisPeriodPickerSheetState extends State<_JenisPeriodPickerSheet> {
           const SizedBox(height: 8),
           _Option(
             icon: Icons.calendar_view_month_rounded,
-            label: 'Bulanan',
-            description: 'Tagihan otomatis terbit setiap bulan.',
+            label: kFinMonthly.tr,
+            description: kFinMonthlyDesc.tr,
             iconColor: navy,
             primaryColor: navy,
             selected: _value == 'bulanan',
@@ -217,8 +218,8 @@ class _JenisPeriodPickerSheetState extends State<_JenisPeriodPickerSheet> {
           const SizedBox(height: 8),
           _Option(
             icon: Icons.date_range_rounded,
-            label: 'Semester',
-            description: 'Tagihan otomatis terbit per semester.',
+            label: kFinSemester.tr,
+            description: kFinSemesterDesc.tr,
             iconColor: navy,
             primaryColor: navy,
             selected: _value == 'semester',
@@ -227,8 +228,8 @@ class _JenisPeriodPickerSheetState extends State<_JenisPeriodPickerSheet> {
           const SizedBox(height: 8),
           _Option(
             icon: Icons.calendar_today_rounded,
-            label: 'Tahunan',
-            description: 'Tagihan otomatis terbit setiap tahun.',
+            label: kFinYearly.tr,
+            description: kFinYearlyDesc.tr,
             iconColor: navy,
             primaryColor: navy,
             selected: _value == 'tahunan',
@@ -238,9 +239,9 @@ class _JenisPeriodPickerSheetState extends State<_JenisPeriodPickerSheet> {
         ],
       ),
       footer: BottomSheetFooter(
-        primaryLabel: 'Terapkan',
+        primaryLabel: kFinApply.tr,
         primaryColor: navy,
-        secondaryLabel: 'Batal',
+        secondaryLabel: kFinCancel.tr,
         onPrimary: () => AppNavigator.pop(context, JenisFilterResult(_value)),
         onSecondary: () => AppNavigator.pop(context),
       ),

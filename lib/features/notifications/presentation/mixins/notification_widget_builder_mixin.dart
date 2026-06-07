@@ -8,6 +8,15 @@ import 'package:manajemensekolah/features/notifications/presentation/mixins/noti
 import 'package:manajemensekolah/features/notifications/presentation/mixins/notification_read_state_mixin.dart';
 import 'package:manajemensekolah/features/notifications/presentation/mixins/date_formatting_mixin.dart';
 
+const kNotNotificationsEmpty = {
+  'en': 'No notifications',
+  'id': 'Tidak ada notifikasi',
+};
+const kNotNotificationsEmptyHint = {
+  'en': 'New notifications will appear here',
+  'id': 'Notifikasi baru akan muncul di sini',
+};
+
 /// Mixin for building header, empty state, and card widgets.
 mixin NotificationWidgetBuilderMixin
     on NotificationTypeMixin, NotificationReadStateMixin, DateFormattingMixin {
@@ -152,7 +161,7 @@ mixin NotificationWidgetBuilderMixin
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                'Tidak ada notifikasi',
+                kNotNotificationsEmpty.tr,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -161,7 +170,7 @@ mixin NotificationWidgetBuilderMixin
               ),
               const SizedBox(height: 6),
               Text(
-                'Notifikasi baru akan muncul di sini',
+                kNotNotificationsEmptyHint.tr,
                 style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
               ),
             ],

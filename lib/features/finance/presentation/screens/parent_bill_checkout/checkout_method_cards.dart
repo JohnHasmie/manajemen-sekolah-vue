@@ -88,7 +88,7 @@ extension _ParentBillCheckoutMethodCards on _ParentBillCheckoutScreenState {
           const SizedBox(height: AppSpacing.md),
           // Salin nominal pill
           ParentCheckoutCopyPill(
-            label: 'Nominal',
+            label: kFinNominal.tr,
             value: _formatRupiah(_session.totalFor(_method)),
             onCopy: () => _toastCopied('Nominal'),
           ),

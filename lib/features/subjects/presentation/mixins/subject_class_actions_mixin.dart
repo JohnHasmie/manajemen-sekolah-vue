@@ -56,8 +56,8 @@ mixin SubjectClassActionsMixin {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Tambah Kelas',
+                Text(
+                  kAddClass.tr,
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
@@ -66,7 +66,7 @@ mixin SubjectClassActionsMixin {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Pilih kelas untuk ditambahkan',
+                  kSubSelectClassesForAdd.tr,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.white.withValues(alpha: 0.8),
@@ -115,7 +115,7 @@ mixin SubjectClassActionsMixin {
         title: Text(
           (() {
             final model = Classroom.fromJson(classItem);
-            return model.name.isEmpty ? 'Kelas' : model.name;
+            return model.name.isEmpty ? kSubClassGeneric.tr : model.name;
           })(),
           style: const TextStyle(fontWeight: FontWeight.w500),
         ),
@@ -127,12 +127,12 @@ mixin SubjectClassActionsMixin {
               children: [
                 if ((model.gradeLevel ?? '').isNotEmpty)
                   Text(
-                    'Tingkat: ${model.gradeLevel}',
+                    '${kSubGradeLabel.tr}${model.gradeLevel}',
                     style: const TextStyle(fontSize: 12),
                   ),
                 if ((model.homeroomTeacherName ?? '').isNotEmpty)
                   Text(
-                    'Wali: ${model.homeroomTeacherName}',
+                    '${kSubWaliLabel.tr}${model.homeroomTeacherName}',
                     style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
                   ),
               ],
@@ -194,8 +194,8 @@ mixin SubjectClassActionsMixin {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 elevation: 2,
               ),
-              child: const Text(
-                'Lihat Semua',
+              child: Text(
+                kSubViewAll.tr,
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),

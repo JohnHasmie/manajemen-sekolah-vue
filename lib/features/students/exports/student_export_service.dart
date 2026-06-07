@@ -45,7 +45,7 @@ class ExcelService {
       // Create a new Excel document
       final Workbook workbook = Workbook();
       final Worksheet sheet = workbook.worksheets[0];
-      sheet.name = 'Data Siswa';
+      sheet.name = kStuStudentData.tr;
 
       // Add header row
       sheet.getRangeByIndex(1, 1).setText('NIS');
@@ -146,7 +146,7 @@ class ExcelService {
       // Create a new Excel document
       final Workbook workbook = Workbook();
       final Worksheet sheet = workbook.worksheets[0];
-      sheet.name = 'Template Siswa';
+      sheet.name = kStuStudentTemplate.tr;
 
       // Add header row
       sheet.getRangeByIndex(1, 1).setText('NIS*');
@@ -169,19 +169,18 @@ class ExcelService {
       sheet.getRangeByIndex(2, 1).setText('12345');
       sheet.getRangeByIndex(2, 2).setText('John Doe');
       sheet.getRangeByIndex(2, 3).setText('10 IPA 1');
-      sheet.getRangeByIndex(2, 4).setText('Laki-laki');
+      sheet.getRangeByIndex(2, 4).setText(kStuMale.tr);
       sheet.getRangeByIndex(2, 5).setText('2005-01-15');
-      sheet.getRangeByIndex(2, 6).setText('Jl. Contoh No. 123');
+      // TODO(i18n): review
+      sheet.getRangeByIndex(2, 6).setText(kStuExampleAddress.tr);
       sheet.getRangeByIndex(2, 7).setText('Jane Doe');
       sheet.getRangeByIndex(2, 8).setText('jane@example.com');
       sheet.getRangeByIndex(2, 9).setText('08123456789');
 
       // Add notes
-      sheet.getRangeByIndex(4, 1).setText('* Wajib diisi');
+      sheet.getRangeByIndex(4, 1).setText(kStuRequiredFields.tr);
       sheet.getRangeByIndex(5, 1).setText(AppLocalizations.dateFormatHint.tr);
-      sheet
-          .getRangeByIndex(6, 1)
-          .setText('Jenis Kelamin: Laki-laki / Perempuan');
+      sheet.getRangeByIndex(6, 1).setText(kStuGenderOptions.tr);
 
       // Auto fit columns
       for (int i = 1; i <= 9; i++) {
@@ -227,10 +226,10 @@ class ExcelService {
   /// software.
   static Future<void> downloadTemplateCSV(BuildContext context) async {
     try {
-      const String csvContent =
+      final String csvContent =
           '''NIS*,Name*,Class*,Gender*,Date of Birth*,Address*,Parent Name*,Parent Email,Phone Number*
 12345,John Doe,10 IPA 1,Laki-laki,2005-01-15,Jl. Contoh No. 123,Jane Doe,jane@example.com,08123456789
-*Wajib diisi,Format tanggal: YYYY-MM-DD,Jenis Kelamin: Laki-laki / Perempuan''';
+${kStuCsvTemplateNotes.tr}''';
 
       // Get directory
       final Directory directory = await getApplicationDocumentsDirectory();

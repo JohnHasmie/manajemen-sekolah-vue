@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/cache_service.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_error_state.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
@@ -224,15 +225,15 @@ class _LearningRecommendationResultScreenState
           SnackBarUtils.showInfo(
             context,
             newStatus == 'completed'
-                ? 'Rekomendasi ditandai sudah diterapkan'
-                : 'Rekomendasi dikembalikan ke belum diterapkan',
+                ? kRecMarkedApplied.tr
+                : kRecRevertedNotApplied.tr,
           );
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _updatingIds.remove(recId));
-        SnackBarUtils.showError(context, 'Gagal memperbarui status');
+        SnackBarUtils.showError(context, kRecFailedToUpdateStatus.tr);
       }
     }
   }
@@ -494,22 +495,22 @@ class _LearningRecommendationResultScreenState
               spacing: 6,
               runSpacing: 6,
               children: [
-                _HeroPill(label: 'AI · $_totalRecs saran', color: violet),
+                _HeroPill(label: kRecAISuggestions.tr, color: violet),
                 if (_pendingCount > 0)
                   _HeroPill(
-                    label: '$_pendingCount PENDING',
+                    label: '$_pendingCount ${kRecPendingUpper.tr}',
                     color: ColorUtils.warning600,
                   ),
                 if (_inProgressCount > 0)
-                  _HeroPill(label: '$_inProgressCount PROSES', color: cobalt),
+                  _HeroPill(label: '$_inProgressCount ${kRecInProgressUpper.tr}', color: cobalt),
                 if (_completedCount > 0)
                   _HeroPill(
-                    label: '$_completedCount SELESAI',
+                    label: '$_completedCount ${kRecCompletedUpper.tr}',
                     color: ColorUtils.success600,
                   ),
                 if (_shareReadCount > 0)
                   _HeroPill(
-                    label: '$_shareReadCount DIBACA WALI',
+                    label: '$_shareReadCount ${kRecReadByGuardianUpper.tr}',
                     color: ColorUtils.success600,
                   ),
               ],
@@ -530,7 +531,7 @@ class _LearningRecommendationResultScreenState
         child: Row(
           children: [
             _ChipPill(
-              label: 'Semua',
+              label: kRecAll.tr,
               count: _totalRecs,
               active: _statusFilter == 'all',
               color: cobalt,
@@ -538,7 +539,7 @@ class _LearningRecommendationResultScreenState
             ),
             const SizedBox(width: 6),
             _ChipPill(
-              label: 'Pending',
+              label: kRecPending.tr,
               count: _pendingCount,
               active: _statusFilter == 'pending',
               color: ColorUtils.warning600,
@@ -546,7 +547,7 @@ class _LearningRecommendationResultScreenState
             ),
             const SizedBox(width: 6),
             _ChipPill(
-              label: 'Proses',
+              label: kRecInProgressTitle.tr,
               count: _inProgressCount,
               active: _statusFilter == 'in_progress',
               color: cobalt,
@@ -554,7 +555,7 @@ class _LearningRecommendationResultScreenState
             ),
             const SizedBox(width: 6),
             _ChipPill(
-              label: 'Selesai',
+              label: kRecCompleted.tr,
               count: _completedCount,
               active: _statusFilter == 'completed',
               color: ColorUtils.success600,
@@ -578,10 +579,10 @@ class _LearningRecommendationResultScreenState
       );
     }
     if (_recommendations.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.lightbulb_outline,
-        title: 'Belum Ada Rekomendasi',
-        subtitle: 'Generate rekomendasi dari halaman kelas terlebih dahulu',
+        title: kRecNoRecommendationsYetTitle.tr,
+        subtitle: kRecGenerateFromClassPageFirst.tr,
       );
     }
     final filtered = _filteredRecommendations;
@@ -593,7 +594,7 @@ class _LearningRecommendationResultScreenState
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Text(
-                  'Tidak ada rekomendasi dengan filter ini',
+                  kRecNoRecommendationsWithFilter.tr,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: ColorUtils.slate400),
                 ),

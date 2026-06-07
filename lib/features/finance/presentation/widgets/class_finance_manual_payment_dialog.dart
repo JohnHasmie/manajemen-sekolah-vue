@@ -302,8 +302,8 @@ class _ManualPaymentSheetContentState extends State<_ManualPaymentSheetContent>
   @override
   Widget build(BuildContext context) {
     return AppBottomSheet(
-      title: 'Unggah Bukti Pembayaran',
-      subtitle: 'Catat pembayaran manual siswa',
+      title: kFinUploadPaymentProof.tr,
+      subtitle: kFinRecordManualPayment.tr,
       icon: Icons.receipt_long_rounded,
       primaryColor: widget.primaryColor,
       maxHeightFactor: 0.85,

@@ -4,8 +4,10 @@
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 
+const { t } = useI18n();
 const auth = useAuthStore();
 
 const query = ref('');
@@ -74,10 +76,10 @@ async function handleConfirm() {
         HALO, {{ userName.toUpperCase() }}
       </div>
       <h2 class="text-[17px] font-black text-slate-900 tracking-[-0.3px]">
-        Pilih Sekolah
+        {{ t('auth.school.title') }}
       </h2>
       <p class="text-[12px] text-slate-500 font-semibold mt-0.5 leading-relaxed">
-        {{ schools.length <= 1 ? 'Lanjutkan ke sekolah Anda' : `Anda terdaftar di ${schools.length} sekolah · pilih untuk melanjutkan` }}
+        {{ schools.length <= 1 ? t('auth.school.subtitleSingle') : t('auth.school.subtitleMultiple', { count: schools.length }) }}
       </p>
       
       <!-- Step Dots -->
@@ -96,7 +98,7 @@ async function handleConfirm() {
       <input
         v-model="query"
         type="text"
-        placeholder="Cari nama sekolah..."
+        :placeholder="t('auth.searchSchool')"
         class="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-3 text-[13px] font-semibold text-slate-900 placeholder:text-slate-400 focus:border-brand-cobalt focus:ring-0 focus:outline-none transition-all"
       />
     </div>
@@ -104,7 +106,7 @@ async function handleConfirm() {
     <div class="max-h-[320px] overflow-y-auto pr-1 -mr-1 space-y-4">
       <!-- Utama -->
       <div v-if="utama.length > 0">
-        <div class="text-[10px] font-extrabold text-slate-400 tracking-[0.8px] mb-2 uppercase">UTAMA</div>
+        <div class="text-[10px] font-extrabold text-slate-400 tracking-[0.8px] mb-2 uppercase">{{ t('auth.school.primary') }}</div>
         <div v-for="s in utama" :key="s.id || s.school_id" class="space-y-2">
           <button
             type="button"
@@ -125,7 +127,7 @@ async function handleConfirm() {
                   v-for="r in s.roles" :key="r"
                   class="px-1.5 py-0.5 rounded-full bg-brand-cobalt/10 text-brand-cobalt text-[8px] font-black tracking-[0.3px] uppercase"
                 >
-                  {{ r === 'administrator' ? 'ADMIN' : r === 'teacher' ? 'GURU' : r === 'parent' ? 'WALI' : r.toUpperCase() }}
+                  {{ r === 'administrator' ? t('role.admin') : r === 'teacher' ? t('role.guru') : r === 'parent' ? t('role.wali') : r.toUpperCase() }}
                 </span>
               </div>
             </div>
@@ -139,7 +141,7 @@ async function handleConfirm() {
       <!-- Lainnya -->
       <div v-if="lainnya.length > 0">
         <div class="text-[10px] font-extrabold text-slate-400 tracking-[0.8px] mb-2 uppercase">
-          {{ utama.length === 0 ? 'PILIH SEKOLAH' : 'SEKOLAH LAIN' }}
+          {{ utama.length === 0 ? t('auth.school.chooseLabel') : t('auth.school.othersLabel') }}
         </div>
         <div class="space-y-2">
           <button
@@ -176,11 +178,11 @@ async function handleConfirm() {
             <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25" />
             <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
           </svg>
-          <span class="text-[13.5px] tracking-wide uppercase">Memproses…</span>
+          <span class="text-[13.5px] tracking-wide uppercase">{{ t('auth.processing') }}</span>
         </template>
         <template v-else>
           <span class="text-[13.5px] tracking-wide uppercase truncate">
-            {{ candidateName ? `LANJUTKAN KE ${candidateName.length > 20 ? candidateName.substring(0, 18) + '...' : candidateName}` : 'LANJUTKAN' }}
+            {{ candidateName ? t('auth.school.continueButton', { candidateName: candidateName.length > 20 ? candidateName.substring(0, 18) + '...' : candidateName }) : 'LANJUTKAN' }}
           </span>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         </template>
@@ -191,7 +193,7 @@ async function handleConfirm() {
         class="w-full text-center text-[12px] font-extrabold text-slate-500 hover:text-slate-800"
         @click="auth.goBack()"
       >
-        Bukan akun Anda? <span class="text-brand-cobalt uppercase">Keluar</span>
+        {{ t('auth.notYourAccountLogout') }}
       </button>
     </div>
   </div>

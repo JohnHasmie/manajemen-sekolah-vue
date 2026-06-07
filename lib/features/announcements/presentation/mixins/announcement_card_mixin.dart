@@ -27,6 +27,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
 import 'package:manajemensekolah/features/announcements/presentation/screens/parent_announcement_screen.dart';
@@ -279,7 +280,7 @@ mixin AnnouncementCardMixin on ConsumerState<ParentAnnouncementScreen> {
           ),
           const SizedBox(width: 6),
           Text(
-            'Penting',
+            kAnnImportant.tr,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,

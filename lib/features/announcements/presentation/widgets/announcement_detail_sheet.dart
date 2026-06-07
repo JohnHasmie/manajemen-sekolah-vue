@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/features/announcements/domain/models/announcement_event.dart';
 import 'package:manajemensekolah/features/announcements/presentation/widgets/announcement_event_detail_hero.dart';
@@ -72,7 +73,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = (announcementData['title'] ?? 'Tanpa Judul').toString();
+    final title = (announcementData['title'] ?? kAnnNoTitle.tr).toString();
     final content = (announcementData['content'] ?? '').toString();
     final event = AnnouncementEvent.fromJson(announcementData);
     final personalReminders =
@@ -109,7 +110,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
     final eventLocation = announcementData['event_location']?.toString();
 
     return AppBottomSheet(
-      title: isImportant ? 'Pengumuman Penting' : 'Detail Pengumuman',
+      title: isImportant ? kAnnImportantTitle.tr : kAnnDetailTitle.tr,
       subtitle: title,
       icon: isImportant ? Icons.error_outline : Icons.campaign_outlined,
       primaryColor: isImportant ? ColorUtils.error600 : primaryColor,
@@ -119,7 +120,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
         children: [
           // Body content
           Text(
-            'ISI PENGUMUMAN',
+            kAnnContentHeader.tr,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
@@ -129,7 +130,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            content.isNotEmpty ? content : 'Tidak ada isi.',
+            content.isNotEmpty ? content : kAnnNoContent.tr,
             style: TextStyle(
               fontSize: 13.5,
               color: ColorUtils.slate700,
@@ -193,7 +194,7 @@ class AnnouncementDetailSheet extends StatelessWidget {
 
           // ── Info section ──
           Text(
-            'INFORMASI',
+            kAnnInfoHeader.tr,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
@@ -208,19 +209,19 @@ class AnnouncementDetailSheet extends StatelessWidget {
             children: [
               _InfoRow(
                 icon: Icons.person_outline_rounded,
-                label: 'Dibuat oleh',
+                label: kAnnCreatedBy.tr,
                 value: creatorName.toString(),
                 color: primaryColor,
               ),
               _InfoRow(
                 icon: Icons.group_outlined,
-                label: 'Target',
+                label: kAnnAudienceLabel.tr,
                 value: _roleTargetLabel(roleTarget),
                 color: primaryColor,
               ),
               _InfoRow(
                 icon: Icons.access_time_rounded,
-                label: 'Dibuat pada',
+                label: kAnnCreatedOn.tr,
                 value: _prettyDateTime(
                   announcementData['created_at']?.toString(),
                 ),
@@ -237,16 +238,16 @@ class AnnouncementDetailSheet extends StatelessWidget {
             children: [
               _InfoRow(
                 icon: Icons.play_circle_outline_rounded,
-                label: 'Mulai Tayang',
+                label: kAnnStartBroadcast.tr,
                 value: _prettyDate(announcementData['start_date']?.toString()),
                 color: const Color(0xFF0EA5E9),
               ),
               _InfoRow(
                 icon: Icons.stop_circle_outlined,
-                label: 'Selesai Tayang',
+                label: kAnnEndBroadcast.tr,
                 value: announcementData['end_date'] != null
                     ? _prettyDate(announcementData['end_date']?.toString())
-                    : 'Selamanya',
+                    : kAnnForever.tr,
                 color: const Color(0xFF0EA5E9),
               ),
             ],
@@ -260,22 +261,22 @@ class AnnouncementDetailSheet extends StatelessWidget {
               children: [
                 _InfoRow(
                   icon: Icons.event_rounded,
-                  label: 'Tanggal Acara',
+                  label: kAnnEventDate.tr,
                   value: _prettyDate(announcementData['event_at']?.toString()),
                   color: const Color(0xFF8B5CF6),
                 ),
                 _InfoRow(
                   icon: Icons.schedule_rounded,
-                  label: 'Jam Acara',
+                  label: kAnnEventTime.tr,
                   value: announcementData['event_has_time'] == false
-                      ? 'Sepanjang hari'
+                      ? kAnnAllDay.tr
                       : _prettyTime(announcementData['event_at']?.toString()),
                   color: const Color(0xFF8B5CF6),
                 ),
                 if (eventLocation != null && eventLocation.isNotEmpty)
                   _InfoRow(
                     icon: Icons.location_on_outlined,
-                    label: 'Lokasi',
+                    label: kAnnLocation.tr,
                     value: eventLocation,
                     color: const Color(0xFF8B5CF6),
                   ),
@@ -290,11 +291,11 @@ class AnnouncementDetailSheet extends StatelessWidget {
 
   String _roleTargetLabel(String target) {
     return switch (target.toLowerCase()) {
-      'all' => 'Semua Pengguna',
+      'all' => kAnnAllUsers.tr,
       'admin' => 'Admin',
-      'guru' => 'Guru',
-      'wali' => 'Wali Murid',
-      'siswa' => 'Siswa',
+      'guru' => kAnnTeachers.tr,
+      'wali' => kAnnParents.tr,
+      'siswa' => kAnnStudents.tr,
       _ => target,
     };
   }

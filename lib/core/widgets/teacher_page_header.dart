@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/active_filter_chips.dart';
 import 'package:manajemensekolah/core/widgets/role_toggle.dart';
 import 'package:manajemensekolah/core/widgets/search_filter_bar.dart';
@@ -257,7 +258,7 @@ class TeacherPageHeader extends StatelessWidget {
             filters: activeFilters!,
             primaryColor: primaryColor,
             onClearAll: onClearAllFilters,
-            clearAllLabel: 'Hapus',
+            clearAllLabel: kCorWidClear.tr,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             transparentStyle: false,
           ),

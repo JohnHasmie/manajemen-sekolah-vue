@@ -1,0 +1,45 @@
+// Part of the AppLocalizations API — i18n sweep additions for grades.
+part of 'language_utils.dart';
+
+// ── grades (auto-generated from i18n sweep) ───────────────────
+const kGraFilterTitle = {'en': 'Filter Grades', 'id': 'Filter Nilai'};
+const kGraBookLabel = {'en': 'GRADE BOOK', 'id': 'BUKU NILAI'};
+const kGraNewGradeEntryTitle = {'en': 'New Grade Entry', 'id': 'Input Nilai Baru'};
+const kGraSelectAssessmentDate = {'en': 'Select Assessment Date', 'id': 'Pilih Tanggal Penilaian'};
+const kGraTitleOptional = {'en': 'Title (optional)', 'id': 'Judul (opsional)'};
+const kGraScore = {'en': 'Score', 'id': 'Nilai'};
+const kGraDeleteChapter = {'en': 'Delete Chapter', 'id': 'Hapus bab'};
+const kGraConfirmDelete = {'en': 'Are you sure you want to delete', 'id': 'Yakin ingin menghapus'};
+const kGraAllGradesWillBeDeleted = {'en': 'All student grades in this column will be deleted', 'id': 'Semua nilai siswa di kolom ini akan ikut terhapus'};
+const kGraGradeDetails = {'en': 'Grade Details', 'id': 'Detail Nilai'};
+const kGraUnknown = {'en': 'Unknown', 'id': 'Tidak Diketahui'};
+const kGraAssessmentDate = {'en': 'Assessment Date', 'id': 'Tanggal Penilaian'};
+const kGraAssessment = {'en': 'Assessment', 'id': 'Penilaian'};
+const kGraTeacherNotes = {'en': 'Teacher Notes', 'id': 'Catatan Guru'};
+const kGraNoDataYet = {'en': 'No data yet', 'id': 'Belum ada data'};
+const kGraNoGradesYet = {'en': 'No grades yet', 'id': 'Belum ada nilai'};
+const kGraAssessmentDataNotAvailable = {'en': 'Assessment data not available', 'id': 'Data penilaian tidak tersedia'};
+const kGraGradeType = {'en': 'Grade Type', 'id': 'Tipe Nilai'};
+const kGraAssignment = {'en': 'Assignment', 'id': 'Tugas'};
+const kGraDailyQuiz = {'en': 'Daily Quiz', 'id': 'Ulangan Harian'};
+const kGraMidterm = {'en': 'Midterm', 'id': 'PTS'};
+const kGraFinalExam = {'en': 'Final Exam', 'id': 'PAS'};
+const kGraPractice = {'en': 'Practice', 'id': 'Praktek'};
+const kGraPortfolio = {'en': 'Portfolio', 'id': 'Portofolio'};
+const kGraProject = {'en': 'Project', 'id': 'Proyek'};
+const kGraSaving = {'en': 'Saving...', 'id': 'Menyimpan...'};
+const kGraAddChapter = {'en': 'Add Chapter', 'id': 'Tambah Bab'};
+const kGraSelectGradeDate = {'en': 'Select Grade Date', 'id': 'Pilih Tanggal Nilai'};
+const kGraCannotSaveInactiveYear = {'en': 'Cannot save grades for an inactive academic year', 'id': 'Tidak dapat menyimpan nilai untuk tahun ajaran yang tidak aktif'};
+const kGraStudentDataOutdated = {'en': 'Student data is outdated. Pull to refresh and try again.', 'id': 'Data siswa kadaluarsa. Tarik untuk memuat ulang dan coba lagi.'};
+const kGraGradeUpdated = {'en': 'Grade updated', 'id': 'Nilai berhasil diupdate'};
+const kGraGradeSaved = {'en': 'Grade saved', 'id': 'Nilai berhasil disimpan'};
+const kGraDeleteThisGrade = {'en': 'Delete this grade?', 'id': 'Hapus nilai ini?'};
+const kGraGradeWillBeRemoved = {'en': 'The score will be removed from the grade book. This cannot be undone.', 'id': 'Nilai akan dihapus dari buku nilai. Tindakan ini tidak bisa dibatalkan.'};
+const kGraGradeCleared = {'en': 'Grade cleared', 'id': 'Nilai dihapus'};
+const kGraRenameChapter = {'en': 'Rename Chapter', 'id': 'Ubah nama bab'};
+const kGraChapterName = {'en': 'Chapter Name', 'id': 'Nama bab'};
+const kGraChapterNameExample = {'en': 'E.g. \'Chapter 1: Introduction\'', 'id': 'Mis. \'Bab 1: Pengantar\''};
+const kGraSearchTeacher = {'en': 'Search teacher...', 'id': 'Cari guru...'};
+const kGraNoGradeData = {'en': 'No Grade Data', 'id': 'Belum Ada Data Nilai'};
+const kGraNoGradesRecorded = {'en': 'No grades have been recorded yet', 'id': 'Belum ada nilai yang dicatat'};

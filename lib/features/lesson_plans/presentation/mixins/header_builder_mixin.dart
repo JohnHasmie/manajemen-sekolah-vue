@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/drag_handle.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_admin_detail_page.dart';
@@ -80,9 +81,9 @@ mixin HeaderBuilderMixin on State<LessonPlanAdminDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Detail RPP',
-            style: TextStyle(
+          Text(
+            kLesPlaDetails.tr,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: Colors.white,
@@ -152,7 +153,7 @@ mixin HeaderBuilderMixin on State<LessonPlanAdminDetailPage> {
               size: 20,
             ),
             const SizedBox(width: AppSpacing.sm),
-            const Text('Setujui RPP'),
+            Text(kLesPlaApprove.tr),
           ],
         ),
       ),
@@ -162,7 +163,7 @@ mixin HeaderBuilderMixin on State<LessonPlanAdminDetailPage> {
           children: [
             Icon(Icons.cancel_outlined, color: ColorUtils.error600, size: 20),
             const SizedBox(width: AppSpacing.sm),
-            const Text('Tolak RPP'),
+            Text(kLesPlaReject.tr),
           ],
         ),
       ),

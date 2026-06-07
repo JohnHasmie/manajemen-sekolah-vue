@@ -19,6 +19,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_attendance_components.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
@@ -61,8 +62,8 @@ class _AdminAttendanceDashboardHeroState
       },
       header: BrandPageHeader(
         role: 'admin',
-        subtitle: 'Akademik · Kehadiran',
-        title: 'Laporan harian',
+        subtitle: kAttAcademicAttendance.tr,
+        title: kAttDailyReport.tr,
         isRealtimeFresh: !async.isLoading && !async.hasError,
         // Reserve gradient overlap below the chip strip so the KPI
         // strip's top tucks into navy instead of covering the chips.
@@ -76,27 +77,27 @@ class _AdminAttendanceDashboardHeroState
       kpiCard: BrandKpiStrip(
         columns: [
           BrandKpiColumn(
-            label: 'Hadir',
+            label: kPresent.tr,
             value: '${data?.breakdown.present ?? 0}',
             valueColor: const Color(0xFF15803D),
             sub: data == null
                 ? null
-                : '${data.breakdown.presentPct.toStringAsFixed(0)}% hadir',
+                : '${data.breakdown.presentPct.toStringAsFixed(0)}${kAttPercentPresent.tr}',
           ),
           BrandKpiColumn(
-            label: 'Tidak hadir',
+            label: kAttAbsent.tr,
             value: '${data?.absentCount ?? 0}',
             valueColor: const Color(0xFFDC2626),
             sub: data == null
                 ? null
                 : (data.absentDelta == 0
-                      ? 'sama dengan kemarin'
+                      ? kAttSameAsYesterday.tr
                       : data.absentDelta > 0
-                      ? '↑ ${data.absentDelta.abs()} dari kemarin'
-                      : '↓ ${data.absentDelta.abs()} dari kemarin'),
+                      ? kAttIncreaseFromYesterday.tr.replaceFirst('↑', '↑ ${data.absentDelta.abs()}')
+                      : kAttDecreaseFromYesterday.tr.replaceFirst('↓', '↓ ${data.absentDelta.abs()}')),
           ),
           BrandKpiColumn(
-            label: 'Rata kehadiran',
+            label: kAttAverageAttendance.tr,
             value: data == null ? '0%' : '${data.avgPct.toStringAsFixed(1)}%',
             valueColor: ColorUtils.slate900,
             sub: data == null || data.rangeLabel.isEmpty
@@ -155,7 +156,7 @@ class _TingkatPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'TREN PER TINGKAT · 7 HARI',
+            kAttTrendByGrade7Days.tr,
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.w800,
@@ -180,7 +181,7 @@ class _TingkatPanel extends StatelessWidget {
               children: [
                 for (var i = 0; i < trends.length; i++) ...[
                   TrendSparkRow(
-                    label: 'Tingkat ${trends[i].tingkat}',
+                    label: '${kAttGrade.tr} ${trends[i].tingkat}',
                     currentPct: trends[i].currentPct,
                     sparkPoints: trends[i].series,
                     deltaPct: trends[i].deltaPct,
@@ -240,7 +241,7 @@ class _ExportBar extends StatelessWidget {
               Icon(Icons.file_download_rounded, color: navy, size: 22),
               const SizedBox(width: 10),
               Text(
-                'Ekspor laporan',
+                kAttExportReport.tr,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -262,8 +263,8 @@ class _ExportBar extends StatelessWidget {
                   color: navy,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  'Buat',
+                child: Text(
+                  kAttCreate.tr,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,

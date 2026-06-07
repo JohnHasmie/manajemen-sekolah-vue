@@ -10,7 +10,10 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import NavIcon from '@/components/feature/NavIcon.vue';
+
+const { t } = useI18n();
 
 const props = withDefaults(
   defineProps<{
@@ -47,10 +50,10 @@ const deltaTone = computed<string>(() => {
 });
 
 const deltaLabel = computed<string>(() => {
-  if (props.deltaPct == null) return 'Belum ada pembanding';
-  if (props.deltaPct === 0) return 'Sama dengan bulan lalu';
+  if (props.deltaPct == null) return t('parent.attendance.ringDeltaNone');
+  if (props.deltaPct === 0) return t('parent.attendance.ringDeltaSame');
   const arrow = props.deltaPct > 0 ? '↑' : '↓';
-  return `${arrow} ${Math.abs(props.deltaPct).toFixed(1)} vs bulan lalu`;
+  return `${arrow} ${Math.abs(props.deltaPct).toFixed(1)} ${t('parent.attendance.ringDeltaVsLastMonth')}`;
 });
 </script>
 
@@ -86,7 +89,7 @@ const deltaLabel = computed<string>(() => {
         <div class="absolute inset-0 grid place-items-center text-center">
           <div>
             <p class="text-[10px] font-bold text-white/70 uppercase tracking-widest">
-              Hadir
+              {{ t('parent.attendance.ringHadir') }}
             </p>
             <p class="text-2xl font-black">{{ rate.toFixed(1) }}%</p>
           </div>
@@ -111,23 +114,23 @@ const deltaLabel = computed<string>(() => {
           </span>
         </div>
         <p class="text-[12px] text-white/80">
-          {{ schoolDays }} hari sekolah · {{ present }} hadir
+          {{ t('parent.attendance.ringSchoolDaysHadir', { days: schoolDays, present }) }}
         </p>
         <div class="grid grid-cols-4 gap-2 mt-3">
           <div class="bg-white/10 rounded-xl px-2 py-2">
-            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">Hadir</p>
+            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringHadir') }}</p>
             <p class="text-[14px] font-black mt-0.5">{{ present }}</p>
           </div>
           <div class="bg-white/10 rounded-xl px-2 py-2">
-            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">Izin</p>
+            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringIzin') }}</p>
             <p class="text-[14px] font-black mt-0.5">{{ izin }}</p>
           </div>
           <div class="bg-white/10 rounded-xl px-2 py-2">
-            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">Sakit</p>
+            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringSakit') }}</p>
             <p class="text-[14px] font-black mt-0.5">{{ sakit }}</p>
           </div>
           <div class="bg-white/10 rounded-xl px-2 py-2">
-            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">Alpa</p>
+            <p class="text-[9px] font-bold text-white/70 uppercase tracking-widest">{{ t('parent.attendance.ringAlpa') }}</p>
             <p class="text-[14px] font-black mt-0.5">{{ alpha }}</p>
           </div>
         </div>

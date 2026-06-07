@@ -336,7 +336,7 @@ class _ProofInfoCard extends StatelessWidget {
               Expanded(
                 child: _ProofInfoTile(
                   icon: Icons.person_outline_rounded,
-                  label: 'Siswa',
+                  label: kFinStudent.tr,
                   value: siswa,
                 ),
               ),
@@ -344,7 +344,7 @@ class _ProofInfoCard extends StatelessWidget {
               Expanded(
                 child: _ProofInfoTile(
                   icon: Icons.class_outlined,
-                  label: 'Kelas',
+                  label: kFinClass.tr,
                   value: kelas,
                 ),
               ),
@@ -353,7 +353,7 @@ class _ProofInfoCard extends StatelessWidget {
           const SizedBox(height: 8),
           _ProofInfoTile(
             icon: Icons.category_outlined,
-            label: 'Jenis Pembayaran',
+            label: kFinPaymentType.tr,
             value: jenis,
             accent: primaryColor,
           ),
@@ -364,7 +364,7 @@ class _ProofInfoCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _ProofMetaCell(
-                  label: 'Metode',
+                  label: kFinMethod.tr,
                   value: metode,
                   icon: Icons.payments_rounded,
                 ),
@@ -372,7 +372,7 @@ class _ProofInfoCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _ProofMetaCell(
-                  label: 'Tanggal',
+                  label: kFinDate.tr,
                   value: tanggal,
                   icon: Icons.event_rounded,
                 ),
@@ -381,7 +381,7 @@ class _ProofInfoCard extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: _ProofMetaCell(
-                  label: 'Jumlah',
+                  label: kFinAmount.tr,
                   value: amount,
                   icon: Icons.attach_money_rounded,
                   valueColor: ColorUtils.success600,

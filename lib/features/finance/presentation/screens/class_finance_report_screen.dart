@@ -13,6 +13,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_filter_chip_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
 import 'package:manajemensekolah/core/widgets/brand_page_header.dart';
@@ -227,9 +228,9 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
         context: context,
         removeTop: true,
         child: students.isEmpty
-            ? const EmptyState(
-                title: 'Tidak ada siswa',
-                subtitle: 'Kelas ini belum memiliki siswa',
+            ? EmptyState(
+                title: kFinNoStudents.tr,
+                subtitle: kFinNoStudentsDesc.tr,
                 icon: Icons.people_outline,
               )
             : _buildBodyForMode(),
@@ -326,17 +327,17 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
     return BrandKpiStrip(
       columns: [
         BrandKpiColumn(
-          label: 'Lunas',
+          label: kFinPaid.tr,
           value: lunas.toString(),
           valueColor: ColorUtils.success600,
         ),
         BrandKpiColumn(
-          label: 'Belum',
+          label: kFinNotYet.tr,
           value: belum.toString(),
           valueColor: ColorUtils.error600,
         ),
         BrandKpiColumn(
-          label: 'Tempo',
+          label: kFinOverdue.tr,
           value: tempo.toString(),
           valueColor: ColorUtils.warning600,
         ),
@@ -387,7 +388,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
     return BrandPageHeader(
       role: 'admin',
       title: widget.className,
-      subtitle: 'OPERASIONAL · KEUANGAN',
+      subtitle: kFinOperationalFinance.tr,
       onBackPressed: _onBackPressed,
       // Extend the gradient `kpiOverlapHeight` dp past the search
       // bar so the KPI strip (rendered at the top of the body
@@ -397,7 +398,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
       kpiOverlayHeight: BrandPageLayout.kpiOverlapHeight,
       bottomSlot: SearchFilterBar(
         controller: _searchController,
-        hintText: 'Cari siswa...',
+        hintText: kFinSearchStudents.tr,
         onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
         onFilterTap: () => showFilterSheet(
           monthGroups,
@@ -489,7 +490,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
             ),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Cari siswa...',
+                hintText: kFinSearchStudents.tr,
                 hintStyle: TextStyle(color: ColorUtils.slate400),
                 prefixIcon: Icon(Icons.search, color: ColorUtils.slate400),
                 border: InputBorder.none,
@@ -558,7 +559,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
       child: BrandFilterChipStrip(
         chips: [
           BrandFilterChip(
-            label: 'Status',
+            label: kFinStatus.tr,
             value: _selectedStatus == 'Semua' ? null : _selectedStatus,
             onTap: () => showFilterSheet(
               monthGroups,
@@ -568,7 +569,7 @@ class _ClassFinanceReportScreenState extends State<ClassFinanceReportScreen>
             ),
           ),
           BrandFilterChip(
-            label: 'Bulan',
+            label: kFinMonth.tr,
             value: _selectedMonthKey == null ? null : _getSelectedMonthName(),
             onTap: () => showFilterSheet(
               monthGroups,
@@ -669,7 +670,7 @@ class _ViewToggleRow extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(
             child: _ToggleSeg(
-              label: 'Per Siswa',
+              label: kFinPerStudent.tr,
               icon: Icons.view_agenda_rounded,
               selected: mode == _ReportView.cards,
               primaryColor: primaryColor,

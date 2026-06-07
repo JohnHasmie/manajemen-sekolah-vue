@@ -61,7 +61,7 @@ mixin SettingsScreenAppBarMixin {
           child: const Icon(Icons.edit_rounded, color: Colors.white, size: 18),
         ),
         onPressed: onEdit,
-        tooltip: 'Edit Profil',
+        tooltip: kSetEditProfile.tr,
       ),
       PopupMenuButton<String>(
         icon: const Icon(Icons.more_vert, color: Colors.white),
@@ -77,7 +77,7 @@ mixin SettingsScreenAppBarMixin {
               children: [
                 Icon(Icons.refresh, size: 20, color: ColorUtils.info600),
                 const SizedBox(width: AppSpacing.sm),
-                const Text('Perbarui Data'),
+                Text(kSetRefreshData.tr),
               ],
             ),
           ),
@@ -149,7 +149,7 @@ mixin SettingsScreenAppBarMixin {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          name.isNotEmpty ? name : 'Pengguna',
+          name.isNotEmpty ? name : kSetUser.tr,
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,

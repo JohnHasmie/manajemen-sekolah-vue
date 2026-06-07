@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 
@@ -98,8 +99,8 @@ class _TagihanStatusFilterSheetState extends State<_TagihanStatusFilterSheet> {
   Widget build(BuildContext context) {
     final navy = widget.primaryColor;
     return AppBottomSheet(
-      title: 'Status tagihan',
-      subtitle: 'Saring tagihan berdasarkan status pembayaran.',
+      title: kFinBillStatus.tr,
+      subtitle: kFinFilterByPaymentStatus.tr,
       icon: Icons.task_alt_rounded,
       primaryColor: navy,
       maxHeightFactor: 0.55,
@@ -110,7 +111,7 @@ class _TagihanStatusFilterSheetState extends State<_TagihanStatusFilterSheet> {
           const SizedBox(height: 4),
           _Option(
             icon: Icons.list_rounded,
-            label: 'Semua tagihan',
+            label: kFinAllBills.tr,
             description: 'Tampilkan semua tagihan tanpa filter status.',
             iconColor: ColorUtils.slate500,
             primaryColor: navy,
@@ -120,7 +121,7 @@ class _TagihanStatusFilterSheetState extends State<_TagihanStatusFilterSheet> {
           const SizedBox(height: 8),
           _Option(
             icon: Icons.account_balance_wallet_outlined,
-            label: 'Belum bayar',
+            label: kFinUnpaidAmount.tr,
             description: 'Tagihan yang belum dilunasi wali / siswa.',
             iconColor: const Color(0xFFB45309),
             primaryColor: navy,
@@ -130,7 +131,7 @@ class _TagihanStatusFilterSheetState extends State<_TagihanStatusFilterSheet> {
           const SizedBox(height: 8),
           _Option(
             icon: Icons.priority_high_rounded,
-            label: 'Jatuh tempo',
+            label: kFinOverdueLabel.tr,
             description:
                 'Tagihan belum bayar yang sudah lewat tanggal jatuh tempo.',
             iconColor: const Color(0xFFDC2626),

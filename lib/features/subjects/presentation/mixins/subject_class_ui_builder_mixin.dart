@@ -9,6 +9,7 @@
 // unassign for the subject.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/classrooms/domain/models/classroom.dart';
 import 'package:manajemensekolah/features/classrooms/presentation/widgets/assign_wali_kelas_sheet.dart';
 import 'package:manajemensekolah/features/subjects/presentation/widgets/subject_class_quick_action_sheet.dart';
@@ -121,7 +122,7 @@ class _ClassRow extends StatelessWidget {
     final changed = await AssignWaliKelasSheet.show(
       context: context,
       classId: model.id,
-      className: model.name.isEmpty ? 'Kelas' : model.name,
+      className: model.name.isEmpty ? kSubClassGeneric.tr : model.name,
     );
     if (changed == true) onWaliReassigned();
   }
@@ -131,7 +132,7 @@ class _ClassRow extends StatelessWidget {
     final adminAccent = ColorUtils.getRoleColor('admin');
     final accent = isAssigned ? ColorUtils.success600 : ColorUtils.slate500;
     final ctaColor = isAssigned ? ColorUtils.error600 : adminAccent;
-    final ctaLabel = isAssigned ? 'Lepas' : 'Tambah';
+    final ctaLabel = isAssigned ? kSubRemove.tr : kAdd.tr;
 
     final tingkat = (model.gradeLevel ?? '').trim();
     final waliName = (model.homeroomTeacherName ?? '').trim();
@@ -169,7 +170,7 @@ class _ClassRow extends StatelessWidget {
                     children: [
                       if (tingkat.isNotEmpty) ...[
                         Text(
-                          'Tingkat $tingkat',
+                          '${kSubGrade.tr}$tingkat',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -182,7 +183,7 @@ class _ClassRow extends StatelessWidget {
                         const SizedBox(height: 3),
                       ],
                       Text(
-                        model.name.isEmpty ? 'Kelas' : model.name,
+                        model.name.isEmpty ? kSubClassGeneric.tr : model.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -260,7 +261,7 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isAssigned ? ColorUtils.success600 : ColorUtils.slate500;
-    final label = isAssigned ? 'Terdaftar' : 'Belum terdaftar';
+    final label = isAssigned ? kSubRegistered.tr : kSubNotRegistered.tr;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -343,7 +344,7 @@ class _WaliChip extends StatelessWidget {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 130),
                   child: Text(
-                    'Wali: $waliName',
+                    '${kSubWaliLabel.tr}$waliName',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -358,7 +359,7 @@ class _WaliChip extends StatelessWidget {
                 Icon(Icons.warning_amber_rounded, size: 13, color: fg),
                 const SizedBox(width: 4),
                 Text(
-                  'Wali belum diset',
+                  kSubWaliNotSet.tr,
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,

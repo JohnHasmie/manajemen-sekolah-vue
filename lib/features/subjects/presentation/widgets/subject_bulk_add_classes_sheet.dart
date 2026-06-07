@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
@@ -46,8 +47,8 @@ class SubjectBulkAddClassesSheet extends StatefulWidget {
   }) {
     return AppBottomSheet.show<bool>(
       context: context,
-      title: 'Tambah Kelas',
-      subtitle: 'Pilih kelas untuk $subjectName',
+      title: kAddClass.tr,
+      subtitle: '${kSubSelectClassesFor.tr}$subjectName',
       icon: Icons.add_rounded,
       primaryColor: ColorUtils.getRoleColor('admin'),
       content: SubjectBulkAddClassesSheet(
@@ -151,12 +152,12 @@ class _SubjectBulkAddClassesSheetState
       if (!mounted) return;
       SnackBarUtils.showSuccess(
         context,
-        '$attached kelas berhasil ditambahkan ke ${widget.subjectName}',
+        '$attached${kSubClassAddedSuccess.tr}${widget.subjectName}',
       );
       AppNavigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      SnackBarUtils.showError(context, 'Gagal menambah kelas: $e');
+      SnackBarUtils.showError(context, '${kSubAddClassFailed.tr}$e');
       setState(() => _saving = false);
     }
   }
@@ -195,11 +196,11 @@ class _SubjectBulkAddClassesSheetState
 
         // List
         if (classes.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
             child: EmptyState(
-              title: 'Tidak ada kelas',
-              subtitle: 'Semua kelas pada tingkat ini sudah terdaftar',
+              title: kNoClasses.tr,
+              subtitle: kSubAllClassesRegistered.tr,
               icon: Icons.check_circle_outline_rounded,
             ),
           )
@@ -227,10 +228,10 @@ class _SubjectBulkAddClassesSheetState
         const SizedBox(height: AppSpacing.md),
         BottomSheetFooter(
           primaryLabel: _saving
-              ? 'Menyimpan...'
+              ? kSubSaving.tr
               : _selectedIds.isEmpty
-              ? 'Tambah Kelas'
-              : 'Tambah ${_selectedIds.length} Kelas',
+              ? kAddClass.tr
+              : '${kAdd.tr} ${_selectedIds.length} Kelas',
           primaryColor: primary,
           primaryEnabled: !_saving && _selectedIds.isNotEmpty,
           onPrimary: _save,
@@ -254,7 +255,8 @@ class _TingkatTabs extends StatelessWidget {
     required this.onChanged,
   });
 
-  String _label(String value) => value == 'all' ? 'Semua' : 'Tingkat $value';
+  String _label(String value) =>
+      value == 'all' ? kAll.tr : '${kSubGrade.tr}$value';
 
   @override
   Widget build(BuildContext context) {
@@ -328,7 +330,7 @@ class _SelectionSummary extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              '$count kelas dipilih',
+              '$count${kSubClassesSelected.tr}',
               style: TextStyle(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
@@ -346,7 +348,7 @@ class _SelectionSummary extends StatelessWidget {
                 borderRadius: const BorderRadius.all(Radius.circular(8)),
               ),
               child: Text(
-                'Bersihkan',
+                kSubClear.tr,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -384,8 +386,8 @@ class _Search extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                hintText: 'Cari kelas...',
+              decoration: InputDecoration(
+                hintText: kSearchClasses.tr,
                 border: InputBorder.none,
                 isDense: true,
               ),
@@ -420,8 +422,8 @@ class _PickRow extends StatelessWidget {
     final tingkat = (model.gradeLevel ?? '').trim();
     final wali = (model.homeroomTeacherName ?? '').trim();
     final subtitleParts = <String>[
-      if (tingkat.isNotEmpty) 'Tingkat $tingkat',
-      wali.isEmpty ? 'Wali: belum diset' : 'Wali: $wali',
+      if (tingkat.isNotEmpty) '${kSubGrade.tr}$tingkat',
+      wali.isEmpty ? kSubWaliNotSet.tr : '${kSubWaliLabel.tr}$wali',
     ];
 
     return Material(
@@ -451,7 +453,7 @@ class _PickRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      model.name.isEmpty ? 'Kelas' : model.name,
+                      model.name.isEmpty ? kSubClassGeneric.tr : model.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

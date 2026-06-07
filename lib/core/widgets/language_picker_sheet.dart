@@ -82,7 +82,7 @@ class _LanguagePickerSheet extends StatelessWidget {
           Column(
             children: [
               Text(
-                'Pilih Bahasa',
+                kCorWidSelectLanguage.tr,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -91,7 +91,7 @@ class _LanguagePickerSheet extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Berlaku di seluruh aplikasi',
+                kCorWidLanguageAppliedGlobally.tr,
                 style: TextStyle(fontSize: 11, color: ColorUtils.slate500),
               ),
             ],
@@ -102,8 +102,8 @@ class _LanguagePickerSheet extends StatelessWidget {
 
           _LanguageTile(
             flag: const _IndonesianFlag(),
-            nativeName: 'Bahasa Indonesia',
-            internationalName: 'Indonesian · Resmi',
+            nativeName: kCorWidIndonesianLanguage.tr,
+            internationalName: kCorWidIndonesianOfficial.tr,
             active: current == LanguageProvider.indonesian,
             onTap: () => _onPick(context, LanguageProvider.indonesian),
           ),
@@ -111,7 +111,7 @@ class _LanguagePickerSheet extends StatelessWidget {
           _LanguageTile(
             flag: const _UkFlag(),
             nativeName: 'English',
-            internationalName: 'Inggris · International',
+            internationalName: kCorWidEnglishInternational.tr,
             active: current == LanguageProvider.english,
             onTap: () => _onPick(context, LanguageProvider.english),
           ),
@@ -150,23 +150,23 @@ class _LanguagePickerSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Aplikasi akan refresh setelah ganti bahasa',
-                        style: TextStyle(
+                        kCorWidAppRefreshOnLanguageChange.tr,
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF92400E),
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
-                        'Data login + tab aktif tetap dipertahankan',
-                        style: TextStyle(
+                        kCorWidLoginDataRetained.tr,
+                        style: const TextStyle(
                           fontSize: 9.5,
                           color: Color(0xFF92400E),
                         ),
@@ -192,7 +192,7 @@ class _LanguagePickerSheet extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'Tutup',
+                kClose.tr,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
@@ -277,7 +277,7 @@ class _LanguageTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      active ? 'Aktif sekarang' : 'Tap untuk mengaktifkan',
+                      active ? kCorWidActiveNow.tr : kCorWidTapToActivate.tr,
                       style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: active ? FontWeight.w700 : FontWeight.w400,

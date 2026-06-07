@@ -62,7 +62,7 @@ const slices = computed<Slice[]>(() => {
   return [
     {
       student_id: 'me',
-      name: stats.value.child_name ?? 'Anak Anda',
+      name: stats.value.child_name ?? t('parent.dashboard.yourChildFallback'),
       classLabel: stats.value.child_class ?? '',
       attendance_rate: asInt(stats.value.attendance_rate),
       attendance_delta: 0,
@@ -80,7 +80,7 @@ const slices = computed<Slice[]>(() => {
 const sliceOptions = computed(() =>
   slices.value.map((s) => ({
     key: String(s.student_id ?? s.name),
-    label: `${s.name ?? 'Anak'}${s.classLabel ? ' · ' + s.classLabel : s.class_label ? ' · ' + s.class_label : ''}`,
+    label: `${s.name ?? t('parent.dashboard.childFallback')}${s.classLabel ? ' · ' + s.classLabel : s.class_label ? ' · ' + s.class_label : ''}`,
   })),
 );
 
@@ -107,16 +107,16 @@ function str(key: string): string {
   return typeof v === 'string' ? v : '';
 }
 
-const childName = computed(() => str('name') || str('child_name') || 'anak Anda');
+const childName = computed(() => str('name') || str('child_name') || t('parent.dashboard.yourChildLower'));
 const childClass = computed(() => str('classLabel') || str('class_label') || str('child_class'));
 const childSubject = computed(() => str('child_subject'));
 
 const greeting = computed(() => {
   const h = new Date().getHours();
-  if (h < 11) return 'Selamat pagi';
-  if (h < 15) return 'Selamat siang';
-  if (h < 18) return 'Selamat sore';
-  return 'Selamat malam';
+  if (h < 11) return t('parent.dashboard.greetingMorning');
+  if (h < 15) return t('parent.dashboard.greetingNoon');
+  if (h < 18) return t('parent.dashboard.greetingAfternoon');
+  return t('parent.dashboard.greetingNight');
 });
 
 const attendancePresent = computed(() => num('attendance_present'));
@@ -172,29 +172,29 @@ interface QuickAction {
 
 const quickActions = computed<QuickAction[]>(() => [
   {
-    label: 'Kehadiran',
+    label: t('parent.dashboard.quickAttendance'),
     icon: 'check-square',
     to: '/parent/attendance',
-    hint: `${attendancePresent.value} hari hadir`,
+    hint: t('parent.dashboard.daysPresent', { count: attendancePresent.value }),
   },
   {
-    label: 'Nilai',
+    label: t('parent.dashboard.quickGrades'),
     icon: 'bar-chart',
     to: '/parent/grades',
-    hint: `${num('subjects_count') || 10} mapel`,
+    hint: t('parent.dashboard.subjectsCount', { count: num('subjects_count') || 10 }),
   },
   {
-    label: 'Tagihan',
+    label: t('parent.dashboard.quickBills'),
     icon: 'wallet',
     to: '/parent/billing',
     hint: formatRupiah(num('overdue_total') || num('outstanding_bills')),
     tone: 'amber',
   },
   {
-    label: 'Rapor',
+    label: t('parent.dashboard.quickReports'),
     icon: 'clipboard',
     to: '/parent/report-cards',
-    hint: 'Semester 2',
+    hint: t('parent.dashboard.semesterValue', { n: 2 }),
   },
 ]);
 
@@ -217,13 +217,13 @@ function feedTone(type?: string) {
 
 function feedLabel(type?: string) {
   const labels: Record<string, string> = {
-    announcement: 'Pengumuman',
-    grade: 'Nilai',
-    class_activity: 'Kegiatan',
-    report_card: 'Rapor',
-    billing: 'Tagihan',
+    announcement: t('parent.dashboard.feedAnnouncement'),
+    grade: t('parent.dashboard.feedGrade'),
+    class_activity: t('parent.dashboard.feedClassActivity'),
+    report_card: t('parent.dashboard.feedReportCard'),
+    billing: t('parent.dashboard.feedBilling'),
   };
-  return type ? labels[type] ?? type : 'Lain';
+  return type ? labels[type] ?? type : t('parent.dashboard.feedOther');
 }
 
 const priorityItems = computed(() => mapToPriorityItems(priorityRaw.value));
@@ -258,13 +258,13 @@ watch(sliceKey, () => {
               <div class="min-w-0">
                 <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">{{ greeting }}</p>
                 <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Halo, <span class="text-role-parent">{{ auth.user?.name }}</span>
+                  {{ t('parent.dashboard.helloPrefix') }}, <span class="text-role-parent">{{ auth.user?.name }}</span>
                 </h1>
               </div>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
               <div v-if="sliceOptions.length > 1" class="flex items-center gap-2">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">Anak:</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">{{ t('parent.dashboard.childLabel') }}:</span>
                 <SegmentedControl v-model="sliceKey" :options="sliceOptions" size="sm" />
               </div>
               <AcademicYearChip
@@ -287,12 +287,14 @@ watch(sliceKey, () => {
                   {{ childName }} {{ childClass ? '· ' + childClass : '' }}{{ childSubject ? ' · ' + childSubject : '' }}
                 </p>
                 <h2 class="text-2xl sm:text-3xl font-black mt-1">
-                  Kehadiran {{ attendanceRate }}% bulan ini
+                  {{ t('parent.dashboard.attendanceTitle', { rate: attendanceRate }) }}
                 </h2>
                 <p class="text-[12px] text-white/85 mt-2">
-                  {{ attendancePresent }} hari hadir{{ attendanceTotal ? ' dari ' + attendanceTotal + ' hari' : '' }}
+                  {{ attendanceTotal
+                    ? t('parent.dashboard.daysPresentOf', { count: attendancePresent, total: attendanceTotal })
+                    : t('parent.dashboard.daysPresent', { count: attendancePresent }) }}
                   <span v-if="attendanceDelta !== 0" class="ml-2">
-                    {{ attendanceDelta > 0 ? '▲' : '▼' }} {{ Math.abs(attendanceDelta) }}% vs bulan lalu
+                    {{ attendanceDelta > 0 ? '▲' : '▼' }} {{ Math.abs(attendanceDelta) }}% {{ t('parent.dashboard.vsLastMonth') }}
                   </span>
                 </p>
               </div>
@@ -302,7 +304,7 @@ watch(sliceKey, () => {
                 @click="router.push('/parent/attendance')"
               >
                 <NavIcon name="check-square" :size="14" />
-                Lihat detail
+                {{ t('parent.dashboard.viewDetail') }}
               </button>
             </div>
           </section>
@@ -310,44 +312,44 @@ watch(sliceKey, () => {
           <!-- 3. KPI strip per anak -->
           <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <StatSummaryCard
-              label="Rata-rata nilai"
+              :label="t('parent.dashboard.avgGrade')"
               :value="num('avg_grade') || num('average_grade') || '—'"
               tone="success"
               icon-name="bar-chart"
-              sublabel="Semester ini"
+              :sublabel="t('parent.dashboard.thisSemester')"
               :slices="sliceOptions.length"
               :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
               :slice-progress="1"
               @click="router.push('/parent/grades')"
             />
             <StatSummaryCard
-              label="Tagihan"
+              :label="t('parent.dashboard.bills')"
               :value="formatRupiah(num('overdue_total') || num('outstanding_bills'))"
               tone="warning"
               icon-name="wallet"
-              sublabel="Klik untuk bayar →"
+              :sublabel="t('parent.dashboard.clickToPay')"
               :slices="sliceOptions.length"
               :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
               :slice-progress="1"
               @click="router.push('/parent/billing')"
             />
             <StatSummaryCard
-              label="Tugas pending"
+              :label="t('parent.dashboard.pendingTasks')"
               :value="formatNumber(num('tugas_pending'))"
               tone="info"
               icon-name="edit"
-              :sublabel="num('tugas_overdue') ? `${num('tugas_overdue')} overdue` : 'Tidak ada overdue'"
+              :sublabel="num('tugas_overdue') ? t('parent.dashboard.overdueCount', { count: num('tugas_overdue') }) : t('parent.dashboard.noOverdue')"
               :slices="sliceOptions.length"
               :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
               :slice-progress="1"
               @click="router.push('/parent/grades')"
             />
             <StatSummaryCard
-              label="Pengumuman baru"
+              :label="t('parent.dashboard.newAnnouncements')"
               :value="formatNumber(num('unread_announcements'))"
               tone="brand"
               icon-name="megaphone"
-              sublabel="Belum dibaca"
+              :sublabel="t('parent.dashboard.unread')"
               :slices="sliceOptions.length"
               :active-slice="sliceOptions.findIndex((o) => o.key === sliceKey)"
               :slice-progress="1"
@@ -360,7 +362,7 @@ watch(sliceKey, () => {
             <header class="flex items-center justify-between gap-3 mb-3 px-1">
               <div class="flex items-center gap-2">
                 <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest">
-                  Perlu Perhatian
+                  {{ t('parent.dashboard.needsAttention') }}
                 </h3>
                 <span
                   v-if="priorityItems.length > 0"
@@ -387,19 +389,19 @@ watch(sliceKey, () => {
                     <NavIcon name="activity" :size="16" />
                   </div>
                   <div>
-                    <h3 class="text-sm font-black text-slate-900 leading-none">Aktivitas terbaru</h3>
-                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">Pengumuman, nilai, kegiatan, tagihan</p>
+                    <h3 class="text-sm font-black text-slate-900 leading-none">{{ t('parent.dashboard.recentActivity') }}</h3>
+                    <p class="text-[10px] text-slate-400 font-bold mt-0.5">{{ t('parent.dashboard.recentActivitySubtitle') }}</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   class="text-[11px] font-bold text-role-parent hover:underline"
                 >
-                  Lihat semua →
+                  {{ t('parent.dashboard.viewAll') }}
                 </button>
               </header>
               <div v-if="feed.length === 0" class="text-center py-6 text-slate-400 text-sm">
-                Belum ada aktivitas terbaru.
+                {{ t('parent.dashboard.noRecentActivity') }}
               </div>
               <ul v-else class="divide-y divide-slate-100">
                 <li
@@ -458,7 +460,7 @@ watch(sliceKey, () => {
                 <div class="w-8 h-8 rounded-xl bg-role-parent/10 text-role-parent grid place-items-center">
                   <NavIcon name="sparkles" :size="16" />
                 </div>
-                <h3 class="text-sm font-black text-slate-900 leading-none">Pintasan</h3>
+                <h3 class="text-sm font-black text-slate-900 leading-none">{{ t('parent.dashboard.shortcuts') }}</h3>
               </header>
               <div class="grid grid-cols-2 gap-2.5">
                 <button

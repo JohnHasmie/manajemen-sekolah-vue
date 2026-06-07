@@ -274,7 +274,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
       );
       chips.add(
         BrandFilterChip(
-          label: 'Hari',
+          label: kDay.tr,
           value: dayName,
           showChevron: false,
           onTap: () {
@@ -303,7 +303,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
       );
       chips.add(
         BrandFilterChip(
-          label: 'Kelas',
+          label: kClass.tr,
           value: cls['name'] ?? 'Kelas',
           showChevron: false,
           onTap: () {
@@ -333,7 +333,7 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
       );
       chips.add(
         BrandFilterChip(
-          label: 'Semester',
+          label: kSchSemester.tr,
           value: (semester['nama'] ?? 'Smt').toString(),
           showChevron: false,
           onTap: () {
@@ -381,17 +381,17 @@ class TeachingScheduleScreenState extends ConsumerState<TeachingScheduleScreen>
           children: [
             _kpiCell(
               '${stats.weekTotal}',
-              'SESI/PEKAN',
+              kSchSessionsPerWeek.tr,
               ColorUtils.brandCobalt,
             ),
             _kpiDivider(),
-            _kpiCell('${stats.todayCount}', 'HARI INI', ColorUtils.success600),
+            _kpiCell('${stats.todayCount}', kSchToday.tr, ColorUtils.success600),
             _kpiDivider(),
-            _kpiCell('${stats.subjectCount}', 'MAPEL', ColorUtils.warning600),
+            _kpiCell('${stats.subjectCount}', kSchSubjects.tr, ColorUtils.warning600),
             _kpiDivider(),
             _kpiCell(
               '${stats.fourthCount}',
-              isHomeroomView ? 'PENGAJAR' : 'KELAS',
+              isHomeroomView ? kSchTeachers.tr : kSchClasses.tr,
               ColorUtils.slate700,
             ),
           ],

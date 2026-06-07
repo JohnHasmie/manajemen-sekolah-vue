@@ -4,11 +4,13 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import type { DemoRole } from '@/types/demo';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const wizard = useDemoWizardStore();
 const auth = useAuthStore();
 
@@ -34,13 +36,13 @@ const ROLE_LABELS: Record<DemoRole, string> = {
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Langkah 3 dari 12 · Identitas Anda
+      {{ t('registerDemo.step3Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
-      Anda ingin coba berapa role?
+      {{ t('registerDemo.step3Title') }}
     </h2>
     <p class="text-[13px] text-slate-600 mb-4">
-      Akun Google Anda jadi admin. Bisa juga sekaligus jadi guru & wali, atau pakai akun terpisah.
+      {{ t('registerDemo.step3Subtitle') }}
     </p>
 
     <div class="grid grid-cols-2 gap-3 mb-5">
@@ -60,9 +62,9 @@ const ROLE_LABELS: Record<DemoRole, string> = {
           :class="mode === 'all_roles' ? 'text-role-admin' : 'text-slate-500'"
           class="mx-auto mb-1.5"
         />
-        <div class="text-[13px] font-bold">Semua 3 role</div>
+        <div class="text-[13px] font-bold">{{ t('registerDemo.step3AllRoles') }}</div>
         <div class="text-[11px]" :class="mode === 'all_roles' ? 'text-role-admin' : 'text-slate-500'">
-          Switch role dari menu profil
+          {{ t('registerDemo.step3AllRolesHint') }}
         </div>
       </button>
 
@@ -82,16 +84,16 @@ const ROLE_LABELS: Record<DemoRole, string> = {
           :class="mode === 'single_role' ? 'text-role-admin' : 'text-slate-500'"
           class="mx-auto mb-1.5"
         />
-        <div class="text-[13px] font-bold">Hanya 1 role</div>
+        <div class="text-[13px] font-bold">{{ t('registerDemo.step3SingleRole') }}</div>
         <div class="text-[11px]" :class="mode === 'single_role' ? 'text-role-admin' : 'text-slate-500'">
-          + 2 akun demo untuk role lain
+          {{ t('registerDemo.step3SingleRoleHint') }}
         </div>
       </button>
     </div>
 
     <div v-if="mode === 'single_role'" class="mb-5">
       <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-        Pilih peran utama Anda
+        {{ t('registerDemo.step3PrimaryRoleLabel') }}
       </p>
       <div class="grid grid-cols-3 gap-1.5">
         <button
@@ -112,7 +114,7 @@ const ROLE_LABELS: Record<DemoRole, string> = {
     </div>
 
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      Akun yang akan Anda dapatkan
+      {{ t('registerDemo.step3AccountsLabel') }}
     </p>
     <div class="space-y-1.5">
       <div class="bg-slate-50 rounded-lg p-2.5 flex items-center gap-3">
@@ -122,7 +124,7 @@ const ROLE_LABELS: Record<DemoRole, string> = {
         </div>
         <div class="flex-1 min-w-0">
           <div class="font-mono text-[11px] text-slate-900 truncate">{{ userEmail }}</div>
-          <div class="font-mono text-[11px] text-slate-500">Login Google · akun Anda</div>
+          <div class="font-mono text-[11px] text-slate-500">{{ t('registerDemo.step3AdminNote') }}</div>
         </div>
       </div>
       <div class="bg-slate-50 rounded-lg p-2.5 flex items-center gap-3">
@@ -132,7 +134,7 @@ const ROLE_LABELS: Record<DemoRole, string> = {
         </div>
         <div class="flex-1 min-w-0">
           <div class="font-mono text-[11px] text-slate-900">guru.demo@kamiledu.id</div>
-          <div class="font-mono text-[11px] text-slate-500">password dirilis di langkah akhir</div>
+          <div class="font-mono text-[11px] text-slate-500">{{ t('registerDemo.step3PasswordNote') }}</div>
         </div>
       </div>
       <div class="bg-slate-50 rounded-lg p-2.5 flex items-center gap-3">
@@ -142,7 +144,7 @@ const ROLE_LABELS: Record<DemoRole, string> = {
         </div>
         <div class="flex-1 min-w-0">
           <div class="font-mono text-[11px] text-slate-900">wali.demo@kamiledu.id</div>
-          <div class="font-mono text-[11px] text-slate-500">password dirilis di langkah akhir</div>
+          <div class="font-mono text-[11px] text-slate-500">{{ t('registerDemo.step3PasswordNote') }}</div>
         </div>
       </div>
     </div>

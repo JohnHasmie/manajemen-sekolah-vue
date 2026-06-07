@@ -422,10 +422,10 @@ class _ReportCardOverviewPageState extends ConsumerState<ReportCardOverviewPage>
   }
 
   Widget buildNoResultsState() {
-    return const EmptyState(
+    return EmptyState(
       icon: Icons.search_off,
-      title: 'Tidak Ditemukan',
-      subtitle: 'Tidak ada kelas yang cocok dengan filter',
+      title: kRepCarNotFound.tr,
+      subtitle: kRepCarNoMatchingClasses.tr,
     );
   }
 }

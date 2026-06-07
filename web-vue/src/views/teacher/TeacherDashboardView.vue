@@ -76,7 +76,7 @@ const current = computed<Slice>(() => slices.value[Math.min(activeSlice.value, s
 function synthAggregateSlice(): Slice {
   return {
     key: 'mengajar',
-    label: 'Mengajar',
+    label: t('teacher.dashboard.teaching'),
     is_aggregate: true,
     sessions_today: asInt(stats.value.classes_today ?? stats.value.sessions_today),
     sessions_today_done: 0,
@@ -136,8 +136,8 @@ function togglePause() {
 const sessionsCaption = computed(() => {
   const total = num('sessions_today');
   const done = num('sessions_today_done');
-  if (total > 0) return `${done} selesai · ${total - done} belum`;
-  return 'Tidak ada sesi hari ini';
+  if (total > 0) return `${done} ${t('common.completed')} · ${total - done} belum`;
+  return t('teacher.dashboard.noSessionsToday');
 });
 
 const attendanceTrend = computed<StatTrend | null>(() => {
@@ -155,9 +155,9 @@ const rppNeedsAttention = computed(
 
 const rppCaption = computed(() => {
   if (rppNeedsAttention.value > 0) {
-    return `${num('lesson_plans_pending')} menunggu · ${num('lesson_plans_revision')} revisi`;
+    return `${num('lesson_plans_pending')} ${t('common.pending')} · ${num('lesson_plans_revision')} ${t('teacher.dashboard.revision')}`;
   }
-  return `${num('lesson_plans_approved')} disetujui`;
+  return `${num('lesson_plans_approved')} ${t('common.approved')}`;
 });
 
 const rppTone = computed<'warning' | 'success'>(() =>
@@ -165,7 +165,7 @@ const rppTone = computed<'warning' | 'success'>(() =>
 );
 
 const gradesCaption = computed(() =>
-  num('grades_pending_sessions') > 0 ? 'Butuh input nilai' : 'Semua nilai masuk',
+  num('grades_pending_sessions') > 0 ? t('teacher.dashboard.needsGradeInput') : t('teacher.dashboard.allGradesEntered'),
 );
 
 const gradesTone = computed<'brand' | 'success'>(() =>
@@ -234,10 +234,10 @@ function fmtTime(t?: string): string {
 // Greeting based on time of day
 const greeting = computed(() => {
   const h = new Date().getHours();
-  if (h < 11) return 'Selamat pagi';
-  if (h < 15) return 'Selamat siang';
-  if (h < 18) return 'Selamat sore';
-  return 'Selamat malam';
+  if (h < 11) return t('teacher.dashboard.greetingMorning');
+  if (h < 15) return t('teacher.dashboard.greetingAfternoon');
+  if (h < 18) return t('teacher.dashboard.greetingEvening');
+  return t('teacher.dashboard.greetingNight');
 });
 
 const today = computed(() => {
@@ -287,43 +287,43 @@ interface QuickAction {
 
 const quickActions = computed<QuickAction[]>(() => [
   {
-    label: 'Jadwal',
+    label: t('common.schedule'),
     icon: 'calendar',
     to: '/teacher/schedule',
-    hint: `${todaysSchedule.value.length} sesi hari ini`,
+    hint: `${todaysSchedule.value.length} ${t('teacher.dashboard.sessionsToday')}`,
   },
   {
-    label: 'Absensi',
+    label: t('common.attendance'),
     icon: 'check-square',
     to: '/teacher/attendance',
     hint:
       num('sessions_today') > 0
-        ? `${num('sessions_today') - num('sessions_today_done')} tertunda`
-        : 'Lihat presensi',
+        ? `${num('sessions_today') - num('sessions_today_done')} ${t('common.pending')}`
+        : t('teacher.dashboard.viewAttendance'),
   },
   {
-    label: 'Aktivitas',
+    label: t('common.activity'),
     icon: 'activity',
     to: '/teacher/class-activity',
-    hint: 'Catat kegiatan',
+    hint: t('teacher.dashboard.recordActivity'),
   },
   {
-    label: 'Input Nilai',
+    label: t('teacher.dashboard.inputGrades'),
     icon: 'edit',
     to: '/teacher/grades',
     hint:
       num('grades_pending_sessions') > 0
-        ? `${num('grades_pending_sessions')} kelas siap`
-        : 'Semua tuntas',
+        ? `${num('grades_pending_sessions')} ${t('teacher.dashboard.classesReady')}`
+        : t('teacher.dashboard.allCompleted'),
   },
 ]);
 
-const secondaryActions: { label: string; icon: string; to: string }[] = [
-  { label: 'Materi', icon: 'book', to: '/teacher/materials' },
-  { label: 'Draft RPP', icon: 'file-text', to: '/teacher/lesson-plans' },
-  { label: 'AI Rekomendasi', icon: 'sparkles', to: '/teacher/recommendations' },
-  { label: 'E-Rapor', icon: 'file-plus', to: '/teacher/report-cards' },
-];
+const secondaryActions = computed<{ label: string; icon: string; to: string }[]>(() => [
+  { label: t('common.materials'), icon: 'book', to: '/teacher/materials' },
+  { label: t('teacher.dashboard.draftLessonPlan'), icon: 'file-text', to: '/teacher/lesson-plans' },
+  { label: t('teacher.dashboard.aiRecommendations'), icon: 'sparkles', to: '/teacher/recommendations' },
+  { label: t('teacher.dashboard.eReportCard'), icon: 'file-plus', to: '/teacher/report-cards' },
+]);
 
 // handlePriorityTap supplied by usePriorityInbox('teacher') above.
 </script>
@@ -398,7 +398,7 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <StatSummaryCard
-                label="Sesi Hari Ini"
+                :label="t('teacher.dashboard.sessionsCardLabel')"
                 :value="formatNumber(num('sessions_today'))"
                 tone="brand"
                 icon-name="calendar"
@@ -411,11 +411,11 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                 @click="router.push('/teacher/schedule')"
               />
               <StatSummaryCard
-                label="Kehadiran"
+                :label="t('common.attendance')"
                 :value="`${num('attendance_rate_window')}%`"
                 tone="success"
                 icon-name="check-circle"
-                sublabel="rata-rata periode"
+                :sublabel="t('teacher.dashboard.periodAverage')"
                 :trend="attendanceTrend"
                 :slices="sliceCount"
                 :active-slice="activeSlice"
@@ -425,7 +425,7 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                 @click="router.push('/teacher/attendance')"
               />
               <StatSummaryCard
-                label="RPP"
+                :label="t('common.lessonPlan')"
                 :value="formatNumber(num('lesson_plans_approved'))"
                 :tone="rppTone"
                 icon-name="clipboard-list"
@@ -438,7 +438,7 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                 @click="router.push('/teacher/lesson-plans')"
               />
               <StatSummaryCard
-                label="Nilai Belum Input"
+                :label="t('teacher.dashboard.gradesNotYetEntered')"
                 :value="formatNumber(num('grades_pending_sessions'))"
                 :tone="gradesTone"
                 icon-name="edit"
@@ -462,10 +462,10 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                 </div>
                 <div>
                   <h3 class="text-sm font-black text-slate-900 tracking-tight leading-none">
-                    Jadwal Hari Ini
+                    {{ t('teacher.dashboard.todaysSchedule') }}
                   </h3>
                   <p class="text-[11px] text-slate-400 font-bold mt-0.5">
-                    {{ today }} · {{ todaysSchedule.length }} sesi
+                    {{ today }} · {{ todaysSchedule.length }} {{ t('common.sessions') }}
                   </p>
                 </div>
               </div>
@@ -474,7 +474,7 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                 class="text-[11px] font-black text-brand-cobalt hover:text-brand-azure uppercase tracking-widest"
                 @click="router.push('/teacher/schedule')"
               >
-                Lihat Semua →
+                {{ t('common.viewAll') }} →
               </button>
             </header>
 
@@ -482,8 +482,8 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
               <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-50 grid place-items-center mb-3">
                 <NavIcon name="activity" :size="28" />
               </div>
-              <p class="text-sm font-bold text-slate-600">Tidak ada jadwal hari ini</p>
-              <p class="text-xs text-slate-400 mt-1">Jadwal Anda untuk hari ini sudah selesai atau belum dimulai.</p>
+              <p class="text-sm font-bold text-slate-600">{{ t('teacher.dashboard.noScheduleToday') }}</p>
+              <p class="text-xs text-slate-400 mt-1">{{ t('teacher.dashboard.scheduleCompleteOrNotStarted') }}</p>
             </div>
 
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
@@ -505,7 +505,7 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                   {{ fmtTime(s.start_time) }} <span v-if="s.end_time">– {{ fmtTime(s.end_time) }}</span>
                 </p>
                 <p class="text-sm font-black text-slate-900 truncate mt-1">
-                  {{ s.subject_name ?? 'Mata Pelajaran' }}
+                  {{ s.subject_name ?? t('common.subject') }}
                 </p>
                 <p class="text-[11px] font-bold text-slate-500 truncate mt-0.5">
                   {{ s.class_name ?? '' }}<span v-if="s.room"> · {{ s.room }}</span>
@@ -515,7 +515,7 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                   class="mt-2 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-brand-cobalt text-white"
                 >
                   <span class="w-1 h-1 rounded-full bg-white animate-pulse"></span>
-                  Sedang Berlangsung
+                  {{ t('teacher.dashboard.inProgress') }}
                 </span>
               </div>
             </div>
@@ -534,7 +534,7 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                     </div>
                     <div class="flex items-center gap-2">
                       <h3 class="text-sm font-black text-slate-900 tracking-tight leading-none">
-                        Perlu Perhatian
+                        {{ t('teacher.dashboard.requiresAttention') }}
                       </h3>
                       <span
                         v-if="priorityItems.length > 0"
@@ -550,7 +550,7 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                     class="text-[11px] font-black text-brand-cobalt hover:text-brand-azure uppercase tracking-widest"
                     @click="router.push({ name: 'teacher.inbox' })"
                   >
-                    Lihat Semua →
+                    {{ t('common.viewAll') }} →
                   </button>
                 </header>
 
@@ -571,7 +571,7 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                     <NavIcon name="sparkles" :size="16" />
                   </div>
                   <h3 class="text-sm font-black text-slate-900 tracking-tight leading-none">
-                    Aksi Cepat
+                    {{ t('teacher.dashboard.quickActions') }}
                   </h3>
                 </header>
                 <div class="grid grid-cols-2 gap-2.5">
@@ -603,10 +603,10 @@ const secondaryActions: { label: string; icon: string; to: string }[] = [
                   </div>
                   <div>
                     <h3 class="text-sm font-black text-slate-900 tracking-tight leading-none">
-                      Modul Lainnya
+                      {{ t('teacher.dashboard.otherModules') }}
                     </h3>
                     <p class="text-[10px] text-slate-400 font-bold mt-0.5">
-                      Akses laporan, materi, dan alat bantu lainnya
+                      {{ t('teacher.dashboard.accessReportsAndTools') }}
                     </p>
                   </div>
                 </header>

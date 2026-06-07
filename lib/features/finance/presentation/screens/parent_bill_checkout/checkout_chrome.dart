@@ -162,7 +162,7 @@ extension _ParentBillCheckoutChrome on _ParentBillCheckoutScreenState {
       child: Row(
         children: [
           ParentCheckoutMethodTab(
-            label: 'QRIS',
+            label: kFinQRIS.tr,
             caption: '⚡ Tercepat',
             active: _method == _PayMethod.qris,
             onTap: () => _applyState(() {
@@ -171,7 +171,7 @@ extension _ParentBillCheckoutChrome on _ParentBillCheckoutScreenState {
             }),
           ),
           ParentCheckoutMethodTab(
-            label: 'Virtual Acc.',
+            label: kFinVirtualAccount.tr,
             caption: 'BCA / Mandiri',
             active: _method == _PayMethod.va,
             onTap: () => _applyState(() {
@@ -180,7 +180,7 @@ extension _ParentBillCheckoutChrome on _ParentBillCheckoutScreenState {
             }),
           ),
           ParentCheckoutMethodTab(
-            label: 'Manual',
+            label: kFinManual.tr,
             caption: 'Upload bukti',
             active: _method == _PayMethod.manual,
             onTap: () => _applyState(() {

@@ -86,7 +86,7 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
       icon: Icons.cloud_off_rounded,
       tone: BrandEmptyStateTone.danger,
       kicker: 'Sambungan bermasalah',
-      title: 'Tidak dapat memuat rapor',
+      title: kRepCarCannotLoadReport.tr,
       message: errorMessage.isEmpty
           ? 'Periksa koneksi internet, lalu coba muat ulang.'
           : errorMessage,
@@ -103,7 +103,7 @@ mixin ReportCardUIBuilderMixin<T extends StatefulWidget> on State<T> {
       icon: Icons.description_outlined,
       tone: BrandEmptyStateTone.info,
       kicker: 'Belum ada data',
-      title: 'Belum ada rapor terbit',
+      title: kRepCarNoPublishedReports.tr,
       message:
           'Belum ada E-Raport yang dipublikasikan pada semester ini. '
           'Periksa kembali setelah sekolah menerbitkannya.',

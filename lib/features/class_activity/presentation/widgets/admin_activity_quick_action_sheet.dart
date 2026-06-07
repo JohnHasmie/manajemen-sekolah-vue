@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/features/class_activity/domain/models/admin_activity_summary.dart';
 
@@ -22,7 +23,7 @@ class AdminActivityQuickActionSheet {
     final primary = ColorUtils.getRoleColor('admin');
     return AppBottomSheet.show(
       context: context,
-      title: activity.title ?? 'Kegiatan',
+      title: activity.title ?? kClaActDefaultActivityTitle.tr,
       subtitle:
           '${activity.type.labelId} · ${activity.subjectName ?? '—'} · '
           '${activity.className ?? '—'} · ${activity.teacherName ?? '—'}',
@@ -64,8 +65,8 @@ class _Body extends StatelessWidget {
           icon: Icons.visibility_outlined,
           iconBg: const Color(0xFFEDE9FE),
           iconFg: const Color(0xFF7C3AED),
-          title: 'Lihat Detail',
-          desc: 'Buka informasi lengkap, daftar siswa, & statistik',
+          title: kClaActViewDetails.tr,
+          desc: kClaActViewDetailsDesc.tr,
           onTap: () {
             AppNavigator.pop(context);
             onViewDetail();
@@ -76,9 +77,9 @@ class _Body extends StatelessWidget {
             icon: Icons.person_outline_rounded,
             iconBg: const Color(0xFFCCFBF1),
             iconFg: const Color(0xFF0D9488),
-            title: 'Filter pakai Guru ini',
+            title: kClaActFilterByTeacher.tr,
             desc:
-                'Tampilkan semua kegiatan oleh ${activity.teacherName ?? '—'}',
+                '${kClaActShowAllActivitiesByTeacher.tr} ${activity.teacherName ?? '—'}',
             onTap: () {
               AppNavigator.pop(context);
               onFilterByTeacher();
@@ -89,8 +90,8 @@ class _Body extends StatelessWidget {
             icon: Icons.menu_book_outlined,
             iconBg: const Color(0xFFDBEAFE),
             iconFg: const Color(0xFF1D4ED8),
-            title: 'Filter pakai Mapel ini',
-            desc: 'Tampilkan semua kegiatan ${activity.subjectName ?? '—'}',
+            title: kClaActFilterBySubject.tr,
+            desc: '${kClaActShowAllActivities.tr} ${activity.subjectName ?? '—'}',
             onTap: () {
               AppNavigator.pop(context);
               onFilterBySubject();
@@ -101,8 +102,8 @@ class _Body extends StatelessWidget {
             icon: Icons.class_outlined,
             iconBg: const Color(0xFFFEF3C7),
             iconFg: const Color(0xFFB45309),
-            title: 'Filter pakai Kelas ini',
-            desc: 'Tampilkan semua kegiatan kelas ${activity.className ?? '—'}',
+            title: kClaActFilterByClass.tr,
+            desc: '${kClaActShowAllActivitiesClass.tr} ${activity.className ?? '—'}',
             onTap: () {
               AppNavigator.pop(context);
               onFilterByClass();

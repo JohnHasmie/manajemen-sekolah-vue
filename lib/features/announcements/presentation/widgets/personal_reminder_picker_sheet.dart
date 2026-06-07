@@ -9,6 +9,7 @@
 // constraint — re-picking the same offset is idempotent.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/features/announcements/data/announcement_service.dart';
@@ -30,8 +31,8 @@ class PersonalReminderPickerSheet {
   }) async {
     final result = await AppBottomSheet.show<bool>(
       context: context,
-      title: 'Atur Pengingat',
-      subtitle: 'Pilih kapan kamu mau diingatkan sebelum acara',
+      title: kAnnSetReminder.tr,
+      subtitle: kAnnChooseReminderTime.tr,
       icon: Icons.notifications_active_rounded,
       primaryColor: roleColor,
       content: _PickerBody(
@@ -54,13 +55,13 @@ class _PickerBody extends StatefulWidget {
 }
 
 class _PickerBodyState extends State<_PickerBody> {
-  static const _presets = <_ReminderPresetOption>[
-    _ReminderPresetOption(label: '3 hari sebelum', minutes: 4320),
-    _ReminderPresetOption(label: '1 hari sebelum', minutes: 1440),
-    _ReminderPresetOption(label: '3 jam sebelum', minutes: 180),
-    _ReminderPresetOption(label: '1 jam sebelum', minutes: 60),
-    _ReminderPresetOption(label: '30 menit sebelum', minutes: 30),
-    _ReminderPresetOption(label: 'Saat mulai', minutes: 0),
+  static List<_ReminderPresetOption> get _presets => <_ReminderPresetOption>[
+    _ReminderPresetOption(label: kAnnReminder3DaysBefore.tr, minutes: 4320),
+    _ReminderPresetOption(label: kAnnReminder1DayBefore.tr, minutes: 1440),
+    _ReminderPresetOption(label: kAnnReminder3HoursBefore.tr, minutes: 180),
+    _ReminderPresetOption(label: kAnnReminder1HourBefore.tr, minutes: 60),
+    _ReminderPresetOption(label: kAnnReminder30MinutesBefore.tr, minutes: 30),
+    _ReminderPresetOption(label: kAnnReminderAtStart.tr, minutes: 0),
   ];
 
   bool _saving = false;
@@ -76,9 +77,9 @@ class _PickerBodyState extends State<_PickerBody> {
     setState(() => _saving = false);
     if (result != null) {
       Navigator.of(context).pop(true);
-      SnackBarUtils.showSuccess(context, 'Pengingat tersimpan');
+      SnackBarUtils.showSuccess(context, kAnnReminderSaved.tr);
     } else {
-      SnackBarUtils.showError(context, 'Gagal menyimpan pengingat.');
+      SnackBarUtils.showError(context, kAnnReminderSaveFailed.tr);
     }
   }
 
@@ -146,8 +147,7 @@ class _PickerBodyState extends State<_PickerBody> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Pengingat akan tampil di notifikasi pada waktu yang dipilih, '
-            'terpisah dari pengingat yang dikirim sekolah.',
+            kAnnReminderNote.tr,
             style: TextStyle(
               fontSize: 11,
               color: ColorUtils.slate500,

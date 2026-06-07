@@ -50,7 +50,7 @@ mixin SettingsScreenDialogsMixin {
         'en': 'Edit Profile',
         'id': 'Edit Profil',
       }),
-      subtitle: 'Perbarui informasi profil Anda',
+      subtitle: kSetUpdateProfileInfo.tr,
       icon: Icons.person_rounded,
       primaryColor: primaryColor,
       content: _buildProfileFormFields(

@@ -16,6 +16,7 @@
 -->
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { ClassActivityService } from '@/services/class-activity.service';
 import type { ClassActivity } from '@/types/class-activity';
@@ -29,6 +30,7 @@ import ParentActivityCard from '@/components/feature/ParentActivityCard.vue';
 import ParentActivityDetailModal from '@/components/feature/ParentActivityDetailModal.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
+const { t } = useI18n();
 const { activeChildId } = useChildPicker();
 
 // ── Jenis filter (Tugas/Materi) — mirrors mobile's `_typeFilter` ──
@@ -37,9 +39,9 @@ const jenisFilter = ref<JenisFilter>(null);
 const showJenisPicker = ref(false);
 
 const jenisLabel = computed(() => {
-  if (jenisFilter.value === 'tugas') return 'Tugas';
-  if (jenisFilter.value === 'materi') return 'Materi';
-  return 'Semua jenis';
+  if (jenisFilter.value === 'tugas') return t('classActivity.task');
+  if (jenisFilter.value === 'materi') return t('classActivity.material');
+  return t('common.allTypes');
 });
 const hasActiveFilter = computed(() => jenisFilter.value !== null);
 
@@ -112,10 +114,22 @@ function ymd(iso: string): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-const MONTHS_UPPER = [
-  'JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI',
-  'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER',
-];
+// Uppercase month names track the active i18n locale so date headings
+// flip to "APRIL 2026" (English) vs "APRIL 2026" / "MEI 2026" (Indonesian).
+const MONTHS_UPPER = computed<string[]>(() => [
+  t('parent.activity.monthLong.jan'),
+  t('parent.activity.monthLong.feb'),
+  t('parent.activity.monthLong.mar'),
+  t('parent.activity.monthLong.apr'),
+  t('parent.activity.monthLong.may'),
+  t('parent.activity.monthLong.jun'),
+  t('parent.activity.monthLong.jul'),
+  t('parent.activity.monthLong.aug'),
+  t('parent.activity.monthLong.sep'),
+  t('parent.activity.monthLong.oct'),
+  t('parent.activity.monthLong.nov'),
+  t('parent.activity.monthLong.dec'),
+]);
 
 function dateHeader(key: string): string {
   const d = new Date(key);
@@ -124,9 +138,9 @@ function dateHeader(key: string): string {
   const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const p0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffDays = Math.round((t0.getTime() - p0.getTime()) / 86_400_000);
-  if (diffDays === 0) return 'HARI INI';
-  if (diffDays === 1) return 'KEMARIN';
-  return `${d.getDate()} ${MONTHS_UPPER[d.getMonth()]} ${d.getFullYear()}`;
+  if (diffDays === 0) return t('common.today');
+  if (diffDays === 1) return t('common.yesterday');
+  return `${d.getDate()} ${MONTHS_UPPER.value[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 const groupedItems = computed<DateGroup[]>(() => {
@@ -150,13 +164,13 @@ const listState = computed<AsyncState<ClassActivity[]>>(() => {
 
 const emptyTitle = computed(() =>
   items.value.length > 0 && filteredItems.value.length === 0
-    ? 'Tidak ada kegiatan untuk filter ini'
-    : 'Belum ada kegiatan',
+    ? t('classActivity.noFilterMatch')
+    : t('classActivity.empty'),
 );
 const emptyDescription = computed(() =>
   items.value.length > 0 && filteredItems.value.length === 0
-    ? 'Coba reset filter jenis.'
-    : 'Guru belum mencatat kegiatan untuk anak ini.',
+    ? t('common.tryResetFilter')
+    : t('classActivity.noActivitiesRecorded'),
 );
 
 // ── Auto mark-as-read (IntersectionObserver) ──
@@ -352,7 +366,7 @@ function resetFilter() {
             }"
             @click="pickJenis(null)"
           >
-            Semua jenis
+            {{ t('common.allTypes') }}
           </button>
         </li>
         <li>
@@ -369,7 +383,7 @@ function resetFilter() {
             >
               <NavIcon name="check-square" :size="11" />
             </span>
-            Tugas
+            {{ t('classActivity.task') }}
           </button>
         </li>
         <li>
@@ -386,7 +400,7 @@ function resetFilter() {
             >
               <NavIcon name="book" :size="11" />
             </span>
-            Materi
+            {{ t('classActivity.material') }}
           </button>
         </li>
       </ul>

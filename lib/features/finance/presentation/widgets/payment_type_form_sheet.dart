@@ -184,10 +184,10 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet>
     final navy = widget.primaryColor;
 
     return AppBottomSheet(
-      title: isEdit ? 'Ubah jenis pembayaran' : 'Tambah jenis pembayaran',
+      title: isEdit ? kFinEditPaymentType.tr : kFinAddPaymentType.tr,
       subtitle: isEdit
-          ? 'Perbarui detail jenis pembayaran berikut.'
-          : 'Buat jenis pembayaran baru untuk dijadwalkan ke siswa.',
+          ? kFinUpdatePaymentTypeDesc.tr
+          : kFinCreatePaymentTypeDesc.tr,
       icon: Icons.credit_card_rounded,
       primaryColor: navy,
       maxHeightFactor: 0.92,
@@ -197,13 +197,13 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet>
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 6),
-          const _SectionHeader(
-            label: 'INFORMASI DASAR',
+          _SectionHeader(
+            label: kFinBasicInformation.tr,
             icon: Icons.edit_note_rounded,
           ),
           const SizedBox(height: 12),
           _LabeledField(
-            label: 'NAMA JENIS PEMBAYARAN',
+            label: kFinPaymentTypeName.tr,
             controller: _nameController,
             hint: 'Misal: SPP September',
             icon: Icons.payments_rounded,
@@ -211,7 +211,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet>
           ),
           const SizedBox(height: 14),
           _LabeledField(
-            label: 'JUMLAH (RP)',
+            label: kFinAmountIDR.tr,
             controller: _amountController,
             hint: 'Rp 0',
             icon: Icons.attach_money_rounded,
@@ -222,7 +222,7 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet>
           ),
           const SizedBox(height: 14),
           _LabeledField(
-            label: 'DESKRIPSI · OPSIONAL',
+            label: kFinDescriptionOptional.tr,
             controller: _descriptionController,
             hint: 'Catatan tambahan untuk wali kelas atau orang tua…',
             icon: Icons.notes_rounded,
@@ -230,8 +230,8 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet>
             maxLines: 3,
           ),
           const SizedBox(height: 22),
-          const _SectionHeader(
-            label: 'PERIODE PENAGIHAN',
+          _SectionHeader(
+            label: kFinBillingPeriodHeader.tr,
             icon: Icons.schedule_rounded,
           ),
           const SizedBox(height: 12),
@@ -245,8 +245,8 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet>
           // "When should bills start being generated?" — date picker
           // for every periode, plus a day-of-month picker that only
           // appears for `bulanan` so non-monthly Jenis stay simple.
-          const _SectionHeader(
-            label: 'MULAI AKTIF',
+          _SectionHeader(
+            label: kFinStartDate.tr,
             icon: Icons.event_available_rounded,
           ),
           const SizedBox(height: 12),
@@ -259,8 +259,8 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet>
             onDayOfMonthChanged: (d) => setState(() => _dayOfMonth = d),
           ),
           const SizedBox(height: 22),
-          const _SectionHeader(
-            label: 'TARGET PENERIMA',
+          _SectionHeader(
+            label: kFinRecipientTargetLabel.tr,
             icon: Icons.groups_rounded,
           ),
           const SizedBox(height: 12),
@@ -276,8 +276,8 @@ class _PaymentTypeFormSheetState extends ConsumerState<PaymentTypeFormSheet>
             },
           ),
           const SizedBox(height: 22),
-          const _SectionHeader(
-            label: 'STATUS AKTIVASI',
+          _SectionHeader(
+            label: kFinActivationStatus.tr,
             icon: Icons.toggle_on_rounded,
           ),
           const SizedBox(height: 12),

@@ -3,6 +3,7 @@ import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/school_level_settings_screen.dart';
 
@@ -38,7 +39,7 @@ mixin SchoolLevelDataMixin on State<SchoolLevelSettingsScreen> {
         setState(() => onLoadingChanged(false));
         SnackBarUtils.showError(
           context,
-          'Gagal memuat pengaturan: ${ErrorUtils.getFriendlyMessage(e)}',
+          '${kSetFailedLoadSettings.tr}${ErrorUtils.getFriendlyMessage(e)}',
         );
       }
     }

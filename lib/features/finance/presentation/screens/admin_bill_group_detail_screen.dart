@@ -17,6 +17,7 @@ import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/utils/error_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/admin_finance_components.dart';
 import 'package:manajemensekolah/core/widgets/app_refresh_indicator.dart';
 import 'package:manajemensekolah/core/widgets/brand_kpi_strip.dart';
@@ -146,7 +147,7 @@ class _AdminBillGroupDetailScreenState
         onRefresh: _onRefresh,
         header: BrandPageHeader(
           role: 'admin',
-          subtitle: 'DETAIL TAGIHAN',
+          subtitle: kFinBillDetailsHeader.tr,
           title: widget.title,
           isRealtimeFresh: !_isLoading && _errorMessage == null,
           kpiOverlayHeight: BrandKpiStrip.defaultOverlap,
@@ -154,18 +155,18 @@ class _AdminBillGroupDetailScreenState
         kpiCard: BrandKpiStrip(
           columns: [
             BrandKpiColumn(
-              label: 'Siswa',
+              label: kFinStudent.tr,
               value: '${stats.totalCount}',
               sub: stats.paidCount > 0 ? '${stats.paidCount} lunas' : null,
             ),
             BrandKpiColumn(
-              label: 'Belum bayar',
+              label: kFinUnpaidAmount.tr,
               value: '${stats.unpaidCount}',
               valueColor: stats.unpaidCount > 0 ? ColorUtils.warning600 : null,
               sub: _formatRupiahShort(stats.unpaidAmount),
             ),
             BrandKpiColumn(
-              label: 'Jatuh tempo',
+              label: kFinOverdueLabel.tr,
               value: '${stats.overdueCount}',
               valueColor: stats.overdueCount > 0 ? ColorUtils.error600 : null,
               sub: _formatRupiahShort(stats.overdueAmount),
@@ -431,7 +432,7 @@ class _SummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             _row(
-              label: 'Total tagihan',
+              label: kFinTotalBills.tr,
               value: _AdminBillGroupDetailScreenState._formatRupiahShort(
                 stats.totalAmount,
               ),
@@ -440,13 +441,13 @@ class _SummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             _row(
-              label: 'Sudah dibayar',
+              label: kFinAlreadyPaid.tr,
               value: '$paidShort · $pctPaid%',
               accent: const Color(0xFF10B981),
             ),
             const SizedBox(height: 8),
             _row(
-              label: 'Rata-rata / siswa',
+              label: kFinAveragePerStudent.tr,
               value: _AdminBillGroupDetailScreenState._formatRupiahShort(avg),
               accent: ColorUtils.slate700,
             ),

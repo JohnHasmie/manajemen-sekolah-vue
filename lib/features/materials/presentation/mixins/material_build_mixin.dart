@@ -332,17 +332,11 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
 
     final title = selectedSubject != null
         ? getSelectedSubjectName()
-        : lp.getTranslatedText({
-            'en': 'Chapters & Sub-chapters',
-            'id': 'Bab & Sub-Bab',
-          });
+        : kMatChaptersSubchapters.tr;
 
     final kicker = selectedSubject != null && selectedClassName != null
         ? '${selectedClassName!.toUpperCase()} · MATERI'
-        : lp.getTranslatedText({
-            'en': 'Teaching Materials',
-            'id': 'Materi Pembelajaran',
-          });
+        : kMatTeachingMaterials.tr;
 
     return BrandPageHeader(
       role: 'guru',
@@ -381,7 +375,7 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
     if (selectedClassId != null) {
       chips.add(
         BrandFilterChip(
-          label: 'Kelas',
+          label: kClass.tr,
           value: selectedClassName ?? '-',
           showChevron: false,
           onTap: clearClassFilter,
@@ -391,7 +385,7 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
     if (selectedSubject != null) {
       chips.add(
         BrandFilterChip(
-          label: 'Mapel',
+          label: kMatSubjectMapel.tr,
           value: getSelectedSubjectName(),
           showChevron: false,
           onTap: clearSubjectFilter,
@@ -438,15 +432,15 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
       child: IntrinsicHeight(
         child: Row(
           children: [
-            _kpiCell('${stats.totalChapters}', 'BAB', ColorUtils.brandCobalt),
+            _kpiCell('${stats.totalChapters}', kMatChapters.tr, ColorUtils.brandCobalt),
             _kpiDivider(),
             _kpiCell(
               '${stats.totalSubChapters}',
-              'SUB-BAB',
+              kMatSubChapters.tr,
               ColorUtils.slate800,
             ),
             _kpiDivider(),
-            _kpiCell('${stats.checked}', 'TERCATAT', ColorUtils.success600),
+            _kpiCell('${stats.checked}', kMatMarkedUpper.tr, ColorUtils.success600),
           ],
         ),
       ),
@@ -588,7 +582,7 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            lp.getTranslatedText({'en': 'Generate AI', 'id': 'Generate AI'}),
+            kMatGenerateAiShort.tr,
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w800,
@@ -629,14 +623,8 @@ mixin MaterialBuildMixin on ConsumerState<TeacherMaterialScreen> {
         isEmpty: chapterMaterialList.isEmpty,
         onRefresh: forceRefresh,
         role: 'guru',
-        emptyTitle: lp.getTranslatedText({
-          'en': 'No Materials',
-          'id': 'Tidak Ada Materi',
-        }),
-        emptySubtitle: lp.getTranslatedText({
-          'en': 'No materials available for this subject',
-          'id': 'Tidak ada materi untuk mapel ini',
-        }),
+        emptyTitle: kMatNoMaterials.tr,
+        emptySubtitle: kMatNoMaterialsForSubject.tr,
         emptyIcon: Icons.menu_book,
         childBuilder: () => buildChapterContent(lp),
         loadingBuilder: () => const SkeletonListLoading(

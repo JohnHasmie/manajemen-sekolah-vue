@@ -11,6 +11,7 @@
 //
 // Returns the new name on Simpan, `null` on Batal / dismiss / empty.
 import 'package:flutter/material.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Shows a small AlertDialog for renaming a chapter. Resolves to:
 ///  • the trimmed new name on Simpan or text-field onSubmitted
@@ -23,26 +24,26 @@ Future<String?> showGradeRecapChapterRenameDialog({
   final newName = await showDialog<String>(
     context: context,
     builder: (dialogCtx) => AlertDialog(
-      title: const Text('Ubah nama bab'),
+      title: Text(kGraRenameChapter.tr),
       content: TextField(
         controller: controller,
         autofocus: true,
         textCapitalization: TextCapitalization.sentences,
-        decoration: const InputDecoration(
-          labelText: 'Nama bab',
-          hintText: 'Mis. "Bab 1: Pengantar"',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: kGraChapterName.tr,
+          hintText: kGraChapterNameExample.tr,
+          border: const OutlineInputBorder(),
         ),
         onSubmitted: (v) => Navigator.of(dialogCtx).pop(v.trim()),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogCtx).pop(),
-          child: const Text('Batal'),
+          child: Text(kCancel.tr),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(dialogCtx).pop(controller.text.trim()),
-          child: const Text('Simpan'),
+          child: Text(kSave.tr),
         ),
       ],
     ),

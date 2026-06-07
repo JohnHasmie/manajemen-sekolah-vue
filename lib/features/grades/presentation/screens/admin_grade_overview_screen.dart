@@ -189,10 +189,7 @@ class _AdminGradeOverviewScreenState
               decoration: InputDecoration(
                 isDense: true,
                 border: InputBorder.none,
-                hintText: lp.getTranslatedText({
-                  'en': 'Search teacher...',
-                  'id': 'Cari guru...',
-                }),
+                hintText: kGraSearchTeacher.tr,
                 hintStyle: const TextStyle(
                   color: Color(0xFF94A3B8),
                   fontSize: 13,
@@ -225,14 +222,8 @@ class _AdminGradeOverviewScreenState
     if (_teachers.isEmpty) {
       return EmptyState(
         icon: Icons.grade_outlined,
-        title: lp.getTranslatedText({
-          'en': 'No Grade Data',
-          'id': 'Belum Ada Data Nilai',
-        }),
-        subtitle: lp.getTranslatedText({
-          'en': 'No grades have been recorded yet',
-          'id': 'Belum ada nilai yang dicatat',
-        }),
+        title: kGraNoGradeData.tr,
+        subtitle: kGraNoGradesRecorded.tr,
       );
     }
 

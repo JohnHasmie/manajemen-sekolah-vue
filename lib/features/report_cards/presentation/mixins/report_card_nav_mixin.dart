@@ -13,10 +13,9 @@ mixin ReportCardNavMixin on ConsumerState<ReportCardDetailScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Perubahan Belum Disimpan'),
-          content: const Text(
-            'Anda memiliki perubahan yang belum disimpan. '
-            'Apakah Anda yakin ingin meninggalkan halaman ini?',
+          title: Text(kRepCarUnsavedChanges.tr),
+          content: Text(
+            kRepCarConfirmLeaveUnsaved.tr,
           ),
           actions: [
             TextButton(
@@ -26,9 +25,9 @@ mixin ReportCardNavMixin on ConsumerState<ReportCardDetailScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () => AppNavigator.pop(context, true),
-              child: const Text(
-                'Tinggalkan',
-                style: TextStyle(color: Colors.white),
+              child: Text(
+                kRepCarLeave.tr,
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           ],

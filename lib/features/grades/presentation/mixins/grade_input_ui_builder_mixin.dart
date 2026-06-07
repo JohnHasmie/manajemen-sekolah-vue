@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/subjects/domain/models/subject.dart';
 import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
 import 'package:manajemensekolah/features/grades/presentation/widgets/grade_input_dialog.dart';
@@ -69,7 +70,7 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'BUKU NILAI · ${subjectName.toUpperCase()}',
+                      '${kGraBookLabel.tr} · ${subjectName.toUpperCase()}',
                       style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,
@@ -80,8 +81,8 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    const Text(
-                      'Input Nilai Baru',
+                    Text(
+                      kGraNewGradeEntryTitle.tr,
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
@@ -193,7 +194,7 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                   final d = await showModernDatePicker(
                     context: context,
                     initialDate: selectedDate,
-                    title: 'Pilih Tanggal Penilaian',
+                    title: kGraSelectAssessmentDate.tr,
                   );
                   if (d != null) setSelectedDate(d);
                 },
@@ -241,7 +242,7 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                     fontWeight: FontWeight.w600,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Judul (opsional)',
+                    hintText: kGraTitleOptional.tr,
                     hintStyle: TextStyle(
                       fontSize: 11.5,
                       color: ColorUtils.slate400,
@@ -483,7 +484,7 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                 height: 1.0,
               ),
               decoration: InputDecoration(
-                hintText: focusNode.hasFocus ? '' : 'Nilai',
+                hintText: focusNode.hasFocus ? '' : kGraScore.tr,
                 hintStyle: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
@@ -700,7 +701,7 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              filled == 0 ? 'Simpan' : 'Simpan $filled',
+                              filled == 0 ? kSave.tr : '${kSave.tr} $filled',
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w900,

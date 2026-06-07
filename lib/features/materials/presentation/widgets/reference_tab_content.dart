@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Tab content listing AI-generated reference materials.
 ///
@@ -36,25 +37,25 @@ class ReferenceTabContent extends StatelessWidget {
       case 'concept_deep_dive':
         return (
           color: ColorUtils.corporateBlue500,
-          label: 'Pendalaman Konsep',
+          label: kMatConceptDeepDive.tr,
           icon: Icons.psychology_rounded,
         );
       case 'real_world_example':
         return (
           color: ColorUtils.emerald500,
-          label: 'Contoh Nyata',
+          label: kMatRealWorldExample.tr,
           icon: Icons.public_rounded,
         );
       case 'common_misconception':
         return (
           color: ColorUtils.amber500,
-          label: 'Miskonsepsi Umum',
+          label: kMatCommonMisconception.tr,
           icon: Icons.warning_amber_rounded,
         );
       case 'teaching_tip':
         return (
           color: ColorUtils.violet500,
-          label: 'Tips Mengajar',
+          label: kMatTeachingTips.tr,
           icon: Icons.tips_and_updates_rounded,
         );
       default:
@@ -214,7 +215,7 @@ class _EmptyReferenceState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Belum Ada Referensi',
+              kMatNoReferences.tr,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
@@ -223,7 +224,7 @@ class _EmptyReferenceState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Generate materi AI untuk mendapatkan referensi otomatis.',
+              kMatGenerateForReferences.tr,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: ColorUtils.slate500),
             ),
@@ -246,14 +247,14 @@ class _EmptyReferenceState extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.auto_awesome, size: 16, color: Colors.white),
-                    SizedBox(width: AppSpacing.sm),
+                    const Icon(Icons.auto_awesome, size: 16, color: Colors.white),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
-                      'Generate AI',
-                      style: TextStyle(
+                      kMatGenerateAiShort.tr,
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,

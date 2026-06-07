@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 
 /// Tab bar for sub-chapter detail with Material, Quiz, Reference tabs.
@@ -60,16 +61,16 @@ class SubChapterTabBar extends StatelessWidget {
         // before it busts the row, and MainAxisSize.min keeps the label
         // centered within the slot when it doesn't need to shrink.
         tabs: [
-          const Tab(
+          Tab(
             height: 40,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.auto_stories_rounded, size: 16),
-                SizedBox(width: 6),
+                const Icon(Icons.auto_stories_rounded, size: 16),
+                const SizedBox(width: 6),
                 Flexible(
-                  child: Text('Materi', overflow: TextOverflow.ellipsis),
+                  child: Text(kMatMaterialsTab.tr, overflow: TextOverflow.ellipsis),
                 ),
               ],
             ),
@@ -82,8 +83,8 @@ class SubChapterTabBar extends StatelessWidget {
               children: [
                 const Icon(Icons.quiz_rounded, size: 16),
                 const SizedBox(width: 6),
-                const Flexible(
-                  child: Text('Kuis', overflow: TextOverflow.ellipsis),
+                Flexible(
+                  child: Text(kMatQuizTab.tr, overflow: TextOverflow.ellipsis),
                 ),
                 if (quizzes.isNotEmpty) ...[
                   const SizedBox(width: AppSpacing.xs),
@@ -108,16 +109,16 @@ class SubChapterTabBar extends StatelessWidget {
               ],
             ),
           ),
-          const Tab(
+          Tab(
             height: 40,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.menu_book_rounded, size: 16),
-                SizedBox(width: 6),
+                const Icon(Icons.menu_book_rounded, size: 16),
+                const SizedBox(width: 6),
                 Flexible(
-                  child: Text('Referensi', overflow: TextOverflow.ellipsis),
+                  child: Text(kMatReferenceTab.tr, overflow: TextOverflow.ellipsis),
                 ),
               ],
             ),

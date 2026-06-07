@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
@@ -23,8 +24,8 @@ Future<bool> showLoginHelpSheet({
 }) async {
   final result = await AppBottomSheet.show<bool>(
     context: context,
-    title: 'Bantuan Masuk',
-    subtitle: 'Tim kami akan menghubungi Anda dalam 1×24 jam.',
+    title: kAutHelpTitle.tr,
+    subtitle: kAutHelpSubtitle.tr,
     icon: Icons.help_outline_rounded,
     primaryColor: ColorUtils.brandCobalt,
     contentPadding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
@@ -112,8 +113,7 @@ class _LoginHelpSheetBodyState extends State<_LoginHelpSheetBody> {
           context,
           (result['message']?.toString().trim().isNotEmpty == true
               ? result['message'].toString()
-              : 'Permintaan bantuan terkirim. '
-                    'Tim kami akan menghubungi Anda dalam 1×24 jam.'),
+              : kAutHelpSuccess.tr),
         );
       });
     } catch (e) {
@@ -137,20 +137,20 @@ class _LoginHelpSheetBodyState extends State<_LoginHelpSheetBody> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _field(
-            label: 'Nama Lengkap',
+            label: kAutFullNameLabel.tr,
             required: true,
             controller: _nameCtrl,
             icon: Icons.person_rounded,
-            hint: 'mis. Yahya Hasymi',
+            hint: kAutNameHint.tr,
             cobalt: cobalt,
           ),
           const SizedBox(height: 12),
           _field(
-            label: 'Email Aktif',
+            label: kAutActiveEmail.tr,
             required: true,
             controller: _emailCtrl,
             icon: Icons.alternate_email_rounded,
-            hint: 'anda@sekolah.id',
+            hint: kAutEmailHint.tr,
             keyboardType: TextInputType.emailAddress,
             cobalt: cobalt,
           ),
@@ -160,11 +160,11 @@ class _LoginHelpSheetBodyState extends State<_LoginHelpSheetBody> {
             children: [
               Expanded(
                 child: _field(
-                  label: 'No. WhatsApp',
+                  label: kAutWhatsAppNumber.tr,
                   required: false,
                   controller: _phoneCtrl,
                   icon: Icons.phone_rounded,
-                  hint: '08…',
+                  hint: kAutPhoneHint.tr,
                   keyboardType: TextInputType.phone,
                   cobalt: cobalt,
                 ),
@@ -172,18 +172,22 @@ class _LoginHelpSheetBodyState extends State<_LoginHelpSheetBody> {
               const SizedBox(width: 8),
               Expanded(
                 child: _field(
-                  label: 'Sekolah',
+                  label: kAutSchoolLabel.tr,
                   required: false,
                   controller: _schoolCtrl,
                   icon: Icons.school_rounded,
-                  hint: 'mis. SMP A',
+                  hint: kAutSchoolHint.tr,
                   cobalt: cobalt,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          _label('Pesan', required: true, helper: '· min. 10 karakter'),
+          _label(
+            kAutMessageLabel.tr,
+            required: true,
+            helper: kAutMinCharacters.tr,
+          ),
           const SizedBox(height: 6),
           TextField(
             controller: _msgCtrl,
@@ -191,8 +195,7 @@ class _LoginHelpSheetBodyState extends State<_LoginHelpSheetBody> {
             minLines: 3,
             style: TextStyle(fontSize: 12.5, color: ColorUtils.slate900),
             decoration: InputDecoration(
-              hintText:
-                  'Ceritakan kendala Anda — kami akan bantu menyelesaikannya.',
+              hintText: kAutMessageHint.tr,
               hintStyle: TextStyle(fontSize: 12.5, color: ColorUtils.slate400),
               filled: true,
               fillColor: ColorUtils.slate50,
@@ -248,8 +251,8 @@ class _LoginHelpSheetBodyState extends State<_LoginHelpSheetBody> {
           ],
           const SizedBox(height: 14),
           BottomSheetFooter(
-            primaryLabel: _busy ? 'Mengirim…' : 'Kirim Permintaan',
-            secondaryLabel: 'Batal',
+            primaryLabel: _busy ? kAutSending.tr : kAutSendRequest.tr,
+            secondaryLabel: kCancel.tr,
             primaryColor: cobalt,
             primaryEnabled: _canSubmit && !_busy,
             onPrimary: () {

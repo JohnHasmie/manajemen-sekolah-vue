@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/brand_empty_state.dart';
 
 class FinanceVerificationTab extends StatelessWidget {
@@ -42,11 +43,11 @@ class FinanceVerificationTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (pendingPaymentList.isEmpty) {
-      return const BrandEmptyState(
+      return BrandEmptyState(
         icon: Icons.verified_user_outlined,
         tone: BrandEmptyStateTone.success,
-        title: 'Tidak ada pembayaran menunggu verifikasi',
-        message: 'Semua pembayaran telah diverifikasi',
+        title: kFinNoPendingVerification.tr,
+        message: kFinAllPaymentsVerified.tr,
       );
     }
     return CustomScrollView(
@@ -284,7 +285,7 @@ class _PendingRow extends StatelessWidget {
                             Expanded(
                               child: _OutlineButton(
                                 icon: Icons.image_rounded,
-                                label: 'Bukti',
+                                label: kFinProof.tr,
                                 navy: navy,
                                 onTap: onShowProof,
                               ),
@@ -314,7 +315,7 @@ class _PendingRow extends StatelessWidget {
                           Expanded(
                             flex: 2,
                             child: _PrimaryButton(
-                              label: 'Verifikasi',
+                              label: kFinVerify.tr,
                               navy: navy,
                               enabled: !isReadOnly,
                               onTap: isReadOnly ? null : onTap,

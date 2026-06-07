@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/lesson_plans/domain/models/lesson_plan_format.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/lesson_plan_admin_detail_page.dart';
 import 'package:manajemensekolah/features/lesson_plans/presentation/widgets/lesson_plan_file_card.dart';
@@ -24,17 +25,17 @@ mixin ContentCardBuilderMixin on State<LessonPlanAdminDetailPage> {
     final filledCount = filledSections.length;
     final totalCount = sectionKeys.length;
 
-    String formatTitle = 'Isi RPP';
-    String formatSubtitle = '$filledCount/$totalCount bagian terisi';
+    String formatTitle = kLesPlaContents.tr;
+    String formatSubtitle = '$filledCount/$totalCount ${kLesPlaSectionsFilled.tr}';
     if (format == LessonPlanFormat.k13) {
-      formatTitle = 'Bagian K13';
+      formatTitle = kLesPlaK13Section.tr;
       formatSubtitle = '$filledCount bagian terisi · siap ditinjau';
     } else if (format == LessonPlanFormat.modulAjar) {
-      formatTitle = 'Bagian Modul Ajar';
+      formatTitle = kLesPlaModulAjarSection.tr;
       formatSubtitle = '$filledCount bagian terisi · siap ditinjau';
     } else if (format == LessonPlanFormat.rpp1Halaman) {
       formatTitle = 'RPP 1 Halaman';
-      formatSubtitle = '$filledCount komponen inti';
+      formatSubtitle = '$filledCount ${kLesPlaCoreComponents.tr}';
     }
 
     return Container(

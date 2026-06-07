@@ -101,16 +101,16 @@ class AnnouncementDetailDialog extends StatelessWidget {
         '—';
     final hasEvent = announcementData['event_at'] != null;
 
-    final titleStr = model.title.isNotEmpty ? model.title : 'Tanpa Judul';
+    final titleStr = model.title.isNotEmpty ? model.title : kAnnNoTitle.tr;
 
     return AppBottomSheet(
-      title: isImportant ? 'Pengumuman Penting' : 'Detail Pengumuman',
+      title: isImportant ? kAnnImportantTitle.tr : kAnnDetailTitle.tr,
       subtitle: titleStr,
       icon: isImportant ? Icons.warning_amber_rounded : Icons.campaign_outlined,
       primaryColor: isImportant ? ColorUtils.error600 : primaryColor,
       footer: BottomSheetFooter(
-        primaryLabel: 'Edit Data',
-        secondaryLabel: onDelete != null ? 'Hapus' : 'Tutup',
+        primaryLabel: kAnnEditData.tr,
+        secondaryLabel: onDelete != null ? kDelete.tr : kClose.tr,
         secondaryDestructive: onDelete != null,
         primaryColor: primaryColor,
         primaryEnabled: onEdit != null,

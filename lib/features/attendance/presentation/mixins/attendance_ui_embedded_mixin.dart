@@ -181,25 +181,25 @@ mixin AttendanceUIEmbeddedMixin on ConsumerState<AttendancePage> {
         child: Row(
           children: [
             _kpiCell(
-              label: 'Hadir',
+              label: kPresent.tr,
               value: (c['hadir'] ?? 0) + (c['terlambat'] ?? 0),
               color: ColorUtils.success600,
             ),
             _kpiDivider(),
             _kpiCell(
-              label: 'Sakit',
+              label: kSick.tr,
               value: c['sakit'] ?? 0,
               color: ColorUtils.warning600,
             ),
             _kpiDivider(),
             _kpiCell(
-              label: 'Izin',
+              label: kPermission.tr,
               value: c['izin'] ?? 0,
               color: ColorUtils.info600,
             ),
             _kpiDivider(),
             _kpiCell(
-              label: 'Alpa',
+              label: kAttAlpa.tr,
               value: c['alpha'] ?? 0,
               color: ColorUtils.error600,
             ),

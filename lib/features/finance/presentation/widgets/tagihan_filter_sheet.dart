@@ -13,6 +13,7 @@
 // surface in the app.
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/filter_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/filter_chip_grid.dart';
 // Re-export the canonical TagihanStatusFilter enum so consumers can
@@ -219,7 +220,7 @@ class _TagihanFilterSheetState extends State<_TagihanFilterSheet> {
     final showClass = widget.showClassSections;
 
     return AppFilterBottomSheet(
-      title: 'Filter Tagihan',
+      title: kFinFilterBills.tr,
       headerSubtitle:
           'Saring tagihan berdasarkan status, jenis, '
           'periode, tingkat, dan kelas.',
@@ -243,21 +244,21 @@ class _TagihanFilterSheetState extends State<_TagihanFilterSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           FilterChipGrid<TagihanStatusFilter>(
-            title: 'Status',
-            options: const [
+            title: kFinStatus.tr,
+            options: [
               FilterOption(
                 value: TagihanStatusFilter.all,
-                label: 'Semua',
+                label: kFinAll.tr,
                 icon: Icons.all_inbox_rounded,
               ),
               FilterOption(
                 value: TagihanStatusFilter.unpaid,
-                label: 'Belum Lunas',
+                label: kFinUnpaid.tr,
                 icon: Icons.error_outline_rounded,
               ),
               FilterOption(
                 value: TagihanStatusFilter.overdue,
-                label: 'Jatuh Tempo',
+                label: kFinDueDate.tr,
                 icon: Icons.event_busy_rounded,
               ),
             ],
@@ -269,7 +270,7 @@ class _TagihanFilterSheetState extends State<_TagihanFilterSheet> {
           const SizedBox(height: 18),
           if (widget.jenisOptions.isNotEmpty) ...[
             FilterChipGrid<String>(
-              title: 'Jenis Pembayaran',
+              title: kFinPaymentType.tr,
               multiSelect: true,
               options: [
                 for (final j in widget.jenisOptions)
@@ -283,7 +284,7 @@ class _TagihanFilterSheetState extends State<_TagihanFilterSheet> {
           ],
           if (widget.availableYears.isNotEmpty) ...[
             FilterChipGrid<int>(
-              title: 'Tahun',
+              title: kFinYearFilter.tr,
               options: [
                 for (final y in widget.availableYears)
                   FilterOption(value: y, label: y.toString()),
@@ -295,7 +296,7 @@ class _TagihanFilterSheetState extends State<_TagihanFilterSheet> {
             const SizedBox(height: 18),
           ],
           FilterChipGrid<int>(
-            title: 'Bulan',
+            title: kFinMonthFilter.tr,
             options: const [
               FilterOption(value: 1, label: 'Jan'),
               FilterOption(value: 2, label: 'Feb'),
@@ -317,7 +318,7 @@ class _TagihanFilterSheetState extends State<_TagihanFilterSheet> {
           if (showClass && _tingkatOptions.isNotEmpty) ...[
             const SizedBox(height: 18),
             FilterChipGrid<String>(
-              title: 'Tingkat',
+              title: kFinGradeLevel.tr,
               multiSelect: true,
               options: [
                 for (final t in _tingkatOptions)

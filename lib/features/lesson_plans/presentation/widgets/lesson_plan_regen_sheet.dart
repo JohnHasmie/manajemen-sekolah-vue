@@ -107,9 +107,9 @@ class _RegenFieldSheetState extends State<_RegenFieldSheet> {
   @override
   Widget build(BuildContext context) {
     return AppBottomSheet(
-      title: 'Regenerasi ${widget.fieldLabel}',
+      title: '${kRegenerate.tr} ${widget.fieldLabel}',
       subtitle:
-          'Sisa regenerasi: ${widget.remaining} dari ${widget.maxAttempts}',
+          '${kLesPlaRemainingRegens.tr} ${widget.remaining} dari ${widget.maxAttempts}',
       icon: Icons.auto_awesome_rounded,
       primaryColor: widget.primaryColor,
       maxHeightFactor: 0.7,
@@ -118,8 +118,7 @@ class _RegenFieldSheetState extends State<_RegenFieldSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Tambahkan instruksi spesifik (opsional) untuk memandu AI saat '
-            'membuat ulang bagian ini.',
+            kLesPlaAddInstructionsPrompt.tr,
             style: TextStyle(
               fontSize: 13,
               color: ColorUtils.slate500,
@@ -167,8 +166,8 @@ class _RegenAllSheetState extends State<_RegenAllSheet> {
   @override
   Widget build(BuildContext context) {
     return AppBottomSheet(
-      title: 'Regenerasi Semua Field',
-      subtitle: 'Setiap field memiliki batas regenerasi masing-masing.',
+      title: kLesPlaRegenerateAllFields.tr,
+      subtitle: kLesPlaRegenerateAllSubtitle.tr,
       icon: Icons.auto_awesome_rounded,
       primaryColor: widget.primaryColor,
       maxHeightFactor: 0.7,
@@ -196,8 +195,7 @@ class _RegenAllSheetState extends State<_RegenAllSheet> {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    'Seluruh bagian RPP akan dibuat ulang oleh AI. Perubahan '
-                    'yang belum disimpan pada setiap bagian akan ditimpa.',
+                    kLesPlaRegenerateAllWarning.tr,
                     style: TextStyle(
                       fontSize: 12.5,
                       color: ColorUtils.slate700,

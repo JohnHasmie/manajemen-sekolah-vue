@@ -143,8 +143,8 @@ Future<void> showAdminEntityDetailSheet(
   Widget? footer;
   if (canEdit || canDelete) {
     footer = BottomSheetFooter(
-      primaryLabel: 'Edit Data',
-      secondaryLabel: 'Hapus',
+      primaryLabel: kCorWidEditData.tr,
+      secondaryLabel: kDelete.tr,
       primaryColor: accent,
       onPrimary: () {
         AppNavigator.pop(context);

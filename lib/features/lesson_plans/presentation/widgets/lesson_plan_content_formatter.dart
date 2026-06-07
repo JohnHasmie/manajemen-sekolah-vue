@@ -2,6 +2,7 @@
 //
 // Extracted from RPPDetailPageState to keep the screen file under 1,500 lines.
 // All methods are static — no instances needed, like a Laravel helper/trait.
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Formats a raw RPP data map into a human-readable plain-text string, and
 /// strips HTML tags from AI-generated field content.
@@ -46,7 +47,7 @@ class LessonPlanContentFormatter {
     // Header information from database
     buffer.writeln('Judul\t\t\t: $title');
     if (subjectName.isNotEmpty) {
-      buffer.writeln('Mata Pelajaran\t: $subjectName');
+      buffer.writeln('${kSubject.tr}\t: $subjectName');
     }
     if (className.isNotEmpty) {
       buffer.writeln('Kelas\t\t\t: $className');
@@ -289,7 +290,7 @@ class LessonPlanContentFormatter {
     // naturally and the PDF skips these lines anyway.
     buffer.writeln('Mengetahui');
     buffer.writeln('Kepala Sekolah');
-    buffer.writeln('Guru Mata Pelajaran');
+    buffer.writeln(kLesPlaSubjectTeacher.tr);
 
     if (lessonPlanData['ai_generated'] == true ||
         lessonPlanData['is_ai_generated'] == true) {

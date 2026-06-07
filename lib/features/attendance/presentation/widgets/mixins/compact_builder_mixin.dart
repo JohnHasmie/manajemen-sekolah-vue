@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/students/domain/models/student.dart';
 
 /// Compact mode builder for attendance student item.
@@ -91,28 +92,28 @@ mixin CompactBuilderMixin {
       mainAxisSize: MainAxisSize.min,
       children: [
         _WordButton(
-          label: 'Hadir',
+          label: kPresent.tr,
           color: ColorUtils.success600,
           isSelected: lowerStatus == 'hadir' || lowerStatus == 'terlambat',
           onTap: () => onStatusChanged(student.id, 'hadir'),
         ),
         const SizedBox(width: 4),
         _WordButton(
-          label: 'Sakit',
+          label: kSick.tr,
           color: ColorUtils.warning600,
           isSelected: lowerStatus == 'sakit',
           onTap: () => onStatusChanged(student.id, 'sakit'),
         ),
         const SizedBox(width: 4),
         _WordButton(
-          label: 'Izin',
+          label: kPermission.tr,
           color: ColorUtils.info600,
           isSelected: lowerStatus == 'izin',
           onTap: () => onStatusChanged(student.id, 'izin'),
         ),
         const SizedBox(width: 4),
         _WordButton(
-          label: 'Alpa',
+          label: kAttAlpa.tr,
           color: ColorUtils.error600,
           isSelected: lowerStatus == 'alpha',
           onTap: () => onStatusChanged(student.id, 'alpha'),

@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 
 /// Opens the "Pindah Hari" picker. Returns the selected day_id, or null
@@ -31,10 +32,11 @@ Future<String?> showBulkDayPickerSheet({
 }) {
   return AppBottomSheet.show<String>(
     context: context,
-    title: 'Pindah Hari',
-    subtitle:
-        'Pindahkan $selectedCount sesi ke hari berikut '
-        '(jam ke- dipertahankan)',
+    title: kSchMoveDay.tr,
+    subtitle: kSchMoveDaySubtitle.tr.replaceAll(
+      '\$selectedCount',
+      '$selectedCount',
+    ),
     icon: Icons.swap_horiz_rounded,
     primaryColor: ColorUtils.brandDarkBlue,
     scrollable: false,
@@ -56,8 +58,11 @@ Future<String?> showBulkTeacherPickerSheet({
 }) {
   return AppBottomSheet.show<String>(
     context: context,
-    title: 'Ganti Guru',
-    subtitle: 'Tugaskan $selectedCount sesi ke guru berikut',
+    title: kSchChangeTeacher.tr,
+    subtitle: kSchChangeTeacherSubtitle.tr.replaceAll(
+      '\$selectedCount',
+      '$selectedCount',
+    ),
     icon: Icons.person_rounded,
     primaryColor: ColorUtils.brandDarkBlue,
     scrollable: false,
@@ -78,12 +83,12 @@ class _DayGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (days.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
         child: Center(
           child: Text(
-            'Tidak ada data hari.',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            kSchNoDayData.tr,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ),
       );
@@ -185,7 +190,7 @@ class _TeacherSearchListState extends State<_TeacherSearchList> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search_rounded, size: 18),
-                hintText: 'Cari guru...',
+                hintText: kSchSearchTeacher.tr,
                 hintStyle: TextStyle(fontSize: 13, color: ColorUtils.slate400),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
@@ -215,8 +220,11 @@ class _TeacherSearchListState extends State<_TeacherSearchList> {
                 ? Center(
                     child: Text(
                       _query.text.isEmpty
-                          ? 'Tidak ada guru tersedia.'
-                          : 'Tidak ada hasil untuk "${_query.text}".',
+                          ? kSchNoTeachersAvailable.tr
+                          : kSchNoSearchResults.tr.replaceAll(
+                              '\${_query.text}',
+                              _query.text,
+                            ),
                       style: TextStyle(
                         fontSize: 12,
                         color: ColorUtils.slate500,

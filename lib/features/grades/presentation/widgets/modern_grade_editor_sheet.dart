@@ -254,10 +254,7 @@ class _ModernGradeEditorSheetState
     final picked = await showModernDatePicker(
       context: context,
       initialDate: _selectedDate,
-      title: ref.read(languageRiverpod).getTranslatedText({
-        'en': 'Pick Grade Date',
-        'id': 'Pilih Tanggal Nilai',
-      }),
+      title: kGraSelectGradeDate.tr,
       primaryColor: _primaryColor(),
     );
     if (picked != null && mounted) {
@@ -266,16 +263,10 @@ class _ModernGradeEditorSheetState
   }
 
   Future<void> _save() async {
-    final lang = ref.read(languageRiverpod);
-
     if (_isReadOnly) {
       SnackBarUtils.showError(
         context,
-        lang.getTranslatedText({
-          'en': 'Cannot save grades for an inactive academic year',
-          'id':
-              'Tidak dapat menyimpan nilai untuk tahun ajaran yang tidak aktif',
-        }),
+        kGraCannotSaveInactiveYear.tr,
       );
       return;
     }
@@ -290,11 +281,7 @@ class _ModernGradeEditorSheetState
         widget.student.studentClassId!.isEmpty) {
       SnackBarUtils.showError(
         context,
-        lang.getTranslatedText({
-          'en': 'Student data is outdated. Pull to refresh and try again.',
-          'id':
-              'Data siswa kadaluarsa. Tarik untuk memuat ulang dan coba lagi.',
-        }),
+        kGraStudentDataOutdated.tr,
       );
       return;
     }
@@ -327,12 +314,7 @@ class _ModernGradeEditorSheetState
       if (!mounted) return;
       SnackBarUtils.showSuccess(
         context,
-        lang.getTranslatedText({
-          'en': _isEditing ? 'Grade updated' : 'Grade saved',
-          'id': _isEditing
-              ? 'Nilai berhasil diupdate'
-              : 'Nilai berhasil disimpan',
-        }),
+        _isEditing ? kGraGradeUpdated.tr : kGraGradeSaved.tr,
       );
       Navigator.of(context).pop(const GradeEditorResult(saved: true));
     } catch (e) {
@@ -345,43 +327,26 @@ class _ModernGradeEditorSheetState
   }
 
   Future<void> _confirmDelete() async {
-    final lang = ref.read(languageRiverpod);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          lang.getTranslatedText({
-            'en': 'Delete this grade?',
-            'id': 'Hapus nilai ini?',
-          }),
-        ),
+        title: Text(kGraDeleteThisGrade.tr),
         content: Text(
-          lang.getTranslatedText({
-            'en':
-                'The score will be removed from the grade book. '
-                'This cannot be undone.',
-            'id':
-                'Nilai akan dihapus dari buku nilai. '
-                'Tindakan ini tidak bisa dibatalkan.',
-          }),
+          kGraGradeWillBeRemoved.tr,
           style: TextStyle(color: ColorUtils.slate600),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              lang.getTranslatedText({'en': 'Cancel', 'id': 'Batal'}),
-            ),
+            child: Text(kCancel.tr),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFDC2626),
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              lang.getTranslatedText({'en': 'Delete', 'id': 'Hapus'}),
-            ),
+            child: Text(kDelete.tr),
           ),
         ],
       ),
@@ -401,7 +366,7 @@ class _ModernGradeEditorSheetState
       if (!mounted) return;
       SnackBarUtils.showSuccess(
         context,
-        lang.getTranslatedText({'en': 'Grade cleared', 'id': 'Nilai dihapus'}),
+        kGraGradeCleared.tr,
       );
       Navigator.of(context).pop(const GradeEditorResult(saved: true));
     } catch (e) {

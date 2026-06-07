@@ -17,6 +17,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/widgets/recommendation_material_item.dart';
 
 class RecommendationCard extends StatelessWidget {
@@ -98,19 +99,19 @@ class RecommendationCard extends StatelessWidget {
     if (priority == 'high') {
       priorityInfo = (
         color: ColorUtils.error600,
-        label: 'Prioritas Tinggi',
+        label: kRecHighPriority.tr,
         icon: Icons.priority_high_rounded,
       );
     } else if (priority == 'medium') {
       priorityInfo = (
         color: ColorUtils.warning600,
-        label: 'Prioritas Sedang',
+        label: kRecMediumPriority.tr,
         icon: Icons.remove_rounded,
       );
     } else {
       priorityInfo = (
         color: ColorUtils.slate500,
-        label: 'Prioritas Rendah',
+        label: kRecLowPriority.tr,
         icon: Icons.arrow_downward_rounded,
       );
     }
@@ -160,7 +161,7 @@ class RecommendationCard extends StatelessWidget {
                 if (isCompleted)
                   _Pill(
                     icon: Icons.check_circle_rounded,
-                    label: 'SUDAH DITERAPKAN',
+                    label: kRecAlreadyApplied.tr,
                     color: ColorUtils.success600,
                   ),
                 _SharePill(
@@ -282,7 +283,7 @@ class RecommendationCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'Materi & Aktivitas',
+                    kRecMaterialsActivities.tr,
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
@@ -493,27 +494,27 @@ class _SharePill extends StatelessWidget {
     if (!hasBeenShared) {
       return _Pill(
         icon: Icons.send_outlined,
-        label: 'BELUM DIKIRIM',
+        label: kRecNotSent.tr,
         color: ColorUtils.slate500,
       );
     }
     if (read >= total && total > 0) {
       return _Pill(
         icon: Icons.done_all_rounded,
-        label: 'DIBACA WALI',
+        label: kRecReadByGuardianUpper.tr,
         color: ColorUtils.success600,
       );
     }
     if (read > 0) {
       return _Pill(
         icon: Icons.done_all_rounded,
-        label: '$read/$total DIBACA',
+        label: '$read/$total ${kRecReadUpper.tr}',
         color: ColorUtils.success600,
       );
     }
     return _Pill(
       icon: Icons.send_rounded,
-      label: 'TERKIRIM',
+      label: kRecSentUpper.tr,
       color: ColorUtils.brandCobalt,
     );
   }
@@ -718,7 +719,7 @@ class _FooterActions extends StatelessWidget {
       children.add(
         _SecondaryButton(
           icon: Icons.history_rounded,
-          label: 'Riwayat',
+          label: kRecHistory.tr,
           color: cobalt,
           onTap: onViewHistory,
         ),
@@ -727,7 +728,7 @@ class _FooterActions extends StatelessWidget {
       children.add(
         _DashedSecondaryButton(
           icon: Icons.send_rounded,
-          label: 'Bagikan ke Wali',
+          label: kRecShareWithGuardian.tr,
           color: violet,
           onTap: onShare,
         ),

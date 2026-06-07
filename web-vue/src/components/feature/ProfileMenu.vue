@@ -44,7 +44,7 @@ const availableSchools = computed<School[]>(() => {
     return [
       {
         id: sid,
-        name: auth.user?.school_name ?? 'Sekolah Aktif',
+        name: auth.user?.school_name ?? t('profileMenu.fallbackSchool'),
       } as School,
     ];
   }
@@ -94,7 +94,7 @@ const activeSchoolName = computed<string>(
     activeSchool.value?.name ??
     activeSchool.value?.school_name ??
     auth.user?.school_name ??
-    'Sekolah Aktif',
+    t('profileMenu.fallbackSchool'),
 );
 
 // Hide the "Ganti …" entries if the user only has one option available.
@@ -203,7 +203,7 @@ async function pickSchool(s: School) {
     } else if (auth.step === 'done') {
       showSchoolPicker.value = false;
       toast.value = {
-        message: `Beralih ke ${schoolDisplayName(s)}.`,
+        message: t('profileMenu.toastSchoolSwitched', { school: schoolDisplayName(s) }),
         tone: 'success',
       };
       const role = auth.activeRole;
@@ -211,7 +211,7 @@ async function pickSchool(s: School) {
     }
   } catch (e) {
     toast.value = {
-      message: (e as Error).message ?? 'Gagal mengganti sekolah.',
+      message: (e as Error).message ?? t('profileMenu.toastSchoolFailed'),
       tone: 'error',
     };
   } finally {
@@ -222,7 +222,7 @@ async function pickSchool(s: School) {
 async function pickRole(role: Role) {
   if (!auth.schoolId) {
     toast.value = {
-      message: 'School ID tidak ditemukan. Silakan pilih sekolah ulang.',
+      message: t('profileMenu.toastNoSchoolId'),
       tone: 'error',
     };
     return;
@@ -237,14 +237,14 @@ async function pickRole(role: Role) {
     if (auth.step === 'done') {
       showRolePicker.value = false;
       toast.value = {
-        message: `Beralih ke peran ${roleDisplayLabel(role)}.`,
+        message: t('profileMenu.toastRoleSwitched', { role: roleDisplayLabel(role) }),
         tone: 'success',
       };
       router.replace(roleHome(role));
     }
   } catch (e) {
     toast.value = {
-      message: (e as Error).message ?? 'Gagal mengganti peran.',
+      message: (e as Error).message ?? t('profileMenu.toastRoleFailed'),
       tone: 'error',
     };
   } finally {
@@ -333,7 +333,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
-          <span class="flex-1">Ganti Sekolah</span>
+          <span class="flex-1">{{ t('profileMenu.switchSchool') }}</span>
           <span class="text-[10px] font-bold text-slate-400 tabular-nums">{{ availableSchools.length }}</span>
         </button>
 
@@ -350,7 +350,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
-          <span class="flex-1">Ganti Peran</span>
+          <span class="flex-1">{{ t('profileMenu.switchRole') }}</span>
           <span class="text-[10px] font-bold text-slate-400 tabular-nums">{{ availableRoles.length }}</span>
         </button>
 
@@ -365,7 +365,12 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
             <line x1="2" y1="12" x2="22" y2="12" />
             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
           </svg>
-          <span class="flex-1">{{ prefs.locale === 'id' ? 'English' : 'Bahasa Indonesia' }}</span>
+          <!--
+            Label is the language the user would switch TO (so it acts
+            as an action). When currently in Indonesian, show "English";
+            when in English, show "Bahasa Indonesia".
+          -->
+          <span class="flex-1">{{ prefs.locale === 'id' ? t('profileMenu.languageEn') : t('profileMenu.languageId') }}</span>
           <span class="text-xs text-slate-400 uppercase">{{ prefs.locale }}</span>
         </button>
 
@@ -390,12 +395,12 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
     <!-- ── School picker modal ── -->
     <Modal
       v-if="showSchoolPicker"
-      title="Ganti Sekolah"
-      subtitle="Pilih sekolah yang akan diakses. Anda akan tetap masuk."
+      :title="t('profileMenu.schoolPickerTitle')"
+      :subtitle="t('profileMenu.schoolPickerSubtitle')"
       @close="switching ? null : (showSchoolPicker = false)"
     >
       <div v-if="availableSchools.length === 0" class="py-6 text-center text-slate-400 text-sm">
-        Tidak ada sekolah lain yang tertaut dengan akun Anda.
+        {{ t('profileMenu.noOtherSchools') }}
       </div>
       <ul v-else class="space-y-1 max-h-[400px] overflow-y-auto -mx-1">
         <li v-for="s in availableSchools" :key="schoolKey(s)">
@@ -430,7 +435,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
               v-if="schoolKey(s) === auth.schoolId"
               class="text-[10px] font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
             >
-              Aktif
+              {{ t('profileMenu.activeBadge') }}
             </span>
             <Spinner v-else-if="switching === 'school'" size="sm" />
           </button>
@@ -441,12 +446,12 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
     <!-- ── Role picker modal ── -->
     <Modal
       v-if="showRolePicker"
-      title="Ganti Peran"
-      subtitle="Pilih peran untuk sekolah yang sedang aktif."
+      :title="t('profileMenu.rolePickerTitle')"
+      :subtitle="t('profileMenu.rolePickerSubtitle')"
       @close="switching ? null : (showRolePicker = false)"
     >
       <div v-if="availableRoles.length === 0" class="py-6 text-center text-slate-400 text-sm">
-        Tidak ada peran tambahan untuk sekolah ini.
+        {{ t('profileMenu.noOtherRoles') }}
       </div>
       <ul v-else class="space-y-1 max-h-[400px] overflow-y-auto -mx-1">
         <li v-for="role in availableRoles" :key="role">
@@ -474,15 +479,15 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
               <p class="text-[11px] text-slate-500">
                 {{
                   role === 'admin'
-                    ? 'Akses kelola sekolah & pengguna'
+                    ? t('profileMenu.roleDescAdmin')
                     : role === 'guru'
-                      ? 'Mengajar & input nilai'
+                      ? t('profileMenu.roleDescGuru')
                       : role === 'wali_kelas'
-                        ? 'Wali kelas — kelola homeroom & rapor'
+                        ? t('profileMenu.roleDescWaliKelas')
                         : role === 'wali'
-                          ? 'Wali murid — pantau anak'
+                          ? t('profileMenu.roleDescWali')
                           : role === 'staff'
-                            ? 'Staf tata usaha'
+                            ? t('profileMenu.roleDescStaff')
                             : ''
                 }}
               </p>
@@ -491,7 +496,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
               v-if="role === auth.activeRole"
               class="text-[10px] font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
             >
-              Aktif
+              {{ t('profileMenu.activeBadge') }}
             </span>
             <Spinner v-else-if="switching === 'role'" size="sm" />
           </button>

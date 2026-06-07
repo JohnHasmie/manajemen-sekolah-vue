@@ -5,6 +5,7 @@ import 'package:manajemensekolah/core/network/dio_client.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/features/auth/domain/models/user.dart';
 
 class AuthService {
@@ -46,10 +47,10 @@ class AuthService {
       }
 
       if (normalized['token'] == null) {
-        throw Exception('Server tidak mengembalikan token');
+        throw Exception(kAutServerNoToken.tr);
       }
       if (normalized['user'] == null) {
-        throw Exception('Server tidak mengembalikan data user');
+        throw Exception(kAutServerNoUserData.tr);
       }
 
       return normalized;
@@ -234,15 +235,15 @@ class AuthService {
       if (e.response?.statusCode == 429 && body is Map) {
         // Surface throttle message instead of the generic Dio dump.
         throw Exception(
-          body['message'] ?? 'Terlalu banyak permintaan. Coba lagi nanti.',
+          body['message'] ?? kAutTooManyRequests.tr,
         );
       }
       if (body is Map) {
         throw Exception(
-          body['message'] ?? body['error'] ?? 'Gagal mengirim tautan reset.',
+          body['message'] ?? body['error'] ?? kAutFailedSendReset.tr,
         );
       }
-      throw Exception('Gagal mengirim tautan reset. Periksa koneksi Anda.');
+      throw Exception(kAutResetConnectionError.tr);
     }
   }
 
@@ -278,20 +279,15 @@ class AuthService {
       final body = e.response?.data;
       if (e.response?.statusCode == 429 && body is Map) {
         throw Exception(
-          body['message'] ??
-              'Terlalu banyak permintaan. Coba lagi dalam beberapa menit.',
+          body['message'] ?? kAutTooManyRequestsLater.tr,
         );
       }
       if (body is Map) {
         throw Exception(
-          body['message'] ??
-              body['error'] ??
-              'Gagal mengirim permintaan bantuan.',
+          body['message'] ?? body['error'] ?? kAutFailedHelpRequest.tr,
         );
       }
-      throw Exception(
-        'Gagal mengirim permintaan bantuan. Periksa koneksi Anda.',
-      );
+      throw Exception(kAutHelpConnectionError.tr);
     }
   }
 
