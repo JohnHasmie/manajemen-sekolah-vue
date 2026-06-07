@@ -47,6 +47,8 @@
 	<string>This app needs access to save images to photos</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to photos to import Excel files</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Presensi guru memerlukan lokasi untuk memverifikasi kehadiran di area sekolah.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

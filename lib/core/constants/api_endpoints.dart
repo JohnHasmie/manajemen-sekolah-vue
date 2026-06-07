@@ -94,6 +94,20 @@ class ApiEndpoints {
   static const attendanceUnreadCount = '/attendance/unread-count';
   static const attendanceDashboardChart = '/attendance/dashboard-chart';
 
+  // ── Teacher Daily Attendance (Presensi Guru) ──
+  // Distinct from the student `/attendance*` family above: this is the
+  // teacher's OWN once-a-day check-in / check-out, served by the backend
+  // Attendance module's TeacherAttendanceController (backend MR !108).
+  // All are custom static routes (no apiResource) under auth:sanctum +
+  // X-School-ID. Teacher-facing:
+  static const teacherAttendanceConfig = '/teacher-attendance/config';
+  static const teacherAttendanceCheckIn = '/teacher-attendance/check-in';
+  static const teacherAttendanceCheckOut = '/teacher-attendance/check-out';
+  static const teacherAttendanceHistory = '/teacher-attendance/history';
+  // Admin-facing (per-school config + report list):
+  static const teacherAttendanceSettings = '/teacher-attendance/settings';
+  static const teacherAttendanceAdmin = '/teacher-attendance/admin';
+
   // ── Grades ──
   static const grades = '/grades';
   static const gradesTeacherSummary = '/grades/teacher-summary';
