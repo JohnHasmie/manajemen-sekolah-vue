@@ -122,4 +122,30 @@ export const SettingsService = {
       throw new Error(humanError(e, 'Gagal mengubah password.'));
     }
   },
+
+  /**
+   * PATCH /profile/language — persist the user's UI-language choice
+   * so it follows them across devices and survives logout.
+   *
+   * The mirror of Flutter's `ApiSettingsService.updatePreferredLanguage`.
+   * Pass `null` to clear the saved choice and let the backend fall
+   * back to `Accept-Language`.
+   *
+   * Failures are swallowed (only logged via humanError) so the UI
+   * stays snappy — the local i18n switch already happened before this
+   * call, so a 5xx here just means the cross-device sync will retry
+   * on the next explicit pick.
+   */
+  async updatePreferredLanguage(code: 'id' | 'en' | null): Promise<void> {
+    try {
+      await api.patch('/profile/language', { preferred_language: code });
+    } catch (e) {
+      // Non-fatal: local i18n already updated, app UX unaffected.
+      // We log via humanError's mapping so monitoring catches repeat
+      // failures, but we don't re-throw — the picker doesn't want to
+      // know.
+      // eslint-disable-next-line no-console
+      console.warn('updatePreferredLanguage failed:', humanError(e, ''));
+    }
+  },
 };
