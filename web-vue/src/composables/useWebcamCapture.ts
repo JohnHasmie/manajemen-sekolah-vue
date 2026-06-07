@@ -7,16 +7,42 @@
  * <video> stream into a canvas → Blob. There is no <input type=file>
  * fallback by design.
  *
+ * AUTO-FIRST design: the presensi view auto-calls start() the moment the
+ * capture step mounts so the camera is already live by the time the
+ * teacher looks. But getUserMedia can be blocked when called without a
+ * user gesture, denied outright, or unavailable on an insecure origin —
+ * so start() NEVER throws and always sets a categorised `errorKind` +
+ * friendly Indonesian `error`, letting the UI show a prominent
+ * "Nyalakan Kamera" tap-to-retry button plus specific guidance.
+ *
  * Usage:
  *   const cam = useWebcamCapture();
- *   await cam.start(videoEl);   // attaches the stream to your <video>
- *   const blob = await cam.snapshot();  // current frame as a JPEG Blob
- *   cam.stop();                 // release the camera when done
+ *   await cam.start(videoEl);          // attaches the stream to your <video>
+ *   const blob = await cam.snapshot(); // current frame as a JPEG Blob
+ *   cam.stop();                        // release the camera when done
  *
  * The caller owns the <video> element; we just wire the stream to it.
  * Always call stop() in onUnmounted to free the device + privacy light.
  */
-import { onUnmounted, ref } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
+
+/**
+ * Categorised camera failure so the view can render targeted guidance.
+ *  - `unsupported`  → browser lacks getUserMedia
+ *  - `insecure`     → page is not HTTPS/localhost (getUserMedia blocked)
+ *  - `denied`       → permission denied / blocked (NotAllowedError)
+ *  - `not-found`    → device has no camera
+ *  - `in-use`       → camera busy in another app (NotReadableError)
+ *  - `unknown`      → anything else
+ */
+export type WebcamErrorKind =
+  | null
+  | 'unsupported'
+  | 'insecure'
+  | 'denied'
+  | 'not-found'
+  | 'in-use'
+  | 'unknown';
 
 export function useWebcamCapture() {
   /** True once a live stream is attached and playing. */
@@ -25,39 +51,101 @@ export function useWebcamCapture() {
   const isStarting = ref(false);
   /** Human Indonesian error if the camera can't be opened. */
   const error = ref<string | null>(null);
+  /** Machine-readable failure category for targeted UI guidance. */
+  const errorKind = ref<WebcamErrorKind>(null);
 
   let stream: MediaStream | null = null;
   let videoEl: HTMLVideoElement | null = null;
 
-  /** Map a getUserMedia rejection to a friendly Indonesian message. */
-  function describeError(e: unknown): string {
+  /** Whether this browser exposes the camera API at all. */
+  const isSupported = computed(
+    () =>
+      typeof navigator !== 'undefined' &&
+      !!navigator.mediaDevices?.getUserMedia,
+  );
+
+  /**
+   * Whether the page runs in a secure context. getUserMedia only works
+   * on HTTPS or localhost; on plain HTTP it throws. We surface this up
+   * front so the UI can explain it instead of showing a vague error.
+   */
+  const isSecure = computed(() => {
+    if (typeof window === 'undefined') return true;
+    if (typeof window.isSecureContext === 'boolean') {
+      return window.isSecureContext;
+    }
+    const host = window.location?.hostname ?? '';
+    return (
+      window.location?.protocol === 'https:' ||
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '::1'
+    );
+  });
+
+  /** Map a getUserMedia rejection to a (kind, message) pair. */
+  function describeError(e: unknown): {
+    kind: WebcamErrorKind;
+    message: string;
+  } {
     const name = (e as { name?: string })?.name ?? '';
     if (name === 'NotAllowedError' || name === 'SecurityError') {
-      return 'Izin kamera ditolak. Aktifkan akses kamera di browser lalu coba lagi.';
+      return {
+        kind: 'denied',
+        message:
+          'Izin kamera ditolak. Aktifkan akses kamera untuk situs ini lalu coba lagi.',
+      };
     }
     if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
-      return 'Kamera tidak ditemukan pada perangkat ini.';
+      return {
+        kind: 'not-found',
+        message: 'Kamera tidak ditemukan pada perangkat ini.',
+      };
     }
-    if (name === 'NotReadableError') {
-      return 'Kamera sedang digunakan aplikasi lain. Tutup aplikasi tersebut lalu coba lagi.';
+    if (
+      name === 'NotReadableError' ||
+      name === 'TrackStartError' ||
+      name === 'AbortError'
+    ) {
+      return {
+        kind: 'in-use',
+        message:
+          'Kamera sedang dipakai aplikasi lain. Tutup aplikasi tersebut lalu coba lagi.',
+      };
     }
-    return 'Tidak dapat membuka kamera. Pastikan perangkat memiliki kamera aktif.';
+    return {
+      kind: 'unknown',
+      message:
+        'Tidak dapat membuka kamera. Pastikan perangkat memiliki kamera aktif lalu coba lagi.',
+    };
   }
 
   /**
    * Open the camera and attach it to the given <video>. Prefers the
-   * front ("user") camera for a selfie. Resolves once the stream is
-   * playing; rejects via the `error` ref (does not throw).
+   * front ("user") camera for a selfie. Resolves to true once the stream
+   * is playing; on failure resolves false and sets `error`/`errorKind`
+   * (NEVER throws — safe to auto-call on mount).
    */
   async function start(el: HTMLVideoElement): Promise<boolean> {
     error.value = null;
-    if (
-      typeof navigator === 'undefined' ||
-      !navigator.mediaDevices?.getUserMedia
-    ) {
-      error.value = 'Browser ini tidak mendukung akses kamera.';
+    errorKind.value = null;
+
+    if (!isSecure.value) {
+      errorKind.value = 'insecure';
+      error.value =
+        'Kamera hanya bisa diakses lewat koneksi aman (HTTPS). Buka halaman ini dengan alamat https:// lalu coba lagi.';
       return false;
     }
+    if (!isSupported.value) {
+      errorKind.value = 'unsupported';
+      error.value =
+        'Browser ini tidak mendukung akses kamera. Coba gunakan Chrome/Safari versi terbaru.';
+      return false;
+    }
+
+    // If a stream is already live on a previous element, release it first.
+    if (stream) stop();
+
     isStarting.value = true;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -79,8 +167,15 @@ export function useWebcamCapture() {
       isActive.value = true;
       return true;
     } catch (e) {
-      error.value = describeError(e);
+      const { kind, message } = describeError(e);
+      errorKind.value = kind;
+      error.value = message;
       isActive.value = false;
+      // Make sure no half-open track lingers.
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+      }
       return false;
     } finally {
       isStarting.value = false;
@@ -122,9 +217,20 @@ export function useWebcamCapture() {
       videoEl = null;
     }
     isActive.value = false;
+    isStarting.value = false;
   }
 
   onUnmounted(stop);
 
-  return { isActive, isStarting, error, start, snapshot, stop };
+  return {
+    isActive,
+    isStarting,
+    error,
+    errorKind,
+    isSupported,
+    isSecure,
+    start,
+    snapshot,
+    stop,
+  };
 }

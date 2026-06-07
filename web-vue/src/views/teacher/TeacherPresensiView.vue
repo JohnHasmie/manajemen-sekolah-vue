@@ -11,16 +11,32 @@
     4. Submits multipart check-in/out. The SERVER stamps the timestamps
        and computes present/late + geofence distance.
 
+  AUTOMATIC-FIRST UX (this revision):
+    - The moment the capture step is shown, the camera preview AND the
+      GPS fix are kicked off IN PARALLEL, so by the time the teacher
+      looks the camera is already live and the location is being fetched.
+    - It collapses to essentially ONE primary action — "Presensi Masuk"
+      / "Presensi Pulang" — which snapshots the live frame and submits in
+      a single tap. No separate "Ambil foto" step.
+    - Browser reality is handled gracefully: getUserMedia may be blocked
+      without a user gesture or denied, and may be unavailable on an
+      insecure origin. We auto-try, and on failure show a prominent
+      "Nyalakan Kamera" button + targeted Indonesian guidance. Same for
+      location (auto-try, retry button, accuracy + approximate hint).
+    - Never hard-crashes; degrades per the admin config
+      (camera_required / location_required).
+
   Layout:
     - BrandPageHeader (guru gradient) with server clock + date
     - Status banner: belum presensi / sudah masuk / sudah pulang +
       late + outside-geofence feedback
     - Today's teaching schedule strip
-    - Capture card: webcam preview → snapshot, GPS chip, notes, submit
+    - Capture card: auto live webcam preview, auto GPS chip, notes, and
+      a single submit action that snapshots + posts
     - History link
 -->
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import { useWebcamCapture } from '@/composables/useWebcamCapture';
@@ -49,13 +65,12 @@ const loadError = ref<string | null>(null);
 // ── Capture state ───────────────────────────────────────────────
 type Mode = 'check-in' | 'check-out';
 const videoRef = ref<HTMLVideoElement | null>(null);
-/** The last snapshot blob + its preview object URL. */
-const photoBlob = ref<Blob | null>(null);
-const photoUrl = ref<string | null>(null);
 const notes = ref('');
 const submitting = ref(false);
+/** True once the parallel auto camera+location kick-off has run. */
+const autoStarted = ref(false);
 
-// Refresh the displayed clock once per minute.
+// Refresh the displayed clock once per second so the header ticks live.
 const nowTick = ref(Date.now());
 let tickTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -90,6 +105,10 @@ const showCaptureForm = computed(() => {
   return canCheckOut.value; // need check-out and it's allowed
 });
 
+const primaryActionLabel = computed(() =>
+  mode.value === 'check-out' ? 'Presensi Pulang' : 'Presensi Masuk',
+);
+
 const serverDate = computed(() => {
   void nowTick.value;
   const iso = config.value?.server_time;
@@ -123,18 +142,49 @@ const firstStartLabel = computed(() =>
   fmtTime(config.value?.first_teaching_start),
 );
 
-// ── Methods labels (which were captured) ────────────────────────
-const requiredMethodsLabel = computed(() => {
-  const parts: string[] = [];
-  if (cameraRequired.value) parts.push('Foto selfie');
-  if (locationRequired.value) parts.push('Lokasi GPS');
-  if (parts.length === 0) return 'Tanpa syarat tambahan';
-  return parts.join(' + ');
+// ── Camera UI state helpers ─────────────────────────────────────
+/** The contextual guidance shown when the camera can't auto-start. */
+const cameraGuidance = computed(() => {
+  switch (cam.errorKind.value) {
+    case 'denied':
+      return 'Buka ikon gembok/izin di bilah alamat browser, pilih situs ini, lalu izinkan Kamera. Setelah itu tekan "Nyalakan Kamera".';
+    case 'insecure':
+      return 'Akses kamera diblokir karena koneksi tidak aman. Buka halaman ini melalui alamat https:// (atau localhost saat pengembangan).';
+    case 'not-found':
+      return 'Tidak ada kamera yang terdeteksi. Hubungkan/aktifkan kamera lalu coba lagi.';
+    case 'in-use':
+      return 'Kamera sedang dipakai aplikasi lain (mis. Zoom/Meet). Tutup aplikasi tersebut lalu tekan "Nyalakan Kamera".';
+    case 'unsupported':
+      return 'Browser ini tidak mendukung kamera. Gunakan Chrome atau Safari versi terbaru.';
+    default:
+      return 'Tekan "Nyalakan Kamera" untuk mengizinkan akses kamera.';
+  }
+});
+
+/** The contextual guidance shown when location can't be fetched. */
+const locationGuidance = computed(() => {
+  switch (geo.errorKind.value) {
+    case 'denied':
+      return 'Buka ikon gembok/izin di bilah alamat browser, pilih situs ini, lalu izinkan Lokasi, kemudian tekan "Coba lagi".';
+    case 'insecure':
+      return 'Akses lokasi diblokir karena koneksi tidak aman. Buka halaman ini melalui alamat https://.';
+    case 'unavailable':
+      return 'Aktifkan layanan lokasi/GPS perangkat lalu coba lagi.';
+    case 'timeout':
+      return 'Sinyal lokasi lemah. Coba lagi di dekat jendela atau di luar ruangan.';
+    default:
+      return 'Tekan "Coba lagi" untuk mengambil lokasi.';
+  }
 });
 
 // ── Validation: can we submit? ──────────────────────────────────
+/**
+ * Photo is satisfied either by a live camera ready to snapshot OR by a
+ * still already captured. In the auto flow we snapshot at submit time,
+ * so a LIVE camera counts as "ready".
+ */
 const photoSatisfied = computed(
-  () => !cameraRequired.value || !!photoBlob.value,
+  () => !cameraRequired.value || cam.isActive.value || !!photoUrl.value,
 );
 const locationSatisfied = computed(
   () => !locationRequired.value || !!geo.position.value,
@@ -143,19 +193,55 @@ const canSubmit = computed(
   () => photoSatisfied.value && locationSatisfied.value && !submitting.value,
 );
 
+/** A short "why is the button disabled" hint under the submit button. */
+const blockedReason = computed<string | null>(() => {
+  if (cameraRequired.value && !photoSatisfied.value) {
+    return 'Aktifkan kamera dulu untuk presensi.';
+  }
+  if (locationRequired.value && !locationSatisfied.value) {
+    return 'Ambil lokasi dulu untuk presensi.';
+  }
+  return null;
+});
+
+// Captured still (optional manual snapshot preview). The auto flow does
+// NOT need this; the submit button snapshots the live frame directly.
+const photoBlob = ref<Blob | null>(null);
+const photoUrl = ref<string | null>(null);
+
+// ── Auto camera + location (in parallel) ────────────────────────
+/**
+ * Kick off the camera preview and the GPS fix AT THE SAME TIME so the
+ * teacher never waits on a sequential chain. Both are best-effort and
+ * degrade gracefully; neither throws.
+ */
+async function autoStartCapture() {
+  if (autoStarted.value) return;
+  if (!showCaptureForm.value) return;
+  autoStarted.value = true;
+
+  const jobs: Promise<unknown>[] = [];
+
+  if (cameraRequired.value) {
+    // Wait a tick so the <video> element is mounted before attaching.
+    await nextTick();
+    if (videoRef.value) jobs.push(cam.start(videoRef.value));
+  }
+  if (locationRequired.value) {
+    jobs.push(geo.locate());
+  }
+
+  await Promise.allSettled(jobs);
+}
+
 // ── Bootstrap ───────────────────────────────────────────────────
 async function reload() {
   isLoading.value = true;
   loadError.value = null;
+  autoStarted.value = false;
   try {
     config.value = await TeacherAttendanceService.config();
-    // Auto-start the camera when a capture form is needed + camera is
-    // required, so the teacher sees the live preview immediately.
-    if (showCaptureForm.value && cameraRequired.value) {
-      // Wait a tick so the <video> is mounted.
-      await new Promise((r) => setTimeout(r, 0));
-      if (videoRef.value) await cam.start(videoRef.value);
-    }
+    await autoStartCapture();
   } catch (e) {
     loadError.value = (e as Error).message;
   } finally {
@@ -163,9 +249,15 @@ async function reload() {
   }
 }
 
+// When the capture form first becomes visible (e.g. after a config
+// refresh that flips state), make sure the auto kick-off has run.
+watch(showCaptureForm, (visible) => {
+  if (visible && !autoStarted.value) void autoStartCapture();
+});
+
 onMounted(() => {
   reload();
-  tickTimer = setInterval(() => (nowTick.value = Date.now()), 60_000);
+  tickTimer = setInterval(() => (nowTick.value = Date.now()), 1_000);
 });
 
 onUnmounted(() => {
@@ -175,23 +267,13 @@ onUnmounted(() => {
 });
 
 // ── Camera actions ──────────────────────────────────────────────
+/** Manual (tap-triggered) camera start used by the fallback button. */
 async function startCamera() {
+  await nextTick();
   if (videoRef.value) await cam.start(videoRef.value);
 }
 
-async function takeSnapshot() {
-  const blob = await cam.snapshot();
-  if (!blob) {
-    toast.error('Gagal mengambil foto. Pastikan kamera aktif.');
-    return;
-  }
-  if (photoUrl.value) URL.revokeObjectURL(photoUrl.value);
-  photoBlob.value = blob;
-  photoUrl.value = URL.createObjectURL(blob);
-  // Free the camera once we have the still — the privacy light turns off.
-  cam.stop();
-}
-
+/** Drop any captured still and resume the live preview. */
 async function retakePhoto() {
   if (photoUrl.value) URL.revokeObjectURL(photoUrl.value);
   photoBlob.value = null;
@@ -201,22 +283,33 @@ async function retakePhoto() {
 
 // ── Location action ─────────────────────────────────────────────
 async function captureLocation() {
-  const pos = await geo.locate();
-  if (!pos && geo.error.value) toast.error(geo.error.value);
+  await geo.locate();
 }
 
-// ── Submit ──────────────────────────────────────────────────────
+// ── Submit (one-tap: snapshot live frame → post) ────────────────
 async function submit() {
+  // Snapshot the live frame at submit time so the photo is fresh and the
+  // flow stays one-tap. Reuse an already-captured still if present.
+  let blob = photoBlob.value;
+  if (cameraRequired.value && !blob) {
+    blob = await cam.snapshot();
+    if (!blob) {
+      toast.error('Gagal mengambil foto. Aktifkan kamera lalu coba lagi.');
+      return;
+    }
+  }
+
   if (!canSubmit.value) {
-    if (!photoSatisfied.value) toast.error('Foto selfie wajib diambil.');
+    if (!photoSatisfied.value) toast.error('Aktifkan kamera untuk presensi.');
     else if (!locationSatisfied.value)
-      toast.error('Lokasi GPS wajib diaktifkan.');
+      toast.error('Ambil lokasi untuk presensi.');
     return;
   }
+
   submitting.value = true;
   try {
     const payload = {
-      photo: photoBlob.value,
+      photo: blob,
       latitude: geo.position.value?.latitude ?? null,
       longitude: geo.position.value?.longitude ?? null,
       notes: notes.value.trim() || null,
@@ -230,7 +323,8 @@ async function submit() {
       const lateMsg = result.status === 'late' ? ' (tercatat terlambat)' : '';
       toast.success(`Presensi masuk berhasil dicatat${lateMsg}.`);
     }
-    // Reset the form + reload the live state.
+    // Reset the form + reload the live state (which re-arms auto-capture
+    // for the check-out leg if it's now enabled).
     resetForm();
     await reload();
   } catch (e) {
@@ -429,19 +523,40 @@ function gotoHistory() {
       <!-- ── Capture form ─────────────────────────────────────── -->
       <section
         v-if="showCaptureForm"
-        class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-md"
+        class="bg-white border border-slate-200 rounded-2xl overflow-hidden"
       >
-        <div class="flex items-center justify-between gap-2">
-          <div>
-            <p class="text-[13px] font-black text-slate-900">
-              {{ mode === 'check-out' ? 'Presensi Pulang' : 'Presensi Masuk' }}
-            </p>
-            <p class="text-[11px] text-slate-500 mt-0.5">
-              Syarat: {{ requiredMethodsLabel }}
-            </p>
+        <!-- Card head -->
+        <div
+          class="flex items-center justify-between gap-2 px-4 sm:px-5 pt-4 pb-3 border-b border-slate-100"
+        >
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div
+              class="w-9 h-9 rounded-xl grid place-items-center flex-shrink-0"
+              :class="
+                mode === 'check-out'
+                  ? 'bg-violet-100 text-violet-700'
+                  : 'bg-emerald-100 text-emerald-700'
+              "
+            >
+              <NavIcon
+                :name="mode === 'check-out' ? 'log-out' : 'check-square'"
+                :size="17"
+              />
+            </div>
+            <div class="min-w-0">
+              <p class="text-[13px] font-black text-slate-900 leading-tight">
+                {{ primaryActionLabel }}
+              </p>
+              <p
+                class="text-[10.5px] text-slate-500 mt-0.5 inline-flex items-center gap-1"
+              >
+                <NavIcon name="zap" :size="11" class="text-brand-cobalt" />
+                Kamera &amp; lokasi disiapkan otomatis
+              </p>
+            </div>
           </div>
           <span
-            class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full"
+            class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full flex-shrink-0"
             :class="
               mode === 'check-out'
                 ? 'bg-violet-100 text-violet-700'
@@ -452,201 +567,327 @@ function gotoHistory() {
           </span>
         </div>
 
-        <!-- Camera capture -->
-        <div v-if="cameraRequired">
-          <p
-            class="text-[11px] font-bold text-slate-600 mb-2 flex items-center gap-1.5"
-          >
-            <NavIcon name="camera" :size="13" class="text-brand-cobalt" />
-            Foto Selfie (wajah + latar sekolah)
-          </p>
-
-          <!-- Preview of captured still -->
-          <div
-            v-if="photoUrl"
-            class="relative rounded-xl overflow-hidden bg-slate-900 aspect-video"
-          >
-            <img
-              :src="photoUrl"
-              alt="Foto presensi"
-              class="w-full h-full object-cover"
-            />
-            <button
-              type="button"
-              class="absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 text-slate-800 text-[11px] font-bold hover:bg-white"
-              @click="retakePhoto"
-            >
-              <NavIcon name="refresh-cw" :size="12" />Ambil ulang
-            </button>
-          </div>
-
-          <!-- Live camera preview -->
-          <div v-else class="space-y-2">
-            <div
-              class="relative rounded-xl overflow-hidden bg-slate-900 aspect-video grid place-items-center"
-            >
-              <video
-                ref="videoRef"
-                class="w-full h-full object-cover"
-                style="transform: scaleX(-1)"
-                playsinline
-                muted
-              ></video>
-              <div
-                v-if="!cam.isActive.value && !cam.isStarting.value"
-                class="absolute inset-0 grid place-items-center text-center px-4"
+        <div class="p-4 sm:p-5 space-y-md">
+          <!-- ── Camera capture ── -->
+          <div v-if="cameraRequired">
+            <div class="flex items-center justify-between mb-2">
+              <p
+                class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5"
               >
-                <div>
-                  <NavIcon
-                    name="camera"
-                    :size="28"
-                    class="text-white/70 mx-auto mb-2"
-                  />
-                  <p class="text-[12px] text-white/80 font-medium">
-                    {{ cam.error.value ?? 'Kamera belum aktif' }}
-                  </p>
+                <NavIcon name="camera" :size="13" class="text-brand-cobalt" />
+                Foto Selfie
+              </p>
+              <span
+                v-if="cam.isActive.value"
+                class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600"
+              >
+                <span
+                  class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
+                ></span>
+                Kamera aktif
+              </span>
+              <span
+                v-else-if="cam.isStarting.value"
+                class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400"
+              >
+                Menyiapkan…
+              </span>
+              <span
+                v-else-if="cam.error.value"
+                class="inline-flex items-center gap-1 text-[10px] font-bold text-red-500"
+              >
+                <NavIcon name="alert-circle" :size="11" />
+                Kamera mati
+              </span>
+            </div>
+
+            <!-- Preview of captured still -->
+            <div
+              v-if="photoUrl"
+              class="relative rounded-xl overflow-hidden bg-slate-900 aspect-video"
+            >
+              <img
+                :src="photoUrl"
+                alt="Foto presensi"
+                class="w-full h-full object-cover"
+              />
+              <button
+                type="button"
+                class="absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/90 text-slate-800 text-[11px] font-bold hover:bg-white"
+                @click="retakePhoto"
+              >
+                <NavIcon name="refresh-cw" :size="12" />Ambil ulang
+              </button>
+            </div>
+
+            <!-- Live camera preview (auto-started) -->
+            <div v-else class="space-y-2">
+              <div
+                class="relative rounded-xl overflow-hidden bg-slate-900 aspect-video grid place-items-center"
+              >
+                <video
+                  ref="videoRef"
+                  class="w-full h-full object-cover"
+                  style="transform: scaleX(-1)"
+                  playsinline
+                  muted
+                ></video>
+
+                <!-- Starting overlay -->
+                <div
+                  v-if="cam.isStarting.value"
+                  class="absolute inset-0 grid place-items-center bg-slate-900/40"
+                >
+                  <div class="text-center">
+                    <Spinner size="md" />
+                    <p class="text-[11px] text-white/80 font-medium mt-2">
+                      Menyiapkan kamera…
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Camera not yet live (auto-start blocked/denied) -->
+                <div
+                  v-else-if="!cam.isActive.value"
+                  class="absolute inset-0 grid place-items-center text-center px-4 bg-slate-900/30"
+                >
+                  <div>
+                    <NavIcon
+                      :name="
+                        cam.errorKind.value === 'insecure' ? 'shield' : 'camera'
+                      "
+                      :size="28"
+                      class="text-white/70 mx-auto mb-2"
+                    />
+                    <p class="text-[12px] text-white/90 font-bold">
+                      {{ cam.error.value ?? 'Kamera belum aktif' }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Live framing hint -->
+                <div
+                  v-if="cam.isActive.value"
+                  class="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 text-white text-[10px] font-bold"
+                >
+                  Posisikan wajah + latar sekolah
                 </div>
               </div>
-              <div
-                v-if="cam.isStarting.value"
-                class="absolute inset-0 grid place-items-center"
-              >
-                <Spinner size="md" />
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
+
+              <!-- Prominent tap-to-enable when auto-start failed -->
               <Button
-                v-if="!cam.isActive.value"
-                variant="secondary"
-                size="sm"
-                block
-                :loading="cam.isStarting.value"
-                @click="startCamera"
-              >
-                <NavIcon name="camera" :size="13" />Aktifkan kamera
-              </Button>
-              <Button
-                v-else
+                v-if="!cam.isActive.value && !cam.isStarting.value"
                 variant="primary"
                 size="sm"
                 block
-                @click="takeSnapshot"
+                :disabled="
+                  cam.errorKind.value === 'insecure' ||
+                  cam.errorKind.value === 'unsupported' ||
+                  cam.errorKind.value === 'not-found'
+                "
+                @click="startCamera"
               >
-                <NavIcon name="camera" :size="13" />Ambil foto
+                <NavIcon name="camera" :size="13" />Nyalakan Kamera
               </Button>
-            </div>
-            <p
-              v-if="cam.error.value"
-              class="text-[11px] text-red-600 font-medium"
-            >
-              {{ cam.error.value }}
-            </p>
-          </div>
-        </div>
 
-        <!-- Location capture -->
-        <div v-if="locationRequired">
-          <p
-            class="text-[11px] font-bold text-slate-600 mb-2 flex items-center gap-1.5"
-          >
-            <NavIcon name="map-pin" :size="13" class="text-brand-cobalt" />
-            Lokasi GPS
-          </p>
-          <div
-            class="flex items-center gap-3 rounded-xl border p-3"
-            :class="
-              geo.position.value
-                ? 'border-emerald-200 bg-emerald-50'
-                : 'border-slate-200 bg-slate-50'
-            "
-          >
+              <!-- Targeted guidance on failure -->
+              <div
+                v-if="cam.error.value && !cam.isActive.value"
+                class="rounded-xl border p-3"
+                :class="
+                  cam.errorKind.value === 'insecure'
+                    ? 'border-amber-200 bg-amber-50'
+                    : 'border-red-200 bg-red-50'
+                "
+              >
+                <p
+                  class="text-[11px] font-bold flex items-start gap-1.5"
+                  :class="
+                    cam.errorKind.value === 'insecure'
+                      ? 'text-amber-800'
+                      : 'text-red-700'
+                  "
+                >
+                  <NavIcon
+                    :name="
+                      cam.errorKind.value === 'insecure'
+                        ? 'shield'
+                        : 'alert-circle'
+                    "
+                    :size="13"
+                    class="flex-shrink-0 mt-px"
+                  />
+                  <span>{{ cameraGuidance }}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Location capture (auto-started in parallel) ── -->
+          <div v-if="locationRequired">
+            <p
+              class="text-[11px] font-bold text-slate-600 mb-2 flex items-center gap-1.5"
+            >
+              <NavIcon name="map-pin" :size="13" class="text-brand-cobalt" />
+              Lokasi GPS
+            </p>
             <div
-              class="w-9 h-9 rounded-lg grid place-items-center flex-shrink-0"
+              class="flex items-center gap-3 rounded-xl border p-3"
               :class="
                 geo.position.value
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-white text-slate-400 border border-slate-200'
+                  ? 'border-emerald-200 bg-emerald-50'
+                  : geo.error.value
+                    ? 'border-red-200 bg-red-50'
+                    : 'border-slate-200 bg-slate-50'
               "
             >
-              <NavIcon name="map-pin" :size="16" />
+              <div
+                class="w-9 h-9 rounded-lg grid place-items-center flex-shrink-0"
+                :class="
+                  geo.position.value
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-white text-slate-400 border border-slate-200'
+                "
+              >
+                <NavIcon
+                  v-if="!geo.isLocating.value"
+                  name="map-pin"
+                  :size="16"
+                />
+                <Spinner v-else size="sm" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <template v-if="geo.position.value">
+                  <p class="text-[12px] font-bold text-emerald-800">
+                    Lokasi terdeteksi
+                  </p>
+                  <p class="text-[11px] text-emerald-700 tabular-nums">
+                    {{ geo.position.value.latitude.toFixed(6) }},
+                    {{ geo.position.value.longitude.toFixed(6) }}
+                    <span
+                      v-if="geo.position.value.accuracy"
+                      class="text-emerald-600"
+                    >
+                      · ±{{ Math.round(geo.position.value.accuracy) }} m
+                    </span>
+                  </p>
+                </template>
+                <template v-else-if="geo.isLocating.value">
+                  <p class="text-[12px] font-bold text-slate-600">
+                    Mengambil lokasi…
+                  </p>
+                  <p class="text-[11px] text-slate-400">
+                    Server memverifikasi jarak ke sekolah (geofence).
+                  </p>
+                </template>
+                <template v-else>
+                  <p class="text-[12px] font-bold text-slate-600">
+                    Lokasi belum diambil
+                  </p>
+                  <p class="text-[11px] text-slate-400">
+                    Server memverifikasi jarak ke sekolah (geofence).
+                  </p>
+                </template>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                :loading="geo.isLocating.value"
+                :disabled="
+                  geo.errorKind.value === 'insecure' ||
+                  geo.errorKind.value === 'unsupported'
+                "
+                @click="captureLocation"
+              >
+                {{ geo.position.value ? 'Perbarui' : 'Coba lagi' }}
+              </Button>
             </div>
-            <div class="flex-1 min-w-0">
-              <template v-if="geo.position.value">
-                <p class="text-[12px] font-bold text-emerald-800">
-                  Lokasi terdeteksi
-                </p>
-                <p class="text-[11px] text-emerald-700 tabular-nums">
-                  {{ geo.position.value.latitude.toFixed(6) }},
-                  {{ geo.position.value.longitude.toFixed(6) }}
-                  <span
-                    v-if="geo.position.value.accuracy"
-                    class="text-emerald-600"
-                  >
-                    · ±{{ Math.round(geo.position.value.accuracy) }} m
-                  </span>
-                </p>
-              </template>
-              <template v-else>
-                <p class="text-[12px] font-bold text-slate-600">
-                  Lokasi belum diambil
-                </p>
-                <p class="text-[11px] text-slate-400">
-                  Server memverifikasi jarak ke sekolah (geofence).
-                </p>
-              </template>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              :loading="geo.isLocating.value"
-              @click="captureLocation"
+
+            <!-- Approximate-accuracy hint (common on desktop) -->
+            <p
+              v-if="geo.position.value && geo.isApproximate.value"
+              class="text-[10.5px] text-amber-600 font-medium mt-1.5 flex items-start gap-1"
             >
-              {{ geo.position.value ? 'Perbarui' : 'Ambil lokasi' }}
-            </Button>
+              <NavIcon
+                name="alert-circle"
+                :size="11"
+                class="flex-shrink-0 mt-px"
+              />
+              Lokasi di komputer bisa kurang akurat (berbasis Wi-Fi/IP). Jika
+              ditolak server, presensi via ponsel untuk GPS lebih presisi.
+            </p>
+
+            <!-- Targeted guidance on failure -->
+            <div
+              v-if="geo.error.value && !geo.position.value"
+              class="rounded-xl border p-3 mt-1.5"
+              :class="
+                geo.errorKind.value === 'insecure'
+                  ? 'border-amber-200 bg-amber-50'
+                  : 'border-red-200 bg-red-50'
+              "
+            >
+              <p
+                class="text-[11px] font-bold flex items-start gap-1.5"
+                :class="
+                  geo.errorKind.value === 'insecure'
+                    ? 'text-amber-800'
+                    : 'text-red-700'
+                "
+              >
+                <NavIcon
+                  :name="
+                    geo.errorKind.value === 'insecure'
+                      ? 'shield'
+                      : 'alert-circle'
+                  "
+                  :size="13"
+                  class="flex-shrink-0 mt-px"
+                />
+                <span>{{ locationGuidance }}</span>
+              </p>
+            </div>
           </div>
-          <p
-            v-if="geo.error.value"
-            class="text-[11px] text-red-600 font-medium mt-1.5"
+
+          <!-- ── Notes ── -->
+          <div>
+            <label class="text-[11px] font-bold text-slate-600 mb-1.5 block">
+              Catatan (opsional)
+            </label>
+            <textarea
+              v-model="notes"
+              rows="2"
+              maxlength="1000"
+              placeholder="Mis. ada keperluan dinas, dsb."
+              class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30 resize-none"
+            ></textarea>
+          </div>
+
+          <!-- ── Single primary action (snapshot live frame + post) ── -->
+          <Button
+            variant="primary"
+            block
+            :loading="submitting"
+            :disabled="!canSubmit"
+            @click="submit"
           >
-            {{ geo.error.value }}
+            <NavIcon
+              :name="mode === 'check-out' ? 'log-out' : 'check-square'"
+              :size="15"
+            />
+            {{ primaryActionLabel }} Sekarang
+          </Button>
+          <p
+            v-if="blockedReason"
+            class="text-[10.5px] text-amber-600 font-medium text-center -mt-1"
+          >
+            {{ blockedReason }}
+          </p>
+          <p v-else class="text-[10.5px] text-slate-400 text-center -mt-1">
+            Foto diambil otomatis saat menekan tombol · waktu dicatat oleh
+            server.
           </p>
         </div>
-
-        <!-- Notes -->
-        <div>
-          <label class="text-[11px] font-bold text-slate-600 mb-1.5 block">
-            Catatan (opsional)
-          </label>
-          <textarea
-            v-model="notes"
-            rows="2"
-            maxlength="1000"
-            placeholder="Mis. ada keperluan dinas, dsb."
-            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-cobalt/30 resize-none"
-          ></textarea>
-        </div>
-
-        <!-- Submit -->
-        <Button
-          variant="primary"
-          block
-          :loading="submitting"
-          :disabled="!canSubmit"
-          @click="submit"
-        >
-          <NavIcon
-            :name="mode === 'check-out' ? 'log-out' : 'check-square'"
-            :size="15"
-          />
-          {{
-            mode === 'check-out'
-              ? 'Presensi Pulang Sekarang'
-              : 'Presensi Masuk Sekarang'
-          }}
-        </Button>
-        <p class="text-[10.5px] text-slate-400 text-center -mt-1">
-          Waktu presensi dicatat oleh server, bukan jam perangkat Anda.
-        </p>
       </section>
 
       <!-- ── History link ─────────────────────────────────────── -->
@@ -664,7 +905,7 @@ function gotoHistory() {
           <p class="text-[13px] font-bold text-slate-900">Riwayat Presensi</p>
           <p class="text-[11px] text-slate-500">Lihat catatan presensi Anda</p>
         </div>
-        <span class="text-slate-300">→</span>
+        <NavIcon name="arrow-right" :size="16" class="text-slate-300" />
       </button>
     </template>
   </div>
