@@ -213,3 +213,114 @@ export function teacherAttendanceStatusLabel(
   if (status === 'present') return 'Tepat Waktu';
   return '-';
 }
+
+/**
+ * Indonesian column header for a DYNAMIC rekap status key. `present`
+ * and `late` are always present; further keys (sick / excused / absent)
+ * may appear in `meta.statuses`. Falls back to a Title-Cased version of
+ * an unknown key so a new backend status never renders blank.
+ */
+export function teacherAttendanceStatusColumnLabel(status: string): string {
+  switch (status) {
+    case 'present':
+      return 'Hadir';
+    case 'late':
+      return 'Telat';
+    case 'sick':
+      return 'Sakit';
+    case 'excused':
+      return 'Izin';
+    case 'absent':
+      return 'Alpa';
+    default:
+      return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+}
+
+// ───────────────────────────────────────────────────────────────────
+// REKAP / SUMMARY (backend MR !110)
+//
+// The summary endpoints return per-TEACHER (admin) or own-totals
+// (teacher) rekap aggregated over a date range. Unlike the per-row
+// list above, status columns are DYNAMIC: `present` + `late` are
+// ALWAYS present as int keys (the only statuses the check-in flow
+// writes today), and any further statuses found in the data (sick /
+// excused / absent …) are appended. The AUTHORITATIVE ordered column
+// list is `meta.statuses` — read that rather than hardcoding columns.
+// ───────────────────────────────────────────────────────────────────
+
+/**
+ * Per-status integer counts carried by every rekap row / totals /
+ * summary block. Keys are exactly the statuses listed in `meta.statuses`
+ * (always includes `present` + `late`). Indexed so a dynamic column
+ * can be read as `row[status]` without TS complaining.
+ */
+export type TeacherAttendanceStatusCounts = Record<string, number>;
+
+/** Shared meta carried by both summary responses. */
+export interface TeacherAttendanceSummaryMeta {
+  start_date: string; // YYYY-MM-DD
+  end_date: string; // YYYY-MM-DD
+  /** Authoritative ordered list of status columns present in the data. */
+  statuses: string[];
+}
+
+/** One per-teacher rekap row (admin/summary `data[]`). */
+export interface TeacherAttendanceSummaryRow
+  extends TeacherAttendanceStatusCounts {
+  teacher_id: string;
+  teacher_name: string;
+  employee_number: string | null;
+  /** Records aggregated for this teacher over the range. */
+  total: number;
+  /** round((present + late) / total * 100, 1); 0.0 when total is 0. */
+  present_pct: number;
+}
+
+/** The school-wide totals row (admin/summary `totals`). */
+export interface TeacherAttendanceSummaryTotals
+  extends TeacherAttendanceStatusCounts {
+  total: number;
+  present_pct: number;
+  teacher_count: number;
+}
+
+/** GET /teacher-attendance/admin/summary — per-teacher rekap. */
+export interface TeacherAttendanceAdminSummary {
+  meta: TeacherAttendanceSummaryMeta;
+  data: TeacherAttendanceSummaryRow[];
+  totals: TeacherAttendanceSummaryTotals;
+}
+
+/** Meta block of the teacher own-summary (history/summary). */
+export interface TeacherAttendanceOwnSummaryMeta
+  extends TeacherAttendanceSummaryMeta {
+  teacher_id: string;
+  teacher_name: string;
+}
+
+/** The teacher's own totals block (history/summary `summary`). */
+export interface TeacherAttendanceOwnSummaryTotals
+  extends TeacherAttendanceStatusCounts {
+  total: number;
+  present_pct: number;
+}
+
+/** GET /teacher-attendance/history/summary — auth teacher's own rekap. */
+export interface TeacherAttendanceOwnSummary {
+  meta: TeacherAttendanceOwnSummaryMeta;
+  summary: TeacherAttendanceOwnSummaryTotals;
+}
+
+/** Date-range filters shared by both summary endpoints. */
+export interface TeacherAttendanceSummaryFilters {
+  start_date?: string;
+  end_date?: string;
+}
+
+/** Admin summary filters add the optional teacher narrowing. */
+export interface TeacherAttendanceAdminSummaryFilters
+  extends TeacherAttendanceSummaryFilters {
+  /** Accepts a Teacher ID OR User ID; server resolves school-scoped. */
+  teacher_id?: string;
+}
