@@ -65,20 +65,78 @@ class LanguageProvider with ChangeNotifier {
   String get currentLanguage => _currentLanguage;
 
   /// Changes the app language and persists the choice to
-  /// SharedPreferences.
-  /// Like setting `App::setLocale()` in Laravel's middleware.
+  /// SharedPreferences (immediate, device-local) AND to the backend
+  /// (best-effort, cross-device).
+  /// Like setting `App::setLocale()` in Laravel's middleware AND
+  /// updating `users.preferred_language` so subsequent API calls
+  /// from any device see the same locale.
   ///
   /// [language] - The language code to switch to ('en' or 'id').
-  /// Side effects: Saves to SharedPreferences, calls [notifyListeners] to
-  /// trigger UI rebuilds across the app.
-  Future<void> setLanguage(String language) async {
+  /// [syncToServer] - When false, skip the backend round-trip. The
+  ///   server-side hydration path uses this to apply a value that
+  ///   ALREADY came from the server, avoiding an immediate echo
+  ///   PATCH on every cold start.
+  ///
+  /// Side effects:
+  ///   - SharedPreferences write (synchronous, awaited).
+  ///   - `notifyListeners` fires so widgets rebuild with the new
+  ///     `.tr` resolutions.
+  ///   - Fire-and-forget PATCH `/profile/language` (failures swallowed
+  ///     and logged — local UX continues either way).
+  Future<void> setLanguage(String language, {bool syncToServer = true}) async {
     _currentLanguage = language;
 
-    // Save to shared preferences
+    // 1. Device-local persistence — survives app restart on THIS
+    //    device. Awaited because the picker UI pops the sheet right
+    //    after; the next frame should already see the new value.
     final prefs = PreferencesService();
     await prefs.setString('language', language);
 
-    notifyListeners(); // Notify all listeners about the change
+    // 2. UI rebuilds first so the picker feels instant.
+    notifyListeners();
+
+    // 3. Cross-device persistence — push to backend so the user gets
+    //    the same locale on a phone, tablet, or fresh browser. Fire
+    //    and forget; the local change is the source of truth for now,
+    //    and a failing PATCH (offline, 5xx) will retry on the next
+    //    explicit pick. We import the service lazily to keep this
+    //    barrel file's dependency graph minimal — `language_utils.dart`
+    //    is imported almost everywhere via `.tr`, so adding a hard
+    //    dependency on the settings service here would balloon the
+    //    cycle count.
+    if (syncToServer) {
+      // Lazy-load the symbol via a deferred top-level hook so this
+      // file remains framework-only and unit-testable without a
+      // running dio.
+      _serverSync?.call(language);
+    }
+  }
+
+  /// Hook injected at app startup (see `main.dart`) so this provider
+  /// can push to the backend without taking a hard import on the
+  /// settings service. `null` until injection — picker still works
+  /// in that case, just without server sync (e.g. tests, splash
+  /// screen pre-login).
+  static void Function(String code)? _serverSync;
+
+  /// Wire the server-sync hook. Called once during app bootstrap,
+  /// AFTER auth + dio are ready. Pass `null` to disable (logout).
+  static void registerServerSync(void Function(String code)? sync) {
+    _serverSync = sync;
+  }
+
+  /// Apply a server-supplied preference without echoing it back to
+  /// the server. Called when `/profile` returns `preferred_language`
+  /// after login or refresh — we adopt the server value as the source
+  /// of truth without immediately PATCHing the same value back.
+  ///
+  /// No-op if [code] is null, empty, or unsupported, so callers can
+  /// pipe profile-response fields straight in without pre-validation.
+  Future<void> hydrateFromServer(String? code) async {
+    if (code == null) return;
+    if (code != english && code != indonesian) return;
+    if (code == _currentLanguage) return;
+    await setLanguage(code, syncToServer: false);
   }
 
   /// Loads the previously saved language preference from

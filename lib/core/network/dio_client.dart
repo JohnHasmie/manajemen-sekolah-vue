@@ -20,6 +20,7 @@ import 'package:manajemensekolah/core/router/app_router.dart';
 import 'package:manajemensekolah/core/services/secure_storage_service.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/services/preferences_service.dart';
+import 'package:manajemensekolah/core/utils/language_utils.dart';
 
 /// Global Dio instance. Initialized once via [createDioClient].
 /// Like a singleton Axios instance in Vue or a Http facade in Laravel.
@@ -80,6 +81,22 @@ class AuthInterceptor extends Interceptor {
       }
     } catch (_) {
       // If secure storage fails, continue without auth headers
+    }
+
+    // Forward the active UI locale so anonymous endpoints (login,
+    // password-reset email, etc.) also get localised responses.
+    // For authenticated endpoints the backend's `SetLocaleFromHeader`
+    // middleware prefers the user's saved `preferred_language`
+    // column over this header — so changing the device locale
+    // mid-session won't override a deliberate cross-device pick.
+    try {
+      final code = languageProvider.currentLanguage;
+      if (code.isNotEmpty) {
+        options.headers['Accept-Language'] = code;
+      }
+    } catch (_) {
+      // Provider not yet initialised (rare race during cold start) —
+      // fine to ship the request without the header.
     }
 
     handler.next(options);

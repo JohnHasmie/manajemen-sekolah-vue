@@ -79,6 +79,15 @@ export interface User {
   schools?: School[];
   /** Roles the user can act as in the chosen school. */
   roles?: Role[];
+  /**
+   * Persisted UI-language choice. Mirrors `users.preferred_language`
+   * on the backend. `null`/missing means "no explicit choice yet" —
+   * the SetLocaleFromHeader middleware will fall back to the
+   * `Accept-Language` request header. Used by the auth store to
+   * hydrate the i18n locale at login so a user who picked English
+   * on their phone gets English on a fresh browser too.
+   */
+  preferred_language?: 'id' | 'en' | null;
 }
 
 /**

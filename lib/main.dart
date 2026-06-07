@@ -58,6 +58,7 @@ import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/services/log_service.dart';
 import 'package:manajemensekolah/core/services/performance_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:flutter/services.dart';
 import 'package:upgrader/upgrader.dart';
@@ -159,6 +160,20 @@ void main() async {
 
     // Initialize language provider and load saved language
     await languageProvider.loadSavedLanguage();
+
+    // Register the cross-device sync hook so future `setLanguage`
+    // calls also push to `PATCH /api/profile/language`. The settings
+    // service is fetched once via getIt and reused; failures inside
+    // it are already swallowed-and-logged, so this hook is fire-and-
+    // forget from the picker's perspective.
+    LanguageProvider.registerServerSync((code) {
+      // Detach via Future.microtask so the picker's `notifyListeners`
+      // call returns immediately — the network round-trip never
+      // blocks the UI rebuild.
+      Future<void>.microtask(
+        () => getIt<ApiSettingsService>().updatePreferredLanguage(code),
+      );
+    });
 
     // Setup error handling (non-blocking)
     _setupErrorHandling();
