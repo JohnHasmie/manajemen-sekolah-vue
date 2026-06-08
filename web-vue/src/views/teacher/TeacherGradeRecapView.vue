@@ -157,7 +157,7 @@ const summaryKpi = computed<KpiCard[]>(() => {
   const s = serverSummary.value;
   const totalCards = flatCards.value.length;
   let totalBab = 0;
-  for (const r of flatCards.value) totalBab += r.subject.bab_count;
+  for (const r of flatCards.value) totalBab += r.subject.chapter_count;
 
   const completionPct = s?.overall_completion_pct ?? 0;
   const avg = s?.overall_avg_score;
@@ -397,7 +397,7 @@ function progressBarTone(pct: number) {
                 Bab
               </p>
               <p class="text-[12px] font-black text-slate-900 mt-0.5">
-                {{ row.subject.bab_count }}
+                {{ row.subject.chapter_count }}
               </p>
             </div>
             <div class="bg-slate-50 rounded-lg px-2 py-1.5 text-center">
