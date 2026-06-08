@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- KamilEdu brand navy. Used by FCM as the accent/tint color applied to
+         the white status-bar notification icon (ic_stat_notification). -->
+    <color name="kamiledu_notification_color">#334B7C</color>
+</resources>
