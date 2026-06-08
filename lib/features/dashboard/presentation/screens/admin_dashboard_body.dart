@@ -48,6 +48,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:manajemensekolah/core/constants/dashboard_modules.dart';
+import 'package:manajemensekolah/core/mixins/admin_academic_year_reload_mixin.dart';
 import 'package:manajemensekolah/core/router/app_navigator.dart';
 import 'package:manajemensekolah/core/utils/color_utils.dart';
 import 'package:manajemensekolah/core/providers/riverpod_providers.dart';
@@ -139,7 +140,8 @@ class AdminDashboardBody extends ConsumerStatefulWidget {
   ConsumerState<AdminDashboardBody> createState() => _AdminDashboardBodyState();
 }
 
-class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
+class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody>
+    with AdminAcademicYearReloadMixin<AdminDashboardBody> {
   Timer? _pollTimer;
 
   /// Timestamp of the most recent successful stats refresh. Initialized to
@@ -203,12 +205,45 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody> {
     await _loadPriorityInbox();
   }
 
+  /// Reload the summary inbox when the user switches academic year via
+  /// the global picker. The "Lihat semua" inbox screen
+  /// (`AdminInboxScreen`) already reacts to this provider through the
+  /// same mixin; without this the dashboard card would keep showing a
+  /// stale snapshot taken under the previously-selected year — the
+  /// exact "Semua aman" vs "3 item" mismatch reported on production
+  /// (the card lagged the full list after a year/context change).
+  @override
+  void onAcademicYearChanged() {
+    _loadPriorityInbox();
+  }
+
   /// Pulls the latest Perlu Perhatian items from the admin endpoint.
-  /// Falls back to an empty list on any error (the inbox card's
-  /// entries: mode handles the empty case with the legacy counts).
+  ///
+  /// The summary card and the "Lihat semua" screen share the same
+  /// composer, so they must stay in sync. We pass the currently-selected
+  /// academic year (same source the full inbox screen uses) so a card
+  /// rendered right after a year switch reflects the same scope as the
+  /// list behind "Lihat semua".
+  ///
+  /// A *failed* fetch (`ok == false` — network error, or the 400 the
+  /// backend returns when the school-context header isn't ready yet)
+  /// must not overwrite a known-good list with the "Semua aman" empty
+  /// state: that produced the production mismatch where the card read
+  /// "Semua aman" while "Lihat semua" still listed real items. So on a
+  /// failed load we keep whatever rows we already have. A *successful*
+  /// empty response (`ok == true`) is a genuine "all clear" and is
+  /// applied, so the card still clears once the admin resolves
+  /// everything.
   Future<void> _loadPriorityInbox() async {
-    final result = await DashboardService.getAdminPriorityInbox();
+    final result = await DashboardService.getAdminPriorityInbox(
+      academicYearId: currentAcademicYearId,
+    );
     if (!mounted) return;
+    if (!result.ok) {
+      // Couldn't load — leave the existing card untouched rather than
+      // flashing the empty state over real items.
+      return;
+    }
     setState(() {
       _priorityInbox = PriorityInboxItem.parseList(result.items);
       _priorityInboxTotal = result.total;
