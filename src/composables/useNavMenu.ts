@@ -144,6 +144,11 @@ const SUPER_ADMIN_NAV: NavSection[] = [
         icon: 'school',
       },
       {
+        to: '/super-admin/demo-incomplete',
+        labelKey: 'superAdmin.nav.incomplete',
+        icon: 'clock',
+      },
+      {
         to: '/super-admin/broadcast',
         labelKey: 'superAdmin.nav.broadcast',
         icon: 'megaphone',

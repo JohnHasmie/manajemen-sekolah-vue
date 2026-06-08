@@ -54,6 +54,8 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Toast from '@/components/ui/Toast.vue';
+import DemoAccountManagementSection from './DemoAccountManagementSection.vue';
+import type { DemoAccountDeleteResult } from '@/types/demo-account';
 import { formatDateTime, formatRupiah } from '@/lib/format';
 
 const route = useRoute();
@@ -301,6 +303,17 @@ async function submitReview() {
 
 function goBack() {
   router.push({ name: 'super-admin.demo-requests' });
+}
+
+// Called after a successful demo-account deletion from the management
+// section. Surface a summary toast (the section itself refreshes counts).
+function onAccountsDeleted(result: DemoAccountDeleteResult) {
+  toast.value = {
+    message: t('superAdmin.demoAccounts.deletedToast', {
+      count: result.deleted_users,
+    }),
+    tone: 'success',
+  };
 }
 </script>
 
@@ -879,6 +892,14 @@ function goBack() {
             </p>
           </div>
         </section>
+
+        <!-- KELOLA AKUN DEMO — only for an ACTIVATED demo school.
+             Deletion is gated server-side to is_demo=true tenants. -->
+        <DemoAccountManagementSection
+          v-if="detail.status === 'approved' && detail.activated_school_id"
+          :school-id="detail.activated_school_id"
+          @deleted="onAccountsDeleted"
+        />
 
         <!-- REVIEW NOTE (if reviewed) -->
         <section

@@ -129,6 +129,8 @@ const SuperAdminSchoolsView = () =>
   import('@/views/super-admin/SuperAdminSchoolsView.vue');
 const SuperAdminBroadcastView = () =>
   import('@/views/super-admin/SuperAdminBroadcastView.vue');
+const SuperAdminIncompleteRegistrationsView = () =>
+  import('@/views/super-admin/SuperAdminIncompleteRegistrationsView.vue');
 const TeacherPresensiView = () =>
   import('@/views/teacher/TeacherPresensiView.vue');
 const TeacherPresensiHistoryView = () =>
@@ -523,6 +525,15 @@ const routes: RouteRecordRaw[] = [
         path: 'super-admin/schools',
         name: 'super-admin.schools',
         component: SuperAdminSchoolsView,
+        meta: { superAdmin: true },
+      },
+      {
+        // Abandoned demo registrations — people who started the
+        // register-demo wizard but never finished/submitted, with a
+        // "step X of Y" progress indicator so the team can follow up.
+        path: 'super-admin/demo-incomplete',
+        name: 'super-admin.demo-incomplete',
+        component: SuperAdminIncompleteRegistrationsView,
         meta: { superAdmin: true },
       },
       {

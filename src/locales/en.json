@@ -1434,6 +1434,7 @@
       "overview": "Platform overview",
       "demoRequests": "Demo requests",
       "schools": "Schools / Tenants",
+      "incomplete": "Incomplete registrations",
       "broadcast": "Fonnte Broadcast"
     },
     "overview": {
@@ -1564,6 +1565,42 @@
       "approvedToast": "Demo activated. Activation notice sent to the requester via email & WhatsApp.",
       "rejectedToast": "Demo request rejected.",
       "alreadyReviewed": "This request is already {status}."
+    },
+    "demoAccounts": {
+      "title": "Manage Demo Accounts",
+      "warning": "Deleting accounts is permanent and cannot be undone. It applies to demo schools only — real-school accounts can never be deleted.",
+      "loading": "Loading account summary…",
+      "empty": "No demo accounts available to delete.",
+      "totalAccounts": "{count} total accounts on this demo school.",
+      "mode": {
+        "all": "All accounts",
+        "guru": "Teachers",
+        "admin": "Admins",
+        "wali": "Parents"
+      },
+      "deleteAll": "Delete all accounts",
+      "deleteGuru": "Delete teacher accounts",
+      "deleteAdmin": "Delete admin accounts",
+      "deleteWali": "Delete parent accounts",
+      "confirmTitle": "Delete demo accounts?",
+      "confirmBody": "You are about to delete {action} for this demo school ({count} accounts). This is permanent and cannot be undone.",
+      "confirmTypeLabel": "Type {word} to confirm.",
+      "confirmDelete": "Delete permanently",
+      "cancel": "Cancel",
+      "deletedToast": "Deleted {count} demo accounts."
+    },
+    "incomplete": {
+      "title": "Incomplete Registrations",
+      "loadingMeta": "Loading registrations…",
+      "countMeta": "{count} incomplete registrations",
+      "explainer": "People who started registering a demo account but never finished the wizard. See how far each one got so you can follow up.",
+      "explainerNote": "Those who already submitted a demo request appear on the Demo Requests page, not here.",
+      "stepBadge": "Step {current} of {total}",
+      "lastActive": "Last active",
+      "draftSchool": "School",
+      "unknownUser": "Unknown user",
+      "emptyTitle": "No pending registrations",
+      "emptyDescription": "No one has abandoned the demo wizard midway. Nice!"
     },
     "broadcast": {
       "title": "Fonnte WhatsApp Broadcast",

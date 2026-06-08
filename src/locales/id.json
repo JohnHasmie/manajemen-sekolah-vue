@@ -1430,6 +1430,7 @@
       "overview": "Ringkasan Platform",
       "demoRequests": "Permintaan Demo",
       "schools": "Sekolah / Tenant",
+      "incomplete": "Registrasi Belum Selesai",
       "broadcast": "Fonnte Broadcast"
     },
     "overview": {
@@ -1560,6 +1561,42 @@
       "approvedToast": "Demo diaktivasi. Notifikasi aktivasi dikirim ke pemohon via email & WhatsApp.",
       "rejectedToast": "Permintaan demo ditolak.",
       "alreadyReviewed": "Permintaan ini sudah {status}."
+    },
+    "demoAccounts": {
+      "title": "Kelola Akun Demo",
+      "warning": "Penghapusan akun bersifat permanen dan tidak dapat dibatalkan. Hanya berlaku untuk sekolah demo — akun sekolah asli tidak akan pernah terhapus.",
+      "loading": "Memuat ringkasan akun…",
+      "empty": "Tidak ada akun demo yang dapat dihapus.",
+      "totalAccounts": "Total {count} akun pada sekolah demo ini.",
+      "mode": {
+        "all": "Semua akun",
+        "guru": "Guru",
+        "admin": "Admin",
+        "wali": "Orang tua"
+      },
+      "deleteAll": "Hapus semua akun",
+      "deleteGuru": "Hapus akun guru",
+      "deleteAdmin": "Hapus akun admin",
+      "deleteWali": "Hapus akun orang tua",
+      "confirmTitle": "Hapus akun demo?",
+      "confirmBody": "Anda akan menghapus {action} sekolah demo ini ({count} akun). Tindakan ini permanen dan tidak dapat dibatalkan.",
+      "confirmTypeLabel": "Ketik {word} untuk mengonfirmasi.",
+      "confirmDelete": "Hapus permanen",
+      "cancel": "Batal",
+      "deletedToast": "Berhasil menghapus {count} akun demo."
+    },
+    "incomplete": {
+      "title": "Registrasi Belum Selesai",
+      "loadingMeta": "Memuat registrasi…",
+      "countMeta": "{count} registrasi belum selesai",
+      "explainer": "Daftar orang yang sudah mulai mendaftar akun demo tetapi belum menyelesaikan wizard. Lihat sampai langkah mana mereka berhenti untuk menindaklanjuti.",
+      "explainerNote": "Mereka yang sudah mengirim permintaan demo muncul di halaman Permintaan Demo, bukan di sini.",
+      "stepBadge": "Langkah {current} dari {total}",
+      "lastActive": "Terakhir aktif",
+      "draftSchool": "Sekolah",
+      "unknownUser": "Pengguna tidak dikenal",
+      "emptyTitle": "Tidak ada registrasi tertunda",
+      "emptyDescription": "Belum ada orang yang meninggalkan wizard demo di tengah jalan. Bagus!"
     },
     "broadcast": {
       "title": "Fonnte WhatsApp Broadcast",
