@@ -30,8 +30,16 @@ const google = useGoogleSignIn();
 const googleButtonRef = ref<HTMLDivElement | null>(null);
 
 onMounted(async () => {
-  if (google.isEnabled.value && googleButtonRef.value) {
+  if (!google.isEnabled.value) return;
+  // Initialize GIS once (idempotent across all call sites) and render
+  // the real Google button. `mountButton` waits for init internally, so
+  // the button paints as soon as the GIS script is ready.
+  if (googleButtonRef.value) {
     await google.mountButton(googleButtonRef.value);
+  } else {
+    // Container not in the DOM yet (edge case): still init GIS so the
+    // demo CTA's account chooser is primed.
+    await google.ensureReady();
   }
 });
 
