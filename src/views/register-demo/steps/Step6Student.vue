@@ -33,7 +33,7 @@ const total = computed(() => perClass.value * totalClasses.value);
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      {{ t('registerDemo.step7Label') }}
+      {{ t('registerDemo.stepCounter', { current: wizard.stepNumber, total: wizard.stepTotal }) }} · {{ t('registerDemo.step7Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
       {{ t('registerDemo.step7Title') }}

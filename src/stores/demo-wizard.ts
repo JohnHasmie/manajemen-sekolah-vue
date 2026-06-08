@@ -82,6 +82,10 @@ export const useDemoWizardStore = defineStore('demoWizard', {
 
   getters: {
     currentKey: (s): DemoStepKey => DEMO_STEPS[s.currentStep] ?? 'welcome',
+    /** 1-based position of the current step, for "Langkah X dari Y" copy. */
+    stepNumber: (s) => s.currentStep + 1,
+    /** Total wizard steps — derived from DEMO_STEPS so the counter never drifts. */
+    stepTotal: () => DEMO_STEPS.length,
     canGoBack: (s) => s.currentStep > 0 && !s.isProvisioning,
     canGoNext: (s) => s.currentStep < DEMO_STEPS.length - 1 && !s.isProvisioning,
     progress: (s) => ((s.currentStep + 1) / DEMO_STEPS.length) * 100,
