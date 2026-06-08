@@ -52,9 +52,15 @@ const router = useRouter();
 const checking = ref(true);
 
 onMounted(async () => {
-  // Hydrate from server / localStorage so a refresh on this screen
-  // recovers the school answers the user already filled in the wizard.
-  await wizard.hydrate();
+  try {
+    // Hydrate from server / localStorage so a refresh on this screen
+    // recovers the school answers the user already filled in the wizard.
+    await wizard.hydrate();
+  } catch {
+    // hydrate() is already best-effort internally, but guard here too so
+    // a thrown rejection can never leave `checking` stuck true (endless
+    // spinner) — fall through to the no-data redirect below.
+  }
   // Guard: no wizard (school) data means the user never completed the
   // wizard — bounce them back to its start rather than letting them
   // submit an empty request.
