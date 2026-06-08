@@ -456,11 +456,53 @@ mixin AttendanceDataMixin on ConsumerState<AttendancePage> {
       return base;
     }
 
-    final existing = groupedAttendance.map(keyOf).toSet();
+    // The backend now paginates by SESSION, not by class+subject group, so
+    // the SAME (class, subject [, teacher]) group can legitimately span
+    // several pages — page 1 carries its earliest-dated sessions, page 2
+    // the next batch, and so on. The old logic dropped any group whose key
+    // was already on screen, which silently discarded every session on
+    // pages 2+ for a class the teacher had already seen (the "data hilang"
+    // the user reported, now on scroll instead of first paint).
+    //
+    // Fix: when a group key is already present, MERGE the incoming group's
+    // `latest_records` sessions into the existing group instead of dropping
+    // the whole group — deduping sessions by (date, lesson_hour_id) so a
+    // session can never appear twice even if the page boundary shifts
+    // between requests.
+    final indexByKey = <String, int>{};
+    for (var i = 0; i < groupedAttendance.length; i++) {
+      indexByKey[keyOf(groupedAttendance[i])] = i;
+    }
+
+    String sessionKey(dynamic s) {
+      if (s is! Map) return '__';
+      return '${s['date']}__${s['lesson_hour_id'] ?? ''}';
+    }
+
     for (final g in data) {
-      if (!existing.contains(keyOf(g))) {
+      final k = keyOf(g);
+      final existingIdx = indexByKey[k];
+      if (existingIdx == null) {
         groupedAttendance.add(g);
+        indexByKey[k] = groupedAttendance.length - 1;
+        continue;
       }
+
+      // Merge sessions into the group already on screen.
+      final existingGroup = Map<String, dynamic>.from(
+        groupedAttendance[existingIdx] as Map,
+      );
+      final existingSessions = List<dynamic>.from(
+        (existingGroup['latest_records'] as List?) ?? const [],
+      );
+      final seen = existingSessions.map(sessionKey).toSet();
+      for (final s in (g['latest_records'] as List?) ?? const []) {
+        if (seen.add(sessionKey(s))) {
+          existingSessions.add(s);
+        }
+      }
+      existingGroup['latest_records'] = existingSessions;
+      groupedAttendance[existingIdx] = existingGroup;
     }
   }
 
