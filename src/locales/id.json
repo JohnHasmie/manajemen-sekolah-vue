@@ -3,6 +3,11 @@
     "name": "KamilEdu",
     "tagline": "Platform Manajemen Sekolah Terpadu"
   },
+  "languageSwitcher": {
+    "label": "Pilih bahasa",
+    "switchToId": "Ganti ke Bahasa Indonesia",
+    "switchToEn": "Ganti ke Bahasa Inggris"
+  },
   "common": {
     "save": "Simpan",
     "saveChanges": "Simpan perubahan",

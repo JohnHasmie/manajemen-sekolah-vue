@@ -24,6 +24,7 @@ import RolePicker from './components/RolePicker.vue';
 import ForgotPasswordModal from './components/ForgotPasswordModal.vue';
 import HelpRequestModal from './components/HelpRequestModal.vue';
 import Toast from '@/components/ui/Toast.vue';
+import PublicLanguageSwitcher from '@/components/feature/PublicLanguageSwitcher.vue';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -88,6 +89,11 @@ const whatsappUrl = computed(() => {
 
 <template>
   <div class="min-h-screen flex flex-col bg-slate-50">
+    <!-- Public language switcher — floats top-right over the brand band. -->
+    <div class="absolute top-4 right-4 z-20">
+      <PublicLanguageSwitcher />
+    </div>
+
     <BrandBand :compact="!isLoginStep" />
 
     <!-- Form-card overlaps the gradient by -24px. -->
