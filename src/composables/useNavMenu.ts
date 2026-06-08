@@ -143,6 +143,11 @@ const SUPER_ADMIN_NAV: NavSection[] = [
         labelKey: 'superAdmin.nav.schools',
         icon: 'school',
       },
+      {
+        to: '/super-admin/broadcast',
+        labelKey: 'superAdmin.nav.broadcast',
+        icon: 'megaphone',
+      },
     ],
   },
 ];

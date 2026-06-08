@@ -127,6 +127,8 @@ const SuperAdminDemoRequestDetailView = () =>
   import('@/views/super-admin/SuperAdminDemoRequestDetailView.vue');
 const SuperAdminSchoolsView = () =>
   import('@/views/super-admin/SuperAdminSchoolsView.vue');
+const SuperAdminBroadcastView = () =>
+  import('@/views/super-admin/SuperAdminBroadcastView.vue');
 const TeacherPresensiView = () =>
   import('@/views/teacher/TeacherPresensiView.vue');
 const TeacherPresensiHistoryView = () =>
@@ -521,6 +523,12 @@ const routes: RouteRecordRaw[] = [
         path: 'super-admin/schools',
         name: 'super-admin.schools',
         component: SuperAdminSchoolsView,
+        meta: { superAdmin: true },
+      },
+      {
+        path: 'super-admin/broadcast',
+        name: 'super-admin.broadcast',
+        component: SuperAdminBroadcastView,
         meta: { superAdmin: true },
       },
 

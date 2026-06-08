@@ -1429,7 +1429,8 @@
     "nav": {
       "overview": "Ringkasan Platform",
       "demoRequests": "Permintaan Demo",
-      "schools": "Sekolah / Tenant"
+      "schools": "Sekolah / Tenant",
+      "broadcast": "Fonnte Broadcast"
     },
     "overview": {
       "title": "Ringkasan Platform",
@@ -1559,6 +1560,43 @@
       "approvedToast": "Demo diaktivasi. Notifikasi aktivasi dikirim ke pemohon via email & WhatsApp.",
       "rejectedToast": "Permintaan demo ditolak.",
       "alreadyReviewed": "Permintaan ini sudah {status}."
+    },
+    "broadcast": {
+      "title": "Fonnte WhatsApp Broadcast",
+      "subtitle": "Kirim pesan WhatsApp massal ke penerima manual atau administrator sekolah dengan aman via gateway Fonnte.",
+      "form": {
+        "targetType": "Target Penerima",
+        "manual": "Nomor Manual",
+        "schoolAdmins": "Admin Sekolah",
+        "manualPlaceholder": "Masukkan nomor WhatsApp dipisahkan dengan koma atau baris baru (misal: 6281234567890, 081234567891)",
+        "schoolSelectPlaceholder": "Pilih sekolah target...",
+        "messageLabel": "Templat Pesan",
+        "messagePlaceholder": "Ketik pesan Anda di sini... Gunakan {name} dan {school_name} sebagai placeholder.",
+        "insertName": "Sisipkan Nama",
+        "insertSchool": "Sisipkan Nama Sekolah",
+        "delayLabel": "Jeda Kirim (Detik)",
+        "resolveButton": "Muat Kontak Penerima",
+        "sendButton": "Mulai Broadcast",
+        "stopButton": "Jeda / Berhenti",
+        "resetButton": "Reset Form",
+        "loadingSchools": "Memuat daftar sekolah...",
+        "resolving": "Memuat kontak...",
+        "resolvedCount": "{count} penerima ditemukan."
+      },
+      "progress": {
+        "status": "Status Broadcast",
+        "idle": "Idle",
+        "sending": "Mengirim...",
+        "paused": "Dijeda",
+        "completed": "Selesai",
+        "metrics": {
+          "total": "Total",
+          "success": "Sukses",
+          "failed": "Gagal"
+        },
+        "console": "Log Konsol Langsung",
+        "noLogs": "Siap. Konfigurasikan form dan klik Mulai untuk memulai..."
+      }
     }
   }
 }

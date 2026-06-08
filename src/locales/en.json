@@ -1433,7 +1433,8 @@
     "nav": {
       "overview": "Platform overview",
       "demoRequests": "Demo requests",
-      "schools": "Schools / Tenants"
+      "schools": "Schools / Tenants",
+      "broadcast": "Fonnte Broadcast"
     },
     "overview": {
       "title": "Platform overview",
@@ -1563,6 +1564,43 @@
       "approvedToast": "Demo activated. Activation notice sent to the requester via email & WhatsApp.",
       "rejectedToast": "Demo request rejected.",
       "alreadyReviewed": "This request is already {status}."
+    },
+    "broadcast": {
+      "title": "Fonnte WhatsApp Broadcast",
+      "subtitle": "Send bulk WhatsApp messages to manual recipients or school administrators safely using the Fonnte gateway.",
+      "form": {
+        "targetType": "Recipient Target",
+        "manual": "Manual Numbers",
+        "schoolAdmins": "Target School Admins",
+        "manualPlaceholder": "Enter WhatsApp numbers separated by commas or new lines (e.g. 6281234567890, 081234567891)",
+        "schoolSelectPlaceholder": "Select target schools...",
+        "messageLabel": "Message Template",
+        "messagePlaceholder": "Type your message here... Use {name} and {school_name} as placeholders.",
+        "insertName": "Insert Name",
+        "insertSchool": "Insert School Name",
+        "delayLabel": "Send Delay (Seconds)",
+        "resolveButton": "Resolve Recipients",
+        "sendButton": "Start Broadcast",
+        "stopButton": "Pause / Stop",
+        "resetButton": "Reset Form",
+        "loadingSchools": "Loading schools...",
+        "resolving": "Resolving recipients...",
+        "resolvedCount": "{count} recipients resolved."
+      },
+      "progress": {
+        "status": "Broadcast Status",
+        "idle": "Idle",
+        "sending": "Sending...",
+        "paused": "Paused",
+        "completed": "Completed",
+        "metrics": {
+          "total": "Total",
+          "success": "Success",
+          "failed": "Failed"
+        },
+        "console": "Live Console Logs",
+        "noLogs": "Ready. Configure the form and click Send to begin..."
+      }
     }
   }
 }
