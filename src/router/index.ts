@@ -116,8 +116,15 @@ const ParentRecommendationView = () =>
   import('@/views/parent/ParentRecommendationView.vue');
 const AdminTeacherAttendanceView = () =>
   import('@/views/admin/AdminTeacherAttendanceView.vue');
-const AdminDemoRequestView = () =>
-  import('@/views/admin/AdminDemoRequestView.vue');
+// ── Super-admin (KamilEdu-team) area ──────────────────────────────────
+// Dedicated /super-admin subtree, visually distinct from the school-admin
+// shell but on the same theme tokens. Guarded to super_admin only.
+const SuperAdminOverviewView = () =>
+  import('@/views/super-admin/SuperAdminOverviewView.vue');
+const SuperAdminDemoRequestView = () =>
+  import('@/views/super-admin/SuperAdminDemoRequestView.vue');
+const SuperAdminSchoolsView = () =>
+  import('@/views/super-admin/SuperAdminSchoolsView.vue');
 const TeacherPresensiView = () =>
   import('@/views/teacher/TeacherPresensiView.vue');
 const TeacherPresensiHistoryView = () =>
@@ -178,11 +185,11 @@ const roleHomePath: Record<string, string> = {
   parent: '/parent',
   orang_tua: '/parent',
   staff: '/staff',
-  // KamilEdu-team super-admin: no school/role — land directly on the
-  // platform Demo Requests review page (route name admin.demo-requests),
-  // never the school/role picker. Mirrors the backend super-admin login
-  // short-circuit (edu_backend_core_api MR !115).
-  super_admin: '/admin/demo-requests',
+  // KamilEdu-team super-admin: no school/role — land on the DEDICATED
+  // super-admin area (Ringkasan Platform overview), NEVER the
+  // school-admin shell or the school/role picker. Mirrors the backend
+  // super-admin login short-circuit (edu_backend_core_api MR !115).
+  super_admin: '/super-admin',
 };
 
 const routes: RouteRecordRaw[] = [
@@ -460,15 +467,36 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
-        // SUPER-ADMIN — Demo Requests review hub. Routed under the
-        // admin subtree (super-admins act as `admin`); the nav entry
-        // only appears for super-admins (useNavMenu + auth.isSuperAdmin)
-        // and the in-page guard below redirects non-super-admins. The
-        // authoritative gate is the backend EnsureSuperAdmin middleware.
+        // LEGACY redirect — the Demo Requests review page moved into the
+        // dedicated /super-admin area. Keep this so old bookmarks and any
+        // cached super-admin landing target still resolve.
         path: 'admin/demo-requests',
         name: 'admin.demo-requests',
-        component: AdminDemoRequestView,
-        meta: { role: 'admin' satisfies Role, superAdmin: true },
+        redirect: { name: 'super-admin.demo-requests' },
+      },
+
+      // ── SUPER-ADMIN (KamilEdu-team) AREA ──────────────────────────
+      // Dedicated subtree, separate from the school-admin /admin tree.
+      // Every route is gated by `meta.superAdmin: true` (client guard
+      // below) AND the backend EnsureSuperAdmin middleware. A normal
+      // school-admin who lands here is bounced to their own home.
+      {
+        path: 'super-admin',
+        name: 'super-admin.home',
+        component: SuperAdminOverviewView,
+        meta: { superAdmin: true },
+      },
+      {
+        path: 'super-admin/demo-requests',
+        name: 'super-admin.demo-requests',
+        component: SuperAdminDemoRequestView,
+        meta: { superAdmin: true },
+      },
+      {
+        path: 'super-admin/schools',
+        name: 'super-admin.schools',
+        component: SuperAdminSchoolsView,
+        meta: { superAdmin: true },
       },
 
       // Teacher / Wali Kelas subtree

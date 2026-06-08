@@ -131,7 +131,8 @@
     "selected": "{count} selected",
     "done": "Done",
     "lessonHour": "Hour {n}",
-    "occupied": "Occupied"
+    "occupied": "Occupied",
+    "refresh": "Refresh"
   },
   "auth": {
     "signIn": "SIGN IN",
@@ -1417,5 +1418,43 @@
     "audienceRole": "By role",
     "audienceClass": "By class",
     "audienceStudent": "By student"
+  },
+  "superAdmin": {
+    "platformName": "KamilEdu Platform",
+    "kicker": "Platform Super Admin",
+    "nav": {
+      "overview": "Platform overview",
+      "demoRequests": "Demo requests",
+      "schools": "Schools / Tenants"
+    },
+    "overview": {
+      "title": "Platform overview",
+      "subtitle": "Monitor tenants, active demos, and the KamilEdu demo-request queue.",
+      "totalSchools": "Total schools",
+      "activeDemos": "Active demos",
+      "pendingRequests": "Pending demo requests",
+      "expiringSoon": "Demos expiring soon",
+      "expiringSoonHint": "Expiring within 3 days",
+      "endpointComingSoon": "Schools-list endpoint coming soon",
+      "demoRequestsCta": "Review and activate incoming demo requests.",
+      "schoolsCta": "Browse all schools / tenants with their demo status.",
+      "expiringSoonTitle": "Demos expiring soon"
+    },
+    "schools": {
+      "title": "Schools / Tenants",
+      "subtitle": "All tenants with their demo status and expiry.",
+      "coverageNotice": "This list currently shows activated demos. Paid and non-demo tenants will appear once a schools-list endpoint is available.",
+      "emptyTitle": "No tenants yet",
+      "emptyDescription": "No demos have been activated yet. Tenants appear here once a demo request is approved.",
+      "unnamed": "Unnamed school",
+      "expiresAt": "Expires",
+      "typeDemo": "Demo",
+      "typeOther": "Other",
+      "state": {
+        "active": "Active",
+        "expiringSoon": "Expiring soon",
+        "expired": "Expired"
+      }
+    }
   }
 }
