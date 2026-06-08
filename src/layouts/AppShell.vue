@@ -34,6 +34,12 @@ const color = useRoleColor(() => auth.activeRole);
 const menu = useNavMenu();
 const notifications = useNotificationsStore();
 
+// KamilEdu-team super-admins run in this same shell but on the dedicated
+// /super-admin area — they have no active school, so the brand chrome
+// (sidebar header + topbar) shows a "Platform" identity instead of a
+// school name / SchoolPill.
+const isSuperAdmin = computed(() => auth.isSuperAdmin);
+
 // Sidebar state
 const isCollapsed = ref(localStorage.getItem('sidebar_collapsed') === 'true');
 const drawerOpen = ref(false);
@@ -48,10 +54,16 @@ watch(() => route.fullPath, () => {
 });
 
 const isActive = (to: string) => {
-  // The role home (e.g. /admin) is active only on exact match; everything
-  // else is active on prefix match.
+  // The role home (e.g. /admin, /super-admin) is active only on exact
+  // match; everything else is active on prefix match.
   if (to === route.path) return true;
-  if (to === '/admin' || to === '/teacher' || to === '/parent' || to === '/staff') {
+  if (
+    to === '/admin' ||
+    to === '/teacher' ||
+    to === '/parent' ||
+    to === '/staff' ||
+    to === '/super-admin'
+  ) {
     return false;
   }
   return route.path.startsWith(`${to}/`) || route.path === to;
@@ -116,28 +128,44 @@ const schoolInitial = computed(() => {
     >
       <!-- School / Brand Logo Section -->
       <div class="h-20 flex items-center px-6 gap-4 border-b border-slate-100 bg-slate-50/50 backdrop-blur-md">
-        <!-- School logo or fallback initial -->
-        <div class="flex-shrink-0 w-10 h-10 rounded-xl shadow-md shadow-brand-cobalt/10 flex items-center justify-center overflow-hidden"
-             :class="activeSchoolLogo ? 'bg-white p-0.5' : 'bg-gradient-to-br from-brand-cobalt to-brand-azure'"
-        >
-          <img
-            v-if="activeSchoolLogo"
-            :src="activeSchoolLogo"
-            :alt="activeSchoolName"
-            class="w-full h-full object-cover rounded-lg"
-          />
+        <!-- Super-admins: platform shield instead of a school logo -->
+        <template v-if="isSuperAdmin">
+          <div class="flex-shrink-0 w-10 h-10 rounded-xl shadow-md shadow-brand-cobalt/10 flex items-center justify-center bg-gradient-to-br from-brand-cobalt to-brand-azure text-white">
+            <NavIcon name="shield" :size="20" />
+          </div>
+          <div v-if="!isCollapsed" class="min-w-0 animate-in fade-in slide-in-from-left-4 duration-500">
+            <p class="font-bold text-slate-900 text-sm leading-tight truncate">
+              {{ t('superAdmin.platformName') }}
+            </p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-brand-cobalt">
+              {{ t('superAdmin.kicker') }}
+            </p>
+          </div>
+        </template>
+        <!-- Regular roles: school logo or fallback initial -->
+        <template v-else>
+          <div class="flex-shrink-0 w-10 h-10 rounded-xl shadow-md shadow-brand-cobalt/10 flex items-center justify-center overflow-hidden"
+               :class="activeSchoolLogo ? 'bg-white p-0.5' : 'bg-gradient-to-br from-brand-cobalt to-brand-azure'"
+          >
+            <img
+              v-if="activeSchoolLogo"
+              :src="activeSchoolLogo"
+              :alt="activeSchoolName"
+              class="w-full h-full object-cover rounded-lg"
+            />
+            <span
+              v-else
+              class="text-white font-black text-lg leading-none"
+            >{{ schoolInitial }}</span>
+          </div>
           <span
-            v-else
-            class="text-white font-black text-lg leading-none"
-          >{{ schoolInitial }}</span>
-        </div>
-        <span
-          v-if="!isCollapsed"
-          class="font-bold text-slate-900 text-sm leading-tight truncate animate-in fade-in slide-in-from-left-4 duration-500"
-          :title="activeSchoolName"
-        >
-          {{ activeSchoolName }}
-        </span>
+            v-if="!isCollapsed"
+            class="font-bold text-slate-900 text-sm leading-tight truncate animate-in fade-in slide-in-from-left-4 duration-500"
+            :title="activeSchoolName"
+          >
+            {{ activeSchoolName }}
+          </span>
+        </template>
       </div>
 
       <!-- Navigation with Brand Styling -->
@@ -253,21 +281,29 @@ const schoolInitial = computed(() => {
       >
         <div class="h-16 flex items-center justify-between px-lg border-b border-slate-100">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="flex-shrink-0 w-9 h-9 rounded-xl shadow-md shadow-brand-cobalt/10 flex items-center justify-center overflow-hidden"
-                 :class="activeSchoolLogo ? 'bg-white p-0.5' : 'bg-gradient-to-br from-brand-cobalt to-brand-azure'"
-            >
-              <img
-                v-if="activeSchoolLogo"
-                :src="activeSchoolLogo"
-                :alt="activeSchoolName"
-                class="w-full h-full object-cover rounded-lg"
-              />
-              <span
-                v-else
-                class="text-white font-black text-base leading-none"
-              >{{ schoolInitial }}</span>
-            </div>
-            <span class="font-bold text-slate-900 text-sm leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</span>
+            <template v-if="isSuperAdmin">
+              <div class="flex-shrink-0 w-9 h-9 rounded-xl shadow-md shadow-brand-cobalt/10 flex items-center justify-center bg-gradient-to-br from-brand-cobalt to-brand-azure text-white">
+                <NavIcon name="shield" :size="18" />
+              </div>
+              <span class="font-bold text-slate-900 text-sm leading-tight truncate">{{ t('superAdmin.platformName') }}</span>
+            </template>
+            <template v-else>
+              <div class="flex-shrink-0 w-9 h-9 rounded-xl shadow-md shadow-brand-cobalt/10 flex items-center justify-center overflow-hidden"
+                   :class="activeSchoolLogo ? 'bg-white p-0.5' : 'bg-gradient-to-br from-brand-cobalt to-brand-azure'"
+              >
+                <img
+                  v-if="activeSchoolLogo"
+                  :src="activeSchoolLogo"
+                  :alt="activeSchoolName"
+                  class="w-full h-full object-cover rounded-lg"
+                />
+                <span
+                  v-else
+                  class="text-white font-black text-base leading-none"
+                >{{ schoolInitial }}</span>
+              </div>
+              <span class="font-bold text-slate-900 text-sm leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</span>
+            </template>
           </div>
           <button
             type="button"
@@ -322,9 +358,17 @@ const schoolInitial = computed(() => {
           <NavIcon name="menu" :size="20" />
         </button>
 
+        <!-- Super-admins: a static platform badge (no school context). -->
+        <span
+          v-if="isSuperAdmin"
+          class="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-sm font-semibold text-white"
+        >
+          <NavIcon name="shield" :size="16" />
+          {{ t('superAdmin.kicker') }}
+        </span>
         <!-- School pill — always visible so the user knows their active
              tenant. On the dashboard route this is the only context cue. -->
-        <SchoolPill />
+        <SchoolPill v-else />
 
         <div class="flex-1" />
 

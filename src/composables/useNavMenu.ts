@@ -122,20 +122,30 @@ const STAFF_NAV: NavSection[] = [
 ];
 
 /**
- * Extra section appended for KamilEdu-team super-admins. Surfaces the
- * platform-level Demo Requests review page (super-admin-gated route,
- * see router/index.ts). Regular admins never see this section.
+ * DEDICATED super-admin (KamilEdu-team) nav. This is the WHOLE menu for
+ * a super-admin — it deliberately does NOT include any school-admin
+ * items (Dashboard/Pengumuman/Siswa/Guru/Kelas etc.), because a
+ * super-admin has no school of their own. Surfaces only the platform
+ * pages under the /super-admin subtree (see router/index.ts).
  */
-const SUPER_ADMIN_NAV: NavSection = {
-  titleKey: 'nav.platform',
-  items: [
-    {
-      to: '/admin/demo-requests',
-      labelKey: 'nav.demoRequests',
-      icon: 'shield',
-    },
-  ],
-};
+const SUPER_ADMIN_NAV: NavSection[] = [
+  {
+    titleKey: 'nav.platform',
+    items: [
+      { to: '/super-admin', labelKey: 'superAdmin.nav.overview', icon: 'home' },
+      {
+        to: '/super-admin/demo-requests',
+        labelKey: 'superAdmin.nav.demoRequests',
+        icon: 'clipboard-list',
+      },
+      {
+        to: '/super-admin/schools',
+        labelKey: 'superAdmin.nav.schools',
+        icon: 'school',
+      },
+    ],
+  },
+];
 
 const MENUS: Record<Role, NavSection[]> = {
   admin: ADMIN_NAV,
@@ -143,23 +153,21 @@ const MENUS: Record<Role, NavSection[]> = {
   wali_kelas: TEACHER_NAV,
   wali: PARENT_NAV,
   staff: STAFF_NAV,
-  // Super-admins route as `admin`; the super-admin extras are appended
-  // dynamically in `useNavMenu` rather than via this map. Map entry
-  // kept for exhaustiveness over the `Role` union.
-  super_admin: ADMIN_NAV,
+  // Super-admins get their OWN dedicated menu (handled in useNavMenu via
+  // the isSuperAdmin check below). Map entry kept for exhaustiveness
+  // over the `Role` union.
+  super_admin: SUPER_ADMIN_NAV,
 };
 
 export function useNavMenu(): ComputedRef<NavSection[]> {
   const auth = useAuthStore();
   return computed(() => {
+    // Super-admins ALWAYS get the dedicated platform menu — never the
+    // school-admin items. The getter also covers the case where the
+    // super-admin grant sits alongside an `admin` role.
+    if (auth.isSuperAdmin) return SUPER_ADMIN_NAV;
     const role = auth.activeRole;
     if (!role) return [];
-    const base = MENUS[role] ?? [];
-    // Append the platform section only for super-admins, and only on
-    // an admin surface (super-admins act as `admin`).
-    if (auth.isSuperAdmin && (role === 'admin' || role === 'super_admin')) {
-      return [...base, SUPER_ADMIN_NAV];
-    }
-    return base;
+    return MENUS[role] ?? [];
   });
 }

@@ -1,5 +1,11 @@
 <!--
-  AdminDemoRequestView.vue — SUPER-ADMIN demo-request review hub.
+  SuperAdminDemoRequestView.vue — SUPER-ADMIN demo-request review hub.
+
+  Moved from views/admin/AdminDemoRequestView.vue into the dedicated
+  /super-admin area. Behaviour is unchanged — the legacy
+  /admin/demo-requests path now redirects to /super-admin/demo-requests
+  (see router/index.ts), so existing links + the super-admin login
+  short-circuit keep working.
 
   KamilEdu-team page (NOT a per-school admin surface). A demo
   registration now submits a PENDING `demo_requests` row instead of
