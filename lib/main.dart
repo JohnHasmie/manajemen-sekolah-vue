@@ -57,7 +57,9 @@ import 'package:manajemensekolah/core/services/analytics_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
 import 'package:manajemensekolah/core/services/log_service.dart';
 import 'package:manajemensekolah/core/services/performance_service.dart';
+import 'package:manajemensekolah/core/services/cache_invalidation_service.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
+import 'package:manajemensekolah/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:manajemensekolah/features/settings/data/settings_service.dart';
 import 'package:manajemensekolah/core/constants/app_spacing.dart';
 import 'package:flutter/services.dart';
@@ -164,15 +166,27 @@ void main() async {
     // Register the cross-device sync hook so future `setLanguage`
     // calls also push to `PATCH /api/profile/language`. The settings
     // service is fetched once via getIt and reused; failures inside
-    // it are already swallowed-and-logged, so this hook is fire-and-
-    // forget from the picker's perspective.
-    LanguageProvider.registerServerSync((code) {
-      // Detach via Future.microtask so the picker's `notifyListeners`
-      // call returns immediately — the network round-trip never
-      // blocks the UI rebuild.
-      Future<void>.microtask(
-        () => getIt<ApiSettingsService>().updatePreferredLanguage(code),
-      );
+    // it are already swallowed-and-logged.
+    //
+    // This is AWAITED by `setLanguage` (it returns the Future) so the
+    // server's `preferred_language` column is updated BEFORE the
+    // backend-data re-fetch below runs — otherwise the re-fetch could
+    // race ahead and read the old locale (column wins over the
+    // `Accept-Language` header on the server). The picker UI does NOT
+    // wait on this: `setLanguage` calls `notifyListeners()` first, so
+    // all Flutter-local `.tr` strings flip instantly; only the
+    // backend-data refresh is gated on the round-trip.
+    LanguageProvider.registerServerSync(
+      (code) => getIt<ApiSettingsService>().updatePreferredLanguage(code),
+    );
+
+    // Register the backend-data refresh hook. Fired by `setLanguage`
+    // AFTER the PATCH resolves, so server-localized data (dashboard
+    // "Perlu Perhatian" priority-inbox labels/subtitles, etc.) is
+    // re-fetched in the new language immediately instead of staying
+    // stale until a manual pull-to-refresh.
+    LanguageProvider.registerOnLanguageChanged((code) {
+      _refreshBackendLocalizedData();
     });
 
     // Setup error handling (non-blocking)
@@ -180,6 +194,71 @@ void main() async {
 
     runApp(const ProviderScope(child: SchoolManagementApp()));
   }, LogService.sendError);
+}
+
+/// Re-fetches backend-localized data after a language change so
+/// server-rendered strings (dashboard "Perlu Perhatian" priority-inbox
+/// labels/subtitles for admin/guru/wali, and other server-localized
+/// text) appear in the new language immediately.
+///
+/// Targeted, not a global nuke:
+/// 1. Clears the dashboard's local cache (server-localized stats &
+///    inbox rows are cached under `dashboard_*`) so the refetch reads
+///    fresh server copy rather than the stale-language cache.
+/// 2. Invalidates the `dashboardProvider` async notifier and re-fetches
+///    for the current academic year. This re-pulls the consolidated
+///    dashboard payload — which carries the TEACHER priority inbox
+///    (`stats['priority_inbox']`) — and all other dashboard-state
+///    server text.
+/// 3. Bumps `languageChangeSignalProvider`. The ADMIN & PARENT bodies
+///    own their inbox in local `setState` (they call the priority-inbox
+///    endpoints directly), so they `ref.listen` to this signal and
+///    re-fetch their own rows.
+///
+/// Resolves the root [ProviderContainer] via the global [navigatorKey]
+/// (same pattern as `shell_nav.dart`'s `goToGlobal`). No-ops safely if
+/// the navigator isn't mounted yet (e.g. language picked pre-login from
+/// a screen outside the router) — nothing to refresh in that case.
+void _refreshBackendLocalizedData() {
+  final navContext = navigatorKey.currentContext;
+  if (navContext == null) {
+    // Pre-login / navigator not mounted — no dashboard to refresh.
+    return;
+  }
+  try {
+    final container = ProviderScope.containerOf(navContext, listen: false);
+
+    // 1. Bump the signal first so screens listening with their own
+    //    local fetch (admin/parent inbox) kick off immediately.
+    container.read(languageChangeSignalProvider.notifier).state++;
+
+    // 2. Clear the dashboard cache, then invalidate + re-fetch the
+    //    dashboard provider (covers the teacher inbox + all other
+    //    dashboard-state server text). Fire-and-forget — the UI shows
+    //    its existing data until the fresh copy lands.
+    () async {
+      try {
+        await CacheInvalidationService.onDashboardChanged();
+        // `reloadForYearChange` re-fetches the full payload for the
+        // current academic year without resetting role/school state.
+        // Guarded: the provider may not be alive if no dashboard is on
+        // screen, in which case the next build fetches fresh anyway.
+        await container
+            .read(dashboardProvider.notifier)
+            .reloadForYearChange();
+      } catch (e) {
+        AppLogger.warning(
+          'language',
+          'Backend-data refresh after language change failed: $e',
+        );
+      }
+    }();
+  } catch (e) {
+    AppLogger.warning(
+      'language',
+      'Could not resolve container for language refresh: $e',
+    );
+  }
 }
 
 /// Top-level error handling setup (called from `main`).

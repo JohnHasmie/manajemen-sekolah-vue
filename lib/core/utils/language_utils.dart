@@ -81,8 +81,9 @@ class LanguageProvider with ChangeNotifier {
   ///   - SharedPreferences write (synchronous, awaited).
   ///   - `notifyListeners` fires so widgets rebuild with the new
   ///     `.tr` resolutions.
-  ///   - Fire-and-forget PATCH `/profile/language` (failures swallowed
-  ///     and logged — local UX continues either way).
+  ///   - AWAITED PATCH `/profile/language` (failures swallowed and
+  ///     logged — local UX continues either way), then a re-fetch of
+  ///     backend-localized data (priority inbox, etc.).
   Future<void> setLanguage(String language, {bool syncToServer = true}) async {
     _currentLanguage = language;
 
@@ -92,23 +93,44 @@ class LanguageProvider with ChangeNotifier {
     final prefs = PreferencesService();
     await prefs.setString('language', language);
 
-    // 2. UI rebuilds first so the picker feels instant.
+    // 2. UI rebuilds first so all Flutter-local `.tr` strings flip
+    //    instantly — the picker feels immediate and client-side i18n
+    //    never waits on the network.
     notifyListeners();
 
-    // 3. Cross-device persistence — push to backend so the user gets
-    //    the same locale on a phone, tablet, or fresh browser. Fire
-    //    and forget; the local change is the source of truth for now,
-    //    and a failing PATCH (offline, 5xx) will retry on the next
-    //    explicit pick. We import the service lazily to keep this
-    //    barrel file's dependency graph minimal — `language_utils.dart`
-    //    is imported almost everywhere via `.tr`, so adding a hard
-    //    dependency on the settings service here would balloon the
-    //    cycle count.
+    // 3. Cross-device persistence + backend-data refresh.
+    //
+    //    `hydrateFromServer` passes `syncToServer: false` because it's
+    //    ADOPTING a value the server already holds — there's nothing
+    //    new to persist and nothing stale to re-fetch.
+    //
+    //    Ordering matters and is the whole point of this path: the
+    //    backend's locale precedence is (1) the saved
+    //    `preferred_language` column, then (2) the `Accept-Language`
+    //    header. So we MUST let the PATCH land before re-fetching, or
+    //    the re-fetch could race ahead and still read the OLD column
+    //    value. Hence the PATCH is AWAITED, not fire-and-forget.
+    //
+    //    Resilience: the production sync hook swallows its own errors,
+    //    but we still guard with try/catch so that even a throwing
+    //    PATCH never aborts the local locale change (already applied
+    //    above) NOR the re-fetch. On failure the re-fetch isn't
+    //    wasted — dio now sends the new `Accept-Language`, which the
+    //    server honours as the fallback when the column write didn't
+    //    land.
     if (syncToServer) {
-      // Lazy-load the symbol via a deferred top-level hook so this
-      // file remains framework-only and unit-testable without a
-      // running dio.
-      _serverSync?.call(language);
+      // Lazy-loaded hooks (injected in `main.dart`) keep this barrel
+      // file framework-only and unit-testable without a running dio.
+      final sync = _serverSync;
+      if (sync != null) {
+        try {
+          await sync(language);
+        } catch (_) {
+          // Swallow — local locale + Accept-Language already updated;
+          // continue to the re-fetch regardless.
+        }
+      }
+      _onLanguageChanged?.call(language);
     }
   }
 
@@ -117,12 +139,35 @@ class LanguageProvider with ChangeNotifier {
   /// settings service. `null` until injection — picker still works
   /// in that case, just without server sync (e.g. tests, splash
   /// screen pre-login).
-  static void Function(String code)? _serverSync;
+  ///
+  /// Returns a `Future` so [setLanguage] can AWAIT the PATCH before
+  /// triggering a re-fetch — see the ordering note in [setLanguage].
+  /// The hook is expected to swallow its own errors (the settings
+  /// service already does), so `setLanguage` doesn't need a try/catch.
+  static Future<void> Function(String code)? _serverSync;
 
   /// Wire the server-sync hook. Called once during app bootstrap,
   /// AFTER auth + dio are ready. Pass `null` to disable (logout).
-  static void registerServerSync(void Function(String code)? sync) {
+  static void registerServerSync(Future<void> Function(String code)? sync) {
     _serverSync = sync;
+  }
+
+  /// Hook injected at app startup (see `main.dart`) that re-fetches
+  /// backend-localized data (dashboard priority-inbox "Perlu
+  /// Perhatian" labels, server-rendered subtitles, etc.) so they
+  /// switch language immediately instead of staying stale until a
+  /// manual refresh.
+  ///
+  /// Fired by [setLanguage] AFTER the locale is applied and the
+  /// `_serverSync` PATCH has resolved, so the server already sees the
+  /// new `preferred_language` when the re-fetch hits. `null` until
+  /// injection — local i18n still flips instantly without it.
+  static void Function(String code)? _onLanguageChanged;
+
+  /// Wire the backend-data refresh hook. Called once during app
+  /// bootstrap. Pass `null` to disable (logout / tests).
+  static void registerOnLanguageChanged(void Function(String code)? hook) {
+    _onLanguageChanged = hook;
   }
 
   /// Apply a server-supplied preference without echoing it back to
@@ -190,3 +235,24 @@ final languageRiverpod =
     riverpod_legacy.ChangeNotifierProvider<LanguageProvider>((ref) {
       return languageProvider; // Global singleton from language_utils.dart
     });
+
+/// Monotonically-increasing counter bumped once per *completed*
+/// language change (after the `PATCH /profile/language` round-trip).
+///
+/// Screens that fetch backend-localized data with their own local
+/// `setState` (rather than through a Riverpod async provider) —
+/// notably the admin & parent dashboard bodies' "Perlu Perhatian"
+/// inbox — `ref.listen` to this and re-fetch when it changes. The
+/// teacher inbox rides the `dashboardProvider` invalidation instead,
+/// so it doesn't need this signal.
+///
+/// Why a counter, not a `bool`/the language string: a counter is
+/// guaranteed to change on every bump, so `ref.listen`'s
+/// previous-vs-next comparison always fires even if the same code is
+/// somehow re-applied. The actual value is irrelevant — listeners
+/// only care that it moved.
+///
+/// Bumped from the `registerOnLanguageChanged` hook in `main.dart`.
+final languageChangeSignalProvider = riverpod_legacy.StateProvider<int>(
+  (ref) => 0,
+);

@@ -320,8 +320,20 @@ class _ParentDashboardBodyState extends ConsumerState<ParentDashboardBody> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch language provider to rebuild when language changes.
+    // Watch language provider to rebuild when language changes — flips
+    // all Flutter-local `.tr` strings instantly.
     ref.watch(languageRiverpod);
+
+    // Re-fetch the server-localized "Perlu Perhatian" inbox when the
+    // language change has been persisted server-side. The inbox rows
+    // carry backend-localized labels/subtitles, so a plain rebuild
+    // isn't enough — we need fresh data in the new language. The
+    // signal is bumped only AFTER the `PATCH /profile/language`
+    // round-trip (see main.dart), so this re-fetch reads the new
+    // locale. `_loadPriorityInbox` swallows its own errors.
+    ref.listen<int>(languageChangeSignalProvider, (_, _) {
+      _loadPriorityInbox();
+    });
 
     return Scaffold(
       backgroundColor: ColorUtils.slate50,
