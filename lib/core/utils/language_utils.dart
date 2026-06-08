@@ -27,6 +27,7 @@ part 'language_utils_sweep_finance.dart';
 part 'language_utils_sweep_schedule.dart';
 part 'language_utils_sweep_class_activity.dart';
 part 'language_utils_sweep_attendance.dart';
+part 'language_utils_sweep_teacher_attendance.dart';
 part 'language_utils_sweep_grades.dart';
 part 'language_utils_sweep_report_cards.dart';
 part 'language_utils_sweep_classrooms.dart';

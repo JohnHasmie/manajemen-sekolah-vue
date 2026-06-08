@@ -104,9 +104,11 @@ class ApiEndpoints {
   static const teacherAttendanceCheckIn = '/teacher-attendance/check-in';
   static const teacherAttendanceCheckOut = '/teacher-attendance/check-out';
   static const teacherAttendanceHistory = '/teacher-attendance/history';
-  // Admin-facing (per-school config + report list):
+  // Admin-facing (per-school config + report list + per-teacher rekap):
   static const teacherAttendanceSettings = '/teacher-attendance/settings';
   static const teacherAttendanceAdmin = '/teacher-attendance/admin';
+  static const teacherAttendanceAdminSummary =
+      '/teacher-attendance/admin/summary';
 
   // ── Grades ──
   static const grades = '/grades';
