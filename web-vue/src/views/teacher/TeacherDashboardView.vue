@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
@@ -277,6 +278,11 @@ onUnmounted(stopSlices);
 
 // Refetch when the active academic year changes via the chip.
 useAcademicYearWatcher(() => load());
+
+// Re-fetch the server-localised priority inbox (+ stats) when the user
+// switches app language so "Perlu Perhatian" / "Needs Attention" labels
+// follow the new locale without a manual page reload.
+useLocaleWatcher(() => load());
 
 interface QuickAction {
   label: string;
