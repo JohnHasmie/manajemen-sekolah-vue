@@ -61,6 +61,16 @@ onMounted(async () => {
     // a thrown rejection can never leave `checking` stuck true (endless
     // spinner) — fall through to the no-data redirect below.
   }
+  // A restored pending-request receipt always wins: if the user already
+  // submitted (hydrate recovered `result` from localStorage), keep them on
+  // the pending/"Menunggu" done-state and never bounce to the wizard or show
+  // the form again. The template renders `v-else-if="result"` before the
+  // form, so this just guarantees no bounce when the school payload is
+  // somehow empty but a receipt exists.
+  if (wizard.result) {
+    checking.value = false;
+    return;
+  }
   // Guard: no wizard (school) data means the user never completed the
   // wizard — bounce them back to its start rather than letting them
   // submit an empty request.

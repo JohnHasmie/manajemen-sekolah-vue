@@ -42,6 +42,14 @@ interface PersistedShape {
    * discarded so the new user starts at step 1 with fresh defaults.
    */
   userId?: string;
+  /**
+   * The pending-request receipt returned by a successful provision().
+   * Persisted so a reload of the pending/"Menunggu" screen recovers the
+   * receipt and keeps rendering the pending state — instead of dropping
+   * the user back onto the identity FORM. In-memory `result` was lost on
+   * reload before; this is the field that makes the pending state durable.
+   */
+  result?: DemoPendingResponse | null;
 }
 
 interface State {
@@ -129,6 +137,17 @@ export const useDemoWizardStore = defineStore('demoWizard', {
       const hadInMemoryData = this.hasWizardData;
       const inMemoryPayload = this.payload;
       const inMemoryStep = this.currentStep;
+      // Restore the persisted pending-request receipt FIRST, before any
+      // remote/local payload handling, so it survives every hydrate path —
+      // including the early `remote?.payload` return below. Without this a
+      // reload of the pending/"Menunggu" screen would null out `result` and
+      // fall through to the identity FORM. Read once, guard against an empty
+      // or corrupt LS entry (storage.get already swallows parse errors and
+      // returns null), and never clobber a receipt already held in memory.
+      const persisted = storage.get<PersistedShape>(LS_KEY);
+      if (persisted?.result && !this.result) {
+        this.result = persisted.result;
+      }
       try {
         const remote = await DemoService.loadWizardState();
         if (remote?.payload) {
@@ -239,6 +258,10 @@ export const useDemoWizardStore = defineStore('demoWizard', {
       this.isProvisioning = true;
       try {
         this.result = await DemoService.provision(this.payload);
+        // Write the receipt to localStorage immediately so a reload of the
+        // pending/"Menunggu" screen recovers it via hydrate() and keeps
+        // showing the pending state rather than re-rendering the form.
+        this._persist();
         return true;
       } catch (e) {
         this.error = (e as Error).message;
@@ -271,6 +294,10 @@ export const useDemoWizardStore = defineStore('demoWizard', {
         payload: this.payload,
         updatedAt: new Date().toISOString(),
         userId: auth.user?.id,
+        // Persist the pending-request receipt too so the "Menunggu" screen
+        // is recoverable across reloads. clearLocalProgress()/reset() remove
+        // the whole LS_KEY entry, which correctly drops this as well.
+        result: this.result,
       });
     },
 
