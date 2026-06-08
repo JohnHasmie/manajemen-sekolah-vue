@@ -10,6 +10,8 @@
 library;
 
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:manajemensekolah/core/router/app_router.dart'
+    show resetFcmSessionRegistration;
 import 'package:manajemensekolah/core/services/analytics_service.dart';
 import 'package:manajemensekolah/core/services/api_service.dart';
 import 'package:manajemensekolah/core/services/fcm_service.dart';
@@ -119,6 +121,9 @@ class TokenService {
       try {
         await FCMService().deleteTokenFromBackend();
         await FCMService().clearLocalToken();
+        // Arm the router's restored-session guard so the next login (or a
+        // restored session after re-login) re-registers the device token.
+        resetFcmSessionRegistration();
         AppLogger.info('auth', 'FCM token cleaned up');
       } catch (fcmError) {
         AppLogger.warning(
