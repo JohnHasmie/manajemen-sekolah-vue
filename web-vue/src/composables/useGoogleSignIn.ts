@@ -22,16 +22,26 @@
  * every `useGoogleSignIn()` caller shares one initialized instance and
  * `initialize()` runs once regardless of how many components mount.
  *
- * ── Why we don't rely on One Tap / FedCM ──────────────────────────────
+ * ── Why we render a REAL, VISIBLE button (and dropped the proxy hack) ──
  * `google.accounts.id.prompt()` (One Tap) goes through FedCM, which the
  * browser disables on cooldown, in incognito, or after a prior dismissal
  * — it then rejects with NetworkError / AbortError and shows NO UI, so
- * the account chooser never appears. The reliable, FedCM-independent way
- * to open the chooser AND still receive an `id_token` (which the backend
- * REQUIRES — see GoogleLoginRequest: `id_token` is `required`) is to use
- * a real GIS-rendered button: rendering it offscreen and programmatically
- * clicking it opens the account-chooser popup with `ux_mode: 'popup'`.
- * One Tap remains a best-effort progressive enhancement only.
+ * the account chooser never appears.
+ *
+ * The previous fix tried to keep a custom-styled CTA button by rendering
+ * a GIS button OFF-SCREEN and proxying a synthetic `.click()` to it. That
+ * silently no-ops: GIS's rendered button only reacts to **trusted**,
+ * user-initiated clicks (`event.isTrusted === true`). A programmatic
+ * `HTMLElement.click()` produces an untrusted event, so GIS ignores it —
+ * no popup, no console error (exactly the reported symptom).
+ *
+ * The robust, FedCM-independent path that still yields an `id_token`
+ * (which the backend REQUIRES — see GoogleLoginRequest: `id_token` is
+ * `required`) is to render a REAL, VISIBLE GIS button and let the user
+ * click it directly. With `ux_mode: 'popup'` that trusted click opens
+ * Google's account-chooser popup and returns an id_token to our shared
+ * callback. Both the login form and the demo CTA render their own real
+ * button. One Tap remains a best-effort progressive enhancement only.
  */
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
@@ -66,15 +76,6 @@ const error = ref<string | null>(null);
 let scriptPromise: Promise<void> | null = null;
 let initPromise: Promise<void> | null = null;
 let initialized = false;
-
-/**
- * Offscreen container holding a real GIS-rendered button. Clicking the
- * demo CTA proxies a click to this button's inner clickable node, which
- * opens the Google account chooser popup and yields an `id_token` via the
- * shared callback — without depending on FedCM/One Tap.
- */
-let hiddenButtonHost: HTMLDivElement | null = null;
-let hiddenButtonRendered = false;
 
 function loadScript(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve();
@@ -186,146 +187,57 @@ function ensureInit(): Promise<void> {
   return initPromise;
 }
 
-/** Locates the same-origin clickable node inside a GIS-rendered button. */
-function findClickable(host: HTMLElement): HTMLElement | null {
-  return (
-    host.querySelector<HTMLElement>('[role="button"]') ??
-    host.querySelector<HTMLElement>('div[tabindex]') ??
-    (host.firstElementChild as HTMLElement | null)
-  );
-}
-
-/**
- * Synchronously dispatch a click to the pre-rendered hidden button, if it
- * is ready. Returns true if a click was dispatched. Kept synchronous so it
- * can run inside a user-gesture handler WITHOUT an intervening `await`,
- * which is what lets the browser allow the resulting popup.
- */
-function tryClickHiddenButtonSync(): boolean {
-  if (!hiddenButtonHost || !hiddenButtonRendered) return false;
-  const clickable = findClickable(hiddenButtonHost);
-  if (!clickable) return false;
-  clickable.click();
-  return true;
-}
-
-/**
- * Ensures the offscreen real Google button exists + is rendered so it can
- * be clicked programmatically to open the account chooser.
- */
-async function ensureHiddenButton(): Promise<HTMLElement | null> {
-  await ensureInit();
-  if (!isReady.value || !window.google?.accounts?.id) return null;
-
-  if (!hiddenButtonHost) {
-    hiddenButtonHost = document.createElement('div');
-    // Render off-screen with REAL dimensions + full opacity. GIS has
-    // anti-abuse checks that ignore clicks on a button it considers
-    // hidden (display:none / opacity:0 / zero-size), so we keep the
-    // button genuinely rendered and just push it out of the viewport.
-    hiddenButtonHost.setAttribute('aria-hidden', 'true');
-    hiddenButtonHost.style.position = 'fixed';
-    hiddenButtonHost.style.top = '0';
-    hiddenButtonHost.style.left = '-10000px';
-    hiddenButtonHost.style.width = '240px';
-    hiddenButtonHost.style.height = '44px';
-    hiddenButtonHost.style.zIndex = '-1';
-    document.body.appendChild(hiddenButtonHost);
-  }
-
-  if (!hiddenButtonRendered) {
-    window.google.accounts.id.renderButton(hiddenButtonHost, {
-      type: 'standard',
-      theme: 'outline',
-      size: 'large',
-      text: 'continue_with',
-      width: 240,
-    });
-    hiddenButtonRendered = true;
-  }
-
-  return hiddenButtonHost;
+export interface MountButtonOptions {
+  /**
+   * Pixel width of the rendered button. GIS caps this at 400 and ignores
+   * `width: '100%'`-style values, so callers pass a concrete number
+   * (usually the container's measured `clientWidth`).
+   */
+  width?: number;
+  /** GIS button theme. Demo CTA uses a filled blue; login uses outline. */
+  theme?: 'outline' | 'filled_blue' | 'filled_black';
+  /** GIS label text key. */
+  text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
 }
 
 export interface UseGoogleSignIn {
   isEnabled: typeof isEnabled;
   isReady: typeof isReady;
   error: typeof error;
-  /** Renders a visible Google-rendered button into `container`. */
-  mountButton: (container: HTMLElement) => Promise<void>;
   /**
-   * Reliably opens the Google account chooser (popup) regardless of
-   * FedCM/One Tap availability, and signs in via the id_token flow.
-   * Returns `true` once the chooser was triggered, `false` if GIS is
-   * unavailable. Used by the demo CTA.
+   * Renders a REAL, VISIBLE Google-rendered button into `container`. The
+   * user clicks it directly — that trusted click opens Google's
+   * account-chooser popup and yields an id_token via the shared callback.
+   * Used by BOTH the login form and the demo CTA (the only reliable path;
+   * synthetic/proxied clicks on a GIS button are silently ignored).
    */
-  openAccountChooser: () => Promise<boolean>;
+  mountButton: (container: HTMLElement, options?: MountButtonOptions) => Promise<void>;
   /** Best-effort One Tap (progressive enhancement only; may be a no-op). */
   promptOneTap: () => Promise<void>;
   /** Initializes GIS (idempotent). Safe to call from onMounted. */
   ensureReady: () => Promise<void>;
-  /**
-   * Pre-load GIS + render the hidden chooser button on mount so the demo
-   * CTA's click can open the popup synchronously (avoids popup blocking).
-   */
-  prewarm: () => Promise<void>;
 }
 
 export function useGoogleSignIn(): UseGoogleSignIn {
-  async function mountButton(container: HTMLElement) {
+  async function mountButton(container: HTMLElement, options?: MountButtonOptions) {
     try {
       await ensureInit();
     } catch {
       return; // error already surfaced via shared `error` ref
     }
     if (!isReady.value || !window.google?.accounts?.id) return;
+    // Clear any previous render (e.g. when the container is re-mounted)
+    // so GIS doesn't stack two buttons on top of each other.
+    container.replaceChildren();
     window.google.accounts.id.renderButton(container, {
       type: 'standard',
-      theme: 'outline',
+      theme: options?.theme ?? 'outline',
       size: 'large',
       shape: 'rectangular',
       logo_alignment: 'left',
-      text: 'continue_with',
-      width: container.clientWidth || 320,
+      text: options?.text ?? 'continue_with',
+      width: options?.width ?? (container.clientWidth || 320),
     });
-  }
-
-  async function openAccountChooser(): Promise<boolean> {
-    // Fast path: GIS was pre-warmed on mount, so the hidden button already
-    // exists. Click it synchronously — staying inside the user gesture is
-    // what keeps the browser from blocking the resulting popup.
-    if (tryClickHiddenButtonSync()) return true;
-
-    // Slow path: GIS not ready yet (first interaction before prewarm
-    // finished, or prewarm was skipped). Load + render, then click. The
-    // popup may require a second click if the browser blocked the first
-    // because of the async gap — but the chooser reliably opens then.
-    const host = await ensureHiddenButton();
-    if (!host) return false;
-
-    let clickable = findClickable(host);
-    if (!clickable) {
-      // GIS hasn't painted the button yet — give it a tick and retry once.
-      await new Promise((r) => setTimeout(r, 200));
-      clickable = findClickable(host);
-      if (!clickable) return false;
-    }
-    clickable.click();
-    return true;
-  }
-
-  /**
-   * Pre-load GIS + render the hidden account-chooser button ahead of time
-   * (call from onMounted). This lets the demo CTA's first click dispatch
-   * synchronously, so the browser allows the account-chooser popup.
-   */
-  async function prewarm(): Promise<void> {
-    if (!isEnabled.value) return;
-    try {
-      await ensureHiddenButton();
-    } catch {
-      // non-fatal — openAccountChooser will retry on click
-    }
   }
 
   async function promptOneTap() {
@@ -336,7 +248,7 @@ export function useGoogleSignIn(): UseGoogleSignIn {
     }
     if (isReady.value) {
       // One Tap is best-effort: if FedCM is disabled it silently no-ops
-      // here, but the rendered button / openAccountChooser still work.
+      // here, but the rendered button (mountButton) still works.
       try {
         window.google?.accounts.id.prompt();
       } catch {
@@ -350,9 +262,7 @@ export function useGoogleSignIn(): UseGoogleSignIn {
     isReady,
     error,
     mountButton,
-    openAccountChooser,
     promptOneTap,
     ensureReady: ensureInit,
-    prewarm,
   };
 }
