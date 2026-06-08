@@ -42,22 +42,10 @@ class FCMNotificationHandler {
   void handleTap(Map<String, dynamic> data) {
     AppLogger.debug('fcm', 'Notification tapped with data: $data');
 
-    final type = data['type'] as String?;
-
-    switch (type) {
-      case 'absensi' || 'attendance':
-        _router.navigateToPresenceScreen(data);
-      case 'class_activity' || 'class_activity_detail':
-        _router.navigateToClassActivityScreen();
-      case 'pengumuman' || 'announcement':
-        _router.navigateToAnnouncementScreen();
-      case 'grade':
-        _router.navigateToGradeScreen();
-      case 'tagihan':
-        // Per P1_BottomNav_Spec § 6 — tagihan was previously logged-only.
-        // The router now routes it to the role-appropriate Finance tab.
-        _router.navigateToBillingScreen();
-    }
+    // Delegate to the single routing helper. It normalizes every backend
+    // `type`/`screen` variant (push payloads differ from DB rows) and
+    // falls back to the in-app notification list for unknown types.
+    _router.route(data);
   }
 
   void parseAndHandle(String? payload) {
