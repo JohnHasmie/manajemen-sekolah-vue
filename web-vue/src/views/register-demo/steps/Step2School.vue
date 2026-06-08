@@ -238,6 +238,16 @@ async function requestAccessForKamilEduMatch() {
       {{ t('registerDemo.step2Subtitle') }}
     </p>
 
+    <!-- Accuracy note — keep data real so the demo request flows smoothly. -->
+    <div
+      class="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5"
+    >
+      <NavIcon name="alert-circle" :size="15" class="mt-0.5 flex-shrink-0 text-amber-600" />
+      <p class="text-[12px] leading-snug text-amber-900">
+        {{ t('registerDemo.accuracyNote') }}
+      </p>
+    </div>
+
     <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
       {{ t('registerDemo.step2JenjangLabel') }}
     </p>

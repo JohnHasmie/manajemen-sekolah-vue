@@ -11,22 +11,23 @@
   Flow control (per CLAUDE.md):
     - AppNavigator NOT used — this is a pre-auth-shell route, so we
       use vue-router directly via the wizard's footer buttons.
-    - SnackBarUtils via Toast composable when provision fails.
-    - On step 10 (Done), clicking "Masuk dashboard" calls
-      auth.refreshAfterDemo() to re-fetch /auth/me, then routes to
-      the role hub.
+    - The demo is now a REVIEWED request: the final "Requester" step
+      submits a PENDING demo request (no auto-activation). On success
+      we show a confirmation popup, then a terminal "request received"
+      step whose button returns to /login. Activation + credentials
+      arrive later via WhatsApp/email once the team approves.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { useAuthStore } from '@/stores/auth';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { DEMO_STEPS, type DemoStepKey } from '@/types/demo';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import ToastHost from '@/components/ui/ToastHost.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
+import Modal from '@/components/ui/Modal.vue';
 
 import Step1Welcome from './steps/Step1Welcome.vue';
 import Step2School from './steps/Step2School.vue';
@@ -39,11 +40,11 @@ import Step7Parent from './steps/Step7Parent.vue';
 import Step8Schedule from './steps/Step8Schedule.vue';
 import Step9Billing from './steps/Step9Billing.vue';
 import Step10Scenarios from './steps/Step10Scenarios.vue';
+import Step11Requester from './steps/Step11Requester.vue';
 import Step10Done from './steps/Step10Done.vue';
 
 const { t } = useI18n();
 const wizard = useDemoWizardStore();
-const auth = useAuthStore();
 const router = useRouter();
 
 onMounted(() => {
@@ -64,6 +65,7 @@ const STEP_LABELS = computed<Record<DemoStepKey, string>>(() => ({
   schedule: t('registerDemo.stepLabelSchedule'),
   billing: t('registerDemo.stepLabelBilling'),
   scenarios: t('registerDemo.stepLabelScenarios'),
+  requester: t('registerDemo.stepLabelRequester'),
   done: t('registerDemo.stepLabelDone'),
 }));
 
@@ -79,6 +81,7 @@ const stepComponentMap = {
   schedule: Step8Schedule,
   billing: Step9Billing,
   scenarios: Step10Scenarios,
+  requester: Step11Requester,
   done: Step10Done,
 } as const;
 
@@ -94,41 +97,44 @@ function goTo(idx: number) {
   }
 }
 
+// Pending-request popup — shown after a successful submit. The demo
+// is NOT activated here; the KamilEdu team validates + identifies the
+// requester first, then notifies via WhatsApp/email. We deliberately
+// do NOT reveal activation internals.
+const showPendingDialog = ref(false);
+
 async function handleNext() {
-  if (wizard.currentKey === 'scenarios') {
-    // Skenario adalah step config terakhir — di sinilah provision
-    // dijalankan. Sebelumnya trigger ada di langkah Tagihan, tapi
-    // sekarang Tagihan hanya konfigurasi template/nominal.
+  if (wizard.currentKey === 'requester') {
+    // FINAL step — submit the demo request. Client-validate the
+    // requester identity first (mirrors the backend rules) so an
+    // incomplete form surfaces inline errors instead of a 422.
+    wizard.markRequesterSubmitAttempted();
+    if (!wizard.requesterValid) {
+      wizard.error = t('registerDemo.requesterFormInvalid');
+      return;
+    }
     const ok = await wizard.provision();
-    if (ok) wizard.next();
+    if (ok) {
+      // Show the confirmation popup, then advance to the terminal
+      // "request received" step behind it.
+      showPendingDialog.value = true;
+      wizard.next();
+    }
     return;
   }
   if (isLastStep.value) {
-    // Step terakhir — finalize + masuk dashboard.
-    try {
-      await auth.refreshAfterDemo();
-    } catch (e) {
-      wizard.error = (e as Error).message;
-      return;
-    }
-    // Bersihkan progress wizard di localStorage supaya kalau browser
-    // ini dipakai daftar demo lagi dengan akun lain, dia mulai dari
-    // step 1 dengan jawaban default. Server-side state (idempotency)
-    // tetap aman — yang dihapus cuma cache lokal.
+    // Terminal step — the demo isn't live yet (pending review), so
+    // there's no dashboard to enter. Clear local progress and return
+    // to the login screen; activation arrives later via WA/email.
     wizard.clearLocalProgress();
-    // refreshAfterDemo always auto-picks admin role for owner, so
-    // the happy path is auth.step === 'done' → role hub.
-    // Fallbacks: if the auto-pick somehow didn't land us at 'done'
-    // (e.g., owner picked single_role = guru in step 3), let the
-    // picker on /login take over.
-    if (auth.step === 'done') {
-      router.replace('/');
-    } else {
-      router.replace('/login');
-    }
+    router.replace('/login');
     return;
   }
   wizard.next();
+}
+
+function dismissPendingDialog() {
+  showPendingDialog.value = false;
 }
 
 function handleBack() {
@@ -150,9 +156,11 @@ async function confirmResetWizard() {
 
 const nextLabel = computed(() => {
   if (wizard.currentKey === 'welcome') return t('registerDemo.nextButtonStart');
-  if (wizard.currentKey === 'scenarios')
-    return wizard.isProvisioning ? t('registerDemo.nextButtonCreating') : t('registerDemo.nextButtonCreate');
-  if (isLastStep.value) return t('registerDemo.nextButtonEnter');
+  if (wizard.currentKey === 'requester')
+    return wizard.isProvisioning
+      ? t('registerDemo.nextButtonSubmitting')
+      : t('registerDemo.nextButtonSubmit');
+  if (isLastStep.value) return t('registerDemo.nextButtonFinish');
   return t('common.next');
 });
 </script>
@@ -320,5 +328,35 @@ const nextLabel = computed(() => {
       @confirm="confirmResetWizard"
       @close="showResetConfirm = false"
     />
+
+    <!-- Pending-request confirmation popup. No activation internals. -->
+    <Modal v-if="showPendingDialog" size="sm" @close="dismissPendingDialog">
+      <div class="text-center">
+        <div
+          class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100"
+        >
+          <NavIcon name="check-circle" :size="28" class="text-emerald-600" />
+        </div>
+        <h2 class="text-[18px] font-black text-slate-900">
+          {{ t('registerDemo.pendingDialogTitle') }}
+        </h2>
+        <p class="mt-2 text-[13px] leading-relaxed text-slate-600">
+          {{ t('registerDemo.pendingDialogMessage') }}
+        </p>
+        <div
+          class="mt-4 flex items-center justify-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-[12px] text-slate-600"
+        >
+          <NavIcon name="send" :size="14" class="text-emerald-500" />
+          {{ t('registerDemo.pendingDialogChannels') }}
+        </div>
+        <button
+          type="button"
+          class="mt-5 w-full rounded-lg bg-role-admin px-5 py-2.5 text-[13px] font-bold text-white hover:bg-role-admin/90"
+          @click="dismissPendingDialog"
+        >
+          {{ t('registerDemo.pendingDialogButton') }}
+        </button>
+      </div>
+    </Modal>
   </div>
 </template>
