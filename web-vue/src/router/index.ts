@@ -123,6 +123,8 @@ const SuperAdminOverviewView = () =>
   import('@/views/super-admin/SuperAdminOverviewView.vue');
 const SuperAdminDemoRequestView = () =>
   import('@/views/super-admin/SuperAdminDemoRequestView.vue');
+const SuperAdminDemoRequestDetailView = () =>
+  import('@/views/super-admin/SuperAdminDemoRequestDetailView.vue');
 const SuperAdminSchoolsView = () =>
   import('@/views/super-admin/SuperAdminSchoolsView.vue');
 const TeacherPresensiView = () =>
@@ -503,6 +505,16 @@ const routes: RouteRecordRaw[] = [
         path: 'super-admin/demo-requests',
         name: 'super-admin.demo-requests',
         component: SuperAdminDemoRequestView,
+        meta: { superAdmin: true },
+      },
+      {
+        // Full detail of one demo request — EVERY form input the
+        // requester submitted in the register-demo wizard + identity
+        // screen. Opened from a list row. Approve/Reject is available
+        // inline while the request is still pending.
+        path: 'super-admin/demo-requests/:id',
+        name: 'super-admin.demo-requests.detail',
+        component: SuperAdminDemoRequestDetailView,
         meta: { superAdmin: true },
       },
       {
