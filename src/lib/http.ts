@@ -19,6 +19,16 @@ import { storage, StorageKeys } from './storage';
 import type { ApiError, ApiResponse } from '@/types/api';
 
 /**
+ * Request config augmented with a flag recording whether the request
+ * was sent with a bearer token. Set by the request interceptor, read by
+ * the response interceptor to scope session-expired handling to genuine
+ * authenticated requests only.
+ */
+type AuthAwareRequestConfig = InternalAxiosRequestConfig & {
+  __hadAuthToken?: boolean;
+};
+
+/**
  * URL prefixes that must NEVER receive an auto-injected
  * `academic_year_id` — either because they don't filter by year,
  * or because they're the academic-year endpoints themselves.
@@ -61,6 +71,13 @@ function buildClient(baseURL: string): AxiosInstance {
     if (token) {
       config.headers.set('Authorization', `Bearer ${token}`);
     }
+    // Record whether THIS request was made as an authenticated user.
+    // The response interceptor uses this to distinguish a genuine
+    // session-expiry (token was present → server rejected it) from a
+    // 401 on a request that never carried a session at all (e.g. a
+    // public endpoint hit on the login page before sign-in). Only the
+    // former should clear state + show the "session expired" toast.
+    (config as AuthAwareRequestConfig).__hadAuthToken = Boolean(token);
     if (schoolId) {
       config.headers.set('X-School-ID', schoolId);
     }
@@ -127,7 +144,23 @@ function buildClient(baseURL: string): AxiosInstance {
     async (error) => {
       const status = error.response?.status;
 
-      if (status === 401) {
+      // Only treat a 401 as a *session expiry* when the request was
+      // actually made with a bearer token (a real session that the
+      // server has now rejected). A 401 on a request that carried no
+      // token is just an unauthenticated/public call being refused —
+      // there was never a session to expire, so we must NOT clear
+      // state, redirect, or show the "Sesi Anda telah berakhir" toast.
+      //
+      // Without this guard the public login page showed a spurious
+      // session-expired toast: a 401 from any pre-auth call (or an
+      // expired-token bounce that lands back here) redirected to
+      // `/login?reason=...`, which LoginView surfaces as a red toast
+      // even though the user had never signed in.
+      const hadAuthToken = Boolean(
+        (error.config as AuthAwareRequestConfig | undefined)?.__hadAuthToken,
+      );
+
+      if (status === 401 && hadAuthToken) {
         // Token expired or invalidated. Clear state and bounce to /login.
         storage.remove(StorageKeys.token);
         storage.remove(StorageKeys.user);

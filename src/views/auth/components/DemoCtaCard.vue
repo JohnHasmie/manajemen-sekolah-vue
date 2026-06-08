@@ -1,68 +1,66 @@
 <!--
   DemoCtaCard.vue — "Buat sekolah demo" prompt on the login screen.
   Variant A from the wireframe: tinted card with kicker + title +
-  benefit chips + primary outline CTA.
+  benefit chips + a REAL Google Sign-In button.
 
-  The CTA triggers Google One Tap (since the demo wizard requires
-  an authenticated user). We set a session-scoped `demo_intent`
-  flag first so:
-    - If the user is brand-new on Google (no schools), the backend
-      returns `dapat_buat_demo: true` and the auth store routes to
-      /register-demo automatically.
-    - If the user already has schools, RegisterDemoView guard reads
-      the flag and offers a confirmation to start a parallel demo
-      (TODO follow-up).
+  ── Why a real GIS button (not a custom button) ──────────────────────
+  The demo wizard requires an authenticated user, so the CTA must sign
+  the user in with Google first. The backend requires a Google id_token
+  (GoogleLoginRequest → `id_token` required), which means the GIS
+  id_token flow — and GIS only emits that token from a button the user
+  clicks DIRECTLY. A custom button that proxies a synthetic `.click()`
+  to a hidden GIS button is silently ignored by GIS (its rendered button
+  only honours trusted, user-initiated clicks) — that was the previous
+  "nothing happens on click" bug. So we render the actual GIS button
+  here and let the user click it.
+
+  On callback (shared `handleCredentialResponse` in useGoogleSignIn):
+    - Brand-new Google user with no schools → backend returns
+      `dapat_buat_demo: true` → auth store routes to /register-demo.
+    - User who already has schools → normal login → dashboard.
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
-import { useToast } from '@/composables/useToast';
 
 const { t } = useI18n();
 const google = useGoogleSignIn();
-const toast = useToast();
 
 const SESSION_KEY = 'demo_intent_v1';
-const busy = ref(false);
+const googleButtonRef = ref<HTMLDivElement | null>(null);
 
-// Pre-load GIS + render the hidden chooser button so the first click on
-// "Buat demo gratis" can open the Google account-chooser popup
-// synchronously (browsers block popups opened after an async gap).
-onMounted(() => {
-  void google.prewarm();
-});
-
-async function handleClick() {
-  if (busy.value) return;
-  if (!google.isEnabled.value) {
-    toast.error(t('auth.demo.googleNotConfigured'));
-    return;
-  }
-  // Flag the intent so the auth store / router can prefer the demo
-  // path post-Google. Cleared by the wizard after first read.
+// Flag the demo intent for any future post-Google branch that wants to
+// distinguish "came from the demo CTA" from a plain login. Functionally
+// inert today (routing is driven by the backend `dapat_buat_demo` flag),
+// kept for the documented follow-up. Wrapped because sessionStorage can
+// throw in private mode.
+function flagDemoIntent() {
   try {
     sessionStorage.setItem(SESSION_KEY, '1');
   } catch {
-    // sessionStorage may be blocked in private mode — non-fatal.
-  }
-
-  busy.value = true;
-  try {
-    // Open the Google account chooser reliably (popup, not FedCM/One Tap).
-    // This works even when One Tap is suppressed by the browser.
-    const opened = await google.openAccountChooser();
-    if (!opened) {
-      // GIS truly unavailable (script blocked / no client id). Surface a
-      // real error and point the user at the standard Google button.
-      toast.error(google.error.value ?? t('auth.demo.clickGoogleButton'));
-    }
-  } catch (e) {
-    toast.error((e as Error).message || t('auth.demo.clickGoogleButton'));
-  } finally {
-    busy.value = false;
+    // non-fatal
   }
 }
+
+// Render the real Google button into the card. The user clicks it
+// directly, which opens Google's account-chooser popup and yields an
+// id_token via the composable's shared callback.
+onMounted(async () => {
+  if (!google.isEnabled.value) return;
+  flagDemoIntent();
+  if (googleButtonRef.value) {
+    await google.mountButton(googleButtonRef.value, {
+      theme: 'filled_blue',
+      text: 'continue_with',
+      width: googleButtonRef.value.clientWidth || 320,
+    });
+  } else {
+    // Container not in the DOM yet — still prime GIS so the login form's
+    // own button (and a later mount) work.
+    await google.ensureReady();
+  }
+});
 </script>
 
 <template>
@@ -102,40 +100,31 @@ async function handleClick() {
       {{ t('auth.demo.description') }}
     </p>
 
-    <button
-      type="button"
-      :disabled="busy"
-      class="w-full rounded-lg border-2 border-brand-dark-blue bg-white text-brand-dark-blue py-2.5 text-[12.5px] font-extrabold hover:bg-brand-dark-blue hover:text-white disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-brand-dark-blue transition-colors flex items-center justify-center gap-2"
-      @click="handleClick"
+    <!-- Real Google Sign-In button. Clicking it opens the account
+         chooser and runs the demo/login flow. -->
+    <div v-if="google.isEnabled.value" class="flex justify-center min-h-[44px]">
+      <div
+        v-show="google.isReady.value"
+        ref="googleButtonRef"
+        class="w-full flex justify-center"
+      />
+      <!-- Loading state while the GIS script loads -->
+      <div
+        v-if="!google.isReady.value"
+        class="w-full rounded-lg border-2 border-brand-dark-blue/30 bg-white/60 py-2.5 flex items-center justify-center gap-3 animate-pulse"
+      >
+        <div class="w-3.5 h-3.5 rounded-full bg-brand-dark-blue/20"></div>
+        <span class="text-[11px] font-extrabold text-brand-dark-blue/50 uppercase tracking-widest">{{ t('auth.loadingGoogle') }}</span>
+      </div>
+    </div>
+
+    <!-- Fallback when Google isn't configured (no VITE_GOOGLE_CLIENT_ID). -->
+    <div
+      v-else
+      class="w-full rounded-lg border-2 border-dashed border-slate-300 bg-white/60 py-2.5 px-3 text-center text-[11px] font-bold text-slate-500"
     >
-      <svg
-        v-if="busy"
-        class="w-3.5 h-3.5 animate-spin"
-        viewBox="0 0 24 24"
-        fill="none"
-      >
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25" />
-        <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-      </svg>
-      <svg
-        v-else
-        xmlns="http://www.w3.org/2000/svg"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-        <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-        <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
-        <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
-      </svg>
-      {{ t('auth.demo.createButton') }}
-    </button>
+      {{ t('auth.demo.googleNotConfigured') }}
+    </div>
 
     <div class="mt-2.5 flex items-center justify-center gap-2 flex-wrap text-[10px] text-slate-500">
       <span class="inline-flex items-center gap-1">
