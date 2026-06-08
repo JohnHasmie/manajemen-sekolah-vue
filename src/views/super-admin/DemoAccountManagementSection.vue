@@ -19,17 +19,31 @@
        TYPE the exact confirmation word ("HAPUS") before the button
        unlocks, and clearly states the action cannot be undone.
 
-  Props: schoolId — the activated demo school's UUID (from the demo
-  request's `activated_school_id`).
+  Beyond the per-account actions, a clearly-separated DANGER ZONE offers
+  "Hapus Sekolah Demo (beserta semua data)" — deleting the ENTIRE demo
+  school (the school row + every piece of provisioned data). That action
+  requires a STRONGER confirmation: the operator must type the exact
+  school name OR the literal "HAPUS". On success the parent navigates
+  back to the demo-requests list (the school no longer exists).
 
-  Emits: deleted — fired after a successful delete so the parent can
-  refresh / show a toast.
+  Props:
+    schoolId   — the activated demo school's UUID (from the demo
+                 request's `activated_school_id`).
+    schoolName — the demo school's name, shown in the danger-zone copy
+                 and accepted as a strong confirmation token.
+
+  Emits:
+    deleted       — fired after a successful ACCOUNT delete so the parent
+                    can refresh / show a toast.
+    schoolDeleted — fired after the WHOLE school is deleted so the parent
+                    can toast + navigate back to the list.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { DemoAccountService } from '@/services/demo-account.service';
 import type {
+  DeleteDemoSchoolResult,
   DemoAccountCounts,
   DemoAccountDeleteMode,
   DemoAccountDeleteResult,
@@ -38,9 +52,10 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Modal from '@/components/ui/Modal.vue';
 
-const props = defineProps<{ schoolId: string }>();
+const props = defineProps<{ schoolId: string; schoolName?: string | null }>();
 const emit = defineEmits<{
   deleted: [result: DemoAccountDeleteResult];
+  schoolDeleted: [result: DeleteDemoSchoolResult];
 }>();
 
 const { t } = useI18n();
@@ -132,6 +147,57 @@ async function confirmDelete() {
     deleteError.value = (e as Error).message;
   } finally {
     deleting.value = false;
+  }
+}
+
+// ── Delete-ENTIRE-school flow ───────────────────────────────────────
+// Stronger confirmation: type the exact school name OR "HAPUS".
+const schoolDeleteOpen = ref(false);
+const schoolConfirmInput = ref('');
+const deletingSchool = ref(false);
+const schoolDeleteError = ref<string | null>(null);
+
+// Trimmed school name (may be empty if the parent didn't pass one).
+const schoolNameTrimmed = computed(() => (props.schoolName ?? '').trim());
+
+// Unlock when the operator typed "HAPUS" OR the exact school name
+// (case-insensitive, trimmed) — same contract the backend enforces.
+const schoolConfirmUnlocked = computed(() => {
+  const v = schoolConfirmInput.value.trim();
+  if (v.toUpperCase() === CONFIRM_WORD) return true;
+  const name = schoolNameTrimmed.value;
+  return name.length > 0 && v.toLowerCase() === name.toLowerCase();
+});
+
+function startSchoolDelete() {
+  schoolDeleteOpen.value = true;
+  schoolConfirmInput.value = '';
+  schoolDeleteError.value = null;
+}
+
+function cancelSchoolDelete() {
+  schoolDeleteOpen.value = false;
+  schoolConfirmInput.value = '';
+  schoolDeleteError.value = null;
+}
+
+async function confirmSchoolDelete() {
+  if (!schoolConfirmUnlocked.value) return;
+  deletingSchool.value = true;
+  schoolDeleteError.value = null;
+  try {
+    const result = await DemoAccountService.deleteSchool(
+      props.schoolId,
+      schoolConfirmInput.value.trim(),
+    );
+    // Parent handles the toast + navigation back to the list (the
+    // school is gone, so there's nothing left to refresh here).
+    emit('schoolDeleted', result);
+    cancelSchoolDelete();
+  } catch (e) {
+    schoolDeleteError.value = (e as Error).message;
+  } finally {
+    deletingSchool.value = false;
   }
 }
 
@@ -280,6 +346,28 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
       </div>
     </template>
 
+    <!-- DANGER ZONE · DELETE THE ENTIRE DEMO SCHOOL ───────────────────
+         Always available (even with zero accounts) for an activated
+         demo school. Clearly separated + stronger confirmation. -->
+    <div
+      v-if="!isLoading && !loadError"
+      class="mt-4 rounded-2xl border-2 border-red-300 bg-red-50/40 p-3.5"
+    >
+      <h3
+        class="text-[11px] font-black uppercase tracking-widest text-red-600 flex items-center gap-2 mb-1.5"
+      >
+        <NavIcon name="alert-triangle" :size="14" />
+        {{ t('superAdmin.demoAccounts.dangerZoneTitle') }}
+      </h3>
+      <p class="text-[11px] text-red-700/90 leading-relaxed mb-3">
+        {{ t('superAdmin.demoAccounts.deleteSchoolWarning') }}
+      </p>
+      <Button variant="danger" size="sm" block @click="startSchoolDelete">
+        <NavIcon name="trash-2" :size="14" />
+        {{ t('superAdmin.demoAccounts.deleteSchool') }}
+      </Button>
+    </div>
+
     <!-- CONFIRMATION MODAL (typed confirmation, irreversible) -->
     <Modal
       v-if="pendingMode"
@@ -340,6 +428,81 @@ const hasAnyAccounts = computed(() => (counts.value?.total_accounts ?? 0) > 0);
           >
             <NavIcon name="trash-2" :size="14" />
             {{ t('superAdmin.demoAccounts.confirmDelete') }}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+
+    <!-- DELETE-WHOLE-SCHOOL MODAL (strong typed confirmation) -->
+    <Modal
+      v-if="schoolDeleteOpen"
+      size="sm"
+      :title="t('superAdmin.demoAccounts.deleteSchoolConfirmTitle')"
+      @close="cancelSchoolDelete"
+    >
+      <div class="space-y-3">
+        <div
+          class="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5"
+        >
+          <span class="text-red-500 mt-0.5 flex-shrink-0">
+            <NavIcon name="alert-triangle" :size="18" />
+          </span>
+          <p class="text-xs text-red-700 leading-relaxed">
+            {{
+              t('superAdmin.demoAccounts.deleteSchoolConfirmBody', {
+                name:
+                  schoolNameTrimmed || t('superAdmin.demoAccounts.thisSchool'),
+              })
+            }}
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 mb-1">
+            <template v-if="schoolNameTrimmed">
+              {{
+                t('superAdmin.demoAccounts.deleteSchoolTypeLabel', {
+                  name: schoolNameTrimmed,
+                  word: CONFIRM_WORD,
+                })
+              }}
+            </template>
+            <template v-else>
+              {{
+                t('superAdmin.demoAccounts.confirmTypeLabel', {
+                  word: CONFIRM_WORD,
+                })
+              }}
+            </template>
+          </label>
+          <input
+            v-model="schoolConfirmInput"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            :placeholder="schoolNameTrimmed || CONFIRM_WORD"
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-red-300"
+            @keyup.enter="schoolConfirmUnlocked && confirmSchoolDelete()"
+          />
+        </div>
+
+        <p v-if="schoolDeleteError" class="text-xs text-red-600">
+          {{ schoolDeleteError }}
+        </p>
+
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <Button variant="ghost" size="sm" @click="cancelSchoolDelete">
+            {{ t('superAdmin.demoAccounts.cancel') }}
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            :loading="deletingSchool"
+            :disabled="!schoolConfirmUnlocked"
+            @click="confirmSchoolDelete"
+          >
+            <NavIcon name="trash-2" :size="14" />
+            {{ t('superAdmin.demoAccounts.deleteSchoolConfirm') }}
           </Button>
         </div>
       </div>

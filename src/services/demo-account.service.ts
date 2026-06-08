@@ -11,6 +11,7 @@
  */
 import { api } from '@/lib/http';
 import type {
+  DeleteDemoSchoolResult,
   DemoAccountCounts,
   DemoAccountDeleteMode,
   DemoAccountDeleteResult,
@@ -85,6 +86,34 @@ export const DemoAccountService = {
       return data as DemoAccountDeleteResult;
     } catch (e) {
       throw toFriendlyError(e, 'Gagal menghapus akun demo.');
+    }
+  },
+
+  /**
+   * DELETE /api/demo-schools/{schoolId} — delete the ENTIRE demo school
+   * (the school row + ALL its provisioned data). IRREVERSIBLE.
+   *
+   * Strictly demo-only: the backend re-asserts schools.is_demo=true and
+   * answers a real (non-demo) target with a 422 we surface verbatim. The
+   * `confirm` token (the exact school name OR the literal "HAPUS") is
+   * required by the backend FormRequest as defence-in-depth, mirroring
+   * the typed confirmation the UI enforces.
+   *
+   * @param schoolId the activated demo school's UUID
+   * @param confirm  the school name or "HAPUS"
+   */
+  async deleteSchool(
+    schoolId: string,
+    confirm: string,
+  ): Promise<DeleteDemoSchoolResult> {
+    try {
+      const res = await api.delete(`/demo-schools/${schoolId}`, {
+        data: { confirm },
+      });
+      const data = res.data?.data ?? res.data;
+      return data as DeleteDemoSchoolResult;
+    } catch (e) {
+      throw toFriendlyError(e, 'Gagal menghapus sekolah demo.');
     }
   },
 

@@ -49,6 +49,32 @@ export interface DemoAccountDeleteResult {
   deleted_by_role: Record<string, number>;
 }
 
+/**
+ * Summary returned by DELETE /demo-schools/{schoolId} — deleting the
+ * ENTIRE demo school (the school row + ALL its provisioned data).
+ *
+ * Source of truth:
+ *   - app/Modules/Demo/Actions/DeleteDemoSchoolAction.php
+ *   - app/Modules/Demo/Http/Resources/DeleteDemoSchoolResource.php
+ *
+ * Strictly demo-only: the backend re-asserts schools.is_demo=true, so a
+ * real (non-demo) tenant can NEVER be deleted from here.
+ */
+export interface DeleteDemoSchoolResult {
+  /** False on the idempotent no-op path (school already gone). */
+  deleted: boolean;
+  school_id: string;
+  school_name: string | null;
+  /** Demo-only `users` rows hard-deleted. */
+  deleted_users: number;
+  /** Users shared with another (real) school — detached, NOT deleted. */
+  detached_users: number;
+  /** Explicit per-table delete counts for non-cascading tables. */
+  deleted_records: Record<string, number>;
+  /** `demo_requests` rows reset (activated_school_id nulled + expired). */
+  demo_requests_reset: number;
+}
+
 /** The user who started an abandoned registration (Google sign-in). */
 export interface IncompleteRegistrationRequester {
   id: string;

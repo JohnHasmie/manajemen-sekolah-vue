@@ -1587,7 +1587,16 @@
       "confirmTypeLabel": "Type {word} to confirm.",
       "confirmDelete": "Delete permanently",
       "cancel": "Cancel",
-      "deletedToast": "Deleted {count} demo accounts."
+      "deletedToast": "Deleted {count} demo accounts.",
+      "thisSchool": "this demo school",
+      "dangerZoneTitle": "Danger Zone",
+      "deleteSchool": "Delete Demo School (with all data)",
+      "deleteSchoolWarning": "Permanently deletes this entire demo school — including all accounts, classes, students, subjects, schedules, bills, grades, announcements, and everything else. This cannot be undone. It applies to demo schools only; a real school can never be deleted.",
+      "deleteSchoolConfirmTitle": "Delete the entire demo school?",
+      "deleteSchoolConfirmBody": "You are about to PERMANENTLY delete the demo school \"{name}\" and EVERYTHING in it. This cannot be undone.",
+      "deleteSchoolTypeLabel": "Type the school name \"{name}\" or \"{word}\" to confirm.",
+      "deleteSchoolConfirm": "Delete school permanently",
+      "schoolDeletedToast": "Demo school \"{name}\" and all its data have been deleted."
     },
     "incomplete": {
       "title": "Incomplete Registrations",

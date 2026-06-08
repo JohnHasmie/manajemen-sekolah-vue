@@ -55,7 +55,10 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Button from '@/components/ui/Button.vue';
 import Toast from '@/components/ui/Toast.vue';
 import DemoAccountManagementSection from './DemoAccountManagementSection.vue';
-import type { DemoAccountDeleteResult } from '@/types/demo-account';
+import type {
+  DeleteDemoSchoolResult,
+  DemoAccountDeleteResult,
+} from '@/types/demo-account';
 import { formatDateTime, formatRupiah } from '@/lib/format';
 
 const route = useRoute();
@@ -118,7 +121,10 @@ function socialEntries(
   if (!sm) return [];
   return (Object.keys(sm) as (keyof DemoRequesterSocialMedia)[])
     .filter((k) => sm[k]?.trim())
-    .map((k) => ({ label: DEMO_SOCIAL_LABELS[k] ?? k, value: sm[k] as string }));
+    .map((k) => ({
+      label: DEMO_SOCIAL_LABELS[k] ?? k,
+      value: sm[k] as string,
+    }));
 }
 
 // ── Label maps for enum-ish payload fields ──────────────────────────
@@ -315,6 +321,20 @@ function onAccountsDeleted(result: DemoAccountDeleteResult) {
     tone: 'success',
   };
 }
+
+// Called after the ENTIRE demo school is deleted. The school no longer
+// exists, so this detail page can't meaningfully re-render — show a
+// success toast, then navigate back to the demo-requests list. A short
+// delay lets the operator see the confirmation before we leave.
+function onSchoolDeleted(result: DeleteDemoSchoolResult) {
+  toast.value = {
+    message: t('superAdmin.demoAccounts.schoolDeletedToast', {
+      name: result.school_name ?? detail.value?.school_summary?.name ?? '',
+    }),
+    tone: 'success',
+  };
+  window.setTimeout(goBack, 1200);
+}
 </script>
 
 <template>
@@ -323,9 +343,7 @@ function onAccountsDeleted(result: DemoAccountDeleteResult) {
     <BrandPageHeader
       role="admin"
       :kicker="t('superAdmin.kicker')"
-      :title="
-        detail?.school_summary?.name ?? t('superAdmin.demoDetail.title')
-      "
+      :title="detail?.school_summary?.name ?? t('superAdmin.demoDetail.title')"
       :meta="
         detail
           ? `${t('superAdmin.demoDetail.submittedAt')} ${formatDateTime(detail.created_at) || '—'}`
@@ -491,7 +509,9 @@ function onAccountsDeleted(result: DemoAccountDeleteResult) {
                 {{ t('superAdmin.demoDetail.schoolName') }}
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.school?.name ?? detail.school_summary?.name ?? '—' }}
+                {{
+                  payload?.school?.name ?? detail.school_summary?.name ?? '—'
+                }}
               </dd>
             </div>
             <div>
@@ -511,7 +531,9 @@ function onAccountsDeleted(result: DemoAccountDeleteResult) {
                 {{ t('superAdmin.demoDetail.city') }}
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.school?.city ?? detail.school_summary?.city ?? '—' }}
+                {{
+                  payload?.school?.city ?? detail.school_summary?.city ?? '—'
+                }}
               </dd>
             </div>
             <div>
@@ -519,7 +541,9 @@ function onAccountsDeleted(result: DemoAccountDeleteResult) {
                 {{ t('superAdmin.demoDetail.npsn') }}
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.school?.npsn ?? detail.school_summary?.npsn ?? '—' }}
+                {{
+                  payload?.school?.npsn ?? detail.school_summary?.npsn ?? '—'
+                }}
               </dd>
             </div>
             <div>
@@ -691,7 +715,11 @@ function onAccountsDeleted(result: DemoAccountDeleteResult) {
                   class="border-t border-slate-100"
                 >
                   <td class="px-3 py-2 font-medium text-slate-900">
-                    {{ t('superAdmin.demoDetail.gradeLabel', { grade: row.grade }) }}
+                    {{
+                      t('superAdmin.demoDetail.gradeLabel', {
+                        grade: row.grade,
+                      })
+                    }}
                   </td>
                   <td class="px-3 py-2 text-slate-600 tabular-nums">
                     {{ row.count }}
@@ -758,7 +786,9 @@ function onAccountsDeleted(result: DemoAccountDeleteResult) {
           >
             {{ t('superAdmin.demoDetail.sectionSchedule') }}
           </h2>
-          <dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 text-sm mb-3">
+          <dl
+            class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 text-sm mb-3"
+          >
             <div>
               <dt class="text-[11px] text-slate-400">
                 {{ t('superAdmin.demoDetail.scheduleMode') }}
@@ -898,7 +928,11 @@ function onAccountsDeleted(result: DemoAccountDeleteResult) {
         <DemoAccountManagementSection
           v-if="detail.status === 'approved' && detail.activated_school_id"
           :school-id="detail.activated_school_id"
+          :school-name="
+            payload?.school?.name ?? detail.school_summary?.name ?? null
+          "
           @deleted="onAccountsDeleted"
+          @school-deleted="onSchoolDeleted"
         />
 
         <!-- REVIEW NOTE (if reviewed) -->

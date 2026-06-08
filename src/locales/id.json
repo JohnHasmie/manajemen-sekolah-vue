@@ -1583,7 +1583,16 @@
       "confirmTypeLabel": "Ketik {word} untuk mengonfirmasi.",
       "confirmDelete": "Hapus permanen",
       "cancel": "Batal",
-      "deletedToast": "Berhasil menghapus {count} akun demo."
+      "deletedToast": "Berhasil menghapus {count} akun demo.",
+      "thisSchool": "sekolah demo ini",
+      "dangerZoneTitle": "Zona Berbahaya",
+      "deleteSchool": "Hapus Sekolah Demo (beserta semua data)",
+      "deleteSchoolWarning": "Menghapus seluruh sekolah demo ini secara permanen — termasuk semua akun, kelas, siswa, mata pelajaran, jadwal, tagihan, nilai, pengumuman, dan data lainnya. Tindakan ini tidak dapat dibatalkan. Hanya berlaku untuk sekolah demo; sekolah asli tidak akan pernah terhapus.",
+      "deleteSchoolConfirmTitle": "Hapus seluruh sekolah demo?",
+      "deleteSchoolConfirmBody": "Anda akan menghapus PERMANEN sekolah demo \"{name}\" beserta SELURUH data di dalamnya. Tindakan ini tidak dapat dibatalkan.",
+      "deleteSchoolTypeLabel": "Ketik nama sekolah \"{name}\" atau \"{word}\" untuk mengonfirmasi.",
+      "deleteSchoolConfirm": "Hapus sekolah permanen",
+      "schoolDeletedToast": "Sekolah demo \"{name}\" beserta seluruh datanya telah dihapus."
     },
     "incomplete": {
       "title": "Registrasi Belum Selesai",
