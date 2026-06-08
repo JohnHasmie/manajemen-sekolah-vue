@@ -27,7 +27,7 @@ defineEmits<{ clear: [] }>();
     >
       <button
         type="button"
-        class="rounded-md hover:bg-slate-100 p-1.5"
+        class="rounded-full hover:bg-slate-100 p-1.5"
         aria-label="Batalkan pilihan"
         @click="$emit('clear')"
       >
