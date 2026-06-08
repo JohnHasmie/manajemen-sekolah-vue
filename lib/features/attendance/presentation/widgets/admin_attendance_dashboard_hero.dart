@@ -93,8 +93,14 @@ class _AdminAttendanceDashboardHeroState
                 : (data.absentDelta == 0
                       ? kAttSameAsYesterday.tr
                       : data.absentDelta > 0
-                      ? kAttIncreaseFromYesterday.tr.replaceFirst('↑', '↑ ${data.absentDelta.abs()}')
-                      : kAttDecreaseFromYesterday.tr.replaceFirst('↓', '↓ ${data.absentDelta.abs()}')),
+                      ? kAttIncreaseFromYesterday.tr.replaceFirst(
+                          '↑',
+                          '↑ ${data.absentDelta.abs()}',
+                        )
+                      : kAttDecreaseFromYesterday.tr.replaceFirst(
+                          '↓',
+                          '↓ ${data.absentDelta.abs()}',
+                        )),
           ),
           BrandKpiColumn(
             label: kAttAverageAttendance.tr,
@@ -265,7 +271,7 @@ class _ExportBar extends StatelessWidget {
                 ),
                 child: Text(
                   kAttCreate.tr,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,

@@ -58,7 +58,7 @@ mixin SubjectClassActionsMixin {
               children: [
                 Text(
                   kAddClass.tr,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -196,7 +196,7 @@ mixin SubjectClassActionsMixin {
               ),
               child: Text(
                 kSubViewAll.tr,
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ),

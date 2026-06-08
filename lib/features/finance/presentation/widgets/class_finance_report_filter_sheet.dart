@@ -105,9 +105,12 @@ class _ClassFinanceReportFilterSheetState
               ),
               FilterChipGrid<String>(
                 options: [
-                  FilterOption(value: 'Semua', label: 'Semua'),
-                  FilterOption(value: 'Lunas', label: 'Lunas'),
-                  FilterOption(value: 'Belum Dibayar', label: 'Belum Dibayar'),
+                  const FilterOption(value: 'Semua', label: 'Semua'),
+                  const FilterOption(value: 'Lunas', label: 'Lunas'),
+                  const FilterOption(
+                    value: 'Belum Dibayar',
+                    label: 'Belum Dibayar',
+                  ),
                   FilterOption(
                     value: 'Belum Diverifikasi',
                     label: kFinNotVerified.tr,

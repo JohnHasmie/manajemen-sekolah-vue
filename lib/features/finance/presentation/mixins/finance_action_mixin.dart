@@ -85,15 +85,16 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
       if (result.ok) {
         SnackBarUtils.showSuccess(
           context,
-          result.softDeleted
-              ? kFinTypeDisabled.tr
-              : kFinTypeDeletedSuccess.tr,
+          result.softDeleted ? kFinTypeDisabled.tr : kFinTypeDeletedSuccess.tr,
         );
         await loadDataAfterAction();
       } else {
         SnackBarUtils.showError(
           context,
-          kFinDeleteError.tr.replaceFirst('\${result.error}', '${result.error}'),
+          kFinDeleteError.tr.replaceFirst(
+            '\${result.error}',
+            '${result.error}',
+          ),
         );
       }
     }
@@ -274,7 +275,7 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
       title: kFinDeleteBill.tr,
       message: kFinDeleteBillMsg.tr
           .replaceFirst('\$name', '$name')
-          .replaceFirst('\$formattedMonth', '$formattedMonth'),
+          .replaceFirst('\$formattedMonth', formattedMonth),
       confirmText: kFinDeleteBill.tr,
       icon: Icons.delete_rounded,
       isDestructive: true,
@@ -292,7 +293,7 @@ mixin FinanceActionMixin on ConsumerState<FinanceScreen> {
             context,
             kFinBillDeletedSuccess.tr
                 .replaceFirst('\$name', '$name')
-                .replaceFirst('\$formattedMonth', '$formattedMonth'),
+                .replaceFirst('\$formattedMonth', formattedMonth),
           );
           await loadDataAfterAction();
         } else {
