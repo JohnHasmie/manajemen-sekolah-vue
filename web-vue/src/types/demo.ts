@@ -31,6 +31,7 @@ export type DemoStepKey =
   | 'schedule'
   | 'billing'
   | 'scenarios'
+  | 'requester'
   | 'done';
 
 export const DEMO_STEPS: readonly DemoStepKey[] = [
@@ -45,6 +46,11 @@ export const DEMO_STEPS: readonly DemoStepKey[] = [
   'schedule',
   'billing',
   'scenarios',
+  // Final step before submit. Collects the REQUESTER identity so the
+  // KamilEdu team can validate + identify the person asking for a demo.
+  // The demo is NOT activated on submit — submit creates a PENDING
+  // demo request that a super-admin approves manually later.
+  'requester',
   'done',
 ] as const;
 
@@ -160,6 +166,44 @@ export interface DemoScenariosPayload {
   enabled: DemoScenarioKey[];
 }
 
+/**
+ * Requester social-media handles — collected at the final identity
+ * step so the KamilEdu team can identify + reach the person asking
+ * for a demo. Every channel is optional individually, but the form
+ * (and the backend `withValidator()`) enforce that AT LEAST ONE is
+ * non-empty before submit. Empty channels are dropped server-side.
+ */
+export type DemoSocialChannel =
+  | 'facebook'
+  | 'threads'
+  | 'instagram'
+  | 'linkedin'
+  | 'other';
+
+export interface DemoSocialMedia {
+  facebook?: string;
+  threads?: string;
+  instagram?: string;
+  linkedin?: string;
+  other?: string;
+}
+
+/**
+ * Requester identity — the NEW final-step form. Mirrors the backend
+ * `SubmitDemoRequestRequest::identityRules()`:
+ *   full_name (3-160), nip (3-60), jabatan (2-120),
+ *   whatsapp (6-32, digits / + / - / space), social_media (>=1).
+ * Distinct from `DemoIdentityPayload` (which is the wizard's role
+ * selection, not the person's identity).
+ */
+export interface DemoRequesterPayload {
+  full_name: string;
+  nip: string;
+  jabatan: string;
+  whatsapp: string;
+  social_media: DemoSocialMedia;
+}
+
 export interface DemoWizardPayload {
   school: DemoSchoolPayload;
   identity: DemoIdentityPayload;
@@ -171,6 +215,8 @@ export interface DemoWizardPayload {
   schedule: DemoSchedulePayload;
   billing: DemoBillingPayload;
   scenarios: DemoScenariosPayload;
+  /** Requester identity — submitted with the pending demo request. */
+  requester: DemoRequesterPayload;
 }
 
 export const SCENARIO_DEFINITIONS: ReadonlyArray<{
@@ -405,7 +451,22 @@ export interface SchoolSearchHit {
   demo_expires_at?: string | null;
 }
 
-/* ─── Provision response types ─── */
+/* ─── Submit (pending demo request) response ─── */
+
+/**
+ * Shape returned by `POST /demo/provision` now that the demo is
+ * reviewed instead of auto-activated. The endpoint no longer
+ * provisions a school — it records a PENDING demo request and a
+ * super-admin approves it manually later. No activation internals
+ * (school id, credentials, expiry) are exposed here on purpose.
+ */
+export interface DemoPendingResponse {
+  demo_request_id: string;
+  status: 'pending';
+  submitted_at: string;
+}
+
+/* ─── Legacy provision response (kept for the activation path) ─── */
 
 export interface DemoCredential {
   role: string;
@@ -456,6 +517,70 @@ export interface DemoProvisionResponse {
   };
   credentials: DemoCredential[];
   summary: DemoSummary;
+}
+
+/* ─── Requester identity validation (mirrors backend rules) ─── */
+
+export type RequesterErrorKey =
+  | 'full_name'
+  | 'nip'
+  | 'jabatan'
+  | 'whatsapp'
+  | 'social_media';
+
+/** Channels enforced by the backend's at-least-one social-media rule. */
+export const DEMO_SOCIAL_CHANNELS: readonly DemoSocialChannel[] = [
+  'facebook',
+  'threads',
+  'instagram',
+  'linkedin',
+  'other',
+] as const;
+
+/**
+ * Client-side validation of the requester identity form. Mirrors the
+ * Laravel `SubmitDemoRequestRequest::identityRules()` + the
+ * at-least-one-socmed check in `withValidator()` so a bad submit is
+ * caught before the network round-trip. Returns a partial map of
+ * field → i18n key; an empty map means the form is valid.
+ */
+export function validateRequester(
+  r: DemoRequesterPayload,
+): Partial<Record<RequesterErrorKey, string>> {
+  const errors: Partial<Record<RequesterErrorKey, string>> = {};
+  const fullName = (r.full_name ?? '').trim();
+  const nip = (r.nip ?? '').trim();
+  const jabatan = (r.jabatan ?? '').trim();
+  const whatsapp = (r.whatsapp ?? '').trim();
+
+  if (fullName.length < 3 || fullName.length > 160) {
+    errors.full_name = 'registerDemo.requesterErrFullName';
+  }
+  if (nip.length < 3 || nip.length > 60) {
+    errors.nip = 'registerDemo.requesterErrNip';
+  }
+  if (jabatan.length < 2 || jabatan.length > 120) {
+    errors.jabatan = 'registerDemo.requesterErrJabatan';
+  }
+  // Same regex shape as the backend: starts with a digit or '+', then
+  // digits / spaces / dashes; 6-32 chars total.
+  if (
+    whatsapp.length < 6 ||
+    whatsapp.length > 32 ||
+    !/^[0-9+][0-9\s-]*$/.test(whatsapp)
+  ) {
+    errors.whatsapp = 'registerDemo.requesterErrWhatsapp';
+  }
+
+  const sm = r.social_media ?? {};
+  const hasAnySocial = DEMO_SOCIAL_CHANNELS.some(
+    (c) => (sm[c] ?? '').trim() !== '',
+  );
+  if (!hasAnySocial) {
+    errors.social_media = 'registerDemo.requesterErrSocial';
+  }
+
+  return errors;
 }
 
 /* ─── Defaults ─── */
@@ -531,6 +656,19 @@ export function defaultWizardPayload(): DemoWizardPayload {
         'akses_request',
         'rapor_full',
       ],
+    },
+    requester: {
+      full_name: '',
+      nip: '',
+      jabatan: '',
+      whatsapp: '',
+      social_media: {
+        facebook: '',
+        threads: '',
+        instagram: '',
+        linkedin: '',
+        other: '',
+      },
     },
   };
 }

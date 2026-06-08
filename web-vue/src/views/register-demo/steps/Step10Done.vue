@@ -1,197 +1,128 @@
 <!--
-  Step 10 — Done. Shows summary stats + the 3 credentials (admin =
-  Google login, guru/wali = generated emails+passwords). Click-to-
-  copy on the password fields. Does NOT mention 30-day expiry — the
-  dashboard banner will reveal that next.
+  Step 12 — Done (request received).
+
+  The demo is now a REVIEWED request, so this terminal step no longer
+  shows credentials or seeded-data stats. It confirms the PENDING
+  request was received and that activation will follow after the
+  KamilEdu team validates + identifies the requester, with info sent
+  via WhatsApp/email. NO activation internals are revealed.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useAuthStore } from '@/stores/auth';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
-import { useToast } from '@/composables/useToast';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const wizard = useDemoWizardStore();
-const auth = useAuthStore();
-const toast = useToast();
 
-const summary = computed(() => wizard.result?.summary);
-const credentials = computed(() => wizard.result?.credentials ?? []);
+const result = computed(() => wizard.result);
+const requester = computed(() => wizard.payload.requester);
+const schoolName = computed(() => wizard.payload.school.name);
 
-async function copyValue(value: string, label: string) {
-  try {
-    await navigator.clipboard.writeText(value);
-    toast.success(`${label} ${t('registerDemo.step11CopiedSuffix')}`);
-  } catch {
-    toast.error(t('registerDemo.step11CopyFailed'));
-  }
-}
-
-const roleIcon: Record<string, string> = {
-  admin: 'shield',
-  'admin (multi)': 'shield',
-  teacher: 'user-check',
-  parent: 'heart',
-};
+/** Short, human-readable submitted-at — falls back gracefully. */
+const submittedAt = computed(() => {
+  const raw = result.value?.submitted_at;
+  if (!raw) return '';
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString(locale.value === 'en' ? 'en-US' : 'id-ID', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+});
 </script>
 
 <template>
   <div>
-    <div v-if="wizard.isProvisioning" class="text-center py-12">
+    <div v-if="wizard.isProvisioning" class="py-12 text-center">
       <Spinner size="lg" />
-      <p class="mt-4 text-[14px] font-bold text-slate-700">{{ t('registerDemo.step11Building') }}</p>
-      <p class="text-[12px] text-slate-500 mt-1">{{ t('registerDemo.step11BuildingNote') }}</p>
+      <p class="mt-4 text-[14px] font-bold text-slate-700">
+        {{ t('registerDemo.pendingSubmitting') }}
+      </p>
+      <p class="mt-1 text-[12px] text-slate-500">
+        {{ t('registerDemo.pendingSubmittingNote') }}
+      </p>
     </div>
 
-    <div v-else-if="!wizard.result" class="text-center py-12 text-slate-500 text-[13px]">
-      {{ t('registerDemo.step11NoResultYet') }}
+    <div v-else-if="!result" class="py-12 text-center text-[13px] text-slate-500">
+      {{ t('registerDemo.pendingNoResultYet') }}
     </div>
 
     <div v-else>
-      <div class="w-16 h-16 rounded-full bg-emerald-100 mx-auto mb-4 flex items-center justify-center">
-        <NavIcon name="check" :size="32" class="text-emerald-600" />
-      </div>
-      <h2 class="text-[22px] font-black text-slate-900 text-center mb-1">
-        {{ t('registerDemo.step11Title') }}
-      </h2>
-      <p class="text-center text-[13px] text-slate-600 mb-5">
-        {{ t('registerDemo.step11Subtitle') }}
-      </p>
-
-      <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-        {{ t('registerDemo.step11BasicDataLabel') }}
-      </p>
-      <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
-        <div
-          v-for="s in [
-            { n: summary?.guru ?? 0, l: 'guru' },
-            { n: summary?.kelas ?? 0, l: 'kelas' },
-            { n: summary?.siswa ?? 0, l: 'siswa' },
-            { n: summary?.wali ?? 0, l: 'wali' },
-            { n: summary?.jadwal ?? 0, l: 'jadwal' },
-            { n: summary?.tagihan ?? 0, l: 'tagihan' },
-          ]"
-          :key="s.l"
-          class="bg-slate-50 rounded-lg py-2 text-center"
-        >
-          <div class="text-[17px] font-black text-slate-900">{{ s.n }}</div>
-          <div class="text-[10px] text-slate-500">{{ s.l }}</div>
-        </div>
-      </div>
-
-      <template
-        v-if="
-          (summary?.kehadiran ?? 0) + (summary?.rpp ?? 0) + (summary?.pengumuman ?? 0) +
-          (summary?.progress_subbab ?? 0) + (summary?.kegiatan_kelas ?? 0) +
-          (summary?.nilai ?? 0) + (summary?.pembayaran ?? 0) +
-          (summary?.pengumuman_event ?? 0) + (summary?.notifikasi ?? 0) +
-          (summary?.rapor_draft ?? 0) + (summary?.submission_late ?? 0) +
-          (summary?.audit_log ?? 0) > 0
-        "
-      >
-        <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-          {{ t('registerDemo.step11ScenarioDataLabel') }}
-        </p>
-        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-6">
-          <div
-            v-for="s in [
-              { n: summary?.kehadiran ?? 0, l: 'kehadiran' },
-              { n: summary?.rpp ?? 0, l: 'RPP' },
-              { n: summary?.pengumuman ?? 0, l: 'pengumuman' },
-              { n: summary?.progress_subbab ?? 0, l: 'progress' },
-              { n: summary?.kegiatan_kelas ?? 0, l: 'kegiatan' },
-              { n: summary?.nilai ?? 0, l: 'nilai' },
-              { n: summary?.pembayaran ?? 0, l: 'bayar' },
-              { n: summary?.pengumuman_event ?? 0, l: 'event' },
-              { n: summary?.notifikasi ?? 0, l: 'notif' },
-              { n: summary?.rapor_draft ?? 0, l: 'rapor' },
-              { n: summary?.submission_late ?? 0, l: 'telat' },
-              { n: summary?.audit_log ?? 0, l: 'log' },
-            ]"
-            :key="s.l"
-            class="bg-role-admin/5 border border-role-admin/15 rounded-lg py-2 text-center"
-          >
-            <div class="text-[17px] font-black text-role-admin">{{ s.n }}</div>
-            <div class="text-[10px] text-slate-500">{{ s.l }}</div>
-          </div>
-        </div>
-      </template>
-
-      <div class="flex items-end justify-between mb-2">
-        <p class="text-[10.5px] font-bold tracking-widest text-slate-500 uppercase">
-          {{ t('registerDemo.step11AccountsLabel') }}
-        </p>
-      </div>
       <div
-        class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 flex items-start gap-2"
+        class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100"
       >
-        <NavIcon name="alert-circle" :size="14" class="text-amber-600 mt-0.5 flex-shrink-0" />
-        <p class="text-[11.5px] text-amber-900 leading-snug">
-          {{ t('registerDemo.step11AdminNote') }}
-        </p>
+        <NavIcon name="check-circle" :size="32" class="text-emerald-600" />
       </div>
-      <div class="grid gap-2 sm:grid-cols-3">
-        <div
-          v-for="cred in credentials"
-          :key="cred.email"
-          class="rounded-lg p-3 border"
-          :class="
-            cred.is_self
-              ? 'bg-role-admin/5 border-role-admin/30'
-              : 'bg-slate-50 border-slate-200'
-          "
-        >
-          <div class="flex items-center gap-2 mb-1.5">
-            <NavIcon :name="roleIcon[cred.role] ?? 'user'" :size="16" class="text-role-admin" />
-            <span class="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-              {{ cred.role }}
-            </span>
-            <span v-if="cred.is_self" class="ml-auto text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full font-bold">
-              {{ t('registerDemo.step11YouBadge') }}
-            </span>
-            <span v-else class="ml-auto text-[10px] text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded-full font-bold">
-              {{ t('registerDemo.step11DemoBadge') }}
-            </span>
+      <h2 class="mb-1 text-center text-[22px] font-black text-slate-900">
+        {{ t('registerDemo.pendingTitle') }}
+      </h2>
+      <p class="mb-5 text-center text-[13px] leading-relaxed text-slate-600">
+        {{ t('registerDemo.pendingSubtitle') }}
+      </p>
+
+      <!-- Request summary card -->
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <p class="mb-3 text-[10.5px] font-bold uppercase tracking-widest text-slate-500">
+          {{ t('registerDemo.pendingSummaryLabel') }}
+        </p>
+        <dl class="space-y-2.5 text-[13px]">
+          <div class="flex items-start gap-3">
+            <dt class="w-28 flex-shrink-0 text-slate-500">
+              {{ t('registerDemo.pendingFieldSchool') }}
+            </dt>
+            <dd class="flex-1 font-bold text-slate-900">{{ schoolName || '—' }}</dd>
           </div>
-          <div class="flex items-center gap-1 mb-1">
-            <code class="font-mono text-[11px] text-slate-900 truncate flex-1">{{ cred.email }}</code>
-            <button
-              type="button"
-              class="text-slate-400 hover:text-role-admin shrink-0"
-              :title="t('registerDemo.step11CopyEmailTitle')"
-              @click="copyValue(cred.email, 'Email')"
-            >
-              <NavIcon name="copy" :size="12" />
-            </button>
+          <div class="flex items-start gap-3">
+            <dt class="w-28 flex-shrink-0 text-slate-500">
+              {{ t('registerDemo.pendingFieldRequester') }}
+            </dt>
+            <dd class="flex-1 font-bold text-slate-900">{{ requester.full_name || '—' }}</dd>
           </div>
-          <div class="flex items-center gap-1">
-            <code class="font-mono text-[11px] text-slate-500 truncate flex-1">
-              {{ cred.password ?? (cred.note ?? 'Login Google') }}
-            </code>
-            <button
-              v-if="cred.password"
-              type="button"
-              class="text-slate-400 hover:text-role-admin shrink-0"
-              :title="t('registerDemo.step11CopyPasswordTitle')"
-              @click="copyValue(cred.password!, 'Password')"
-            >
-              <NavIcon name="copy" :size="12" />
-            </button>
+          <div class="flex items-start gap-3">
+            <dt class="w-28 flex-shrink-0 text-slate-500">
+              {{ t('registerDemo.pendingFieldWhatsapp') }}
+            </dt>
+            <dd class="flex-1 font-mono text-[12.5px] text-slate-900">
+              {{ requester.whatsapp || '—' }}
+            </dd>
           </div>
-          <p
-            v-if="!cred.is_self"
-            class="text-[10px] text-slate-500 mt-1.5 leading-snug"
-          >
-            {{ cred.role === 'teacher' ? t('registerDemo.step11TeacherPovNote') : t('registerDemo.step11ParentPovNote') }}.
-          </p>
-        </div>
+          <div v-if="submittedAt" class="flex items-start gap-3">
+            <dt class="w-28 flex-shrink-0 text-slate-500">
+              {{ t('registerDemo.pendingFieldSubmittedAt') }}
+            </dt>
+            <dd class="flex-1 text-slate-900">{{ submittedAt }}</dd>
+          </div>
+          <div class="flex items-start gap-3">
+            <dt class="w-28 flex-shrink-0 text-slate-500">
+              {{ t('registerDemo.pendingFieldStatus') }}
+            </dt>
+            <dd class="flex-1">
+              <span
+                class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-[11.5px] font-bold text-amber-800"
+              >
+                <NavIcon name="clock" :size="12" />
+                {{ t('registerDemo.pendingStatusBadge') }}
+              </span>
+            </dd>
+          </div>
+        </dl>
       </div>
 
-      <p class="text-[11.5px] text-slate-500 mt-4 text-center leading-snug">
-        {{ t('registerDemo.step11FinalNote') }}
+      <!-- What happens next — no activation internals. -->
+      <div
+        class="mt-4 flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-3"
+      >
+        <NavIcon name="send" :size="16" class="mt-0.5 flex-shrink-0 text-emerald-600" />
+        <p class="text-[12.5px] leading-relaxed text-emerald-900">
+          {{ t('registerDemo.pendingNextSteps') }}
+        </p>
+      </div>
+
+      <p class="mt-4 text-center text-[11.5px] leading-snug text-slate-500">
+        {{ t('registerDemo.pendingFinalNote') }}
       </p>
     </div>
   </div>
