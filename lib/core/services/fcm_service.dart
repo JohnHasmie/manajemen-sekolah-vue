@@ -167,6 +167,72 @@ class FCMService {
     return _tokenManager.sendToBackend(token);
   }
 
+  /// Register the device's CURRENT FCM token with the backend.
+  ///
+  /// This is the entry point to call right after auth is established
+  /// (login success, or app-start once a stored session is restored).
+  /// Why it's needed: FCM tokens are stable per app-install, so they do
+  /// NOT rotate on re-login/reopen. The only places that previously
+  /// pushed a token to the server were the rare `onTokenRefresh` event
+  /// and the Attendance retry button — so whatever token sits in the DB
+  /// goes stale and the device silently stops receiving pushes. The
+  /// backend's `RegisterFcmTokenAction` dedupes (deletes prior tokens for
+  /// the same user+device_type, inserts the current one), so calling this
+  /// on every login self-heals stale rows.
+  ///
+  /// Resilient + non-blocking by contract:
+  /// - Ensures FCM is initialized first (initializes if not).
+  /// - Resolves the token via `getSavedToken()`, falling back to a live
+  ///   `getToken()` if nothing is cached yet.
+  /// - Never throws — all failures are caught and logged so login/app-
+  ///   start UX is never blocked or broken by FCM.
+  ///
+  /// MUST be called AFTER the bearer token is stored: the POST /fcm/token
+  /// carries the auth header (see [FCMTokenManager.sendToBackend], which
+  /// short-circuits if no auth token is present).
+  ///
+  /// Returns true if a token was successfully sent to the backend.
+  Future<bool> registerTokenWithBackend() async {
+    try {
+      // Make sure FCM is set up. On app start `initialize()` runs pre-auth,
+      // but if it failed/was skipped we re-attempt here so a login can still
+      // register the device.
+      if (!_isInitialized) {
+        AppLogger.debug(
+          'fcm',
+          'registerTokenWithBackend: not initialized yet, initializing...',
+        );
+        await initialize();
+      }
+
+      // Prefer the cached token; fall back to a live fetch (e.g. APNS only
+      // became available after the initial pre-auth attempt).
+      var token = await getSavedToken();
+      token ??= await _tokenManager.getToken();
+
+      if (token == null || token.isEmpty) {
+        AppLogger.warning(
+          'fcm',
+          'registerTokenWithBackend: no FCM token available to register',
+        );
+        return false;
+      }
+
+      // Keep local cache in sync, then push to the backend (deduped
+      // server-side).
+      await _tokenManager.saveTokenLocally(token);
+      final sent = await sendTokenToBackend(token);
+      if (sent) {
+        AppLogger.info('fcm', 'FCM token registered with backend on auth');
+      }
+      return sent;
+    } catch (e) {
+      // Never let FCM registration break the login / app-start flow.
+      AppLogger.error('fcm', 'registerTokenWithBackend failed: $e');
+      return false;
+    }
+  }
+
   /// Delete token from backend API
   Future<void> deleteTokenFromBackend() async {
     await _tokenManager.deleteFromBackend();
