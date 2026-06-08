@@ -30,10 +30,19 @@ export type DemoStepKey =
   | 'parent'
   | 'schedule'
   | 'billing'
-  | 'scenarios'
-  | 'requester'
-  | 'done';
+  | 'scenarios';
 
+/**
+ * Wizard step sequence — SCHOOL/demo data only. The REQUESTER identity
+ * (Data Diri) used to be the final wizard step (`requester`) followed
+ * by a terminal `done` step. Per founder request, identity now lives on
+ * a SEPARATE screen (route `/register-demo/identity`) that the user is
+ * sent to AFTER submitting the wizard — so someone filling from the
+ * start never has to know identity is needed up front. The wizard ends
+ * at `scenarios`; its final button hands off to the identity screen,
+ * which collects identity, fires the combined submit, and shows the
+ * pending/done state.
+ */
 export const DEMO_STEPS: readonly DemoStepKey[] = [
   'welcome',
   'school',
@@ -46,12 +55,6 @@ export const DEMO_STEPS: readonly DemoStepKey[] = [
   'schedule',
   'billing',
   'scenarios',
-  // Final step before submit. Collects the REQUESTER identity so the
-  // KamilEdu team can validate + identify the person asking for a demo.
-  // The demo is NOT activated on submit — submit creates a PENDING
-  // demo request that a super-admin approves manually later.
-  'requester',
-  'done',
 ] as const;
 
 /** Backend role names — what we send and what the server expects. */
