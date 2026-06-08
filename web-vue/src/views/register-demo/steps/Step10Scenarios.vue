@@ -58,7 +58,7 @@ const allOn = computed(
 <template>
   <div>
     <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-2">
-      {{ t('registerDemo.step12Label') }}
+      {{ t('registerDemo.stepCounter', { current: wizard.stepNumber, total: wizard.stepTotal }) }} · {{ t('registerDemo.step12Label') }}
     </p>
     <h2 class="text-[20px] font-black text-slate-900 mb-1 leading-tight">
       {{ t('registerDemo.step12Title') }}
