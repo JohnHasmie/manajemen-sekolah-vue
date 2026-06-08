@@ -28,6 +28,7 @@ import Spinner from '@/components/ui/Spinner.vue';
 import ToastHost from '@/components/ui/ToastHost.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import Modal from '@/components/ui/Modal.vue';
+import PublicLanguageSwitcher from '@/components/feature/PublicLanguageSwitcher.vue';
 
 import Step1Welcome from './steps/Step1Welcome.vue';
 import Step2School from './steps/Step2School.vue';
@@ -168,6 +169,12 @@ const nextLabel = computed(() => {
 <template>
   <div class="min-h-screen bg-slate-50 px-4 py-6 md:px-8 md:py-10">
     <div class="mx-auto max-w-5xl">
+      <!-- Public language switcher — visible above the wizard on every
+           step (the stepper + form pane render below it). -->
+      <div class="mb-4 flex justify-end">
+        <PublicLanguageSwitcher />
+      </div>
+
       <!-- Mobile-only pill stepper at top -->
       <nav class="lg:hidden mb-4 -mx-1 overflow-x-auto">
         <div class="flex gap-1.5 px-1">
