@@ -1,4 +1,9 @@
 {
+  "languageSwitcher": {
+    "label": "Choose language",
+    "switchToId": "Switch to Indonesian",
+    "switchToEn": "Switch to English"
+  },
   "app": {
     "name": "KamilEdu",
     "tagline": "Integrated School Management Platform"
