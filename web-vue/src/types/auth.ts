@@ -29,8 +29,21 @@
  *
  * `wali_kelas` is a derived homeroom-capability flag — not a stored
  * users_roles.role value.
+ *
+ * `super_admin` is the KamilEdu-team platform role (a real
+ * `users_roles.role` value). It is NOT routed to its own subtree —
+ * super-admins log in as `admin` and gain extra surfaces (e.g. the
+ * Demo Requests review page) via the `auth.isSuperAdmin` getter. The
+ * authoritative gate stays server-side (EnsureSuperAdmin middleware).
  */
-export type Role = 'admin' | 'guru' | 'wali_kelas' | 'wali' | 'siswa' | 'staff';
+export type Role =
+  | 'admin'
+  | 'guru'
+  | 'wali_kelas'
+  | 'wali'
+  | 'siswa'
+  | 'staff'
+  | 'super_admin';
 
 export type AuthStep =
   | 'login'

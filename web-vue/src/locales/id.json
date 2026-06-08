@@ -286,7 +286,9 @@
     "levelSettings": "Tingkat",
     "timeSettings": "Jam Pelajaran",
     "systemSettings": "Sistem",
-    "dataManagement": "Manajemen Data"
+    "dataManagement": "Manajemen Data",
+    "platform": "Platform",
+    "demoRequests": "Permintaan Demo"
   },
   "profile": {
     "title": "Profil",
