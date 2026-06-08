@@ -63,10 +63,10 @@ const formatTime = (date: Date) => {
         </div>
 
         <div class="hidden sm:flex items-center gap-3">
-          <button class="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/20 border border-white/10 grid place-items-center transition-colors">
+          <button class="w-10 h-10 rounded-full bg-white/15 hover:bg-white/20 border border-white/10 grid place-items-center transition-colors">
             <NavIcon name="bell" :size="20" />
           </button>
-          <button class="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/20 border border-white/10 grid place-items-center transition-colors">
+          <button class="w-10 h-10 rounded-full bg-white/15 hover:bg-white/20 border border-white/10 grid place-items-center transition-colors">
             <NavIcon name="settings" :size="20" />
           </button>
         </div>

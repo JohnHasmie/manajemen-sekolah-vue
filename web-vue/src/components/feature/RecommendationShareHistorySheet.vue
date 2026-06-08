@@ -315,7 +315,7 @@ const hasAnyRecipient = computed(() => recipients.value.length > 0);
             <div class="relative">
               <button
                 type="button"
-                class="w-7 h-7 rounded-lg grid place-items-center text-slate-500 hover:bg-slate-100"
+                class="w-7 h-7 rounded-full grid place-items-center text-slate-500 hover:bg-slate-100"
                 :disabled="busyIds.has(r.id) || isRevoked(r)"
                 :aria-label="`Aksi untuk ${r.parent_name}`"
                 @click="toggleActions(r.id)"

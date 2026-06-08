@@ -324,7 +324,7 @@ function chipBadgeClass(tone: string | undefined): string {
     >
       <button
         type="button"
-        class="w-9 h-9 rounded-xl flex items-center justify-center bg-white/10 border border-white/20 text-white hover:bg-white/20 transition relative"
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 border border-white/20 text-white hover:bg-white/20 transition relative"
         @click="showStatusModal = true"
       >
         <NavIcon name="filter" :size="15" />
@@ -335,7 +335,7 @@ function chipBadgeClass(tone: string | undefined): string {
       </button>
       <button
         type="button"
-        class="w-9 h-9 rounded-xl flex items-center justify-center bg-white/10 border border-white/20 text-white hover:bg-white/20 transition"
+        class="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 border border-white/20 text-white hover:bg-white/20 transition"
         @click="showMoreMenuModal = true"
       >
         <NavIcon name="more-horizontal" :size="15" />
