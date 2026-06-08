@@ -114,11 +114,34 @@ export const useDemoWizardStore = defineStore('demoWizard', {
       this.isLoading = true;
       const auth = useAuthStore();
       const currentUserId = auth.user?.id ?? null;
+      // Snapshot any answers the user has ALREADY typed into this live
+      // store before we go fetch remote/local state. hydrate() can race
+      // the hand-off to the identity screen: that screen awaits hydrate()
+      // in its onMounted, and if the store wasn't flagged `hydrated` yet
+      // (e.g. the wizard's fire-and-forget hydrate hadn't resolved, or
+      // the debounced/flushed remote save for the latest school answer
+      // hadn't committed server-side), a remote payload with a STALE,
+      // empty school name would clobber the in-memory answers. That makes
+      // `hasWizardData` false on the identity screen's guard and bounces
+      // the user back to the wizard — the exact regression we're fixing.
+      // So we treat freshly-entered in-memory data as authoritative and
+      // never let server/local state overwrite a non-empty school name.
+      const hadInMemoryData = this.hasWizardData;
+      const inMemoryPayload = this.payload;
+      const inMemoryStep = this.currentStep;
       try {
         const remote = await DemoService.loadWizardState();
         if (remote?.payload) {
-          this.payload = mergeWithDefaults(remote.payload);
-          this.currentStep = clamp(remote.current_step, 0, DEMO_STEPS.length - 1);
+          if (hadInMemoryData) {
+            // Keep the answers the user is actively entering; don't let a
+            // lagging server snapshot wipe them. Persist so the freshest
+            // state wins on the next cross-device resume too.
+            this.payload = inMemoryPayload;
+            this.currentStep = inMemoryStep;
+          } else {
+            this.payload = mergeWithDefaults(remote.payload);
+            this.currentStep = clamp(remote.current_step, 0, DEMO_STEPS.length - 1);
+          }
           this.hydrated = true;
           this._persist();
           return;
@@ -153,10 +176,12 @@ export const useDemoWizardStore = defineStore('demoWizard', {
             !!local.userId &&
             !!currentUserId &&
             local.userId === currentUserId;
-          if (sameUser) {
+          // Same guard as the remote branch: never let a localStorage read
+          // overwrite answers the user has just typed into the live store.
+          if (sameUser && !hadInMemoryData) {
             this.payload = mergeWithDefaults(local.payload);
             this.currentStep = clamp(local.currentStep, 0, DEMO_STEPS.length - 1);
-          } else {
+          } else if (!sameUser) {
             storage.remove(LS_KEY);
           }
         }
@@ -287,6 +312,26 @@ export const useDemoWizardStore = defineStore('demoWizard', {
         current_step: this.currentStep,
         payload: this.payload,
       });
+    },
+
+    /**
+     * Prepare a reliable hand-off to the SEPARATE identity screen when the
+     * user finishes the wizard's last step. Persist the live answers to
+     * localStorage, flush the debounced remote save, and — crucially —
+     * mark the store `hydrated` so the identity screen's `onMounted`
+     * `await wizard.hydrate()` is a guaranteed no-op. Without that flag the
+     * identity guard could re-fetch a not-yet-committed (empty) server
+     * snapshot and clobber the in-memory school answers, making
+     * `hasWizardData` false and bouncing the user back to the wizard.
+     * The in-memory answers are the source of truth at this point.
+     */
+    prepareIdentityHandoff(): void {
+      this._persist();
+      this.flushRemoteSave();
+      // The live store already holds the authoritative answers, so there's
+      // nothing left to hydrate FROM — flag it hydrated so the identity
+      // screen trusts the in-memory payload and never re-fetches/clobbers.
+      this.hydrated = true;
     },
   },
 });

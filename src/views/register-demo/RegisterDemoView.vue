@@ -103,9 +103,15 @@ function handleNext() {
     // are already persisted (localStorage + debounced wizard-state
     // save). Hand off to the SEPARATE Data Diri (identity) screen,
     // where the user enters their identity and does the FINAL send
-    // (combined school + identity payload). Flush the pending debounced
-    // remote save first so a cross-device resume sees the latest state.
-    wizard.flushRemoteSave();
+    // (combined school + identity payload).
+    //
+    // prepareIdentityHandoff() persists the live answers, flushes the
+    // pending debounced remote save (so a cross-device resume sees the
+    // latest state), AND marks the store hydrated so the identity
+    // screen's `await wizard.hydrate()` guard is a no-op instead of
+    // re-fetching a possibly-stale empty server snapshot that would
+    // clobber the in-memory school name and bounce the user back here.
+    wizard.prepareIdentityHandoff();
     router.push('/register-demo/identity');
     return;
   }
