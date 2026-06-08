@@ -23,7 +23,8 @@ import { useAuthStore } from '@/stores/auth';
 import {
   DEMO_STEPS,
   defaultWizardPayload,
-  type DemoProvisionResponse,
+  validateRequester,
+  type DemoPendingResponse,
   type DemoStepKey,
   type DemoWizardPayload,
 } from '@/types/demo';
@@ -49,9 +50,20 @@ interface State {
   isLoading: boolean;
   isProvisioning: boolean;
   error: string | null;
-  result: DemoProvisionResponse | null;
+  /**
+   * Pending-request receipt set when submit succeeds. The demo is NOT
+   * activated yet — step `done` reads this to show the "request
+   * received, await validation" confirmation.
+   */
+  result: DemoPendingResponse | null;
   /** Set by hydrate() once we've talked to the server at least once. */
   hydrated: boolean;
+  /**
+   * Flipped true the first time the user hits Submit on the requester
+   * step. Lets that step reveal ALL pending validation errors at once
+   * (not just touched fields) so nothing required is silently missed.
+   */
+  requesterSubmitAttempted: boolean;
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -65,6 +77,7 @@ export const useDemoWizardStore = defineStore('demoWizard', {
     error: null,
     result: null,
     hydrated: false,
+    requesterSubmitAttempted: false,
   }),
 
   getters: {
@@ -72,6 +85,8 @@ export const useDemoWizardStore = defineStore('demoWizard', {
     canGoBack: (s) => s.currentStep > 0 && !s.isProvisioning,
     canGoNext: (s) => s.currentStep < DEMO_STEPS.length - 1 && !s.isProvisioning,
     progress: (s) => ((s.currentStep + 1) / DEMO_STEPS.length) * 100,
+    /** True when the requester identity form passes client validation. */
+    requesterValid: (s) => Object.keys(validateRequester(s.payload.requester)).length === 0,
   },
 
   actions: {
@@ -166,8 +181,18 @@ export const useDemoWizardStore = defineStore('demoWizard', {
     },
 
     /**
-     * Hit the backend provision endpoint. Returns true on success so
-     * the view can advance to the final step + clear localStorage.
+     * Mark that the user pressed Submit on the requester step so that
+     * step reveals every pending validation error at once. Idempotent.
+     */
+    markRequesterSubmitAttempted(): void {
+      this.requesterSubmitAttempted = true;
+    },
+
+    /**
+     * Submit the final demo request. NO LONGER activates a demo — it
+     * records a PENDING request the KamilEdu team reviews manually.
+     * Returns true on success so the view can advance to the
+     * "request received" confirmation step.
      */
     async provision(): Promise<boolean> {
       this.error = null;
@@ -192,6 +217,7 @@ export const useDemoWizardStore = defineStore('demoWizard', {
       this.currentStep = 0;
       this.result = null;
       this.error = null;
+      this.requesterSubmitAttempted = false;
       storage.remove(LS_KEY);
       await DemoService.resetWizardState();
     },
@@ -255,5 +281,15 @@ function mergeWithDefaults(partial: Partial<DemoWizardPayload>): DemoWizardPaylo
     schedule: { ...d.schedule, ...(partial.schedule ?? {}) },
     billing: { ...d.billing, ...(partial.billing ?? {}) },
     scenarios: { ...d.scenarios, ...(partial.scenarios ?? {}) },
+    requester: {
+      ...d.requester,
+      ...(partial.requester ?? {}),
+      // Nested map needs its own merge so a partially-persisted
+      // requester doesn't drop the default empty channels.
+      social_media: {
+        ...d.requester.social_media,
+        ...(partial.requester?.social_media ?? {}),
+      },
+    },
   };
 }

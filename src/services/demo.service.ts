@@ -5,7 +5,7 @@
  */
 import { api } from '@/lib/http';
 import type {
-  DemoProvisionResponse,
+  DemoPendingResponse,
   DemoWizardPayload,
   SchoolSearchHit,
 } from '@/types/demo';
@@ -149,26 +149,31 @@ export const DemoService = {
   },
 
   /**
-   * Final provisioning. Heavy call — backend runs ~200ms–800ms in a
-   * transaction. The wizard shows a loading overlay while waiting.
+   * Submit the final demo request. The endpoint is still
+   * `POST /demo/provision` (kept backward-compatible) but it no longer
+   * activates a demo — it validates the wizard payload + requester
+   * identity and records a PENDING demo request that the KamilEdu team
+   * approves manually later. Returns the pending receipt
+   * ({ demo_request_id, status, submitted_at }) so the wizard can
+   * show the "request received" confirmation.
    *
-   * Translates the common 429 / 500 axios failures into user-facing
-   * Bahasa Indonesia messages so the wizard's red banner doesn't
-   * show "Request failed with status code 429".
+   * Translates the common 429 / 422 / 500 axios failures into
+   * user-facing Bahasa Indonesia messages so the wizard's red banner
+   * doesn't show "Request failed with status code 429".
    */
-  async provision(payload: DemoWizardPayload): Promise<DemoProvisionResponse> {
+  async provision(payload: DemoWizardPayload): Promise<DemoPendingResponse> {
     try {
-      // Provision can run 30-90s on a fresh demo (252 students × 14
-      // bills + 315 schedule slots) — override the default 30s axios
-      // timeout per-call so big schools don't trip ECONNABORTED.
+      // Submit is a light insert now (no heavy seeding), but keep a
+      // generous timeout so a slow network never trips ECONNABORTED
+      // before the request lands.
       const res = await api.post('/demo/provision', payload, {
-        timeout: 120_000,
+        timeout: 60_000,
       });
       const data = res.data?.data;
-      if (!data) {
-        throw new Error('Respons provision tidak valid.');
+      if (!data?.demo_request_id) {
+        throw new Error('Respons permintaan demo tidak valid.');
       }
-      return data as DemoProvisionResponse;
+      return data as DemoPendingResponse;
     } catch (e: unknown) {
       const err = e as {
         code?: string;
@@ -178,7 +183,7 @@ export const DemoService = {
       // Axios timeout: ECONNABORTED with message "timeout of XXXms exceeded".
       if (err.code === 'ECONNABORTED' || /timeout/i.test(err.message ?? '')) {
         throw new Error(
-          'Pembuatan sekolah memakan waktu lebih lama dari biasanya. Coba kurangi jumlah siswa/kelas atau ulangi sebentar lagi.',
+          'Pengiriman memakan waktu lebih lama dari biasanya. Periksa koneksi Anda lalu coba lagi.',
         );
       }
       const status = err.response?.status;
@@ -189,14 +194,14 @@ export const DemoService = {
         );
       }
       if (status === 422) {
-        throw new Error(backendMsg ?? 'Data wizard tidak lengkap. Cek kembali setiap langkah.');
+        throw new Error(backendMsg ?? 'Data belum lengkap. Cek kembali setiap langkah.');
       }
       if (status === 500 || status === 503) {
         throw new Error(
-          backendMsg ?? 'Server bermasalah saat membuat sekolah. Coba lagi sebentar.',
+          backendMsg ?? 'Server bermasalah saat mengirim permintaan. Coba lagi sebentar.',
         );
       }
-      throw new Error(backendMsg ?? err.message ?? 'Gagal membuat sekolah demo.');
+      throw new Error(backendMsg ?? err.message ?? 'Gagal mengirim permintaan demo.');
     }
   },
 
