@@ -77,7 +77,7 @@ const gradient = computed(() => ({
       </div>
       <button
         type="button"
-        class="relative inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 text-white flex-shrink-0"
+        class="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 text-white flex-shrink-0"
         aria-label="Filter"
         @click="$emit('filterClick')"
       >

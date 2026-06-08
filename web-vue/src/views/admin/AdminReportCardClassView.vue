@@ -276,7 +276,7 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
           <button
             v-if="s.raport_status && s.raport_status !== 'draft'"
             type="button"
-            class="w-9 h-9 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-600 flex-shrink-0 transition-colors"
+            class="w-9 h-9 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center text-red-600 flex-shrink-0 transition-colors"
             @click.stop="downloadStudentPdf(s)"
           >
             <NavIcon name="download" :size="15" />

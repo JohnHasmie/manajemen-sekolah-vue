@@ -258,7 +258,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
 
             <button
               type="button"
-              class="w-9 h-9 rounded-xl flex items-center justify-center bg-white/10 border border-white/20 text-white hover:bg-white/20 transition flex-shrink-0"
+              class="w-9 h-9 rounded-full flex items-center justify-center bg-white/10 border border-white/20 text-white hover:bg-white/20 transition flex-shrink-0"
               :class="{ 'opacity-50 cursor-not-allowed': !isPublished }"
               @click="handlePrintAction"
             >

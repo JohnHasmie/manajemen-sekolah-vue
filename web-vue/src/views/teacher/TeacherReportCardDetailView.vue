@@ -595,7 +595,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                 />
                 <button
                   type="button"
-                  class="w-9 h-9 rounded-lg grid place-items-center text-slate-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
+                  class="w-9 h-9 rounded-full grid place-items-center text-slate-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
                   :aria-label="`Hapus ${e.name}`"
                   :disabled="isLocked || isSaving"
                   @click="removeExtra(idx)"
@@ -655,7 +655,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                 />
                 <button
                   type="button"
-                  class="w-9 h-9 rounded-lg grid place-items-center text-slate-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
+                  class="w-9 h-9 rounded-full grid place-items-center text-slate-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
                   :aria-label="`Hapus ${a.name}`"
                   :disabled="isLocked || isSaving"
                   @click="removeAchievement(idx)"

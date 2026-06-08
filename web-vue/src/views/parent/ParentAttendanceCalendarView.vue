@@ -275,14 +275,14 @@ function dotCls(s: ParentAttendanceStatus): string {
         <div class="flex items-center gap-1">
           <button
             type="button"
-            class="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors"
+            class="w-7 h-7 rounded-full flex items-center justify-center bg-white/15 hover:bg-white/25 text-white transition-colors"
             @click="shiftMonth(-1)"
           >
             <NavIcon name="chevron-left" :size="14" />
           </button>
           <button
             type="button"
-            class="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors"
+            class="w-7 h-7 rounded-full flex items-center justify-center bg-white/15 hover:bg-white/25 text-white transition-colors"
             @click="shiftMonth(1)"
           >
             <NavIcon name="chevron-right" :size="14" />

@@ -272,7 +272,7 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
   <div data-profile-menu class="relative">
     <button
       type="button"
-      class="inline-flex items-center gap-2 rounded-full bg-white/15 hover:bg-white/25 py-1 pl-1 pr-3 text-sm font-medium text-white"
+      class="inline-flex items-center gap-2 rounded-full bg-white/15 hover:bg-white/25 p-1 sm:py-1 sm:pl-1 sm:pr-3 text-sm font-medium text-white"
       :aria-expanded="open"
       @click="toggle"
     >
