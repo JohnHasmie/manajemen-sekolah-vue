@@ -27,6 +27,19 @@ class TeacherClassActivityScreen extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>>? materialsToMarkAsGenerated;
   final bool autoShowActivityDialog;
 
+  /// Exact `lesson_hour_id` UUID of a chosen jam-pelajaran slot. Set
+  /// when entering from a Jadwal session card's "Kegiatan" button so
+  /// the auto-opened add form prefills the right "Jam ke-N".
+  final String? initialLessonHourId;
+
+  /// When true the screen, once its schedule data has loaded, opens the
+  /// "Tambah Kegiatan" add form prefilled from the
+  /// `initialClassId` / `initialSubjectId` / `initialDate` /
+  /// `initialLessonHourId` params — the Jadwal "Kegiatan" entry flow
+  /// (Bug 2). Distinct from [autoShowActivityDialog], which instead
+  /// auto-detects the NOW-ongoing slot.
+  final bool autoOpenPrefilledForm;
+
   const TeacherClassActivityScreen({
     super.key,
     this.initialDate,
@@ -39,6 +52,8 @@ class TeacherClassActivityScreen extends ConsumerStatefulWidget {
     this.initialAdditionalMaterials,
     this.materialsToMarkAsGenerated,
     this.autoShowActivityDialog = false,
+    this.initialLessonHourId,
+    this.autoOpenPrefilledForm = false,
   });
 
   @override

@@ -213,6 +213,7 @@ mixin TeacherActivityBodyBuilderMixin
       initial: a,
       classes: classes,
       subjects: subjects,
+      schedules: schedules,
       onSave: (payload) async {
         final id = (a['id'] ?? '').toString();
         if (id.isEmpty) return;
@@ -424,6 +425,10 @@ mixin TeacherActivityBodyBuilderMixin
   List<dynamic> get timelineActivities;
   List<dynamic> get classList;
   List<dynamic> get filterSubjectList;
+
+  /// Teacher's teaching schedule — forwarded to the edit form so its
+  /// Mapel + Jam pickers stay scoped per class / per day.
+  List<dynamic> get schedules;
   TextEditingController get searchController;
   ScrollController get scrollController;
   ScrollController get timelineScrollController;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/core/utils/language_utils.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
@@ -124,6 +125,10 @@ mixin TeacherActivityScheduleMixin
       subjects: [
         {'id': subjectId, 'name': subjectName},
       ],
+      // Pass the full teaching schedule so the form's Mapel + Jam
+      // pickers stay scoped (and so the prefilled lesson hour resolves
+      // to a valid "Jam ke-N" option).
+      schedules: schedules,
       initial: {
         'class_id': classId,
         'class_name': className,
@@ -135,7 +140,65 @@ mixin TeacherActivityScheduleMixin
         await svc.createActivity({
           ...payload,
           'teacher_id': teacherId,
-          if (lessonHourId != null) 'lesson_hour_id': lessonHourId,
+          // Payload already carries lesson_hour_id when the teacher
+          // picked a jam; keep the schedule's hour as a fallback.
+          if (payload['lesson_hour_id'] == null && lessonHourId != null)
+            'lesson_hour_id': lessonHourId,
+        });
+      },
+    );
+    if (res != null && mounted) {
+      SnackBarUtils.showSuccess(
+        context,
+        lp.getTranslatedText({
+          'en': 'Activity saved',
+          'id': 'Kegiatan tersimpan',
+        }),
+      );
+      await forceRefresh();
+    }
+  }
+
+  /// Jadwal "Kegiatan" entry (Bug 2). Opens the unified "Tambah
+  /// Kegiatan" add form prefilled from the chosen schedule session:
+  /// kelas, mapel, tanggal, and the session's jam-pelajaran. Because we
+  /// forward the full [schedules] list, the scoped Mapel + Jam pickers
+  /// resolve the prefilled subject + lesson hour to valid options, so
+  /// the teacher lands on a ready-to-save form (post Bug 1).
+  Future<void> autoOpenPrefilledActivityForm({
+    required String classId,
+    required String className,
+    required String subjectId,
+    required String subjectName,
+    DateTime? date,
+    String? lessonHourId,
+  }) async {
+    if (!mounted) return;
+    final lp = ref.read(languageRiverpod);
+    final svc = getIt<ApiClassActivityService>();
+    final res = await showActivityFormSheet(
+      context: context,
+      classes: [
+        {'id': classId, 'name': className},
+      ],
+      subjects: [
+        {'id': subjectId, 'name': subjectName},
+      ],
+      schedules: schedules,
+      initial: {
+        'class_id': classId,
+        'class_name': className,
+        'subject_id': subjectId,
+        'subject_name': subjectName,
+        if (date != null) 'date': DateFormat('yyyy-MM-dd').format(date),
+        if (lessonHourId != null) 'lesson_hour_id': lessonHourId,
+      },
+      onSave: (payload) async {
+        await svc.createActivity({
+          ...payload,
+          'teacher_id': teacherId,
+          if (payload['lesson_hour_id'] == null && lessonHourId != null)
+            'lesson_hour_id': lessonHourId,
         });
       },
     );

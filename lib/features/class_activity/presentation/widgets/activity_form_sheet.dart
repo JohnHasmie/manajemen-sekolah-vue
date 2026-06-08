@@ -19,6 +19,7 @@ import 'package:manajemensekolah/core/utils/snackbar_utils.dart';
 import 'package:manajemensekolah/core/widgets/app_bottom_sheet.dart';
 import 'package:manajemensekolah/core/widgets/bottom_sheet_footer.dart';
 import 'package:manajemensekolah/core/widgets/modern_date_picker.dart';
+import 'package:manajemensekolah/features/class_activity/data/activity_schedule_options.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/widgets/activity_material_selector.dart';
 import 'package:manajemensekolah/features/subjects/data/subject_service.dart';
 
@@ -30,12 +31,21 @@ class ActivityFormResult {
 /// Public entrypoint. Returns the saved payload (with the user's
 /// inputs merged on top of `initial`) when the teacher taps Simpan,
 /// or null when the sheet is dismissed.
+///
+/// [schedules] is the teacher's own teaching schedule (the raw list the
+/// teacher-summary endpoint returns). When provided, the Mapel picker
+/// is scoped to subjects the teacher actually teaches (in the selected
+/// class, when one is chosen) and the WAKTU field becomes a
+/// lesson-hour ("Jam ke-N") picker for the selected class + day instead
+/// of a free clock. This is the same per-class / per-day / lesson-hour
+/// source the Jadwal screen uses — see [ActivityScheduleOptions].
 Future<ActivityFormResult?> showActivityFormSheet({
   required BuildContext context,
   Map<String, dynamic>? initial,
   required List<Map<String, dynamic>> classes,
   required List<Map<String, dynamic>> subjects,
   required Future<void> Function(Map<String, dynamic> payload) onSave,
+  List<dynamic> schedules = const [],
 }) {
   final isEdit =
       initial != null && (initial['id']?.toString().isNotEmpty ?? false);
@@ -53,6 +63,7 @@ Future<ActivityFormResult?> showActivityFormSheet({
       isEdit: isEdit,
       classes: classes,
       subjects: subjects,
+      schedules: schedules,
       onSave: onSave,
     ),
   );
@@ -63,6 +74,12 @@ class _ActivityFormBody extends StatefulWidget {
   final bool isEdit;
   final List<Map<String, dynamic>> classes;
   final List<Map<String, dynamic>> subjects;
+
+  /// Teacher's teaching schedule — drives the scoped Mapel + Jam
+  /// pickers. Empty when the caller has no schedule context (the form
+  /// then falls back to the passed-in [subjects] list and the legacy
+  /// free clock so it never hard-breaks).
+  final List<dynamic> schedules;
   final Future<void> Function(Map<String, dynamic> payload) onSave;
 
   const _ActivityFormBody({
@@ -70,6 +87,7 @@ class _ActivityFormBody extends StatefulWidget {
     required this.isEdit,
     required this.classes,
     required this.subjects,
+    required this.schedules,
     required this.onSave,
   });
 
@@ -85,6 +103,12 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
   late TextEditingController _descCtrl;
   late DateTime _date;
   late TimeOfDay? _time;
+
+  /// Exact `lesson_hour_id` UUID of the picked jam-pelajaran slot.
+  /// Carried into the payload so the schedule screen can track
+  /// per-hour fill state. Null when the teacher hasn't picked a slot
+  /// (or no schedule context was supplied).
+  String? _lessonHourId;
   bool _saving = false;
 
   // Fix-AA — Bab + Sub-bab pickers. Optional; if subject picked, we
@@ -137,6 +161,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
     _date = d;
     final t = (i['time'] ?? i['jam'] ?? '').toString();
     _time = _parseTime(t);
+    _lessonHourId = (i['lesson_hour_id'] ?? i['jam_pelajaran_id'])?.toString();
 
     // Hydrate chapter / sub-chapter from initial payload (edit mode).
     _chapterId = (i['chapter_id'] ?? i['bab_id'])?.toString();
@@ -302,6 +327,46 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
     _titleCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
+  }
+
+  /// True when the form has the teacher's schedule context and can
+  /// therefore scope the Mapel + Jam pickers. When false the form keeps
+  /// the legacy behaviour (passed-in `subjects` list + free clock) so
+  /// callers without schedule context never hard-break.
+  bool get _hasScheduleContext => widget.schedules.isNotEmpty;
+
+  /// Subjects offered in the Mapel picker. With schedule context we
+  /// only show subjects the teacher teaches — narrowed to the selected
+  /// class when one is chosen (Bug 1a). Without it we fall back to the
+  /// caller-supplied list.
+  List<Map<String, dynamic>> get _scopedSubjects {
+    if (!_hasScheduleContext) return widget.subjects;
+    final scoped = ActivityScheduleOptions.subjectsFor(
+      widget.schedules,
+      classId: _classId,
+    );
+    // Edit mode: ensure the already-selected subject stays visible even
+    // if it's not in the freshly derived list (e.g. an old assignment
+    // the teacher no longer teaches), so the locked pill still labels.
+    if (_subjectId != null &&
+        _subjectId!.isNotEmpty &&
+        !scoped.any((s) => (s['id'] ?? '').toString() == _subjectId)) {
+      scoped.add({'id': _subjectId, 'name': _subjectLabel()});
+    }
+    return scoped;
+  }
+
+  /// Lesson-hour ("Jam ke-N") options for the selected class on the
+  /// selected date's weekday (Bug 1b). Empty when no class is picked or
+  /// no schedule context is available.
+  List<ActivityLessonHourOption> get _lessonHourOptions {
+    if (!_hasScheduleContext) return const [];
+    return ActivityScheduleOptions.lessonHoursFor(
+      widget.schedules,
+      classId: _classId,
+      date: _date,
+      subjectId: _subjectId,
+    );
   }
 
   @override
@@ -471,9 +536,7 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
                   Expanded(
                     child: _picker(
                       icon: Icons.schedule_rounded,
-                      label: _time == null
-                          ? kClaActChooseTime.tr
-                          : _time!.format(context),
+                      label: _timeLabel(),
                       enabled: !_saving,
                       onTap: _pickTime,
                     ),
@@ -702,9 +765,20 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
 
   String _subjectLabel() {
     if (_subjectId == null) return kClaActChooseSubject.tr;
+    // Look in the caller-supplied list first, then the schedule-derived
+    // subjects (computed inline here — NOT via `_scopedSubjects`, which
+    // calls back into this method for its edit-mode fallback).
     for (final s in widget.subjects) {
       if ((s['id'] ?? '').toString() == _subjectId) {
         return (s['name'] ?? '-').toString();
+      }
+    }
+    if (_hasScheduleContext) {
+      final derived = ActivityScheduleOptions.subjectsFor(widget.schedules);
+      for (final s in derived) {
+        if ((s['id'] ?? '').toString() == _subjectId) {
+          return (s['name'] ?? '-').toString();
+        }
       }
     }
     return (widget.initial['subject_name'] ??
@@ -718,13 +792,39 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
       title: kClaActChooseClass.tr,
       options: widget.classes,
     );
-    if (picked != null) setState(() => _classId = picked);
+    if (picked == null || picked == _classId) return;
+    setState(() {
+      _classId = picked;
+      // With schedule context the Mapel + Jam options are class-scoped,
+      // so a subject/jam picked for the previous class is no longer
+      // valid — clear them (and the dependent chapter pickers).
+      if (_hasScheduleContext) {
+        _subjectId = null;
+        _lessonHourId = null;
+        _time = null;
+        _chapterId = null;
+        _subChapterId = null;
+        _chapters = const [];
+        _subChapters = const [];
+      }
+    });
   }
 
   Future<void> _pickSubject() async {
+    final options = _scopedSubjects;
+    if (_hasScheduleContext && options.isEmpty) {
+      // No class chosen yet, or the teacher teaches nothing in it.
+      SnackBarUtils.showError(
+        context,
+        _classId == null
+            ? kClaActPickClassFirst.tr
+            : kClaActNoTaughtSubjects.tr,
+      );
+      return;
+    }
     final picked = await _showOptionSheet(
       title: kClaActChooseSubject.tr,
-      options: widget.subjects,
+      options: options,
     );
     if (picked != null && picked != _subjectId) {
       setState(() {
@@ -736,6 +836,13 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
         _subChapterId = null;
         _chapters = const [];
         _subChapters = const [];
+        // The jam options are also subject-scoped (a slot belongs to a
+        // specific class+subject pairing), so clear a previously picked
+        // lesson hour that may no longer apply.
+        if (_hasScheduleContext) {
+          _lessonHourId = null;
+          _time = null;
+        }
       });
       _loadChapters();
     }
@@ -813,15 +920,189 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
       initialDate: _date,
       title: kClaActChooseDate.tr,
     );
-    if (picked != null) setState(() => _date = picked);
+    if (picked == null) return;
+    final weekdayChanged = picked.weekday != _date.weekday;
+    setState(() {
+      _date = picked;
+      // The jam-pelajaran options are per-weekday, so a previously
+      // picked "Jam ke-N" no longer applies once the weekday changes —
+      // clear it so the teacher re-picks from the new day's slots.
+      if (_hasScheduleContext && weekdayChanged) {
+        _lessonHourId = null;
+        _time = null;
+      }
+    });
+  }
+
+  /// Label for the WAKTU picker. With schedule context it shows the
+  /// picked "Jam ke-N · HH:MM–HH:MM" (matching the chosen lesson hour),
+  /// otherwise the legacy clock value.
+  String _timeLabel() {
+    if (_hasScheduleContext) {
+      final opts = _lessonHourOptions;
+      // Prefer matching by the exact lesson_hour_id so the label tracks
+      // the picked slot precisely (e.g. when prefilled from a Jadwal
+      // card). Fall back to matching by start time.
+      ActivityLessonHourOption? match;
+      for (final o in opts) {
+        if (_lessonHourId != null &&
+            o.lessonHourId == _lessonHourId &&
+            (o.lessonHourId ?? '').isNotEmpty) {
+          match = o;
+          break;
+        }
+      }
+      if (match == null && _time != null) {
+        final hhmm =
+            '${_time!.hour.toString().padLeft(2, '0')}:'
+            '${_time!.minute.toString().padLeft(2, '0')}';
+        for (final o in opts) {
+          if (o.timeValue == hhmm) {
+            match = o;
+            break;
+          }
+        }
+      }
+      if (match != null) return match.label;
+      return kClaActChooseLessonHour.tr;
+    }
+    return _time == null ? kClaActChooseTime.tr : _time!.format(context);
   }
 
   Future<void> _pickTime() async {
-    final picked = await showTimePicker(
+    // Without schedule context, keep the legacy free clock so callers
+    // that don't pass schedules still work.
+    if (!_hasScheduleContext) {
+      final picked = await showTimePicker(
+        context: context,
+        initialTime: _time ?? TimeOfDay.now(),
+      );
+      if (picked != null) setState(() => _time = picked);
+      return;
+    }
+
+    // Schedule-scoped jam-pelajaran picker (Bug 1b).
+    if (_classId == null || _classId!.isEmpty) {
+      SnackBarUtils.showError(context, kClaActPickClassFirst.tr);
+      return;
+    }
+    final opts = _lessonHourOptions;
+    final picked = await _showLessonHourSheet(opts);
+    if (picked != null) {
+      setState(() {
+        _lessonHourId = picked.lessonHourId;
+        _time = _parseTime(picked.timeValue);
+      });
+    }
+  }
+
+  /// Bottom sheet listing the "Jam ke-N" lesson-hour slots for the
+  /// selected class + day. Mirrors [_showOptionSheet]'s chrome. Returns
+  /// the chosen option, or null on dismiss. Shows an empty-state row
+  /// when the day has no slots for that class.
+  Future<ActivityLessonHourOption?> _showLessonHourSheet(
+    List<ActivityLessonHourOption> options,
+  ) {
+    return showModalBottomSheet<ActivityLessonHourOption>(
       context: context,
-      initialTime: _time ?? TimeOfDay.now(),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: ColorUtils.slate300,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    kClaActChooseLessonHour.tr,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: ColorUtils.slate900,
+                    ),
+                  ),
+                ),
+              ),
+              if (options.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 16,
+                        color: ColorUtils.slate400,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          kClaActNoLessonHoursForDay.tr,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorUtils.slate500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.5,
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    itemBuilder: (_, i) {
+                      final o = options[i];
+                      final selected =
+                          (o.lessonHourId ?? '').isNotEmpty &&
+                          o.lessonHourId == _lessonHourId;
+                      return ListTile(
+                        leading: Icon(
+                          Icons.schedule_rounded,
+                          size: 18,
+                          color: selected
+                              ? ColorUtils.getRoleColor('guru')
+                              : ColorUtils.slate400,
+                        ),
+                        title: Text(o.label),
+                        trailing: selected
+                            ? Icon(
+                                Icons.check_rounded,
+                                size: 18,
+                                color: ColorUtils.getRoleColor('guru'),
+                              )
+                            : null,
+                        onTap: () => Navigator.of(context).pop(o),
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
     );
-    if (picked != null) setState(() => _time = picked);
   }
 
   Future<void> _onSave() async {
@@ -847,6 +1128,10 @@ class _ActivityFormBodyState extends State<_ActivityFormBody> {
         'time':
             '${_time!.hour.toString().padLeft(2, '0')}:'
             '${_time!.minute.toString().padLeft(2, '0')}',
+      // Tag the activity with the picked jam-pelajaran slot so the
+      // schedule screen can track per-hour fill state.
+      if (_lessonHourId != null && _lessonHourId!.isNotEmpty)
+        'lesson_hour_id': _lessonHourId,
       // Bab + Sub-bab are optional. Send `null` when cleared so the
       // backend treats it as "remove the link" on update.
       'chapter_id': _chapterId,
