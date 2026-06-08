@@ -143,6 +143,25 @@ export const useAuthStore = defineStore('auth', {
       return this.user?.role ?? this.role;
     },
     /**
+     * True when the logged-in user holds the platform `super_admin`
+     * role. Super-admins act as `admin` for routing but unlock extra
+     * KamilEdu-team surfaces (the Demo Requests review page).
+     *
+     * Checks both the active role and the full roles list — the
+     * super-admin grant can sit alongside an `admin` role and the
+     * active role is usually `admin`. This getter only drives UI
+     * visibility; the authoritative check is the server-side
+     * EnsureSuperAdmin middleware (a non-super-admin who reaches the
+     * page anyway gets a 403 + a friendly empty state).
+     */
+    isSuperAdmin(): boolean {
+      const SUPER = ['super_admin', 'superadmin', 'super-admin'];
+      const active = String(this.user?.role ?? this.role ?? '').toLowerCase();
+      if (SUPER.includes(active)) return true;
+      const roles = this.user?.roles ?? this.roles ?? [];
+      return roles.some((r) => SUPER.includes(String(r ?? '').toLowerCase()));
+    },
+    /**
      * The id to pass as `teacher_id` to multi-tenant endpoints.
      * Prefers the resolved `teacher_profile.id` (set by
      * `hydrateSchoolsRoles()`), falls back to `user.id` while it

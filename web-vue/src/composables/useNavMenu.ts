@@ -121,12 +121,32 @@ const STAFF_NAV: NavSection[] = [
   },
 ];
 
+/**
+ * Extra section appended for KamilEdu-team super-admins. Surfaces the
+ * platform-level Demo Requests review page (super-admin-gated route,
+ * see router/index.ts). Regular admins never see this section.
+ */
+const SUPER_ADMIN_NAV: NavSection = {
+  titleKey: 'nav.platform',
+  items: [
+    {
+      to: '/admin/demo-requests',
+      labelKey: 'nav.demoRequests',
+      icon: 'shield',
+    },
+  ],
+};
+
 const MENUS: Record<Role, NavSection[]> = {
   admin: ADMIN_NAV,
   guru: TEACHER_NAV,
   wali_kelas: TEACHER_NAV,
   wali: PARENT_NAV,
   staff: STAFF_NAV,
+  // Super-admins route as `admin`; the super-admin extras are appended
+  // dynamically in `useNavMenu` rather than via this map. Map entry
+  // kept for exhaustiveness over the `Role` union.
+  super_admin: ADMIN_NAV,
 };
 
 export function useNavMenu(): ComputedRef<NavSection[]> {
@@ -134,6 +154,12 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
   return computed(() => {
     const role = auth.activeRole;
     if (!role) return [];
-    return MENUS[role] ?? [];
+    const base = MENUS[role] ?? [];
+    // Append the platform section only for super-admins, and only on
+    // an admin surface (super-admins act as `admin`).
+    if (auth.isSuperAdmin && (role === 'admin' || role === 'super_admin')) {
+      return [...base, SUPER_ADMIN_NAV];
+    }
+    return base;
   });
 }
