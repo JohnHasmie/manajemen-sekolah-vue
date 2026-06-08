@@ -84,6 +84,125 @@ void main() {
   });
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Language-change → server-sync → backend-data refresh ordering.
+  //
+  // The whole point of the refresh path: the backend resolves locale
+  // as (1) the saved `preferred_language` column, then (2) the
+  // `Accept-Language` header. So the `PATCH /profile/language` MUST
+  // land before the backend-data re-fetch, or the re-fetch could race
+  // ahead and read the old locale. These tests lock that contract.
+  // ─────────────────────────────────────────────────────────────────────────
+  group('LanguageProvider server-sync + refresh ordering', () {
+    setUp(() async {
+      await _initPrefs();
+    });
+
+    tearDown(() {
+      // Statics persist across tests — always clear the hooks.
+      LanguageProvider.registerServerSync(null);
+      LanguageProvider.registerOnLanguageChanged(null);
+    });
+
+    test(
+      'setLanguage awaits the server-sync PATCH BEFORE firing the '
+      'refresh hook',
+      () async {
+        final order = <String>[];
+        var syncResolved = false;
+
+        LanguageProvider.registerServerSync((code) async {
+          order.add('sync_start');
+          // Simulate the network round-trip resolving on a later
+          // microtask — the refresh hook must NOT have run yet.
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+          syncResolved = true;
+          order.add('sync_done');
+        });
+        LanguageProvider.registerOnLanguageChanged((code) {
+          // If this fires before `syncResolved`, the PATCH wasn't
+          // awaited and the re-fetch would race the column write.
+          expect(
+            syncResolved,
+            isTrue,
+            reason: 'refresh hook ran before the PATCH resolved',
+          );
+          order.add('refresh');
+        });
+
+        final provider = LanguageProvider();
+        await provider.setLanguage(LanguageProvider.english);
+
+        expect(order, equals(['sync_start', 'sync_done', 'refresh']));
+      },
+    );
+
+    test(
+      'refresh hook receives the new language code',
+      () async {
+        String? refreshedWith;
+        LanguageProvider.registerServerSync((_) async {});
+        LanguageProvider.registerOnLanguageChanged((code) {
+          refreshedWith = code;
+        });
+
+        final provider = LanguageProvider();
+        await provider.setLanguage(LanguageProvider.english);
+
+        expect(refreshedWith, equals(LanguageProvider.english));
+      },
+    );
+
+    test(
+      'a failing PATCH still updates the locale and still fires the '
+      'refresh hook (resilient, does not crash)',
+      () async {
+        var refreshFired = false;
+        // Even a *throwing* sync hook (offline / 5xx) must not abort
+        // the local locale change or the re-fetch — setLanguage guards
+        // the await with try/catch.
+        LanguageProvider.registerServerSync((_) async {
+          throw Exception('simulated 5xx / offline');
+        });
+        LanguageProvider.registerOnLanguageChanged((_) {
+          refreshFired = true;
+        });
+
+        final provider = LanguageProvider();
+
+        // Must not throw even though the sync hook does.
+        await provider.setLanguage(LanguageProvider.english);
+
+        expect(provider.currentLanguage, equals(LanguageProvider.english));
+        expect(
+          refreshFired,
+          isTrue,
+          reason: 'refresh must still fire after a failed PATCH',
+        );
+      },
+    );
+
+    test(
+      'hydrateFromServer (syncToServer:false) does NOT fire server-sync '
+      'or refresh hooks',
+      () async {
+        var syncFired = false;
+        var refreshFired = false;
+        LanguageProvider.registerServerSync((_) async => syncFired = true);
+        LanguageProvider.registerOnLanguageChanged((_) => refreshFired = true);
+
+        final provider = LanguageProvider();
+        // hydrateFromServer adopts a server-supplied value; it must not
+        // echo a PATCH back nor trigger a redundant re-fetch.
+        await provider.hydrateFromServer(LanguageProvider.english);
+
+        expect(provider.currentLanguage, equals(LanguageProvider.english));
+        expect(syncFired, isFalse);
+        expect(refreshFired, isFalse);
+      },
+    );
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
   // LocalizedString.tr extension
   // ─────────────────────────────────────────────────────────────────────────
   group('LocalizedString.tr extension', () {
