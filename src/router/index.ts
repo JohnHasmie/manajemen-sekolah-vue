@@ -211,6 +211,19 @@ const routes: RouteRecordRaw[] = [
     meta: { public: true, registerDemo: true },
   },
 
+  // Separate "Data Diri" (requester identity) screen — reached AFTER
+  // the wizard's last step is submitted. Distinct route, NOT a wizard
+  // step: a fresh visitor fills the wizard (school data) first and only
+  // then lands here to enter identity + do the final send. Same public
+  // gating as the wizard. The view itself guards against direct nav /
+  // refresh with no wizard data by redirecting back to /register-demo.
+  {
+    path: '/register-demo/identity',
+    name: 'register-demo-identity',
+    component: () => import('@/views/register-demo/RegisterDemoIdentityView.vue'),
+    meta: { public: true, registerDemo: true },
+  },
+
   // Authenticated routes are nested under the AppShell layout.
   {
     path: '/',
