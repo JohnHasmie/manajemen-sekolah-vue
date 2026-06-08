@@ -16,13 +16,20 @@ class FCMLocalNotificationsManager {
   static const String channelDescription =
       'This channel is used for important notifications.';
 
+  /// Android small-notification icon (status bar). This is the WHITE,
+  /// transparent-background KamilEdu graduation-cap silhouette at
+  /// res/drawable-*/ic_stat_notification.png. Android tints/masks the small
+  /// icon, so the colorful launcher logo (@mipmap/kamiledu) cannot be used here
+  /// — it would render as a white blob (or the default Flutter icon). Bare
+  /// resource name (no @drawable/ prefix, no extension) per
+  /// flutter_local_notifications convention.
+  static const String androidSmallIcon = 'ic_stat_notification';
+
   /// Initialize local notifications plugin with Android and iOS settings
   Future<void> initialize(
     DidReceiveNotificationResponseCallback onTapCallback,
   ) async {
-    const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
+    const androidSettings = AndroidInitializationSettings(androidSmallIcon);
 
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -79,7 +86,7 @@ class FCMLocalNotificationsManager {
             channelDescription: channelDescription,
             importance: Importance.high,
             priority: Priority.high,
-            icon: android?.smallIcon ?? '@mipmap/ic_launcher',
+            icon: android?.smallIcon ?? androidSmallIcon,
           ),
           iOS: const DarwinNotificationDetails(
             presentAlert: true,
@@ -101,9 +108,7 @@ class FCMLocalNotificationsManager {
 
     final plugin = FlutterLocalNotificationsPlugin();
 
-    const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
+    const androidSettings = AndroidInitializationSettings(androidSmallIcon);
     const iosSettings = DarwinInitializationSettings();
     const settings = InitializationSettings(
       android: androidSettings,
@@ -124,7 +129,7 @@ class FCMLocalNotificationsManager {
             channelDescription: channelDescription,
             importance: Importance.high,
             priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+            icon: androidSmallIcon,
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
