@@ -640,7 +640,7 @@ class ParentPaymentSuccessScreen extends StatelessWidget {
             context,
             kFinFileOpenError.tr.replaceFirst(
               '\${result.message}',
-              '${result.message}',
+              result.message,
             ),
           );
         }

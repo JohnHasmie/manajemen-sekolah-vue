@@ -83,7 +83,7 @@ mixin GradeInputUiBuilderMixin on State<GradeInputDialog> {
                     const SizedBox(height: 2),
                     Text(
                       kGraNewGradeEntryTitle.tr,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
