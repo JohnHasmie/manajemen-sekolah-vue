@@ -32,6 +32,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
+import { useAuthStore } from '@/stores/auth';
 import {
   DEMO_SOCIAL_CHANNELS,
   validateRequester,
@@ -45,6 +46,7 @@ import PublicLanguageSwitcher from '@/components/feature/PublicLanguageSwitcher.
 
 const { t, locale } = useI18n();
 const wizard = useDemoWizardStore();
+const auth = useAuthStore();
 const router = useRouter();
 
 // True while we resolve whether the user is allowed on this screen.
@@ -189,6 +191,14 @@ async function handleSend() {
   // existing /demo/provision endpoint — backend contract unchanged.
   const ok = await wizard.provision();
   if (ok) {
+    // The pending demo request is recorded; the requester's register_demo
+    // session has served its purpose. Releasing it now prevents the
+    // LoginView/route-guard `step==='register_demo'` redirect from bouncing
+    // the user back into the wizard when they hit Selesai (→/login) or
+    // reload. logout() is local+server best-effort, never navigates, and
+    // does NOT touch the demo-wizard localStorage (the persisted pending
+    // receipt survives, so the pending screen still renders).
+    await auth.logout();
     showPendingDialog.value = true;
   }
 }
