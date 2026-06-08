@@ -26,6 +26,7 @@ import { usePriorityInbox } from '@/composables/usePriorityInbox';
 import type { PriorityItem } from '@/components/feature/PriorityInbox.vue';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import ParentPageHeader from '@/components/layout/ParentPageHeader.vue';
@@ -77,6 +78,9 @@ async function reload() {
 
 onMounted(reload);
 useAcademicYearWatcher(reload);
+// Re-fetch the server-localised inbox when the app language changes so
+// the labels/subtitles follow the new locale without a page reload.
+useLocaleWatcher(reload);
 
 // ── Filter buckets ────────────────────────────────────────────────
 type FilterKey = 'all' | 'critical' | 'warning' | 'info';
