@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/core/widgets/app_draggable_sheet.dart';
 import 'package:manajemensekolah/features/attendance/presentation/screens/teacher_attendance_screen.dart';
-import 'package:manajemensekolah/features/class_activity/presentation/screens/embedded_activity_list_screen.dart';
+import 'package:manajemensekolah/features/class_activity/presentation/screens/teacher_class_activity_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/teacher_material_screen.dart';
 import 'package:manajemensekolah/features/schedule/data/schedule_service.dart';
 import 'package:manajemensekolah/features/schedule/domain/models/schedule.dart';
@@ -111,32 +111,30 @@ mixin ScheduleTableNavigationMixin on State<TeacherScheduleTableView> {
     );
   }
 
+  /// Jadwal "Kegiatan" entry (Bug 2) — table/matrix view counterpart of
+  /// the card view's [ScheduleCardModalMixin.openClassActivity]. Opens
+  /// the Kegiatan-Kelas page and auto-opens the "Tambah Kegiatan" add
+  /// form prefilled from this session (kelas, mapel, tanggal, jam).
   void openClassActivity(BuildContext context, Map<String, dynamic> schedule) {
     final model = Schedule.fromJson(schedule);
-    final subjectId = model.subjectId;
-    final subjectName = model.subjectName;
-    final classId = model.classId;
-    final className = model.className;
     final widget = (this as dynamic).widget;
     final onRefresh = widget.onRefresh as VoidCallback;
 
-    AppDraggableSheet.show<void>(
-      context: context,
-      onClose: onRefresh,
-      builder: (_, _) => ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        child: EmbeddedActivityListScreen(
-          teacherId: widget.teacherId as String,
-          teacherName: widget.teacherNama as String,
-          classId: classId ?? '',
-          className: className ?? '',
-          subjectId: subjectId ?? '',
-          subjectName: subjectName ?? '',
-          initialDate:
-              (this as dynamic).computeScheduleDate(schedule) as DateTime,
-          lessonHourId: model.lessonHourId,
-        ),
-      ),
-    );
+    Navigator.of(context)
+        .push<void>(
+          MaterialPageRoute(
+            builder: (_) => TeacherClassActivityScreen(
+              initialClassId: model.classId,
+              initialClassName: model.className,
+              initialSubjectId: model.subjectId,
+              initialSubjectName: model.subjectName,
+              initialDate:
+                  (this as dynamic).computeScheduleDate(schedule) as DateTime,
+              initialLessonHourId: model.lessonHourId,
+              autoOpenPrefilledForm: true,
+            ),
+          ),
+        )
+        .then((_) => onRefresh());
   }
 }

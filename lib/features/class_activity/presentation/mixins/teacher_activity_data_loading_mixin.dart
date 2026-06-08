@@ -180,6 +180,23 @@ mixin TeacherActivityDataLoadingMixin
 
   /// Handles auto-open logic after data is first loaded.
   void _handleAutoOpen() {
+    // Jadwal "Kegiatan" entry (Bug 2): open the Tambah Kegiatan add
+    // form prefilled from the chosen session, instead of dropping the
+    // teacher on the activity list. Takes priority over the legacy
+    // list-open so a Jadwal tap lands straight on the add form.
+    if (widget.autoOpenPrefilledForm &&
+        widget.initialClassId != null &&
+        widget.initialSubjectId != null) {
+      autoOpenPrefilledActivityForm(
+        classId: widget.initialClassId!,
+        className: widget.initialClassName ?? '',
+        subjectId: widget.initialSubjectId!,
+        subjectName: widget.initialSubjectName ?? '',
+        date: widget.initialDate,
+        lessonHourId: widget.initialLessonHourId,
+      );
+      return;
+    }
     if (widget.initialClassId != null && widget.initialSubjectId != null) {
       openActivityList(
         classId: widget.initialClassId!,
@@ -222,6 +239,17 @@ mixin TeacherActivityDataLoadingMixin
   });
 
   void autoOpenCurrentSchedule();
+
+  /// Opens the "Tambah Kegiatan" add form prefilled from a Jadwal
+  /// session (Bug 2). Implemented by [TeacherActivityScheduleMixin].
+  void autoOpenPrefilledActivityForm({
+    required String classId,
+    required String className,
+    required String subjectId,
+    required String subjectName,
+    DateTime? date,
+    String? lessonHourId,
+  });
 
   void setLoading(bool value);
 

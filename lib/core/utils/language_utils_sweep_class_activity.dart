@@ -144,6 +144,22 @@ const kClaActTitleHint = {
 };
 const kClaActDateAndTime = {'en': 'Date & Time', 'id': 'Tanggal & Waktu'};
 const kClaActChooseTime = {'en': 'Choose time', 'id': 'Pilih jam'};
+const kClaActChooseLessonHour = {
+  'en': 'Choose lesson hour',
+  'id': 'Pilih jam pelajaran',
+};
+const kClaActNoLessonHoursForDay = {
+  'en': 'No lesson hours for this class on the selected day',
+  'id': 'Tidak ada jam pelajaran untuk kelas ini di hari yang dipilih',
+};
+const kClaActPickClassFirst = {
+  'en': 'Choose a class first',
+  'id': 'Pilih kelas terlebih dahulu',
+};
+const kClaActNoTaughtSubjects = {
+  'en': 'You don\'t teach any subjects in this class',
+  'id': 'Anda tidak mengajar mapel di kelas ini',
+};
 const kClaActDescription = {'en': 'Description', 'id': 'Deskripsi'};
 const kClaActDescriptionHint = {
   'en': 'Explain the activity or task instructions...',

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:manajemensekolah/core/di/service_locator.dart';
 import 'package:manajemensekolah/features/class_activity/presentation/screens/'
-    'embedded_activity_list_screen.dart';
+    'teacher_class_activity_screen.dart';
 import 'package:manajemensekolah/features/grades/presentation/screens/'
     'teacher_grade_input_screen.dart';
 import 'package:manajemensekolah/features/materials/presentation/screens/'
@@ -76,30 +76,28 @@ mixin ScheduleCardModalMixin {
         });
   }
 
-  /// Opens class activity modal bottom sheet.
-  /// Refreshes the schedule summary when the modal closes.
+  /// Jadwal "Kegiatan" entry (Bug 2). Opens the Kegiatan-Kelas page and
+  /// auto-opens the "Tambah Kegiatan" add form prefilled from this
+  /// session — kelas, mapel, tanggal, and the slot's jam-pelajaran — so
+  /// the flow matches tapping the FAB inside Kegiatan-Kelas (post Bug 1
+  /// the prefilled mapel + jam are valid options in the scoped pickers).
+  /// Refreshes the schedule summary when the page pops.
   void openClassActivity(BuildContext ctx) {
-    showModalBottomSheet(
-      context: ctx,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => SizedBox(
-        height: MediaQuery.of(ctx).size.height * 0.9,
-        child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          child: EmbeddedActivityListScreen(
-            teacherId: teacherId,
-            teacherName: teacherNama,
-            classId: classId ?? '',
-            className: className ?? '',
-            subjectId: subjectId ?? '',
-            subjectName: subjectName ?? '',
-            initialDate: computeScheduleDate(),
-            lessonHourId: lessonHourId,
+    Navigator.of(ctx)
+        .push<void>(
+          MaterialPageRoute(
+            builder: (_) => TeacherClassActivityScreen(
+              initialClassId: classId,
+              initialClassName: className,
+              initialSubjectId: subjectId,
+              initialSubjectName: subjectName,
+              initialDate: computeScheduleDate(),
+              initialLessonHourId: lessonHourId,
+              autoOpenPrefilledForm: true,
+            ),
           ),
-        ),
-      ),
-    ).then((_) => onRefresh?.call());
+        )
+        .then((_) => onRefresh?.call());
   }
 
   /// Opens the grade book (Buku Nilai) for the current class and

@@ -47,20 +47,22 @@ mixin TeacherActivityNavigationMixin
   /// puts it in add mode (class+mapel pickers unlocked, primary =
   /// "Simpan").
   ///
-  /// Subjects are pre-fetched across all of the teacher's classes
-  /// upfront. The picker isn't class-scoped because the form widget
-  /// holds `subjects` as a static list — minor UX downgrade vs the
-  /// legacy class-driven refetch, but the backend validates the
-  /// (class_id, subject_id) pair on save.
+  /// The form scopes its Mapel + Jam (jam-pelajaran) pickers to the
+  /// teacher's own teaching schedule (passed via `schedules`): the
+  /// Mapel picker only offers subjects the teacher teaches in the
+  /// selected class, and the WAKTU field becomes a "Jam ke-N" picker
+  /// for the selected class + day — not all school subjects / a free
+  /// clock. See [ActivityScheduleOptions].
   Future<void> showAddActivityFlow(LanguageProvider lp) async {
     final classes = classList
         .whereType<Map>()
         .map(Map<String, dynamic>.from)
         .toList();
 
-    // Fetch all subjects the teacher teaches. Best-effort — if it
-    // fails, fall back to an empty list and let the user retry from
-    // an error state inside the picker.
+    // Fetch all subjects the teacher teaches. Best-effort — used as a
+    // fallback label source; the form derives the picker options from
+    // `schedules` when present. If it fails, fall back to an empty
+    // list.
     List<Map<String, dynamic>> subjects = const [];
     try {
       final r = await _dio.get('/teacher/$teacherId/subjects');
@@ -82,6 +84,7 @@ mixin TeacherActivityNavigationMixin
       context: context,
       classes: classes,
       subjects: subjects,
+      schedules: schedules,
       onSave: (payload) async {
         await svc.createActivity({...payload, 'teacher_id': teacherId});
       },
@@ -110,6 +113,11 @@ mixin TeacherActivityNavigationMixin
   void showFilterDialog(LanguageProvider lp);
 
   List<dynamic> get classList;
+
+  /// Teacher's teaching schedule — forwarded to the form so its Mapel
+  /// + Jam pickers can be scoped per class / per day. Provided by the
+  /// state mixin composed into the same screen state.
+  List<dynamic> get schedules;
   @override
   Color get primaryColor;
   String get teacherId;
