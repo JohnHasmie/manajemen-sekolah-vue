@@ -116,6 +116,8 @@ const ParentRecommendationView = () =>
   import('@/views/parent/ParentRecommendationView.vue');
 const AdminTeacherAttendanceView = () =>
   import('@/views/admin/AdminTeacherAttendanceView.vue');
+const AdminDemoRequestView = () =>
+  import('@/views/admin/AdminDemoRequestView.vue');
 const TeacherPresensiView = () =>
   import('@/views/teacher/TeacherPresensiView.vue');
 const TeacherPresensiHistoryView = () =>
@@ -452,6 +454,17 @@ const routes: RouteRecordRaw[] = [
         component: AdminTeacherAttendanceView,
         meta: { role: 'admin' satisfies Role },
       },
+      {
+        // SUPER-ADMIN — Demo Requests review hub. Routed under the
+        // admin subtree (super-admins act as `admin`); the nav entry
+        // only appears for super-admins (useNavMenu + auth.isSuperAdmin)
+        // and the in-page guard below redirects non-super-admins. The
+        // authoritative gate is the backend EnsureSuperAdmin middleware.
+        path: 'admin/demo-requests',
+        name: 'admin.demo-requests',
+        component: AdminDemoRequestView,
+        meta: { role: 'admin' satisfies Role, superAdmin: true },
+      },
 
       // Teacher / Wali Kelas subtree
       {
@@ -751,6 +764,14 @@ router.beforeEach((to) => {
     if (!matches) {
       return { path: roleHomePath[auth.activeRole] ?? '/login' };
     }
+  }
+
+  // Super-admin-only routes (platform pages, e.g. demo-requests). The
+  // backend EnsureSuperAdmin middleware is the authoritative gate; this
+  // client guard just keeps a non-super-admin admin from landing on a
+  // page they can't use (they'd only see 403s). Bounce to their home.
+  if (to.meta.superAdmin === true && !auth.isSuperAdmin) {
+    return { path: roleHomePath[auth.activeRole ?? ''] ?? '/login' };
   }
 
   return true;

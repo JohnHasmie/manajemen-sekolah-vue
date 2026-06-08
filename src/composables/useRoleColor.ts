@@ -57,6 +57,15 @@ const TABLE: Record<Role, RoleColor> = {
     text: 'text-role-staff',
     ring: 'ring-role-staff',
   },
+  // Super-admins act on the admin surface — reuse the admin navy so
+  // the shell + headers stay visually consistent.
+  super_admin: {
+    hex: '#143068',
+    bg: 'bg-role-admin',
+    bgSoft: 'bg-role-admin-soft',
+    text: 'text-role-admin',
+    ring: 'ring-role-admin',
+  },
 };
 
 const FALLBACK: RoleColor = {
