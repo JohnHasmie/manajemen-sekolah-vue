@@ -208,7 +208,8 @@ const schoolInitial = computed(() => {
       <div class="p-4 border-t border-slate-100 bg-slate-50/50">
         <button 
           type="button" 
-          class="w-full h-12 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-brand-cobalt hover:border-brand-cobalt/30 flex items-center justify-center transition-all group shadow-sm"
+          class="w-full h-12 bg-white border border-slate-200 text-slate-400 hover:text-brand-cobalt hover:border-brand-cobalt/30 flex items-center justify-center transition-all group shadow-sm"
+          :class="isCollapsed ? 'rounded-full' : 'rounded-2xl'"
           @click="toggleSidebar"
         >
           <div class="transition-transform duration-500 group-hover:scale-125" :class="isCollapsed ? 'rotate-180' : ''">
@@ -270,7 +271,7 @@ const schoolInitial = computed(() => {
           </div>
           <button
             type="button"
-            class="p-1 rounded-md hover:bg-slate-100"
+            class="p-1 rounded-full hover:bg-slate-100"
             aria-label="Tutup menu"
             @click="drawerOpen = false"
           >
@@ -314,7 +315,7 @@ const schoolInitial = computed(() => {
       >
         <button
           type="button"
-          class="md:hidden rounded-xl bg-white/10 hover:bg-white/20 w-10 h-10 grid place-items-center transition-colors"
+          class="md:hidden rounded-full bg-white/10 hover:bg-white/20 w-10 h-10 grid place-items-center transition-colors"
           aria-label="Buka menu"
           @click="drawerOpen = true"
         >

@@ -202,7 +202,7 @@ const dueRelative = computed(() => {
           <button
             v-if="!readonly && rec.status !== 'completed'"
             type="button"
-            class="w-7 h-7 rounded-lg grid place-items-center text-slate-500 hover:bg-slate-100 hover:text-brand-cobalt flex-shrink-0"
+            class="w-7 h-7 rounded-full grid place-items-center text-slate-500 hover:bg-slate-100 hover:text-brand-cobalt flex-shrink-0"
             :aria-label="`Edit ${rec.title}`"
             @click="emit('edit', rec)"
           >

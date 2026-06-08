@@ -367,7 +367,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                   v-if="!y.current && y.status !== 'archived'"
                   type="button"
                   title="Tetapkan aktif"
-                  class="w-8 h-8 rounded-lg grid place-items-center text-emerald-700 hover:bg-emerald-50"
+                  class="w-8 h-8 rounded-full grid place-items-center text-emerald-700 hover:bg-emerald-50"
                   :disabled="isMutating"
                   @click="setCurrentTarget = y"
                 >
@@ -377,7 +377,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                   v-if="y.status !== 'archived'"
                   type="button"
                   title="Edit"
-                  class="w-8 h-8 rounded-lg grid place-items-center text-slate-600 hover:bg-slate-100"
+                  class="w-8 h-8 rounded-full grid place-items-center text-slate-600 hover:bg-slate-100"
                   :disabled="isMutating"
                   @click="openEdit(y)"
                 >
@@ -387,7 +387,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                   v-if="!y.current && y.status !== 'archived'"
                   type="button"
                   title="Arsipkan"
-                  class="w-8 h-8 rounded-lg grid place-items-center text-amber-700 hover:bg-amber-50"
+                  class="w-8 h-8 rounded-full grid place-items-center text-amber-700 hover:bg-amber-50"
                   :disabled="isMutating"
                   @click="archiveTarget = y"
                 >
@@ -397,7 +397,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                   v-if="y.status === 'archived'"
                   type="button"
                   title="Batalkan arsip"
-                  class="w-8 h-8 rounded-lg grid place-items-center text-blue-700 hover:bg-blue-50"
+                  class="w-8 h-8 rounded-full grid place-items-center text-blue-700 hover:bg-blue-50"
                   :disabled="isMutating"
                   @click="unarchiveTarget = y"
                 >
@@ -407,7 +407,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                   v-if="!y.current"
                   type="button"
                   title="Hapus"
-                  class="w-8 h-8 rounded-lg grid place-items-center text-red-600 hover:bg-red-50"
+                  class="w-8 h-8 rounded-full grid place-items-center text-red-600 hover:bg-red-50"
                   :disabled="isMutating"
                   @click="deleteTarget = y"
                 >

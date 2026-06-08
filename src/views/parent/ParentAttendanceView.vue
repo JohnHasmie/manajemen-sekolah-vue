@@ -394,7 +394,7 @@ const SKELETON_ROWS = Array.from({ length: 5 });
           >
             <button
               type="button"
-              class="p-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
+              class="w-7 h-7 rounded-full flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
               @click="shiftMonth(-1)"
             >
               <NavIcon name="chevron-left" :size="12" />
@@ -407,7 +407,7 @@ const SKELETON_ROWS = Array.from({ length: 5 });
             </span>
             <button
               type="button"
-              class="p-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
+              class="w-7 h-7 rounded-full flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
               @click="shiftMonth(1)"
             >
               <NavIcon name="chevron-right" :size="12" />
@@ -499,7 +499,7 @@ const SKELETON_ROWS = Array.from({ length: 5 });
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <button
             type="button"
-            class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
+            class="w-7 h-7 rounded-full flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
             @click="shiftYear(-1)"
           >
             <NavIcon name="chevron-left" :size="14" />
@@ -509,7 +509,7 @@ const SKELETON_ROWS = Array.from({ length: 5 });
           </span>
           <button
             type="button"
-            class="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
+            class="w-7 h-7 rounded-full flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-500 transition-colors"
             @click="shiftYear(1)"
           >
             <NavIcon name="chevron-right" :size="14" />
