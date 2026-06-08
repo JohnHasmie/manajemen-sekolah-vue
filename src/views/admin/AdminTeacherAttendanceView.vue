@@ -992,16 +992,37 @@ onMounted(loadSettings);
                       <span v-else class="text-[11px] text-slate-300">-</span>
                     </td>
                     <td class="px-4 py-2.5">
-                      <a
-                        v-if="r.check_in_photo_url"
-                        :href="r.check_in_photo_url"
-                        target="_blank"
-                        rel="noopener"
-                        class="inline-flex items-center gap-1 text-brand-cobalt text-[11px] font-bold hover:underline"
-                      >
-                        <NavIcon name="camera" :size="12" />Lihat
-                      </a>
-                      <span v-else class="text-[11px] text-slate-300">-</span>
+                      <div class="flex flex-col gap-1">
+                        <!-- Foto Masuk (check-in selfie) -->
+                        <a
+                          v-if="r.check_in_photo_url"
+                          :href="r.check_in_photo_url"
+                          target="_blank"
+                          rel="noopener"
+                          class="inline-flex items-center gap-1 text-brand-cobalt text-[11px] font-bold hover:underline"
+                        >
+                          <NavIcon name="camera" :size="12" />Masuk
+                        </a>
+                        <span v-else class="text-[11px] text-slate-300">
+                          Masuk -
+                        </span>
+                        <!-- Foto Pulang (check-out selfie) -->
+                        <a
+                          v-if="r.check_out_photo_url"
+                          :href="r.check_out_photo_url"
+                          target="_blank"
+                          rel="noopener"
+                          class="inline-flex items-center gap-1 text-brand-cobalt text-[11px] font-bold hover:underline"
+                        >
+                          <NavIcon name="camera" :size="12" />Pulang
+                        </a>
+                        <span
+                          v-else
+                          class="inline-flex items-center text-[11px] text-slate-300"
+                        >
+                          Pulang -
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
