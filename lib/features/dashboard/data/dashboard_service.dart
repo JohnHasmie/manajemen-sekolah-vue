@@ -148,8 +148,20 @@ class DashboardService {
   /// Backend response also carries `total` (full unfiltered count)
   /// when items exist; we surface both as a tuple-ish return so the
   /// card can render "Perlu Perhatian · 5/12" when the list is
-  /// capped. Returns `(items: [], total: 0)` on any error.
-  static Future<({List<Map<String, dynamic>> items, int total})>
+  /// capped.
+  ///
+  /// The `ok` flag distinguishes a *successful* response (HTTP 200 with
+  /// `success:true`) from a failure — a network error, a non-200 (e.g.
+  /// the 400 "No active school context" the backend returns when the
+  /// `X-School-ID` header is missing during a cold-start / school-switch
+  /// race), or a malformed body. The caller needs this distinction: an
+  /// `ok:true` empty list is a genuine "Semua aman", whereas an
+  /// `ok:false` empty list is "couldn't load" and must NOT overwrite a
+  /// known-good card with the empty state — that was the production bug
+  /// where the summary card showed "Semua aman" while "Lihat semua"
+  /// listed real items. Returns `(ok: false, items: [], total: 0)` on
+  /// any error.
+  static Future<({bool ok, List<Map<String, dynamic>> items, int total})>
   getAdminPriorityInbox({String? academicYearId}) async {
     try {
       final queryParams = <String, dynamic>{};
@@ -169,13 +181,17 @@ class DashboardService {
               .whereType<Map>()
               .map<Map<String, dynamic>>(Map<String, dynamic>.from)
               .toList(growable: false);
-          return (items: items, total: total is int ? total : items.length);
+          return (
+            ok: true,
+            items: items,
+            total: total is int ? total : items.length,
+          );
         }
       }
-      return (items: const <Map<String, dynamic>>[], total: 0);
+      return (ok: false, items: const <Map<String, dynamic>>[], total: 0);
     } catch (e) {
       AppLogger.error('api', 'Error fetching admin priority inbox: $e');
-      return (items: const <Map<String, dynamic>>[], total: 0);
+      return (ok: false, items: const <Map<String, dynamic>>[], total: 0);
     }
   }
 
