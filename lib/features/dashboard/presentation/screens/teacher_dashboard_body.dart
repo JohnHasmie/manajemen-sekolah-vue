@@ -54,7 +54,6 @@ import 'package:manajemensekolah/core/utils/app_logger.dart';
 import 'package:manajemensekolah/features/recommendations/data/recommendation_service.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_class_screen.dart';
 import 'package:manajemensekolah/features/recommendations/presentation/screens/recommendation_result_screen.dart';
-import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_overview.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/teacher_report_card_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/teacher_schedule_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/settings_screen.dart';
@@ -328,20 +327,12 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   void _openTeacherPresensi() =>
       AppNavigator.push(context, const TeacherPresensiScreen());
 
-  void _openReportCards() {
-    final tp = ref.read(teacherRiverpod);
-    AppNavigator.push(
-      context,
-      ReportCardOverviewPage(
-        teacher: {
-          'id': tp.teacherId ?? '',
-          'nama': tp.teacherName ?? 'Guru',
-          'email': widget.state.userData['email']?.toString() ?? '',
-          'role': 'guru',
-        },
-      ),
-    );
-  }
+  // NOTE: `_openReportCards` (the Raport overview entry point) was
+  // removed together with the "Raport" tile per Luay's request — the
+  // teacher dashboard no longer surfaces the Raport module here. The
+  // report-card flow stays reachable via the priority-inbox
+  // `report_card_class` deep-link, which uses [ReportCardScreen]
+  // through `_openReportCardClass` below.
 
   @override
   Widget build(BuildContext context) {
@@ -950,17 +941,18 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
   Widget _buildModulLain() {
     return ModulLainStrip(
       title: AppLocalizations.dbOtherModules.tr,
-      totalLabel: '8 ${AppLocalizations.dbOtherModules.tr.toLowerCase()}',
+      // 7 modules total now: 3 front tiles (Materi, RPP, Rekap Nilai) +
+      // 4 in the "Lainnya" overflow sheet (Presensi Guru, Pengumuman,
+      // Rekomendasi, Akun). Was 8 before Raport was removed per Luay's
+      // request — Raport no longer surfaces from the teacher dashboard
+      // here (the report-card flow stays reachable via the priority
+      // inbox `report_card_class` deep-link).
+      totalLabel: '7 ${AppLocalizations.dbOtherModules.tr.toLowerCase()}',
       accentColor: _teacherCobalt,
+      // Front tiles (the always-visible "Modul lain" strip). Presensi
+      // Guru moved OUT of here into the "Lainnya" overflow below, and
+      // Raport was removed entirely — both per Luay's request.
       visibleItems: [
-        // Presensi Guru — the teacher's own daily check-in/out. Uses the
-        // shared Kehadiran (violet) module icon; the "Presensi Guru"
-        // label sets it apart from the student "Absensi" quick action.
-        ModulLainStripItem(
-          label: 'Presensi Guru',
-          icon: DashboardModules.kehadiran.icon,
-          onTap: _openTeacherPresensi,
-        ),
         ModulLainStripItem(
           label: DashboardModules.materi.defaultLabel.tr,
           icon: DashboardModules.materi.icon,
@@ -976,13 +968,19 @@ class _TeacherDashboardBodyState extends ConsumerState<TeacherDashboardBody> {
           icon: DashboardModules.rekapNilai.icon,
           onTap: _openGradeRecap,
         ),
-        ModulLainStripItem(
-          label: DashboardModules.raport.defaultLabel.tr,
-          icon: DashboardModules.raport.icon,
-          onTap: _openReportCards,
-        ),
       ],
+      // "Lainnya" overflow sheet (opened from the "+N Lainnya" tile).
+      // Presensi Guru lives here now instead of as a front tile, as
+      // Luay asked ("pada menu lainnya masukkan presensi guru").
       overflowItems: [
+        // Presensi Guru — the teacher's own daily check-in/out. Uses the
+        // shared Kehadiran (violet) module icon; the "Presensi Guru"
+        // label sets it apart from the student "Absensi" quick action.
+        ModulLainStripItem(
+          label: 'Presensi Guru',
+          icon: DashboardModules.kehadiran.icon,
+          onTap: _openTeacherPresensi,
+        ),
         ModulLainStripItem(
           label: DashboardModules.pengumuman.defaultLabel.tr,
           icon: DashboardModules.pengumuman.icon,
