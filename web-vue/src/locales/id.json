@@ -131,7 +131,8 @@
     "selected": "{count} dipilih",
     "done": "Selesai",
     "lessonHour": "Jam ke-{n}",
-    "occupied": "Terisi"
+    "occupied": "Terisi",
+    "refresh": "Muat ulang"
   },
   "auth": {
     "signIn": "MASUK",
@@ -1413,5 +1414,43 @@
     "audienceRole": "Per peran",
     "audienceClass": "Per kelas",
     "audienceStudent": "Per siswa"
+  },
+  "superAdmin": {
+    "platformName": "KamilEdu Platform",
+    "kicker": "Platform Super Admin",
+    "nav": {
+      "overview": "Ringkasan Platform",
+      "demoRequests": "Permintaan Demo",
+      "schools": "Sekolah / Tenant"
+    },
+    "overview": {
+      "title": "Ringkasan Platform",
+      "subtitle": "Pantau tenant, demo aktif, dan antrean permintaan demo KamilEdu.",
+      "totalSchools": "Total Sekolah",
+      "activeDemos": "Demo Aktif",
+      "pendingRequests": "Permintaan Demo Pending",
+      "expiringSoon": "Demo Akan Berakhir",
+      "expiringSoonHint": "Berakhir dalam 3 hari",
+      "endpointComingSoon": "Endpoint daftar sekolah belum tersedia",
+      "demoRequestsCta": "Tinjau dan aktivasi permintaan demo yang masuk.",
+      "schoolsCta": "Lihat seluruh sekolah / tenant beserta status demo.",
+      "expiringSoonTitle": "Demo yang akan berakhir"
+    },
+    "schools": {
+      "title": "Sekolah / Tenant",
+      "subtitle": "Daftar tenant beserta status demo dan masa berlaku.",
+      "coverageNotice": "Saat ini daftar menampilkan demo yang telah diaktivasi. Tenant berbayar dan non-demo akan muncul setelah endpoint daftar sekolah tersedia.",
+      "emptyTitle": "Belum ada tenant",
+      "emptyDescription": "Belum ada demo yang diaktivasi. Tenant akan muncul di sini setelah permintaan demo disetujui.",
+      "unnamed": "Sekolah tanpa nama",
+      "expiresAt": "Berakhir",
+      "typeDemo": "Demo",
+      "typeOther": "Lainnya",
+      "state": {
+        "active": "Aktif",
+        "expiringSoon": "Akan Berakhir",
+        "expired": "Kedaluwarsa"
+      }
+    }
   }
 }
