@@ -23,6 +23,7 @@ import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
 import PriorityInbox from '@/components/feature/PriorityInbox.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
 
 type StatsPayload = Record<string, any>;
@@ -134,6 +135,11 @@ onMounted(load);
 
 // Refetch when the active academic year changes via the chip.
 useAcademicYearWatcher(() => load());
+
+// Re-fetch the server-localised priority inbox (+ stats) when the user
+// switches app language so "Perlu Perhatian" / "Needs Attention" labels
+// follow the new locale without a manual page reload.
+useLocaleWatcher(() => load());
 
 interface QuickAction {
   labelKey: string;
