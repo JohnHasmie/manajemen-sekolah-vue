@@ -58,7 +58,7 @@ mixin NotificationScaffoldMixin on NotificationWidgetBuilderMixin {
         final notif = notifications[index];
         return GestureDetector(
           onTap: () {
-            if (!isUnread(notif)) {
+            if (isUnread(notif)) {
               markAsRead(notif.id);
             }
             handleTap(notif);
