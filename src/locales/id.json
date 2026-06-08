@@ -248,7 +248,8 @@
     "wali_kelas": "Wali Kelas",
     "wali": "Wali murid",
     "siswa": "Siswa",
-    "staff": "Staf"
+    "staff": "Staf",
+    "super_admin": "Super Admin"
   },
   "status": {
     "Pending": "Menunggu",
