@@ -82,11 +82,25 @@ export const useDemoWizardStore = defineStore('demoWizard', {
 
   getters: {
     currentKey: (s): DemoStepKey => DEMO_STEPS[s.currentStep] ?? 'welcome',
+    /** 1-based position of the current step, for "Langkah X dari Y" copy. */
+    stepNumber: (s) => s.currentStep + 1,
+    /** Total wizard steps — derived from DEMO_STEPS so the counter never drifts. */
+    stepTotal: () => DEMO_STEPS.length,
     canGoBack: (s) => s.currentStep > 0 && !s.isProvisioning,
     canGoNext: (s) => s.currentStep < DEMO_STEPS.length - 1 && !s.isProvisioning,
     progress: (s) => ((s.currentStep + 1) / DEMO_STEPS.length) * 100,
     /** True when the requester identity form passes client validation. */
     requesterValid: (s) => Object.keys(validateRequester(s.payload.requester)).length === 0,
+    /**
+     * Whether the user has produced enough wizard (school) data to be
+     * allowed onto the SEPARATE identity screen. Used by that screen's
+     * route guard: a direct visit / refresh with no school name means
+     * the wizard was never completed, so we bounce back to its start
+     * instead of letting the user submit an empty request. We key off
+     * the school name because it's the first required answer and is
+     * mandatory for a meaningful demo request.
+     */
+    hasWizardData: (s) => (s.payload.school.name ?? '').trim().length > 0,
   },
 
   actions: {
@@ -111,13 +125,14 @@ export const useDemoWizardStore = defineStore('demoWizard', {
         }
 
         // Server returned null — that means this user has no completed
-        // provision (or just signed up). If localStorage still points
-        // at the final Done step from a previous failed attempt,
-        // there's no result to display and the user is stuck on the
-        // "Tekan tombol Buat sekolah demo..." placeholder. Reset to
-        // step 0 so they can run the wizard cleanly.
+        // provision (or just signed up). Older persisted state may carry
+        // a step index for the removed `requester` / `done` steps (the
+        // identity + pending screens now live on a separate route). Such
+        // a leftover would land the user past the wizard's real last
+        // step with nothing to show, so reset to step 0 for a clean run.
+        // `clamp` below also defensively caps any over-large index.
         const lsRaw = storage.get<PersistedShape>(LS_KEY);
-        if (lsRaw && lsRaw.currentStep >= DEMO_STEPS.length - 1) {
+        if (lsRaw && lsRaw.currentStep > DEMO_STEPS.length - 1) {
           storage.remove(LS_KEY);
           this.hydrated = true;
           return;
@@ -255,6 +270,23 @@ export const useDemoWizardStore = defineStore('demoWizard', {
         });
         saveTimer = null;
       }, 700);
+    },
+
+    /**
+     * Cancel any pending debounced remote save and fire it immediately.
+     * Called when the user leaves the wizard for the separate identity
+     * screen so the latest school answers are persisted server-side
+     * right away (cross-device resume), without waiting out the debounce.
+     */
+    flushRemoteSave(): void {
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+      }
+      DemoService.saveWizardState({
+        current_step: this.currentStep,
+        payload: this.payload,
+      });
     },
   },
 });
