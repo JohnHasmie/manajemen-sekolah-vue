@@ -80,6 +80,7 @@ import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admi
 import 'package:manajemensekolah/features/lesson_plans/presentation/screens/admin_rpp_review_hub_screen.dart';
 import 'package:manajemensekolah/features/report_cards/presentation/screens/admin_raport_hub_screen.dart';
 import 'package:manajemensekolah/features/schedule/presentation/screens/admin_schedule_management_screen.dart';
+import 'package:manajemensekolah/features/teacher_attendance/presentation/screens/admin_teacher_attendance_report_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/data_management_screen.dart';
 import 'package:manajemensekolah/features/settings/presentation/screens/system_settings_screen.dart';
 
@@ -891,6 +892,15 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody>
   void _openPresensi() =>
       AppNavigator.push(context, const AdminAttendanceDashboardScreen());
 
+  /// Presensi Guru → the admin teacher-attendance REPORT (rekap per-guru
+  /// + detail per-row). Web parity for the missing mobile admin teacher
+  /// presensi report. Distinct from [_openPresensi], which is the STUDENT
+  /// attendance dashboard.
+  void _openPresensiGuru() => AppNavigator.push(
+    context,
+    const AdminTeacherAttendanceReportScreen(),
+  );
+
   void _openAktivitasKelas() =>
       AppNavigator.push(context, const AdminClassActivityScreen());
 
@@ -902,7 +912,7 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody>
     // strip at 4 tiles.
     return ModulLainStrip(
       title: AppLocalizations.dbOtherModules.tr,
-      totalLabel: '9 ${AppLocalizations.dbOtherModules.tr.toLowerCase()}',
+      totalLabel: '10 ${AppLocalizations.dbOtherModules.tr.toLowerCase()}',
       accentColor: _adminNavy,
       visibleItems: [
         ModulLainStripItem(
@@ -930,6 +940,14 @@ class _AdminDashboardBodyState extends ConsumerState<AdminDashboardBody>
         ),
       ],
       overflowItems: [
+        // Presensi Guru — the admin teacher-attendance report (web
+        // parity). Reuses the violet Kehadiran module icon; sits next to
+        // the student Presensi entry in the visible row above.
+        ModulLainStripItem(
+          label: kTarModule.tr,
+          icon: DashboardModules.kehadiran.icon,
+          onTap: _openPresensiGuru,
+        ),
         ModulLainStripItem(
           label: kDasReportCardModule.tr,
           icon: DashboardModules.raport.icon,

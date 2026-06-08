@@ -305,6 +305,247 @@ class TeacherAttendanceConfig {
   }
 }
 
+// ── Admin report — per-row pagination ─────────────────────────────────
+// The admin per-row list (`GET /teacher-attendance/admin`) is a standard
+// Laravel resource collection: `{ data: [...], meta: {...} }`. We surface
+// the meta so the screen can paginate, mirroring the web service's
+// `listFromJson`.
+
+/// Pagination meta echoed by the admin per-row list. Like the `meta`
+/// block of a Laravel `->paginate()` JSON response.
+class TeacherAttendancePageMeta {
+  final int currentPage;
+  final int lastPage;
+  final int perPage;
+  final int total;
+
+  const TeacherAttendancePageMeta({
+    required this.currentPage,
+    required this.lastPage,
+    required this.perPage,
+    required this.total,
+  });
+
+  factory TeacherAttendancePageMeta.fromJson(
+    Map<String, dynamic> json, {
+    int fallbackPerPage = 20,
+    int fallbackTotal = 0,
+  }) {
+    return TeacherAttendancePageMeta(
+      currentPage: _asIntOrNull(json['current_page']) ?? 1,
+      lastPage: _asIntOrNull(json['last_page']) ?? 1,
+      perPage: _asIntOrNull(json['per_page']) ?? fallbackPerPage,
+      total: _asIntOrNull(json['total']) ?? fallbackTotal,
+    );
+  }
+}
+
+/// One page of the admin per-row report: the parsed records plus the
+/// pagination meta. Returned by the admin report list endpoint.
+class TeacherAttendanceListResult {
+  final List<TeacherAttendanceRecord> items;
+  final TeacherAttendancePageMeta meta;
+
+  const TeacherAttendanceListResult({required this.items, required this.meta});
+
+  factory TeacherAttendanceListResult.fromJson(dynamic body) {
+    final map = body is Map<String, dynamic> ? body : <String, dynamic>{};
+    final rawList = map['data'];
+    final items = rawList is List
+        ? rawList
+              .whereType<Map>()
+              .map(
+                (e) => TeacherAttendanceRecord.fromJson(
+                  Map<String, dynamic>.from(e),
+                ),
+              )
+              .toList()
+        : <TeacherAttendanceRecord>[];
+    final rawMeta = map['meta'];
+    final meta = rawMeta is Map<String, dynamic>
+        ? TeacherAttendancePageMeta.fromJson(
+            rawMeta,
+            fallbackPerPage: items.length,
+            fallbackTotal: items.length,
+          )
+        : TeacherAttendancePageMeta(
+            currentPage: 1,
+            lastPage: 1,
+            perPage: items.length,
+            total: items.length,
+          );
+    return TeacherAttendanceListResult(items: items, meta: meta);
+  }
+}
+
+// ── Admin rekap — per-teacher summary ─────────────────────────────────
+// The per-teacher rekap (`GET /teacher-attendance/admin/summary`)
+// aggregates each teacher's records over a date range. Status columns
+// are DYNAMIC: `present` + `late` are always present, and further
+// statuses (sick / excused / absent…) may appear. The AUTHORITATIVE
+// ordered column list is `meta.statuses` — read that rather than
+// hardcoding columns. This mirrors the web `adminSummary` parser 1:1.
+
+/// Default status columns when the server omits/mangles `meta.statuses`,
+/// so the rekap table never renders column-less.
+const List<String> kTeacherAttendanceDefaultStatuses = ['present', 'late'];
+
+/// Reads the ordered status-column list from a summary `meta.statuses`,
+/// falling back to [kTeacherAttendanceDefaultStatuses].
+List<String> _statusKeysFromMeta(dynamic meta) {
+  final raw = meta is Map ? meta['statuses'] : null;
+  if (raw is List) {
+    final keys = raw
+        .map((s) => s?.toString() ?? '')
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (keys.isNotEmpty) return keys;
+  }
+  return List<String>.from(kTeacherAttendanceDefaultStatuses);
+}
+
+/// Pulls the per-status int counts out of a raw row/totals map using the
+/// authoritative `statuses` list. Any status the server omitted for a
+/// row reads as 0 (a teacher with no `late` records still gets `late: 0`).
+Map<String, int> _statusCountsFromJson(
+  Map<String, dynamic> raw,
+  List<String> statuses,
+) {
+  final out = <String, int>{};
+  for (final key in statuses) {
+    out[key] = _asIntOrNull(raw[key]) ?? 0;
+  }
+  return out;
+}
+
+/// One per-teacher rekap row (`data[]`). Carries the dynamic per-status
+/// counts ([counts], indexed by the meta status keys) plus the teacher
+/// identity, aggregate total, and attendance percentage.
+class TeacherAttendanceSummaryRow {
+  final String teacherId;
+  final String teacherName;
+  final String? employeeNumber;
+
+  /// Per-status counts, keyed by the status keys from `meta.statuses`.
+  final Map<String, int> counts;
+
+  /// Records aggregated for this teacher over the range.
+  final int total;
+
+  /// round((present + late) / total * 100, 1); 0.0 when total is 0.
+  final double presentPct;
+
+  const TeacherAttendanceSummaryRow({
+    required this.teacherId,
+    required this.teacherName,
+    this.employeeNumber,
+    required this.counts,
+    required this.total,
+    required this.presentPct,
+  });
+
+  /// Count for a dynamic status column (0 when absent for this teacher).
+  int countFor(String status) => counts[status] ?? 0;
+
+  factory TeacherAttendanceSummaryRow.fromJson(
+    Map<String, dynamic> json,
+    List<String> statuses,
+  ) {
+    return TeacherAttendanceSummaryRow(
+      teacherId: _asString(json['teacher_id']) ?? '',
+      teacherName: _asString(json['teacher_name']) ?? '-',
+      employeeNumber: _asString(json['employee_number']),
+      counts: _statusCountsFromJson(json, statuses),
+      total: _asIntOrNull(json['total']) ?? 0,
+      presentPct: _asDoubleOrNull(json['present_pct']) ?? 0,
+    );
+  }
+}
+
+/// The school-wide totals row (`totals`). Same dynamic-status shape as a
+/// row, plus the distinct-teacher count over the range.
+class TeacherAttendanceSummaryTotals {
+  final Map<String, int> counts;
+  final int total;
+  final double presentPct;
+  final int teacherCount;
+
+  const TeacherAttendanceSummaryTotals({
+    required this.counts,
+    required this.total,
+    required this.presentPct,
+    required this.teacherCount,
+  });
+
+  int countFor(String status) => counts[status] ?? 0;
+
+  factory TeacherAttendanceSummaryTotals.fromJson(
+    Map<String, dynamic> json,
+    List<String> statuses, {
+    int fallbackTeacherCount = 0,
+  }) {
+    return TeacherAttendanceSummaryTotals(
+      counts: _statusCountsFromJson(json, statuses),
+      total: _asIntOrNull(json['total']) ?? 0,
+      presentPct: _asDoubleOrNull(json['present_pct']) ?? 0,
+      teacherCount: _asIntOrNull(json['teacher_count']) ?? fallbackTeacherCount,
+    );
+  }
+}
+
+/// The full `GET /teacher-attendance/admin/summary` payload: the period
+/// meta (with the dynamic [statuses] column list), the per-teacher rows,
+/// and the school-wide totals. Parsed defensively so a surprise shape
+/// renders an empty rekap rather than crashing.
+class TeacherAttendanceAdminSummary {
+  final String startDate; // "YYYY-MM-DD"
+  final String endDate; // "YYYY-MM-DD"
+
+  /// Authoritative ordered list of status columns present in the data.
+  final List<String> statuses;
+  final List<TeacherAttendanceSummaryRow> rows;
+  final TeacherAttendanceSummaryTotals totals;
+
+  const TeacherAttendanceAdminSummary({
+    required this.startDate,
+    required this.endDate,
+    required this.statuses,
+    required this.rows,
+    required this.totals,
+  });
+
+  factory TeacherAttendanceAdminSummary.fromJson(dynamic body) {
+    final map = body is Map<String, dynamic> ? body : <String, dynamic>{};
+    final meta = map['meta'];
+    final statuses = _statusKeysFromMeta(meta);
+    final rawRows = map['data'];
+    final rows = rawRows is List
+        ? rawRows
+              .whereType<Map>()
+              .map(
+                (e) => TeacherAttendanceSummaryRow.fromJson(
+                  Map<String, dynamic>.from(e),
+                  statuses,
+                ),
+              )
+              .toList()
+        : <TeacherAttendanceSummaryRow>[];
+    final rawTotals = map['totals'];
+    final totals = TeacherAttendanceSummaryTotals.fromJson(
+      rawTotals is Map<String, dynamic> ? rawTotals : <String, dynamic>{},
+      statuses,
+      fallbackTeacherCount: rows.length,
+    );
+    return TeacherAttendanceAdminSummary(
+      startDate: (meta is Map ? _asString(meta['start_date']) : null) ?? '',
+      endDate: (meta is Map ? _asString(meta['end_date']) : null) ?? '',
+      statuses: statuses,
+      rows: rows,
+      totals: totals,
+    );
+  }
+}
+
 // ── Safe coercion helpers ─────────────────────────────────────────────
 // The API is mostly clean, but Laravel + JSON can hand back a number as
 // a String or a 1/0 instead of true/false depending on the cast. These
