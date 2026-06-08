@@ -14,6 +14,7 @@
       (TODO follow-up).
 -->
 <script setup lang="ts">
+import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
 import { useToast } from '@/composables/useToast';
@@ -23,8 +24,17 @@ const google = useGoogleSignIn();
 const toast = useToast();
 
 const SESSION_KEY = 'demo_intent_v1';
+const busy = ref(false);
+
+// Pre-load GIS + render the hidden chooser button so the first click on
+// "Buat demo gratis" can open the Google account-chooser popup
+// synchronously (browsers block popups opened after an async gap).
+onMounted(() => {
+  void google.prewarm();
+});
 
 async function handleClick() {
+  if (busy.value) return;
   if (!google.isEnabled.value) {
     toast.error(t('auth.demo.googleNotConfigured'));
     return;
@@ -36,11 +46,21 @@ async function handleClick() {
   } catch {
     // sessionStorage may be blocked in private mode — non-fatal.
   }
-  await google.promptOneTap();
-  // Tell the user where to look in case One Tap is suppressed by
-  // the browser (incognito + no recent google.com session blocks it).
-  if (!google.isReady.value) {
-    toast.info(t('auth.demo.clickGoogleButton'));
+
+  busy.value = true;
+  try {
+    // Open the Google account chooser reliably (popup, not FedCM/One Tap).
+    // This works even when One Tap is suppressed by the browser.
+    const opened = await google.openAccountChooser();
+    if (!opened) {
+      // GIS truly unavailable (script blocked / no client id). Surface a
+      // real error and point the user at the standard Google button.
+      toast.error(google.error.value ?? t('auth.demo.clickGoogleButton'));
+    }
+  } catch (e) {
+    toast.error((e as Error).message || t('auth.demo.clickGoogleButton'));
+  } finally {
+    busy.value = false;
   }
 }
 </script>
@@ -84,10 +104,21 @@ async function handleClick() {
 
     <button
       type="button"
-      class="w-full rounded-lg border-2 border-brand-dark-blue bg-white text-brand-dark-blue py-2.5 text-[12.5px] font-extrabold hover:bg-brand-dark-blue hover:text-white transition-colors flex items-center justify-center gap-2"
+      :disabled="busy"
+      class="w-full rounded-lg border-2 border-brand-dark-blue bg-white text-brand-dark-blue py-2.5 text-[12.5px] font-extrabold hover:bg-brand-dark-blue hover:text-white disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-brand-dark-blue transition-colors flex items-center justify-center gap-2"
       @click="handleClick"
     >
       <svg
+        v-if="busy"
+        class="w-3.5 h-3.5 animate-spin"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25" />
+        <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+      </svg>
+      <svg
+        v-else
         xmlns="http://www.w3.org/2000/svg"
         width="14"
         height="14"
