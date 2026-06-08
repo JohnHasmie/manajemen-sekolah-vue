@@ -178,6 +178,11 @@ const roleHomePath: Record<string, string> = {
   parent: '/parent',
   orang_tua: '/parent',
   staff: '/staff',
+  // KamilEdu-team super-admin: no school/role — land directly on the
+  // platform Demo Requests review page (route name admin.demo-requests),
+  // never the school/role picker. Mirrors the backend super-admin login
+  // short-circuit (edu_backend_core_api MR !115).
+  super_admin: '/admin/demo-requests',
 };
 
 const routes: RouteRecordRaw[] = [
@@ -760,7 +765,13 @@ router.beforeEach((to) => {
     // Teacher and wali_kelas share the /teacher subtree.
     const matches =
       requiredRole === auth.activeRole ||
-      (requiredRole === 'guru' && auth.activeRole === 'wali_kelas');
+      (requiredRole === 'guru' && auth.activeRole === 'wali_kelas') ||
+      // A super-admin acts as `admin` for routing — the platform pages
+      // (e.g. admin.demo-requests) live in the /admin subtree under
+      // `meta.role: 'admin'`. Without this, a pure super-admin (whose
+      // activeRole is 'super_admin', not 'admin') would never match an
+      // admin route and bounce in a redirect loop on its own home.
+      (requiredRole === 'admin' && auth.isSuperAdmin);
     if (!matches) {
       return { path: roleHomePath[auth.activeRole] ?? '/login' };
     }

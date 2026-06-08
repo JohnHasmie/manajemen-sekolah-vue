@@ -194,6 +194,40 @@ export const useAuthStore = defineStore('auth', {
         storage.set(StorageKeys.token, res.token);
       }
 
+      // ── Super-admin short-circuit ─────────────────────────────────
+      // A KamilEdu-team super-admin has NO school/role to pick — the
+      // backend (edu_backend_core_api MR !115) returns the completed
+      // shape directly: { is_super_admin: true, role: 'super_admin',
+      // school: null } with NO pilih_sekolah / pilih_role flags. We
+      // must complete the login immediately and SKIP the school/role
+      // pickers entirely. Placed before every picker branch (and
+      // before the require_otp branch is irrelevant — verify-otp's
+      // response carries this same completed shape, NOT require_otp).
+      //
+      // We key on the explicit `is_super_admin` flag first, then fall
+      // back to the role string so an older/looser backend response
+      // still routes correctly. The authoritative gate stays
+      // server-side (EnsureSuperAdmin middleware).
+      const isSuperAdminRes =
+        res.is_super_admin === true ||
+        String(res.role ?? res.user?.role ?? '').toLowerCase() ===
+          'super_admin';
+      if (isSuperAdminRes && res.user) {
+        // Pin the role to the canonical 'super_admin' so `activeRole`,
+        // the router's roleHomePath lookup, and the `isSuperAdmin`
+        // getter all agree — never let it fall back to 'admin' (which
+        // would route to /admin and re-expose the school picker chrome).
+        res.user.role = 'super_admin';
+        this.role = 'super_admin';
+        if (Array.isArray(res.user.schools)) {
+          res.user.schools = res.user.schools.map(normalizeSchool);
+        }
+        // _completeLogin sets step='done'. The super-admin has no
+        // active school (school: null) — leave schoolId untouched.
+        this._completeLogin(res.token || this.token || '', res.user);
+        return;
+      }
+
       if (res.require_otp) {
         this.step = 'otp';
         return;

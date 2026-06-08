@@ -133,6 +133,16 @@ export interface AuthResponse {
     last_active_at: string;
   } | null;
 
+  // Super-admin login/verify response (edu_backend_core_api MR !115).
+  // A KamilEdu-team super-admin has no school/role to pick — the backend
+  // returns the completed shape directly with these top-level markers and
+  // NO pilih_sekolah / pilih_role flags. `school` is null for them.
+  //   { token, user: {…, role:'super_admin'}, school:null,
+  //     role:'super_admin', is_super_admin:true }
+  is_super_admin?: boolean;
+  /** Top-level active role; `'super_admin'` for KamilEdu-team accounts. */
+  role?: Role;
+
   // Final-state payload
   token?: string;
   user?: User;

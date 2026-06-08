@@ -251,7 +251,8 @@
     "wali_kelas": "Homeroom",
     "wali": "PARENT",
     "siswa": "Student",
-    "staff": "Staff"
+    "staff": "Staff",
+    "super_admin": "Super Admin"
   },
   "status": {
     "Pending": "Pending",
