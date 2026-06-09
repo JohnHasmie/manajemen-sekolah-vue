@@ -2,9 +2,11 @@
  * Class activity (Kegiatan Kelas) types — mirror Flutter's
  * `lib/features/class_activity/domain/models/` exactly.
  *
- * Canonical Flutter enum is 4 values: tugas / pr / ulangan / lainnya.
- * Earlier Vue revisions had a wider set (material, general, etc.) —
- * those are now collapsed onto `lainnya` via `normalizeActivityType`
+ * Canonical Flutter enum is 4 values: tugas / aktivitas / ujian /
+ * catatan (the exact strings mobile writes to `class_activities.type`).
+ * Earlier Vue revisions used a different bucket (assignment / homework /
+ * test / other) — those, plus other legacy raws (material, ulangan, pr,
+ * …), are collapsed onto the 4 mobile values via `normalizeActivityType`
  * so legacy backend rows keep mapping cleanly without throwing.
  *
  * Three roles consume these types:
@@ -15,49 +17,84 @@
 
 // ── Type enum ──
 //
-// Canonical English values match the backend `class_activities.type`
-// column: assignment | test | quiz | activity | exam | material.
-// Vue keeps a compact 4-value bucket: assignment / homework / test /
-// other — anything not in the first three maps to 'other'.
+// Canonical values mirror the Flutter mobile app's 4 activity tiles and
+// are the exact strings written to the backend `class_activities.type`
+// column by mobile: tugas / aktivitas / ujian / catatan. Older clients
+// and legacy DB rows may carry English/alias values (assignment, test,
+// material, ulangan, pr, …) — `normalizeActivityType` collapses every
+// known alias onto these 4 so old data keeps rendering, and `catatan`
+// is the catch-all bucket for anything unrecognised (mirrors mobile's
+// default of `tugas` for the *form* but here we keep unknowns readable
+// as "Catatan").
 
-export type ActivityType = 'assignment' | 'homework' | 'test' | 'other';
+export type ActivityType = 'tugas' | 'aktivitas' | 'ujian' | 'catatan';
 
 export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
-  assignment: 'Tugas',
-  homework: 'PR',
-  test: 'Ulangan',
-  other: 'Lainnya',
+  tugas: 'Tugas',
+  aktivitas: 'Aktivitas',
+  ujian: 'Ujian',
+  catatan: 'Catatan',
 };
 
 /** Per-type accent hex — drives card left bar + type pill. */
 export const ACTIVITY_TYPE_COLORS: Record<ActivityType, string> = {
-  assignment: '#B45309', // amber-700
-  homework: '#7C3AED', // violet-600
-  test: '#DC2626', // red-600
-  other: '#475569', // slate-600
+  tugas: '#B45309', // amber-700  — assignment / homework
+  aktivitas: '#7C3AED', // violet-600 — discussion / practice
+  ujian: '#DC2626', // red-600    — quiz / exam / assessment
+  catatan: '#475569', // slate-600  — general class notes / other
 };
 
 /**
- * Accept any of the legacy raw values the backend / older clients
- * may emit and collapse them onto the canonical 4 types. Mirrors
- * `AdminActivityType.fromRaw` in the Flutter model.
+ * Accept any of the legacy raw values the backend / older clients /
+ * older Vue revisions may emit and collapse them onto the canonical 4
+ * mobile types. Mirrors mobile's `_normalizeType` in
+ * `activity_form_sheet.dart` (which defaults unknowns to `tugas`); the
+ * empty/unknown bucket here is `tugas` to match.
  */
 export function normalizeActivityType(raw: unknown): ActivityType {
   const v = String(raw ?? '').toLowerCase().trim();
-  if (!v) return 'other';
-  if (v === 'assignment' || v === 'tugas') return 'assignment';
-  if (v === 'homework' || v === 'pr') return 'homework';
-  if (
-    v === 'test' ||
-    v === 'ulangan' ||
-    v === 'exam' ||
-    v === 'ujian' ||
-    v === 'quiz' ||
-    v === 'kuis'
-  ) {
-    return 'test';
+  if (!v) return 'tugas';
+  // tugas family — assignments / homework / PR.
+  if (v === 'tugas' || v === 'assignment' || v === 'homework' || v === 'pr') {
+    return 'tugas';
   }
-  return 'other';
+  // aktivitas family — discussion / practice / linked material.
+  if (
+    v === 'aktivitas' ||
+    v === 'activity' ||
+    v === 'kegiatan' ||
+    v === 'material' ||
+    v === 'materi' ||
+    v === 'diskusi' ||
+    v === 'discussion'
+  ) {
+    return 'aktivitas';
+  }
+  // ujian family — quiz / exam / assessment.
+  if (
+    v === 'ujian' ||
+    v === 'ulangan' ||
+    v === 'test' ||
+    v === 'exam' ||
+    v === 'quiz' ||
+    v === 'kuis' ||
+    v === 'penilaian'
+  ) {
+    return 'ujian';
+  }
+  // catatan family — general notes / "lainnya" / anything else known.
+  if (
+    v === 'catatan' ||
+    v === 'note' ||
+    v === 'notes' ||
+    v === 'umum' ||
+    v === 'lainnya' ||
+    v === 'other'
+  ) {
+    return 'catatan';
+  }
+  // Unknown → mirror mobile's default.
+  return 'tugas';
 }
 
 // ── Period enum (admin hub filter chip) ──
@@ -144,7 +181,7 @@ export interface ActivitySubmissionRow {
   student_id: string;
   student_name: string;
   status: SubmissionStatus;
-  /** 0..100 — only filled for scored types (tugas/ulangan). */
+  /** 0..100 — only filled for scored types (tugas/ujian). */
   score?: number | null;
   notes?: string | null;
 }

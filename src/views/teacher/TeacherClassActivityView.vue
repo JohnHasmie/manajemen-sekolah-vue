@@ -271,7 +271,7 @@ const kpiCards = computed<KpiCard[]>(() => {
     serverKpi.value?.pending_action ??
     items.value.filter(
       (i) =>
-        (i.type === 'assignment' || i.type === 'test') &&
+        (i.type === 'tugas' || i.type === 'ujian') &&
         i.submissions.total_students > 0 &&
         i.submissions.pending > 0,
     ).length;
@@ -312,12 +312,23 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
+// Filter tabs (toolbar) — the 4 mobile types + an "all" option.
 const typeTabs: { key: ActivityType | 'all'; label: string }[] = [
   { key: 'all', label: 'Semua' },
   { key: 'tugas', label: 'Tugas' },
-  { key: 'pr', label: 'PR' },
-  { key: 'ulangan', label: 'Ulangan' },
-  { key: 'lainnya', label: 'Lainnya' },
+  { key: 'aktivitas', label: 'Aktivitas' },
+  { key: 'ujian', label: 'Ujian' },
+  { key: 'catatan', label: 'Catatan' },
+];
+
+// Add/Edit form tiles — same 4 types + the mobile descriptions
+// (`activity_form_sheet.dart`). Sends the raw mobile value as the
+// `type` payload field.
+const typeOptions: { key: ActivityType; label: string; desc: string }[] = [
+  { key: 'tugas', label: 'Tugas', desc: 'Pemberian tugas / PR' },
+  { key: 'aktivitas', label: 'Aktivitas', desc: 'Diskusi / praktik' },
+  { key: 'ujian', label: 'Ujian', desc: 'Kuis / penilaian' },
+  { key: 'catatan', label: 'Catatan', desc: 'Catatan kelas umum' },
 ];
 
 // ── Edit form state ──
@@ -350,7 +361,7 @@ const form = reactive<{
   date: todayIso(),
   lessonHourId: '',
   time: '',
-  type: 'lainnya',
+  type: 'tugas',
   chapterId: '',
   subChapterId: '',
   description: '',
@@ -621,7 +632,7 @@ function resetForm() {
   form.date = todayIso();
   form.lessonHourId = '';
   form.time = '';
-  form.type = 'lainnya';
+  form.type = 'tugas';
   form.chapterId = '';
   form.subChapterId = '';
   form.description = '';
@@ -1085,20 +1096,31 @@ function pickSubject(id: string) {
           <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             Tipe
           </label>
-          <div class="flex gap-1.5 mt-1 flex-wrap">
+          <!-- 4 mobile types (Tugas / Aktivitas / Ujian / Catatan) with
+               the same descriptions as the Flutter form. Sends the raw
+               value (form.type) the backend expects. -->
+          <div class="grid grid-cols-2 gap-2 mt-1">
             <button
-              v-for="opt in typeTabs.filter((t) => t.key !== 'all')"
+              v-for="opt in typeOptions"
               :key="opt.key"
               type="button"
-              class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+              class="text-left px-3 py-2 rounded-xl transition border"
               :class="
                 form.type === opt.key
-                  ? 'bg-brand-cobalt text-white border-brand-cobalt'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-brand-cobalt/40'
+                  ? 'bg-brand-cobalt/5 border-brand-cobalt'
+                  : 'bg-white border-slate-200 hover:border-brand-cobalt/40'
               "
-              @click="form.type = opt.key as ActivityType"
+              @click="form.type = opt.key"
             >
-              {{ opt.label }}
+              <span
+                class="block text-[12px] font-bold"
+                :class="form.type === opt.key ? 'text-brand-cobalt' : 'text-slate-700'"
+              >
+                {{ opt.label }}
+              </span>
+              <span class="block text-[10px] text-slate-500 truncate">
+                {{ opt.desc }}
+              </span>
             </button>
           </div>
         </div>

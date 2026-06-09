@@ -83,10 +83,12 @@ useAcademicYearWatcher(() => {
 });
 
 // ── Client-side jenis filter (mirrors mobile's getter on activityList) ──
+// 'tugas' = submission-trackable types (tugas / ujian); everything else
+// (aktivitas / catatan / materi raws) reads as 'materi'.
 function jenisOf(a: ClassActivity): 'tugas' | 'materi' {
   const raw = (a.raw_type ?? '').toLowerCase().trim();
   if (raw === 'materi' || raw === 'material' || raw === 'info') return 'materi';
-  if (a.type === 'assignment' || a.type === 'homework' || a.type === 'test') {
+  if (a.type === 'tugas' || a.type === 'ujian') {
     return 'tugas';
   }
   return 'materi';

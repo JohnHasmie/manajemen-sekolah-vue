@@ -5,7 +5,7 @@
   Mirrors Flutter's `activity_submission_picker_sheet.dart`:
     • Draggable modal listing every student in the activity's class
     • Each row: name · 4-state status pill (Belum/Sudah/Telat/Izin)
-    • For scored types (tugas/ulangan): inline score input 0..100
+    • For scored types (tugas/ujian): inline score input 0..100
     • Optional note input (collapsed by default)
     • Bulk action: tap a status chip header to apply to all unset rows
     • Search box at the top for fast scrolling in big classes
@@ -83,10 +83,10 @@ const dirtyRows = computed(() =>
 const dirtyCount = computed(() => dirtyRows.value.length);
 
 // Scored activities surface the score input. Backend ignores `score`
-// for non-scored types but rendering it for "lainnya" / "pr" would
-// confuse teachers, so we hide proactively.
+// for non-scored types but rendering it for "aktivitas" / "catatan"
+// would confuse teachers, so we hide proactively.
 const showScoreColumn = computed(
-  () => props.activity.type === 'assignment' || props.activity.type === 'test',
+  () => props.activity.type === 'tugas' || props.activity.type === 'ujian',
 );
 
 const statusCounts = computed(() => {
