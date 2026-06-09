@@ -62,7 +62,28 @@ export const NotificationService = {
     const items = (res.data.data ?? []).map((row) =>
       notificationFromJson(row, audience),
     );
-    return { items, pagination: res.data.pagination };
+    // Backend `index()` returns Laravel's FLAT paginator envelope
+    // (`{ data, current_page, last_page, per_page, total, … }`) — there is
+    // NO `pagination` sub-object, so `res.data.pagination` was always
+    // undefined and the page-control (gated on `store.pagination`) never
+    // showed past page 1. Build the Pagination shape from the flat fields.
+    const flat = res.data as unknown as {
+      current_page?: number;
+      last_page?: number;
+      per_page?: number;
+      total?: number;
+    };
+    const pagination: Pagination | undefined =
+      flat.current_page != null
+        ? {
+            total_items: flat.total ?? items.length,
+            total_pages: flat.last_page ?? 1,
+            current_page: flat.current_page,
+            per_page: flat.per_page ?? perPage,
+            has_next_page: flat.current_page < (flat.last_page ?? 1),
+          }
+        : undefined;
+    return { items, pagination };
   },
 
   async unreadCount(): Promise<number> {
