@@ -4,7 +4,7 @@
   action, infinite scroll (via pagination), and tap-to-navigate.
 -->
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useNotificationsStore } from '@/stores/notifications';
@@ -27,13 +27,13 @@ const state = computed<AsyncState<AppNotification[]>>(() => {
 
 onMounted(() => {
   store.fetch(1);
-  setupObserver();
 });
 
 async function open(n: AppNotification) {
-  // Always mark read on click — even for rows with no deep-link target
-  // (e.g. the founder's bare test notifications), the click must clear
-  // the unread state.
+  // Mark read ONLY on an explicit click (per founder request: web should
+  // not mark a notification read just because it scrolled into view). Even
+  // rows with no deep-link target (e.g. bare test notifications) clear their
+  // unread state on click. "Tandai semua dibaca" remains for bulk clearing.
   if (!n.read_at) await store.markRead(n.id);
   if (n.href) {
     router.push(n.href).catch(() => {
@@ -41,71 +41,6 @@ async function open(n: AppNotification) {
     });
   }
 }
-
-// ── IntersectionObserver auto-mark-as-read (mobile parity) ────
-//
-// Mobile auto-marks visible unread notifications as read via a
-// scroll listener. The web port mirrors that: when an unread row
-// scrolls into view (≥60% visible) we queue it for a debounced
-// batch mark. One store.markRead call per id keeps the optimistic
-// state in sync; failure is silent (next pull-refresh recovers).
-const listRoot = ref<HTMLElement | null>(null);
-let observer: IntersectionObserver | null = null;
-const pendingReads = new Set<string>();
-let flushTimer: number | null = null;
-
-function flushPendingReads() {
-  if (pendingReads.size === 0) return;
-  const ids = Array.from(pendingReads);
-  pendingReads.clear();
-  for (const id of ids) {
-    void store.markRead(id);
-  }
-}
-
-function scheduleFlush() {
-  if (flushTimer != null) window.clearTimeout(flushTimer);
-  flushTimer = window.setTimeout(flushPendingReads, 600);
-}
-
-function setupObserver() {
-  if (observer) return;
-  if (typeof IntersectionObserver === 'undefined') return;
-  observer = new IntersectionObserver(
-    (records) => {
-      for (const r of records) {
-        if (!r.isIntersecting) continue;
-        const id = (r.target as HTMLElement).dataset.notificationId;
-        if (id) pendingReads.add(id);
-      }
-      if (pendingReads.size > 0) scheduleFlush();
-    },
-    { threshold: 0.6 },
-  );
-}
-
-function attachUnreadObservers() {
-  if (!observer || !listRoot.value) return;
-  const nodes = listRoot.value.querySelectorAll<HTMLElement>(
-    '[data-unread="1"]',
-  );
-  nodes.forEach((n) => observer!.observe(n));
-}
-
-onBeforeUnmount(() => {
-  observer?.disconnect();
-  observer = null;
-  if (flushTimer != null) window.clearTimeout(flushTimer);
-});
-
-// Re-attach observers whenever the visible item list changes.
-watch(
-  () => store.items.map((i) => i.id).join(','),
-  async () => {
-    await nextTick();
-    attachUnreadObservers();
-  },
-);
 
 function categoryColor(cat: AppNotification['category']) {
   switch (cat) {
@@ -172,16 +107,8 @@ function categoryLabel(cat: AppNotification['category']) {
         @retry="store.fetch(1)"
       >
         <template #default="{ data }">
-          <ul
-            ref="listRoot"
-            class="divide-y divide-slate-100 -mt-md -mx-lg sm:-mx-xl"
-          >
-            <li
-              v-for="n in data"
-              :key="n.id"
-              :data-notification-id="n.id"
-              :data-unread="n.read_at ? '0' : '1'"
-            >
+          <ul class="divide-y divide-slate-100 -mt-md -mx-lg sm:-mx-xl">
+            <li v-for="n in data" :key="n.id">
               <button
                 type="button"
                 class="w-full text-left px-lg sm:px-xl py-md hover:bg-slate-50 flex gap-md transition-colors"
