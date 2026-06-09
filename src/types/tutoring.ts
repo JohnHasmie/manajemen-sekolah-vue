@@ -84,6 +84,27 @@ export interface TutoringProgram {
   groups_count?: number;
 }
 
+export interface TutoringPackage {
+  id: string;
+  program_id: string;
+  name: string;
+  total_sessions?: number | null;
+  price?: number | null;
+  billing_modes_allowed: string[];
+  is_active: boolean;
+}
+
+export interface TutoringGroup {
+  id: string;
+  program_id: string;
+  name: string;
+  tutor_user_id?: string | null;
+  tutor?: { name?: string } | null;
+  capacity: number;
+  status: string;
+  enrollments_count?: number;
+}
+
 export interface TenantBillingSettings {
   allow_prepaid: boolean;
   allow_monthly: boolean;

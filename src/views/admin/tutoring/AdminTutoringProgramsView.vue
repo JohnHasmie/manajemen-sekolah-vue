@@ -6,11 +6,21 @@
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringProgram } from '@/types/tutoring';
 
 const toast = useToast();
+const router = useRouter();
+
+function openDetail(p: TutoringProgram) {
+  router.push({
+    name: 'admin.tutoring.program-detail',
+    params: { programId: p.id },
+    query: { name: p.name },
+  });
+}
 const loading = ref(true);
 const error = ref<string | null>(null);
 const programs = ref<TutoringProgram[]>([]);
@@ -127,7 +137,10 @@ onMounted(load);
         :key="p.id"
         class="flex items-center justify-between rounded-2xl border border-slate-200 p-4"
       >
-        <div>
+        <button
+          class="flex-1 text-left"
+          @click="openDetail(p)"
+        >
           <div class="font-bold text-slate-800">{{ p.name }}</div>
           <div class="text-sm text-slate-500">
             {{
@@ -140,9 +153,9 @@ onMounted(load);
                 .join(' · ')
             }}
           </div>
-        </div>
+        </button>
         <button
-          class="text-sm font-semibold text-red-600"
+          class="ml-2 text-sm font-semibold text-red-600"
           @click="remove(p)"
         >
           Hapus

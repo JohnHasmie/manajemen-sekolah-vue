@@ -16,6 +16,8 @@ import type {
   TutoringBill,
   TutoringChildOverview,
   TutoringEnrollee,
+  TutoringGroup,
+  TutoringPackage,
   TutoringProgram,
   TutoringProgress,
   TutoringSession,
@@ -125,6 +127,49 @@ export const TutoringService = {
 
   async deleteProgram(id: string): Promise<void> {
     await api.delete(`/tutoring/programs/${id}`);
+  },
+
+  async getPackages(programId: string): Promise<TutoringPackage[]> {
+    const res = await api.get<ApiResponse<TutoringPackage[]>>(
+      '/tutoring/packages',
+      { params: { program_id: programId } },
+    );
+    return extractData(res) ?? [];
+  },
+
+  async createPackage(payload: {
+    program_id: string;
+    name: string;
+    billing_modes_allowed: string[];
+    total_sessions?: number;
+    price?: number;
+  }): Promise<TutoringPackage> {
+    const res = await api.post<ApiResponse<TutoringPackage>>(
+      '/tutoring/packages',
+      payload,
+    );
+    return extractData(res);
+  },
+
+  async getGroups(programId: string): Promise<TutoringGroup[]> {
+    const res = await api.get<ApiResponse<TutoringGroup[]>>(
+      '/tutoring/groups',
+      { params: { program_id: programId } },
+    );
+    return extractData(res) ?? [];
+  },
+
+  async createGroup(payload: {
+    program_id: string;
+    name: string;
+    capacity?: number;
+    tutor_user_id?: string;
+  }): Promise<TutoringGroup> {
+    const res = await api.post<ApiResponse<TutoringGroup>>(
+      '/tutoring/groups',
+      payload,
+    );
+    return extractData(res);
   },
 
   async getBillingSettings(): Promise<TenantBillingSettings> {
