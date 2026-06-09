@@ -26,7 +26,7 @@ import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
 import SegmentedControl from '@/components/filters/SegmentedControl.vue';
-import { formatRupiah } from '@/lib/format';
+import { formatRupiah, localISODate } from '@/lib/format';
 
 const route = useRoute();
 const router = useRouter();
@@ -76,7 +76,7 @@ const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 // ── Manual upload state ─────────────────────────────────────────────
 const file = ref<File | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
-const paymentDate = ref<string>(new Date().toISOString().slice(0, 10));
+const paymentDate = ref<string>(localISODate());
 const uploadAmount = ref<number | null>(null);
 const isUploading = ref(false);
 

@@ -21,6 +21,7 @@
  * the activity's stored academic_year_id.
  */
 import { api } from '@/lib/http';
+import { localISODate } from '@/lib/format';
 import type { Pagination } from '@/types/api';
 import {
   activitySubmissionRowFromJson,
@@ -83,8 +84,8 @@ function computeWindow(
   const start = new Date(today);
   start.setDate(today.getDate() - rangeDays);
   return {
-    start_date: start.toISOString().slice(0, 10),
-    end_date: today.toISOString().slice(0, 10),
+    start_date: localISODate(start),
+    end_date: localISODate(today),
   };
 }
 
