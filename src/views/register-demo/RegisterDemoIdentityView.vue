@@ -159,6 +159,23 @@ const filledSocialCount = computed(
 const result = computed(() => wizard.result);
 const schoolName = computed(() => wizard.payload.school.name);
 
+// "Don't have a NIP? Contact admin" — a NIP-less requester shouldn't bail
+// out of the demo. The link opens WhatsApp to support with a pre-filled
+// message built from what they've already entered (name, jabatan, school)
+// plus their Google register email, so the admin can provision manually.
+const adminWaNumber = (import.meta.env.VITE_WHATSAPP_SUPPORT ??
+  '6285179819002') as string;
+const contactAdminHref = computed(() => {
+  const r = requester.value;
+  const text = t('registerDemo.nipContactWaText', {
+    name: (r.full_name || '').trim() || '-',
+    jabatan: (r.jabatan || '').trim() || '-',
+    school: (schoolName.value || '').trim() || '-',
+    email: (auth.user?.email || '').trim() || '-',
+  });
+  return `https://wa.me/${adminWaNumber}?text=${encodeURIComponent(text)}`;
+});
+
 /** Short, human-readable submitted-at — falls back gracefully. */
 const submittedAt = computed(() => {
   const raw = result.value?.submitted_at;
@@ -403,6 +420,17 @@ const sendLabel = computed(() =>
                   </div>
                   <p v-if="showError('nip')" class="mt-1 text-[11.5px] text-red-600">
                     {{ errorText('nip') }}
+                  </p>
+                  <p class="mt-1 text-[11.5px] leading-snug text-slate-500">
+                    {{ t('registerDemo.nipNoNumberHint') }}
+                    <a
+                      :href="contactAdminHref"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="font-semibold text-role-admin hover:underline"
+                    >
+                      {{ t('registerDemo.nipContactAdminLink') }}
+                    </a>
                   </p>
                 </div>
 
