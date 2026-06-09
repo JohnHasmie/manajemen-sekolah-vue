@@ -23,6 +23,8 @@ import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
 import PriorityInbox from '@/components/feature/PriorityInbox.vue';
 import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
+import AdminTutoringDashboardView from '@/views/admin/tutoring/AdminTutoringDashboardView.vue';
+import { useTenant } from '@/composables/useTenant';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
@@ -33,6 +35,10 @@ type Slice = Record<string, any>;
 const auth = useAuthStore();
 const router = useRouter();
 const { t } = useI18n();
+// A tutoring-center admin gets the bimbel dashboard; the school KPIs
+// below read zero for a bimbel. Reactive so it swaps in as soon as the
+// tenant resolves (the route redirect can race the schools fetch).
+const { isTutoringCenter } = useTenant();
 
 const showYearPicker = ref(false);
 const { mapToPriorityItems, handlePriorityTap, priorityCountLabel } =
@@ -196,7 +202,8 @@ const financePct = computed(() =>
 </script>
 
 <template>
-  <div class="space-y-md">
+  <AdminTutoringDashboardView v-if="isTutoringCenter" />
+  <div v-else class="space-y-md">
     <AsyncView :state="state" :empty-title="t('common.empty')" @retry="load">
       <template #default>
         <div class="max-w-[1600px] mx-auto space-y-md">

@@ -38,14 +38,35 @@ export function useTenant(): TenantInfo {
   const auth = useAuthStore();
 
   const kind = computed<TenantKind>(() => {
+    // 1. Stamped on the user (switch-school / login response).
     const fromUser = auth.user?.tenant_type;
     if (fromUser) return tenantKindFromRaw(fromUser);
 
-    // Fall back to the active school row.
-    const active = auth.schools.find(
-      (s) => (s.id ?? s.school_id) === auth.schoolId,
-    );
-    return tenantKindFromRaw(active?.tenant_type);
+    const matchActive = (
+      rows:
+        | { id?: string; school_id?: string; tenant_type?: string }[]
+        | undefined,
+    ) => rows?.find((s) => (s.id ?? s.school_id) === auth.schoolId);
+
+    // 2. The active row in the user's OWN schools list — this is what
+    //    fetchSchoolsAndRoles populates (with tenant_type) after login,
+    //    even for a single-school admin who never hit switch-school.
+    const fromUserSchools = matchActive(auth.user?.schools);
+    if (fromUserSchools?.tenant_type) {
+      return tenantKindFromRaw(fromUserSchools.tenant_type);
+    }
+
+    // 3. The store-level schools list (populated on multi-school login).
+    const fromStore = matchActive(auth.schools);
+    if (fromStore?.tenant_type) {
+      return tenantKindFromRaw(fromStore.tenant_type);
+    }
+
+    // 4. Last resort: a single school in either list (no ambiguity).
+    const only =
+      (auth.user?.schools?.length === 1 ? auth.user.schools[0] : null) ??
+      (auth.schools.length === 1 ? auth.schools[0] : null);
+    return tenantKindFromRaw(only?.tenant_type);
   });
 
   const isTutoringCenter = computed(() => kind.value === 'TUTORING_CENTER');
