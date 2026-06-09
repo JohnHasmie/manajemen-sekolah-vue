@@ -151,6 +151,10 @@
     "or": "or continue with",
     "continueWithGoogle": "Sign in with Google",
     "loadingGoogle": "Preparing Google...",
+    "googleInAppBrowser": "Google sign-in doesn't work in in-app browsers (e.g. Threads/Instagram). Open this page in Chrome/Safari to use Google — or sign in with email & password above.",
+    "googleLoadFailed": "Couldn't load Google. Check your connection and try again — or sign in with email & password above.",
+    "copyLink": "Copy link",
+    "linkCopied": "Copied!",
     "needHelp": "Need help? Sign in help",
     "needHelp__todo": true,
     "contactAdmin": "Is your school already using KamilEdu? Contact your school admin",
@@ -240,6 +244,7 @@
       "googleSignIn": "Google sign-in",
       "noCardRequired": "No card required",
       "googleNotConfigured": "Google sign-in isn't configured. Please contact admin.",
+      "googleInAppBrowser": "Creating a demo with Google doesn't work in in-app browsers (e.g. Threads/Instagram). Open this page in Chrome/Safari.",
       "clickGoogleButton": "Click the Google button above to continue creating a demo."
     },
     "errors": {

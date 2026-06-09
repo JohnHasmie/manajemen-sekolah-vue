@@ -65,6 +65,33 @@ declare global {
   }
 }
 
+/**
+ * Detects embedded/in-app browsers (Threads, Instagram, Facebook, LINE,
+ * WeChat, TikTok, Snapchat, Twitter, …) and any Android System WebView.
+ *
+ * Google Identity Services is unusable in these contexts on TWO counts:
+ *   1. The GIS client script frequently fails to load at all (restricted
+ *      webview network/CSP) → the old "GIS load failed" red text.
+ *   2. Even when it loads, Google REFUSES OAuth from embedded webviews
+ *      with `disallowed_useragent` ("this browser may not be secure").
+ * So when this is true we never attempt GIS; instead the UI tells the
+ * user to open the page in a real browser (Chrome/Safari) and keeps the
+ * email + password path fully working. This is the reported bug: opening
+ * the site from the Threads in-app browser broke Google login / demo.
+ */
+function detectInAppBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  // Named in-app browsers (Meta family incl. Threads' "Barcelona" codename).
+  const named =
+    /(FBAN|FBAV|FB_IAB|FBIOS|FBSS|Instagram|Barcelona|Threads|Line\/|MicroMessenger|TikTok|musical_ly|Bytedance|Snapchat|Twitter)/i;
+  if (named.test(ua)) return true;
+  // Android System WebView — Google OAuth is blocked in ANY Android
+  // webview regardless of host app (`; wv)` is the WebView UA marker).
+  if (/;\s*wv\)/.test(ua) || /\bwv\b/.test(ua)) return true;
+  return false;
+}
+
 // ── Module-level singleton state ────────────────────────────────────────
 // Shared across every `useGoogleSignIn()` caller so GIS is initialized
 // exactly once and all components observe the same readiness/error.
@@ -72,6 +99,11 @@ const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const isEnabled = ref(Boolean(clientId));
 const isReady = ref(false);
 const error = ref<string | null>(null);
+// True inside an embedded in-app browser where GIS can't work. Distinct
+// from `isEnabled` (server has a client ID) and from a transient load
+// error — lets the UI show "open in Chrome/Safari" instead of the
+// misleading "Google not configured" / raw "GIS load failed".
+const isInAppBrowser = ref(detectInAppBrowser());
 
 let scriptPromise: Promise<void> | null = null;
 let initPromise: Promise<void> | null = null;
@@ -88,7 +120,7 @@ function loadScript(): Promise<void> {
     );
     if (existing) {
       existing.addEventListener('load', () => resolve());
-      existing.addEventListener('error', () => reject(new Error('GIS load failed')));
+      existing.addEventListener('error', () => reject(new Error('GIS_LOAD_FAILED')));
       return;
     }
 
@@ -97,7 +129,7 @@ function loadScript(): Promise<void> {
     tag.async = true;
     tag.defer = true;
     tag.onload = () => resolve();
-    tag.onerror = () => reject(new Error('GIS load failed'));
+    tag.onerror = () => reject(new Error('GIS_LOAD_FAILED'));
     document.head.appendChild(tag);
   });
 
@@ -153,6 +185,13 @@ async function handleCredentialResponse(response: { credential?: string }) {
  */
 function ensureInit(): Promise<void> {
   if (!isEnabled.value) return Promise.resolve();
+  // Embedded in-app browser: never attempt GIS (it can't work — see
+  // detectInAppBrowser). Surface a distinct sentinel so the UI shows the
+  // "open in a real browser" notice rather than a technical/load error.
+  if (isInAppBrowser.value) {
+    error.value = 'IN_APP_BROWSER';
+    return Promise.reject(new Error('IN_APP_BROWSER'));
+  }
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
@@ -177,7 +216,12 @@ function ensureInit(): Promise<void> {
       isReady.value = true;
     } catch (e) {
       error.value = (e as Error).message;
-      isEnabled.value = false;
+      // NOTE: do NOT flip `isEnabled` to false here. A failed SCRIPT load
+      // (network / restricted webview) is not the same as "the server has
+      // no Google client ID" — conflating them made the demo card show the
+      // misleading "Login Google belum dikonfigurasi di server ini" even
+      // though it was configured. `isEnabled` stays true (client ID exists);
+      // the UI keys off `error`/`isInAppBrowser` to show the right message.
       // Allow a future retry (e.g. transient network failure loading GIS).
       initPromise = null;
       throw e;
@@ -204,6 +248,8 @@ export interface UseGoogleSignIn {
   isEnabled: typeof isEnabled;
   isReady: typeof isReady;
   error: typeof error;
+  /** True in an embedded in-app browser (Threads/IG/FB/…) where GIS can't work. */
+  isInAppBrowser: typeof isInAppBrowser;
   /**
    * Renders a REAL, VISIBLE Google-rendered button into `container`. The
    * user clicks it directly — that trusted click opens Google's
@@ -261,6 +307,7 @@ export function useGoogleSignIn(): UseGoogleSignIn {
     isEnabled,
     isReady,
     error,
+    isInAppBrowser,
     mountButton,
     promptOneTap,
     ensureReady: ensureInit,

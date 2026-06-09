@@ -61,6 +61,19 @@ onMounted(async () => {
     await google.ensureReady();
   }
 });
+
+// Copy the current URL so a user stuck in an in-app browser (Threads/IG/…)
+// can paste it into a real browser where Google sign-in / demo works.
+const linkCopied = ref(false);
+async function copyCurrentLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    linkCopied.value = true;
+    setTimeout(() => { linkCopied.value = false; }, 2000);
+  } catch {
+    // Clipboard may be blocked in the webview; the URL is still in the bar.
+  }
+}
 </script>
 
 <template>
@@ -100,9 +113,28 @@ onMounted(async () => {
       {{ t('auth.demo.description') }}
     </p>
 
+    <!-- In-app browser (Threads/IG/FB/…) OR GIS failed to load: creating a
+         demo needs Google sign-in, which can't work here. Tell the user to
+         open in a real browser + offer a copy-link. -->
+    <div
+      v-if="google.isInAppBrowser.value || google.error.value === 'GIS_LOAD_FAILED'"
+      class="w-full rounded-lg border-2 border-dashed border-amber-300 bg-amber-50 py-2.5 px-3 text-center text-[11px] font-bold text-amber-800 leading-relaxed"
+    >
+      <p>{{ google.isInAppBrowser.value ? t('auth.demo.googleInAppBrowser') : t('auth.googleLoadFailed') }}</p>
+      <button
+        v-if="google.isInAppBrowser.value"
+        type="button"
+        class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-white border border-amber-300 px-2.5 py-1.5 text-[10.5px] font-extrabold text-amber-900 hover:bg-amber-100 transition-colors"
+        @click="copyCurrentLink"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+        {{ linkCopied ? t('auth.linkCopied') : t('auth.copyLink') }}
+      </button>
+    </div>
+
     <!-- Real Google Sign-In button. Clicking it opens the account
          chooser and runs the demo/login flow. -->
-    <div v-if="google.isEnabled.value" class="flex justify-center min-h-[44px]">
+    <div v-else-if="google.isEnabled.value" class="flex justify-center min-h-[44px]">
       <div
         v-show="google.isReady.value"
         ref="googleButtonRef"
