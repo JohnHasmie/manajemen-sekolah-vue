@@ -64,10 +64,17 @@ export const useNotificationsStore = defineStore('notifications', {
      */
     prepend(n: AppNotification): boolean {
       if (this.items.some((i) => i.id === n.id)) return false;
-      // Only push into the cached list when it's actually loaded; an
-      // empty cache means NotificationListView hasn't fetched yet and
-      // will pull the row on its own. Either way the badge must move.
-      if (this.items.length > 0) this.items.unshift(n);
+      // Always insert at the top of the cached list. The previous
+      // `if (items.length > 0)` guard skipped the insert whenever the
+      // cache was empty — but an empty cache is the COMMON case while the
+      // user sits on the Notifikasi list with no rows yet, so realtime
+      // arrivals bumped the bell badge (unreadCount) WITHOUT ever showing
+      // in the list. That's the "badge says 3 unread but the list is
+      // empty until I reload" bug. The dedup check above already prevents
+      // a poll+push double-insert, and a later fetch() replaces `items`
+      // wholesale with the authoritative server page, so unconditionally
+      // unshifting is safe in every state (pre-fetch, loaded, or empty).
+      this.items.unshift(n);
       if (!n.read_at) this.unreadCount += 1;
       return true;
     },
