@@ -6,10 +6,10 @@
   much of the recap the responsible teacher has filled.
 
     1. BrandPageHeader (admin) + embedded search bar
-    2. KPI strip (3 cells) — SLICE / PROGRESS / FINAL ✓
+    2. KPI strip (3 cells) — REKAP / PROGRESS / FINAL ✓
     3. Filter chip row: "Belum lengkap" toggle + Sort selector
        (+ web-bonus Export CSV + Reload buttons)
-    4. "PER SLICE · N SLICE" section header with hairline
+    4. "PER REKAP · N REKAP" section header with hairline
     5. Per-slice cards — class pill, subject + chevron, teacher subline,
        3-stat row (PROGRESS / RATA-RATA / LULUS), slim progress bar,
        status chips (N/N bab, UTS ✓|belum, UAS ✓|belum)
@@ -310,7 +310,7 @@ function exportCsv() {
       role="admin"
       kicker="AKADEMIK"
       title="Rekap Nilai"
-      :meta="`${kpiCells.totalSlice} slice · ${kpiCells.completed} final ✓ · rerata ${Math.round(kpiCells.avgProgress)}%`"
+      :meta="`${kpiCells.totalSlice} rekap · ${kpiCells.completed} final ✓ · rerata ${Math.round(kpiCells.avgProgress)}%`"
       :live-dot="false"
     >
       <template #default>
@@ -337,7 +337,7 @@ function exportCsv() {
           {{ kpiCells.totalSlice }}
         </p>
         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
-          Slice
+          Rekap
         </p>
       </div>
       <div class="text-center px-2">
@@ -432,10 +432,10 @@ function exportCsv() {
     <header class="flex items-center gap-2 px-1 pt-1">
       <NavIcon name="layers" :size="12" class="text-slate-500" />
       <span class="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">
-        Per Slice
+        Per Rekap
       </span>
       <span class="text-[9.5px] font-black text-slate-300 uppercase tracking-widest">
-        · {{ filteredRows.length }} slice
+        · {{ filteredRows.length }} rekap
       </span>
       <span class="flex-1 h-px bg-slate-100" />
     </header>
