@@ -16,7 +16,9 @@ import {
 const Endpoints = {
   list: '/notifications',
   unreadCount: '/notifications/unread-count',
-  markRead: (id: string) => `/notifications/${id}/read`,
+  // Single-row mark-read = DELETE /notifications/{id} (apiResource destroy);
+  // there is no `/{id}/read` route. Matches the mobile app's markAsRead.
+  markRead: (id: string) => `/notifications/${id}`,
   markAllRead: '/notifications/mark-all-read',
 } as const;
 
@@ -64,12 +66,30 @@ export const NotificationService = {
   },
 
   async unreadCount(): Promise<number> {
-    const res = await api.get<ApiSuccess<{ count: number }>>(Endpoints.unreadCount);
-    return res.data.data?.count ?? 0;
+    // The backend `getUnreadCount` returns a BARE `{ count: <int> }` body
+    // (NOT the `{ success, data: {...} }` envelope) — same shape the mobile
+    // app reads as `response.data['count']`. Reading `res.data.data.count`
+    // therefore always yielded `undefined → 0`, so the bell badge showed 0
+    // on mount regardless of real unread rows. Accept both shapes defensively.
+    const res = await api.get<{ count?: number } | ApiSuccess<{ count: number }>>(
+      Endpoints.unreadCount,
+    );
+    const body = res.data as {
+      count?: number;
+      data?: { count?: number };
+    };
+    return body.count ?? body.data?.count ?? 0;
   },
 
   async markRead(id: string): Promise<void> {
-    await api.post(Endpoints.markRead(id));
+    // The API has NO `POST /notifications/{id}/read` route — that call 404'd,
+    // which made the store revert its optimistic mark-read (dot reappeared,
+    // count never dropped). The single-row "mark read" the backend actually
+    // exposes is `DELETE /notifications/{id}` (apiResource destroy), which is
+    // exactly what the mobile app uses (see notification_service.dart). The
+    // list endpoint only returns unread rows, so removing the row server-side
+    // is equivalent to marking it read.
+    await api.delete(Endpoints.markRead(id));
   },
 
   async markAllRead(): Promise<void> {
