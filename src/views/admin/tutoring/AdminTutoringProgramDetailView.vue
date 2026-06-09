@@ -12,7 +12,11 @@ import { useRoute, useRouter } from 'vue-router';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
-import type { TutoringGroup, TutoringPackage } from '@/types/tutoring';
+import type {
+  TutoringAssessment,
+  TutoringGroup,
+  TutoringPackage,
+} from '@/types/tutoring';
 
 const route = useRoute();
 const router = useRouter();
@@ -30,7 +34,17 @@ function goEnroll() {
 
 const packages = ref<TutoringPackage[]>([]);
 const groups = ref<TutoringGroup[]>([]);
+const assessments = ref<TutoringAssessment[]>([]);
 const loading = ref(true);
+
+function openAssessment(a: TutoringAssessment) {
+  if (!a.questions_count) return;
+  router.push({
+    name: 'admin.tutoring.assessment-detail',
+    params: { assessmentId: a.id },
+    query: { name: a.title },
+  });
+}
 
 const showPkgForm = ref(false);
 const showGrpForm = ref(false);
@@ -54,9 +68,10 @@ const allModes: { key: string; label: string }[] = [
 async function load() {
   loading.value = true;
   try {
-    [packages.value, groups.value] = await Promise.all([
+    [packages.value, groups.value, assessments.value] = await Promise.all([
       TutoringService.getPackages(programId),
       TutoringService.getGroups(programId),
+      TutoringService.getAssessments(programId),
     ]);
   } catch (e) {
     toast.error(e instanceof Error ? e.message : 'Gagal memuat detail.');
@@ -286,6 +301,44 @@ onMounted(load);
                   .join(' · ')
               }}
             </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Assessments (try-out / post-test) -->
+      <section class="mt-6">
+        <h2 class="mb-2 font-bold text-slate-800">Asesmen</h2>
+        <p v-if="assessments.length === 0" class="text-sm text-slate-500">
+          Belum ada asesmen. Buat dari Generator Soal AI.
+        </p>
+        <ul v-else class="space-y-2">
+          <li
+            v-for="a in assessments"
+            :key="a.id"
+            class="flex items-center justify-between rounded-xl border border-slate-200 p-3"
+            :class="
+              a.questions_count
+                ? 'cursor-pointer hover:bg-slate-50'
+                : 'opacity-70'
+            "
+            @click="openAssessment(a)"
+          >
+            <div>
+              <div class="font-semibold text-slate-800">{{ a.title }}</div>
+              <div class="text-sm text-slate-500">
+                {{
+                  [
+                    a.type_label,
+                    a.held_at,
+                    (a.questions_count ?? 0) + ' soal',
+                    (a.scores_count ?? 0) + ' nilai',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+                }}
+              </div>
+            </div>
+            <span v-if="a.questions_count" class="text-slate-400">›</span>
           </li>
         </ul>
       </section>

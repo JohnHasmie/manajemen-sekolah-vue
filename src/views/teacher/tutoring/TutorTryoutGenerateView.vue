@@ -48,8 +48,9 @@ async function saveAsTryout() {
       title: `Try-out ${subj}`,
       held_at: new Date().toISOString(),
       tutoring_group_id: groupId.value,
+      questions: questions.value,
     });
-    toast.success('Try-out tersimpan. Catat nilai dari menu Program.');
+    toast.success('Try-out + soal tersimpan. Lihat di Program → Asesmen.');
   } catch (e) {
     toast.error(e instanceof Error ? e.message : 'Gagal menyimpan try-out.');
   } finally {

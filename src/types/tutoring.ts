@@ -165,3 +165,15 @@ export interface TutoringAiQuestion {
   difficulty?: string;
   topic?: string;
 }
+
+/** Assessment header + persisted AI question set. */
+export interface TutoringAssessment {
+  id: string;
+  title: string;
+  type?: string;
+  type_label?: string;
+  held_at?: string | null;
+  questions_count?: number;
+  scores_count?: number;
+  questions?: TutoringAiQuestion[] | null;
+}

@@ -12,6 +12,7 @@ import type { ApiResponse } from '@/types/api';
 import type {
   TenantBillingSettings,
   TutoringAiQuestion,
+  TutoringAssessment,
   TutoringAttendanceSummary,
   TutoringBill,
   TutoringChildOverview,
@@ -291,8 +292,26 @@ export const TutoringService = {
     tutoring_group_id?: string;
     tutoring_program_id?: string;
     max_score?: number;
+    questions?: TutoringAiQuestion[];
   }): Promise<void> {
     await api.post('/tutoring/assessments', payload);
+  },
+
+  /** Assessments for a program (header list — admin viewer). */
+  async getAssessments(programId: string): Promise<TutoringAssessment[]> {
+    const res = await api.get<ApiResponse<TutoringAssessment[]>>(
+      '/tutoring/assessments',
+      { params: { program_id: programId } },
+    );
+    return extractData(res) ?? [];
+  },
+
+  /** One assessment incl. its persisted question set. */
+  async getAssessment(id: string): Promise<TutoringAssessment> {
+    const res = await api.get<ApiResponse<TutoringAssessment>>(
+      `/tutoring/assessments/${id}`,
+    );
+    return extractData(res);
   },
 
   /**

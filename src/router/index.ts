@@ -806,6 +806,13 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        path: 'admin/tutoring/assessments/:assessmentId',
+        name: 'admin.tutoring.assessment-detail',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringAssessmentDetailView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'admin/tutoring/billing-settings',
         name: 'admin.tutoring.billing-settings',
         component: () =>
