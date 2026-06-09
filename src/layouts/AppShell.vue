@@ -377,7 +377,11 @@ const schoolInitial = computed(() => {
                internally guards on the /demo/expiry response so
                regular schools see nothing. -->
           <DemoCountdownBanner />
-          <NotificationBell :unread-count="notifications.unreadCount" />
+          <!-- NotificationBell reads the notifications store directly, so the
+               badge stays reactive (mount hydration + realtime) without a
+               prop snapshot. The shell still hydrates the count on mount
+               below (refreshUnreadCount) so it shows on first paint. -->
+          <NotificationBell />
           <div class="w-px h-6 bg-white/10 mx-1"></div>
           <ProfileMenu />
         </div>

@@ -1,18 +1,33 @@
 <!--
   NotificationBell.vue — bell icon with unread badge in the topbar.
-  Routes to /notifications on click. Unread count comes from the
-  notifications store (populated by Firebase Cloud Messaging hooks +
-  the /notifications/unread-count endpoint).
+  Routes to /notifications on click.
 
-  For now this is a thin shell — the count source will be wired into
-  task #16's notifications store.
+  The unread count reads DIRECTLY from the notifications store so the
+  badge is reactive end-to-end: it updates the instant the store's
+  `unreadCount` changes (mount hydration via refreshUnreadCount, a
+  realtime `prepend`, a `markRead`, or `markAllRead`) with no parent
+  having to re-pass a prop snapshot. The optional `unreadCount` prop is
+  kept only as an explicit override for tests/storybook; when omitted
+  (the normal case) the store value drives the badge.
 -->
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
+import { useNotificationsStore } from '@/stores/notifications';
 
-defineProps<{ unreadCount?: number }>();
+const props = defineProps<{ unreadCount?: number }>();
 
 const router = useRouter();
+
+const store = useNotificationsStore();
+const { unreadCount: storeUnreadCount } = storeToRefs(store);
+
+// Prefer an explicit prop override when supplied; otherwise track the
+// store's reactive count. `storeToRefs` keeps reactivity intact.
+const count = computed(() =>
+  props.unreadCount !== undefined ? props.unreadCount : storeUnreadCount.value,
+);
 </script>
 
 <template>
@@ -36,10 +51,10 @@ const router = useRouter();
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
     <span
-      v-if="unreadCount && unreadCount > 0"
+      v-if="count > 0"
       class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-status-danger text-white text-[10px] font-bold flex items-center justify-center"
     >
-      {{ unreadCount > 99 ? '99+' : unreadCount }}
+      {{ count > 99 ? '99+' : count }}
     </span>
   </button>
 </template>
