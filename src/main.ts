@@ -1,4 +1,4 @@
-import { createApp } from 'vue';
+import { createApp, watch } from 'vue';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import LogRocket from 'logrocket';
@@ -6,6 +6,7 @@ import LogRocket from 'logrocket';
 import App from './App.vue';
 import router from './router';
 import { i18n } from './lib/i18n';
+import { useAuthStore } from '@/stores/auth';
 
 // LogRocket session replay + monitoring. Initialised as early as possible
 // so the full session is captured. Guarded to production builds only, so
@@ -37,6 +38,39 @@ pinia.use(piniaPluginPersistedstate);
 app.use(pinia);
 app.use(router);
 app.use(i18n);
+
+// LogRocket: tie sessions to the signed-in user (prod-only, mirroring init).
+// A watcher — not a one-shot call — because `auth.restore()` runs on the
+// first navigation, so this also catches an already-authenticated reload;
+// `immediate` identifies right away if the user is already present, and it
+// re-fires on an account switch.
+if (import.meta.env.PROD) {
+  const authStore = useAuthStore();
+  watch(
+    () => authStore.user,
+    (u) => {
+      if (u?.id) {
+        LogRocket.identify(u.id, {
+          name: u.name,
+          email: u.email,
+          role: String(u.role ?? ''),
+        });
+      }
+    },
+    { immediate: true },
+  );
+}
+
+// Surface Vue component errors to LogRocket. (window.onerror + unhandled
+// promise rejections are captured automatically by LogRocket.init.) Keep
+// console logging too — Vue suppresses its own default once an errorHandler
+// is set.
+app.config.errorHandler = (err, _instance, info) => {
+  console.error(err, info);
+  if (import.meta.env.PROD && err instanceof Error) {
+    LogRocket.captureException(err);
+  }
+};
 
 // Auto-recover from stale dynamic-import chunks after a deploy. Vite fires
 // `vite:preloadError` when a lazy chunk 404s because a new build purged the
