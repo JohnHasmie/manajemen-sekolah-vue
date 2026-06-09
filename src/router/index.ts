@@ -149,8 +149,11 @@ const TeacherPresensiView = () =>
   import('@/views/teacher/TeacherPresensiView.vue');
 const TeacherPresensiHistoryView = () =>
   import('@/views/teacher/TeacherPresensiHistoryView.vue');
-const TeacherDashboardView = () =>
-  import('@/views/teacher/TeacherDashboardView.vue');
+// School-teacher dashboard view is loaded indirectly via
+// TeacherHomeRouter — that wrapper imports it AND the bimbel
+// equivalent, then picks based on the active tenant.
+const TeacherHomeRouter = () =>
+  import('@/views/teacher/TeacherHomeRouter.vue');
 const TeacherAttendanceView = () =>
   import('@/views/teacher/TeacherAttendanceView.vue');
 const TeacherAttendanceDetailView = () =>
@@ -565,7 +568,9 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'teacher',
         name: 'teacher.home',
-        component: TeacherDashboardView,
+        // Wrapper that swaps body based on tenant_type — school
+        // teacher dashboard vs bimbel-native tutor home.
+        component: TeacherHomeRouter,
         meta: { role: 'guru' satisfies Role },
       },
       {
