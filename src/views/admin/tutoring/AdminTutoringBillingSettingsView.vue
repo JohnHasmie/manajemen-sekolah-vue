@@ -1,8 +1,7 @@
 <!--
-  AdminTutoringBillingSettingsView — toggle which billing modes the bimbel
-  offers (prepaid / monthly / per-session) + default mode. Web mirror of
-  the Flutter `tutoring_billing_settings_screen.dart`. Server enforces
-  "at least one mode" / "mode in use" — surfaced as toasts.
+  AdminTutoringBillingSettingsView — toggle which billing modes the
+  tenant offers + a default mode. Rebuilt on the tutoring shared
+  components.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -10,15 +9,11 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 
+import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSectionHeader.vue';
+
 const { t } = useI18n();
 const toast = useToast();
-
-const MODE_KEYS: Record<string, string> = {
-  PREPAID: 'tutoring.billing.prepaid',
-  MONTHLY: 'tutoring.billing.monthly',
-  PER_SESSION: 'tutoring.billing.perSession',
-};
-const modeLabel = (m: string) => (MODE_KEYS[m] ? t(MODE_KEYS[m]) : m);
 const loading = ref(true);
 const saving = ref(false);
 
@@ -34,6 +29,13 @@ const enabledModes = computed(() => {
   if (allowPerSession.value) m.push('PER_SESSION');
   return m;
 });
+
+const MODE_KEYS: Record<string, string> = {
+  PREPAID: 'tutoring.billing.prepaid',
+  MONTHLY: 'tutoring.billing.monthly',
+  PER_SESSION: 'tutoring.billing.perSession',
+};
+const modeLabel = (m: string) => (MODE_KEYS[m] ? t(MODE_KEYS[m]) : m);
 
 async function load() {
   loading.value = true;
@@ -53,7 +55,6 @@ async function load() {
 }
 
 async function save() {
-  // Keep default valid if its mode was switched off.
   if (defaultMode.value && !enabledModes.value.includes(defaultMode.value)) {
     defaultMode.value = null;
   }
@@ -79,60 +80,69 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">
-      {{ t('tutoring.billing.title') }}
-    </h1>
+  <div class="mx-auto max-w-2xl p-4 sm:p-6">
+    <TutoringPageHeader
+      :title="t('tutoring.billing.title')"
+      crumbs="Bimbel · Pengaturan Billing"
+    />
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
 
-    <div v-else class="space-y-4">
-      <p class="text-sm text-slate-500">{{ t('tutoring.billing.hint') }}</p>
+    <div v-else>
+      <p class="text-sm text-slate-500 mb-4">{{ t('tutoring.billing.hint') }}</p>
 
-      <label class="flex items-center justify-between rounded-xl border border-slate-200 p-3">
-        <span>
-          <span class="font-semibold text-slate-800">{{ t('tutoring.billing.prepaid') }}</span>
-          <span class="block text-xs text-slate-500">{{ t('tutoring.billing.prepaidDesc') }}</span>
+      <label
+        v-for="cfg in [
+          {
+            v: allowPrepaid,
+            set: (b: boolean) => (allowPrepaid = b),
+            t: t('tutoring.billing.prepaid'),
+            s: t('tutoring.billing.prepaidDesc'),
+          },
+          {
+            v: allowMonthly,
+            set: (b: boolean) => (allowMonthly = b),
+            t: t('tutoring.billing.monthly'),
+            s: t('tutoring.billing.monthlyDesc'),
+          },
+          {
+            v: allowPerSession,
+            set: (b: boolean) => (allowPerSession = b),
+            t: t('tutoring.billing.perSession'),
+            s: t('tutoring.billing.perSessionDesc'),
+          },
+        ]"
+        :key="cfg.t"
+        class="flex items-center justify-between gap-3 bg-white border border-slate-100 rounded-2xl px-4 py-3 mb-2 cursor-pointer"
+      >
+        <span class="min-w-0">
+          <span class="block text-sm font-semibold text-slate-900">{{ cfg.t }}</span>
+          <span class="block text-xs text-slate-500 mt-0.5">{{ cfg.s }}</span>
         </span>
-        <input v-model="allowPrepaid" type="checkbox" class="h-5 w-5" />
+        <input
+          :checked="cfg.v"
+          type="checkbox"
+          class="h-5 w-5 accent-role-admin"
+          @change="cfg.set(($event.target as HTMLInputElement).checked)"
+        />
       </label>
 
-      <label class="flex items-center justify-between rounded-xl border border-slate-200 p-3">
-        <span>
-          <span class="font-semibold text-slate-800">{{ t('tutoring.billing.monthly') }}</span>
-          <span class="block text-xs text-slate-500">{{ t('tutoring.billing.monthlyDesc') }}</span>
-        </span>
-        <input v-model="allowMonthly" type="checkbox" class="h-5 w-5" />
-      </label>
-
-      <label class="flex items-center justify-between rounded-xl border border-slate-200 p-3">
-        <span>
-          <span class="font-semibold text-slate-800">{{ t('tutoring.billing.perSession') }}</span>
-          <span class="block text-xs text-slate-500">{{ t('tutoring.billing.perSessionDesc') }}</span>
-        </span>
-        <input v-model="allowPerSession" type="checkbox" class="h-5 w-5" />
-      </label>
-
-      <div>
-        <label class="mb-1 block text-sm font-semibold text-slate-700">
-          {{ t('tutoring.billing.defaultMode') }}
-        </label>
-        <select
-          v-model="defaultMode"
-          class="w-full rounded-lg border border-slate-300 px-3 py-2"
-        >
-          <option :value="null">{{ t('tutoring.billing.none') }}</option>
-          <option v-for="m in enabledModes" :key="m" :value="m">
-            {{ modeLabel(m) }}
-          </option>
-        </select>
-      </div>
+      <TutoringSectionHeader :title="t('tutoring.billing.defaultMode')" />
+      <select
+        v-model="defaultMode"
+        class="w-full rounded-lg border border-slate-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+      >
+        <option :value="null">{{ t('tutoring.billing.none') }}</option>
+        <option v-for="m in enabledModes" :key="m" :value="m">
+          {{ modeLabel(m) }}
+        </option>
+      </select>
 
       <button
         :disabled="saving"
-        class="w-full rounded-lg bg-indigo-900 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+        class="mt-4 w-full rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="save"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.common.save') }}

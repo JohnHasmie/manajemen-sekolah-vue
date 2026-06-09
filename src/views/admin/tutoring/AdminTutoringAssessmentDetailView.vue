@@ -1,8 +1,7 @@
 <!--
   AdminTutoringAssessmentDetailView — viewer for one assessment + its
-  persisted AI question set. Web mirror of the Flutter
-  `tutoring_assessment_detail_screen.dart`. Consumes the questions stored
-  by "Simpan sebagai Try-out".
+  persisted AI question set. Uses the shared `TutoringQuestionCard` so
+  the renderer is identical to the AI generator preview.
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
@@ -11,6 +10,11 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringAssessment } from '@/types/tutoring';
+
+import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import TutoringHero from '@/components/feature/tutoring/TutoringHero.vue';
+import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import TutoringQuestionCard from '@/components/feature/tutoring/TutoringQuestionCard.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -33,51 +37,42 @@ async function load() {
     loading.value = false;
   }
 }
-
 onMounted(load);
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">{{ title }}</h1>
+  <div class="mx-auto max-w-3xl p-4 sm:p-6">
+    <TutoringPageHeader
+      :title="t('tutoring.programDetail.assessments')"
+      :crumbs="'Bimbel · ' + title"
+    />
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
 
-    <p
-      v-else-if="!assessment?.questions?.length"
-      class="py-12 text-center text-slate-500"
-    >
-      {{ t('tutoring.assessment.noQuestions') }}
-    </p>
+    <template v-else>
+      <TutoringHero
+        icon="file-text"
+        greet="ASESMEN"
+        :title="title"
+        :subtitle="(assessment?.questions?.length ?? 0) + ' ' + t('tutoring.assessment.questions')"
+      />
 
-    <div v-else class="space-y-3">
-      <p class="text-sm font-bold text-slate-500">
-        {{ assessment.questions.length }} {{ t('tutoring.assessment.questions') }}
-      </p>
-      <article
-        v-for="(q, i) in assessment.questions"
-        :key="i"
-        class="rounded-2xl border border-slate-200 p-4"
-      >
-        <p class="font-bold text-slate-800">{{ i + 1 }}. {{ q.question }}</p>
-        <ul class="mt-2 space-y-1">
-          <li
-            v-for="(o, oi) in q.options ?? []"
-            :key="oi"
-            :class="o.is_correct ? 'font-bold text-emerald-700' : 'text-slate-700'"
-          >
-            {{ o.label }}. {{ o.text }}
-          </li>
-        </ul>
-        <p v-if="q.correct_answer" class="mt-2 font-bold text-emerald-700">
-          {{ t('tutoring.assessment.answer') }}: {{ q.correct_answer }}
-        </p>
-        <p v-if="q.explanation" class="mt-1 text-sm text-slate-500">
-          {{ t('tutoring.assessment.explanation') }}: {{ q.explanation }}
-        </p>
-      </article>
-    </div>
+      <TutoringEmpty
+        v-if="!assessment?.questions?.length"
+        :text="t('tutoring.assessment.noQuestions')"
+        icon="file-text"
+        class="mt-4"
+      />
+      <div v-else class="mt-3 space-y-2">
+        <TutoringQuestionCard
+          v-for="(q, i) in assessment.questions"
+          :key="i"
+          :index="i + 1"
+          :q="q"
+        />
+      </div>
+    </template>
   </div>
 </template>

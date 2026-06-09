@@ -1,8 +1,6 @@
 <!--
-  TutorCreateSessionView — schedule a single bimbel session. Web mirror
-  of the Flutter `tutor_create_session_screen.dart`. Pick group → date →
-  time → duration/room/topic → submit. The session inherits the group's
-  default tutor server-side.
+  TutorCreateSessionView — schedule a single bimbel session. Rebuilt on
+  the tutoring shared components with the teacher (cobalt) accent.
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
@@ -11,6 +9,9 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringGroup } from '@/types/tutoring';
+
+import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -30,8 +31,6 @@ const topic = ref('');
 async function load() {
   loading.value = true;
   try {
-    // All tenant groups (no program filter) — a tutor may lead groups
-    // across programs.
     groups.value = await TutoringService.getAllGroups();
   } catch (e) {
     toast.error(
@@ -72,64 +71,56 @@ async function submit() {
 }
 
 onMounted(load);
+
+const fieldLabel =
+  'text-[10.5px] font-bold text-slate-500 uppercase tracking-wider';
+const inputCls =
+  'mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher';
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">
-      {{ t('tutoring.createSession.title') }}
-    </h1>
+  <div class="mx-auto max-w-2xl p-4 sm:p-6">
+    <TutoringPageHeader
+      :title="t('tutoring.createSession.title')"
+      crumbs="Bimbel · Sesi · Buat"
+    />
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
 
-    <p
+    <TutoringEmpty
       v-else-if="groups.length === 0"
-      class="py-12 text-center text-slate-500"
-    >
-      {{ t('tutoring.createSession.noGroups') }}
-    </p>
+      :text="t('tutoring.createSession.noGroups')"
+      icon="users"
+    />
 
-    <div v-else class="space-y-3">
+    <div
+      v-else
+      class="space-y-3 bg-white border border-slate-100 rounded-2xl p-4 sm:p-5"
+    >
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.group') }}</span>
-        <select
-          v-model="groupId"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        >
+        <span :class="fieldLabel">{{ t('tutoring.createSession.group') }}</span>
+        <select v-model="groupId" :class="inputCls">
           <option :value="null" disabled>{{ t('tutoring.createSession.pickGroup') }}</option>
-          <option v-for="g in groups" :key="g.id" :value="g.id">
-            {{ g.name }}
-          </option>
+          <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
         </select>
       </label>
 
       <div class="flex gap-2">
         <label class="block flex-1">
-          <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.date') }}</span>
-          <input
-            v-model="date"
-            type="date"
-            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-          />
+          <span :class="fieldLabel">{{ t('tutoring.createSession.date') }}</span>
+          <input v-model="date" type="date" :class="inputCls" />
         </label>
         <label class="block w-32">
-          <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.time') }}</span>
-          <input
-            v-model="time"
-            type="time"
-            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-          />
+          <span :class="fieldLabel">{{ t('tutoring.createSession.time') }}</span>
+          <input v-model="time" type="time" :class="inputCls" />
         </label>
       </div>
 
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.duration') }}</span>
-        <select
-          v-model.number="duration"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        >
+        <span :class="fieldLabel">{{ t('tutoring.createSession.duration') }}</span>
+        <select v-model.number="duration" :class="inputCls">
           <option :value="60">60 menit</option>
           <option :value="90">90 menit</option>
           <option :value="120">120 menit</option>
@@ -138,24 +129,18 @@ onMounted(load);
       </label>
 
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.room') }}</span>
-        <input
-          v-model="room"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
+        <span :class="fieldLabel">{{ t('tutoring.createSession.room') }}</span>
+        <input v-model="room" :class="inputCls" />
       </label>
 
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.topic') }}</span>
-        <input
-          v-model="topic"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
+        <span :class="fieldLabel">{{ t('tutoring.createSession.topic') }}</span>
+        <input v-model="topic" :class="inputCls" />
       </label>
 
       <button
         :disabled="saving"
-        class="w-full rounded-lg bg-teal-700 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+        class="w-full rounded-lg bg-role-teacher hover:bg-role-teacher/90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="submit"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.createSession.save') }}

@@ -1,8 +1,7 @@
 <!--
-  TutorTryoutGenerateView — generate try-out / exercise questions with AI.
-  Web mirror of the Flutter `tutor_tryout_generate_screen.dart`. Calls the
-  AI microservice (aiApi) and renders questions with options, correct
-  answer, and explanation.
+  TutorTryoutGenerateView — generate try-out / exercise questions with
+  AI. Rebuilt on the tutoring shared components. The generated
+  questions use the shared `TutoringQuestionCard`.
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
@@ -10,6 +9,12 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringAiQuestion, TutoringGroup } from '@/types/tutoring';
+
+import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import TutoringFlowTag from '@/components/feature/tutoring/TutoringFlowTag.vue';
+import TutoringChipsRow from '@/components/feature/tutoring/TutoringChipsRow.vue';
+import TutoringQuestionCard from '@/components/feature/tutoring/TutoringQuestionCard.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const toast = useToast();
@@ -24,7 +29,6 @@ const difficulty = ref('mixed');
 const loading = ref(false);
 const questions = ref<TutoringAiQuestion[]>([]);
 
-// "Simpan sebagai Try-out" — needs a target group.
 const groups = ref<TutoringGroup[]>([]);
 const groupId = ref<string | null>(null);
 const saving = ref(false);
@@ -32,9 +36,7 @@ const saving = ref(false);
 onMounted(async () => {
   try {
     groups.value = await TutoringService.getAllGroups();
-  } catch {
-    // Non-fatal: generation still works without the save option.
-  }
+  } catch {/* non-fatal */}
 });
 
 async function saveAsTryout() {
@@ -86,62 +88,57 @@ async function generate() {
     loading.value = false;
   }
 }
+
+const inputCls =
+  'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher';
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">
-      {{ t('tutoring.ai.title') }}
-    </h1>
+  <div class="mx-auto max-w-3xl p-4 sm:p-6">
+    <TutoringPageHeader
+      :title="t('tutoring.ai.title')"
+      crumbs="Bimbel · Generator Soal"
+    />
 
-    <div class="space-y-3 rounded-2xl border border-slate-200 p-4">
-      <div class="flex gap-2">
-        <button
-          v-for="m in (['tryout', 'exercise'] as const)"
-          :key="m"
-          class="rounded-lg px-3 py-1.5 text-sm font-semibold"
-          :class="
-            mode === m
-              ? 'bg-teal-700 text-white'
-              : 'bg-slate-100 text-slate-700'
-          "
-          @click="mode = m"
-        >
-          {{ m === 'tryout' ? t('tutoring.ai.tryout') : t('tutoring.ai.exercise') }}
-        </button>
-      </div>
+    <TutoringFlowTag
+      class="mb-3"
+      text="Atur → Generate → Simpan sebagai try-out untuk kelompok"
+    />
+
+    <div class="space-y-3 bg-white border border-slate-100 rounded-2xl p-4">
+      <TutoringChipsRow
+        v-model="mode"
+        :options="[
+          { value: 'tryout', label: t('tutoring.ai.tryout') },
+          { value: 'exercise', label: t('tutoring.ai.exercise') },
+        ]"
+      />
 
       <input
         v-model="subject"
         :placeholder="t('tutoring.ai.subjectPh')"
-        class="w-full rounded-lg border border-slate-300 px-3 py-2"
+        :class="inputCls"
       />
       <div class="flex gap-2">
         <input
           v-model="level"
           :placeholder="t('tutoring.ai.levelPh')"
-          class="w-full rounded-lg border border-slate-300 px-3 py-2"
+          :class="inputCls"
         />
         <input
           v-model="topic"
           :placeholder="t('tutoring.ai.topicPh')"
-          class="w-full rounded-lg border border-slate-300 px-3 py-2"
+          :class="inputCls"
         />
       </div>
       <div class="flex gap-2">
-        <select
-          v-model.number="count"
-          class="w-full rounded-lg border border-slate-300 px-3 py-2"
-        >
+        <select v-model.number="count" :class="inputCls">
           <option :value="5">{{ t('tutoring.ai.count', { n: 5 }) }}</option>
           <option :value="10">{{ t('tutoring.ai.count', { n: 10 }) }}</option>
           <option :value="15">{{ t('tutoring.ai.count', { n: 15 }) }}</option>
           <option :value="20">{{ t('tutoring.ai.count', { n: 20 }) }}</option>
         </select>
-        <select
-          v-model="difficulty"
-          class="w-full rounded-lg border border-slate-300 px-3 py-2"
-        >
+        <select v-model="difficulty" :class="inputCls">
           <option value="mixed">{{ t('tutoring.ai.mixed') }}</option>
           <option value="easy">{{ t('tutoring.ai.easy') }}</option>
           <option value="medium">{{ t('tutoring.ai.medium') }}</option>
@@ -151,66 +148,43 @@ async function generate() {
 
       <button
         :disabled="loading"
-        class="w-full rounded-lg bg-teal-700 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+        class="w-full rounded-lg bg-role-teacher hover:bg-role-teacher/90 px-4 py-2.5 font-semibold text-white disabled:opacity-50 inline-flex items-center justify-center gap-2"
         @click="generate"
       >
+        <NavIcon name="sparkles" :size="16" />
         {{ loading ? t('tutoring.ai.generating') : t('tutoring.ai.generate') }}
       </button>
     </div>
 
-    <!-- Save as trackable try-out (tryout mode only, after generation) -->
+    <!-- Save block (tryout mode only, after generation) -->
     <div
       v-if="questions.length > 0 && mode === 'tryout'"
-      class="mt-4 space-y-2 rounded-2xl border border-slate-200 p-4"
+      class="mt-4 space-y-2 bg-white border border-slate-100 rounded-2xl p-4"
     >
-      <label class="block text-sm font-semibold text-slate-700">
+      <p class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
         {{ t('tutoring.ai.saveForGroup') }}
-      </label>
-      <select
-        v-model="groupId"
-        class="w-full rounded-lg border border-slate-300 px-3 py-2"
-      >
+      </p>
+      <select v-model="groupId" :class="inputCls">
         <option :value="null" disabled>{{ t('tutoring.ai.pickGroupPh') }}</option>
-        <option v-for="g in groups" :key="g.id" :value="g.id">
-          {{ g.name }}
-        </option>
+        <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
       </select>
       <button
         :disabled="saving || !groupId"
-        class="rounded-lg border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 disabled:opacity-50"
+        class="w-full rounded-lg border border-role-teacher text-role-teacher hover:bg-role-teacher-soft px-4 py-2 text-sm font-semibold disabled:opacity-50 inline-flex items-center justify-center gap-2"
         @click="saveAsTryout"
       >
+        <NavIcon name="bookmark" :size="14" />
         {{ saving ? t('tutoring.common.saving') : t('tutoring.ai.saveAsTryout') }}
       </button>
     </div>
 
-    <div class="mt-4 space-y-3">
-      <article
+    <div class="mt-4 space-y-2">
+      <TutoringQuestionCard
         v-for="(q, i) in questions"
         :key="i"
-        class="rounded-2xl border border-slate-200 p-4"
-      >
-        <p class="font-bold text-slate-800">{{ i + 1 }}. {{ q.question }}</p>
-        <ul class="mt-2 space-y-1">
-          <li
-            v-for="(o, oi) in q.options ?? []"
-            :key="oi"
-            :class="
-              o.is_correct
-                ? 'font-bold text-emerald-700'
-                : 'text-slate-700'
-            "
-          >
-            {{ o.label }}. {{ o.text }}
-          </li>
-        </ul>
-        <p v-if="q.correct_answer" class="mt-2 font-bold text-emerald-700">
-          {{ t('tutoring.ai.answer') }}: {{ q.correct_answer }}
-        </p>
-        <p v-if="q.explanation" class="mt-1 text-sm text-slate-500">
-          {{ t('tutoring.ai.explanation') }}: {{ q.explanation }}
-        </p>
-      </article>
+        :index="i + 1"
+        :q="q"
+      />
     </div>
   </div>
 </template>

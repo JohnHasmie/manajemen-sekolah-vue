@@ -1,8 +1,7 @@
 <!--
-  AdminTutoringEnrollView — enroll a student into a program's package.
-  Web mirror of the Flutter `tutoring_enroll_screen.dart`. Pick package →
-  optional group → student → billing mode (filtered to the package's
-  allowed modes) → config → submit (createEnrollment + createBillingPlan).
+  AdminTutoringEnrollView — pick package → optional group → student →
+  billing mode → config → submit. Rebuilt on the tutoring shared
+  components.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -11,6 +10,9 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringGroup, TutoringPackage } from '@/types/tutoring';
+
+import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import TutoringFlowTag from '@/components/feature/tutoring/TutoringFlowTag.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -97,106 +99,83 @@ async function submit() {
 }
 
 onMounted(load);
+
+const fieldLabel =
+  'text-[10.5px] font-bold text-slate-500 uppercase tracking-wider';
+const inputCls =
+  'mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin';
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">
-      {{ t('tutoring.enroll.title') }} · {{ programName }}
-    </h1>
+  <div class="mx-auto max-w-2xl p-4 sm:p-6">
+    <TutoringPageHeader
+      :title="t('tutoring.enroll.title')"
+      :crumbs="'Bimbel · ' + programName"
+    />
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">
+    <TutoringFlowTag
+      class="mb-3"
+      text="Pilih paket → kelompok → siswa → mode billing → Simpan"
+    />
+
+    <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
 
-    <div v-else class="space-y-3">
+    <div
+      v-else
+      class="space-y-3 bg-white border border-slate-100 rounded-2xl p-4 sm:p-5"
+    >
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.enroll.package') }}</span>
-        <select
-          v-model="packageId"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-          @change="mode = null"
-        >
+        <span :class="fieldLabel">{{ t('tutoring.enroll.package') }}</span>
+        <select v-model="packageId" :class="inputCls" @change="mode = null">
           <option :value="null" disabled>{{ t('tutoring.enroll.pickPackage') }}</option>
-          <option v-for="p in packages" :key="p.id" :value="p.id">
-            {{ p.name }}
-          </option>
+          <option v-for="p in packages" :key="p.id" :value="p.id">{{ p.name }}</option>
         </select>
       </label>
 
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">
-          {{ t('tutoring.enroll.group') }}
-        </span>
-        <select
-          v-model="groupId"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        >
+        <span :class="fieldLabel">{{ t('tutoring.enroll.group') }}</span>
+        <select v-model="groupId" :class="inputCls">
           <option :value="null">{{ t('tutoring.enroll.noGroup') }}</option>
-          <option v-for="g in groups" :key="g.id" :value="g.id">
-            {{ g.name }}
-          </option>
+          <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
         </select>
       </label>
 
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.enroll.student') }}</span>
-        <select
-          v-model="studentId"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        >
+        <span :class="fieldLabel">{{ t('tutoring.enroll.student') }}</span>
+        <select v-model="studentId" :class="inputCls">
           <option :value="null" disabled>{{ t('tutoring.enroll.pickStudent') }}</option>
-          <option v-for="s in students" :key="s.id" :value="s.id">
-            {{ s.name }}
-          </option>
+          <option v-for="s in students" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
       </label>
 
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.enroll.mode') }}</span>
-        <select
-          v-model="mode"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        >
+        <span :class="fieldLabel">{{ t('tutoring.enroll.mode') }}</span>
+        <select v-model="mode" :class="inputCls">
           <option :value="null" disabled>{{ t('tutoring.enroll.pickMode') }}</option>
-          <option v-for="m in allowedModes" :key="m" :value="m">
-            {{ modeLabel(m) }}
-          </option>
+          <option v-for="m in allowedModes" :key="m" :value="m">{{ modeLabel(m) }}</option>
         </select>
       </label>
 
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.enroll.amount') }}</span>
-        <input
-          v-model.number="amount"
-          type="number"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
+        <span :class="fieldLabel">{{ t('tutoring.enroll.amount') }}</span>
+        <input v-model.number="amount" type="number" :class="inputCls" />
       </label>
 
       <label v-if="mode === 'PREPAID'" class="block">
-        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.enroll.sessionsQuota') }}</span>
-        <input
-          v-model.number="sessionsQuota"
-          type="number"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
+        <span :class="fieldLabel">{{ t('tutoring.enroll.sessionsQuota') }}</span>
+        <input v-model.number="sessionsQuota" type="number" :class="inputCls" />
       </label>
 
       <label v-if="mode === 'MONTHLY'" class="block">
-        <span class="text-sm font-semibold text-slate-700">
-          {{ t('tutoring.enroll.billingDay') }}
-        </span>
-        <input
-          v-model.number="billingDay"
-          type="number"
-          class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
+        <span :class="fieldLabel">{{ t('tutoring.enroll.billingDay') }}</span>
+        <input v-model.number="billingDay" type="number" :class="inputCls" />
       </label>
 
       <button
         :disabled="saving"
-        class="w-full rounded-lg bg-indigo-900 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+        class="w-full rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="submit"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.enroll.submit') }}

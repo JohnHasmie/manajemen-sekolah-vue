@@ -1,9 +1,7 @@
 <!--
   TutorSessionsView — the tutor's own bimbel sessions (−7d..+14d). Tap a
-  session to record attendance. Web mirror of `tutor_sessions_screen.dart`.
-
-  The tutor's user id comes from the auth store (the backend filters the
-  schedule by tutor_user_id).
+  session to record attendance. Rebuilt on the tutoring shared
+  components with the teacher (cobalt) accent.
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
@@ -13,6 +11,12 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useAuthStore } from '@/stores/auth';
 import { formatDateShort } from '@/lib/format';
 import type { TutoringSession } from '@/types/tutoring';
+
+import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue';
+import TutoringStatusPill from '@/components/feature/tutoring/TutoringStatusPill.vue';
+import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -48,12 +52,6 @@ async function load() {
   }
 }
 
-function statusClass(status: string): string {
-  if (status === 'DONE') return 'bg-emerald-100 text-emerald-800';
-  if (status === 'CANCELLED') return 'bg-red-100 text-red-800';
-  return 'bg-indigo-100 text-indigo-800';
-}
-
 function openAttendance(s: TutoringSession) {
   if (s.status === 'CANCELLED') return;
   router.push({
@@ -72,64 +70,58 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4">
-    <div class="mb-4 flex items-center justify-between">
-      <h1 class="text-lg font-bold text-slate-800">
-        {{ t('tutoring.sessions.title') }}
-      </h1>
-      <button
-        class="rounded-lg bg-teal-700 px-3 py-2 text-sm font-semibold text-white"
-        @click="
-          router.push({ name: 'teacher.tutoring.session-create' })
-        "
-      >
-        + {{ t('tutoring.sessions.addBtn') }}
-      </button>
-    </div>
+  <div class="mx-auto max-w-3xl p-4 sm:p-6">
+    <TutoringPageHeader
+      :title="t('tutoring.sessions.title')"
+      crumbs="Bimbel · Sesi Saya"
+    >
+      <template #right>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 bg-role-teacher hover:bg-role-teacher/90 text-white rounded-xl px-3.5 py-2 text-sm font-semibold"
+          @click="router.push({ name: 'teacher.tutoring.session-create' })"
+        >
+          <NavIcon name="plus" :size="14" />
+          {{ t('tutoring.sessions.addBtn') }}
+        </button>
+      </template>
+    </TutoringPageHeader>
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
-    <div v-else-if="error" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-      <p class="text-red-700">{{ error }}</p>
-      <button class="mt-3 text-sm font-semibold text-red-700 underline" @click="load">
-        {{ t('tutoring.common.retry') }}
-      </button>
-    </div>
-    <p v-else-if="sessions.length === 0" class="py-12 text-center text-slate-500">
-      {{ t('tutoring.sessions.empty') }}
-    </p>
-    <ul v-else class="space-y-2.5">
-      <li
+    <TutoringEmpty
+      v-else-if="error"
+      :text="error"
+      icon="alert-circle"
+    />
+    <TutoringEmpty
+      v-else-if="sessions.length === 0"
+      :text="t('tutoring.sessions.empty')"
+      icon="calendar"
+    />
+    <div v-else class="space-y-2">
+      <TutoringListTile
         v-for="s in sessions"
         :key="s.id"
-        class="flex items-center justify-between rounded-2xl border border-slate-200 p-4"
-        :class="s.status === 'CANCELLED' ? 'opacity-60' : 'cursor-pointer hover:bg-slate-50'"
-        @click="openAttendance(s)"
+        icon="calendar"
+        accent="tutor"
+        :title="s.scheduled_at ? formatDateShort(s.scheduled_at) : '—'"
+        :subtitle="
+          [
+            s.group?.name,
+            s.topic,
+            s.room ? t('tutoring.sessions.room') + ' ' + s.room : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')
+        "
+        :to="s.status === 'CANCELLED' ? null : () => openAttendance(s)"
       >
-        <div>
-          <div class="font-bold text-slate-800">
-            {{ s.scheduled_at ? formatDateShort(s.scheduled_at) : '—' }}
-          </div>
-          <div class="text-sm text-slate-500">
-            {{
-              [
-                s.group?.name,
-                s.topic,
-                s.room ? t('tutoring.sessions.room') + ' ' + s.room : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')
-            }}
-          </div>
-        </div>
-        <span
-          class="rounded-full px-2.5 py-1 text-[11px] font-bold"
-          :class="statusClass(s.status)"
-        >
-          {{ s.status_label ?? s.status }}
-        </span>
-      </li>
-    </ul>
+        <template #trailing>
+          <TutoringStatusPill :session="s.status" />
+        </template>
+      </TutoringListTile>
+    </div>
   </div>
 </template>

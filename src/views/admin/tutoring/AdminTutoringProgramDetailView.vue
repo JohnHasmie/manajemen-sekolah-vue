@@ -1,10 +1,7 @@
 <!--
-  AdminTutoringProgramDetailView — a program's packages + groups with
-  inline create forms. Web mirror of the Flutter
-  `tutoring_program_detail_screen.dart`. Completes the admin catalog
-  flow: Program → Paket → Kelompok.
-
-  programId from the route param; programName from the query.
+  AdminTutoringProgramDetailView — a program's packages + groups +
+  assessments with inline create forms. Rebuilt on the tutoring shared
+  components.
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
@@ -18,6 +15,13 @@ import type {
   TutoringGroup,
   TutoringPackage,
 } from '@/types/tutoring';
+
+import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import TutoringHero from '@/components/feature/tutoring/TutoringHero.vue';
+import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue';
+import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSectionHeader.vue';
+import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -150,218 +154,207 @@ async function createGroup() {
 }
 
 onMounted(load);
+
+const inputCls =
+  'w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin';
+const saveBtnCls =
+  'rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50';
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4">
-    <div class="mb-4 flex items-center justify-between">
-      <h1 class="text-lg font-bold text-slate-800">{{ programName }}</h1>
-      <button
-        class="rounded-lg bg-indigo-900 px-3 py-2 text-sm font-semibold text-white"
-        @click="goEnroll"
-      >
-        + {{ t('tutoring.programDetail.enroll') }}
-      </button>
-    </div>
+  <div class="mx-auto max-w-3xl p-4 sm:p-6">
+    <TutoringPageHeader
+      :title="t('tutoring.programs.title')"
+      :crumbs="'Bimbel · Program · ' + programName"
+    />
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">
+    <TutoringHero
+      icon="layers"
+      greet="PROGRAM"
+      :title="programName"
+      subtitle="Atur paket & kelompok lalu daftarkan siswa"
+      accent="admin"
+    >
+      <template #trailing>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 bg-role-admin hover:bg-role-admin/90 text-white rounded-xl px-3 py-2 text-xs font-semibold"
+          @click="goEnroll"
+        >
+          <NavIcon name="user-plus" :size="14" />
+          {{ t('tutoring.programDetail.enroll') }}
+        </button>
+      </template>
+    </TutoringHero>
+
+    <div v-if="loading" class="py-12 text-center text-slate-500 mt-3">
       {{ t('tutoring.common.loading') }}
     </div>
 
     <template v-else>
       <!-- Packages -->
-      <section class="mb-6">
-        <div class="mb-2 flex items-center justify-between">
-          <h2 class="font-bold text-slate-800">{{ t('tutoring.programDetail.packages') }}</h2>
-          <button
-            class="text-sm font-semibold text-indigo-900"
-            @click="showPkgForm = !showPkgForm"
-          >
-            {{ showPkgForm ? t('tutoring.common.close') : '+ ' + t('tutoring.common.add') }}
-          </button>
-        </div>
-
-        <div
-          v-if="showPkgForm"
-          class="mb-3 space-y-2 rounded-xl border border-slate-200 p-3"
-        >
+      <TutoringSectionHeader
+        :title="t('tutoring.programDetail.packages')"
+        :action-label="showPkgForm ? t('tutoring.common.close') : t('tutoring.common.add')"
+        @action="showPkgForm = !showPkgForm"
+      />
+      <section
+        v-if="showPkgForm"
+        class="mb-3 space-y-2 bg-white border border-slate-100 rounded-2xl p-4"
+      >
+        <input
+          v-model="pkgForm.name"
+          :placeholder="t('tutoring.programDetail.pkgNamePh')"
+          :class="inputCls"
+        />
+        <div class="flex gap-2">
           <input
-            v-model="pkgForm.name"
-            :placeholder="t('tutoring.programDetail.pkgNamePh')"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2"
+            v-model="pkgForm.total_sessions"
+            type="number"
+            :placeholder="t('tutoring.programDetail.totalSessionsPh')"
+            :class="inputCls"
           />
-          <div class="flex gap-2">
-            <input
-              v-model="pkgForm.total_sessions"
-              type="number"
-              :placeholder="t('tutoring.programDetail.totalSessionsPh')"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2"
-            />
-            <input
-              v-model="pkgForm.price"
-              type="number"
-              :placeholder="t('tutoring.programDetail.pricePh')"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2"
-            />
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button
-              v-for="m in allModes"
-              :key="m.key"
-              type="button"
-              class="rounded-full px-3 py-1 text-sm"
-              :class="
-                pkgForm.modes.includes(m.key)
-                  ? 'bg-indigo-900 text-white'
-                  : 'bg-slate-100 text-slate-700'
-              "
-              @click="toggleMode(m.key)"
-            >
-              {{ m.label }}
-            </button>
-          </div>
+          <input
+            v-model="pkgForm.price"
+            type="number"
+            :placeholder="t('tutoring.programDetail.pricePh')"
+            :class="inputCls"
+          />
+        </div>
+        <div class="flex flex-wrap gap-1.5">
           <button
-            :disabled="savingPkg"
-            class="rounded-lg bg-indigo-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            @click="createPackage"
+            v-for="m in allModes"
+            :key="m.key"
+            type="button"
+            class="rounded-lg px-2.5 py-1.5 text-xs font-semibold border"
+            :class="
+              pkgForm.modes.includes(m.key)
+                ? 'bg-role-admin border-role-admin text-white'
+                : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+            "
+            @click="toggleMode(m.key)"
           >
-            {{ savingPkg ? t('tutoring.common.saving') : t('tutoring.common.save') }}
+            {{ m.label }}
           </button>
         </div>
-
-        <p v-if="packages.length === 0" class="text-sm text-slate-500">
-          {{ t('tutoring.programDetail.noPackages') }}
-        </p>
-        <ul v-else class="space-y-2">
-          <li
-            v-for="p in packages"
-            :key="p.id"
-            class="rounded-xl border border-slate-200 p-3"
-          >
-            <div class="font-semibold text-slate-800">{{ p.name }}</div>
-            <div class="text-sm text-slate-500">
-              {{
-                [
-                  p.total_sessions
-                    ? p.total_sessions + ' ' + t('tutoring.programDetail.sessions')
-                    : null,
-                  p.price != null ? formatRupiah(p.price) : null,
-                  p.billing_modes_allowed.join(', '),
-                ]
-                  .filter(Boolean)
-                  .join(' · ')
-              }}
-            </div>
-          </li>
-        </ul>
+        <button
+          :disabled="savingPkg"
+          :class="saveBtnCls"
+          @click="createPackage"
+        >
+          {{ savingPkg ? t('tutoring.common.saving') : t('tutoring.common.save') }}
+        </button>
       </section>
+
+      <TutoringEmpty
+        v-if="packages.length === 0"
+        :text="t('tutoring.programDetail.noPackages')"
+      />
+      <div v-else class="space-y-2">
+        <TutoringListTile
+          v-for="p in packages"
+          :key="p.id"
+          icon="layers"
+          :title="p.name"
+          :subtitle="
+            [
+              p.total_sessions
+                ? p.total_sessions + ' ' + t('tutoring.programDetail.sessions')
+                : null,
+              p.price != null ? formatRupiah(p.price) : null,
+              p.billing_modes_allowed.join(', '),
+            ]
+              .filter(Boolean)
+              .join(' · ')
+          "
+        />
+      </div>
 
       <!-- Groups -->
-      <section>
-        <div class="mb-2 flex items-center justify-between">
-          <h2 class="font-bold text-slate-800">{{ t('tutoring.programDetail.groups') }}</h2>
-          <button
-            class="text-sm font-semibold text-indigo-900"
-            @click="showGrpForm = !showGrpForm"
-          >
-            {{ showGrpForm ? t('tutoring.common.close') : '+ ' + t('tutoring.common.add') }}
-          </button>
-        </div>
-
-        <div
-          v-if="showGrpForm"
-          class="mb-3 space-y-2 rounded-xl border border-slate-200 p-3"
+      <TutoringSectionHeader
+        :title="t('tutoring.programDetail.groups')"
+        :action-label="showGrpForm ? t('tutoring.common.close') : t('tutoring.common.add')"
+        @action="showGrpForm = !showGrpForm"
+      />
+      <section
+        v-if="showGrpForm"
+        class="mb-3 space-y-2 bg-white border border-slate-100 rounded-2xl p-4"
+      >
+        <input
+          v-model="grpForm.name"
+          :placeholder="t('tutoring.programDetail.grpNamePh')"
+          :class="inputCls"
+        />
+        <input
+          v-model.number="grpForm.capacity"
+          type="number"
+          :placeholder="t('tutoring.programDetail.capacityPh')"
+          :class="inputCls"
+        />
+        <button
+          :disabled="savingGrp"
+          :class="saveBtnCls"
+          @click="createGroup"
         >
-          <input
-            v-model="grpForm.name"
-            :placeholder="t('tutoring.programDetail.grpNamePh')"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2"
-          />
-          <input
-            v-model.number="grpForm.capacity"
-            type="number"
-            :placeholder="t('tutoring.programDetail.capacityPh')"
-            class="w-full rounded-lg border border-slate-300 px-3 py-2"
-          />
-          <button
-            :disabled="savingGrp"
-            class="rounded-lg bg-indigo-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            @click="createGroup"
-          >
-            {{ savingGrp ? t('tutoring.common.saving') : t('tutoring.common.save') }}
-          </button>
-        </div>
-
-        <p v-if="groups.length === 0" class="text-sm text-slate-500">
-          {{ t('tutoring.programDetail.noGroups') }}
-        </p>
-        <ul v-else class="space-y-2">
-          <li
-            v-for="g in groups"
-            :key="g.id"
-            class="rounded-xl border border-slate-200 p-3"
-          >
-            <div class="font-semibold text-slate-800">{{ g.name }}</div>
-            <div class="text-sm text-slate-500">
-              {{
-                [
-                  t('tutoring.programDetail.capacity') + ' ' + g.capacity,
-                  (g.enrollments_count ?? 0) +
-                    ' ' +
-                    t('tutoring.programDetail.students'),
-                  g.tutor?.name
-                    ? t('tutoring.programDetail.tutor') + ': ' + g.tutor.name
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')
-              }}
-            </div>
-          </li>
-        </ul>
+          {{ savingGrp ? t('tutoring.common.saving') : t('tutoring.common.save') }}
+        </button>
       </section>
 
-      <!-- Assessments (try-out / post-test) -->
-      <section class="mt-6">
-        <h2 class="mb-2 font-bold text-slate-800">{{ t('tutoring.programDetail.assessments') }}</h2>
-        <p v-if="assessments.length === 0" class="text-sm text-slate-500">
-          {{ t('tutoring.programDetail.noAssessments') }}
-        </p>
-        <ul v-else class="space-y-2">
-          <li
-            v-for="a in assessments"
-            :key="a.id"
-            class="flex items-center justify-between rounded-xl border border-slate-200 p-3"
-            :class="
-              a.questions_count
-                ? 'cursor-pointer hover:bg-slate-50'
-                : 'opacity-70'
-            "
-            @click="openAssessment(a)"
-          >
-            <div>
-              <div class="font-semibold text-slate-800">{{ a.title }}</div>
-              <div class="text-sm text-slate-500">
-                {{
-                  [
-                    a.type_label,
-                    a.held_at,
-                    (a.questions_count ?? 0) +
-                      ' ' +
-                      t('tutoring.programDetail.questions'),
-                    (a.scores_count ?? 0) +
-                      ' ' +
-                      t('tutoring.programDetail.scores'),
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')
-                }}
-              </div>
-            </div>
-            <span v-if="a.questions_count" class="text-slate-400">›</span>
-          </li>
-        </ul>
-      </section>
+      <TutoringEmpty
+        v-if="groups.length === 0"
+        :text="t('tutoring.programDetail.noGroups')"
+      />
+      <div v-else class="space-y-2">
+        <TutoringListTile
+          v-for="g in groups"
+          :key="g.id"
+          icon="users"
+          :title="g.name"
+          :subtitle="
+            [
+              t('tutoring.programDetail.capacity') + ' ' + g.capacity,
+              (g.enrollments_count ?? 0) +
+                ' ' +
+                t('tutoring.programDetail.students'),
+              g.tutor?.name
+                ? t('tutoring.programDetail.tutor') + ': ' + g.tutor.name
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')
+          "
+        />
+      </div>
+
+      <!-- Assessments -->
+      <TutoringSectionHeader :title="t('tutoring.programDetail.assessments')" />
+      <TutoringEmpty
+        v-if="assessments.length === 0"
+        :text="t('tutoring.programDetail.noAssessments')"
+      />
+      <div v-else class="space-y-2">
+        <TutoringListTile
+          v-for="a in assessments"
+          :key="a.id"
+          icon="file-text"
+          :title="a.title"
+          :subtitle="
+            [
+              a.type_label,
+              a.held_at,
+              (a.questions_count ?? 0) +
+                ' ' +
+                t('tutoring.programDetail.questions'),
+              (a.scores_count ?? 0) +
+                ' ' +
+                t('tutoring.programDetail.scores'),
+            ]
+              .filter(Boolean)
+              .join(' · ')
+          "
+          :to="a.questions_count ? () => openAssessment(a) : null"
+        />
+      </div>
     </template>
   </div>
 </template>

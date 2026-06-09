@@ -1,9 +1,8 @@
 <!--
   TutorSessionAttendanceView — record attendance for one bimbel session.
-  Merges the group's active enrollees with any saved roster (saved status
-  wins, else PRESENT), one bulk save. Web mirror of
-  `tutor_session_attendance_screen.dart`. The save is idempotent
-  server-side and fires the PER_SESSION billing hook.
+  Merges enrollees + saved roster, one bulk save (idempotent server-
+  side, fires PER_SESSION billing). Rebuilt on the tutoring shared
+  components.
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
@@ -11,6 +10,11 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
+
+import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import TutoringHero from '@/components/feature/tutoring/TutoringHero.vue';
+import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -58,7 +62,6 @@ async function load() {
       n[e.student_id] = e.student?.name ?? '—';
       c[e.student_id] = savedByStudent[e.student_id] ?? 'PRESENT';
     }
-    // Include saved rows whose student is no longer an active enrollee.
     for (const r of saved) {
       if (!(r.student_id in n)) {
         n[r.student_id] = r.student?.name ?? '—';
@@ -98,50 +101,62 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">
-      {{ t('tutoring.attendance.title') }} · {{ title }}
-    </h1>
+  <div class="mx-auto max-w-2xl p-4 sm:p-6">
+    <TutoringPageHeader
+      :title="t('tutoring.attendance.title')"
+      :crumbs="'Bimbel · ' + title"
+    />
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
-    <div v-else-if="error" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-      <p class="text-red-700">{{ error }}</p>
-      <button class="mt-3 text-sm font-semibold text-red-700 underline" @click="load">
-        {{ t('tutoring.common.retry') }}
-      </button>
-    </div>
-    <p
+    <TutoringEmpty
+      v-else-if="error"
+      :text="error"
+      icon="alert-circle"
+    />
+    <TutoringEmpty
       v-else-if="Object.keys(names).length === 0"
-      class="py-12 text-center text-slate-500"
-    >
-      {{ t('tutoring.attendance.noStudents') }}
-    </p>
-    <div v-else class="space-y-2.5">
-      <div
-        v-for="(name, studentId) in names"
-        :key="studentId"
-        class="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2"
-      >
-        <span class="font-medium text-slate-800">{{ name }}</span>
-        <select
-          v-model="chosen[studentId]"
-          class="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+      :text="t('tutoring.attendance.noStudents')"
+      icon="users"
+    />
+    <template v-else>
+      <TutoringHero
+        icon="calendar"
+        greet="SESI"
+        :title="title"
+        :subtitle="Object.keys(names).length + ' siswa'"
+        accent="tutor"
+      />
+
+      <div class="mt-3 space-y-2">
+        <div
+          v-for="(name, studentId) in names"
+          :key="studentId"
+          class="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl p-3"
         >
-          <option v-for="k in statusKeys" :key="k" :value="k">
-            {{ statusLabel(k) }}
-          </option>
-        </select>
+          <span
+            class="w-9 h-9 rounded-xl bg-role-teacher-soft text-role-teacher grid place-items-center flex-shrink-0"
+          >
+            <NavIcon name="user" :size="18" />
+          </span>
+          <span class="flex-1 text-sm font-semibold text-slate-900">{{ name }}</span>
+          <select
+            v-model="chosen[studentId]"
+            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+          >
+            <option v-for="k in statusKeys" :key="k" :value="k">{{ statusLabel(k) }}</option>
+          </select>
+        </div>
       </div>
 
       <button
         :disabled="saving"
-        class="mt-3 w-full rounded-lg bg-teal-700 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+        class="mt-4 w-full rounded-lg bg-role-teacher hover:bg-role-teacher/90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="save"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.attendance.save') }}
       </button>
-    </div>
+    </template>
   </div>
 </template>

@@ -1,8 +1,7 @@
 <!--
-  AdminTutoringProgramsView — manage bimbel programs: list with
-  package/group counts, create via inline form, delete (handles the
-  backend's 409 FK-restrict). Web mirror of the Flutter
-  `tutoring_programs_screen.dart`.
+  AdminTutoringProgramsView — list bimbel programs (package/group
+  counts), inline form to create, row delete with FK-restrict toast.
+  Rebuilt on the tutoring shared components.
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
@@ -12,17 +11,16 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringProgram } from '@/types/tutoring';
 
+import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import TutoringFlowTag from '@/components/feature/tutoring/TutoringFlowTag.vue';
+import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue';
+import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
+
 const { t } = useI18n();
 const toast = useToast();
 const router = useRouter();
 
-function openDetail(p: TutoringProgram) {
-  router.push({
-    name: 'admin.tutoring.program-detail',
-    params: { programId: p.id },
-    query: { name: p.name },
-  });
-}
 const loading = ref(true);
 const error = ref<string | null>(null);
 const programs = ref<TutoringProgram[]>([]);
@@ -84,95 +82,111 @@ async function remove(p: TutoringProgram) {
   }
 }
 
+function openDetail(p: TutoringProgram) {
+  router.push({
+    name: 'admin.tutoring.program-detail',
+    params: { programId: p.id },
+    query: { name: p.name },
+  });
+}
+
 onMounted(load);
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4">
-    <header class="mb-4 flex items-center justify-between">
-      <h1 class="text-lg font-bold text-slate-800">
-        {{ t('tutoring.programs.title') }}
-      </h1>
-      <button
-        class="rounded-lg bg-indigo-900 px-4 py-2 text-sm font-semibold text-white"
-        @click="showForm = !showForm"
-      >
-        {{ showForm ? t('tutoring.common.close') : '+ ' + t('tutoring.programs.addBtn') }}
-      </button>
-    </header>
+  <div class="mx-auto max-w-3xl p-4 sm:p-6">
+    <TutoringPageHeader
+      :title="t('tutoring.programs.title')"
+      crumbs="Bimbel · Program"
+    >
+      <template #right>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 bg-role-admin hover:bg-role-admin/90 text-white rounded-xl px-3.5 py-2 text-sm font-semibold"
+          @click="showForm = !showForm"
+        >
+          <NavIcon name="plus" :size="14" />
+          {{ showForm ? t('tutoring.common.close') : t('tutoring.programs.addBtn') }}
+        </button>
+      </template>
+    </TutoringPageHeader>
+
+    <TutoringFlowTag
+      class="mb-3"
+      text="Setup katalog: Program → Paket → Kelompok"
+    />
 
     <!-- Create form -->
     <section
       v-if="showForm"
-      class="mb-4 space-y-3 rounded-2xl border border-slate-200 p-4"
+      class="mb-4 space-y-2.5 bg-white border border-slate-100 rounded-2xl p-4"
     >
       <input
         v-model="form.name"
         :placeholder="t('tutoring.programs.namePh')"
-        class="w-full rounded-lg border border-slate-300 px-3 py-2"
+        class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
       />
       <input
         v-model="form.target_education_level"
         :placeholder="t('tutoring.programs.levelPh')"
-        class="w-full rounded-lg border border-slate-300 px-3 py-2"
+        class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
       />
       <textarea
         v-model="form.description"
         :placeholder="t('tutoring.programs.descPh')"
         rows="2"
-        class="w-full rounded-lg border border-slate-300 px-3 py-2"
+        class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
       />
       <button
         :disabled="saving"
-        class="rounded-lg bg-indigo-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        class="rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
         @click="create"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.common.save') }}
       </button>
     </section>
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
-    <div v-else-if="error" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-      <p class="text-red-700">{{ error }}</p>
-      <button class="mt-3 text-sm font-semibold text-red-700 underline" @click="load">
-        {{ t('tutoring.common.retry') }}
-      </button>
-    </div>
-    <p v-else-if="programs.length === 0" class="py-12 text-center text-slate-500">
-      {{ t('tutoring.programs.empty') }}
-    </p>
-    <ul v-else class="space-y-2.5">
-      <li
+    <TutoringEmpty
+      v-else-if="error"
+      :text="error"
+      icon="alert-circle"
+    />
+    <TutoringEmpty
+      v-else-if="programs.length === 0"
+      :text="t('tutoring.programs.empty')"
+      icon="layers"
+    />
+    <div v-else class="space-y-2">
+      <TutoringListTile
         v-for="p in programs"
         :key="p.id"
-        class="flex items-center justify-between rounded-2xl border border-slate-200 p-4"
+        icon="layers"
+        :title="p.name"
+        :subtitle="
+          [
+            p.target_education_level,
+            (p.packages_count ?? 0) + ' ' + t('tutoring.programs.packages'),
+            (p.groups_count ?? 0) + ' ' + t('tutoring.programs.groups'),
+          ]
+            .filter(Boolean)
+            .join(' · ')
+        "
+        :to="() => openDetail(p)"
       >
-        <button
-          class="flex-1 text-left"
-          @click="openDetail(p)"
-        >
-          <div class="font-bold text-slate-800">{{ p.name }}</div>
-          <div class="text-sm text-slate-500">
-            {{
-              [
-                p.target_education_level,
-                (p.packages_count ?? 0) + ' ' + t('tutoring.programs.packages'),
-                (p.groups_count ?? 0) + ' ' + t('tutoring.programs.groups'),
-              ]
-                .filter(Boolean)
-                .join(' · ')
-            }}
-          </div>
-        </button>
-        <button
-          class="ml-2 text-sm font-semibold text-red-600"
-          @click="remove(p)"
-        >
-          {{ t('tutoring.programs.delete') }}
-        </button>
-      </li>
-    </ul>
+        <template #trailing>
+          <button
+            type="button"
+            class="p-1.5 rounded-lg text-status-danger hover:bg-status-danger-soft"
+            :title="t('tutoring.programs.delete')"
+            @click.stop="remove(p)"
+          >
+            <NavIcon name="trash-2" :size="16" />
+          </button>
+        </template>
+      </TutoringListTile>
+    </div>
   </div>
 </template>
