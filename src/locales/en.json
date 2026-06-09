@@ -1650,6 +1650,43 @@
     }
   },
   "tutoring": {
+    "nav": {
+      "programs": "Programs",
+      "sessions": "Sessions",
+      "bills": "Bills",
+      "billingSettings": "Billing settings",
+      "monitor": "Monitoring",
+      "ai": "AI questions"
+    },
+    "dashboard": {
+      "title": "Tutoring Dashboard",
+      "students": "Students",
+      "programs": "Active programs",
+      "groups": "Groups",
+      "upcoming": "Upcoming sessions",
+      "thisWeek": "Sessions this week",
+      "attendance": "Attendance (30d)",
+      "unpaid": "Outstanding bills",
+      "manage": "Manage",
+      "quickPrograms": "Programs & packages",
+      "quickSessions": "Sessions",
+      "quickBills": "Bills",
+      "quickBilling": "Billing settings",
+      "loadError": "Failed to load dashboard."
+    },
+    "adminSessions": {
+      "title": "All Sessions",
+      "empty": "No sessions in this range."
+    },
+    "adminBills": {
+      "paid": "Paid",
+      "unpaid": "Unpaid",
+      "pending": "Pending",
+      "title": "Tutoring Bills",
+      "empty": "No bills yet.",
+      "unpaidOnly": "Unpaid only",
+      "student": "Student"
+    },
     "tenant": {
       "school": "School",
       "center": "Tutoring"

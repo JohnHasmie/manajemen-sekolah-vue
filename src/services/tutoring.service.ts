@@ -11,6 +11,7 @@ import { aiApi, api, extractData } from '@/lib/http';
 import type { ApiResponse } from '@/types/api';
 import type {
   TenantBillingSettings,
+  TutoringAdminStats,
   TutoringAiQuestion,
   TutoringAssessment,
   TutoringAttendanceSummary,
@@ -30,6 +31,45 @@ function toIso(d: Date): string {
 }
 
 export const TutoringService = {
+  // ── Admin reads ─────────────────────────────────────────────────
+
+  /** Headline KPIs for the admin bimbel dashboard. */
+  async getAdminStats(): Promise<TutoringAdminStats> {
+    const res = await api.get<ApiResponse<TutoringAdminStats>>(
+      '/tutoring/admin-stats',
+    );
+    return (
+      extractData(res) ?? {
+        active_programs: 0,
+        groups: 0,
+        students: 0,
+        active_enrollments: 0,
+        upcoming_sessions: 0,
+        sessions_this_week: 0,
+        unpaid_bills: 0,
+        unpaid_total: 0,
+        attendance_rate: null,
+      }
+    );
+  },
+
+  /** All sessions for the tenant within [from]..[to] (admin view). */
+  async getAllSessions(from: Date, to: Date): Promise<TutoringSession[]> {
+    const res = await api.get<ApiResponse<TutoringSession[]>>(
+      '/tutoring/schedule',
+      { params: { from: toIso(from), to: toIso(to) } },
+    );
+    return extractData(res) ?? [];
+  },
+
+  /** All tutoring bills for the tenant (admin view). */
+  async getAllBills(status?: string): Promise<TutoringBill[]> {
+    const res = await api.get<ApiResponse<TutoringBill[]>>('/tutoring/bills', {
+      params: { per_page: 100, ...(status ? { status } : {}) },
+    });
+    return extractData(res) ?? [];
+  },
+
   // ── Parent reads ────────────────────────────────────────────────
 
   async getSchedule(

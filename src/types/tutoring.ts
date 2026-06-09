@@ -37,6 +37,20 @@ export interface TutoringBill {
   month?: string | null;
   source_type?: string | null;
   source_label?: string | null;
+  student_name?: string | null;
+}
+
+/** Headline KPIs for the admin bimbel dashboard. */
+export interface TutoringAdminStats {
+  active_programs: number;
+  groups: number;
+  students: number;
+  active_enrollments: number;
+  upcoming_sessions: number;
+  sessions_this_week: number;
+  unpaid_bills: number;
+  unpaid_total: number;
+  attendance_rate: number | null;
 }
 
 export interface TutoringProgressEntry {

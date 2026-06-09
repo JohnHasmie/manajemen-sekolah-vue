@@ -23,7 +23,21 @@ import {
   type RouteRecordRaw,
 } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { tenantKindFromRaw } from '@/composables/useTenant';
 import type { Role } from '@/types/auth';
+
+/**
+ * True when the active tenant is a tutoring center. Read from the
+ * persisted user (`tenant_type`), falling back to the active school row.
+ */
+function isTutoringTenant(): boolean {
+  const auth = useAuthStore();
+  const raw =
+    auth.user?.tenant_type ??
+    auth.schools.find((s) => (s.id ?? s.school_id) === auth.schoolId)
+      ?.tenant_type;
+  return tenantKindFromRaw(raw) === 'TUTORING_CENTER';
+}
 
 // Lazy view loaders — keep initial bundle small.
 const LoginView = () => import('@/views/auth/LoginView.vue');
@@ -252,6 +266,10 @@ const routes: RouteRecordRaw[] = [
         name: 'admin.home',
         component: AdminDashboardView,
         meta: { role: 'admin' satisfies Role },
+        // A bimbel admin's school dashboard reads empty — bounce to the
+        // tutoring-native dashboard instead.
+        beforeEnter: () =>
+          isTutoringTenant() ? { name: 'admin.tutoring.dashboard' } : true,
       },
       {
         path: 'admin/inbox',
@@ -783,6 +801,27 @@ const routes: RouteRecordRaw[] = [
         component: () =>
           import('@/views/parent/ParentTutoringOverviewView.vue'),
         meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring',
+        name: 'admin.tutoring.dashboard',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringDashboardView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/sessions',
+        name: 'admin.tutoring.sessions',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringSessionsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/bills',
+        name: 'admin.tutoring.bills',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringBillsView.vue'),
+        meta: { role: 'admin' satisfies Role },
       },
       {
         path: 'admin/tutoring/programs',

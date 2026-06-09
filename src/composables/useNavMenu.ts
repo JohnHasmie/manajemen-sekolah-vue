@@ -12,6 +12,7 @@
  */
 import { computed, type ComputedRef } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useTenant } from '@/composables/useTenant';
 import type { Role } from '@/types/auth';
 
 export interface NavItem {
@@ -157,6 +158,99 @@ const SUPER_ADMIN_NAV: NavSection[] = [
   },
 ];
 
+// ── Tutoring-center (bimbel) menus ─────────────────────────────────
+// Shown when the active tenant is a TUTORING_CENTER. They replace the
+// school menus, whose data-management pages (students/teachers/classes)
+// read empty for a bimbel — its data lives in the tutoring tables.
+const ADMIN_TUTORING_NAV: NavSection[] = [
+  {
+    titleKey: '',
+    items: [
+      { to: '/admin/tutoring', labelKey: 'nav.dashboard', icon: 'home' },
+      {
+        to: '/admin/announcements',
+        labelKey: 'nav.announcements',
+        icon: 'megaphone',
+      },
+    ],
+  },
+  {
+    titleKey: 'tutoring.tenant.center',
+    items: [
+      {
+        to: '/admin/tutoring/programs',
+        labelKey: 'tutoring.nav.programs',
+        icon: 'layers',
+      },
+      {
+        to: '/admin/tutoring/sessions',
+        labelKey: 'tutoring.nav.sessions',
+        icon: 'calendar',
+      },
+      {
+        to: '/admin/tutoring/bills',
+        labelKey: 'tutoring.nav.bills',
+        icon: 'wallet',
+      },
+      {
+        to: '/admin/tutoring/billing-settings',
+        labelKey: 'tutoring.nav.billingSettings',
+        icon: 'settings',
+      },
+    ],
+  },
+];
+
+const TEACHER_TUTORING_NAV: NavSection[] = [
+  {
+    titleKey: '',
+    items: [
+      { to: '/teacher', labelKey: 'nav.dashboard', icon: 'home' },
+      {
+        to: '/teacher/announcements',
+        labelKey: 'nav.announcements',
+        icon: 'megaphone',
+      },
+    ],
+  },
+  {
+    titleKey: 'tutoring.tenant.center',
+    items: [
+      {
+        to: '/teacher/tutoring/sessions',
+        labelKey: 'tutoring.nav.sessions',
+        icon: 'calendar',
+      },
+      {
+        to: '/teacher/tutoring/tryout-generator',
+        labelKey: 'tutoring.nav.ai',
+        icon: 'sparkles',
+      },
+    ],
+  },
+];
+
+const PARENT_TUTORING_NAV: NavSection[] = [
+  {
+    titleKey: '',
+    items: [
+      { to: '/parent', labelKey: 'nav.dashboard', icon: 'home' },
+      {
+        to: '/parent/announcements',
+        labelKey: 'nav.announcements',
+        icon: 'megaphone',
+      },
+    ],
+  },
+];
+
+const TUTORING_MENUS: Partial<Record<Role, NavSection[]>> = {
+  admin: ADMIN_TUTORING_NAV,
+  guru: TEACHER_TUTORING_NAV,
+  wali_kelas: TEACHER_TUTORING_NAV,
+  wali: PARENT_TUTORING_NAV,
+};
+
 const MENUS: Record<Role, NavSection[]> = {
   admin: ADMIN_NAV,
   guru: TEACHER_NAV,
@@ -171,6 +265,7 @@ const MENUS: Record<Role, NavSection[]> = {
 
 export function useNavMenu(): ComputedRef<NavSection[]> {
   const auth = useAuthStore();
+  const { isTutoringCenter } = useTenant();
   return computed(() => {
     // Super-admins ALWAYS get the dedicated platform menu — never the
     // school-admin items. The getter also covers the case where the
@@ -178,6 +273,11 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
     if (auth.isSuperAdmin) return SUPER_ADMIN_NAV;
     const role = auth.activeRole;
     if (!role) return [];
+    // Tutoring-center tenants get the bimbel menu (the school
+    // data-management pages read empty for them).
+    if (isTutoringCenter.value && TUTORING_MENUS[role]) {
+      return TUTORING_MENUS[role]!;
+    }
     return MENUS[role] ?? [];
   });
 }

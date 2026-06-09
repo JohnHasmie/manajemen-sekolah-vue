@@ -1646,6 +1646,43 @@
     }
   },
   "tutoring": {
+    "nav": {
+      "programs": "Program",
+      "sessions": "Sesi",
+      "bills": "Tagihan",
+      "billingSettings": "Pengaturan billing",
+      "monitor": "Monitoring",
+      "ai": "Soal AI"
+    },
+    "dashboard": {
+      "title": "Dasbor Bimbel",
+      "students": "Siswa",
+      "programs": "Program aktif",
+      "groups": "Kelompok",
+      "upcoming": "Sesi mendatang",
+      "thisWeek": "Sesi minggu ini",
+      "attendance": "Kehadiran (30h)",
+      "unpaid": "Tagihan tertunggak",
+      "manage": "Kelola",
+      "quickPrograms": "Program & paket",
+      "quickSessions": "Sesi",
+      "quickBills": "Tagihan",
+      "quickBilling": "Pengaturan billing",
+      "loadError": "Gagal memuat dasbor."
+    },
+    "adminSessions": {
+      "title": "Semua Sesi",
+      "empty": "Tidak ada sesi dalam rentang ini."
+    },
+    "adminBills": {
+      "paid": "Lunas",
+      "unpaid": "Belum bayar",
+      "pending": "Menunggu",
+      "title": "Tagihan Bimbel",
+      "empty": "Belum ada tagihan.",
+      "unpaidOnly": "Belum bayar saja",
+      "student": "Siswa"
+    },
     "tenant": {
       "school": "Sekolah",
       "center": "Bimbel"
