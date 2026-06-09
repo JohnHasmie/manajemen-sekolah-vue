@@ -1,10 +1,26 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
+import LogRocket from 'logrocket';
 
 import App from './App.vue';
 import router from './router';
 import { i18n } from './lib/i18n';
+
+// LogRocket session replay + monitoring. Initialised as early as possible
+// so the full session is captured. Guarded to production builds only, so
+// local `npm run dev` sessions aren't recorded (flip the guard if you want
+// dev recording). 'gpgce7/kamil-edu' is the PUBLIC client-side app id, not a
+// secret — safe to commit.
+//
+// ⚠️ PII: LogRocket records the DOM + network by default. Password inputs are
+// masked automatically, but other sensitive fields (student names/NIS, grades,
+// payment info, WhatsApp numbers) are NOT. Before relying on this in prod,
+// configure DOM/network redaction — add `data-private` to sensitive elements
+// or use input/request sanitizers. See https://docs.logrocket.com/reference/dom
+if (import.meta.env.PROD) {
+  LogRocket.init('gpgce7/kamil-edu');
+}
 
 // Poppins — regular + bold (matches Flutter pubspec).
 import '@fontsource/poppins/400.css';
