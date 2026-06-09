@@ -22,6 +22,7 @@ import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
 import PriorityInbox from '@/components/feature/PriorityInbox.vue';
+import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
@@ -92,6 +93,17 @@ const current = computed<Slice>(() => {
     {}
   );
 });
+
+/** Open the bimbel monitoring screen for the active child. */
+function openTutoring() {
+  const studentId = current.value.student_id as string | undefined;
+  if (!studentId) return;
+  router.push({
+    name: 'parent.tutoring.overview',
+    params: { studentId },
+    query: { name: (current.value.name as string | undefined) ?? 'Anak' },
+  });
+}
 
 function asInt(v: unknown): number {
   if (typeof v === 'number') return Math.round(v);
@@ -280,6 +292,13 @@ watch(sliceKey, () => {
               />
             </div>
           </section>
+
+          <!-- Bimbel entry — only for tutoring-center tenants. -->
+          <TutoringEntryBanner
+            title="Monitoring Bimbel"
+            subtitle="Jadwal sesi, kehadiran, nilai try-out & tagihan"
+            @click="openTutoring"
+          />
 
           <!-- 2. Hero gradient with attendance focus -->
           <section

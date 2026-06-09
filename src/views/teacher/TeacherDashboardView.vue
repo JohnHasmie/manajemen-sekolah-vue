@@ -29,6 +29,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import PriorityInbox, { type PriorityItem } from '@/components/feature/PriorityInbox.vue';
 import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
+import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
 
 type StatsPayload = Record<string, any>;
@@ -368,6 +369,12 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
               />
             </div>
           </section>
+
+          <!-- Bimbel entry — only for tutoring-center tenants. -->
+          <TutoringEntryBanner
+            subtitle="Sesi mengajar, absensi & generator soal bimbel"
+            @click="router.push({ name: 'teacher.tutoring.sessions' })"
+          />
 
           <!-- 2. KPI strip (inline, no hero) with slice carousel -->
           <section

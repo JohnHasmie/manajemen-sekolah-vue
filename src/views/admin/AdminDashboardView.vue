@@ -22,6 +22,7 @@ import SegmentedControl from '@/components/filters/SegmentedControl.vue';
 import AcademicYearChip from '@/components/feature/AcademicYearChip.vue';
 import AcademicYearPickerModal from '@/components/feature/AcademicYearPickerModal.vue';
 import PriorityInbox from '@/components/feature/PriorityInbox.vue';
+import TutoringEntryBanner from '@/components/feature/TutoringEntryBanner.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useLocaleWatcher } from '@/composables/useLocaleWatcher';
 import { usePriorityInbox } from '@/composables/usePriorityInbox';
@@ -231,6 +232,12 @@ const financePct = computed(() =>
               </span>
             </div>
           </section>
+
+          <!-- Bimbel entry — only for tutoring-center tenants. -->
+          <TutoringEntryBanner
+            subtitle="Kelola program, paket, kelompok & billing bimbel"
+            @click="router.push({ name: 'admin.tutoring.programs' })"
+          />
 
           <!-- 2. KPI strip (inline, no floating) -->
           <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
