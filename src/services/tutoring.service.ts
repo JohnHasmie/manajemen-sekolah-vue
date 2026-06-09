@@ -7,10 +7,11 @@
  * `{ success, data, meta }` envelope via `extractData`; the one case
  * that needs `meta` (attendance summary) reads the raw response.
  */
-import { api, extractData } from '@/lib/http';
+import { aiApi, api, extractData } from '@/lib/http';
 import type { ApiResponse } from '@/types/api';
 import type {
   TenantBillingSettings,
+  TutoringAiQuestion,
   TutoringAttendanceSummary,
   TutoringBill,
   TutoringChildOverview,
@@ -185,5 +186,30 @@ export const TutoringService = {
     items: { student_id: string; status: string }[],
   ): Promise<void> {
     await api.post(`/tutoring/sessions/${sessionId}/attendance`, { items });
+  },
+
+  // ── AI: try-out / exercise generation ───────────────────────────
+
+  /**
+   * Generate try-out / exercise questions via the AI microservice
+   * (aiApi base URL, not the core API). Synchronous — returns the
+   * `{ questions, meta }` data block directly.
+   */
+  async generateTryout(payload: {
+    subject: string;
+    target_education_level?: string;
+    topic?: string;
+    question_count?: number;
+    difficulty?: string;
+    mode?: 'tryout' | 'exercise';
+  }): Promise<{ questions: TutoringAiQuestion[]; meta: Record<string, unknown> }> {
+    const path =
+      payload.mode === 'exercise'
+        ? '/tutoring-ai/exercise/generate'
+        : '/tutoring-ai/tryout/generate';
+    const res = await aiApi.post<
+      ApiResponse<{ questions: TutoringAiQuestion[]; meta: Record<string, unknown> }>
+    >(path, payload);
+    return extractData(res) ?? { questions: [], meta: {} };
   },
 };

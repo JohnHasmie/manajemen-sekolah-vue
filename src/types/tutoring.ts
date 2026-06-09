@@ -125,3 +125,22 @@ export const BILLING_MODE_LABELS: Record<string, string> = {
   MONTHLY: 'SPP Bulanan',
   PER_SESSION: 'Per Sesi',
 };
+
+// ── AI-generated questions (try-out / exercise) ──────────────────
+
+export interface TutoringAiOption {
+  label: string;
+  text: string;
+  is_correct: boolean;
+}
+
+export interface TutoringAiQuestion {
+  number?: number;
+  question: string;
+  type?: string;
+  options?: TutoringAiOption[];
+  correct_answer?: string;
+  explanation?: string;
+  difficulty?: string;
+  topic?: string;
+}
