@@ -172,6 +172,47 @@ export const TutoringService = {
     return extractData(res);
   },
 
+  // ── Admin: enrollment ───────────────────────────────────────────
+
+  /** Tenant students (for the enroll picker) via the core /student. */
+  async getTenantStudents(): Promise<{ id: string; name: string }[]> {
+    const res = await api.get('/student');
+    const body = res.data;
+    const list = Array.isArray(body?.data)
+      ? body.data
+      : Array.isArray(body)
+        ? body
+        : [];
+    return (list as Record<string, unknown>[]).map((m) => ({
+      id: String(m.id),
+      name: String(m.name ?? m.nama ?? '—'),
+    }));
+  },
+
+  async createEnrollment(payload: {
+    student_id: string;
+    package_id: string;
+    billing_mode: string;
+    group_id?: string;
+  }): Promise<string> {
+    const res = await api.post<ApiResponse<{ id: string }>>(
+      '/tutoring/enrollments',
+      payload,
+    );
+    return extractData(res)?.id ?? '';
+  },
+
+  async createBillingPlan(
+    enrollmentId: string,
+    mode: string,
+    config: Record<string, number>,
+  ): Promise<void> {
+    await api.post(`/tutoring/enrollments/${enrollmentId}/billing-plan`, {
+      mode,
+      config,
+    });
+  },
+
   async getBillingSettings(): Promise<TenantBillingSettings> {
     const res = await api.get<ApiResponse<TenantBillingSettings>>(
       '/tutoring/billing-settings',

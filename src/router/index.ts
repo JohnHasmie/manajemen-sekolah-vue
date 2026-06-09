@@ -799,6 +799,13 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        path: 'admin/tutoring/programs/:programId/enroll',
+        name: 'admin.tutoring.enroll',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringEnrollView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'admin/tutoring/billing-settings',
         name: 'admin.tutoring.billing-settings',
         component: () =>

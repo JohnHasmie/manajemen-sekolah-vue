@@ -8,16 +8,25 @@
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
 import type { TutoringGroup, TutoringPackage } from '@/types/tutoring';
 
 const route = useRoute();
+const router = useRouter();
 const toast = useToast();
 const programId = String(route.params.programId ?? '');
 const programName = String(route.query.name ?? 'Program');
+
+function goEnroll() {
+  router.push({
+    name: 'admin.tutoring.enroll',
+    params: { programId },
+    query: { name: programName },
+  });
+}
 
 const packages = ref<TutoringPackage[]>([]);
 const groups = ref<TutoringGroup[]>([]);
@@ -122,7 +131,15 @@ onMounted(load);
 
 <template>
   <div class="mx-auto max-w-3xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">{{ programName }}</h1>
+    <div class="mb-4 flex items-center justify-between">
+      <h1 class="text-lg font-bold text-slate-800">{{ programName }}</h1>
+      <button
+        class="rounded-lg bg-indigo-900 px-3 py-2 text-sm font-semibold text-white"
+        @click="goEnroll"
+      >
+        + Daftarkan Siswa
+      </button>
+    </div>
 
     <div v-if="loading" class="py-16 text-center text-slate-500">Memuat…</div>
 
