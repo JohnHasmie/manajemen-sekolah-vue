@@ -185,3 +185,25 @@ export function formatRelative(value: Date | string | null | undefined): string 
   if (day < 7) return t('parent.activity.timeDaysAgo', { n: day });
   return formatDateShort(d);
 }
+
+/**
+ * Local (device-calendar) date as `YYYY-MM-DD`.
+ *
+ * Use this — NOT `new Date().toISOString().slice(0, 10)` — whenever the
+ * string is a calendar date that will be STORED/submitted (e.g. an
+ * attendance/presensi date). `toISOString()` formats in UTC, so for WIB
+ * users (Asia/Jakarta, UTC+7) any time between 00:00 and 06:59 local
+ * resolves to *yesterday*, landing the record on the wrong day. The
+ * `getFullYear/getMonth/getDate` getters read local time, so the date
+ * always matches the calendar the user actually sees. Mirrors the
+ * `todayIso()` helpers in the teacher attendance views and the Flutter
+ * fix !197.
+ */
+export function localISODate(value: Date = new Date()): string {
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
