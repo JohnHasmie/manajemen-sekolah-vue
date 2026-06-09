@@ -68,7 +68,17 @@ onMounted(load);
 
 <template>
   <div class="mx-auto max-w-3xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">Sesi Mengajar</h1>
+    <div class="mb-4 flex items-center justify-between">
+      <h1 class="text-lg font-bold text-slate-800">Sesi Mengajar</h1>
+      <button
+        class="rounded-lg bg-teal-700 px-3 py-2 text-sm font-semibold text-white"
+        @click="
+          router.push({ name: 'teacher.tutoring.session-create' })
+        "
+      >
+        + Sesi
+      </button>
+    </div>
 
     <div v-if="loading" class="py-16 text-center text-slate-500">Memuat…</div>
     <div v-else-if="error" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">

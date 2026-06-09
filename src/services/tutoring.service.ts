@@ -159,6 +159,12 @@ export const TutoringService = {
     return extractData(res) ?? [];
   },
 
+  /** All tenant groups (no program filter). */
+  async getAllGroups(): Promise<TutoringGroup[]> {
+    const res = await api.get<ApiResponse<TutoringGroup[]>>('/tutoring/groups');
+    return extractData(res) ?? [];
+  },
+
   async createGroup(payload: {
     program_id: string;
     name: string;
@@ -272,6 +278,20 @@ export const TutoringService = {
     items: { student_id: string; status: string }[],
   ): Promise<void> {
     await api.post(`/tutoring/sessions/${sessionId}/attendance`, { items });
+  },
+
+  /**
+   * Create a single session. tutor_user_id is omitted — the backend
+   * inherits the group's default tutor.
+   */
+  async createSession(payload: {
+    group_id: string;
+    scheduled_at: string;
+    duration_minutes?: number;
+    room?: string;
+    topic?: string;
+  }): Promise<void> {
+    await api.post('/tutoring/sessions', payload);
   },
 
   // ── AI: try-out / exercise generation ───────────────────────────
