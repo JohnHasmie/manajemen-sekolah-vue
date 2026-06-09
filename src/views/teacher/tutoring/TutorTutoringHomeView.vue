@@ -98,7 +98,13 @@ const quickActions = [
     icon: 'sparkles',
     title: 'Generator Soal AI',
     sub: 'Try-out / latihan via AI',
-    to: 'teacher.tutoring.tryout-generate',
+    to: 'teacher.tutoring.tryout-generator',
+  },
+  {
+    icon: 'book',
+    title: 'Aktivitas & Tugas',
+    sub: 'Beri tugas / quiz ke kelompok',
+    to: 'teacher.tutoring.activities',
   },
 ] as const;
 </script>

@@ -247,3 +247,34 @@ export interface TutoringInviteResult {
   /** Only set when status === 'created'. */
   temp_password?: string | null;
 }
+
+/** One activity (homework / exam / quiz / project) shipped to a
+ *  bimbel group. Mirrors TutoringActivityResource. */
+export interface TutoringActivity {
+  id: string;
+  tutoring_group_id: string;
+  group?: { id: string; name?: string; program?: { id: string; name?: string } | null } | null;
+  subject?: { id: string; name?: string } | null;
+  type: 'HOMEWORK' | 'EXAM' | 'QUIZ' | 'PROJECT' | string;
+  type_label?: string | null;
+  title: string;
+  description?: string | null;
+  due_at?: string | null;
+  submissions_count?: number | null;
+  created_at?: string | null;
+}
+
+export interface TutoringActivitySubmission {
+  id: string;
+  activity_id?: string;
+  tutoring_activity_id?: string;
+  student_id: string;
+  student?: { id: string; name?: string } | null;
+  student_name?: string | null;
+  status: 'ASSIGNED' | 'SUBMITTED' | 'LATE' | 'GRADED' | 'MISSED' | string;
+  status_label?: string | null;
+  score?: number | null;
+  max_score?: number | null;
+  note?: string | null;
+  submitted_at?: string | null;
+}

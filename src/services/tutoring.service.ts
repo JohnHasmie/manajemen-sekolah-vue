@@ -25,6 +25,8 @@ import type {
   TutoringProgress,
   TutoringSession,
   TutoringSessionAttendanceRow,
+  TutoringActivity,
+  TutoringActivitySubmission,
   TutoringStudentRow,
   TutoringTutorRow,
   TutoringTutorStats,
@@ -469,5 +471,74 @@ export const TutoringService = {
       ApiResponse<{ questions: TutoringAiQuestion[]; meta: Record<string, unknown> }>
     >(path, payload);
     return extractData(res) ?? { questions: [], meta: {} };
+  },
+
+  // ── Activities (Phase 5 — tugas / quiz / ujian / proyek) ────────
+
+  /** List activities. Tutor + parent reads; optional group/type filter. */
+  async getActivities(opts: {
+    group_id?: string;
+    type?: 'HOMEWORK' | 'EXAM' | 'QUIZ' | 'PROJECT';
+  } = {}): Promise<TutoringActivity[]> {
+    const res = await api.get<ApiResponse<TutoringActivity[]>>(
+      '/tutoring/activities',
+      {
+        params: {
+          ...(opts.group_id ? { group_id: opts.group_id } : {}),
+          ...(opts.type ? { type: opts.type } : {}),
+          per_page: 100,
+        },
+      },
+    );
+    return extractData(res) ?? [];
+  },
+
+  async createActivity(payload: {
+    tutoring_group_id: string;
+    type: 'HOMEWORK' | 'EXAM' | 'QUIZ' | 'PROJECT';
+    title: string;
+    description?: string;
+    due_at?: string | null;
+    subject_id?: string | null;
+  }): Promise<TutoringActivity> {
+    const res = await api.post<ApiResponse<TutoringActivity>>(
+      '/tutoring/activities',
+      payload,
+    );
+    return extractData(res);
+  },
+
+  async getActivitySubmissions(
+    activityId: string,
+  ): Promise<TutoringActivitySubmission[]> {
+    const res = await api.get<ApiResponse<TutoringActivitySubmission[]>>(
+      `/tutoring/activities/${activityId}/submissions`,
+    );
+    return extractData(res) ?? [];
+  },
+
+  async recordActivitySubmissions(
+    activityId: string,
+    items: Array<{
+      student_id: string;
+      status: string;
+      score?: number | null;
+      note?: string | null;
+    }>,
+  ): Promise<void> {
+    await api.post(
+      `/tutoring/activities/${activityId}/submissions`,
+      { items },
+    );
+  },
+
+  async getStudentActivitySubmissions(
+    studentId: string,
+  ): Promise<TutoringActivitySubmission[]> {
+    const res = await api.get<ApiResponse<TutoringActivitySubmission[]>>(
+      '/tutoring/activity-submissions',
+      { params: { student_id: studentId } },
+    );
+    return extractData(res) ?? [];
   },
 };

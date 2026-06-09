@@ -912,6 +912,20 @@ const routes: RouteRecordRaw[] = [
           import('@/views/teacher/tutoring/TutorCreateSessionView.vue'),
         meta: { role: 'guru' satisfies Role },
       },
+      {
+        path: 'teacher/tutoring/activities',
+        name: 'teacher.tutoring.activities',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorActivitiesView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/activities/:activityId/submissions',
+        name: 'teacher.tutoring.activity-submissions',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorActivitySubmissionsView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
 
       // Staff subtree (placeholder until staff feature surfaces are
       // confirmed — see task #51).
