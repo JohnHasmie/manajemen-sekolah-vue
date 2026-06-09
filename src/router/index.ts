@@ -772,6 +772,47 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'wali' satisfies Role },
       },
 
+      // ── Tutoring (bimbel) ─────────────────────────────────────────
+      // Reached when the active tenant is a TUTORING_CENTER. Routes are
+      // gated by meta.role like every other entry; their position in
+      // this array doesn't matter (Vue Router matches by path). Lazy
+      // imports keep the bimbel bundle out of the school-only flows.
+      {
+        path: 'parent/tutoring/:studentId',
+        name: 'parent.tutoring.overview',
+        component: () =>
+          import('@/views/parent/ParentTutoringOverviewView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/programs',
+        name: 'admin.tutoring.programs',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringProgramsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/billing-settings',
+        name: 'admin.tutoring.billing-settings',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringBillingSettingsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/sessions',
+        name: 'teacher.tutoring.sessions',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorSessionsView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/sessions/:sessionId/attendance',
+        name: 'teacher.tutoring.attendance',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorSessionAttendanceView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+
       // Staff subtree (placeholder until staff feature surfaces are
       // confirmed — see task #51).
       {

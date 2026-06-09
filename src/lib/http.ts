@@ -79,7 +79,14 @@ function buildClient(baseURL: string): AxiosInstance {
     // former should clear state + show the "session expired" toast.
     (config as AuthAwareRequestConfig).__hadAuthToken = Boolean(token);
     if (schoolId) {
+      // Send BOTH the new X-Tenant-ID (preferred by the backend's
+      // EnsureSchoolContext since Phase 0) and the legacy X-School-ID
+      // alias, same value — the `schools` table hosts both formal
+      // schools and tutoring centers, so one id drives both. Forward-
+      // compatible with no breaking change. Mirrors the Flutter Dio
+      // AuthInterceptor.
       config.headers.set('X-School-ID', schoolId);
+      config.headers.set('X-Tenant-ID', schoolId);
     }
     // Tell the backend which locale to render server-side strings in
     // (priority-inbox labels/subtitles, validator messages, mail

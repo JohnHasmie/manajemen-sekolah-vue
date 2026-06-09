@@ -71,6 +71,13 @@ export interface School {
   education_level?: string;
   logo_url?: string | null;
   roles?: Role[];
+  /**
+   * Tenant kind — 'SCHOOL' (formal school) or 'TUTORING_CENTER'
+   * (bimbel). Added in the tutoring-center rollout (backend Phase 0);
+   * the /user/schools + switch-school payloads now carry it. Missing
+   * on older payloads → treat as SCHOOL.
+   */
+  tenant_type?: 'SCHOOL' | 'TUTORING_CENTER';
 }
 
 export interface User {
@@ -88,6 +95,12 @@ export interface User {
    * all read this first before falling back to a `schools[]` lookup.
    */
   school_name?: string | null;
+  /**
+   * Active tenant kind, mirrored onto the user by SwitchSchoolAction
+   * (backend Phase 0) so the client can pick the school vs tutoring
+   * surface straight after a switch. Missing → SCHOOL.
+   */
+  tenant_type?: 'SCHOOL' | 'TUTORING_CENTER';
   /** Schools the user belongs to (populated when needsSchoolSelection). */
   schools?: School[];
   /** Roles the user can act as in the chosen school. */
