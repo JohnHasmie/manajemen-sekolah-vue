@@ -198,6 +198,14 @@ export interface ClassActivity {
    *  sheet's separate "Bab" + "Sub-Bab" rendering. */
   chapter_title?: string | null;
   sub_chapter_title?: string | null;
+  /** Raw FK ids for the linked materi bab/sub-bab. Present on the
+   *  full-detail payload (table columns) — used by the edit form to
+   *  pre-select the Bab + Sub-bab pickers. */
+  chapter_id?: string | null;
+  sub_chapter_id?: string | null;
+  /** Raw FK id of the linked lesson-hour slot. Lets the edit form
+   *  re-highlight the picked "Jam ke-N" session. */
+  lesson_hour_id?: string | null;
   /** Optional list of additional materi sub-chapters referenced by the
    *  activity. Each entry renders as a "Sub-Bab tambahan" detail row. */
   additional_material?: { sub_chapter_title: string }[];
@@ -382,6 +390,17 @@ export function classActivityFromJson(raw: AnyRecord): ClassActivity {
         raw.judul_sub_bab ??
         ((raw.subChapter as AnyRecord | undefined)?.title as unknown),
     ),
+    chapter_id: strOrNull(
+      raw.chapter_id ??
+        raw.bab_id ??
+        ((raw.chapter as AnyRecord | undefined)?.id as unknown),
+    ),
+    sub_chapter_id: strOrNull(
+      raw.sub_chapter_id ??
+        raw.sub_bab_id ??
+        ((raw.subChapter as AnyRecord | undefined)?.id as unknown),
+    ),
+    lesson_hour_id: strOrNull(raw.lesson_hour_id ?? raw.jam_pelajaran_id),
     additional_material: Array.isArray(raw.additional_material)
       ? (raw.additional_material as AnyRecord[])
           .map((item) => ({

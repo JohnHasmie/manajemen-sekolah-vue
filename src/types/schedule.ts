@@ -23,6 +23,14 @@ export type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat';
 
 export interface ScheduleSession {
   id: string;
+  /**
+   * UUID of the `lesson_hour` slot row this session occupies (each
+   * day×hour tuple owns a distinct UUID). Distinct from `id`, which is
+   * the teaching-schedule row id. Carried so the Kegiatan form can tag
+   * a new activity with the exact lesson-hour the teacher picked —
+   * mirrors Flutter's `Schedule.lessonHourId`.
+   */
+  lesson_hour_id?: string | null;
   day: DayKey;
   /** "07:30" HH:mm 24h. */
   start_time: string;

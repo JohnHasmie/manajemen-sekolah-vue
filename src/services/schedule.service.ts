@@ -181,8 +181,16 @@ function sessionFromJson(raw: any): ScheduleSession {
     }
   }
 
+  // Eager-loaded TeachingSchedule responses nest the slot under
+  // `lesson_hour.id`; legacy/flat rows expose `lesson_hour_id` /
+  // `jam_pelajaran_id` directly. Mirror Flutter's Schedule.fromJson
+  // precedence so the Kegiatan form can persist the exact slot UUID.
+  const lessonHourId =
+    lessonHour?.id ?? raw.lesson_hour_id ?? raw.jam_pelajaran_id ?? null;
+
   return {
     id: String(raw.id ?? ''),
+    lesson_hour_id: lessonHourId ? String(lessonHourId) : null,
     day: normalizeDayKey(dayName ?? raw.day ?? raw.hari),
     day_name: dayName,
     start_time: String(startRaw).slice(0, 5),
