@@ -6,6 +6,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
+import TenantBadge from '@/components/feature/TenantBadge.vue';
 
 const { t } = useI18n();
 const auth = useAuthStore();
@@ -117,7 +118,13 @@ async function handleConfirm() {
               {{ getInitials(s.school_name || s.name) }}
             </div>
             <div class="flex-1 min-w-0">
-              <h3 class="text-[13.5px] font-black text-slate-900 truncate leading-tight">{{ s.school_name || s.name }}</h3>
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-[13.5px] font-black text-slate-900 truncate leading-tight">{{ s.school_name || s.name }}</h3>
+                <TenantBadge
+                  v-if="s.tenant_type === 'TUTORING_CENTER'"
+                  :type="s.tenant_type"
+                />
+              </div>
               <p class="text-[10.5px] font-semibold text-slate-500 mt-0.5 truncate">
                 {{ s.city || s.address }} {{ s.academic_year ? `· TP ${s.academic_year}` : '' }}
               </p>
@@ -154,7 +161,13 @@ async function handleConfirm() {
               {{ getInitials(s.school_name || s.name) }}
             </div>
             <div class="flex-1 min-w-0">
-              <h3 class="text-[13.5px] font-black text-slate-800 truncate leading-tight">{{ s.school_name || s.name }}</h3>
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-[13.5px] font-black text-slate-800 truncate leading-tight">{{ s.school_name || s.name }}</h3>
+                <TenantBadge
+                  v-if="s.tenant_type === 'TUTORING_CENTER'"
+                  :type="s.tenant_type"
+                />
+              </div>
               <p class="text-[10.5px] font-semibold text-slate-400 mt-0.5 truncate">
                 {{ s.city || s.address }} {{ s.academic_year ? `· TP ${s.academic_year}` : '' }}
               </p>
