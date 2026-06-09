@@ -6,11 +6,19 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
-import { BILLING_MODE_LABELS } from '@/types/tutoring';
 
+const { t } = useI18n();
 const toast = useToast();
+
+const MODE_KEYS: Record<string, string> = {
+  PREPAID: 'tutoring.billing.prepaid',
+  MONTHLY: 'tutoring.billing.monthly',
+  PER_SESSION: 'tutoring.billing.perSession',
+};
+const modeLabel = (m: string) => (MODE_KEYS[m] ? t(MODE_KEYS[m]) : m);
 const loading = ref(true);
 const saving = ref(false);
 
@@ -36,7 +44,9 @@ async function load() {
     allowPerSession.value = s.allow_per_session;
     defaultMode.value = s.default_mode ?? null;
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat pengaturan.');
+    toast.error(
+      e instanceof Error ? e.message : t('tutoring.billing.loadFailed'),
+    );
   } finally {
     loading.value = false;
   }
@@ -55,9 +65,11 @@ async function save() {
       allow_per_session: allowPerSession.value,
       default_mode: defaultMode.value,
     });
-    toast.success('Pengaturan billing tersimpan.');
+    toast.success(t('tutoring.billing.saved'));
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.');
+    toast.error(
+      e instanceof Error ? e.message : t('tutoring.billing.saveFailed'),
+    );
   } finally {
     saving.value = false;
   }
@@ -68,51 +80,52 @@ onMounted(load);
 
 <template>
   <div class="mx-auto max-w-2xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">Pengaturan Billing</h1>
+    <h1 class="mb-4 text-lg font-bold text-slate-800">
+      {{ t('tutoring.billing.title') }}
+    </h1>
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">Memuat…</div>
+    <div v-if="loading" class="py-16 text-center text-slate-500">
+      {{ t('tutoring.common.loading') }}
+    </div>
 
     <div v-else class="space-y-4">
-      <p class="text-sm text-slate-500">
-        Minimal satu mode harus aktif. Mode yang sedang dipakai enrollment
-        aktif tidak bisa dimatikan.
-      </p>
+      <p class="text-sm text-slate-500">{{ t('tutoring.billing.hint') }}</p>
 
       <label class="flex items-center justify-between rounded-xl border border-slate-200 p-3">
         <span>
-          <span class="font-semibold text-slate-800">Paket Prabayar</span>
-          <span class="block text-xs text-slate-500">Bayar di muka untuk N sesi.</span>
+          <span class="font-semibold text-slate-800">{{ t('tutoring.billing.prepaid') }}</span>
+          <span class="block text-xs text-slate-500">{{ t('tutoring.billing.prepaidDesc') }}</span>
         </span>
         <input v-model="allowPrepaid" type="checkbox" class="h-5 w-5" />
       </label>
 
       <label class="flex items-center justify-between rounded-xl border border-slate-200 p-3">
         <span>
-          <span class="font-semibold text-slate-800">SPP Bulanan</span>
-          <span class="block text-xs text-slate-500">Tagihan tetap tiap bulan.</span>
+          <span class="font-semibold text-slate-800">{{ t('tutoring.billing.monthly') }}</span>
+          <span class="block text-xs text-slate-500">{{ t('tutoring.billing.monthlyDesc') }}</span>
         </span>
         <input v-model="allowMonthly" type="checkbox" class="h-5 w-5" />
       </label>
 
       <label class="flex items-center justify-between rounded-xl border border-slate-200 p-3">
         <span>
-          <span class="font-semibold text-slate-800">Per Sesi</span>
-          <span class="block text-xs text-slate-500">Tagih tiap pertemuan dihadiri.</span>
+          <span class="font-semibold text-slate-800">{{ t('tutoring.billing.perSession') }}</span>
+          <span class="block text-xs text-slate-500">{{ t('tutoring.billing.perSessionDesc') }}</span>
         </span>
         <input v-model="allowPerSession" type="checkbox" class="h-5 w-5" />
       </label>
 
       <div>
         <label class="mb-1 block text-sm font-semibold text-slate-700">
-          Mode default (saran saat enroll)
+          {{ t('tutoring.billing.defaultMode') }}
         </label>
         <select
           v-model="defaultMode"
           class="w-full rounded-lg border border-slate-300 px-3 py-2"
         >
-          <option :value="null">Tidak ada</option>
+          <option :value="null">{{ t('tutoring.billing.none') }}</option>
           <option v-for="m in enabledModes" :key="m" :value="m">
-            {{ BILLING_MODE_LABELS[m] ?? m }}
+            {{ modeLabel(m) }}
           </option>
         </select>
       </div>
@@ -122,7 +135,7 @@ onMounted(load);
         class="w-full rounded-lg bg-indigo-900 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="save"
       >
-        {{ saving ? 'Menyimpan…' : 'Simpan' }}
+        {{ saving ? t('tutoring.common.saving') : t('tutoring.common.save') }}
       </button>
     </div>
   </div>

@@ -9,16 +9,20 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
-import { tenantKindFromRaw, tenantLabel } from '@/composables/useTenant';
+import { useI18n } from 'vue-i18n';
+import { tenantKindFromRaw } from '@/composables/useTenant';
 
 const props = defineProps<{
   /** Raw `tenant_type` value from a school/user payload. */
   type?: string | null;
 }>();
 
+const { t } = useI18n();
 const kind = computed(() => tenantKindFromRaw(props.type));
 const isBimbel = computed(() => kind.value === 'TUTORING_CENTER');
-const label = computed(() => tenantLabel(kind.value));
+const label = computed(() =>
+  t(isBimbel.value ? 'tutoring.tenant.center' : 'tutoring.tenant.school'),
+);
 </script>
 
 <template>

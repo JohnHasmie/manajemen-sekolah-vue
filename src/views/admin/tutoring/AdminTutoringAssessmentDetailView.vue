@@ -7,14 +7,16 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringAssessment } from '@/types/tutoring';
 
+const { t } = useI18n();
 const route = useRoute();
 const toast = useToast();
 const assessmentId = String(route.params.assessmentId ?? '');
-const title = String(route.query.name ?? 'Asesmen');
+const title = String(route.query.name ?? t('tutoring.programDetail.assessments'));
 
 const loading = ref(true);
 const assessment = ref<TutoringAssessment | null>(null);
@@ -24,7 +26,9 @@ async function load() {
   try {
     assessment.value = await TutoringService.getAssessment(assessmentId);
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat asesmen.');
+    toast.error(
+      e instanceof Error ? e.message : t('tutoring.assessment.loadFailed'),
+    );
   } finally {
     loading.value = false;
   }
@@ -37,18 +41,20 @@ onMounted(load);
   <div class="mx-auto max-w-3xl p-4">
     <h1 class="mb-4 text-lg font-bold text-slate-800">{{ title }}</h1>
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">Memuat…</div>
+    <div v-if="loading" class="py-16 text-center text-slate-500">
+      {{ t('tutoring.common.loading') }}
+    </div>
 
     <p
       v-else-if="!assessment?.questions?.length"
       class="py-12 text-center text-slate-500"
     >
-      Asesmen ini tidak menyimpan butir soal.
+      {{ t('tutoring.assessment.noQuestions') }}
     </p>
 
     <div v-else class="space-y-3">
       <p class="text-sm font-bold text-slate-500">
-        {{ assessment.questions.length }} soal
+        {{ assessment.questions.length }} {{ t('tutoring.assessment.questions') }}
       </p>
       <article
         v-for="(q, i) in assessment.questions"
@@ -66,10 +72,10 @@ onMounted(load);
           </li>
         </ul>
         <p v-if="q.correct_answer" class="mt-2 font-bold text-emerald-700">
-          Jawaban: {{ q.correct_answer }}
+          {{ t('tutoring.assessment.answer') }}: {{ q.correct_answer }}
         </p>
         <p v-if="q.explanation" class="mt-1 text-sm text-slate-500">
-          Pembahasan: {{ q.explanation }}
+          {{ t('tutoring.assessment.explanation') }}: {{ q.explanation }}
         </p>
       </article>
     </div>

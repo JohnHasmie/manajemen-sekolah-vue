@@ -295,8 +295,8 @@ watch(sliceKey, () => {
 
           <!-- Bimbel entry — only for tutoring-center tenants. -->
           <TutoringEntryBanner
-            title="Monitoring Bimbel"
-            subtitle="Jadwal sesi, kehadiran, nilai try-out & tagihan"
+            :title="t('tutoring.entry.parentTitle')"
+            :subtitle="t('tutoring.entry.parentSub')"
             @click="openTutoring"
           />
 

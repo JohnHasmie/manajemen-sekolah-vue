@@ -8,11 +8,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useAuthStore } from '@/stores/auth';
 import { formatDateShort } from '@/lib/format';
 import type { TutoringSession } from '@/types/tutoring';
 
+const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
 const loading = ref(true);
@@ -22,7 +24,7 @@ const sessions = ref<TutoringSession[]>([]);
 async function load() {
   const tutorId = auth.user?.id;
   if (!tutorId) {
-    error.value = 'Tidak dapat mengenali akun tutor.';
+    error.value = t('tutoring.sessions.cannotIdentify');
     loading.value = false;
     return;
   }
@@ -39,7 +41,8 @@ async function load() {
       return ad - bd;
     });
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Gagal memuat sesi.';
+    error.value =
+      e instanceof Error ? e.message : t('tutoring.sessions.loadFailed');
   } finally {
     loading.value = false;
   }
@@ -58,7 +61,9 @@ function openAttendance(s: TutoringSession) {
     params: { sessionId: s.id },
     query: {
       groupId: s.group_id,
-      title: s.scheduled_at ? formatDateShort(s.scheduled_at) : 'Absensi',
+      title: s.scheduled_at
+        ? formatDateShort(s.scheduled_at)
+        : t('tutoring.attendance.title'),
     },
   });
 }
@@ -69,26 +74,30 @@ onMounted(load);
 <template>
   <div class="mx-auto max-w-3xl p-4">
     <div class="mb-4 flex items-center justify-between">
-      <h1 class="text-lg font-bold text-slate-800">Sesi Mengajar</h1>
+      <h1 class="text-lg font-bold text-slate-800">
+        {{ t('tutoring.sessions.title') }}
+      </h1>
       <button
         class="rounded-lg bg-teal-700 px-3 py-2 text-sm font-semibold text-white"
         @click="
           router.push({ name: 'teacher.tutoring.session-create' })
         "
       >
-        + Sesi
+        + {{ t('tutoring.sessions.addBtn') }}
       </button>
     </div>
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">Memuat…</div>
+    <div v-if="loading" class="py-16 text-center text-slate-500">
+      {{ t('tutoring.common.loading') }}
+    </div>
     <div v-else-if="error" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
       <p class="text-red-700">{{ error }}</p>
       <button class="mt-3 text-sm font-semibold text-red-700 underline" @click="load">
-        Coba lagi
+        {{ t('tutoring.common.retry') }}
       </button>
     </div>
     <p v-else-if="sessions.length === 0" class="py-12 text-center text-slate-500">
-      Tidak ada sesi dalam rentang ini.
+      {{ t('tutoring.sessions.empty') }}
     </p>
     <ul v-else class="space-y-2.5">
       <li
@@ -104,7 +113,11 @@ onMounted(load);
           </div>
           <div class="text-sm text-slate-500">
             {{
-              [s.group?.name, s.topic, s.room ? 'Ruang ' + s.room : null]
+              [
+                s.group?.name,
+                s.topic,
+                s.room ? t('tutoring.sessions.room') + ' ' + s.room : null,
+              ]
                 .filter(Boolean)
                 .join(' · ')
             }}

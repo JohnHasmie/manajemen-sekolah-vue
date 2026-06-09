@@ -8,6 +8,7 @@
   passes the destination via @click.
 -->
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { useTenant } from '@/composables/useTenant';
 
 defineProps<{
@@ -16,6 +17,7 @@ defineProps<{
 }>();
 defineEmits<{ (e: 'click'): void }>();
 
+const { t } = useI18n();
 const { isTutoringCenter } = useTenant();
 </script>
 
@@ -43,10 +45,10 @@ const { isTutoringCenter } = useTenant();
     </span>
     <span class="min-w-0 flex-1">
       <span class="block font-extrabold text-violet-900">
-        {{ title ?? 'Menu Bimbel' }}
+        {{ title ?? t('tutoring.entry.adminTitle') }}
       </span>
       <span class="block text-[11.5px] text-violet-700">
-        {{ subtitle ?? 'Kelola program, sesi, dan absensi bimbel' }}
+        {{ subtitle ?? t('tutoring.entry.adminSub') }}
       </span>
     </span>
     <svg

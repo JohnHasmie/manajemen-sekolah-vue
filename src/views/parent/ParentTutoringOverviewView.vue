@@ -10,10 +10,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { formatDateShort, formatRupiah } from '@/lib/format';
 import type { TutoringBill, TutoringChildOverview } from '@/types/tutoring';
 
+const { t } = useI18n();
 const route = useRoute();
 const studentId = String(route.params.studentId ?? '');
 const studentName = String(route.query.name ?? 'Anak');
@@ -28,7 +30,8 @@ async function load() {
   try {
     data.value = await TutoringService.getChildOverview(studentId);
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Gagal memuat data bimbel.';
+    error.value =
+      e instanceof Error ? e.message : t('tutoring.overview.loadError');
   } finally {
     loading.value = false;
   }
@@ -49,12 +52,14 @@ function billTotal(bills: TutoringBill[]): number {
   <div class="mx-auto max-w-3xl p-4">
     <header class="mb-4 flex items-center gap-2">
       <span class="rounded-full bg-violet-600 px-3 py-1 text-sm font-bold text-white">
-        Bimbel
+        {{ t('tutoring.overview.title') }}
       </span>
       <h1 class="text-lg font-bold text-slate-800">{{ studentName }}</h1>
     </header>
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">Memuat…</div>
+    <div v-if="loading" class="py-16 text-center text-slate-500">
+      {{ t('tutoring.common.loading') }}
+    </div>
 
     <div v-else-if="error" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
       <p class="text-red-700">{{ error }}</p>
@@ -62,16 +67,16 @@ function billTotal(bills: TutoringBill[]): number {
         class="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white"
         @click="load"
       >
-        Coba lagi
+        {{ t('tutoring.common.retry') }}
       </button>
     </div>
 
     <div v-else-if="data" class="space-y-4">
       <!-- Attendance -->
       <section class="rounded-2xl border border-slate-200 p-4">
-        <h2 class="mb-3 font-bold text-slate-800">Kehadiran</h2>
+        <h2 class="mb-3 font-bold text-slate-800">{{ t('tutoring.overview.attendance') }}</h2>
         <p v-if="data.attendance.total_recorded === 0" class="text-slate-500">
-          Belum ada sesi yang tercatat.
+          {{ t('tutoring.overview.noSessions') }}
         </p>
         <div v-else class="flex items-center gap-4">
           <div class="rounded-xl bg-violet-100 px-4 py-2 text-center">
@@ -82,20 +87,21 @@ function billTotal(bills: TutoringBill[]): number {
                   : Math.round(data.attendance.attendance_rate) + '%'
               }}
             </div>
-            <div class="text-[11px] text-slate-600">Hadir</div>
+            <div class="text-[11px] text-slate-600">{{ t('tutoring.overview.present') }}</div>
           </div>
           <p class="text-slate-600">
-            {{ data.attendance.attended }} dari
-            {{ data.attendance.total_recorded }} sesi hadir
+            {{ data.attendance.attended }} {{ t('tutoring.overview.of') }}
+            {{ data.attendance.total_recorded }}
+            {{ t('tutoring.overview.sessionsAttended') }}
           </p>
         </div>
       </section>
 
       <!-- Progress -->
       <section class="rounded-2xl border border-slate-200 p-4">
-        <h2 class="mb-3 font-bold text-slate-800">Nilai &amp; Progress</h2>
+        <h2 class="mb-3 font-bold text-slate-800">{{ t('tutoring.overview.progress') }}</h2>
         <p v-if="data.progress.timeline.length === 0" class="text-slate-500">
-          Belum ada nilai try-out.
+          {{ t('tutoring.overview.noScores') }}
         </p>
         <div v-else>
           <div class="mb-2 flex items-center gap-4">
@@ -107,12 +113,12 @@ function billTotal(bills: TutoringBill[]): number {
                     : Math.round(data.progress.summary.overall.latest) + '%'
                 }}
               </div>
-              <div class="text-[11px] text-slate-600">Terakhir</div>
+              <div class="text-[11px] text-slate-600">{{ t('tutoring.overview.latest') }}</div>
             </div>
             <p class="text-slate-600">
-              Terbaik
+              {{ t('tutoring.overview.best') }}
               {{ Math.round(data.progress.summary.overall.best ?? 0) }}% ·
-              Rata-rata
+              {{ t('tutoring.overview.average') }}
               {{ Math.round(data.progress.summary.overall.average ?? 0) }}%
             </p>
           </div>
@@ -133,13 +139,14 @@ function billTotal(bills: TutoringBill[]): number {
 
       <!-- Bills -->
       <section class="rounded-2xl border border-slate-200 p-4">
-        <h2 class="mb-3 font-bold text-slate-800">Tagihan</h2>
+        <h2 class="mb-3 font-bold text-slate-800">{{ t('tutoring.overview.bills') }}</h2>
         <p v-if="unpaid(data.bills).length === 0" class="text-slate-500">
-          Tidak ada tagihan tertunggak. 🎉
+          {{ t('tutoring.overview.noBills') }}
         </p>
         <div v-else>
           <p class="mb-2 font-bold text-slate-800">
-            Total tertunggak: {{ formatRupiah(billTotal(data.bills)) }}
+            {{ t('tutoring.overview.totalDue') }}:
+            {{ formatRupiah(billTotal(data.bills)) }}
           </p>
           <ul class="divide-y divide-slate-100">
             <li
@@ -148,9 +155,10 @@ function billTotal(bills: TutoringBill[]): number {
               class="flex items-center justify-between py-1.5"
             >
               <span class="text-slate-700">
-                {{ b.source_label ?? 'Tagihan' }}
+                {{ b.source_label ?? t('tutoring.overview.billDefault') }}
                 <template v-if="b.due_date">
-                  · jatuh tempo {{ formatDateShort(b.due_date) }}
+                  · {{ t('tutoring.overview.due') }}
+                  {{ formatDateShort(b.due_date) }}
                 </template>
               </span>
               <span class="text-slate-800">{{ formatRupiah(b.amount ?? 0) }}</span>
@@ -161,9 +169,9 @@ function billTotal(bills: TutoringBill[]): number {
 
       <!-- Schedule -->
       <section class="rounded-2xl border border-slate-200 p-4">
-        <h2 class="mb-3 font-bold text-slate-800">Jadwal Mendatang</h2>
+        <h2 class="mb-3 font-bold text-slate-800">{{ t('tutoring.overview.schedule') }}</h2>
         <p v-if="data.upcomingSessions.length === 0" class="text-slate-500">
-          Tidak ada sesi terjadwal.
+          {{ t('tutoring.overview.noSchedule') }}
         </p>
         <ul v-else class="space-y-2">
           <li
@@ -178,7 +186,11 @@ function billTotal(bills: TutoringBill[]): number {
               </div>
               <div class="text-xs text-slate-500">
                 {{
-                  [s.group?.program?.name, s.topic, s.room ? 'Ruang ' + s.room : null]
+                  [
+                    s.group?.program?.name,
+                    s.topic,
+                    s.room ? t('tutoring.overview.room') + ' ' + s.room : null,
+                  ]
                     .filter(Boolean)
                     .join(' · ')
                 }}

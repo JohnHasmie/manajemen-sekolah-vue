@@ -372,7 +372,7 @@ const secondaryActions = computed<{ label: string; icon: string; to: string }[]>
 
           <!-- Bimbel entry — only for tutoring-center tenants. -->
           <TutoringEntryBanner
-            subtitle="Sesi mengajar, absensi & generator soal bimbel"
+            :subtitle="t('tutoring.entry.tutorSub')"
             @click="router.push({ name: 'teacher.tutoring.sessions' })"
           />
 

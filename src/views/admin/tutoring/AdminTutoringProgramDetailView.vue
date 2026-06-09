@@ -9,6 +9,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
@@ -18,6 +19,7 @@ import type {
   TutoringPackage,
 } from '@/types/tutoring';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
@@ -60,9 +62,9 @@ const pkgForm = ref({
 const grpForm = ref({ name: '', capacity: 10 });
 
 const allModes: { key: string; label: string }[] = [
-  { key: 'PREPAID', label: 'Prabayar' },
-  { key: 'MONTHLY', label: 'Bulanan' },
-  { key: 'PER_SESSION', label: 'Per Sesi' },
+  { key: 'PREPAID', label: t('tutoring.modes.prepaid') },
+  { key: 'MONTHLY', label: t('tutoring.modes.monthly') },
+  { key: 'PER_SESSION', label: t('tutoring.modes.perSession') },
 ];
 
 async function load() {
@@ -74,7 +76,9 @@ async function load() {
       TutoringService.getAssessments(programId),
     ]);
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat detail.');
+    toast.error(
+      e instanceof Error ? e.message : t('tutoring.programDetail.loadFailed'),
+    );
   } finally {
     loading.value = false;
   }
@@ -89,11 +93,11 @@ function toggleMode(key: string) {
 
 async function createPackage() {
   if (pkgForm.value.name.trim().length < 3) {
-    toast.error('Nama paket minimal 3 karakter.');
+    toast.error(t('tutoring.programDetail.pkgNameTooShort'));
     return;
   }
   if (pkgForm.value.modes.length === 0) {
-    toast.error('Pilih minimal satu mode billing.');
+    toast.error(t('tutoring.programDetail.pickMode'));
     return;
   }
   savingPkg.value = true;
@@ -107,12 +111,14 @@ async function createPackage() {
         : undefined,
       price: pkgForm.value.price ? Number(pkgForm.value.price) : undefined,
     });
-    toast.success('Paket dibuat.');
+    toast.success(t('tutoring.programDetail.pkgCreated'));
     showPkgForm.value = false;
     pkgForm.value = { name: '', total_sessions: '', price: '', modes: ['PREPAID'] };
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal membuat paket.');
+    toast.error(
+      e instanceof Error ? e.message : t('tutoring.programDetail.pkgCreateFailed'),
+    );
   } finally {
     savingPkg.value = false;
   }
@@ -120,7 +126,7 @@ async function createPackage() {
 
 async function createGroup() {
   if (grpForm.value.name.trim().length < 3) {
-    toast.error('Nama kelompok minimal 3 karakter.');
+    toast.error(t('tutoring.programDetail.grpNameTooShort'));
     return;
   }
   savingGrp.value = true;
@@ -130,12 +136,14 @@ async function createGroup() {
       name: grpForm.value.name.trim(),
       capacity: grpForm.value.capacity,
     });
-    toast.success('Kelompok dibuat.');
+    toast.success(t('tutoring.programDetail.grpCreated'));
     showGrpForm.value = false;
     grpForm.value = { name: '', capacity: 10 };
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal membuat kelompok.');
+    toast.error(
+      e instanceof Error ? e.message : t('tutoring.programDetail.grpCreateFailed'),
+    );
   } finally {
     savingGrp.value = false;
   }
@@ -152,22 +160,24 @@ onMounted(load);
         class="rounded-lg bg-indigo-900 px-3 py-2 text-sm font-semibold text-white"
         @click="goEnroll"
       >
-        + Daftarkan Siswa
+        + {{ t('tutoring.programDetail.enroll') }}
       </button>
     </div>
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">Memuat…</div>
+    <div v-if="loading" class="py-16 text-center text-slate-500">
+      {{ t('tutoring.common.loading') }}
+    </div>
 
     <template v-else>
       <!-- Packages -->
       <section class="mb-6">
         <div class="mb-2 flex items-center justify-between">
-          <h2 class="font-bold text-slate-800">Paket</h2>
+          <h2 class="font-bold text-slate-800">{{ t('tutoring.programDetail.packages') }}</h2>
           <button
             class="text-sm font-semibold text-indigo-900"
             @click="showPkgForm = !showPkgForm"
           >
-            {{ showPkgForm ? 'Tutup' : '+ Tambah' }}
+            {{ showPkgForm ? t('tutoring.common.close') : '+ ' + t('tutoring.common.add') }}
           </button>
         </div>
 
@@ -177,20 +187,20 @@ onMounted(load);
         >
           <input
             v-model="pkgForm.name"
-            placeholder="Nama paket (cth. Intensif 12 Sesi)"
+            :placeholder="t('tutoring.programDetail.pkgNamePh')"
             class="w-full rounded-lg border border-slate-300 px-3 py-2"
           />
           <div class="flex gap-2">
             <input
               v-model="pkgForm.total_sessions"
               type="number"
-              placeholder="Total sesi"
+              :placeholder="t('tutoring.programDetail.totalSessionsPh')"
               class="w-full rounded-lg border border-slate-300 px-3 py-2"
             />
             <input
               v-model="pkgForm.price"
               type="number"
-              placeholder="Harga (Rp)"
+              :placeholder="t('tutoring.programDetail.pricePh')"
               class="w-full rounded-lg border border-slate-300 px-3 py-2"
             />
           </div>
@@ -215,12 +225,12 @@ onMounted(load);
             class="rounded-lg bg-indigo-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="createPackage"
           >
-            {{ savingPkg ? 'Menyimpan…' : 'Simpan paket' }}
+            {{ savingPkg ? t('tutoring.common.saving') : t('tutoring.common.save') }}
           </button>
         </div>
 
         <p v-if="packages.length === 0" class="text-sm text-slate-500">
-          Belum ada paket.
+          {{ t('tutoring.programDetail.noPackages') }}
         </p>
         <ul v-else class="space-y-2">
           <li
@@ -232,7 +242,9 @@ onMounted(load);
             <div class="text-sm text-slate-500">
               {{
                 [
-                  p.total_sessions ? p.total_sessions + ' sesi' : null,
+                  p.total_sessions
+                    ? p.total_sessions + ' ' + t('tutoring.programDetail.sessions')
+                    : null,
                   p.price != null ? formatRupiah(p.price) : null,
                   p.billing_modes_allowed.join(', '),
                 ]
@@ -247,12 +259,12 @@ onMounted(load);
       <!-- Groups -->
       <section>
         <div class="mb-2 flex items-center justify-between">
-          <h2 class="font-bold text-slate-800">Kelompok</h2>
+          <h2 class="font-bold text-slate-800">{{ t('tutoring.programDetail.groups') }}</h2>
           <button
             class="text-sm font-semibold text-indigo-900"
             @click="showGrpForm = !showGrpForm"
           >
-            {{ showGrpForm ? 'Tutup' : '+ Tambah' }}
+            {{ showGrpForm ? t('tutoring.common.close') : '+ ' + t('tutoring.common.add') }}
           </button>
         </div>
 
@@ -262,13 +274,13 @@ onMounted(load);
         >
           <input
             v-model="grpForm.name"
-            placeholder="Nama kelompok (cth. Kelas UTBK Pagi)"
+            :placeholder="t('tutoring.programDetail.grpNamePh')"
             class="w-full rounded-lg border border-slate-300 px-3 py-2"
           />
           <input
             v-model.number="grpForm.capacity"
             type="number"
-            placeholder="Kapasitas"
+            :placeholder="t('tutoring.programDetail.capacityPh')"
             class="w-full rounded-lg border border-slate-300 px-3 py-2"
           />
           <button
@@ -276,12 +288,12 @@ onMounted(load);
             class="rounded-lg bg-indigo-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="createGroup"
           >
-            {{ savingGrp ? 'Menyimpan…' : 'Simpan kelompok' }}
+            {{ savingGrp ? t('tutoring.common.saving') : t('tutoring.common.save') }}
           </button>
         </div>
 
         <p v-if="groups.length === 0" class="text-sm text-slate-500">
-          Belum ada kelompok.
+          {{ t('tutoring.programDetail.noGroups') }}
         </p>
         <ul v-else class="space-y-2">
           <li
@@ -293,9 +305,13 @@ onMounted(load);
             <div class="text-sm text-slate-500">
               {{
                 [
-                  'Kapasitas ' + g.capacity,
-                  (g.enrollments_count ?? 0) + ' siswa',
-                  g.tutor?.name ? 'Tutor: ' + g.tutor.name : null,
+                  t('tutoring.programDetail.capacity') + ' ' + g.capacity,
+                  (g.enrollments_count ?? 0) +
+                    ' ' +
+                    t('tutoring.programDetail.students'),
+                  g.tutor?.name
+                    ? t('tutoring.programDetail.tutor') + ': ' + g.tutor.name
+                    : null,
                 ]
                   .filter(Boolean)
                   .join(' · ')
@@ -307,9 +323,9 @@ onMounted(load);
 
       <!-- Assessments (try-out / post-test) -->
       <section class="mt-6">
-        <h2 class="mb-2 font-bold text-slate-800">Asesmen</h2>
+        <h2 class="mb-2 font-bold text-slate-800">{{ t('tutoring.programDetail.assessments') }}</h2>
         <p v-if="assessments.length === 0" class="text-sm text-slate-500">
-          Belum ada asesmen. Buat dari Generator Soal AI.
+          {{ t('tutoring.programDetail.noAssessments') }}
         </p>
         <ul v-else class="space-y-2">
           <li
@@ -330,8 +346,12 @@ onMounted(load);
                   [
                     a.type_label,
                     a.held_at,
-                    (a.questions_count ?? 0) + ' soal',
-                    (a.scores_count ?? 0) + ' nilai',
+                    (a.questions_count ?? 0) +
+                      ' ' +
+                      t('tutoring.programDetail.questions'),
+                    (a.scores_count ?? 0) +
+                      ' ' +
+                      t('tutoring.programDetail.scores'),
                   ]
                     .filter(Boolean)
                     .join(' · ')

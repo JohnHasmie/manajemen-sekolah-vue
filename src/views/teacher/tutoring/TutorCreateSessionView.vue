@@ -7,10 +7,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringGroup } from '@/types/tutoring';
 
+const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
 
@@ -32,7 +34,9 @@ async function load() {
     // across programs.
     groups.value = await TutoringService.getAllGroups();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat kelompok.');
+    toast.error(
+      e instanceof Error ? e.message : t('tutoring.createSession.loadFailed'),
+    );
   } finally {
     loading.value = false;
   }
@@ -40,11 +44,11 @@ async function load() {
 
 async function submit() {
   if (!groupId.value) {
-    toast.error('Pilih kelompok dulu.');
+    toast.error(t('tutoring.createSession.pickGroupFirst'));
     return;
   }
   if (!date.value) {
-    toast.error('Pilih tanggal.');
+    toast.error(t('tutoring.createSession.pickDate'));
     return;
   }
   saving.value = true;
@@ -56,10 +60,12 @@ async function submit() {
       room: room.value.trim() || undefined,
       topic: topic.value.trim() || undefined,
     });
-    toast.success('Sesi dibuat.');
+    toast.success(t('tutoring.createSession.created'));
     router.back();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal membuat sesi.');
+    toast.error(
+      e instanceof Error ? e.message : t('tutoring.createSession.createFailed'),
+    );
   } finally {
     saving.value = false;
   }
@@ -70,25 +76,29 @@ onMounted(load);
 
 <template>
   <div class="mx-auto max-w-2xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">Buat Sesi</h1>
+    <h1 class="mb-4 text-lg font-bold text-slate-800">
+      {{ t('tutoring.createSession.title') }}
+    </h1>
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">Memuat…</div>
+    <div v-if="loading" class="py-16 text-center text-slate-500">
+      {{ t('tutoring.common.loading') }}
+    </div>
 
     <p
       v-else-if="groups.length === 0"
       class="py-12 text-center text-slate-500"
     >
-      Belum ada kelompok. Minta admin membuat kelompok dulu.
+      {{ t('tutoring.createSession.noGroups') }}
     </p>
 
     <div v-else class="space-y-3">
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">Kelompok</span>
+        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.group') }}</span>
         <select
           v-model="groupId"
           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
         >
-          <option :value="null" disabled>Pilih kelompok</option>
+          <option :value="null" disabled>{{ t('tutoring.createSession.pickGroup') }}</option>
           <option v-for="g in groups" :key="g.id" :value="g.id">
             {{ g.name }}
           </option>
@@ -97,7 +107,7 @@ onMounted(load);
 
       <div class="flex gap-2">
         <label class="block flex-1">
-          <span class="text-sm font-semibold text-slate-700">Tanggal</span>
+          <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.date') }}</span>
           <input
             v-model="date"
             type="date"
@@ -105,7 +115,7 @@ onMounted(load);
           />
         </label>
         <label class="block w-32">
-          <span class="text-sm font-semibold text-slate-700">Jam</span>
+          <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.time') }}</span>
           <input
             v-model="time"
             type="time"
@@ -115,7 +125,7 @@ onMounted(load);
       </div>
 
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">Durasi (menit)</span>
+        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.duration') }}</span>
         <select
           v-model.number="duration"
           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
@@ -128,7 +138,7 @@ onMounted(load);
       </label>
 
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">Ruang (opsional)</span>
+        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.room') }}</span>
         <input
           v-model="room"
           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
@@ -136,7 +146,7 @@ onMounted(load);
       </label>
 
       <label class="block">
-        <span class="text-sm font-semibold text-slate-700">Topik (opsional)</span>
+        <span class="text-sm font-semibold text-slate-700">{{ t('tutoring.createSession.topic') }}</span>
         <input
           v-model="topic"
           class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
@@ -148,7 +158,7 @@ onMounted(load);
         class="w-full rounded-lg bg-teal-700 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="submit"
       >
-        {{ saving ? 'Menyimpan…' : 'Simpan Sesi' }}
+        {{ saving ? t('tutoring.common.saving') : t('tutoring.createSession.save') }}
       </button>
     </div>
   </div>

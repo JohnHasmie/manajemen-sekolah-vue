@@ -8,20 +8,27 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
-import {
-  ATTENDANCE_STATUS_LABELS,
-  type AttendanceStatusKey,
-} from '@/types/tutoring';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
 const sessionId = String(route.params.sessionId ?? '');
 const groupId = String(route.query.groupId ?? '');
-const title = String(route.query.title ?? 'Absensi');
+const title = String(route.query.title ?? t('tutoring.attendance.title'));
+
+const STATUS_KEYS: Record<string, string> = {
+  PRESENT: 'tutoring.status.present',
+  LATE: 'tutoring.status.late',
+  SICK: 'tutoring.status.sick',
+  EXCUSED: 'tutoring.status.excused',
+  ALPHA: 'tutoring.status.alpha',
+};
+const statusLabel = (k: string) => (STATUS_KEYS[k] ? t(STATUS_KEYS[k]) : k);
 
 const loading = ref(true);
 const saving = ref(false);
@@ -32,9 +39,7 @@ const names = ref<Record<string, string>>({});
 /** student_id → chosen status */
 const chosen = ref<Record<string, string>>({});
 
-const statusKeys = Object.keys(
-  ATTENDANCE_STATUS_LABELS,
-) as AttendanceStatusKey[];
+const statusKeys = Object.keys(STATUS_KEYS);
 
 async function load() {
   loading.value = true;
@@ -63,7 +68,8 @@ async function load() {
     names.value = n;
     chosen.value = c;
   } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Gagal memuat daftar siswa.';
+    error.value =
+      e instanceof Error ? e.message : t('tutoring.attendance.loadFailed');
   } finally {
     loading.value = false;
   }
@@ -77,10 +83,12 @@ async function save() {
       status,
     }));
     await TutoringService.recordAttendance(sessionId, items);
-    toast.success('Absensi tersimpan.');
+    toast.success(t('tutoring.attendance.saved'));
     router.back();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menyimpan absensi.');
+    toast.error(
+      e instanceof Error ? e.message : t('tutoring.attendance.saveFailed'),
+    );
   } finally {
     saving.value = false;
   }
@@ -91,20 +99,24 @@ onMounted(load);
 
 <template>
   <div class="mx-auto max-w-2xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">Absensi · {{ title }}</h1>
+    <h1 class="mb-4 text-lg font-bold text-slate-800">
+      {{ t('tutoring.attendance.title') }} · {{ title }}
+    </h1>
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">Memuat…</div>
+    <div v-if="loading" class="py-16 text-center text-slate-500">
+      {{ t('tutoring.common.loading') }}
+    </div>
     <div v-else-if="error" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
       <p class="text-red-700">{{ error }}</p>
       <button class="mt-3 text-sm font-semibold text-red-700 underline" @click="load">
-        Coba lagi
+        {{ t('tutoring.common.retry') }}
       </button>
     </div>
     <p
       v-else-if="Object.keys(names).length === 0"
       class="py-12 text-center text-slate-500"
     >
-      Belum ada siswa terdaftar di kelompok ini.
+      {{ t('tutoring.attendance.noStudents') }}
     </p>
     <div v-else class="space-y-2.5">
       <div
@@ -118,7 +130,7 @@ onMounted(load);
           class="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
         >
           <option v-for="k in statusKeys" :key="k" :value="k">
-            {{ ATTENDANCE_STATUS_LABELS[k] }}
+            {{ statusLabel(k) }}
           </option>
         </select>
       </div>
@@ -128,7 +140,7 @@ onMounted(load);
         class="mt-3 w-full rounded-lg bg-teal-700 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="save"
       >
-        {{ saving ? 'Menyimpan…' : 'Simpan Absensi' }}
+        {{ saving ? t('tutoring.common.saving') : t('tutoring.attendance.save') }}
       </button>
     </div>
   </div>

@@ -6,10 +6,12 @@
 -->
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringAiQuestion, TutoringGroup } from '@/types/tutoring';
 
+const { t } = useI18n();
 const toast = useToast();
 
 const mode = ref<'tryout' | 'exercise'>('tryout');
@@ -37,7 +39,7 @@ onMounted(async () => {
 
 async function saveAsTryout() {
   if (!groupId.value) {
-    toast.error('Pilih kelompok untuk menyimpan try-out.');
+    toast.error(t('tutoring.ai.pickGroup'));
     return;
   }
   saving.value = true;
@@ -50,9 +52,9 @@ async function saveAsTryout() {
       tutoring_group_id: groupId.value,
       questions: questions.value,
     });
-    toast.success('Try-out + soal tersimpan. Lihat di Program → Asesmen.');
+    toast.success(t('tutoring.ai.savedOk'));
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menyimpan try-out.');
+    toast.error(e instanceof Error ? e.message : t('tutoring.ai.saveFailed'));
   } finally {
     saving.value = false;
   }
@@ -60,7 +62,7 @@ async function saveAsTryout() {
 
 async function generate() {
   if (!subject.value.trim()) {
-    toast.error('Mata pelajaran wajib diisi.');
+    toast.error(t('tutoring.ai.subjectRequired'));
     return;
   }
   loading.value = true;
@@ -76,10 +78,10 @@ async function generate() {
     });
     questions.value = data.questions ?? [];
     if (questions.value.length === 0) {
-      toast.info('Tidak ada soal yang dihasilkan. Coba lagi.');
+      toast.info(t('tutoring.ai.noGenerated'));
     }
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal membuat soal.');
+    toast.error(e instanceof Error ? e.message : t('tutoring.ai.genFailed'));
   } finally {
     loading.value = false;
   }
@@ -88,7 +90,9 @@ async function generate() {
 
 <template>
   <div class="mx-auto max-w-3xl p-4">
-    <h1 class="mb-4 text-lg font-bold text-slate-800">Generator Soal AI</h1>
+    <h1 class="mb-4 text-lg font-bold text-slate-800">
+      {{ t('tutoring.ai.title') }}
+    </h1>
 
     <div class="space-y-3 rounded-2xl border border-slate-200 p-4">
       <div class="flex gap-2">
@@ -103,24 +107,24 @@ async function generate() {
           "
           @click="mode = m"
         >
-          {{ m === 'tryout' ? 'Try-out' : 'Latihan' }}
+          {{ m === 'tryout' ? t('tutoring.ai.tryout') : t('tutoring.ai.exercise') }}
         </button>
       </div>
 
       <input
         v-model="subject"
-        placeholder="Mata pelajaran (cth. Matematika UTBK)"
+        :placeholder="t('tutoring.ai.subjectPh')"
         class="w-full rounded-lg border border-slate-300 px-3 py-2"
       />
       <div class="flex gap-2">
         <input
           v-model="level"
-          placeholder="Jenjang (cth. SMA)"
+          :placeholder="t('tutoring.ai.levelPh')"
           class="w-full rounded-lg border border-slate-300 px-3 py-2"
         />
         <input
           v-model="topic"
-          placeholder="Topik (opsional)"
+          :placeholder="t('tutoring.ai.topicPh')"
           class="w-full rounded-lg border border-slate-300 px-3 py-2"
         />
       </div>
@@ -129,19 +133,19 @@ async function generate() {
           v-model.number="count"
           class="w-full rounded-lg border border-slate-300 px-3 py-2"
         >
-          <option :value="5">5 soal</option>
-          <option :value="10">10 soal</option>
-          <option :value="15">15 soal</option>
-          <option :value="20">20 soal</option>
+          <option :value="5">{{ t('tutoring.ai.count', { n: 5 }) }}</option>
+          <option :value="10">{{ t('tutoring.ai.count', { n: 10 }) }}</option>
+          <option :value="15">{{ t('tutoring.ai.count', { n: 15 }) }}</option>
+          <option :value="20">{{ t('tutoring.ai.count', { n: 20 }) }}</option>
         </select>
         <select
           v-model="difficulty"
           class="w-full rounded-lg border border-slate-300 px-3 py-2"
         >
-          <option value="mixed">Campuran</option>
-          <option value="easy">Mudah</option>
-          <option value="medium">Sedang</option>
-          <option value="hard">Sulit</option>
+          <option value="mixed">{{ t('tutoring.ai.mixed') }}</option>
+          <option value="easy">{{ t('tutoring.ai.easy') }}</option>
+          <option value="medium">{{ t('tutoring.ai.medium') }}</option>
+          <option value="hard">{{ t('tutoring.ai.hard') }}</option>
         </select>
       </div>
 
@@ -150,7 +154,7 @@ async function generate() {
         class="w-full rounded-lg bg-teal-700 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="generate"
       >
-        {{ loading ? 'Membuat soal…' : 'Generate' }}
+        {{ loading ? t('tutoring.ai.generating') : t('tutoring.ai.generate') }}
       </button>
     </div>
 
@@ -160,13 +164,13 @@ async function generate() {
       class="mt-4 space-y-2 rounded-2xl border border-slate-200 p-4"
     >
       <label class="block text-sm font-semibold text-slate-700">
-        Simpan sebagai try-out untuk kelompok
+        {{ t('tutoring.ai.saveForGroup') }}
       </label>
       <select
         v-model="groupId"
         class="w-full rounded-lg border border-slate-300 px-3 py-2"
       >
-        <option :value="null" disabled>Pilih kelompok</option>
+        <option :value="null" disabled>{{ t('tutoring.ai.pickGroupPh') }}</option>
         <option v-for="g in groups" :key="g.id" :value="g.id">
           {{ g.name }}
         </option>
@@ -176,7 +180,7 @@ async function generate() {
         class="rounded-lg border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 disabled:opacity-50"
         @click="saveAsTryout"
       >
-        {{ saving ? 'Menyimpan…' : 'Simpan sebagai Try-out' }}
+        {{ saving ? t('tutoring.common.saving') : t('tutoring.ai.saveAsTryout') }}
       </button>
     </div>
 
@@ -201,10 +205,10 @@ async function generate() {
           </li>
         </ul>
         <p v-if="q.correct_answer" class="mt-2 font-bold text-emerald-700">
-          Jawaban: {{ q.correct_answer }}
+          {{ t('tutoring.ai.answer') }}: {{ q.correct_answer }}
         </p>
         <p v-if="q.explanation" class="mt-1 text-sm text-slate-500">
-          Pembahasan: {{ q.explanation }}
+          {{ t('tutoring.ai.explanation') }}: {{ q.explanation }}
         </p>
       </article>
     </div>
