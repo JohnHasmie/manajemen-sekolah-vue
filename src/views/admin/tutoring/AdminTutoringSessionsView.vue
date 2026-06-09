@@ -20,9 +20,11 @@ import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import Modal from '@/components/ui/Modal.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import TutoringStatusPill from '@/components/feature/tutoring/TutoringStatusPill.vue';
+import SessionsCalendar from '@/components/feature/tutoring/SessionsCalendar.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 type Filter = 'all' | 'upcoming' | 'past';
+type ViewMode = 'list' | 'calendar';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -31,6 +33,7 @@ const toast = useToast();
 const loading = ref(true);
 const sessions = ref<TutoringSession[]>([]);
 const filter = ref<Filter>('all');
+const view = ref<ViewMode>('list');
 const showFilterPicker = ref(false);
 
 const FILTER_OPTIONS: { key: Filter; label: string }[] = [
@@ -167,11 +170,46 @@ onMounted(load);
           @click="showFilterPicker = true"
         />
       </template>
+      <template #segmented>
+        <div class="inline-flex p-1 bg-slate-50 border border-slate-200 rounded-xl">
+          <button
+            type="button"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
+            :class="view === 'list'
+              ? 'bg-role-admin text-white'
+              : 'text-slate-500 hover:text-slate-900'"
+            @click="view = 'list'"
+          >
+            <NavIcon name="list" :size="14" />
+            List
+          </button>
+          <button
+            type="button"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
+            :class="view === 'calendar'
+              ? 'bg-role-admin text-white'
+              : 'text-slate-500 hover:text-slate-900'"
+            @click="view = 'calendar'"
+          >
+            <NavIcon name="calendar" :size="14" />
+            Kalender
+          </button>
+        </div>
+      </template>
     </PageFilterToolbar>
 
     <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
+
+    <!-- Calendar view ─ entire tenant's sessions on a month grid -->
+    <SessionsCalendar
+      v-else-if="view === 'calendar'"
+      :sessions="sessions"
+      accent="admin"
+      :on-open="openAttendance"
+    />
+
     <TutoringEmpty
       v-else-if="filtered.length === 0"
       :text="t('tutoring.adminSessions.empty')"
