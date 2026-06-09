@@ -31,8 +31,15 @@ onMounted(() => {
 });
 
 async function open(n: AppNotification) {
+  // Always mark read on click — even for rows with no deep-link target
+  // (e.g. the founder's bare test notifications), the click must clear
+  // the unread state.
   if (!n.read_at) await store.markRead(n.id);
-  if (n.href) router.push(n.href);
+  if (n.href) {
+    router.push(n.href).catch(() => {
+      // Swallow redundant-navigation errors (already on the page).
+    });
+  }
 }
 
 // ── IntersectionObserver auto-mark-as-read (mobile parity) ────
@@ -108,6 +115,8 @@ function categoryColor(cat: AppNotification['category']) {
       return 'bg-status-info-soft text-status-info';
     case 'grade':
       return 'bg-status-success-soft text-emerald-700';
+    case 'class_activity':
+      return 'bg-status-info-soft text-status-info';
     case 'lesson_plan':
       return 'bg-role-teacher-soft text-role-teacher';
     case 'billing':
@@ -124,6 +133,7 @@ function categoryLabel(cat: AppNotification['category']) {
     announcement: t('common.announcement'),
     attendance: t('common.attendance'),
     grade: t('common.grade'),
+    class_activity: t('common.activity'),
     lesson_plan: t('common.lessonPlan'),
     billing: t('common.billing'),
     system: t('common.system'),

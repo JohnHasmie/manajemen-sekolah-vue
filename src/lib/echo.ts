@@ -32,8 +32,15 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
 import { storage, StorageKeys } from './storage';
+import router from '@/router';
+import { useToast } from '@/composables/useToast';
 import { useNotificationsStore } from '@/stores/notifications';
-import type { AppNotification, NotificationCategory } from '@/types/notification';
+import { activeNotificationAudience } from '@/services/notification.service';
+import {
+  notificationCategoryFromType,
+  notificationHref,
+  type AppNotification,
+} from '@/types/notification';
 
 /**
  * Shape of the realtime payload the backend ships in `broadcastWith()`.
@@ -83,15 +90,37 @@ function channelName(userId: string): string {
  * boundary so the rest of the app never sees the wire shape.
  */
 function toAppNotification(p: NotificationCreatedPayload): AppNotification {
+  const data = p.data ?? undefined;
+  // Use the SHARED type→category + href derivers so a realtime row and
+  // the same row pulled later via REST land in the same category and
+  // deep-link to the same page. Audience = the reader's active role.
+  const audience = activeNotificationAudience();
   return {
     id: p.id,
     title: p.title,
     body: p.message,
-    category: (p.type as NotificationCategory) ?? 'other',
+    category: notificationCategoryFromType(p.type),
     read_at: p.is_read ? p.created_at : null,
     created_at: p.created_at,
-    data: p.data ?? undefined,
+    href: notificationHref(p.type, data, audience),
+    data,
   };
+}
+
+/**
+ * Navigate to a notification's target page (if any) and mark it read.
+ * Shared by the realtime toast's click handler. Safe to call with a null
+ * href — it still marks the row read (the founder's bare test rows have
+ * no target, but the click must clear their unread state).
+ */
+function openNotification(n: AppNotification): void {
+  const store = useNotificationsStore();
+  void store.markRead(n.id);
+  if (n.href) {
+    void router.push(n.href).catch(() => {
+      // Swallow redundant-navigation errors (already on the page).
+    });
+  }
 }
 
 /**
@@ -156,6 +185,7 @@ export function init(userId: string | null | undefined): void {
   subscribedUserId = userId;
 
   const store = useNotificationsStore();
+  const toast = useToast();
 
   echo
     .private(channelName(userId))
@@ -163,16 +193,26 @@ export function init(userId: string | null | undefined): void {
       try {
         const incoming = toAppNotification(payload);
 
-        // Prepend to the list cache *only if it's loaded* and we don't
-        // already hold this id (defends against a poll + push race).
-        const alreadyKnown = store.items.some((i) => i.id === incoming.id);
-        if (!alreadyKnown) {
-          if (store.items.length > 0) {
-            store.items.unshift(incoming);
-          }
-          // Freshly-created rows are always unread → bump the badge.
-          store.unreadCount += 1;
-        }
+        // Prepend to the list cache + bump the badge. Idempotent: a
+        // duplicate id (poll + push race) returns false and we skip the
+        // toast so the same arrival never double-notifies.
+        const isNew = store.prepend(incoming);
+        if (!isNew) return;
+
+        // Don't pop a toast while the user is already staring at the
+        // Notifikasi list — the new row appears there live, a toast on
+        // top would be redundant. Everywhere else, show it.
+        if (router.currentRoute.value.name === 'notifications') return;
+
+        // Visible realtime trigger: a tappable toast with the title +
+        // body. Clicking it deep-links to the notification's page (if
+        // any) and marks it read.
+        toast.show({
+          tone: 'info',
+          title: incoming.title,
+          message: incoming.body,
+          onClick: () => openNotification(incoming),
+        });
       } catch {
         // Never let a malformed payload break the socket pipeline; the
         // existing polling will reconcile the count on the next tick.
