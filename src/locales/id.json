@@ -1652,7 +1652,10 @@
       "bills": "Tagihan",
       "billingSettings": "Pengaturan billing",
       "monitor": "Monitoring",
-      "ai": "Soal AI"
+      "ai": "Soal AI",
+      "manajemen": "Manajemen",
+      "students": "Siswa Bimbel",
+      "tutors": "Tutor"
     },
     "dashboard": {
       "title": "Dasbor Bimbel",
@@ -1885,6 +1888,50 @@
       "parentTitle": "Monitoring Bimbel",
       "parentSub": "Jadwal sesi, kehadiran, nilai try-out & tagihan",
       "noChild": "Belum ada anak terdaftar."
+    },
+    "students": {
+      "title": "Siswa Bimbel",
+      "empty": "Belum ada siswa terdaftar.",
+      "flow": "Diturunkan dari enrollment aktif.",
+      "filterAll": "Semua program",
+      "attendance": "hadir",
+      "outstanding": "tunggakan"
+    },
+    "tutors": {
+      "title": "Tutor",
+      "empty": "Belum ada tutor. Undang lewat tombol di samping.",
+      "inviteCta": "Undang tutor",
+      "filterAll": "Semua",
+      "filterActive": "Aktif",
+      "filterPending": "Belum punya kelompok",
+      "sessions30d": "sesi 30h",
+      "attendance": "kehadiran rerata",
+      "statusActive": "Aktif",
+      "statusPending": "Menunggu"
+    },
+    "invite": {
+      "title": "Undang Tutor",
+      "subtitle": "Email akan mendapat akses TEACHER. Akun baru otomatis dibuat bila email belum terdaftar.",
+      "emailLabel": "EMAIL",
+      "emailHint": "tutor@contoh.id",
+      "nameLabel": "NAMA (opsional)",
+      "nameHint": "Akan dipakai kalau akun baru",
+      "submit": "Kirim undangan",
+      "created": "Akun tutor dibuat",
+      "attached": "Tutor ditambahkan",
+      "alreadyTutor": "Sudah jadi tutor",
+      "tempPwd": "Kata sandi sementara — bagikan langsung ke tutor",
+      "done": "Selesai",
+      "emailInvalid": "Email tidak valid."
+    },
+    "studentDetail": {
+      "title": "Detail Siswa",
+      "active": "Aktif"
+    },
+    "tutorDetail": {
+      "title": "Detail Tutor",
+      "groupsAssigned": "Kelompok yang Diampu",
+      "noGroups": "Belum di-assign ke kelompok. Assign dari Program → Kelompok."
     }
   }
 }

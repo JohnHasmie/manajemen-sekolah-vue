@@ -19,11 +19,14 @@ import type {
   TutoringChildOverview,
   TutoringEnrollee,
   TutoringGroup,
+  TutoringInviteResult,
   TutoringPackage,
   TutoringProgram,
   TutoringProgress,
   TutoringSession,
   TutoringSessionAttendanceRow,
+  TutoringStudentRow,
+  TutoringTutorRow,
 } from '@/types/tutoring';
 
 function toIso(d: Date): string {
@@ -33,10 +36,12 @@ function toIso(d: Date): string {
 export const TutoringService = {
   // ── Admin reads ─────────────────────────────────────────────────
 
-  /** Headline KPIs for the admin bimbel dashboard. */
-  async getAdminStats(): Promise<TutoringAdminStats> {
+  /** Headline KPIs for the admin bimbel dashboard. Optionally scoped
+   *  to a single program (the dashboard slice filter). */
+  async getAdminStats(programId?: string | null): Promise<TutoringAdminStats> {
     const res = await api.get<ApiResponse<TutoringAdminStats>>(
       '/tutoring/admin-stats',
+      { params: programId ? { program_id: programId } : {} },
     );
     return (
       extractData(res) ?? {
@@ -51,6 +56,55 @@ export const TutoringService = {
         attendance_rate: null,
       }
     );
+  },
+
+  /** Admin: list of enrolled bimbel students. */
+  async getAdminStudents(opts: {
+    program_id?: string | null;
+    search?: string;
+  } = {}): Promise<TutoringStudentRow[]> {
+    const res = await api.get<ApiResponse<TutoringStudentRow[]>>(
+      '/tutoring/students',
+      {
+        params: {
+          ...(opts.program_id ? { program_id: opts.program_id } : {}),
+          ...(opts.search ? { search: opts.search } : {}),
+        },
+      },
+    );
+    return extractData(res) ?? [];
+  },
+
+  /** Admin: tutors carrying TEACHER role on this tenant. */
+  async getAdminTutors(opts: {
+    status?: 'active' | 'pending';
+    search?: string;
+  } = {}): Promise<TutoringTutorRow[]> {
+    const res = await api.get<ApiResponse<TutoringTutorRow[]>>(
+      '/tutoring/tutors',
+      {
+        params: {
+          ...(opts.status ? { status: opts.status } : {}),
+          ...(opts.search ? { search: opts.search } : {}),
+        },
+      },
+    );
+    return extractData(res) ?? [];
+  },
+
+  /** Admin: invite a tutor by email (idempotent). */
+  async inviteTutor(payload: {
+    email: string;
+    name?: string | null;
+  }): Promise<TutoringInviteResult> {
+    const res = await api.post<ApiResponse<TutoringInviteResult>>(
+      '/tutoring/tutors/invite',
+      {
+        email: payload.email,
+        ...(payload.name ? { name: payload.name } : {}),
+      },
+    );
+    return extractData(res)!;
   },
 
   /** All sessions for the tenant within [from]..[to] (admin view). */

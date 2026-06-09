@@ -817,6 +817,27 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        path: 'admin/tutoring/students',
+        name: 'admin.tutoring.students',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringStudentsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/tutors',
+        name: 'admin.tutoring.tutors',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringTutorsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/tutors/:userId',
+        name: 'admin.tutoring.tutor-detail',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringTutorDetailView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'admin/tutoring/bills',
         name: 'admin.tutoring.bills',
         component: () =>

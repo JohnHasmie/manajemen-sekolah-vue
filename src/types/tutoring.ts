@@ -191,3 +191,45 @@ export interface TutoringAssessment {
   scores_count?: number;
   questions?: TutoringAiQuestion[] | null;
 }
+
+/** Admin: row from GET /tutoring/students. */
+export interface TutoringStudentRow {
+  student_id: string;
+  student_name: string;
+  enrollment_id: string;
+  program_id?: string | null;
+  program_name?: string | null;
+  package_name?: string | null;
+  group_name?: string | null;
+  billing_mode: string;
+  attendance_recorded: number;
+  attendance_present: number;
+  attendance_rate: number | null;
+  unpaid_count: number;
+  unpaid_total: number;
+}
+
+/** Admin: row from GET /tutoring/tutors. */
+export interface TutoringTutorRow {
+  user_id: string;
+  name: string;
+  email: string;
+  /** 'ACTIVE' (has groups) | 'PENDING' (no groups yet). */
+  status: 'ACTIVE' | 'PENDING';
+  group_count: number;
+  groups: { id: string; name: string; program?: string | null }[];
+  sessions_30d: number;
+  attendance_rate: number | null;
+  joined_at?: string | null;
+}
+
+/** Result of POST /tutoring/tutors/invite. */
+export interface TutoringInviteResult {
+  user_id: string;
+  name: string;
+  email: string;
+  /** 'created' (new account) | 'attached' | 'already_tutor'. */
+  status: 'created' | 'attached' | 'already_tutor';
+  /** Only set when status === 'created'. */
+  temp_password?: string | null;
+}

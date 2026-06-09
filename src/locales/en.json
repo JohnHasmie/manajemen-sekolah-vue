@@ -1656,7 +1656,10 @@
       "bills": "Bills",
       "billingSettings": "Billing settings",
       "monitor": "Monitoring",
-      "ai": "AI questions"
+      "ai": "AI questions",
+      "manajemen": "Management",
+      "students": "Students",
+      "tutors": "Tutors"
     },
     "dashboard": {
       "title": "Tutoring Dashboard",
@@ -1889,6 +1892,50 @@
       "parentTitle": "Tutoring Monitoring",
       "parentSub": "Session schedule, attendance, try-out scores & bills",
       "noChild": "No child registered yet."
+    },
+    "students": {
+      "title": "Tutoring Students",
+      "empty": "No enrolled students yet.",
+      "flow": "Derived from active enrollments.",
+      "filterAll": "All programs",
+      "attendance": "attendance",
+      "outstanding": "outstanding"
+    },
+    "tutors": {
+      "title": "Tutors",
+      "empty": "No tutors yet. Invite using the button.",
+      "inviteCta": "Invite tutor",
+      "filterAll": "All",
+      "filterActive": "Active",
+      "filterPending": "No group yet",
+      "sessions30d": "sessions 30d",
+      "attendance": "attendance rate",
+      "statusActive": "Active",
+      "statusPending": "Pending"
+    },
+    "invite": {
+      "title": "Invite Tutor",
+      "subtitle": "The email will be granted TEACHER access. A new account is created automatically if the email is unknown.",
+      "emailLabel": "EMAIL",
+      "emailHint": "tutor@example.id",
+      "nameLabel": "NAME (optional)",
+      "nameHint": "Used when creating a new account",
+      "submit": "Send invitation",
+      "created": "Tutor account created",
+      "attached": "Tutor added",
+      "alreadyTutor": "Already a tutor",
+      "tempPwd": "Temporary password — share it with the tutor right away",
+      "done": "Done",
+      "emailInvalid": "Invalid email."
+    },
+    "studentDetail": {
+      "title": "Student Detail",
+      "active": "Active"
+    },
+    "tutorDetail": {
+      "title": "Tutor Detail",
+      "groupsAssigned": "Groups Assigned",
+      "noGroups": "No group assigned yet. Assign from Program → Groups."
     }
   }
 }

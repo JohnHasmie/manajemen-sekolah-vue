@@ -175,6 +175,21 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
     ],
   },
   {
+    titleKey: 'tutoring.nav.manajemen',
+    items: [
+      {
+        to: '/admin/tutoring/students',
+        labelKey: 'tutoring.nav.students',
+        icon: 'users',
+      },
+      {
+        to: '/admin/tutoring/tutors',
+        labelKey: 'tutoring.nav.tutors',
+        icon: 'user-check',
+      },
+    ],
+  },
+  {
     titleKey: 'tutoring.tenant.center',
     items: [
       {

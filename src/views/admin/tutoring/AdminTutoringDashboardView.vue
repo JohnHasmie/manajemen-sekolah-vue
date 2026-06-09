@@ -6,14 +6,14 @@
   approved redesign mockup.
 -->
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
 import { formatRupiah } from '@/lib/format';
-import type { TutoringAdminStats } from '@/types/tutoring';
+import type { TutoringAdminStats, TutoringProgram } from '@/types/tutoring';
 
 import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
 import TutoringHero from '@/components/feature/tutoring/TutoringHero.vue';
@@ -22,6 +22,7 @@ import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue
 import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSectionHeader.vue';
 import TutoringStatusPill from '@/components/feature/tutoring/TutoringStatusPill.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import TutoringChipsRow from '@/components/feature/tutoring/TutoringChipsRow.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -30,11 +31,22 @@ const auth = useAuthStore();
 
 const loading = ref(true);
 const stats = ref<TutoringAdminStats | null>(null);
+const programs = ref<TutoringProgram[]>([]);
+/** '' = aggregate; otherwise a program id. Mirrors the school
+ *  dashboard's tingkat slice control. */
+const programId = ref<string>('');
+
+const programOptions = computed(() => [
+  { value: '', label: t('tutoring.students.filterAll') },
+  ...programs.value.map((p) => ({ value: p.id, label: p.name })),
+]);
 
 async function load() {
   loading.value = true;
   try {
-    stats.value = await TutoringService.getAdminStats();
+    stats.value = await TutoringService.getAdminStats(
+      programId.value || undefined,
+    );
   } catch (e) {
     toast.error(
       e instanceof Error ? e.message : t('tutoring.dashboard.loadError'),
@@ -44,7 +56,29 @@ async function load() {
   }
 }
 
-onMounted(load);
+onMounted(async () => {
+  await load();
+  try {
+    programs.value = await TutoringService.getPrograms();
+  } catch {/* non-fatal */}
+});
+
+watch(programId, load);
+
+const manageTiles = [
+  {
+    icon: 'users',
+    label: 'Siswa Bimbel',
+    sub: 'Daftar siswa terdaftar',
+    to: 'admin.tutoring.students',
+  },
+  {
+    icon: 'user-check',
+    label: 'Tutor',
+    sub: 'Daftar tutor & beban mengajar',
+    to: 'admin.tutoring.tutors',
+  },
+] as const;
 
 const quickActions = [
   {
@@ -98,6 +132,16 @@ const quickActions = [
         </template>
       </TutoringHero>
 
+      <!-- KPI slice filter — mirrors the school dashboard's tingkat
+           SegmentedControl. For bimbel the slices are programs; the
+           four scoped KPIs (siswa/kelompok/sesi/kehadiran) re-render
+           against the selected program. -->
+      <TutoringChipsRow
+        v-model="programId"
+        :options="programOptions"
+        class="mt-3"
+      />
+
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
         <TutoringKpiCard
           icon="users"
@@ -122,6 +166,18 @@ const quickActions = [
           :label="t('tutoring.dashboard.unpaid')"
           tone="danger"
           :hint="stats.unpaid_total > 0 ? formatRupiah(stats.unpaid_total) : undefined"
+        />
+      </div>
+
+      <TutoringSectionHeader :title="t('tutoring.nav.manajemen')" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <TutoringListTile
+          v-for="m in manageTiles"
+          :key="m.label"
+          :icon="m.icon"
+          :title="m.label"
+          :subtitle="m.sub"
+          :to="() => router.push({ name: m.to })"
         />
       </div>
 
