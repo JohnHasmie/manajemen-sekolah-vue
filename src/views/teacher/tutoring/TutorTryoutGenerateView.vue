@@ -5,10 +5,10 @@
   answer, and explanation.
 -->
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
-import type { TutoringAiQuestion } from '@/types/tutoring';
+import type { TutoringAiQuestion, TutoringGroup } from '@/types/tutoring';
 
 const toast = useToast();
 
@@ -21,6 +21,41 @@ const difficulty = ref('mixed');
 
 const loading = ref(false);
 const questions = ref<TutoringAiQuestion[]>([]);
+
+// "Simpan sebagai Try-out" — needs a target group.
+const groups = ref<TutoringGroup[]>([]);
+const groupId = ref<string | null>(null);
+const saving = ref(false);
+
+onMounted(async () => {
+  try {
+    groups.value = await TutoringService.getAllGroups();
+  } catch {
+    // Non-fatal: generation still works without the save option.
+  }
+});
+
+async function saveAsTryout() {
+  if (!groupId.value) {
+    toast.error('Pilih kelompok untuk menyimpan try-out.');
+    return;
+  }
+  saving.value = true;
+  try {
+    const subj = subject.value.trim() || 'Try-out';
+    await TutoringService.createAssessment({
+      type: 'TRYOUT',
+      title: `Try-out ${subj}`,
+      held_at: new Date().toISOString(),
+      tutoring_group_id: groupId.value,
+    });
+    toast.success('Try-out tersimpan. Catat nilai dari menu Program.');
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Gagal menyimpan try-out.');
+  } finally {
+    saving.value = false;
+  }
+}
 
 async function generate() {
   if (!subject.value.trim()) {
@@ -115,6 +150,32 @@ async function generate() {
         @click="generate"
       >
         {{ loading ? 'Membuat soal…' : 'Generate' }}
+      </button>
+    </div>
+
+    <!-- Save as trackable try-out (tryout mode only, after generation) -->
+    <div
+      v-if="questions.length > 0 && mode === 'tryout'"
+      class="mt-4 space-y-2 rounded-2xl border border-slate-200 p-4"
+    >
+      <label class="block text-sm font-semibold text-slate-700">
+        Simpan sebagai try-out untuk kelompok
+      </label>
+      <select
+        v-model="groupId"
+        class="w-full rounded-lg border border-slate-300 px-3 py-2"
+      >
+        <option :value="null" disabled>Pilih kelompok</option>
+        <option v-for="g in groups" :key="g.id" :value="g.id">
+          {{ g.name }}
+        </option>
+      </select>
+      <button
+        :disabled="saving || !groupId"
+        class="rounded-lg border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 disabled:opacity-50"
+        @click="saveAsTryout"
+      >
+        {{ saving ? 'Menyimpan…' : 'Simpan sebagai Try-out' }}
       </button>
     </div>
 

@@ -281,6 +281,21 @@ export const TutoringService = {
   },
 
   /**
+   * Create a tutoring assessment header (try-out / post-test). Used by
+   * the AI generator's "Simpan sebagai Try-out".
+   */
+  async createAssessment(payload: {
+    type: string;
+    title: string;
+    held_at: string;
+    tutoring_group_id?: string;
+    tutoring_program_id?: string;
+    max_score?: number;
+  }): Promise<void> {
+    await api.post('/tutoring/assessments', payload);
+  },
+
+  /**
    * Create a single session. tutor_user_id is omitted — the backend
    * inherits the group's default tutor.
    */
