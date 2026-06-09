@@ -1333,6 +1333,8 @@
     "nextButtonSubmitting": "Mengirim…",
     "nextButtonFinish": "Selesai",
     "accuracyNote": "Mohon isi data dengan aktual dan benar agar proses permintaan demo Anda berjalan lancar.",
+    "sampleDataNote": "Data contoh di langkah ini cuma untuk mengisi demo — boleh diisi acak/asal dulu biar cepat, tidak perlu lama-lama. Nanti bisa diinput ulang yang benar setelah demo aktif.",
+    "identityAccuracyNote": "Khusus data diri ini, mohon isi sesuai dengan Anda sebagai pemohon — data inilah yang kami pakai untuk validasi dan memudahkan aktivasi demo Anda.",
     "requesterLabel": "Langkah terakhir · Data diri pemohon",
     "requesterTitle": "Lengkapi data diri Anda",
     "requesterSubtitle": "Data ini kami gunakan untuk validasi dan identifikasi sebelum permintaan demo Anda diproses.",

@@ -1337,6 +1337,8 @@
     "nextButtonSubmitting": "Submitting…",
     "nextButtonFinish": "Done",
     "accuracyNote": "Please fill in your data accurately and correctly so your demo request can be processed smoothly.",
+    "sampleDataNote": "The sample data in this step is only to populate your demo — feel free to fill it with random values to go fast, no need to labour over it. You can re-enter the real data after the demo is active.",
+    "identityAccuracyNote": "For these personal details, please fill them in to match you as the requester — we use this to validate and to make activating your demo easier.",
     "requesterLabel": "Final step · Requester details",
     "requesterTitle": "Complete your details",
     "requesterSubtitle": "We use this information to validate and identify you before your demo request is processed.",

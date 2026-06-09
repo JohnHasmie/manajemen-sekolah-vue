@@ -347,7 +347,7 @@ const sendLabel = computed(() =>
             >
               <NavIcon name="alert-circle" :size="15" class="mt-0.5 flex-shrink-0 text-amber-600" />
               <p class="text-[12px] leading-snug text-amber-900">
-                {{ t('registerDemo.accuracyNote') }}
+                {{ t('registerDemo.identityAccuracyNote') }}
               </p>
             </div>
 
