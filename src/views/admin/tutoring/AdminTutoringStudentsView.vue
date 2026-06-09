@@ -1,7 +1,8 @@
 <!--
   AdminTutoringStudentsView — list of bimbel students (derived from
-  active enrollments). Table on web (better at scale); chip filter +
-  search to scope.
+  active enrollments). Uses the school-pattern chrome (BrandPageHeader
+  + KpiStripCards + PageFilterToolbar) so it visually matches the rest
+  of the app.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -12,11 +13,15 @@ import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
 import type { TutoringProgram, TutoringStudentRow } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringFlowTag from '@/components/feature/tutoring/TutoringFlowTag.vue';
-import TutoringChipsRow from '@/components/feature/tutoring/TutoringChipsRow.vue';
-import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import KpiStripCards, {
+  type KpiCard,
+} from '@/components/feature/KpiStripCards.vue';
+import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import Modal from '@/components/ui/Modal.vue';
 import TutoringStatusPill from '@/components/feature/tutoring/TutoringStatusPill.vue';
+import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const { t } = useI18n();
@@ -28,11 +33,13 @@ const rows = ref<TutoringStudentRow[]>([]);
 const programs = ref<TutoringProgram[]>([]);
 const programId = ref<string>(''); // '' = Semua program
 const search = ref('');
+const showProgramPicker = ref(false);
 
-const programOptions = computed(() => [
-  { value: '', label: t('tutoring.students.filterAll') },
-  ...programs.value.map((p) => ({ value: p.id, label: p.name })),
-]);
+const activeProgramLabel = computed(() =>
+  programId.value === ''
+    ? t('tutoring.students.filterAll')
+    : programs.value.find((p) => p.id === programId.value)?.name ?? '—',
+);
 
 const MODE_KEYS: Record<string, string> = {
   PREPAID: 'tutoring.billing.prepaid',
@@ -65,44 +72,97 @@ onMounted(async () => {
 watch(programId, load);
 
 function openDetail(r: TutoringStudentRow) {
-  // Re-use the parent overview view — same data shape, accessible
-  // through a different name in the admin context.
   router.push({
     name: 'parent.tutoring.overview',
     params: { studentId: r.student_id },
     query: { name: r.student_name },
   });
 }
+
+function pickProgram(id: string) {
+  programId.value = id;
+  showProgramPicker.value = false;
+}
+
+// Client-side aggregates for the KPI strip (no extra round-trip).
+const totalOutstanding = computed(() =>
+  rows.value.reduce((s, r) => s + (r.unpaid_total ?? 0), 0),
+);
+const unpaidStudents = computed(() =>
+  rows.value.filter((r) => (r.unpaid_count ?? 0) > 0).length,
+);
+const avgAttendance = computed(() => {
+  const withRate = rows.value.filter((r) => r.attendance_rate != null);
+  if (withRate.length === 0) return null;
+  return Math.round(
+    withRate.reduce((s, r) => s + (r.attendance_rate ?? 0), 0) / withRate.length,
+  );
+});
+
+const kpiCards = computed<KpiCard[]>(() => [
+  {
+    icon: 'users',
+    label: t('tutoring.students.title'),
+    value: rows.value.length,
+    suffix: 'siswa',
+    tone: 'brand',
+    accented: true,
+  },
+  {
+    icon: 'layers',
+    label: 'Program aktif',
+    value: programs.value.filter((p) => p.is_active !== false).length,
+    tone: 'violet',
+  },
+  {
+    icon: 'check-circle',
+    label: t('tutoring.students.attendance'),
+    value: avgAttendance.value == null ? '–' : `${avgAttendance.value}%`,
+    tone: 'green',
+  },
+  {
+    icon: 'wallet',
+    label: t('tutoring.students.outstanding'),
+    value: formatRupiah(totalOutstanding.value),
+    suffix: unpaidStudents.value > 0 ? `${unpaidStudents.value} siswa` : undefined,
+    tone: totalOutstanding.value > 0 ? 'amber' : 'green',
+  },
+]);
+
+let searchTimer: ReturnType<typeof setTimeout> | null = null;
+function onSearch(v: string) {
+  search.value = v;
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(load, 300);
+}
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl p-4 sm:p-6">
-    <TutoringPageHeader
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="admin"
+      kicker="Bimbel · Siswa"
       :title="t('tutoring.students.title')"
-      crumbs="Bimbel · Siswa"
+      :meta="`${rows.length} siswa terdaftar`"
+    />
+
+    <KpiStripCards :cards="kpiCards" />
+
+    <PageFilterToolbar
+      :search="search"
+      search-placeholder="Cari nama siswa…"
+      @update:search="onSearch"
     >
-      <template #right>
-        <div class="flex items-center gap-2">
-          <input
-            v-model.lazy="search"
-            class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
-            :placeholder="t('common.search') || 'Cari…'"
-            @change="load"
-          />
-        </div>
+      <template #chips>
+        <AppFilterChip
+          label="Program"
+          :value="activeProgramLabel"
+          icon-name="layers"
+          tone="violet"
+          @click="showProgramPicker = true"
+        />
       </template>
-    </TutoringPageHeader>
-
-    <TutoringFlowTag
-      class="mb-3"
-      :text="t('tutoring.students.flow')"
-    />
-
-    <TutoringChipsRow
-      v-model="programId"
-      :options="programOptions"
-      class="mb-3"
-    />
+    </PageFilterToolbar>
 
     <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
@@ -155,5 +215,34 @@ function openDetail(r: TutoringStudentRow) {
         </tbody>
       </table>
     </div>
+
+    <Modal
+      v-if="showProgramPicker"
+      title="Filter Program"
+      @close="showProgramPicker = false"
+    >
+      <ul class="space-y-1">
+        <li>
+          <button
+            type="button"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            :class="{ 'bg-role-admin/5 text-role-admin font-bold': programId === '' }"
+            @click="pickProgram('')"
+          >
+            {{ t('tutoring.students.filterAll') }}
+          </button>
+        </li>
+        <li v-for="p in programs" :key="p.id">
+          <button
+            type="button"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            :class="{ 'bg-role-admin/5 text-role-admin font-bold': programId === p.id }"
+            @click="pickProgram(p.id)"
+          >
+            {{ p.name }}
+          </button>
+        </li>
+      </ul>
+    </Modal>
   </div>
 </template>

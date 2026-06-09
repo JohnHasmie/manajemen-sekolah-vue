@@ -10,7 +10,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringGroup } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 
 const { t } = useI18n();
@@ -79,10 +79,12 @@ const inputCls =
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl p-4 sm:p-6">
-    <TutoringPageHeader
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="guru"
+      kicker="Bimbel · Sesi · Buat"
       :title="t('tutoring.createSession.title')"
-      crumbs="Bimbel · Sesi · Buat"
+      meta="Pilih kelompok → tanggal/jam → durasi → simpan"
     />
 
     <div v-if="loading" class="py-12 text-center text-slate-500">

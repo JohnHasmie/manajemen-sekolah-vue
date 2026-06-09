@@ -1,10 +1,9 @@
 <!--
-  AdminTutoringBillsView — all tutoring bills across the tenant, with a
-  status filter chip row + a link to billing settings. Rebuilt on the
-  tutoring shared components.
+  AdminTutoringBillsView — all tutoring bills across the tenant.
+  Uses the BrandPageHeader + KpiStripCards + PageFilterToolbar chrome.
 -->
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
@@ -12,8 +11,13 @@ import { useToast } from '@/composables/useToast';
 import { formatDateShort, formatRupiah } from '@/lib/format';
 import type { TutoringBill } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringChipsRow from '@/components/feature/tutoring/TutoringChipsRow.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import KpiStripCards, {
+  type KpiCard,
+} from '@/components/feature/KpiStripCards.vue';
+import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import Modal from '@/components/ui/Modal.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import TutoringStatusPill from '@/components/feature/tutoring/TutoringStatusPill.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -27,6 +31,19 @@ const toast = useToast();
 const loading = ref(true);
 const filter = ref<Filter>('all');
 const bills = ref<TutoringBill[]>([]);
+const showFilterPicker = ref(false);
+
+const FILTER_OPTIONS = computed<{ key: Filter; label: string }[]>(() => [
+  { key: 'all', label: 'Semua' },
+  { key: 'unpaid', label: t('tutoring.adminBills.unpaid') },
+  { key: 'pending', label: t('tutoring.adminBills.pending') },
+  { key: 'paid', label: t('tutoring.adminBills.paid') },
+]);
+
+const activeFilterLabel = computed(
+  () =>
+    FILTER_OPTIONS.value.find((o) => o.key === filter.value)?.label ?? 'Semua',
+);
 
 async function load() {
   loading.value = true;
@@ -46,33 +63,94 @@ async function load() {
 watch(filter, load);
 onMounted(load);
 
-const chipOptions: { value: Filter; label: string }[] = [
-  { value: 'all', label: 'Semua' },
-  { value: 'unpaid', label: t('tutoring.adminBills.unpaid') },
-  { value: 'pending', label: t('tutoring.adminBills.pending') },
-  { value: 'paid', label: t('tutoring.adminBills.paid') },
-];
+function pickFilter(k: Filter) {
+  filter.value = k;
+  showFilterPicker.value = false;
+}
+
+// Aggregates — computed against the loaded set, which reflects the
+// active filter (so "Lunas" shows paid totals only). Acceptable since
+// the strip describes the visible slice.
+const total = computed(() => bills.value.reduce((s, b) => s + (b.amount ?? 0), 0));
+const paidCount = computed(
+  () => bills.value.filter((b) => b.status === 'paid').length,
+);
+const unpaidCount = computed(
+  () => bills.value.filter((b) => b.status !== 'paid').length,
+);
+const unpaidTotal = computed(() =>
+  bills.value
+    .filter((b) => b.status !== 'paid')
+    .reduce((s, b) => s + (b.amount ?? 0), 0),
+);
+
+const kpiCards = computed<KpiCard[]>(() => [
+  {
+    icon: 'wallet',
+    label: 'Total tagihan',
+    value: bills.value.length,
+    suffix: formatRupiah(total.value),
+    tone: 'brand',
+    accented: true,
+  },
+  {
+    icon: 'check-circle',
+    label: 'Lunas',
+    value: paidCount.value,
+    tone: 'green',
+  },
+  {
+    icon: 'alert-circle',
+    label: 'Belum lunas',
+    value: unpaidCount.value,
+    suffix:
+      unpaidCount.value > 0 ? formatRupiah(unpaidTotal.value) : undefined,
+    tone: unpaidCount.value > 0 ? 'amber' : 'green',
+  },
+  {
+    icon: 'calendar',
+    label: 'Jatuh tempo 7h',
+    value: bills.value.filter((b) => {
+      if (!b.due_date || b.status === 'paid') return false;
+      const d = new Date(b.due_date).getTime();
+      return d - Date.now() < 7 * 24 * 3600 * 1000;
+    }).length,
+    tone: 'red',
+  },
+]);
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl p-4 sm:p-6">
-    <TutoringPageHeader
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="admin"
+      kicker="Bimbel · Tagihan"
       :title="t('tutoring.adminBills.title')"
-      crumbs="Bimbel · Tagihan"
+      :meta="`${bills.length} tagihan · ${formatRupiah(unpaidTotal)} belum lunas`"
     >
-      <template #right>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700"
-          @click="router.push({ name: 'admin.tutoring.billing-settings' })"
-        >
-          <NavIcon name="settings" :size="14" />
-          {{ t('tutoring.nav.billingSettings') }}
-        </button>
-      </template>
-    </TutoringPageHeader>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+        @click="router.push({ name: 'admin.tutoring.billing-settings' })"
+      >
+        <NavIcon name="settings" :size="13" />
+        {{ t('tutoring.nav.billingSettings') }}
+      </button>
+    </BrandPageHeader>
 
-    <TutoringChipsRow v-model="filter" :options="chipOptions" class="mb-3" />
+    <KpiStripCards :cards="kpiCards" />
+
+    <PageFilterToolbar :hide-default-search="true">
+      <template #chips>
+        <AppFilterChip
+          label="Status"
+          :value="activeFilterLabel"
+          icon-name="wallet"
+          tone="amber"
+          @click="showFilterPicker = true"
+        />
+      </template>
+    </PageFilterToolbar>
 
     <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
@@ -117,5 +195,24 @@ const chipOptions: { value: Filter; label: string }[] = [
         </tbody>
       </table>
     </div>
+
+    <Modal
+      v-if="showFilterPicker"
+      title="Filter Status"
+      @close="showFilterPicker = false"
+    >
+      <ul class="space-y-1">
+        <li v-for="o in FILTER_OPTIONS" :key="o.key">
+          <button
+            type="button"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            :class="{ 'bg-role-admin/5 text-role-admin font-bold': filter === o.key }"
+            @click="pickFilter(o.key)"
+          >
+            {{ o.label }}
+          </button>
+        </li>
+      </ul>
+    </Modal>
   </div>
 </template>

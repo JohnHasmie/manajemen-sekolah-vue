@@ -11,8 +11,7 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringHero from '@/components/feature/tutoring/TutoringHero.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
@@ -101,10 +100,12 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl p-4 sm:p-6">
-    <TutoringPageHeader
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="guru"
+      :kicker="'Bimbel · Sesi · ' + title"
       :title="t('tutoring.attendance.title')"
-      :crumbs="'Bimbel · ' + title"
+      :meta="`${Object.keys(names).length} siswa`"
     />
 
     <div v-if="loading" class="py-12 text-center text-slate-500">
@@ -121,15 +122,7 @@ onMounted(load);
       icon="users"
     />
     <template v-else>
-      <TutoringHero
-        icon="calendar"
-        greet="SESI"
-        :title="title"
-        :subtitle="Object.keys(names).length + ' siswa'"
-        accent="tutor"
-      />
-
-      <div class="mt-3 space-y-2">
+      <div class="space-y-2">
         <div
           v-for="(name, studentId) in names"
           :key="studentId"
@@ -152,7 +145,7 @@ onMounted(load);
 
       <button
         :disabled="saving"
-        class="mt-4 w-full rounded-lg bg-role-teacher hover:bg-role-teacher/90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+        class="w-full rounded-lg bg-role-teacher hover:bg-role-teacher/90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="save"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.attendance.save') }}

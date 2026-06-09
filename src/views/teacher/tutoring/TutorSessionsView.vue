@@ -23,10 +23,13 @@ import type {
   TutoringTutorStats,
 } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringHero from '@/components/feature/tutoring/TutoringHero.vue';
-import TutoringKpiCard from '@/components/feature/tutoring/TutoringKpiCard.vue';
-import TutoringChipsRow from '@/components/feature/tutoring/TutoringChipsRow.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import KpiStripCards, {
+  type KpiCard,
+} from '@/components/feature/KpiStripCards.vue';
+import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import Modal from '@/components/ui/Modal.vue';
 import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue';
 import TutoringStatusPill from '@/components/feature/tutoring/TutoringStatusPill.vue';
 import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSectionHeader.vue';
@@ -36,9 +39,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 type RangeFilter = 'all' | 'today' | 'thisWeek' | 'upcoming' | 'past';
 type ViewMode = 'list' | 'calendar';
 
-// '' = no filter (all). TutoringChipsRow's generic constraint is
-// `string | number`, so we use empty string as the sentinel instead
-// of null.
+// '' = no filter (all).
 const ALL = '' as const;
 
 const { t } = useI18n();
@@ -263,25 +264,108 @@ watch(focusedMonth, ({ y, m }) => {
     focusedDay.value = new Date(y, m, 1);
   }
 });
+
+// ── filter pickers (school-pattern: AppFilterChip + modal) ──────────
+
+const RANGE_OPTIONS = computed<{ key: RangeFilter; label: string }[]>(() => [
+  { key: 'all', label: t('tutoring.sessions.filterAll') },
+  { key: 'today', label: t('tutoring.sessions.filterToday') },
+  { key: 'thisWeek', label: t('tutoring.sessions.filterThisWeek') },
+  { key: 'upcoming', label: t('tutoring.sessions.filterUpcoming') },
+  { key: 'past', label: t('tutoring.sessions.filterPast') },
+]);
+const STATUS_OPTIONS = computed(() => [
+  { value: '' as string, label: t('tutoring.sessions.filterAll') },
+  { value: 'SCHEDULED' as string, label: t('tutoring.sessions.filterScheduled') },
+  { value: 'DONE' as string, label: t('tutoring.sessions.filterDone') },
+  { value: 'CANCELLED' as string, label: t('tutoring.sessions.filterCancelled') },
+]);
+const activeRangeLabel = computed(
+  () => RANGE_OPTIONS.value.find((o) => o.key === range.value)?.label ?? 'Semua',
+);
+const activeStatusLabel = computed(
+  () => STATUS_OPTIONS.value.find((o) => o.value === statusFilter.value)?.label ?? 'Semua',
+);
+const activeGroupLabel = computed(
+  () => groupOptions.value.find((o) => o.value === groupId.value)?.label ?? 'Semua kelompok',
+);
+const showRangePicker = ref(false);
+const showStatusPicker = ref(false);
+const showGroupPicker = ref(false);
+
+function pickRange(k: RangeFilter) {
+  range.value = k;
+  showRangePicker.value = false;
+}
+function pickStatus(v: string) {
+  statusFilter.value = v;
+  showStatusPicker.value = false;
+}
+function pickGroup(v: string) {
+  groupId.value = v;
+  showGroupPicker.value = false;
+}
+
+// KPI cards for the strip — same data as before, KpiCard shape now.
+const kpiCards = computed<KpiCard[]>(() => {
+  const s = stats.value;
+  if (!s) return [];
+  return [
+    {
+      icon: 'calendar',
+      label: t('tutoring.sessions.kpiSessionsWeek'),
+      value: s.sessions_this_week,
+      suffix:
+        s.sessions_today > 0
+          ? `${s.sessions_today} ${t('tutoring.sessions.kpiHintToday')}`
+          : undefined,
+      tone: 'brand',
+      accented: true,
+    },
+    {
+      icon: 'clock',
+      label: t('tutoring.sessions.kpiHoursWeek'),
+      value: hoursLabel(s.hours_this_week),
+      tone: 'violet',
+    },
+    {
+      icon: 'check-circle',
+      label: t('tutoring.sessions.kpiAttendance'),
+      value: s.attendance_rate == null ? '–' : `${s.attendance_rate}%`,
+      tone: 'green',
+    },
+    {
+      icon: 'users',
+      label: t('tutoring.sessions.kpiGroups'),
+      value: s.groups,
+      suffix:
+        s.students > 0
+          ? `${s.students} ${t('tutoring.sessions.kpiStudents')}`
+          : undefined,
+      tone: 'amber',
+    },
+  ];
+});
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4 sm:p-6">
-    <TutoringPageHeader
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="guru"
+      kicker="Bimbel · Sesi Saya"
       :title="t('tutoring.sessions.title')"
-      crumbs="Bimbel · Sesi Saya"
+      :meta="auth.user?.name ? `Halo, ${auth.user.name}` : undefined"
+      live-dot
     >
-      <template #right>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 bg-role-teacher hover:bg-role-teacher/90 text-white rounded-xl px-3.5 py-2 text-sm font-semibold"
-          @click="router.push({ name: 'teacher.tutoring.session-create' })"
-        >
-          <NavIcon name="plus" :size="14" />
-          {{ t('tutoring.sessions.addBtn') }}
-        </button>
-      </template>
-    </TutoringPageHeader>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-teacher text-[12px] font-bold hover:bg-white/90"
+        @click="router.push({ name: 'teacher.tutoring.session-create' })"
+      >
+        <NavIcon name="plus" :size="13" />
+        {{ t('tutoring.sessions.addBtn') }}
+      </button>
+    </BrandPageHeader>
 
     <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
@@ -292,114 +376,65 @@ watch(focusedMonth, ({ y, m }) => {
     </template>
 
     <template v-else>
-      <!-- Hero greeting — matches the school teacher pages' brand
-           chrome but uses the tutoring shared components so visuals
-           line up with the rest of bimbel. -->
-      <TutoringHero
-        icon="calendar"
-        :greet="t('tutoring.sessions.greet')"
-        title="Halo, "
-        :accent-name="auth.user?.name ?? 'Tutor'"
-        accent="tutor"
-      >
-        <template #trailing>
-          <TutoringStatusPill label="Realtime" tone="ok" dot />
+      <KpiStripCards v-if="stats" :cards="kpiCards" />
+
+      <!-- Filter toolbar — view-toggle as segmented, range/group/status
+           as picker chips. -->
+      <PageFilterToolbar :hide-default-search="true">
+        <template #chips>
+          <AppFilterChip
+            label="Rentang"
+            :value="activeRangeLabel"
+            icon-name="calendar"
+            tone="violet"
+            @click="showRangePicker = true"
+          />
+          <AppFilterChip
+            v-if="groupOptions.length > 2"
+            label="Kelompok"
+            :value="activeGroupLabel"
+            icon-name="users"
+            tone="brand"
+            @click="showGroupPicker = true"
+          />
+          <AppFilterChip
+            label="Status"
+            :value="activeStatusLabel"
+            icon-name="check-circle"
+            tone="green"
+            @click="showStatusPicker = true"
+          />
         </template>
-      </TutoringHero>
-
-      <!-- KPI strip — graceful when stats fail (the page still works). -->
-      <div v-if="stats" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-        <TutoringKpiCard
-          icon="calendar"
-          :value="stats.sessions_this_week"
-          :label="t('tutoring.sessions.kpiSessionsWeek')"
-          :hint="stats.sessions_today > 0
-            ? stats.sessions_today + ' ' + t('tutoring.sessions.kpiHintToday')
-            : undefined"
-          tone="info"
-        />
-        <TutoringKpiCard
-          icon="clock"
-          :value="hoursLabel(stats.hours_this_week)"
-          :label="t('tutoring.sessions.kpiHoursWeek')"
-        />
-        <TutoringKpiCard
-          icon="check-circle"
-          :value="stats.attendance_rate == null
-            ? '–'
-            : stats.attendance_rate + '%'"
-          :label="t('tutoring.sessions.kpiAttendance')"
-          tone="ok"
-        />
-        <TutoringKpiCard
-          icon="users"
-          :value="stats.groups"
-          :label="t('tutoring.sessions.kpiGroups')"
-          :hint="stats.students > 0
-            ? stats.students + ' ' + t('tutoring.sessions.kpiStudents')
-            : undefined"
-        />
-      </div>
-
-      <!-- View toggle — segmented control between list + calendar. -->
-      <div
-        class="mt-4 inline-flex p-1 bg-white border border-slate-200 rounded-xl"
-      >
-        <button
-          type="button"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
-          :class="view === 'list'
-            ? 'bg-role-teacher text-white'
-            : 'text-slate-500 hover:text-slate-900'"
-          @click="view = 'list'"
-        >
-          <NavIcon name="list" :size="14" />
-          {{ t('tutoring.sessions.viewList') }}
-        </button>
-        <button
-          type="button"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
-          :class="view === 'calendar'
-            ? 'bg-role-teacher text-white'
-            : 'text-slate-500 hover:text-slate-900'"
-          @click="view = 'calendar'"
-        >
-          <NavIcon name="calendar" :size="14" />
-          {{ t('tutoring.sessions.viewCalendar') }}
-        </button>
-      </div>
-
-      <!-- Filter chips. Group filter only renders when the load has
-           more than one distinct group; otherwise it's noise. -->
-      <div class="mt-3 space-y-2">
-        <TutoringChipsRow
-          v-model="range"
-          :options="[
-            { value: 'all', label: t('tutoring.sessions.filterAll') },
-            { value: 'today', label: t('tutoring.sessions.filterToday') },
-            { value: 'thisWeek', label: t('tutoring.sessions.filterThisWeek') },
-            { value: 'upcoming', label: t('tutoring.sessions.filterUpcoming') },
-            { value: 'past', label: t('tutoring.sessions.filterPast') },
-          ]"
-        />
-        <TutoringChipsRow
-          v-if="groupOptions.length > 2"
-          v-model="groupId"
-          :options="groupOptions"
-        />
-        <TutoringChipsRow
-          v-model="statusFilter"
-          :options="[
-            { value: ALL, label: t('tutoring.sessions.filterAll') },
-            { value: 'SCHEDULED', label: t('tutoring.sessions.filterScheduled') },
-            { value: 'DONE', label: t('tutoring.sessions.filterDone') },
-            { value: 'CANCELLED', label: t('tutoring.sessions.filterCancelled') },
-          ]"
-        />
-      </div>
+        <template #segmented>
+          <div class="inline-flex p-1 bg-slate-50 border border-slate-200 rounded-xl">
+            <button
+              type="button"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
+              :class="view === 'list'
+                ? 'bg-role-teacher text-white'
+                : 'text-slate-500 hover:text-slate-900'"
+              @click="view = 'list'"
+            >
+              <NavIcon name="list" :size="14" />
+              {{ t('tutoring.sessions.viewList') }}
+            </button>
+            <button
+              type="button"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
+              :class="view === 'calendar'
+                ? 'bg-role-teacher text-white'
+                : 'text-slate-500 hover:text-slate-900'"
+              @click="view = 'calendar'"
+            >
+              <NavIcon name="calendar" :size="14" />
+              {{ t('tutoring.sessions.viewCalendar') }}
+            </button>
+          </div>
+        </template>
+      </PageFilterToolbar>
 
       <!-- List view ───────────────────────────────────────────── -->
-      <div v-if="view === 'list'" class="mt-4">
+      <div v-if="view === 'list'">
         <TutoringEmpty
           v-if="filtered.length === 0"
           :text="t('tutoring.sessions.empty')"
@@ -427,7 +462,7 @@ watch(focusedMonth, ({ y, m }) => {
       </div>
 
       <!-- Calendar view ───────────────────────────────────────── -->
-      <div v-else class="mt-4">
+      <div v-else>
         <div class="bg-white border border-slate-100 rounded-3xl p-4">
           <!-- header — < Month YYYY > -->
           <div class="flex items-center gap-2 mb-2">
@@ -523,5 +558,62 @@ watch(focusedMonth, ({ y, m }) => {
         </div>
       </div>
     </template>
+
+    <Modal
+      v-if="showRangePicker"
+      title="Filter Rentang"
+      @close="showRangePicker = false"
+    >
+      <ul class="space-y-1">
+        <li v-for="o in RANGE_OPTIONS" :key="o.key">
+          <button
+            type="button"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            :class="{ 'bg-role-teacher/5 text-role-teacher font-bold': range === o.key }"
+            @click="pickRange(o.key)"
+          >
+            {{ o.label }}
+          </button>
+        </li>
+      </ul>
+    </Modal>
+
+    <Modal
+      v-if="showStatusPicker"
+      title="Filter Status"
+      @close="showStatusPicker = false"
+    >
+      <ul class="space-y-1">
+        <li v-for="o in STATUS_OPTIONS" :key="o.value">
+          <button
+            type="button"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            :class="{ 'bg-role-teacher/5 text-role-teacher font-bold': statusFilter === o.value }"
+            @click="pickStatus(o.value)"
+          >
+            {{ o.label }}
+          </button>
+        </li>
+      </ul>
+    </Modal>
+
+    <Modal
+      v-if="showGroupPicker"
+      title="Filter Kelompok"
+      @close="showGroupPicker = false"
+    >
+      <ul class="space-y-1">
+        <li v-for="o in groupOptions" :key="String(o.value)">
+          <button
+            type="button"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            :class="{ 'bg-role-teacher/5 text-role-teacher font-bold': groupId === o.value }"
+            @click="pickGroup(o.value)"
+          >
+            {{ o.label }}
+          </button>
+        </li>
+      </ul>
+    </Modal>
   </div>
 </template>

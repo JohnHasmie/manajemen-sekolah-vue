@@ -11,8 +11,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringGroup, TutoringPackage } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringFlowTag from '@/components/feature/tutoring/TutoringFlowTag.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -107,15 +106,12 @@ const inputCls =
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl p-4 sm:p-6">
-    <TutoringPageHeader
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="admin"
+      :kicker="'Bimbel · ' + programName"
       :title="t('tutoring.enroll.title')"
-      :crumbs="'Bimbel · ' + programName"
-    />
-
-    <TutoringFlowTag
-      class="mb-3"
-      text="Pilih paket → kelompok → siswa → mode billing → Simpan"
+      meta="Pilih paket → kelompok → siswa → mode billing → Simpan"
     />
 
     <div v-if="loading" class="py-12 text-center text-slate-500">

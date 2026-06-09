@@ -1,21 +1,28 @@
 <!--
   AdminTutoringProgramsView — list bimbel programs (package/group
-  counts), inline form to create, row delete with FK-restrict toast.
-  Rebuilt on the tutoring shared components.
+  counts) with inline create form. Uses the BrandPageHeader +
+  KpiStripCards + PageFilterToolbar chrome.
 -->
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringProgram } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringFlowTag from '@/components/feature/tutoring/TutoringFlowTag.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import KpiStripCards, {
+  type KpiCard,
+} from '@/components/feature/KpiStripCards.vue';
+import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import Modal from '@/components/ui/Modal.vue';
 import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+
+type Filter = 'all' | 'active' | 'empty';
 
 const { t } = useI18n();
 const toast = useToast();
@@ -24,10 +31,34 @@ const router = useRouter();
 const loading = ref(true);
 const error = ref<string | null>(null);
 const programs = ref<TutoringProgram[]>([]);
+const search = ref('');
 
 const showForm = ref(false);
 const saving = ref(false);
 const form = ref({ name: '', target_education_level: '', description: '' });
+
+const filter = ref<Filter>('all');
+const showFilterPicker = ref(false);
+
+const FILTER_OPTIONS: { key: Filter; label: string }[] = [
+  { key: 'all', label: 'Semua' },
+  { key: 'active', label: 'Punya paket' },
+  { key: 'empty', label: 'Belum punya paket' },
+];
+
+const activeFilterLabel = computed(
+  () => FILTER_OPTIONS.find((o) => o.key === filter.value)?.label ?? 'Semua',
+);
+
+const filtered = computed(() => {
+  const q = search.value.trim().toLowerCase();
+  return programs.value.filter((p) => {
+    if (filter.value === 'active' && (p.packages_count ?? 0) === 0) return false;
+    if (filter.value === 'empty' && (p.packages_count ?? 0) > 0) return false;
+    if (q && !p.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+});
 
 async function load() {
   loading.value = true;
@@ -90,36 +121,93 @@ function openDetail(p: TutoringProgram) {
   });
 }
 
+function pickFilter(k: Filter) {
+  filter.value = k;
+  showFilterPicker.value = false;
+}
+
+const totalPackages = computed(
+  () => programs.value.reduce((s, p) => s + (p.packages_count ?? 0), 0),
+);
+const totalGroups = computed(
+  () => programs.value.reduce((s, p) => s + (p.groups_count ?? 0), 0),
+);
+const emptyPrograms = computed(
+  () => programs.value.filter((p) => (p.packages_count ?? 0) === 0).length,
+);
+
+const kpiCards = computed<KpiCard[]>(() => [
+  {
+    icon: 'layers',
+    label: t('tutoring.programs.title'),
+    value: programs.value.length,
+    suffix: 'program',
+    tone: 'brand',
+    accented: true,
+  },
+  {
+    icon: 'package',
+    label: t('tutoring.programs.packages'),
+    value: totalPackages.value,
+    tone: 'violet',
+  },
+  {
+    icon: 'users',
+    label: t('tutoring.programs.groups'),
+    value: totalGroups.value,
+    tone: 'green',
+  },
+  {
+    icon: 'alert-circle',
+    label: 'Belum punya paket',
+    value: emptyPrograms.value,
+    tone: emptyPrograms.value > 0 ? 'amber' : 'slate',
+  },
+]);
+
 onMounted(load);
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4 sm:p-6">
-    <TutoringPageHeader
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="admin"
+      kicker="Bimbel · Program"
       :title="t('tutoring.programs.title')"
-      crumbs="Bimbel · Program"
+      :meta="`${programs.length} program · ${totalPackages} paket · ${totalGroups} kelompok`"
     >
-      <template #right>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 bg-role-admin hover:bg-role-admin/90 text-white rounded-xl px-3.5 py-2 text-sm font-semibold"
-          @click="showForm = !showForm"
-        >
-          <NavIcon name="plus" :size="14" />
-          {{ showForm ? t('tutoring.common.close') : t('tutoring.programs.addBtn') }}
-        </button>
-      </template>
-    </TutoringPageHeader>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+        @click="showForm = !showForm"
+      >
+        <NavIcon name="plus" :size="13" />
+        {{ showForm ? t('tutoring.common.close') : t('tutoring.programs.addBtn') }}
+      </button>
+    </BrandPageHeader>
 
-    <TutoringFlowTag
-      class="mb-3"
-      text="Setup katalog: Program → Paket → Kelompok"
-    />
+    <KpiStripCards :cards="kpiCards" />
+
+    <PageFilterToolbar
+      :search="search"
+      search-placeholder="Cari nama program…"
+      @update:search="(v: string) => (search = v)"
+    >
+      <template #chips>
+        <AppFilterChip
+          label="Status"
+          :value="activeFilterLabel"
+          icon-name="layers"
+          tone="violet"
+          @click="showFilterPicker = true"
+        />
+      </template>
+    </PageFilterToolbar>
 
     <!-- Create form -->
     <section
       v-if="showForm"
-      class="mb-4 space-y-2.5 bg-white border border-slate-100 rounded-2xl p-4"
+      class="space-y-2.5 bg-white border border-slate-100 rounded-2xl p-4"
     >
       <input
         v-model="form.name"
@@ -149,19 +237,15 @@ onMounted(load);
     <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
+    <TutoringEmpty v-else-if="error" :text="error" icon="alert-circle" />
     <TutoringEmpty
-      v-else-if="error"
-      :text="error"
-      icon="alert-circle"
-    />
-    <TutoringEmpty
-      v-else-if="programs.length === 0"
+      v-else-if="filtered.length === 0"
       :text="t('tutoring.programs.empty')"
       icon="layers"
     />
     <div v-else class="space-y-2">
       <TutoringListTile
-        v-for="p in programs"
+        v-for="p in filtered"
         :key="p.id"
         icon="layers"
         :title="p.name"
@@ -188,5 +272,24 @@ onMounted(load);
         </template>
       </TutoringListTile>
     </div>
+
+    <Modal
+      v-if="showFilterPicker"
+      title="Filter Status"
+      @close="showFilterPicker = false"
+    >
+      <ul class="space-y-1">
+        <li v-for="o in FILTER_OPTIONS" :key="o.key">
+          <button
+            type="button"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            :class="{ 'bg-role-admin/5 text-role-admin font-bold': filter === o.key }"
+            @click="pickFilter(o.key)"
+          >
+            {{ o.label }}
+          </button>
+        </li>
+      </ul>
+    </Modal>
   </div>
 </template>

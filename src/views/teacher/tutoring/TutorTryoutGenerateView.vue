@@ -10,8 +10,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringAiQuestion, TutoringGroup } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringFlowTag from '@/components/feature/tutoring/TutoringFlowTag.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import TutoringChipsRow from '@/components/feature/tutoring/TutoringChipsRow.vue';
 import TutoringQuestionCard from '@/components/feature/tutoring/TutoringQuestionCard.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -94,15 +93,12 @@ const inputCls =
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4 sm:p-6">
-    <TutoringPageHeader
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="guru"
+      kicker="Bimbel · Generator Soal"
       :title="t('tutoring.ai.title')"
-      crumbs="Bimbel · Generator Soal"
-    />
-
-    <TutoringFlowTag
-      class="mb-3"
-      text="Atur → Generate → Simpan sebagai try-out untuk kelompok"
+      meta="Atur → Generate → Simpan sebagai try-out untuk kelompok"
     />
 
     <div class="space-y-3 bg-white border border-slate-100 rounded-2xl p-4">

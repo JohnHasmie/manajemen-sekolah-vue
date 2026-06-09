@@ -11,8 +11,7 @@ import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 import type { TutoringAssessment } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringHero from '@/components/feature/tutoring/TutoringHero.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import TutoringQuestionCard from '@/components/feature/tutoring/TutoringQuestionCard.vue';
 
@@ -41,10 +40,12 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4 sm:p-6">
-    <TutoringPageHeader
-      :title="t('tutoring.programDetail.assessments')"
-      :crumbs="'Bimbel · ' + title"
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="admin"
+      :kicker="'Bimbel · Asesmen · ' + title"
+      :title="title"
+      :meta="`${assessment?.questions?.length ?? 0} ${t('tutoring.assessment.questions')}`"
     />
 
     <div v-if="loading" class="py-12 text-center text-slate-500">
@@ -52,20 +53,12 @@ onMounted(load);
     </div>
 
     <template v-else>
-      <TutoringHero
-        icon="file-text"
-        greet="ASESMEN"
-        :title="title"
-        :subtitle="(assessment?.questions?.length ?? 0) + ' ' + t('tutoring.assessment.questions')"
-      />
-
       <TutoringEmpty
         v-if="!assessment?.questions?.length"
         :text="t('tutoring.assessment.noQuestions')"
         icon="file-text"
-        class="mt-4"
       />
-      <div v-else class="mt-3 space-y-2">
+      <div v-else class="space-y-2">
         <TutoringQuestionCard
           v-for="(q, i) in assessment.questions"
           :key="i"

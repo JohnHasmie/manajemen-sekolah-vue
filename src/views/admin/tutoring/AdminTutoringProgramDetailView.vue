@@ -16,12 +16,15 @@ import type {
   TutoringPackage,
 } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringHero from '@/components/feature/tutoring/TutoringHero.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import KpiStripCards, {
+  type KpiCard,
+} from '@/components/feature/KpiStripCards.vue';
 import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue';
 import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSectionHeader.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import { computed } from 'vue';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -155,6 +158,35 @@ async function createGroup() {
 
 onMounted(load);
 
+const totalEnrollments = computed(
+  () => groups.value.reduce((s, g) => s + (g.enrollments_count ?? 0), 0),
+);
+
+const kpiCards = computed<KpiCard[]>(() => [
+  {
+    icon: 'package',
+    label: t('tutoring.programDetail.packages'),
+    value: packages.value.length,
+    tone: 'brand',
+    accented: true,
+  },
+  {
+    icon: 'users',
+    label: t('tutoring.programDetail.groups'),
+    value: groups.value.length,
+    suffix: totalEnrollments.value > 0
+      ? `${totalEnrollments.value} siswa`
+      : undefined,
+    tone: 'violet',
+  },
+  {
+    icon: 'file-text',
+    label: t('tutoring.programDetail.assessments'),
+    value: assessments.value.length,
+    tone: 'green',
+  },
+]);
+
 const inputCls =
   'w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin';
 const saveBtnCls =
@@ -162,32 +194,26 @@ const saveBtnCls =
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4 sm:p-6">
-    <TutoringPageHeader
-      :title="t('tutoring.programs.title')"
-      :crumbs="'Bimbel · Program · ' + programName"
-    />
-
-    <TutoringHero
-      icon="layers"
-      greet="PROGRAM"
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="admin"
+      :kicker="'Bimbel · Program · ' + programName"
       :title="programName"
-      subtitle="Atur paket & kelompok lalu daftarkan siswa"
-      accent="admin"
+      meta="Atur paket & kelompok lalu daftarkan siswa"
     >
-      <template #trailing>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 bg-role-admin hover:bg-role-admin/90 text-white rounded-xl px-3 py-2 text-xs font-semibold"
-          @click="goEnroll"
-        >
-          <NavIcon name="user-plus" :size="14" />
-          {{ t('tutoring.programDetail.enroll') }}
-        </button>
-      </template>
-    </TutoringHero>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+        @click="goEnroll"
+      >
+        <NavIcon name="user-plus" :size="13" />
+        {{ t('tutoring.programDetail.enroll') }}
+      </button>
+    </BrandPageHeader>
 
-    <div v-if="loading" class="py-12 text-center text-slate-500 mt-3">
+    <KpiStripCards v-if="!loading" :cards="kpiCards" :lg-cols="3" />
+
+    <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
 

@@ -9,7 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSectionHeader.vue';
 
 const { t } = useI18n();
@@ -80,10 +80,12 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl p-4 sm:p-6">
-    <TutoringPageHeader
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="admin"
+      kicker="Bimbel · Pengaturan Billing"
       :title="t('tutoring.billing.title')"
-      crumbs="Bimbel · Pengaturan Billing"
+      :meta="t('tutoring.billing.hint')"
     />
 
     <div v-if="loading" class="py-12 text-center text-slate-500">
@@ -91,7 +93,6 @@ onMounted(load);
     </div>
 
     <div v-else>
-      <p class="text-sm text-slate-500 mb-4">{{ t('tutoring.billing.hint') }}</p>
 
       <label
         v-for="cfg in [

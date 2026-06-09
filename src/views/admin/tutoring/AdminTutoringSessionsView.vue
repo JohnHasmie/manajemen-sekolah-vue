@@ -1,7 +1,6 @@
 <!--
   AdminTutoringSessionsView — all tutoring sessions across the tenant.
-  Web-side renders as a table (better at scale) with the shared chip
-  filter row + status pills.
+  Adopts the BrandPageHeader + KpiStripCards + PageFilterToolbar chrome.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -12,8 +11,13 @@ import { useToast } from '@/composables/useToast';
 import { formatDateShort } from '@/lib/format';
 import type { TutoringSession } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringChipsRow from '@/components/feature/tutoring/TutoringChipsRow.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import KpiStripCards, {
+  type KpiCard,
+} from '@/components/feature/KpiStripCards.vue';
+import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
+import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import Modal from '@/components/ui/Modal.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import TutoringStatusPill from '@/components/feature/tutoring/TutoringStatusPill.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -27,14 +31,25 @@ const toast = useToast();
 const loading = ref(true);
 const sessions = ref<TutoringSession[]>([]);
 const filter = ref<Filter>('all');
+const showFilterPicker = ref(false);
+
+const FILTER_OPTIONS: { key: Filter; label: string }[] = [
+  { key: 'all', label: 'Semua' },
+  { key: 'upcoming', label: 'Mendatang' },
+  { key: 'past', label: 'Lampau' },
+];
+
+const activeFilterLabel = computed(
+  () => FILTER_OPTIONS.find((o) => o.key === filter.value)?.label ?? 'Semua',
+);
 
 const filtered = computed(() => {
   const now = Date.now();
   return sessions.value
     .filter((s) => {
       if (filter.value === 'all') return true;
-      const t = s.scheduled_at ? new Date(s.scheduled_at).getTime() : 0;
-      return filter.value === 'upcoming' ? t > now : t <= now;
+      const tt = s.scheduled_at ? new Date(s.scheduled_at).getTime() : 0;
+      return filter.value === 'upcoming' ? tt > now : tt <= now;
     })
     .sort((a, b) => {
       const ad = a.scheduled_at ? new Date(a.scheduled_at).getTime() : 0;
@@ -42,6 +57,48 @@ const filtered = computed(() => {
       return bd - ad;
     });
 });
+
+const upcomingCount = computed(() => {
+  const now = Date.now();
+  return sessions.value.filter((s) => {
+    const tt = s.scheduled_at ? new Date(s.scheduled_at).getTime() : 0;
+    return tt > now && s.status !== 'CANCELLED';
+  }).length;
+});
+const doneCount = computed(
+  () => sessions.value.filter((s) => s.status === 'DONE').length,
+);
+const cancelledCount = computed(
+  () => sessions.value.filter((s) => s.status === 'CANCELLED').length,
+);
+
+const kpiCards = computed<KpiCard[]>(() => [
+  {
+    icon: 'calendar',
+    label: 'Total sesi 60h',
+    value: sessions.value.length,
+    tone: 'brand',
+    accented: true,
+  },
+  {
+    icon: 'clock',
+    label: 'Mendatang',
+    value: upcomingCount.value,
+    tone: 'violet',
+  },
+  {
+    icon: 'check-circle',
+    label: 'Selesai',
+    value: doneCount.value,
+    tone: 'green',
+  },
+  {
+    icon: 'x-circle',
+    label: 'Batal',
+    value: cancelledCount.value,
+    tone: cancelledCount.value > 0 ? 'red' : 'slate',
+  },
+]);
 
 async function load() {
   loading.value = true;
@@ -73,37 +130,44 @@ function openAttendance(s: TutoringSession) {
   });
 }
 
-onMounted(load);
+function pickFilter(k: Filter) {
+  filter.value = k;
+  showFilterPicker.value = false;
+}
 
-const chipOptions: { value: Filter; label: string }[] = [
-  { value: 'all', label: 'Semua' },
-  { value: 'upcoming', label: 'Mendatang' },
-  { value: 'past', label: 'Lampau' },
-];
+onMounted(load);
 </script>
 
 <template>
-  <div class="mx-auto max-w-5xl p-4 sm:p-6">
-    <TutoringPageHeader
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="admin"
+      kicker="Bimbel · Sesi"
       :title="t('tutoring.adminSessions.title')"
-      crumbs="Bimbel · Sesi"
+      :meta="`${sessions.length} sesi (60 hari) · ${upcomingCount} mendatang`"
     >
-      <template #right>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-700"
-        >
-          <NavIcon name="download" :size="14" />
-          Export
-        </button>
-      </template>
-    </TutoringPageHeader>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+      >
+        <NavIcon name="download" :size="13" />
+        Export
+      </button>
+    </BrandPageHeader>
 
-    <TutoringChipsRow
-      v-model="filter"
-      :options="chipOptions"
-      class="mb-3"
-    />
+    <KpiStripCards :cards="kpiCards" />
+
+    <PageFilterToolbar :hide-default-search="true">
+      <template #chips>
+        <AppFilterChip
+          label="Rentang"
+          :value="activeFilterLabel"
+          icon-name="calendar"
+          tone="violet"
+          @click="showFilterPicker = true"
+        />
+      </template>
+    </PageFilterToolbar>
 
     <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
@@ -160,5 +224,24 @@ const chipOptions: { value: Filter; label: string }[] = [
         </tbody>
       </table>
     </div>
+
+    <Modal
+      v-if="showFilterPicker"
+      title="Filter Rentang"
+      @close="showFilterPicker = false"
+    >
+      <ul class="space-y-1">
+        <li v-for="o in FILTER_OPTIONS" :key="o.key">
+          <button
+            type="button"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            :class="{ 'bg-role-admin/5 text-role-admin font-bold': filter === o.key }"
+            @click="pickFilter(o.key)"
+          >
+            {{ o.label }}
+          </button>
+        </li>
+      </ul>
+    </Modal>
   </div>
 </template>

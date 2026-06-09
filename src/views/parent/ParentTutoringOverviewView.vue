@@ -1,19 +1,20 @@
 <!--
   ParentTutoringOverviewView — parent's monitoring page for one child's
-  bimbel: attendance rate, score progress, outstanding bills, upcoming
-  sessions. Rebuilt on the tutoring shared components with the wali
-  (azure) accent.
+  bimbel. Uses the BrandPageHeader (wali role → azure gradient) +
+  KpiStripCards chrome, with detail sections below.
 -->
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { formatDateShort, formatRupiah } from '@/lib/format';
 import type { TutoringBill, TutoringChildOverview } from '@/types/tutoring';
 
-import TutoringPageHeader from '@/components/feature/tutoring/TutoringPageHeader.vue';
-import TutoringHero from '@/components/feature/tutoring/TutoringHero.vue';
+import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import KpiStripCards, {
+  type KpiCard,
+} from '@/components/feature/KpiStripCards.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
@@ -48,79 +49,85 @@ function billTotal(bills: TutoringBill[]): number {
   return unpaid(bills).reduce((sum, b) => sum + (b.amount ?? 0), 0);
 }
 
-const sectionCls =
-  'bg-white border border-slate-100 rounded-2xl p-4 sm:p-5';
-const sectionTitleRow =
-  'flex items-center gap-2.5 mb-3';
+const kpiCards = computed<KpiCard[]>(() => {
+  if (!data.value) return [];
+  const d = data.value;
+  return [
+    {
+      icon: 'check-circle',
+      label: t('tutoring.overview.attendance'),
+      value:
+        d.attendance.attendance_rate == null
+          ? '–'
+          : `${Math.round(d.attendance.attendance_rate)}%`,
+      suffix:
+        d.attendance.total_recorded > 0
+          ? `${d.attendance.attended}/${d.attendance.total_recorded}`
+          : undefined,
+      tone: 'green',
+      accented: true,
+    },
+    {
+      icon: 'trending-up',
+      label: t('tutoring.overview.latest'),
+      value:
+        d.progress.summary.overall.latest == null
+          ? '–'
+          : `${Math.round(d.progress.summary.overall.latest)}%`,
+      suffix:
+        d.progress.summary.overall.average != null
+          ? `avg ${Math.round(d.progress.summary.overall.average)}%`
+          : undefined,
+      tone: 'violet',
+    },
+    {
+      icon: 'calendar',
+      label: t('tutoring.overview.schedule'),
+      value: d.upcomingSessions.length,
+      suffix: 'sesi',
+      tone: 'brand',
+    },
+    {
+      icon: 'wallet',
+      label: t('tutoring.overview.bills'),
+      value: unpaid(d.bills).length,
+      suffix:
+        unpaid(d.bills).length > 0
+          ? formatRupiah(billTotal(d.bills))
+          : undefined,
+      tone: unpaid(d.bills).length > 0 ? 'amber' : 'green',
+    },
+  ];
+});
+
+const sectionCls = 'bg-white border border-slate-100 rounded-2xl p-4 sm:p-5';
+const sectionTitleRow = 'flex items-center gap-2.5 mb-3';
 const sectionIconCls =
   'w-7 h-7 rounded-lg bg-role-parent-soft text-role-parent grid place-items-center flex-shrink-0';
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl p-4 sm:p-6">
-    <TutoringPageHeader
-      :title="t('tutoring.overview.title')"
-      :crumbs="'Bimbel · ' + studentName"
+  <div class="space-y-md pb-12">
+    <BrandPageHeader
+      role="wali"
+      kicker="Bimbel · Monitoring"
+      :title="studentName"
+      :meta="data
+        ? `${data.upcomingSessions.length} sesi mendatang · ${unpaid(data.bills).length} tagihan`
+        : ''"
     />
 
     <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}
     </div>
 
-    <TutoringEmpty
-      v-else-if="error"
-      :text="error"
-      icon="alert-circle"
-    />
+    <TutoringEmpty v-else-if="error" :text="error" icon="alert-circle" />
 
     <template v-else-if="data">
-      <TutoringHero
-        icon="user"
-        greet="MONITORING"
-        :title="studentName"
-        subtitle="Bimbel Demo"
-        accent="wali"
-      />
+      <KpiStripCards :cards="kpiCards" />
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-        <!-- Attendance -->
-        <section :class="sectionCls">
-          <div :class="sectionTitleRow">
-            <span :class="sectionIconCls">
-              <NavIcon name="check-circle" :size="16" />
-            </span>
-            <h3 class="text-sm font-bold text-slate-900 tracking-tight">
-              {{ t('tutoring.overview.attendance') }}
-            </h3>
-          </div>
-          <p
-            v-if="data.attendance.total_recorded === 0"
-            class="text-xs text-slate-500"
-          >
-            {{ t('tutoring.overview.noSessions') }}
-          </p>
-          <div v-else class="flex items-center gap-3">
-            <div class="rounded-xl bg-role-parent-soft px-3 py-2 text-center">
-              <div class="text-xl font-extrabold text-role-parent">
-                {{
-                  data.attendance.attendance_rate == null
-                    ? '–'
-                    : Math.round(data.attendance.attendance_rate) + '%'
-                }}
-              </div>
-              <div class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider">
-                {{ t('tutoring.overview.present') }}
-              </div>
-            </div>
-            <p class="text-xs text-slate-500">
-              {{ data.attendance.attended }} {{ t('tutoring.overview.of') }}
-              {{ data.attendance.total_recorded }}
-              {{ t('tutoring.overview.sessionsAttended') }}
-            </p>
-          </div>
-        </section>
-
-        <!-- Progress -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- Progress detail -->
         <section :class="sectionCls">
           <div :class="sectionTitleRow">
             <span :class="sectionIconCls">
@@ -136,43 +143,21 @@ const sectionIconCls =
           >
             {{ t('tutoring.overview.noScores') }}
           </p>
-          <div v-else>
-            <div class="flex items-center gap-3 mb-2">
-              <div class="rounded-xl bg-role-parent-soft px-3 py-2 text-center">
-                <div class="text-xl font-extrabold text-role-parent">
-                  {{
-                    data.progress.summary.overall.latest == null
-                      ? '–'
-                      : Math.round(data.progress.summary.overall.latest) + '%'
-                  }}
-                </div>
-                <div class="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider">
-                  {{ t('tutoring.overview.latest') }}
-                </div>
-              </div>
-              <p class="text-xs text-slate-500">
-                {{ t('tutoring.overview.best') }}
-                {{ Math.round(data.progress.summary.overall.best ?? 0) }}% ·
-                {{ t('tutoring.overview.average') }}
-                {{ Math.round(data.progress.summary.overall.average ?? 0) }}%
-              </p>
-            </div>
-            <ul class="divide-y divide-slate-100">
-              <li
-                v-for="e in data.progress.timeline.slice(0, 3)"
-                :key="e.assessment_id"
-                class="flex items-center justify-between py-1.5 text-sm"
-              >
-                <span class="text-slate-700">{{ e.title }}</span>
-                <span class="font-bold text-slate-900">
-                  {{ e.percentage == null ? '–' : Math.round(e.percentage) + '%' }}
-                </span>
-              </li>
-            </ul>
-          </div>
+          <ul v-else class="divide-y divide-slate-100">
+            <li
+              v-for="e in data.progress.timeline.slice(0, 5)"
+              :key="e.assessment_id"
+              class="flex items-center justify-between py-1.5 text-sm"
+            >
+              <span class="text-slate-700">{{ e.title }}</span>
+              <span class="font-bold text-slate-900">
+                {{ e.percentage == null ? '–' : Math.round(e.percentage) + '%' }}
+              </span>
+            </li>
+          </ul>
         </section>
 
-        <!-- Bills -->
+        <!-- Bills detail -->
         <section :class="sectionCls">
           <div :class="sectionTitleRow">
             <span :class="sectionIconCls">
@@ -188,34 +173,28 @@ const sectionIconCls =
           >
             {{ t('tutoring.overview.noBills') }}
           </p>
-          <div v-else>
-            <p class="mb-2 text-sm font-bold text-status-danger">
-              {{ t('tutoring.overview.totalDue') }}:
-              {{ formatRupiah(billTotal(data.bills)) }}
-            </p>
-            <ul class="divide-y divide-slate-100">
-              <li
-                v-for="b in unpaid(data.bills)"
-                :key="b.id"
-                class="flex items-center justify-between py-1.5 text-xs"
-              >
-                <span class="text-slate-700">
-                  {{ b.source_label ?? t('tutoring.overview.billDefault') }}
-                  <template v-if="b.due_date">
-                    · {{ t('tutoring.overview.due') }}
-                    {{ formatDateShort(b.due_date) }}
-                  </template>
-                </span>
-                <span class="font-bold text-slate-900">
-                  {{ formatRupiah(b.amount ?? 0) }}
-                </span>
-              </li>
-            </ul>
-          </div>
+          <ul v-else class="divide-y divide-slate-100">
+            <li
+              v-for="b in unpaid(data.bills)"
+              :key="b.id"
+              class="flex items-center justify-between py-1.5 text-xs"
+            >
+              <span class="text-slate-700">
+                {{ b.source_label ?? t('tutoring.overview.billDefault') }}
+                <template v-if="b.due_date">
+                  · {{ t('tutoring.overview.due') }}
+                  {{ formatDateShort(b.due_date) }}
+                </template>
+              </span>
+              <span class="font-bold text-slate-900">
+                {{ formatRupiah(b.amount ?? 0) }}
+              </span>
+            </li>
+          </ul>
         </section>
 
-        <!-- Schedule -->
-        <section :class="sectionCls">
+        <!-- Schedule detail (full-width on mobile, half on >=sm) -->
+        <section :class="sectionCls" class="sm:col-span-2">
           <div :class="sectionTitleRow">
             <span :class="sectionIconCls">
               <NavIcon name="calendar" :size="16" />
