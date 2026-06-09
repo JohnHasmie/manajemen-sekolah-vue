@@ -53,6 +53,20 @@ export interface TutoringAdminStats {
   attendance_rate: number | null;
 }
 
+/** KPI strip for the tutor's own "Sesi Saya" dashboard.
+ *  Mirrors GetTutoringTutorStatsAction. `attendance_rate` is null when
+ *  the tutor hasn't recorded any attendance in the last 30 days. */
+export interface TutoringTutorStats {
+  sessions_this_week: number;
+  sessions_today: number;
+  hours_this_week: number;
+  minutes_this_week: number;
+  upcoming_sessions: number;
+  groups: number;
+  students: number;
+  attendance_rate: number | null;
+}
+
 export interface TutoringProgressEntry {
   assessment_id: string;
   title: string;

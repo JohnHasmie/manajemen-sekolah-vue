@@ -27,6 +27,7 @@ import type {
   TutoringSessionAttendanceRow,
   TutoringStudentRow,
   TutoringTutorRow,
+  TutoringTutorStats,
 } from '@/types/tutoring';
 
 function toIso(d: Date): string {
@@ -332,6 +333,29 @@ export const TutoringService = {
   },
 
   // ── Tutor: sessions + attendance ────────────────────────────────
+
+  /** KPI strip for the tutor's own dashboard — sessions/hours this
+   *  week, attendance rate, groups, students. Defaults to the calling
+   *  user; pass [tutorUserId] only when an admin previews a specific
+   *  tutor's KPIs. */
+  async getTutorStats(tutorUserId?: string): Promise<TutoringTutorStats> {
+    const res = await api.get<ApiResponse<TutoringTutorStats>>(
+      '/tutoring/tutor-stats',
+      { params: tutorUserId ? { tutor_user_id: tutorUserId } : {} },
+    );
+    return (
+      extractData(res) ?? {
+        sessions_this_week: 0,
+        sessions_today: 0,
+        hours_this_week: 0,
+        minutes_this_week: 0,
+        upcoming_sessions: 0,
+        groups: 0,
+        students: 0,
+        attendance_rate: null,
+      }
+    );
+  },
 
   async getTutorSessions(
     tutorUserId: string,
