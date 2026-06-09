@@ -860,4 +860,36 @@ router.beforeEach((to) => {
   return true;
 });
 
+/**
+ * Recover from stale lazy-chunk failures after a new deploy.
+ *
+ * When a fresh build ships (Vercel), the previous hashed chunk filenames
+ * (e.g. `RegisterDemoIdentityView-CgGh-UKk.js`) are purged. A browser still
+ * running the OLD `index.html` then fails the dynamic `import()` on the next
+ * navigation with "Failed to fetch dynamically imported module" — leaving the
+ * user stuck (the exact error reported on "lanjut ke data diri").
+ *
+ * Here we detect that class of error and hard-navigate to the intended path
+ * so the browser pulls the new `index.html` + current chunks. A sessionStorage
+ * timestamp guards against a reload loop when the failure is genuinely
+ * persistent (offline / server actually down) — at most one auto-reload per
+ * 10s. The companion `vite:preloadError` handler in `main.ts` covers
+ * preloads (vs navigation imports) using the same guard key.
+ */
+router.onError((error, to) => {
+  const msg = String((error as Error | undefined)?.message ?? '');
+  const isChunkLoadError =
+    /Failed to fetch dynamically imported module/i.test(msg) ||
+    /error loading dynamically imported module/i.test(msg) ||
+    /Importing a module script failed/i.test(msg);
+  if (!isChunkLoadError) return;
+
+  const KEY = 'chunk-reload-at';
+  const last = Number(sessionStorage.getItem(KEY) ?? '0');
+  if (Date.now() - last < 10_000) return; // already tried recently — avoid a loop
+  sessionStorage.setItem(KEY, String(Date.now()));
+
+  window.location.assign(to?.fullPath ?? window.location.pathname);
+});
+
 export default router;
