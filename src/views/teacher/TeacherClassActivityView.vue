@@ -29,6 +29,7 @@ import { useAuthStore } from '@/stores/auth';
 import { ClassActivityService } from '@/services/class-activity.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
+import { localISODate } from '@/lib/format';
 import type {
   ActivitySubmissionRow,
   ActivityType,
@@ -336,7 +337,7 @@ const form = reactive<{
 });
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localISODate();
 }
 
 function resetForm() {

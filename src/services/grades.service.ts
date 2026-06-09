@@ -7,6 +7,7 @@
  * matrix endpoint yet, we fall back to a synthesized empty matrix.
  */
 import { api } from '@/lib/http';
+import { localISODate } from '@/lib/format';
 import { StudentService } from '@/services/students.service';
 import {
   adminGradeOverviewFromJson,
@@ -462,9 +463,7 @@ export const GradeService = {
     // Date fallback: backend rejects `null` / missing on POST, so
     // default to today (YYYY-MM-DD) when the assessment record has
     // no date attached — matches the cell's effective recording date.
-    const dateIso =
-      payload.assessment.date ||
-      new Date().toISOString().slice(0, 10);
+    const dateIso = payload.assessment.date || localISODate();
 
     // Title MUST be the verbatim backend value (incl. null) — the
     // unique index `(teacher, subject, type, date, title)` treats
