@@ -885,6 +885,13 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        path: 'admin/tutoring/payouts',
+        name: 'admin.tutoring.payouts',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringPayoutsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'teacher/tutoring/sessions',
         name: 'teacher.tutoring.sessions',
         component: () =>
@@ -924,6 +931,13 @@ const routes: RouteRecordRaw[] = [
         name: 'teacher.tutoring.activity-submissions',
         component: () =>
           import('@/views/teacher/tutoring/TutorActivitySubmissionsView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/earnings',
+        name: 'teacher.tutoring.earnings',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorEarningsView.vue'),
         meta: { role: 'guru' satisfies Role },
       },
 

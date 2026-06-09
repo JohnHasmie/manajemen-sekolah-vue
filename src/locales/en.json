@@ -1659,7 +1659,10 @@
       "ai": "AI questions",
       "manajemen": "Management",
       "students": "Students",
-      "tutors": "Tutors"
+      "tutors": "Tutors",
+      "activities": "Activities",
+      "earnings": "My earnings",
+      "payouts": "Payouts"
     },
     "dashboard": {
       "title": "Tutoring Dashboard",

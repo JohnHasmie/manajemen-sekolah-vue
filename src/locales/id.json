@@ -1655,7 +1655,10 @@
       "ai": "Soal AI",
       "manajemen": "Manajemen",
       "students": "Siswa Bimbel",
-      "tutors": "Tutor"
+      "tutors": "Tutor",
+      "activities": "Aktivitas",
+      "earnings": "Penghasilan",
+      "payouts": "Penggajian"
     },
     "dashboard": {
       "title": "Dasbor Bimbel",

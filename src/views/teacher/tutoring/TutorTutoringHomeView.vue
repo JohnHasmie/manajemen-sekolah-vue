@@ -106,6 +106,12 @@ const quickActions = [
     sub: 'Beri tugas / quiz ke kelompok',
     to: 'teacher.tutoring.activities',
   },
+  {
+    icon: 'wallet',
+    title: 'Penghasilan Saya',
+    sub: 'Estimasi honor bulan ini',
+    to: 'teacher.tutoring.earnings',
+  },
 ] as const;
 </script>
 

@@ -212,6 +212,11 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
         labelKey: 'tutoring.nav.billingSettings',
         icon: 'settings',
       },
+      {
+        to: '/admin/tutoring/payouts',
+        labelKey: 'tutoring.nav.payouts',
+        icon: 'wallet',
+      },
     ],
   },
 ];
@@ -237,9 +242,19 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
         icon: 'calendar',
       },
       {
+        to: '/teacher/tutoring/activities',
+        labelKey: 'tutoring.nav.activities',
+        icon: 'book',
+      },
+      {
         to: '/teacher/tutoring/tryout-generator',
         labelKey: 'tutoring.nav.ai',
         icon: 'sparkles',
+      },
+      {
+        to: '/teacher/tutoring/earnings',
+        labelKey: 'tutoring.nav.earnings',
+        icon: 'wallet',
       },
     ],
   },

@@ -30,6 +30,8 @@ import type {
   TutoringStudentRow,
   TutoringTutorRow,
   TutoringTutorStats,
+  TutorPayoutRate,
+  TutorPayoutSummary,
 } from '@/types/tutoring';
 
 function toIso(d: Date): string {
@@ -540,5 +542,53 @@ export const TutoringService = {
       { params: { student_id: studentId } },
     );
     return extractData(res) ?? [];
+  },
+
+  // ── Payouts (honorarium per tutor) ──────────────────────────────
+
+  /** Admin: list rates for every tutor on this tenant. */
+  async getPayoutRates(): Promise<TutorPayoutRate[]> {
+    const res = await api.get<ApiResponse<TutorPayoutRate[]>>(
+      '/tutoring/payouts/rates',
+    );
+    return extractData(res) ?? [];
+  },
+
+  /** Admin: upsert one tutor's rate. */
+  async upsertPayoutRate(
+    userId: string,
+    payload: {
+      basis: 'PER_SESSION' | 'PER_HOUR';
+      amount: number;
+      currency?: string;
+      note?: string | null;
+    },
+  ): Promise<TutorPayoutRate> {
+    const res = await api.put<ApiResponse<TutorPayoutRate>>(
+      `/tutoring/payouts/rates/${userId}`,
+      payload,
+    );
+    return extractData(res);
+  },
+
+  /**
+   * Tutor own summary (or admin override via [userId]).
+   * Period defaults to current calendar month; pass [month] as YYYY-MM
+   * to override.
+   */
+  async getPayoutSummary(opts: {
+    userId?: string;
+    month?: string;
+  } = {}): Promise<TutorPayoutSummary> {
+    const res = await api.get<ApiResponse<TutorPayoutSummary>>(
+      '/tutoring/payouts/summary',
+      {
+        params: {
+          ...(opts.userId ? { user_id: opts.userId } : {}),
+          ...(opts.month ? { month: opts.month } : {}),
+        },
+      },
+    );
+    return extractData(res);
   },
 };

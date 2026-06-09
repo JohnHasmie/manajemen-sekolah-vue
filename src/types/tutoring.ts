@@ -264,6 +264,36 @@ export interface TutoringActivity {
   created_at?: string | null;
 }
 
+/** One tutor's honorarium rate. */
+export interface TutorPayoutRate {
+  id?: string;
+  user_id: string;
+  name?: string | null;
+  email?: string | null;
+  basis: 'PER_SESSION' | 'PER_HOUR';
+  amount: number;
+  currency?: string;
+  note?: string | null;
+  updated_at?: string | null;
+}
+
+/** Computed monthly payout summary for one tutor. */
+export interface TutorPayoutSummary {
+  user_id: string;
+  period: { from: string; to: string; label: string };
+  rate: {
+    basis: 'PER_SESSION' | 'PER_HOUR';
+    amount: number;
+    currency: string;
+    note?: string | null;
+    configured: boolean;
+  };
+  sessions_count: number;
+  minutes: number;
+  hours: number;
+  earnings: number;
+}
+
 export interface TutoringActivitySubmission {
   id: string;
   activity_id?: string;
