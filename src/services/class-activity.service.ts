@@ -264,12 +264,18 @@ export const ClassActivityService = {
     activityId: string,
     rows: ActivitySubmissionRow[],
   ): Promise<{ success: boolean; saved?: number; error?: string }> {
+    // Contract (matches the backend UpsertSubmissionsAction + the mobile
+    // client): the bulk-upsert expects `{ rows: [{ student_id, status,
+    // score?, note? }] }`. This service previously sent `submissions` +
+    // `student_class_id` + `notes`, so the controller read an empty `rows`
+    // and returned 422 ("rows harus berupa array yang tidak kosong") on
+    // every save. Aligned the key and per-row field names.
     const payload = {
-      submissions: rows.map((r) => ({
-        student_class_id: r.student_class_id,
+      rows: rows.map((r) => ({
+        student_id: r.student_id,
         status: r.status,
         ...(r.score !== null && r.score !== undefined ? { score: r.score } : {}),
-        ...(r.notes ? { notes: r.notes } : {}),
+        ...(r.notes ? { note: r.notes } : {}),
       })),
     };
     const res = await api.post(
