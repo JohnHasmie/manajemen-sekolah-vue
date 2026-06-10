@@ -34,6 +34,10 @@ const emit = defineEmits<{
 const buktiBlobUrl = ref<string | null>(null);
 const buktiIsImage = ref(false);
 const buktiError = ref<string | null>(null);
+// Distinct from buktiError: a 404 means no proof file was uploaded for this
+// payment (e.g. cash or seeded payments) — a neutral empty state, not a
+// red error.
+const buktiMissing = ref(false);
 const adminNotes = ref('');
 
 const isApproving = ref(false);
@@ -43,12 +47,20 @@ const err = ref<string | null>(null);
 
 async function loadBukti() {
   buktiError.value = null;
+  buktiMissing.value = false;
   try {
     const blob = await FinanceService.fetchReceiptBlob(props.payment.id);
     buktiIsImage.value = blob.type.startsWith('image/');
     buktiBlobUrl.value = URL.createObjectURL(blob);
   } catch (e) {
-    buktiError.value = (e as Error).message;
+    // 404 = no proof uploaded → neutral empty state; anything else → a
+    // friendly error (never the raw "Request failed with status code …").
+    const status = (e as { response?: { status?: number } })?.response?.status;
+    if (status === 404) {
+      buktiMissing.value = true;
+    } else {
+      buktiError.value = 'Gagal memuat bukti pembayaran. Coba lagi nanti.';
+    }
   }
 }
 
@@ -117,7 +129,10 @@ const isPending = computed(() => props.payment.status === 'pending');
           Bukti transfer
         </p>
         <div class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden min-h-48 grid place-items-center">
-          <p v-if="buktiError" class="text-[12px] text-red-600 p-4 text-center">
+          <p v-if="buktiMissing" class="text-[12px] text-slate-400 p-4 text-center">
+            Bukti pembayaran belum diunggah.
+          </p>
+          <p v-else-if="buktiError" class="text-[12px] text-red-600 p-4 text-center">
             {{ buktiError }}
           </p>
           <p v-else-if="!buktiBlobUrl" class="text-[12px] text-slate-400 p-4">
