@@ -22,6 +22,8 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue';
 import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSectionHeader.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
+import { formatRupiah } from '@/lib/format';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -72,14 +74,39 @@ const kpiCards = computed<KpiCard[]>(() => {
       tone: 'green',
     },
     {
-      icon: 'users',
-      label: 'Kelompok',
-      value: s.groups,
-      suffix: s.students > 0 ? `${s.students} siswa` : undefined,
-      tone: 'amber',
+      icon: 'check-circle',
+      label: 'Perlu nilai',
+      value: s.pending_submissions,
+      suffix: s.pending_submissions === 0
+        ? 'Tidak ada antrean'
+        : 'Tugas belum dinilai',
+      tone: s.pending_submissions > 0 ? 'amber' : 'green',
     },
   ];
 });
+
+const nextSessionLabel = computed(() => {
+  const ns = stats.value?.next_session;
+  if (!ns?.scheduled_at) return '—';
+  const d = new Date(ns.scheduled_at);
+  if (Number.isNaN(d.valueOf())) return '—';
+  return d.toLocaleString('id-ID', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+});
+
+function goToAttendance() {
+  const ns = stats.value?.next_session;
+  if (!ns) return;
+  router.push({
+    name: 'teacher.tutoring.attendance',
+    params: { sessionId: ns.id },
+  });
+}
 
 const quickActions = [
   {
@@ -142,7 +169,88 @@ const quickActions = [
     </div>
 
     <template v-else>
+      <!-- ── Pinned next session ─────────────────────────────────── -->
+      <div
+        v-if="stats?.next_session"
+        class="rounded-xl border border-role-guru/25 bg-gradient-to-br from-role-guru/8 to-white p-4"
+      >
+        <div class="flex items-center justify-between">
+          <span class="rounded-full bg-role-guru px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-widest text-white">
+            Sesi Berikutnya
+          </span>
+          <span class="text-xs font-bold text-slate-700">{{ nextSessionLabel }}</span>
+        </div>
+        <h3 class="mt-2 text-base font-extrabold tracking-tight text-slate-900">
+          {{ stats.next_session.group_name || stats.next_session.topic || 'Sesi terjadwal' }}
+        </h3>
+        <p v-if="stats.next_session.program_name" class="text-xs text-slate-500">
+          {{ [
+            stats.next_session.program_name,
+            stats.next_session.room ? `Ruang ${stats.next_session.room}` : null,
+            `${stats.next_session.duration_minutes} menit`,
+          ].filter(Boolean).join(' · ') }}
+        </p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-role-guru px-3.5 py-2 text-sm font-bold text-white hover:bg-role-guru/90"
+            @click="goToAttendance"
+          >
+            <NavIcon name="check-circle" :size="14" />
+            Catat Kehadiran
+          </button>
+          <a
+            v-if="stats.next_session.meeting_url"
+            :href="stats.next_session.meeting_url"
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-role-guru/40 px-3.5 py-2 text-sm font-bold text-role-guru hover:bg-role-guru/5"
+          >
+            <NavIcon name="link" :size="14" />
+            Meet
+          </a>
+        </div>
+      </div>
+
       <KpiStripCards v-if="stats" :cards="kpiCards" />
+
+      <!-- ── Honor + rating preview strip ───────────────────────── -->
+      <div v-if="stats" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+          <div class="flex items-center gap-2">
+            <NavIcon name="wallet" :size="16" class="text-role-guru" />
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-sm font-extrabold tracking-tight text-slate-900">
+                {{ stats.month_earnings > 0 ? formatRupiah(stats.month_earnings) : 'Rp 0' }}
+              </div>
+              <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                Honor bulan ini
+              </div>
+              <div class="truncate text-[10px] text-slate-400">
+                {{ stats.month_sessions_done > 0
+                  ? `${stats.month_sessions_done} sesi DONE`
+                  : 'Belum ada sesi DONE' }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+          <div class="flex items-center gap-2">
+            <NavIcon name="check-circle" :size="16" class="text-role-guru" />
+            <div class="min-w-0 flex-1">
+              <div class="truncate text-sm font-extrabold tracking-tight text-slate-900">
+                {{ stats.rating_avg == null ? '–' : stats.rating_avg.toFixed(1) }}
+              </div>
+              <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                Rating 30h
+              </div>
+              <div class="truncate text-[10px] text-slate-400">
+                {{ stats.rating_count === 0 ? 'Belum ada rating' : `${stats.rating_count} ulasan` }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <TutoringSectionHeader title="Aksi Cepat" />
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">

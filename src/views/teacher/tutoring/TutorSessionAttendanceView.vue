@@ -42,6 +42,9 @@ const names = ref<Record<string, string>>({});
 /** student_id → chosen status */
 const chosen = ref<Record<string, string>>({});
 
+/** Post-session note — written back via PUT /tutoring/sessions/{id}. */
+const notes = ref('');
+
 const statusKeys = Object.keys(STATUS_KEYS);
 
 async function load() {
@@ -85,6 +88,19 @@ async function save() {
       status,
     }));
     await TutoringService.recordAttendance(sessionId, items);
+
+    const note = notes.value.trim();
+    if (note.length > 0) {
+      try {
+        await TutoringService.updateSession(sessionId, { notes: note });
+      } catch (e) {
+        toast.error(
+          'Catatan gagal tersimpan: ' +
+            (e instanceof Error ? e.message : String(e)),
+        );
+      }
+    }
+
     toast.success(t('tutoring.attendance.saved'));
     router.back();
   } catch (e) {
@@ -142,6 +158,29 @@ onMounted(load);
           </select>
         </div>
       </div>
+
+      <!-- Catatan Sesi — surfaces on the wali "Yang Baru" feed -->
+      <section class="bg-white border border-slate-100 rounded-2xl p-4">
+        <div class="flex items-center gap-2 mb-1.5">
+          <NavIcon name="edit" :size="14" class="text-role-teacher" />
+          <h3 class="text-sm font-extrabold tracking-tight text-slate-900">
+            Catatan Sesi
+          </h3>
+          <span class="rounded bg-role-parent/12 px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-widest text-role-parent">
+            Terbaca Wali
+          </span>
+        </div>
+        <p class="text-[11px] text-slate-500 mb-2">
+          Opsional. Akan tampil di "Yang Baru" wali.
+        </p>
+        <textarea
+          v-model="notes"
+          rows="3"
+          maxlength="1000"
+          placeholder='Mis. "Hari ini fokus latihan PG mat dasar. PR: 1.4 no 5–10."'
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
+        />
+      </section>
 
       <button
         :disabled="saving"

@@ -145,9 +145,29 @@ export interface TutoringAdminStats {
   active_enrollments: number;
   upcoming_sessions: number;
   sessions_this_week: number;
+  sessions_today: number;
   unpaid_bills: number;
   unpaid_total: number;
+  bills_due_today: number;
+  month_revenue: number;
+  new_enrollments_today: number;
+  hot_leads: number;
   attendance_rate: number | null;
+  program_id?: string | null;
+}
+
+/** Compact next-session payload embedded in tutor stats — drives the
+ *  pinned "Next Session" card on the tutor home dashboard. */
+export interface TutoringNextSession {
+  id: string;
+  scheduled_at: string | null;
+  duration_minutes: number;
+  group_id?: string | null;
+  group_name?: string | null;
+  program_name?: string | null;
+  room?: string | null;
+  meeting_url?: string | null;
+  topic?: string | null;
 }
 
 /** KPI strip for the tutor's own "Sesi Saya" dashboard.
@@ -162,6 +182,24 @@ export interface TutoringTutorStats {
   groups: number;
   students: number;
   attendance_rate: number | null;
+  pending_submissions: number;
+  month_earnings: number;
+  month_sessions_done: number;
+  next_session: TutoringNextSession | null;
+  rating_avg: number | null;
+  rating_count: number;
+}
+
+/** One row in the admin or wali activity feed.
+ *  wali  → note | score | announcement | bill | attendance
+ *  admin → enrollment_new | lead_new | lead_converted | session_done | bill_paid
+ */
+export interface TutoringFeedEvent {
+  type: string;
+  occurred_at: string | null;
+  title: string;
+  subtitle?: string | null;
+  meta?: Record<string, unknown>;
 }
 
 export interface TutoringProgressEntry {

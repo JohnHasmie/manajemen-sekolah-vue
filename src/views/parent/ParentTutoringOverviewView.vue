@@ -9,7 +9,11 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { formatDateShort, formatRupiah } from '@/lib/format';
-import type { TutoringBill, TutoringChildOverview } from '@/types/tutoring';
+import type {
+  TutoringBill,
+  TutoringChildOverview,
+  TutoringFeedEvent,
+} from '@/types/tutoring';
 
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import KpiStripCards, {
@@ -26,6 +30,8 @@ const studentName = String(route.query.name ?? 'Anak');
 const loading = ref(true);
 const error = ref<string | null>(null);
 const data = ref<TutoringChildOverview | null>(null);
+const feed = ref<TutoringFeedEvent[]>([]);
+const feedLoading = ref(true);
 
 async function load() {
   loading.value = true;
@@ -40,7 +46,59 @@ async function load() {
   }
 }
 
-onMounted(load);
+async function loadFeed() {
+  feedLoading.value = true;
+  try {
+    feed.value = await TutoringService.getStudentFeed(studentId, {
+      limit: 12,
+      sinceDays: 30,
+    });
+  } catch {/* non-fatal */} finally {
+    feedLoading.value = false;
+  }
+}
+
+onMounted(async () => {
+  await load();
+  await loadFeed();
+});
+
+/** Tutor notes first (sticky), then everything else. */
+const feedSorted = computed<TutoringFeedEvent[]>(() => {
+  const notes = feed.value.filter((e) => e.type === 'note');
+  const rest = feed.value.filter((e) => e.type !== 'note');
+  return [...notes, ...rest].slice(0, 8);
+});
+
+const dateFmt = new Intl.DateTimeFormat('id-ID', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+function feedTime(iso: string | null): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return Number.isNaN(d.valueOf()) ? '—' : dateFmt.format(d);
+}
+
+interface FeedStyle { icon: string; tone: string }
+function feedStyle(type: string): FeedStyle {
+  switch (type) {
+    case 'note':
+      return { icon: 'edit', tone: 'text-role-parent bg-role-parent/12' };
+    case 'score':
+      return { icon: 'check-circle', tone: 'text-emerald-600 bg-emerald-50' };
+    case 'announcement':
+      return { icon: 'message-square', tone: 'text-role-admin bg-role-admin/12' };
+    case 'bill':
+      return { icon: 'wallet', tone: 'text-status-danger bg-rose-50' };
+    case 'attendance':
+      return { icon: 'calendar', tone: 'text-role-guru bg-role-guru/12' };
+    default:
+      return { icon: 'circle', tone: 'text-slate-500 bg-slate-100' };
+  }
+}
 
 function unpaid(bills: TutoringBill[]): TutoringBill[] {
   return bills.filter((b) => b.status.toLowerCase() !== 'paid');
@@ -125,6 +183,50 @@ const sectionIconCls =
 
     <template v-else-if="data">
       <KpiStripCards :cards="kpiCards" />
+
+      <!-- ── Yang Baru (activity feed) ───────────────────────────── -->
+      <section :class="sectionCls">
+        <div :class="sectionTitleRow">
+          <span :class="sectionIconCls">
+            <NavIcon name="bell" :size="16" />
+          </span>
+          <h3 class="text-sm font-bold text-slate-900 tracking-tight">
+            Yang Baru
+          </h3>
+        </div>
+        <p v-if="feedLoading" class="text-xs text-slate-400">Memuat…</p>
+        <p v-else-if="feedSorted.length === 0" class="text-xs text-slate-500">
+          Belum ada aktivitas 30 hari terakhir.
+        </p>
+        <ul v-else class="space-y-2">
+          <li
+            v-for="(ev, i) in feedSorted"
+            :key="i"
+            class="flex gap-2.5"
+          >
+            <span
+              class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+              :class="feedStyle(ev.type).tone"
+            >
+              <NavIcon :name="feedStyle(ev.type).icon" :size="13" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="line-clamp-2 text-[13px] font-bold text-slate-900">
+                {{ ev.title }}
+              </div>
+              <div
+                v-if="ev.subtitle"
+                class="line-clamp-3 text-[11.5px] text-slate-500"
+              >
+                {{ ev.subtitle }}
+              </div>
+              <div class="mt-0.5 text-[9.5px] font-semibold text-slate-400">
+                {{ feedTime(ev.occurred_at) }}
+              </div>
+            </div>
+          </li>
+        </ul>
+      </section>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <!-- Progress detail -->

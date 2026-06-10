@@ -18,6 +18,7 @@ import type {
   TutoringBill,
   TutoringChildOverview,
   TutoringEnrollee,
+  TutoringFeedEvent,
   TutoringGroup,
   TutoringInviteResult,
   TutoringPackage,
@@ -836,5 +837,49 @@ export const TutoringService = {
       { params: opts.limit ? { limit: opts.limit } : {} },
     );
     return extractData(res) ?? [];
+  },
+
+  // ── Activity feeds (dashboard "What's New" widget) ──────────────
+
+  /** Wali feed: notes / scores / announcements / bills / attendance. */
+  async getStudentFeed(
+    studentId: string,
+    opts: { limit?: number; sinceDays?: number } = {},
+  ): Promise<TutoringFeedEvent[]> {
+    const res = await api.get<ApiResponse<TutoringFeedEvent[]>>(
+      `/tutoring/students/${studentId}/feed`,
+      {
+        params: {
+          ...(opts.limit ? { limit: opts.limit } : {}),
+          ...(opts.sinceDays ? { since_days: opts.sinceDays } : {}),
+        },
+      },
+    );
+    return extractData(res) ?? [];
+  },
+
+  /** Admin feed: enrollments / leads / sessions / paid bills. */
+  async getAdminActivity(
+    opts: { limit?: number; sinceDays?: number } = {},
+  ): Promise<TutoringFeedEvent[]> {
+    const res = await api.get<ApiResponse<TutoringFeedEvent[]>>(
+      '/tutoring/admin-activity',
+      {
+        params: {
+          ...(opts.limit ? { limit: opts.limit } : {}),
+          ...(opts.sinceDays ? { since_days: opts.sinceDays } : {}),
+        },
+      },
+    );
+    return extractData(res) ?? [];
+  },
+
+  /** Partial update on a session — catatan sesi, topic, status. Used
+   *  by the attendance flow to attach a tutor note after class. */
+  async updateSession(
+    sessionId: string,
+    payload: { notes?: string; topic?: string; status?: string },
+  ): Promise<void> {
+    await api.put(`/tutoring/sessions/${sessionId}`, payload);
   },
 };
