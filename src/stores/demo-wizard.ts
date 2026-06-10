@@ -375,7 +375,16 @@ function clamp(n: number, lo: number, hi: number): number {
 function mergeWithDefaults(partial: Partial<DemoWizardPayload>): DemoWizardPayload {
   const d = defaultWizardPayload();
   return {
-    school: { ...d.school, ...(partial.school ?? {}) },
+    school: {
+      ...d.school,
+      ...(partial.school ?? {}),
+      // A restored payload (server wizard-state or localStorage) can carry
+      // `school.name: null`. The spread above would let that null OVERRIDE
+      // the '' default, and Step2School then does `query.value.length` /
+      // `q.trim()` on it → "Cannot read properties of null" → the School
+      // step renders blank on reload. Coerce null back to the default ''.
+      name: partial.school?.name ?? d.school.name,
+    },
     identity: { ...d.identity, ...(partial.identity ?? {}) },
     subjects: { ...d.subjects, ...(partial.subjects ?? {}) },
     teachers: { ...d.teachers, ...(partial.teachers ?? {}) },

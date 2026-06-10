@@ -22,7 +22,10 @@ const JENJANG_PRIMARY: Jenjang[] = ['SD', 'SMP', 'SMA', 'SMK'];
 const JENJANG_OTHERS: Jenjang[] = ['TK', 'PAUD', 'MI', 'MTs', 'MA', 'Pesantren'];
 
 const showOthers = ref(false);
-const query = ref(wizard.payload.school.name);
+// `?? ''` is defensive: a restored payload may carry a null school name,
+// and onMounted/watch call `.length` / `.trim()` on this — null would throw
+// and blank the step. (The store also coerces null → '' in mergeWithDefaults.)
+const query = ref(wizard.payload.school.name ?? '');
 const results = ref<SchoolSearchHit[]>([]);
 const isSearching = ref(false);
 const requestInflight = ref<string | null>(null);
