@@ -55,10 +55,13 @@ export const NotificationService = {
     page = 1,
     perPage = 20,
   ): Promise<{ items: AppNotification[]; pagination?: Pagination }> {
-    const res = await api.get<ApiPaginated<NotificationJson>>(Endpoints.list, {
-      params: { page, per_page: perPage },
-    });
+    // Pass the active-role audience so the backend role-scopes the list
+    // (e.g. a multi-role "guru" context doesn't get admin/parent billing
+    // notifications). Backend accepts teacher/parent/admin.
     const audience = activeNotificationAudience();
+    const res = await api.get<ApiPaginated<NotificationJson>>(Endpoints.list, {
+      params: { page, per_page: perPage, ...(audience ? { role: audience } : {}) },
+    });
     const items = (res.data.data ?? []).map((row) =>
       notificationFromJson(row, audience),
     );
@@ -92,8 +95,12 @@ export const NotificationService = {
     // app reads as `response.data['count']`. Reading `res.data.data.count`
     // therefore always yielded `undefined → 0`, so the bell badge showed 0
     // on mount regardless of real unread rows. Accept both shapes defensively.
+    // Role-scope the badge count to match the list (see list() above), so a
+    // multi-role "guru" context doesn't have billing notifications inflate it.
+    const audience = activeNotificationAudience();
     const res = await api.get<{ count?: number } | ApiSuccess<{ count: number }>>(
       Endpoints.unreadCount,
+      { params: audience ? { role: audience } : {} },
     );
     const body = res.data as {
       count?: number;
