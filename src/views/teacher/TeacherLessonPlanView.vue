@@ -19,10 +19,10 @@
        is polled. On done → router push to the new RPP's detail page.
 
   Endpoints (mirrors Flutter):
-    GET    /rpp/summary             list + counts envelope
+    GET    /rpp/summary             list + counts envelope (core api)
     POST   /rpp/{id}/submit         teacher submits Draft → Pending
-    POST   /rpp/generate            AI generation (returns job_id)
-    GET    /ai-jobs/{id}            AI job polling
+    POST   /lesson-plans/generate   AI generation, returns job_id (aiApi)
+    GET    /ai-jobs/{id}            AI job polling (aiApi)
 -->
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
@@ -92,9 +92,9 @@ const error = ref<string | null>(null);
 
 const showAiSheet = ref(false);
 const showUploadSheet = ref(false);
-// `isGenerating` covers the POST /rpp/generate roundtrip (modal stays
-// open until the server returns a job_id). After that we flip to the
-// polling overlay via `activeJob`.
+// `isGenerating` covers the POST /lesson-plans/generate roundtrip
+// (modal stays open until the AI server returns a job_id). After that
+// we flip to the polling overlay via `activeJob`.
 const isGenerating = ref(false);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
@@ -333,7 +333,10 @@ async function startAi(payload: {
   format: 'k13' | 'rpp_1_halaman' | 'modul_ajar';
   class_id: string;
   subject_id: string;
-  chapter_label: string;
+  chapter_id: string;
+  sub_chapter_id?: string;
+  /** Human label for the polling overlay subtitle only. */
+  chapter_label?: string;
   duration_minutes: number;
   approach?: string;
 }) {
