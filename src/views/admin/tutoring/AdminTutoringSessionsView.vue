@@ -122,7 +122,9 @@ async function load() {
 function openAttendance(s: TutoringSession) {
   if (s.status === 'CANCELLED') return;
   router.push({
-    name: 'teacher.tutoring.attendance',
+    // Admin-scoped route — same component as the tutor view, but the
+    // router guard on `teacher.tutoring.attendance` is 'guru'-only.
+    name: 'admin.tutoring.session-attendance',
     params: { sessionId: s.id },
     query: {
       groupId: s.group_id,
@@ -256,7 +258,16 @@ onMounted(load);
               <TutoringStatusPill :session="s.status" />
             </td>
             <td class="px-3 py-3 text-right">
-              <NavIcon name="chevron-right" :size="14" class="text-slate-400" />
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-bold text-role-admin hover:bg-role-admin/5 disabled:opacity-40 disabled:cursor-not-allowed"
+                :disabled="s.status === 'CANCELLED'"
+                :title="s.status === 'CANCELLED' ? 'Sesi dibatalkan' : 'Lihat / catat kehadiran'"
+                @click.stop="openAttendance(s)"
+              >
+                <NavIcon name="check-circle" :size="12" />
+                Kehadiran
+              </button>
             </td>
           </tr>
         </tbody>

@@ -822,6 +822,18 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        // Admin-scoped view of a single session: roster + attendance
+        // (read-write for admin) + catatan sesi. Reuses the tutor's
+        // attendance component because the backend already gates by
+        // tenant + role; the only difference is the URL prefix so the
+        // 'guru'-only router guard doesn't bounce the admin.
+        path: 'admin/tutoring/sessions/:sessionId/attendance',
+        name: 'admin.tutoring.session-attendance',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorSessionAttendanceView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'admin/tutoring/students',
         name: 'admin.tutoring.students',
         component: () =>
