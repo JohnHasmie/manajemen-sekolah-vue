@@ -314,6 +314,13 @@ export const useDemoWizardStore = defineStore('demoWizard', {
     },
 
     _scheduleRemoteSave(): void {
+      // The /register-demo wizard is PUBLIC, but /demo/wizard-state is behind
+      // auth:sanctum. An anonymous visitor firing this autosave just gets a
+      // 401 on every step change (harmless — localStorage already holds the
+      // answers — but it spams the network log + LogRocket). Skip the remote
+      // save until the user is authenticated; cross-device resume only matters
+      // for logged-in users anyway.
+      if (!useAuthStore().isAuthenticated) return;
       if (saveTimer) clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
         DemoService.saveWizardState({
@@ -335,6 +342,8 @@ export const useDemoWizardStore = defineStore('demoWizard', {
         clearTimeout(saveTimer);
         saveTimer = null;
       }
+      // Same guard as _scheduleRemoteSave — no anonymous 401s.
+      if (!useAuthStore().isAuthenticated) return;
       DemoService.saveWizardState({
         current_step: this.currentStep,
         payload: this.payload,
