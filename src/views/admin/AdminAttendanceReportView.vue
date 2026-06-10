@@ -41,6 +41,7 @@ import Toast from '@/components/ui/Toast.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import { useAcademicYearStore } from '@/stores/academic-year';
+import { formatDateShort } from '@/lib/format';
 
 const { t: $t } = useI18n();
 const router = useRouter();
@@ -200,10 +201,16 @@ const subjectChipValue = computed(() => {
 const dateChipValue = computed(() => {
   if (!filters.date_start && !filters.date_end) return $t('admin.shared.allFilter');
   if (filters.date_start && filters.date_end) {
-    if (filters.date_start === filters.date_end) return filters.date_start;
-    return `${filters.date_start} → ${filters.date_end}`;
+    if (filters.date_start === filters.date_end) {
+      return formatDateShort(filters.date_start);
+    }
+    return `${formatDateShort(filters.date_start)} → ${formatDateShort(filters.date_end)}`;
   }
-  return filters.date_start || filters.date_end || $t('admin.shared.allFilter');
+  return (
+    formatDateShort(filters.date_start) ||
+    formatDateShort(filters.date_end) ||
+    $t('admin.shared.allFilter')
+  );
 });
 
 const activeFilterCount = computed(() => {
@@ -542,7 +549,7 @@ async function processExport() {
                 <span class="text-slate-500 font-normal">· {{ r.class_name }}</span>
               </p>
               <p class="text-[11px] text-slate-500 truncate">
-                {{ r.date }}
+                {{ formatDateShort(r.date) }}
                 <span v-if="r.teacher_name"> · {{ r.teacher_name }}</span>
                 <span v-if="r.lesson_hour_name"> · {{ r.lesson_hour_name }}</span>
               </p>
@@ -590,7 +597,7 @@ async function processExport() {
                 class="border-t border-slate-100 hover:bg-slate-50 cursor-pointer"
                 @click="openDetail(r)"
               >
-                <td class="px-3 py-2 tabular-nums">{{ r.date }}</td>
+                <td class="px-3 py-2 tabular-nums">{{ formatDateShort(r.date) }}</td>
                 <td class="px-3 py-2 font-bold text-slate-900">{{ r.subject_name }}</td>
                 <td class="px-3 py-2">{{ r.class_name }}</td>
                 <td class="px-3 py-2 text-center font-bold text-role-admin">{{ r.jam_ke ?? '—' }}</td>
