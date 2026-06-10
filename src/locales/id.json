@@ -1178,6 +1178,8 @@
     "step2Label": "Sekolah",
     "step2Title": "Cari sekolah Anda dulu",
     "step2Subtitle": "Pilih jenjang, lalu cek nama — supaya tidak dobel dengan sekolah asli atau demo lain.",
+    "schoolRequiredTitle": "Data sekolah belum diisi",
+    "schoolRequiredMsg": "Isi data sekolah dulu — ketik nama sekolah (custom) atau pilih dari hasil pencarian/NPSN — sebelum lanjut.",
     "step2JenjangLabel": "Jenjang",
     "step2JenjangOthers": "Lainnya",
     "step2NameLabel": "Nama sekolah",

@@ -31,6 +31,7 @@ import Spinner from '@/components/ui/Spinner.vue';
 import ToastHost from '@/components/ui/ToastHost.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import PublicLanguageSwitcher from '@/components/feature/PublicLanguageSwitcher.vue';
+import { useToast } from '@/composables/useToast';
 
 import Step1Welcome from './steps/Step1Welcome.vue';
 import Step2School from './steps/Step2School.vue';
@@ -47,6 +48,7 @@ import Step10Scenarios from './steps/Step10Scenarios.vue';
 const { t } = useI18n();
 const wizard = useDemoWizardStore();
 const router = useRouter();
+const toast = useToast();
 
 onMounted(() => {
   // Hydrate from server / localStorage so a partial wizard resumes
@@ -116,6 +118,19 @@ function goTo(idx: number) {
 }
 
 function handleNext() {
+  // Block leaving the School step until a school is set — either typed as a
+  // custom name or picked from the search/NPSN results. `hasWizardData` is
+  // true once `school.name` is non-empty. Without it every downstream step
+  // (and the final provision) has no school, so surface a popup instead of
+  // silently advancing.
+  if (wizard.currentKey === 'school' && !wizard.hasWizardData) {
+    toast.show({
+      tone: 'error',
+      title: t('registerDemo.schoolRequiredTitle'),
+      message: t('registerDemo.schoolRequiredMsg'),
+    });
+    return;
+  }
   if (isLastStep.value) {
     // Finished the SCHOOL/demo-data steps — this is the "submit" the
     // founder described. We DON'T send anything yet; the school answers

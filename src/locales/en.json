@@ -1182,6 +1182,8 @@
     "step2Label": "School",
     "step2Title": "Search your school first",
     "step2Subtitle": "Select level, then check the name — to avoid duplication with real or other demo schools.",
+    "schoolRequiredTitle": "School not filled in yet",
+    "schoolRequiredMsg": "Enter the school first — type a custom school name or pick one from the search/NPSN results — before continuing.",
     "step2JenjangLabel": "Level",
     "step2JenjangOthers": "Others",
     "step2NameLabel": "School name",
