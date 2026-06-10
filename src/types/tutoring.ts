@@ -9,6 +9,50 @@
 
 // ── Parent-facing (read) ──────────────────────────────────────────
 
+/** Calon siswa (lead). Status drives the funnel column on the admin
+ *  list. converted_enrollment_id is set when the lead is converted. */
+export interface TutoringLead {
+  id: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  program_id?: string | null;
+  program_name?: string | null;
+  source?: string | null;
+  status: 'TRIAL' | 'CONVERTED' | 'DROPPED';
+  notes?: string | null;
+  converted_enrollment_id?: string | null;
+  converted_at?: string | null;
+  dropped_at?: string | null;
+  created_at?: string | null;
+}
+
+/** Voucher / promo code. */
+export interface TutoringVoucher {
+  id: string;
+  code: string;
+  type: 'PERCENTAGE' | 'AMOUNT';
+  value: number;
+  max_uses?: number | null;
+  used_count: number;
+  valid_from?: string | null;
+  valid_until?: string | null;
+  is_active: boolean;
+  notes?: string | null;
+  created_at?: string | null;
+}
+
+/** Validate-voucher response — preview without recording a redemption. */
+export interface TutoringVoucherPreview {
+  voucher_id: string;
+  code: string;
+  type: 'PERCENTAGE' | 'AMOUNT';
+  value: number;
+  original_amount: number;
+  discount_amount: number;
+  final_amount: number;
+}
+
 /** Material (PDF / link / catatan) shipped to a group OR program. */
 export interface TutoringMaterial {
   id: string;

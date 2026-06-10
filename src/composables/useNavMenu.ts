@@ -217,6 +217,16 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
         labelKey: 'tutoring.nav.payouts',
         icon: 'wallet',
       },
+      {
+        to: '/admin/tutoring/leads',
+        labelKey: 'tutoring.nav.leads',
+        icon: 'users',
+      },
+      {
+        to: '/admin/tutoring/vouchers',
+        labelKey: 'tutoring.nav.vouchers',
+        icon: 'wallet',
+      },
     ],
   },
 ];

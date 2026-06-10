@@ -1664,7 +1664,9 @@
       "earnings": "My earnings",
       "payouts": "Payouts",
       "materials": "Materials",
-      "recurring": "Recurring sessions"
+      "recurring": "Recurring sessions",
+      "leads": "Leads",
+      "vouchers": "Vouchers"
     },
     "dashboard": {
       "title": "Tutoring Dashboard",

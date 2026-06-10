@@ -27,10 +27,13 @@ import type {
   TutoringSessionAttendanceRow,
   TutoringActivity,
   TutoringActivitySubmission,
+  TutoringLead,
   TutoringMaterial,
   TutoringStudentRow,
   TutoringTutorRow,
   TutoringTutorStats,
+  TutoringVoucher,
+  TutoringVoucherPreview,
   TutorPayoutRate,
   TutorPayoutSummary,
 } from '@/types/tutoring';
@@ -649,6 +652,113 @@ export const TutoringService = {
         },
       },
     );
+    return extractData(res);
+  },
+
+  // ── Leads (calon siswa) ─────────────────────────────────────────
+
+  async getLeads(opts: { status?: 'TRIAL' | 'CONVERTED' | 'DROPPED' } = {}):
+    Promise<TutoringLead[]> {
+    const res = await api.get<ApiResponse<TutoringLead[]>>('/tutoring/leads', {
+      params: opts.status ? { status: opts.status } : {},
+    });
+    return extractData(res) ?? [];
+  },
+
+  async createLead(payload: {
+    name: string;
+    email?: string;
+    phone?: string;
+    program_id?: string;
+    source?: string;
+    notes?: string;
+  }): Promise<{ id: string }> {
+    const res = await api.post<ApiResponse<{ id: string }>>(
+      '/tutoring/leads',
+      payload,
+    );
+    return extractData(res);
+  },
+
+  async convertLead(id: string, enrollmentId: string): Promise<void> {
+    await api.post(`/tutoring/leads/${id}/convert`, {
+      enrollment_id: enrollmentId,
+    });
+  },
+
+  async dropLead(id: string, notes?: string): Promise<void> {
+    await api.post(`/tutoring/leads/${id}/drop`, { notes });
+  },
+
+  async deleteLead(id: string): Promise<void> {
+    await api.delete(`/tutoring/leads/${id}`);
+  },
+
+  // ── Vouchers (promo codes) ──────────────────────────────────────
+
+  async getVouchers(): Promise<TutoringVoucher[]> {
+    const res = await api.get<ApiResponse<TutoringVoucher[]>>(
+      '/tutoring/vouchers',
+    );
+    return extractData(res) ?? [];
+  },
+
+  async createVoucher(payload: {
+    code: string;
+    type: 'PERCENTAGE' | 'AMOUNT';
+    value: number;
+    max_uses?: number | null;
+    valid_from?: string | null;
+    valid_until?: string | null;
+    is_active?: boolean;
+    notes?: string;
+  }): Promise<{ id: string }> {
+    const res = await api.post<ApiResponse<{ id: string }>>(
+      '/tutoring/vouchers',
+      payload,
+    );
+    return extractData(res);
+  },
+
+  async updateVoucher(
+    id: string,
+    payload: Partial<{
+      value: number;
+      max_uses: number | null;
+      valid_from: string | null;
+      valid_until: string | null;
+      is_active: boolean;
+      notes: string;
+    }>,
+  ): Promise<void> {
+    await api.put(`/tutoring/vouchers/${id}`, payload);
+  },
+
+  async deleteVoucher(id: string): Promise<void> {
+    await api.delete(`/tutoring/vouchers/${id}`);
+  },
+
+  /** Preview discount on [amount] without recording a redemption. */
+  async validateVoucher(
+    code: string,
+    amount: number,
+  ): Promise<TutoringVoucherPreview> {
+    const res = await api.post<ApiResponse<TutoringVoucherPreview>>(
+      '/tutoring/vouchers/validate',
+      { code, amount },
+    );
+    return extractData(res);
+  },
+
+  /** Record a redemption; called during enroll submit. */
+  async redeemVoucher(payload: {
+    code: string;
+    amount: number;
+    enrollment_id?: string;
+  }): Promise<{ voucher_id: string; discount_amount: number; final_amount: number }> {
+    const res = await api.post<
+      ApiResponse<{ voucher_id: string; discount_amount: number; final_amount: number }>
+    >('/tutoring/vouchers/redeem', payload);
     return extractData(res);
   },
 };

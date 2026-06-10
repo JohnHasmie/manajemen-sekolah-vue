@@ -1660,7 +1660,9 @@
       "earnings": "Penghasilan",
       "payouts": "Penggajian",
       "materials": "Bahan Ajar",
-      "recurring": "Sesi Berulang"
+      "recurring": "Sesi Berulang",
+      "leads": "Lead / Calon",
+      "vouchers": "Voucher / Promo"
     },
     "dashboard": {
       "title": "Dasbor Bimbel",

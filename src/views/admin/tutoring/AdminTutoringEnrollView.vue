@@ -42,6 +42,53 @@ const amount = ref<number | null>(null);
 const sessionsQuota = ref<number | null>(null);
 const billingDay = ref<number>(5);
 
+// ── Voucher state — preview-only here; the redeem call fires after
+// the enrollment is created so we can pass enrollment_id along.
+const voucherCode = ref('');
+const voucherPreview = ref<{
+  code: string;
+  discount_amount: number;
+  final_amount: number;
+} | null>(null);
+const voucherErr = ref<string | null>(null);
+const voucherChecking = ref(false);
+
+const effectiveAmount = computed(
+  () => voucherPreview.value?.final_amount ?? amount.value ?? 0,
+);
+
+async function applyVoucher() {
+  const code = voucherCode.value.trim();
+  if (!code) {
+    voucherErr.value = 'Tempel kode dulu.';
+    return;
+  }
+  if (amount.value == null || amount.value <= 0) {
+    voucherErr.value = 'Isi nominal harga dulu sebelum apply.';
+    return;
+  }
+  voucherChecking.value = true;
+  voucherErr.value = null;
+  try {
+    const p = await TutoringService.validateVoucher(code, amount.value);
+    voucherPreview.value = {
+      code: p.code,
+      discount_amount: p.discount_amount,
+      final_amount: p.final_amount,
+    };
+  } catch (e) {
+    voucherPreview.value = null;
+    voucherErr.value = e instanceof Error ? e.message : 'Kode tidak valid.';
+  } finally {
+    voucherChecking.value = false;
+  }
+}
+function clearVoucher() {
+  voucherCode.value = '';
+  voucherPreview.value = null;
+  voucherErr.value = null;
+}
+
 const selectedPackage = computed(() =>
   packages.value.find((p) => p.id === packageId.value),
 );
@@ -81,7 +128,28 @@ async function submit() {
       billing_mode: mode.value,
       group_id: groupId.value ?? undefined,
     });
-    const config: Record<string, number> = { amount: amount.value };
+    // If a voucher was applied, redeem now (before saving the plan)
+    // so the plan amount reflects the discount + the redemption is
+    // pinned to this enrollment.
+    let finalAmount = amount.value;
+    if (voucherPreview.value && enrollmentId) {
+      try {
+        const r = await TutoringService.redeemVoucher({
+          code: voucherPreview.value.code,
+          amount: amount.value,
+          enrollment_id: enrollmentId,
+        });
+        finalAmount = r.final_amount;
+      } catch (e) {
+        toast.error(
+          e instanceof Error
+            ? `Voucher gagal: ${e.message}`
+            : 'Voucher gagal di-redeem.',
+        );
+      }
+    }
+
+    const config: Record<string, number> = { amount: finalAmount };
     if (mode.value === 'PREPAID') config.sessions_quota = sessionsQuota.value ?? 0;
     else if (mode.value === 'MONTHLY') config.billing_day = billingDay.value;
 
@@ -158,6 +226,52 @@ const inputCls =
         <span :class="fieldLabel">{{ t('tutoring.enroll.amount') }}</span>
         <input v-model.number="amount" type="number" :class="inputCls" />
       </label>
+
+      <!-- Voucher / promo code — apply BEFORE submit to preview the
+           discount; the redeem call fires after the enrollment is
+           created so we can pin redemption to it. -->
+      <div>
+        <span :class="fieldLabel">Kode voucher (opsional)</span>
+        <div class="mt-1.5 flex gap-2">
+          <input
+            v-model="voucherCode"
+            placeholder="cth. UTBK20OFF"
+            class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            :disabled="!!voucherPreview"
+          />
+          <button
+            v-if="!voucherPreview"
+            type="button"
+            :disabled="voucherChecking"
+            class="rounded-lg bg-role-admin hover:bg-role-admin/90 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            @click="applyVoucher"
+          >
+            {{ voucherChecking ? 'Cek…' : 'Apply' }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            @click="clearVoucher"
+          >
+            Hapus
+          </button>
+        </div>
+        <p
+          v-if="voucherErr"
+          class="text-xs text-status-danger mt-1"
+        >
+          {{ voucherErr }}
+        </p>
+        <p
+          v-else-if="voucherPreview"
+          class="text-xs text-status-success mt-1 font-semibold"
+        >
+          ✓ Diskon −{{ voucherPreview.discount_amount.toLocaleString('id-ID') }}
+          · Total bayar
+          <strong>{{ voucherPreview.final_amount.toLocaleString('id-ID') }}</strong>
+        </p>
+      </div>
 
       <label v-if="mode === 'PREPAID'" class="block">
         <span :class="fieldLabel">{{ t('tutoring.enroll.sessionsQuota') }}</span>
