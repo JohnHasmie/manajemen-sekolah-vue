@@ -292,40 +292,30 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
 ];
 
 /**
- * Wali bimbel sidebar. "Monitoring" + "Pengumuman Kelompok" need the
- * active child id (per-anak routes), so the wrapper at call-site
- * resolves them from useChildPicker. When no child is resolved yet,
- * those entries land on the dashboard child-picker.
+ * Wali bimbel sidebar. "Monitoring Anak" is the only per-anak route
+ * (it embeds activeChildId from useChildPicker). Jadwal / Nilai /
+ * Kehadiran all live inside that same overview screen, so they're
+ * NOT separate entries — adding them would just duplicate the
+ * Monitoring path and light up three rows at once.
+ *
+ * When activeChildId is empty (initial load, or wali never opened the
+ * picker), Monitoring falls back to /parent so the wali lands on the
+ * dashboard child-switcher instead of a broken /parent/tutoring/
+ * route.
  */
 function parentTutoringNav(activeChildId: string): NavSection[] {
-  const childPath = activeChildId ? `/parent/tutoring/${activeChildId}` : '/parent';
+  const monitoringPath = activeChildId
+    ? `/parent/tutoring/${activeChildId}`
+    : '/parent';
   return [
     {
       titleKey: '',
       items: [
         { to: '/parent', labelKey: 'nav.dashboard', icon: 'home' },
         {
-          to: childPath,
+          to: monitoringPath,
           labelKey: 'tutoring.nav.monitoring',
           icon: 'eye',
-        },
-      ],
-    },
-    {
-      titleKey: 'tutoring.nav.sectionLearning',
-      items: [
-        // Per-anak overview surfaces Jadwal Sesi · Kehadiran · Nilai ·
-        // Tugas · Catatan dalam satu layar. Wali pilih anak di dropdown
-        // dashboard kalau punya >1.
-        {
-          to: childPath,
-          labelKey: 'tutoring.nav.schedule',
-          icon: 'calendar',
-        },
-        {
-          to: childPath,
-          labelKey: 'tutoring.nav.scores',
-          icon: 'bar-chart',
         },
       ],
     },
