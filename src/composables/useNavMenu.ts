@@ -13,6 +13,7 @@
 import { computed, type ComputedRef } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useTenant } from '@/composables/useTenant';
+import { useChildPicker } from '@/composables/useChildPicker';
 import type { Role } from '@/types/auth';
 
 export interface NavItem {
@@ -290,25 +291,70 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
   },
 ];
 
-const PARENT_TUTORING_NAV: NavSection[] = [
-  {
-    titleKey: '',
-    items: [
-      { to: '/parent', labelKey: 'nav.dashboard', icon: 'home' },
-      {
-        to: '/parent/announcements',
-        labelKey: 'nav.announcements',
-        icon: 'megaphone',
-      },
-    ],
-  },
-];
+/**
+ * Wali bimbel sidebar. "Monitoring" + "Pengumuman Kelompok" need the
+ * active child id (per-anak routes), so the wrapper at call-site
+ * resolves them from useChildPicker. When no child is resolved yet,
+ * those entries land on the dashboard child-picker.
+ */
+function parentTutoringNav(activeChildId: string): NavSection[] {
+  const childPath = activeChildId ? `/parent/tutoring/${activeChildId}` : '/parent';
+  return [
+    {
+      titleKey: '',
+      items: [
+        { to: '/parent', labelKey: 'nav.dashboard', icon: 'home' },
+        {
+          to: childPath,
+          labelKey: 'tutoring.nav.monitoring',
+          icon: 'eye',
+        },
+      ],
+    },
+    {
+      titleKey: 'tutoring.nav.sectionLearning',
+      items: [
+        // Per-anak overview surfaces Jadwal Sesi · Kehadiran · Nilai ·
+        // Tugas · Catatan dalam satu layar. Wali pilih anak di dropdown
+        // dashboard kalau punya >1.
+        {
+          to: childPath,
+          labelKey: 'tutoring.nav.schedule',
+          icon: 'calendar',
+        },
+        {
+          to: childPath,
+          labelKey: 'tutoring.nav.scores',
+          icon: 'bar-chart',
+        },
+      ],
+    },
+    {
+      titleKey: 'tutoring.nav.sectionFinance',
+      items: [
+        // Bills tenant-scoped via X-Tenant-ID, jadi shared view jalan
+        // baik untuk sekolah maupun bimbel tanpa duplikasi.
+        { to: '/parent/billing', labelKey: 'tutoring.nav.bills', icon: 'wallet' },
+      ],
+    },
+    {
+      titleKey: 'tutoring.nav.sectionCommunity',
+      items: [
+        {
+          to: '/parent/announcements',
+          labelKey: 'nav.announcements',
+          icon: 'megaphone',
+        },
+      ],
+    },
+  ];
+}
 
+/** Static tenant menus. `wali` resolves dynamically (needs child id). */
 const TUTORING_MENUS: Partial<Record<Role, NavSection[]>> = {
   admin: ADMIN_TUTORING_NAV,
   guru: TEACHER_TUTORING_NAV,
   wali_kelas: TEACHER_TUTORING_NAV,
-  wali: PARENT_TUTORING_NAV,
 };
 
 const MENUS: Record<Role, NavSection[]> = {
@@ -326,6 +372,9 @@ const MENUS: Record<Role, NavSection[]> = {
 export function useNavMenu(): ComputedRef<NavSection[]> {
   const auth = useAuthStore();
   const { isTutoringCenter } = useTenant();
+  // useChildPicker exposes a module-singleton activeChildId that
+  // updates reactively when the wali switches kid on the dashboard.
+  const { activeChildId } = useChildPicker();
   return computed(() => {
     // Super-admins ALWAYS get the dedicated platform menu — never the
     // school-admin items. The getter also covers the case where the
@@ -335,8 +384,12 @@ export function useNavMenu(): ComputedRef<NavSection[]> {
     if (!role) return [];
     // Tutoring-center tenants get the bimbel menu (the school
     // data-management pages read empty for them).
-    if (isTutoringCenter.value && TUTORING_MENUS[role]) {
-      return TUTORING_MENUS[role]!;
+    if (isTutoringCenter.value) {
+      // Wali nav is dynamic — Monitoring/Jadwal/Nilai entries embed
+      // the active child id so a single click lands directly on the
+      // overview without a child-picker detour.
+      if (role === 'wali') return parentTutoringNav(activeChildId.value);
+      if (TUTORING_MENUS[role]) return TUTORING_MENUS[role]!;
     }
     return MENUS[role] ?? [];
   });

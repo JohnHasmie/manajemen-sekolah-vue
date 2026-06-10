@@ -1668,7 +1668,13 @@
       "leads": "Leads",
       "vouchers": "Vouchers",
       "groupAnnouncements": "Group announcements",
-      "leaderboard": "Leaderboard"
+      "leaderboard": "Leaderboard",
+      "monitoring": "Monitoring",
+      "schedule": "Session schedule",
+      "scores": "Scores & progress",
+      "sectionLearning": "Learning",
+      "sectionFinance": "Finance",
+      "sectionCommunity": "Community"
     },
     "dashboard": {
       "title": "Tutoring Dashboard",

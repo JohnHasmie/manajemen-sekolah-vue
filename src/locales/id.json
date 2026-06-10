@@ -1664,7 +1664,13 @@
       "leads": "Lead / Calon",
       "vouchers": "Voucher / Promo",
       "groupAnnouncements": "Pengumuman Kelompok",
-      "leaderboard": "Peringkat"
+      "leaderboard": "Peringkat",
+      "monitoring": "Monitoring Anak",
+      "schedule": "Jadwal Sesi",
+      "scores": "Nilai & Progress",
+      "sectionLearning": "Pembelajaran",
+      "sectionFinance": "Keuangan",
+      "sectionCommunity": "Komunitas"
     },
     "dashboard": {
       "title": "Dasbor Bimbel",
