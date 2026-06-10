@@ -354,7 +354,18 @@ async function startAi(payload: {
     showAiSheet.value = false;
     pollJob(job_id);
   } catch (e) {
-    toast.value = { message: (e as Error).message, tone: 'error' };
+    // Never surface the raw axios string ("Request failed with status
+    // code …") to teachers — map to a professional, actionable message.
+    const status = (e as { response?: { status?: number } })?.response?.status;
+    const message =
+      status === 429
+        ? 'Kuota pembuatan RPP otomatis sudah habis untuk saat ini. Silakan coba lagi nanti.'
+        : status === 422
+          ? 'Data belum lengkap untuk membuat RPP. Periksa kembali kelas, mata pelajaran, dan bab.'
+          : status && status >= 500
+            ? 'Layanan AI sedang bermasalah. Silakan coba lagi beberapa saat lagi.'
+            : 'Gagal membuat RPP otomatis. Silakan coba lagi; bila masih gagal, hubungi admin.';
+    toast.value = { message, tone: 'error' };
   } finally {
     isGenerating.value = false;
   }
