@@ -1666,7 +1666,9 @@
       "materials": "Materials",
       "recurring": "Recurring sessions",
       "leads": "Leads",
-      "vouchers": "Vouchers"
+      "vouchers": "Vouchers",
+      "groupAnnouncements": "Group announcements",
+      "leaderboard": "Leaderboard"
     },
     "dashboard": {
       "title": "Tutoring Dashboard",

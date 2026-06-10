@@ -1662,7 +1662,9 @@
       "materials": "Bahan Ajar",
       "recurring": "Sesi Berulang",
       "leads": "Lead / Calon",
-      "vouchers": "Voucher / Promo"
+      "vouchers": "Voucher / Promo",
+      "groupAnnouncements": "Pengumuman Kelompok",
+      "leaderboard": "Peringkat"
     },
     "dashboard": {
       "title": "Dasbor Bimbel",

@@ -227,6 +227,16 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
         labelKey: 'tutoring.nav.vouchers',
         icon: 'wallet',
       },
+      {
+        to: '/admin/tutoring/group-announcements',
+        labelKey: 'tutoring.nav.groupAnnouncements',
+        icon: 'megaphone',
+      },
+      {
+        to: '/admin/tutoring/leaderboard',
+        labelKey: 'tutoring.nav.leaderboard',
+        icon: 'bar-chart-2',
+      },
     ],
   },
 ];

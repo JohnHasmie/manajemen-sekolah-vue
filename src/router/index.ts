@@ -906,6 +906,20 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        path: 'admin/tutoring/group-announcements',
+        name: 'admin.tutoring.group-announcements',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringGroupAnnouncementsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/leaderboard',
+        name: 'admin.tutoring.leaderboard',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringLeaderboardView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'teacher/tutoring/sessions',
         name: 'teacher.tutoring.sessions',
         component: () =>
