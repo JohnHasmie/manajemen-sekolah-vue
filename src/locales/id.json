@@ -1658,7 +1658,9 @@
       "tutors": "Tutor",
       "activities": "Aktivitas",
       "earnings": "Penghasilan",
-      "payouts": "Penggajian"
+      "payouts": "Penggajian",
+      "materials": "Bahan Ajar",
+      "recurring": "Sesi Berulang"
     },
     "dashboard": {
       "title": "Dasbor Bimbel",

@@ -455,7 +455,20 @@ const kpiCards = computed<KpiCard[]>(() => {
             :to="s.status === 'CANCELLED' ? null : () => openAttendance(s)"
           >
             <template #trailing>
-              <TutoringStatusPill :session="s.status" />
+              <span class="inline-flex items-center gap-1.5">
+                <a
+                  v-if="s.meeting_url"
+                  :href="s.meeting_url"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-role-teacher px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
+                  @click.stop
+                >
+                  <NavIcon name="external-link" :size="11" />
+                  Join
+                </a>
+                <TutoringStatusPill :session="s.status" />
+              </span>
             </template>
           </TutoringListTile>
         </div>
@@ -552,7 +565,20 @@ const kpiCards = computed<KpiCard[]>(() => {
             :to="s.status === 'CANCELLED' ? null : () => openAttendance(s)"
           >
             <template #trailing>
-              <TutoringStatusPill :session="s.status" />
+              <span class="inline-flex items-center gap-1.5">
+                <a
+                  v-if="s.meeting_url"
+                  :href="s.meeting_url"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-role-teacher px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
+                  @click.stop
+                >
+                  <NavIcon name="external-link" :size="11" />
+                  Join
+                </a>
+                <TutoringStatusPill :session="s.status" />
+              </span>
             </template>
           </TutoringListTile>
         </div>

@@ -9,12 +9,28 @@
 
 // ── Parent-facing (read) ──────────────────────────────────────────
 
+/** Material (PDF / link / catatan) shipped to a group OR program. */
+export interface TutoringMaterial {
+  id: string;
+  tutoring_group_id?: string | null;
+  tutoring_program_id?: string | null;
+  group?: { id: string; name?: string } | null;
+  program?: { id: string; name?: string } | null;
+  subject?: { id: string; name?: string } | null;
+  title: string;
+  description?: string | null;
+  file_url?: string | null;
+  published_at?: string | null;
+  created_at?: string | null;
+}
+
 export interface TutoringSession {
   id: string;
   group_id: string;
   scheduled_at: string | null;
   duration_minutes: number;
   room: string | null;
+  meeting_url?: string | null;
   status: 'SCHEDULED' | 'DONE' | 'CANCELLED';
   status_label?: string | null;
   topic?: string | null;

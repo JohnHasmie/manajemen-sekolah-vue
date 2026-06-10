@@ -27,6 +27,7 @@ import type {
   TutoringSessionAttendanceRow,
   TutoringActivity,
   TutoringActivitySubmission,
+  TutoringMaterial,
   TutoringStudentRow,
   TutoringTutorRow,
   TutoringTutorStats,
@@ -445,9 +446,68 @@ export const TutoringService = {
     scheduled_at: string;
     duration_minutes?: number;
     room?: string;
+    meeting_url?: string;
     topic?: string;
   }): Promise<void> {
     await api.post('/tutoring/sessions', payload);
+  },
+
+  /** Bulk-create sessions on a weekday template. */
+  async generateRecurringSessions(payload: {
+    group_id: string;
+    weekdays: number[]; // ISO ints 1..7
+    start_date: string; // YYYY-MM-DD
+    end_date: string;
+    time: string; // HH:mm
+    duration_minutes?: number;
+    room?: string;
+    meeting_url?: string;
+    topic?: string;
+  }): Promise<{ created: number; skipped: number; sessions: string[] }> {
+    const res = await api.post<
+      ApiResponse<{ created: number; skipped: number; sessions: string[] }>
+    >('/tutoring/sessions/generate-recurring', payload);
+    return extractData(res);
+  },
+
+  // ── Materials (bahan ajar) ──────────────────────────────────────
+
+  async getMaterials(opts: {
+    group_id?: string;
+    program_id?: string;
+    only_published?: boolean;
+  } = {}): Promise<TutoringMaterial[]> {
+    const res = await api.get<ApiResponse<TutoringMaterial[]>>(
+      '/tutoring/materials',
+      {
+        params: {
+          ...(opts.group_id ? { group_id: opts.group_id } : {}),
+          ...(opts.program_id ? { program_id: opts.program_id } : {}),
+          ...(opts.only_published ? { only_published: 1 } : {}),
+          per_page: 100,
+        },
+      },
+    );
+    return extractData(res) ?? [];
+  },
+
+  async createMaterial(payload: {
+    tutoring_group_id?: string;
+    tutoring_program_id?: string;
+    title: string;
+    description?: string;
+    file_url?: string;
+    published_at?: string | null;
+  }): Promise<TutoringMaterial> {
+    const res = await api.post<ApiResponse<TutoringMaterial>>(
+      '/tutoring/materials',
+      payload,
+    );
+    return extractData(res);
+  },
+
+  async deleteMaterial(materialId: string): Promise<void> {
+    await api.delete(`/tutoring/materials/${materialId}`);
   },
 
   // ── AI: try-out / exercise generation ───────────────────────────

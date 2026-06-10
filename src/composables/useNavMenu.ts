@@ -242,8 +242,18 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
         icon: 'calendar',
       },
       {
+        to: '/teacher/tutoring/recurring',
+        labelKey: 'tutoring.nav.recurring',
+        icon: 'calendar',
+      },
+      {
         to: '/teacher/tutoring/activities',
         labelKey: 'tutoring.nav.activities',
+        icon: 'book',
+      },
+      {
+        to: '/teacher/tutoring/materials',
+        labelKey: 'tutoring.nav.materials',
         icon: 'book',
       },
       {

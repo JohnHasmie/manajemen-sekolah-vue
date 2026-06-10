@@ -26,6 +26,7 @@ const date = ref<string>(''); // yyyy-mm-dd
 const time = ref<string>('15:00');
 const duration = ref<number>(90);
 const room = ref('');
+const meetingUrl = ref('');
 const topic = ref('');
 
 async function load() {
@@ -57,6 +58,7 @@ async function submit() {
       scheduled_at: new Date(`${date.value}T${time.value}:00`).toISOString(),
       duration_minutes: duration.value,
       room: room.value.trim() || undefined,
+      meeting_url: meetingUrl.value.trim() || undefined,
       topic: topic.value.trim() || undefined,
     });
     toast.success(t('tutoring.createSession.created'));
@@ -133,6 +135,16 @@ const inputCls =
       <label class="block">
         <span :class="fieldLabel">{{ t('tutoring.createSession.room') }}</span>
         <input v-model="room" :class="inputCls" />
+      </label>
+
+      <label class="block">
+        <span :class="fieldLabel">Link meeting (opsional)</span>
+        <input
+          v-model="meetingUrl"
+          type="url"
+          placeholder="https://zoom.us/j/…"
+          :class="inputCls"
+        />
       </label>
 
       <label class="block">

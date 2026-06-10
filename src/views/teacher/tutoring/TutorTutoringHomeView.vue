@@ -101,10 +101,22 @@ const quickActions = [
     to: 'teacher.tutoring.tryout-generator',
   },
   {
+    icon: 'calendar',
+    title: 'Sesi Berulang',
+    sub: 'Generate jadwal mingguan sekali klik',
+    to: 'teacher.tutoring.recurring',
+  },
+  {
     icon: 'book',
     title: 'Aktivitas & Tugas',
     sub: 'Beri tugas / quiz ke kelompok',
     to: 'teacher.tutoring.activities',
+  },
+  {
+    icon: 'book',
+    title: 'Bahan Ajar',
+    sub: 'Unggah materi PDF / link ke kelompok',
+    to: 'teacher.tutoring.materials',
   },
   {
     icon: 'wallet',
