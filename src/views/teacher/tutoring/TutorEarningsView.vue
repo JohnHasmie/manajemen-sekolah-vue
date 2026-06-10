@@ -26,6 +26,13 @@ const loading = ref(true);
 const summary = ref<TutorPayoutSummary | null>(null);
 const month = ref<string>(''); // YYYY-MM; '' = current
 
+// Payslip PDF URL — same query the page is currently viewing.
+// Browser opens / downloads via the <a> in the header.
+const payslipUrl = computed(() => {
+  const base = '/api/tutoring/payouts/summary/pdf';
+  return month.value ? `${base}?month=${month.value}` : base;
+});
+
 async function load() {
   loading.value = true;
   try {
@@ -104,7 +111,17 @@ const monthOptions = computed(() => {
       kicker="Bimbel · Penghasilan"
       title="Penghasilan Saya"
       :meta="summary ? `Periode ${summary.period.label}` : ''"
-    />
+    >
+      <a
+        v-if="summary"
+        :href="payslipUrl"
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-teacher text-[12px] font-bold hover:bg-white/90"
+      >
+        Slip Honor (PDF)
+      </a>
+    </BrandPageHeader>
 
     <div v-if="loading" class="py-12 text-center text-slate-500">
       {{ t('tutoring.common.loading') }}

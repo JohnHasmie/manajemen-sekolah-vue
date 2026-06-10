@@ -9,6 +9,43 @@
 
 // ── Parent-facing (read) ──────────────────────────────────────────
 
+/** Session feedback row (per session × student). */
+export interface TutoringSessionFeedback {
+  id: string;
+  student_id: string;
+  rating: number; // 1..5
+  comment?: string | null;
+  updated_at?: string | null;
+}
+
+/** Aggregate from /sessions/{id}/feedback/summary. */
+export interface TutoringSessionFeedbackSummary {
+  count: number;
+  avg: number | null;
+}
+
+/** Group announcement (tutor → kelompok broadcast). */
+export interface TutoringGroupAnnouncement {
+  id: string;
+  tutoring_group_id: string;
+  group_name?: string | null;
+  created_by: string;
+  author_name?: string | null;
+  title: string;
+  body: string;
+  created_at?: string | null;
+}
+
+/** One row from /groups/{id}/leaderboard. */
+export interface TutoringLeaderboardRow {
+  rank: number;
+  student_id: string;
+  name: string;
+  attendance_rate: number | null;
+  avg_score: number | null;
+  composite: number;
+}
+
 /** Calon siswa (lead). Status drives the funnel column on the admin
  *  list. converted_enrollment_id is set when the lead is converted. */
 export interface TutoringLead {

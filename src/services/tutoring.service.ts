@@ -27,8 +27,12 @@ import type {
   TutoringSessionAttendanceRow,
   TutoringActivity,
   TutoringActivitySubmission,
+  TutoringGroupAnnouncement,
   TutoringLead,
+  TutoringLeaderboardRow,
   TutoringMaterial,
+  TutoringSessionFeedback,
+  TutoringSessionFeedbackSummary,
   TutoringStudentRow,
   TutoringTutorRow,
   TutoringTutorStats,
@@ -760,5 +764,77 @@ export const TutoringService = {
       ApiResponse<{ voucher_id: string; discount_amount: number; final_amount: number }>
     >('/tutoring/vouchers/redeem', payload);
     return extractData(res);
+  },
+
+  // ── Session feedback (parent rate) ──────────────────────────────
+
+  async getSessionFeedback(sessionId: string): Promise<TutoringSessionFeedback[]> {
+    const res = await api.get<ApiResponse<TutoringSessionFeedback[]>>(
+      `/tutoring/sessions/${sessionId}/feedback`,
+    );
+    return extractData(res) ?? [];
+  },
+
+  async getSessionFeedbackSummary(
+    sessionId: string,
+  ): Promise<TutoringSessionFeedbackSummary> {
+    const res = await api.get<ApiResponse<TutoringSessionFeedbackSummary>>(
+      `/tutoring/sessions/${sessionId}/feedback/summary`,
+    );
+    return extractData(res);
+  },
+
+  async upsertSessionFeedback(
+    sessionId: string,
+    payload: { student_id: string; rating: number; comment?: string },
+  ): Promise<void> {
+    await api.put(`/tutoring/sessions/${sessionId}/feedback`, payload);
+  },
+
+  // ── Group announcements (tutor → kelompok) ──────────────────────
+
+  async getGroupAnnouncements(opts: {
+    group_id?: string;
+    student_id?: string;
+  } = {}): Promise<TutoringGroupAnnouncement[]> {
+    const res = await api.get<ApiResponse<TutoringGroupAnnouncement[]>>(
+      '/tutoring/group-announcements',
+      {
+        params: {
+          ...(opts.group_id ? { group_id: opts.group_id } : {}),
+          ...(opts.student_id ? { student_id: opts.student_id } : {}),
+        },
+      },
+    );
+    return extractData(res) ?? [];
+  },
+
+  async createGroupAnnouncement(payload: {
+    tutoring_group_id: string;
+    title: string;
+    body: string;
+  }): Promise<{ id: string }> {
+    const res = await api.post<ApiResponse<{ id: string }>>(
+      '/tutoring/group-announcements',
+      payload,
+    );
+    return extractData(res);
+  },
+
+  async deleteGroupAnnouncement(id: string): Promise<void> {
+    await api.delete(`/tutoring/group-announcements/${id}`);
+  },
+
+  // ── Leaderboard ─────────────────────────────────────────────────
+
+  async getGroupLeaderboard(
+    groupId: string,
+    opts: { limit?: number } = {},
+  ): Promise<TutoringLeaderboardRow[]> {
+    const res = await api.get<ApiResponse<TutoringLeaderboardRow[]>>(
+      `/tutoring/groups/${groupId}/leaderboard`,
+      { params: opts.limit ? { limit: opts.limit } : {} },
+    );
+    return extractData(res) ?? [];
   },
 };
