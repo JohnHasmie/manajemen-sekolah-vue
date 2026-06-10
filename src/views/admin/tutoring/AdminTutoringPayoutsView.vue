@@ -34,6 +34,9 @@ interface Row {
   basis: 'PER_SESSION' | 'PER_HOUR';
   amount: number;
   configured: boolean;
+  bankName: string;
+  bankAccountNumber: string;
+  bankAccountHolder: string;
 }
 
 const loading = ref(true);
@@ -41,6 +44,9 @@ const rows = ref<Row[]>([]);
 const editing = ref<Row | null>(null);
 const editBasis = ref<'PER_SESSION' | 'PER_HOUR'>('PER_SESSION');
 const editAmount = ref<number>(0);
+const editBankName = ref('');
+const editBankNumber = ref('');
+const editBankHolder = ref('');
 const saving = ref(false);
 
 async function load() {
@@ -61,6 +67,9 @@ async function load() {
         basis: (r?.basis ?? 'PER_SESSION') as 'PER_SESSION' | 'PER_HOUR',
         amount: r?.amount ?? 0,
         configured: r !== undefined,
+        bankName: r?.bank_name ?? '',
+        bankAccountNumber: r?.bank_account_number ?? '',
+        bankAccountHolder: r?.bank_account_holder ?? '',
       };
     });
   } catch (e) {
@@ -75,6 +84,9 @@ function openEdit(r: Row) {
   editing.value = r;
   editBasis.value = r.basis;
   editAmount.value = r.amount;
+  editBankName.value = r.bankName;
+  editBankNumber.value = r.bankAccountNumber;
+  editBankHolder.value = r.bankAccountHolder;
 }
 
 async function saveEdit() {
@@ -84,6 +96,9 @@ async function saveEdit() {
     await TutoringService.upsertPayoutRate(editing.value.userId, {
       basis: editBasis.value,
       amount: Math.max(0, Math.floor(editAmount.value)),
+      bank_name: editBankName.value.trim() || null,
+      bank_account_number: editBankNumber.value.trim() || null,
+      bank_account_holder: editBankHolder.value.trim() || null,
     });
     toast.success('Rate tersimpan.');
     editing.value = null;
@@ -237,6 +252,39 @@ function basisLabel(b: string) {
             Honor {{ basisLabel(editBasis) }}, dalam rupiah.
           </p>
         </label>
+
+        <!-- Rekening tujuan transfer honor — tampil di payslip PDF -->
+        <div class="border-t border-slate-100 pt-3 mt-2">
+          <div class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+            Rekening Tutor (opsional)
+          </div>
+          <p class="text-[11px] text-slate-500 mb-2">
+            Tampil di slip honor PDF sebagai tujuan transfer dari bimbel.
+          </p>
+          <div class="grid grid-cols-2 gap-2">
+            <input
+              v-model="editBankName"
+              type="text"
+              maxlength="80"
+              placeholder="Nama Bank"
+              class="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            />
+            <input
+              v-model="editBankNumber"
+              type="text"
+              maxlength="40"
+              placeholder="Nomor Rekening"
+              class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
+            />
+          </div>
+          <input
+            v-model="editBankHolder"
+            type="text"
+            maxlength="120"
+            placeholder="Atas Nama"
+            class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          />
+        </div>
         <div class="flex items-center gap-2 justify-end pt-2">
           <button
             type="button"

@@ -13,6 +13,7 @@ import type {
   TutoringBill,
   TutoringChildOverview,
   TutoringFeedEvent,
+  TutoringPaymentAccount,
 } from '@/types/tutoring';
 
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -58,9 +59,21 @@ async function loadFeed() {
   }
 }
 
+const paymentAccount = ref<TutoringPaymentAccount | null>(null);
+async function loadPaymentAccount() {
+  try {
+    paymentAccount.value = await TutoringService.getPaymentAccount();
+  } catch {/* non-fatal */}
+}
+
+function copyText(text?: string | null) {
+  if (!text) return;
+  navigator.clipboard?.writeText(text);
+}
+
 onMounted(async () => {
   await load();
-  await loadFeed();
+  await Promise.all([loadFeed(), loadPaymentAccount()]);
 });
 
 /** Tutor notes first (sticky), then everything else. */
@@ -259,7 +272,7 @@ const sectionIconCls =
           </ul>
         </section>
 
-        <!-- Bills detail -->
+        <!-- Bills detail + rekening pembayaran -->
         <section :class="sectionCls">
           <div :class="sectionTitleRow">
             <span :class="sectionIconCls">
@@ -293,6 +306,49 @@ const sectionIconCls =
               </span>
             </li>
           </ul>
+
+          <!-- Rekening / QRIS / instruksi pembayaran -->
+          <div
+            v-if="paymentAccount && (paymentAccount.bank_account_number || paymentAccount.qris_image_url || paymentAccount.payment_instructions)"
+            class="mt-3 border-t border-slate-100 pt-3 space-y-2"
+          >
+            <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+              Cara Pembayaran
+            </div>
+            <div
+              v-if="paymentAccount.bank_account_number"
+              class="rounded-lg bg-slate-50 p-2.5 text-xs text-slate-700"
+            >
+              <div class="font-bold text-slate-900">{{ paymentAccount.bank_name ?? '—' }}</div>
+              <button
+                type="button"
+                class="font-mono mt-0.5 text-slate-700 hover:text-role-parent"
+                @click="copyText(paymentAccount.bank_account_number)"
+              >
+                {{ paymentAccount.bank_account_number }} ⧉
+              </button>
+              <div v-if="paymentAccount.bank_account_holder" class="text-slate-500 mt-0.5">
+                a.n. {{ paymentAccount.bank_account_holder }}
+              </div>
+            </div>
+            <div
+              v-if="paymentAccount.qris_image_url"
+              class="rounded-lg bg-slate-50 p-2.5 text-xs"
+            >
+              <div class="font-bold text-slate-900 mb-1.5">QRIS</div>
+              <img
+                :src="paymentAccount.qris_image_url"
+                alt="QRIS"
+                class="max-w-[180px] rounded border border-slate-200"
+              />
+            </div>
+            <div
+              v-if="paymentAccount.payment_instructions"
+              class="rounded-lg bg-slate-50 p-2.5 text-[11px] text-slate-600 whitespace-pre-line"
+            >
+              {{ paymentAccount.payment_instructions }}
+            </div>
+          </div>
         </section>
 
         <!-- Schedule detail (full-width on mobile, half on >=sm) -->

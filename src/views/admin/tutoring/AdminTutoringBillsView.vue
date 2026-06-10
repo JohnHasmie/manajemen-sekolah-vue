@@ -21,6 +21,7 @@ import Modal from '@/components/ui/Modal.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import TutoringStatusPill from '@/components/feature/tutoring/TutoringStatusPill.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import BillDetailModal from '@/components/feature/tutoring/BillDetailModal.vue';
 
 type Filter = 'all' | 'unpaid' | 'pending' | 'paid';
 
@@ -32,6 +33,7 @@ const loading = ref(true);
 const filter = ref<Filter>('all');
 const bills = ref<TutoringBill[]>([]);
 const showFilterPicker = ref(false);
+const openBillId = ref<string | null>(null);
 
 const FILTER_OPTIONS = computed<{ key: Filter; label: string }[]>(() => [
   { key: 'all', label: 'Semua' },
@@ -172,13 +174,15 @@ const kpiCards = computed<KpiCard[]>(() => [
             <th class="text-left font-bold px-3 py-2.5">Periode</th>
             <th class="text-right font-bold px-3 py-2.5">Nominal</th>
             <th class="text-left font-bold px-3 py-2.5">Status</th>
+            <th class="px-3 py-2.5"></th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-for="b in bills"
             :key="b.id"
-            class="border-b border-slate-100 last:border-0 hover:bg-slate-50"
+            class="border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-pointer"
+            @click="openBillId = b.id"
           >
             <td class="px-3 py-3 font-semibold text-slate-900">{{ b.student_name ?? '—' }}</td>
             <td class="px-3 py-3 text-slate-700">{{ b.source_label ?? '—' }}</td>
@@ -191,10 +195,26 @@ const kpiCards = computed<KpiCard[]>(() => [
             <td class="px-3 py-3">
               <TutoringStatusPill :bill="b.status" />
             </td>
+            <td class="px-3 py-3 text-right">
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-bold text-role-admin hover:bg-role-admin/5"
+                @click.stop="openBillId = b.id"
+              >
+                Detail
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <BillDetailModal
+      v-if="openBillId"
+      :bill-id="openBillId"
+      @close="openBillId = null"
+      @done="() => { openBillId = null; load(); }"
+    />
 
     <Modal
       v-if="showFilterPicker"

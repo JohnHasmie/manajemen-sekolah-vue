@@ -273,6 +273,52 @@ export interface TenantBillingSettings {
   allow_monthly: boolean;
   allow_per_session: boolean;
   default_mode?: string | null;
+  // Payment account — where wali transfers TO. All nullable so
+  // admin can configure incrementally (bank now, QRIS later).
+  bank_name?: string | null;
+  bank_account_number?: string | null;
+  bank_account_holder?: string | null;
+  qris_image_url?: string | null;
+  payment_instructions?: string | null;
+  payment_gateway_enabled?: boolean;
+  payment_gateway_provider?: string | null;
+  /** True when credentials are stored; admin sees a status indicator. */
+  payment_gateway_configured?: boolean;
+}
+
+/** Payment-account slice — same shape on bill detail + standalone GET. */
+export interface TutoringPaymentAccount {
+  bank_name?: string | null;
+  bank_account_number?: string | null;
+  bank_account_holder?: string | null;
+  qris_image_url?: string | null;
+  payment_instructions?: string | null;
+  payment_gateway_enabled?: boolean;
+  payment_gateway_provider?: string | null;
+}
+
+/** One row in the bill's payment history. */
+export interface TutoringBillPayment {
+  id: string;
+  amount: number;
+  payment_method?: string | null;
+  payment_date?: string | null;
+  status?: string | null;
+  admin_notes?: string | null;
+  verified_at?: string | null;
+  proof_url?: string | null;
+  proof_proxy_url?: string | null;
+  created_at?: string | null;
+}
+
+/** Response shape of GET /tutoring/bills/{id}. */
+export interface TutoringBillDetail {
+  bill: TutoringBill;
+  student: { id: string; name: string } | null;
+  payments: TutoringBillPayment[];
+  paid_total: number;
+  outstanding: number;
+  payment_account: TutoringPaymentAccount | null;
 }
 
 export interface TutoringEnrollee {
@@ -409,6 +455,9 @@ export interface TutorPayoutRate {
   amount: number;
   currency?: string;
   note?: string | null;
+  bank_name?: string | null;
+  bank_account_number?: string | null;
+  bank_account_holder?: string | null;
   updated_at?: string | null;
 }
 

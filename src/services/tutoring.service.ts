@@ -16,6 +16,8 @@ import type {
   TutoringAssessment,
   TutoringAttendanceSummary,
   TutoringBill,
+  TutoringBillDetail,
+  TutoringPaymentAccount,
   TutoringChildOverview,
   TutoringEnrollee,
   TutoringFeedEvent,
@@ -136,6 +138,48 @@ export const TutoringService = {
       params: { per_page: 100, ...(status ? { status } : {}) },
     });
     return extractData(res) ?? [];
+  },
+
+  /** Bill detail — header + payment history + tenant payment account. */
+  async getBillDetail(id: string): Promise<TutoringBillDetail> {
+    const res = await api.get<ApiResponse<TutoringBillDetail>>(
+      `/tutoring/bills/${id}`,
+    );
+    return extractData(res);
+  },
+
+  /** Admin manual mark-paid — creates a verified Payment row and
+   *  flips bill.status → paid in one transaction. */
+  async markBillPaid(
+    id: string,
+    payload: {
+      amount?: number;
+      payment_method?: string;
+      payment_date?: string;
+      admin_notes?: string;
+    } = {},
+  ): Promise<void> {
+    await api.post(`/tutoring/bills/${id}/mark-paid`, payload);
+  },
+
+  /** Tenant payment-account block (wali reads to know where to transfer). */
+  async getPaymentAccount(): Promise<TutoringPaymentAccount | null> {
+    const res = await api.get<ApiResponse<TutoringPaymentAccount | null>>(
+      '/tutoring/payment-account',
+    );
+    return extractData(res);
+  },
+
+  /** Admin: upload QRIS image. Returns `{ path, url }`. */
+  async uploadQrisImage(file: File): Promise<{ path: string; url: string }> {
+    const form = new FormData();
+    form.append('image', file);
+    const res = await api.post<ApiResponse<{ path: string; url: string }>>(
+      '/tutoring/billing-settings/qris',
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } },
+    );
+    return extractData(res);
   },
 
   // ── Parent reads ────────────────────────────────────────────────
@@ -630,6 +674,9 @@ export const TutoringService = {
       amount: number;
       currency?: string;
       note?: string | null;
+      bank_name?: string | null;
+      bank_account_number?: string | null;
+      bank_account_holder?: string | null;
     },
   ): Promise<TutorPayoutRate> {
     const res = await api.put<ApiResponse<TutorPayoutRate>>(
