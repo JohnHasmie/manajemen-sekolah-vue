@@ -348,13 +348,6 @@ export const SCENARIO_DEFINITIONS: ReadonlyArray<{
     icon: 'alert-triangle',
   },
   {
-    key: 'demo_expiry_short',
-    label: 'Demo Hampir Kedaluwarsa',
-    description:
-      'Set masa berlaku demo jadi 3 hari (bukan 30). Banner countdown di dashboard menampilkan state warning, bukan default normal.',
-    icon: 'alert-circle',
-  },
-  {
     key: 'akses_request',
     label: 'Permintaan Akses',
     description:
