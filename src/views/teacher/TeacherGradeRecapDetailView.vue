@@ -127,11 +127,11 @@ async function load() {
     for (const r of rows.value) {
       const padded: (number | null)[] = [];
       for (let i = 0; i < chapters.value.length; i++) {
-        const existing = r.bab_scores?.[i];
+        const existing = r.chapter_scores?.[i];
         padded.push(typeof existing === 'number' ? existing : null);
       }
-      r.bab_scores = padded;
-      if (!r.bab_names) r.bab_names = chapters.value.slice();
+      r.chapter_scores = padded;
+      if (!r.chapter_names) r.chapter_names = chapters.value.slice();
     }
     dirtyByRow.value = new Map();
   } catch (e) {
@@ -147,14 +147,14 @@ function deriveChapters(matrix: GradeRecapRow[]): string[] {
   let maxLen = 0;
   let referenceNames: string[] | null = null;
   for (const r of matrix) {
-    const len = Math.max(r.bab_scores?.length ?? 0, r.bab_names?.length ?? 0);
+    const len = Math.max(r.chapter_scores?.length ?? 0, r.chapter_names?.length ?? 0);
     if (len > maxLen) maxLen = len;
     if (
-      r.bab_names &&
-      r.bab_names.length >= maxLen &&
-      r.bab_names.some((n) => n.trim().length > 0)
+      r.chapter_names &&
+      r.chapter_names.length >= maxLen &&
+      r.chapter_names.some((n) => n.trim().length > 0)
     ) {
-      referenceNames = r.bab_names;
+      referenceNames = r.chapter_names;
     }
   }
   if (maxLen === 0) maxLen = 1; // always render at least one Bab column
@@ -195,7 +195,7 @@ const hasUnsavedChanges = computed(() => dirtyCount.value > 0);
 // the overview KPI without a second roundtrip.
 function effectiveFinal(r: GradeRecapRow): number | null {
   if (typeof r.final_score === 'number') return r.final_score;
-  const arr = (r.bab_scores ?? []).filter(
+  const arr = (r.chapter_scores ?? []).filter(
     (v): v is number => typeof v === 'number',
   );
   if (arr.length === 0) return null;
@@ -211,9 +211,9 @@ const kpiCards = computed<KpiCard[]>(() => {
     const final = effectiveFinal(r);
     if (
       final !== null ||
-      typeof r.uts_score === 'number' ||
-      typeof r.uas_score === 'number' ||
-      (r.bab_scores ?? []).some((v) => typeof v === 'number')
+      typeof r.midterm_score === 'number' ||
+      typeof r.final_exam_score === 'number' ||
+      (r.chapter_scores ?? []).some((v) => typeof v === 'number')
     ) {
       filled += 1;
     }
@@ -277,16 +277,16 @@ function parseScore(input: string): number | null {
 
 function onBabInput(r: GradeRecapRow, i: number, raw: string) {
   const next = parseScore(raw);
-  const prev = r.bab_scores?.[i] ?? null;
+  const prev = r.chapter_scores?.[i] ?? null;
   if (next === prev) return;
-  if (!r.bab_scores) r.bab_scores = [];
-  r.bab_scores[i] = next;
+  if (!r.chapter_scores) r.chapter_scores = [];
+  r.chapter_scores[i] = next;
   markDirty(r.student_class_id);
 }
 
 function onScoreInput(
   r: GradeRecapRow,
-  field: 'uts_score' | 'uas_score' | 'skill_score' | 'final_score',
+  field: 'midterm_score' | 'final_exam_score' | 'skill_score' | 'final_score',
   raw: string,
 ) {
   const next = parseScore(raw);
@@ -297,21 +297,21 @@ function onScoreInput(
 
 function onPredikatInput(r: GradeRecapRow, raw: string) {
   const next = raw.trim().slice(0, 3) || null;
-  if (r.predikat === next) return;
-  r.predikat = next;
+  if (r.predicate === next) return;
+  r.predicate = next;
   markDirty(r.student_class_id);
 }
 
 function openDescEditor(r: GradeRecapRow) {
-  editDesc.value = { row: r, draft: r.deskripsi ?? '' };
+  editDesc.value = { row: r, draft: r.description ?? '' };
 }
 
 function saveDescEdit() {
   if (!editDesc.value) return;
   const { row, draft } = editDesc.value;
   const next = draft.trim() || null;
-  if (row.deskripsi !== next) {
-    row.deskripsi = next;
+  if (row.description !== next) {
+    row.description = next;
     markDirty(row.student_class_id);
   }
   editDesc.value = null;
@@ -331,10 +331,10 @@ function confirmAddChapter() {
   // stay safe. We DON'T mark the rows dirty — they'll only be saved
   // when the teacher actually inputs a score.
   for (const r of rows.value) {
-    if (!r.bab_scores) r.bab_scores = [];
-    if (!r.bab_names) r.bab_names = [];
-    r.bab_scores.push(null);
-    r.bab_names.push(name);
+    if (!r.chapter_scores) r.chapter_scores = [];
+    if (!r.chapter_names) r.chapter_names = [];
+    r.chapter_scores.push(null);
+    r.chapter_names.push(name);
   }
   showAddChapter.value = false;
   toast.value = { message: 'Bab ditambahkan', tone: 'success' };
@@ -355,8 +355,8 @@ function confirmRenameChapter() {
   chapters.value[index] = name;
   // Mark every row dirty so the new chapter name propagates on save.
   for (const r of rows.value) {
-    if (!r.bab_names) r.bab_names = chapters.value.slice();
-    r.bab_names[index] = name;
+    if (!r.chapter_names) r.chapter_names = chapters.value.slice();
+    r.chapter_names[index] = name;
     markDirty(r.student_class_id);
   }
   renameChapter.value = null;
@@ -379,8 +379,8 @@ function confirmDeleteChapter() {
   const { index } = deleteChapter.value;
   chapters.value.splice(index, 1);
   for (const r of rows.value) {
-    r.bab_scores?.splice(index, 1);
-    r.bab_names?.splice(index, 1);
+    r.chapter_scores?.splice(index, 1);
+    r.chapter_names?.splice(index, 1);
     markDirty(r.student_class_id);
   }
   deleteChapter.value = null;
@@ -407,18 +407,18 @@ function applySource(payload: {
     const pulled = map?.get(r.student_id) ?? null;
     switch (column) {
       case 'midterm':
-        r.uts_score = pulled;
+        r.midterm_score = pulled;
         break;
       case 'final_exam':
-        r.uas_score = pulled;
+        r.final_exam_score = pulled;
         break;
       case 'skill':
         r.skill_score = pulled;
         break;
       case 'bab':
         if (babIndex !== null) {
-          if (!r.bab_scores) r.bab_scores = [];
-          r.bab_scores[babIndex] = pulled;
+          if (!r.chapter_scores) r.chapter_scores = [];
+          r.chapter_scores[babIndex] = pulled;
         }
         break;
     }
@@ -454,14 +454,14 @@ async function save() {
         student_class_id: r.student_class_id,
         subject_id: subjectId.value,
         academic_year_id: Number(yearId),
-        predikat: r.predikat,
-        deskripsi: r.deskripsi,
+        predicate: r.predicate,
+        description: r.description,
         final_score: r.final_score,
         skill_score: r.skill_score,
-        bab_scores: r.bab_scores,
-        bab_names: r.bab_names ?? chapters.value.slice(),
-        uts_score: r.uts_score,
-        uas_score: r.uas_score,
+        chapter_scores: r.chapter_scores,
+        chapter_names: r.chapter_names ?? chapters.value.slice(),
+        midterm_score: r.midterm_score,
+        final_exam_score: r.final_exam_score,
       }));
     const resp = await GradeRecapService.saveBatch(payloads);
     if (resp.success === false) {
@@ -502,13 +502,13 @@ async function exportExcel() {
     const remappedRows = rows.value.map((r) => ({
       nis: r.nis ?? '-',
       nama: r.student_name,
-      bab_scores: r.bab_scores ?? [],
-      uts: r.uts_score,
-      uas: r.uas_score,
+      bab_scores: r.chapter_scores ?? [],
+      uts: r.midterm_score,
+      uas: r.final_exam_score,
       final_score: r.final_score ?? effectiveFinal(r),
       skill_score: r.skill_score,
-      predikat: r.predikat ?? '',
-      deskripsi: r.deskripsi ?? '',
+      predikat: r.predicate ?? '',
+      deskripsi: r.description ?? '',
     })) as unknown as typeof rows.value;
     const remappedChapters = chapters.value.map((name) => ({
       judul_bab: name,
@@ -593,8 +593,8 @@ const focusedPredikatRow = ref<string | null>(null);
 const PREDIKAT_OPTIONS = ['A', 'B', 'C', 'D', 'E'];
 
 function setPredikatPreset(r: GradeRecapRow, val: string) {
-  if (r.predikat !== val) {
-    r.predikat = val;
+  if (r.predicate !== val) {
+    r.predicate = val;
     markDirty(r.student_class_id);
   }
   focusedPredikatRow.value = null;
@@ -808,7 +808,7 @@ function onPredikatBlur(rowId: string) {
                     min="0"
                     max="100"
                     step="1"
-                    :value="r.bab_scores?.[i] ?? ''"
+                    :value="r.chapter_scores?.[i] ?? ''"
                     placeholder="—"
                     class="w-full max-w-[64px] text-center text-[12px] font-semibold rounded-md border border-transparent focus:border-brand-cobalt focus:bg-white px-1 py-1 outline-none tabular-nums"
                     @input="onBabInput(r, i, ($event.target as HTMLInputElement).value)"
@@ -822,10 +822,10 @@ function onPredikatBlur(rowId: string) {
                     min="0"
                     max="100"
                     step="1"
-                    :value="r.uts_score ?? ''"
+                    :value="r.midterm_score ?? ''"
                     placeholder="—"
                     class="w-full max-w-[64px] text-center text-[12px] font-semibold rounded-md border border-transparent focus:border-brand-cobalt focus:bg-white px-1 py-1 outline-none tabular-nums"
-                    @input="onScoreInput(r, 'uts_score', ($event.target as HTMLInputElement).value)"
+                    @input="onScoreInput(r, 'midterm_score', ($event.target as HTMLInputElement).value)"
                   />
                 </td>
                 <td class="px-1 py-1 border-r border-slate-100 text-center">
@@ -834,10 +834,10 @@ function onPredikatBlur(rowId: string) {
                     min="0"
                     max="100"
                     step="1"
-                    :value="r.uas_score ?? ''"
+                    :value="r.final_exam_score ?? ''"
                     placeholder="—"
                     class="w-full max-w-[64px] text-center text-[12px] font-semibold rounded-md border border-transparent focus:border-brand-cobalt focus:bg-white px-1 py-1 outline-none tabular-nums"
-                    @input="onScoreInput(r, 'uas_score', ($event.target as HTMLInputElement).value)"
+                    @input="onScoreInput(r, 'final_exam_score', ($event.target as HTMLInputElement).value)"
                   />
                 </td>
 
@@ -882,7 +882,7 @@ function onPredikatBlur(rowId: string) {
                   <input
                     type="text"
                     maxlength="3"
-                    :value="r.predikat ?? ''"
+                    :value="r.predicate ?? ''"
                     placeholder="—"
                     class="w-full max-w-[44px] text-center text-[12px] font-bold uppercase rounded-md border border-transparent focus:border-brand-cobalt focus:bg-white px-1 py-1 outline-none"
                     @focus="focusedPredikatRow = r.student_class_id"
@@ -910,10 +910,10 @@ function onPredikatBlur(rowId: string) {
                   <button
                     type="button"
                     class="w-full text-left text-[11px] text-slate-700 hover:text-brand-cobalt rounded-md px-1 py-1 hover:bg-slate-50 transition truncate"
-                    :class="{ italic: !r.deskripsi, 'text-slate-400': !r.deskripsi }"
+                    :class="{ italic: !r.description, 'text-slate-400': !r.description }"
                     @click="openDescEditor(r)"
                   >
-                    {{ r.deskripsi || 'Tambah deskripsi…' }}
+                    {{ r.description || 'Tambah deskripsi…' }}
                   </button>
                 </td>
               </tr>
