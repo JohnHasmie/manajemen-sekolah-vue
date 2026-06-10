@@ -655,7 +655,10 @@ export function defaultWizardPayload(): DemoWizardPayload {
         'material_files',
         'read_statuses',
         'konflik_jadwal',
-        'demo_expiry_short',
+        // 'demo_expiry_short' intentionally OFF by default — it shortens
+        // the demo's expiry to showcase the "almost expired" banner, which
+        // confused users (looked like a real near-expiry). Still selectable
+        // in Step 10 for anyone who wants to demo that flow.
         'akses_request',
         'rapor_full',
       ],
