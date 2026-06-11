@@ -387,28 +387,47 @@ async function handleSave(payload: Record<string, unknown>) {
     await reload(pagination.value?.current_page ?? 1);
   } catch (e) {
     // Detect the backend's "email already used by another user" signal.
-    // Backend returns either { code: 'email_conflict' } in a 422 envelope
-    // OR (legacy) throws an Exception whose message contains "sudah
-    // terdaftar" / "Ganti Akun". Either way, surface the hint to the
-    // sheet so it auto-enables the migration toggle.
+    // The backend may return { code: 'email_conflict' } OR an Indonesian
+    // "sudah terdaftar"/"Ganti Akun" message — but the common case is the
+    // plain Laravel unique-validation 422, whose field error reads
+    // "The email has already been taken." (English, no code). Match all
+    // three so a duplicate email is recognised on both add and edit.
     const err = e as {
       message?: string;
-      response?: { data?: { code?: string; message?: string } };
+      response?: {
+        data?: {
+          code?: string;
+          message?: string;
+          errors?: Record<string, string[]>;
+        };
+      };
     };
     const code = err?.response?.data?.code;
     const msg = String(err?.response?.data?.message ?? err?.message ?? '');
+    const emailFieldErr = err?.response?.data?.errors?.email?.[0] ?? '';
     const looksLikeConflict =
       code === 'email_conflict' ||
       /sudah terdaftar/i.test(msg) ||
-      /ganti akun/i.test(msg);
+      /ganti akun/i.test(msg) ||
+      /already been taken|has already|sudah (di)?pakai/i.test(
+        `${emailFieldErr} ${msg}`,
+      );
     if (looksLikeConflict && editTarget.value) {
-      // Keep the sheet open + flip the hint so the user can retry
-      // with the toggle on. Don't show the generic banner — the
-      // sheet's amber callout is the better surface.
+      // Edit mode — keep the sheet open + flip the hint so the user can
+      // retry with the "Ganti akun terkait" toggle on (migrate to the
+      // existing user). The sheet's amber callout is the better surface.
       teacherEmailConflict.value = true;
       toast.value = {
         message:
           'Email sudah dipakai user lain. Aktifkan "Ganti akun terkait" lalu Simpan untuk migrasi.',
+        tone: 'error',
+      };
+    } else if (looksLikeConflict) {
+      // Add mode — there's no migration path, so tell the admin plainly
+      // to use a different email instead of the bare 422 / English text.
+      error.value = 'Email sudah dipakai user lain. Gunakan email yang berbeda.';
+      toast.value = {
+        message: 'Email sudah dipakai user lain. Gunakan email lain.',
         tone: 'error',
       };
     } else {
