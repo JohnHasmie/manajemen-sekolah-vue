@@ -839,10 +839,11 @@ export const RecommendationService = {
     // caller would treat it as success and show a green "berhasil" toast
     // with zero results (the reported reko-generate symptom).
     if (res.status >= 400) {
+      // Surface a warm, non-technical message — never the raw server /
+      // validation text or an "HTTP 4xx" code (per Yahya's request that
+      // the user-facing message be friendly).
       throw new Error(
-        String(
-          body.message ?? `Gagal generate rekomendasi (HTTP ${res.status}).`,
-        ),
+        'Maaf, rekomendasi AI belum bisa dibuat saat ini. Coba lagi beberapa saat lagi ya.',
       );
     }
     return { async: false, data: body, message: body.message };
@@ -876,10 +877,11 @@ export const RecommendationService = {
     // caller would treat it as success and show a green "berhasil" toast
     // with zero results (the reported reko-generate symptom).
     if (res.status >= 400) {
+      // Surface a warm, non-technical message — never the raw server /
+      // validation text or an "HTTP 4xx" code (per Yahya's request that
+      // the user-facing message be friendly).
       throw new Error(
-        String(
-          body.message ?? `Gagal generate rekomendasi (HTTP ${res.status}).`,
-        ),
+        'Maaf, rekomendasi AI belum bisa dibuat saat ini. Coba lagi beberapa saat lagi ya.',
       );
     }
     return { async: false, data: body, message: body.message };

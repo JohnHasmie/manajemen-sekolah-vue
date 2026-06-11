@@ -349,8 +349,12 @@ async function runGenerate(cfg: GenerateConfig) {
         tone: 'error',
       };
     } else {
+      // Show the (already friendly) error message directly — no technical
+      // prefix or raw "AI error" fallback.
       toast.value = {
-        message: `Semua permintaan gagal: ${failed[0].error?.message ?? 'AI error'}.`,
+        message:
+          failed[0].error?.message ??
+          'Maaf, rekomendasi AI belum bisa dibuat saat ini. Coba lagi beberapa saat lagi ya.',
         tone: 'error',
       };
     }
