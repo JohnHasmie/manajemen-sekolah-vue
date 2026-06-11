@@ -46,6 +46,33 @@ type SortKey = 'progress' | 'class' | 'subject' | 'teacher' | 'avg';
 const sortKey = ref<SortKey>('progress');
 const sortDir = ref<'asc' | 'desc'>('asc');
 
+// Dropdown filters — pick a specific Kelas / Mapel / Guru, consistent with
+// the select-style filters on other admin pages. Empty string = "Semua".
+const filterClass = ref('');
+const filterSubject = ref('');
+const filterTeacher = ref('');
+
+// Distinct option lists derived from the loaded rows, alphabetically sorted.
+const classOptions = computed(() =>
+  [...new Set(rows.value.map((r) => r.class_name))].sort((a, b) =>
+    a.localeCompare(b),
+  ),
+);
+const subjectOptions = computed(() =>
+  [...new Set(rows.value.map((r) => r.subject_name))].sort((a, b) =>
+    a.localeCompare(b),
+  ),
+);
+const teacherOptions = computed(() =>
+  [
+    ...new Set(
+      rows.value
+        .map((r) => r.teacher_name)
+        .filter((n): n is string => Boolean(n)),
+    ),
+  ].sort((a, b) => a.localeCompare(b)),
+);
+
 async function load() {
   isLoading.value = true;
   loadError.value = null;
@@ -68,6 +95,11 @@ const filteredRows = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   const list = rows.value.filter((r) => {
     if (onlyIncomplete.value && r.is_complete) return false;
+    if (filterClass.value && r.class_name !== filterClass.value) return false;
+    if (filterSubject.value && r.subject_name !== filterSubject.value)
+      return false;
+    if (filterTeacher.value && (r.teacher_name ?? '') !== filterTeacher.value)
+      return false;
     if (q) {
       const blob =
         `${r.class_name} ${r.subject_name} ${r.teacher_name ?? ''}`.toLowerCase();
@@ -378,6 +410,30 @@ function exportCsv() {
         />
         Belum lengkap
       </button>
+
+      <!-- Kelas / Mapel / Guru filters (select-style, matching other
+           admin pages). Empty option = "Semua". -->
+      <select
+        v-model="filterClass"
+        class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300 focus:outline-none focus:border-role-admin"
+      >
+        <option value="">Semua Kelas</option>
+        <option v-for="c in classOptions" :key="c" :value="c">{{ c }}</option>
+      </select>
+      <select
+        v-model="filterSubject"
+        class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300 focus:outline-none focus:border-role-admin"
+      >
+        <option value="">Semua Mapel</option>
+        <option v-for="s in subjectOptions" :key="s" :value="s">{{ s }}</option>
+      </select>
+      <select
+        v-model="filterTeacher"
+        class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300 focus:outline-none focus:border-role-admin"
+      >
+        <option value="">Semua Guru</option>
+        <option v-for="t in teacherOptions" :key="t" :value="t">{{ t }}</option>
+      </select>
 
       <!-- Sort selector (replaces table column chevrons since cards
            have no column headers). -->
