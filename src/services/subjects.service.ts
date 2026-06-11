@@ -69,13 +69,20 @@ export const SubjectService = {
    * and return ONLY the subjects the teacher teaches (assigned + scheduled
    * + grade-authored) — the schedule add/edit form needs this so picking a
    * homeroom teacher doesn't list every subject in the school.
+   *
+   * Pass classId to narrow further to the subjects the teacher teaches in
+   * that specific class (used by the per-class Generate Rekomendasi sheet).
    */
   async listForTeacher(
     teacherId: string,
     scope?: 'teaching',
+    classId?: string,
   ): Promise<Subject[]> {
+    const params: Record<string, string> = {};
+    if (scope) params.scope = scope;
+    if (classId) params.class_id = classId;
     const res = await api.get(`/teacher/${teacherId}/subjects`, {
-      params: scope ? { scope } : undefined,
+      params: Object.keys(params).length > 0 ? params : undefined,
     });
     const body = res.data as unknown;
     const arr = Array.isArray(body)
