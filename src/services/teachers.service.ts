@@ -46,6 +46,12 @@ export const TeacherService = {
   async list(params: TeacherListParams = {}): Promise<ListResult> {
     const res = await api.get('/teacher', {
       params: {
+        // Cache-buster: the admin teacher list is re-fetched right after
+        // add/edit, but the browser was serving the previous (cached) GET
+        // response, so the list looked stale until a manual hard-reload.
+        // A unique param per call forces a fresh response. Backend ignores
+        // unknown query params.
+        _t: Date.now(),
         page: params.page ?? 1,
         per_page: params.per_page ?? 10,
         ...(params.search ? { search: params.search } : {}),
