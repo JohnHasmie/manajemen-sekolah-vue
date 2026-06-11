@@ -53,7 +53,17 @@ const MAIN_BASE_URL =
 const AI_BASE_URL =
   import.meta.env.VITE_AI_API_URL ?? 'http://localhost:8000/api';
 
-function buildClient(baseURL: string): AxiosInstance {
+function buildClient(
+  baseURL: string,
+  // Whether to auto-inject the selected `academic_year_id` on year-scoped
+  // requests. ONLY safe for the main (edu_core) API: the core uses UUID
+  // academic-year ids, but the AI service (edu_ai) keys academic years by
+  // INTEGER — sending the core UUID there fails its `nullable|integer`
+  // rule with a 422 (e.g. POST /recommendations/generate). The AI service
+  // resolves the current year itself when the field is absent, so the AI
+  // client opts out entirely.
+  injectAcademicYear = true,
+): AxiosInstance {
   const client = axios.create({
     baseURL,
     timeout: 30_000,
@@ -93,7 +103,7 @@ function buildClient(baseURL: string): AxiosInstance {
     // `config.params` / `config.data` — only undefined values get
     // back-filled. Pass `academic_year_id: null` to opt out for a
     // single call.
-    if (shouldInjectAcademicYear(config.url)) {
+    if (injectAcademicYear && shouldInjectAcademicYear(config.url)) {
       // Lazy-read from localStorage to avoid pulling pinia in here.
       // The pinia store persists the picked id under the same key.
       let yearId: string | null = null;
@@ -185,7 +195,7 @@ function buildClient(baseURL: string): AxiosInstance {
 }
 
 export const api = buildClient(MAIN_BASE_URL);
-export const aiApi = buildClient(AI_BASE_URL);
+export const aiApi = buildClient(AI_BASE_URL, false);
 
 /**
  * Unwraps the Laravel response envelope.

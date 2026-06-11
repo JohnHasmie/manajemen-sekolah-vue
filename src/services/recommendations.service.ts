@@ -833,6 +833,18 @@ export const RecommendationService = {
         message: body.message ?? 'Processing…',
       };
     }
+    // Surface any other 4xx (422 validation, 403, …) as a real error.
+    // `validateStatus` lets <500 through so we can special-case 429/202
+    // above, but a 4xx that reaches here is a FAILURE — without this the
+    // caller would treat it as success and show a green "berhasil" toast
+    // with zero results (the reported reko-generate symptom).
+    if (res.status >= 400) {
+      throw new Error(
+        String(
+          body.message ?? `Gagal generate rekomendasi (HTTP ${res.status}).`,
+        ),
+      );
+    }
     return { async: false, data: body, message: body.message };
   },
 
@@ -857,6 +869,18 @@ export const RecommendationService = {
         poll_url: body.data?.poll_url ?? body.poll_url,
         message: body.message ?? 'Processing…',
       };
+    }
+    // Surface any other 4xx (422 validation, 403, …) as a real error.
+    // `validateStatus` lets <500 through so we can special-case 429/202
+    // above, but a 4xx that reaches here is a FAILURE — without this the
+    // caller would treat it as success and show a green "berhasil" toast
+    // with zero results (the reported reko-generate symptom).
+    if (res.status >= 400) {
+      throw new Error(
+        String(
+          body.message ?? `Gagal generate rekomendasi (HTTP ${res.status}).`,
+        ),
+      );
     }
     return { async: false, data: body, message: body.message };
   },
