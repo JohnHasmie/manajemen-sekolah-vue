@@ -133,7 +133,7 @@ export function formatThousands(value: string | number | null | undefined): stri
   if (value === null || value === undefined) return '';
   const digits = String(value).replace(/\D/g, '');
   if (!digits) return '';
-  return NUMBER.format(Number(digits));
+  return number().format(Number(digits));
 }
 
 export function formatDateLong(value: Date | string | null | undefined): string {
