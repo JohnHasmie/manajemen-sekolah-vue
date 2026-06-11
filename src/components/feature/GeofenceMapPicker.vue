@@ -66,6 +66,29 @@ function emitPick(ll: L.LatLng) {
   emit('pick', { lat: round6(ll.lat), lng: round6(ll.lng) });
 }
 
+// When there's no geofence point and no school pin to fall back on, ask the
+// browser for the admin's current location and recentre there instead of
+// sitting on the country-wide default view. On success we also drop the pin
+// and fill the fields, so the geofence defaults to "here" — the admin can
+// still drag it or clear the coordinates to use the school pin. If permission
+// is denied/unavailable we silently keep the default view.
+function geolocateToCurrent() {
+  if (!('geolocation' in navigator)) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      if (!map || !marker) return;
+      const ll = L.latLng(pos.coords.latitude, pos.coords.longitude);
+      map.setView(ll, 16);
+      marker.setLatLng(ll);
+      emitPick(ll);
+    },
+    () => {
+      /* denied or unavailable — keep the default view */
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
+  );
+}
+
 onMounted(() => {
   if (!mapEl.value) return;
   const { center, hasPoint } = initialCenter();
@@ -94,6 +117,11 @@ onMounted(() => {
   // The settings card can be hidden/animating on first paint; recompute
   // the map size once it is visible so tiles fill the container.
   setTimeout(() => map?.invalidateSize(), 0);
+
+  // No saved geofence point and no school pin → start at the admin's current
+  // location rather than the country-wide default.
+  const hasFallback = props.fallbackLat != null && props.fallbackLng != null;
+  if (!hasPoint && !hasFallback) geolocateToCurrent();
 });
 
 // External changes (manual lat/long typing) move the pin to match.
