@@ -195,6 +195,12 @@ export function announcementFromJson(raw: Record<string, unknown>): Announcement
       ? (r.target_ids as unknown[]).map(String)
       : undefined,
     role_target: normalizeRoleTarget(r.role_target),
+    // Per-role audience targeting (guru / wali_kelas / wali_murid → 'all'
+    // or specific ids). Required so the admin edit form can rehydrate the
+    // audience matrix; without it the matrix renders empty on edit.
+    audience_matrix:
+      (r.audience_matrix as Record<string, (string | number)[]> | undefined) ??
+      undefined,
     source: (r.source as string | null | undefined) ?? null,
     audience_label:
       (r.audience_label as string | null | undefined) ?? null,

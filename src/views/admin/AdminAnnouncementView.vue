@@ -314,9 +314,9 @@ function openEdit(a: Announcement) {
     wali_kelas: cell('wali_kelas'),
     wali_murid: cell('wali_murid'),
   };
-  form.scheduled_at = a.scheduled_at ?? '';
-  // Trim to the `datetime-local` shape (YYYY-MM-DDTHH:mm) so an ISO value
-  // from the API still populates the picker on edit.
+  // Both bind to `datetime-local` inputs (YYYY-MM-DDTHH:mm), so trim the
+  // ISO value from the API — otherwise the picker stays empty on edit.
+  form.scheduled_at = (a.scheduled_at ?? '').slice(0, 16);
   form.event_at = (a.event_at ?? '').slice(0, 16);
   form.event_location = a.event_location ?? '';
   form.is_pinned = !!a.is_pinned;
