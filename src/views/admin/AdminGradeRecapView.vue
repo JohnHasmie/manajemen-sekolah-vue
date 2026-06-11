@@ -30,6 +30,10 @@ import type {
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const router = useRouter();
@@ -46,31 +50,38 @@ type SortKey = 'progress' | 'class' | 'subject' | 'teacher' | 'avg';
 const sortKey = ref<SortKey>('progress');
 const sortDir = ref<'asc' | 'desc'>('asc');
 
-// Dropdown filters — pick a specific Kelas / Mapel / Guru, consistent with
-// the select-style filters on other admin pages. Empty string = "Semua".
+// Filter by a specific Kelas / Mapel / Guru. Uses the same chip + facet-picker
+// pattern as the other admin pages (AppFilterChip + FilterFacetPickerModal).
+// Empty string = "Semua".
 const filterClass = ref('');
 const filterSubject = ref('');
 const filterTeacher = ref('');
 
-// Distinct option lists derived from the loaded rows, alphabetically sorted.
-const classOptions = computed(() =>
-  [...new Set(rows.value.map((r) => r.class_name))].sort((a, b) =>
-    a.localeCompare(b),
-  ),
+const showClassPicker = ref(false);
+const showSubjectPicker = ref(false);
+const showTeacherPicker = ref(false);
+
+const classChipValue = computed(() => filterClass.value || 'Semua');
+const subjectChipValue = computed(() => filterSubject.value || 'Semua');
+const teacherChipValue = computed(() => filterTeacher.value || 'Semua');
+
+// Distinct facet options derived from the loaded rows, alphabetically sorted.
+// The value the list filters on is the name itself, so key === label.
+function toFacets(names: string[]): FacetOption[] {
+  return [...new Set(names)]
+    .sort((a, b) => a.localeCompare(b))
+    .map((n) => ({ key: n, label: n }));
+}
+const classOptions = computed<FacetOption[]>(() =>
+  toFacets(rows.value.map((r) => r.class_name)),
 );
-const subjectOptions = computed(() =>
-  [...new Set(rows.value.map((r) => r.subject_name))].sort((a, b) =>
-    a.localeCompare(b),
-  ),
+const subjectOptions = computed<FacetOption[]>(() =>
+  toFacets(rows.value.map((r) => r.subject_name)),
 );
-const teacherOptions = computed(() =>
-  [
-    ...new Set(
-      rows.value
-        .map((r) => r.teacher_name)
-        .filter((n): n is string => Boolean(n)),
-    ),
-  ].sort((a, b) => a.localeCompare(b)),
+const teacherOptions = computed<FacetOption[]>(() =>
+  toFacets(
+    rows.value.map((r) => r.teacher_name).filter((n): n is string => Boolean(n)),
+  ),
 );
 
 async function load() {
@@ -411,29 +422,29 @@ function exportCsv() {
         Belum lengkap
       </button>
 
-      <!-- Kelas / Mapel / Guru filters (select-style, matching other
-           admin pages). Empty option = "Semua". -->
-      <select
-        v-model="filterClass"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300 focus:outline-none focus:border-role-admin"
-      >
-        <option value="">Semua Kelas</option>
-        <option v-for="c in classOptions" :key="c" :value="c">{{ c }}</option>
-      </select>
-      <select
-        v-model="filterSubject"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300 focus:outline-none focus:border-role-admin"
-      >
-        <option value="">Semua Mapel</option>
-        <option v-for="s in subjectOptions" :key="s" :value="s">{{ s }}</option>
-      </select>
-      <select
-        v-model="filterTeacher"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-slate-200 bg-white text-slate-700 hover:border-slate-300 focus:outline-none focus:border-role-admin"
-      >
-        <option value="">Semua Guru</option>
-        <option v-for="t in teacherOptions" :key="t" :value="t">{{ t }}</option>
-      </select>
+      <!-- Kelas / Mapel / Guru filters — same chip + facet-picker pattern as
+           the other admin pages. -->
+      <AppFilterChip
+        icon-name="layers"
+        label="Kelas"
+        :value="classChipValue"
+        tone="brand"
+        @click="showClassPicker = true"
+      />
+      <AppFilterChip
+        icon-name="book-open"
+        label="Mapel"
+        :value="subjectChipValue"
+        tone="violet"
+        @click="showSubjectPicker = true"
+      />
+      <AppFilterChip
+        icon-name="user"
+        label="Guru"
+        :value="teacherChipValue"
+        tone="amber"
+        @click="showTeacherPicker = true"
+      />
 
       <!-- Sort selector (replaces table column chevrons since cards
            have no column headers). -->
@@ -647,5 +658,31 @@ function exportCsv() {
         </div>
       </template>
     </AsyncView>
+
+    <!-- Per-facet pickers (shared style with other admin pages) -->
+    <FilterFacetPickerModal
+      v-if="showClassPicker"
+      title="Filter Kelas"
+      :options="classOptions"
+      :selected="filterClass"
+      @close="showClassPicker = false"
+      @apply="(v) => { filterClass = v; }"
+    />
+    <FilterFacetPickerModal
+      v-if="showSubjectPicker"
+      title="Filter Mapel"
+      :options="subjectOptions"
+      :selected="filterSubject"
+      @close="showSubjectPicker = false"
+      @apply="(v) => { filterSubject = v; }"
+    />
+    <FilterFacetPickerModal
+      v-if="showTeacherPicker"
+      title="Filter Guru"
+      :options="teacherOptions"
+      :selected="filterTeacher"
+      @close="showTeacherPicker = false"
+      @apply="(v) => { filterTeacher = v; }"
+    />
   </div>
 </template>
