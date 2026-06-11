@@ -222,7 +222,10 @@ export const AnnouncementService = {
     audience_matrix?: Record<string, (string | number)[]>;
   }): Promise<{ reach: number; breakdown?: Record<string, number> }> {
     try {
-      const res = await api.post('/announcement/preview-reach', payload);
+      // Route is registered plural-only (announcements/preview-reach); the
+      // singular alias has no preview-reach, so the old path 404'd and the
+      // chip always showed 0 ("0 penerima").
+      const res = await api.post('/announcements/preview-reach', payload);
       const body = res.data?.data ?? res.data ?? {};
       return {
         reach: Number(body.reach ?? body.total ?? 0),
