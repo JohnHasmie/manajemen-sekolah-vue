@@ -24,6 +24,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useAcademicYearStore } from '@/stores/academic-year';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import {
   RateLimitError,
@@ -51,6 +52,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
 
 const auth = useAuthStore();
+const academicYear = useAcademicYearStore();
 const router = useRouter();
 
 // ── Mode toggle (Mengajar ↔ Wali Kelas) ──
@@ -165,13 +167,18 @@ async function loadSummariesForVisible() {
   if (todo.length === 0) return;
   for (const c of todo) loadingSummaryFor.value.add(c.id);
   // Promise.all so all cards reveal numbers near-simultaneously;
-  // failures degrade to an empty stat strip per card. The HTTP
-  // interceptor auto-injects `academic_year_id` from the active-year
-  // store so we don't have to forward it explicitly here.
+  // failures degrade to an empty stat strip per card. Pass the active
+  // academic year EXPLICITLY: the AI client (aiApi) doesn't carry the
+  // year-injecting interceptor the core client does, so without this the
+  // summary counted ALL years (incl. recs with a null/old year) — that's
+  // why the web showed 62 pending vs mobile's 38 (mobile forwards the year).
+  const academicYearId = academicYear.selectedYearId ?? undefined;
   await Promise.all(
     todo.map(async (c) => {
       try {
-        const summary = await RecommendationService.getClassSummary(c.id);
+        const summary = await RecommendationService.getClassSummary(c.id, {
+          academic_year_id: academicYearId,
+        });
         summaryByClass.value[c.id] = summary;
       } catch {
         summaryByClass.value[c.id] = null;
