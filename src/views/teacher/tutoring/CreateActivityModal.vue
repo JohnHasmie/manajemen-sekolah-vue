@@ -69,34 +69,34 @@ async function submit() {
     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
     @click.self="emit('close')"
   >
-    <div class="w-full max-w-md bg-white rounded-2xl p-5 sm:p-6">
-      <h2 class="text-base font-bold text-slate-900 tracking-tight">
+    <div class="w-full max-w-md bg-bimbel-panel rounded-2xl p-5 sm:p-6">
+      <h2 class="text-base font-bold text-bimbel-text-hi tracking-tight">
         Aktivitas Baru
       </h2>
-      <p class="text-xs text-slate-500 mt-1">
+      <p class="text-xs text-bimbel-text-mid mt-1">
         Beri tugas / quiz / ujian untuk kelompok.
       </p>
 
       <div class="mt-4 space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Kelompok
           </span>
           <select
             v-model="groupId"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
             <option value="" disabled>Pilih kelompok</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Tipe
           </span>
           <select
             v-model="type"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
             <option value="HOMEWORK">PR</option>
             <option value="EXAM">Ujian</option>
@@ -105,54 +105,54 @@ async function submit() {
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Judul
           </span>
           <input
             v-model="title"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
             placeholder="cth. Latihan Trigonometri Bab 3"
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Deskripsi / instruksi (opsional)
           </span>
           <textarea
             v-model="description"
             rows="3"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
           />
         </label>
         <div class="flex gap-2">
           <label class="block flex-1">
-            <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
               Tenggat (opsional)
             </span>
             <input
               v-model="dueDate"
               type="date"
-              class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
             />
           </label>
           <label class="block w-32">
-            <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
               Jam
             </span>
             <input
               v-model="dueTime"
               type="time"
-              class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
             />
           </label>
         </div>
-        <p v-if="errMsg" class="text-xs text-status-danger">{{ errMsg }}</p>
+        <p v-if="errMsg" class="text-xs text-bimbel-red">{{ errMsg }}</p>
       </div>
 
       <div class="mt-5 flex items-center gap-2 justify-end">
         <button
           type="button"
-          class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
           @click="emit('close')"
         >
           {{ t('tutoring.common.close') }}

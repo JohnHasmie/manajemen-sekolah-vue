@@ -127,17 +127,17 @@ watch(focusedMonth, ({ y, m }) => {
 // Tailwind classes vary by accent — kept as static literals so JIT
 // picks them up.
 const FOCUSED_BG = computed(() => ({
-  admin: 'bg-role-admin text-white',
+  admin: 'bg-bimbel-accent text-bimbel-ring',
   tutor: 'bg-role-teacher text-white',
   wali: 'bg-role-parent text-white',
 }[props.accent]));
 const TODAY_TEXT = computed(() => ({
-  admin: 'bg-status-info-soft text-role-admin',
-  tutor: 'bg-status-info-soft text-role-teacher',
-  wali: 'bg-status-info-soft text-role-parent',
+  admin: 'bg-status-info-soft text-bimbel-accent',
+  tutor: 'bg-status-info-soft text-bimbel-accent',
+  wali: 'bg-status-info-soft text-bimbel-accent',
 }[props.accent]));
 const DOT_BG = computed(() => ({
-  admin: 'bg-role-admin',
+  admin: 'bg-bimbel-accent',
   tutor: 'bg-role-teacher',
   wali: 'bg-role-parent',
 }[props.accent]));
@@ -145,22 +145,22 @@ const DOT_BG = computed(() => ({
 
 <template>
   <div>
-    <div class="bg-white border border-slate-100 rounded-3xl p-4">
+    <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-3xl p-4">
       <!-- header — < Month YYYY > -->
       <div class="flex items-center gap-2 mb-2">
         <button
           type="button"
-          class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+          class="p-1.5 rounded-lg text-bimbel-text-mid hover:bg-bimbel-border-soft"
           @click="prevMonth"
         >
           <NavIcon name="chevron-left" :size="18" />
         </button>
-        <div class="flex-1 text-center text-sm font-extrabold text-slate-900 tracking-tight">
+        <div class="flex-1 text-center text-sm font-extrabold text-bimbel-text-hi tracking-tight">
           {{ monthLabel(focusedMonth.y, focusedMonth.m) }}
         </div>
         <button
           type="button"
-          class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+          class="p-1.5 rounded-lg text-bimbel-text-mid hover:bg-bimbel-border-soft"
           @click="nextMonth"
         >
           <NavIcon name="chevron-right" :size="18" />
@@ -171,7 +171,7 @@ const DOT_BG = computed(() => ({
         <div
           v-for="(d, i) in ['S', 'S', 'R', 'K', 'J', 'S', 'M']"
           :key="i"
-          class="text-center text-[10.5px] font-bold text-slate-500 tracking-widest py-1"
+          class="text-center text-[10.5px] font-bold text-bimbel-text-mid tracking-widest py-1"
         >
           {{ d }}
         </div>
@@ -190,9 +190,9 @@ const DOT_BG = computed(() => ({
               ? FOCUSED_BG
               : cell && isToday(cell.date)
                 ? TODAY_TEXT
-                : 'text-slate-900 hover:bg-slate-100',
+                : 'text-bimbel-text-hi hover:bg-bimbel-border-soft',
             cell && !isFocused(cell.date) && (sessionsByDay.get(dayKey(cell.date))?.length ?? 0) > 0
-              ? 'border border-slate-200'
+              ? 'border border-bimbel-border'
               : '',
           ]"
           @click="cell && (focusedDay = cell.date)"
@@ -206,7 +206,7 @@ const DOT_BG = computed(() => ({
               v-for="n in Math.min(sessionsByDay.get(dayKey(cell.date))?.length ?? 0, 3)"
               :key="n"
               class="w-1 h-1 rounded-full"
-              :class="isFocused(cell.date) ? 'bg-white' : DOT_BG"
+              :class="isFocused(cell.date) ? 'bg-bimbel-panel' : DOT_BG"
             ></span>
           </span>
         </button>

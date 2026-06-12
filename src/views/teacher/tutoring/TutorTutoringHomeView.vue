@@ -164,7 +164,7 @@ const quickActions = [
       live-dot
     />
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
@@ -178,12 +178,12 @@ const quickActions = [
           <span class="rounded-full bg-role-guru px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-widest text-white">
             Sesi Berikutnya
           </span>
-          <span class="text-xs font-bold text-slate-700">{{ nextSessionLabel }}</span>
+          <span class="text-xs font-bold text-bimbel-text-mid">{{ nextSessionLabel }}</span>
         </div>
-        <h3 class="mt-2 text-base font-extrabold tracking-tight text-slate-900">
+        <h3 class="mt-2 text-base font-extrabold tracking-tight text-bimbel-text-hi">
           {{ stats.next_session.group_name || stats.next_session.topic || 'Sesi terjadwal' }}
         </h3>
-        <p v-if="stats.next_session.program_name" class="text-xs text-slate-500">
+        <p v-if="stats.next_session.program_name" class="text-xs text-bimbel-text-mid">
           {{ [
             stats.next_session.program_name,
             stats.next_session.room ? `Ruang ${stats.next_session.room}` : null,
@@ -216,17 +216,17 @@ const quickActions = [
 
       <!-- ── Honor + rating preview strip ───────────────────────── -->
       <div v-if="stats" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+        <div class="rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2.5">
           <div class="flex items-center gap-2">
             <NavIcon name="wallet" :size="16" class="text-role-guru" />
             <div class="min-w-0 flex-1">
-              <div class="truncate text-sm font-extrabold tracking-tight text-slate-900">
+              <div class="truncate text-sm font-extrabold tracking-tight text-bimbel-text-hi">
                 {{ stats.month_earnings > 0 ? formatRupiah(stats.month_earnings) : 'Rp 0' }}
               </div>
-              <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              <div class="text-[10px] font-semibold uppercase tracking-wider text-bimbel-text-mid">
                 Honor bulan ini
               </div>
-              <div class="truncate text-[10px] text-slate-400">
+              <div class="truncate text-[10px] text-bimbel-text-lo">
                 {{ stats.month_sessions_done > 0
                   ? `${stats.month_sessions_done} sesi DONE`
                   : 'Belum ada sesi DONE' }}
@@ -234,17 +234,17 @@ const quickActions = [
             </div>
           </div>
         </div>
-        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+        <div class="rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2.5">
           <div class="flex items-center gap-2">
             <NavIcon name="check-circle" :size="16" class="text-role-guru" />
             <div class="min-w-0 flex-1">
-              <div class="truncate text-sm font-extrabold tracking-tight text-slate-900">
+              <div class="truncate text-sm font-extrabold tracking-tight text-bimbel-text-hi">
                 {{ stats.rating_avg == null ? '–' : stats.rating_avg.toFixed(1) }}
               </div>
-              <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              <div class="text-[10px] font-semibold uppercase tracking-wider text-bimbel-text-mid">
                 Rating 30h
               </div>
-              <div class="truncate text-[10px] text-slate-400">
+              <div class="truncate text-[10px] text-bimbel-text-lo">
                 {{ stats.rating_count === 0 ? 'Belum ada rating' : `${stats.rating_count} ulasan` }}
               </div>
             </div>

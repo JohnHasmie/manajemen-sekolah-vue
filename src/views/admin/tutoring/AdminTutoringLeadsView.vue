@@ -277,7 +277,7 @@ function pillLabel(status: string): string {
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
@@ -299,7 +299,7 @@ function pillLabel(status: string): string {
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -326,7 +326,7 @@ function pillLabel(status: string): string {
             <button
               v-if="lead.status === 'TRIAL'"
               type="button"
-              class="text-[10.5px] font-bold uppercase tracking-wider text-role-admin hover:underline px-1.5"
+              class="text-[10.5px] font-bold uppercase tracking-wider text-bimbel-accent hover:underline px-1.5"
               @click.stop="goEnroll(lead)"
             >
               Enroll
@@ -334,7 +334,7 @@ function pillLabel(status: string): string {
             <button
               v-if="lead.status === 'TRIAL'"
               type="button"
-              class="text-[10.5px] font-bold uppercase tracking-wider text-status-success hover:underline px-1.5"
+              class="text-[10.5px] font-bold uppercase tracking-wider text-bimbel-green hover:underline px-1.5"
               @click.stop="openConvert(lead)"
             >
               Tandai
@@ -342,7 +342,7 @@ function pillLabel(status: string): string {
             <button
               v-if="lead.status === 'TRIAL'"
               type="button"
-              class="text-[10.5px] font-bold uppercase tracking-wider text-status-danger hover:underline px-1.5"
+              class="text-[10.5px] font-bold uppercase tracking-wider text-bimbel-red hover:underline px-1.5"
               @click.stop="openDrop(lead)"
             >
               Drop
@@ -353,7 +353,7 @@ function pillLabel(status: string): string {
             />
             <button
               type="button"
-              class="p-1.5 rounded-lg text-slate-400 hover:text-status-danger hover:bg-status-danger-soft"
+              class="p-1.5 rounded-lg text-bimbel-text-lo hover:text-bimbel-red hover:bg-bimbel-red-soft"
               title="Hapus"
               @click.stop="remove(lead)"
             >
@@ -370,8 +370,8 @@ function pillLabel(status: string): string {
         <li v-for="o in FILTER_OPTIONS" :key="o.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': filter === o.key }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': filter === o.key }"
             @click="pickFilter(o.key)"
           >
             {{ o.label }}
@@ -384,71 +384,71 @@ function pillLabel(status: string): string {
     <Modal v-if="showCreate" title="Lead Baru" @close="showCreate = false">
       <div class="space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Nama
           </span>
           <input
             v-model="fName"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           />
         </label>
         <div class="grid grid-cols-2 gap-2">
           <label class="block">
-            <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
               Email (opsional)
             </span>
             <input
               v-model="fEmail"
               type="email"
-              class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
             />
           </label>
           <label class="block">
-            <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
               Telepon (opsional)
             </span>
             <input
               v-model="fPhone"
-              class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
             />
           </label>
         </div>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Program minat (opsional)
           </span>
           <select
             v-model="fProgramId"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           >
             <option value="">— Belum tentu —</option>
             <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Sumber (opsional)
           </span>
           <input
             v-model="fSource"
             placeholder="cth. IG ads, referral, walk-in"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Catatan (opsional)
           </span>
           <textarea
             v-model="fNotes"
             rows="3"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin resize-none"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent resize-none"
           />
         </label>
         <div class="flex items-center gap-2 justify-end pt-2">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
             @click="showCreate = false"
           >
             {{ t('tutoring.common.close') }}
@@ -456,7 +456,7 @@ function pillLabel(status: string): string {
           <button
             type="button"
             :disabled="saving"
-            class="rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="submitCreate"
           >
             {{ saving ? t('tutoring.common.saving') : 'Simpan' }}
@@ -467,7 +467,7 @@ function pillLabel(status: string): string {
 
     <!-- Convert modal -->
     <Modal v-if="showConvert" title="Tandai Converted" @close="showConvert = false">
-      <p class="text-sm text-slate-600 mb-3">
+      <p class="text-sm text-bimbel-text-mid mb-3">
         Setelah membuat enrollment di flow Daftarkan, tempel
         <strong>enrollment ID</strong> di sini agar lead tercatat
         sebagai sumber.
@@ -475,12 +475,12 @@ function pillLabel(status: string): string {
       <input
         v-model="convertEnrollmentId"
         placeholder="enrollment_id"
-        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+        class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
       />
       <div class="flex items-center gap-2 justify-end mt-4">
         <button
           type="button"
-          class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
           @click="showConvert = false"
         >
           Batal
@@ -488,7 +488,7 @@ function pillLabel(status: string): string {
         <button
           type="button"
           :disabled="saving"
-          class="rounded-lg bg-status-success hover:bg-status-success/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          class="rounded-lg bg-bimbel-green hover:bg-bimbel-green/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           @click="submitConvert"
         >
           {{ saving ? 'Menyimpan…' : 'Tandai converted' }}
@@ -498,19 +498,19 @@ function pillLabel(status: string): string {
 
     <!-- Drop modal -->
     <Modal v-if="showDrop" title="Drop Lead" @close="showDrop = false">
-      <p class="text-sm text-slate-600 mb-3">
+      <p class="text-sm text-bimbel-text-mid mb-3">
         Alasan drop (opsional, masuk ke catatan):
       </p>
       <textarea
         v-model="dropNotes"
         rows="3"
         placeholder="cth. tidak sesuai jadwal, pindah tempat tinggal"
-        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-status-danger/20 focus:border-status-danger resize-none"
+        class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-status-danger/20 focus:border-status-danger resize-none"
       />
       <div class="flex items-center gap-2 justify-end mt-4">
         <button
           type="button"
-          class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
           @click="showDrop = false"
         >
           Batal
@@ -518,7 +518,7 @@ function pillLabel(status: string): string {
         <button
           type="button"
           :disabled="saving"
-          class="rounded-lg bg-status-danger hover:bg-status-danger/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          class="rounded-lg bg-bimbel-red hover:bg-bimbel-red/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           @click="submitDrop"
         >
           {{ saving ? 'Menyimpan…' : 'Drop' }}

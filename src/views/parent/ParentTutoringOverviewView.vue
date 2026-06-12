@@ -99,17 +99,17 @@ interface FeedStyle { icon: string; tone: string }
 function feedStyle(type: string): FeedStyle {
   switch (type) {
     case 'note':
-      return { icon: 'edit', tone: 'text-role-parent bg-role-parent/12' };
+      return { icon: 'edit', tone: 'text-bimbel-accent bg-role-parent/12' };
     case 'score':
       return { icon: 'check-circle', tone: 'text-emerald-600 bg-emerald-50' };
     case 'announcement':
-      return { icon: 'message-square', tone: 'text-role-admin bg-role-admin/12' };
+      return { icon: 'message-square', tone: 'text-bimbel-accent bg-bimbel-accent/12' };
     case 'bill':
-      return { icon: 'wallet', tone: 'text-status-danger bg-rose-50' };
+      return { icon: 'wallet', tone: 'text-bimbel-red bg-rose-50' };
     case 'attendance':
       return { icon: 'calendar', tone: 'text-role-guru bg-role-guru/12' };
     default:
-      return { icon: 'circle', tone: 'text-slate-500 bg-slate-100' };
+      return { icon: 'circle', tone: 'text-bimbel-text-mid bg-bimbel-grey-dim' };
   }
 }
 
@@ -171,10 +171,10 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
-const sectionCls = 'bg-white border border-slate-100 rounded-2xl p-4 sm:p-5';
+const sectionCls = 'bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5';
 const sectionTitleRow = 'flex items-center gap-2.5 mb-3';
 const sectionIconCls =
-  'w-7 h-7 rounded-lg bg-role-parent-soft text-role-parent grid place-items-center flex-shrink-0';
+  'w-7 h-7 rounded-lg bg-bimbel-accent-dim text-bimbel-accent grid place-items-center flex-shrink-0';
 </script>
 
 <template>
@@ -188,7 +188,7 @@ const sectionIconCls =
         : ''"
     />
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
@@ -203,12 +203,12 @@ const sectionIconCls =
           <span :class="sectionIconCls">
             <NavIcon name="bell" :size="16" />
           </span>
-          <h3 class="text-sm font-bold text-slate-900 tracking-tight">
+          <h3 class="text-sm font-bold text-bimbel-text-hi tracking-tight">
             Yang Baru
           </h3>
         </div>
-        <p v-if="feedLoading" class="text-xs text-slate-400">Memuat…</p>
-        <p v-else-if="feedSorted.length === 0" class="text-xs text-slate-500">
+        <p v-if="feedLoading" class="text-xs text-bimbel-text-lo">Memuat…</p>
+        <p v-else-if="feedSorted.length === 0" class="text-xs text-bimbel-text-mid">
           Belum ada aktivitas 30 hari terakhir.
         </p>
         <ul v-else class="space-y-2">
@@ -224,16 +224,16 @@ const sectionIconCls =
               <NavIcon :name="feedStyle(ev.type).icon" :size="13" />
             </span>
             <div class="min-w-0 flex-1">
-              <div class="line-clamp-2 text-[13px] font-bold text-slate-900">
+              <div class="line-clamp-2 text-[13px] font-bold text-bimbel-text-hi">
                 {{ ev.title }}
               </div>
               <div
                 v-if="ev.subtitle"
-                class="line-clamp-3 text-[11.5px] text-slate-500"
+                class="line-clamp-3 text-[11.5px] text-bimbel-text-mid"
               >
                 {{ ev.subtitle }}
               </div>
-              <div class="mt-0.5 text-[9.5px] font-semibold text-slate-400">
+              <div class="mt-0.5 text-[9.5px] font-semibold text-bimbel-text-lo">
                 {{ feedTime(ev.occurred_at) }}
               </div>
             </div>
@@ -248,24 +248,24 @@ const sectionIconCls =
             <span :class="sectionIconCls">
               <NavIcon name="trending-up" :size="16" />
             </span>
-            <h3 class="text-sm font-bold text-slate-900 tracking-tight">
+            <h3 class="text-sm font-bold text-bimbel-text-hi tracking-tight">
               {{ t('tutoring.overview.progress') }}
             </h3>
           </div>
           <p
             v-if="data.progress.timeline.length === 0"
-            class="text-xs text-slate-500"
+            class="text-xs text-bimbel-text-mid"
           >
             {{ t('tutoring.overview.noScores') }}
           </p>
-          <ul v-else class="divide-y divide-slate-100">
+          <ul v-else class="divide-y divide-bimbel-border-soft">
             <li
               v-for="e in data.progress.timeline.slice(0, 5)"
               :key="e.assessment_id"
               class="flex items-center justify-between py-1.5 text-sm"
             >
-              <span class="text-slate-700">{{ e.title }}</span>
-              <span class="font-bold text-slate-900">
+              <span class="text-bimbel-text-mid">{{ e.title }}</span>
+              <span class="font-bold text-bimbel-text-hi">
                 {{ e.percentage == null ? '–' : Math.round(e.percentage) + '%' }}
               </span>
             </li>
@@ -278,30 +278,30 @@ const sectionIconCls =
             <span :class="sectionIconCls">
               <NavIcon name="wallet" :size="16" />
             </span>
-            <h3 class="text-sm font-bold text-slate-900 tracking-tight">
+            <h3 class="text-sm font-bold text-bimbel-text-hi tracking-tight">
               {{ t('tutoring.overview.bills') }}
             </h3>
           </div>
           <p
             v-if="unpaid(data.bills).length === 0"
-            class="text-xs text-slate-500"
+            class="text-xs text-bimbel-text-mid"
           >
             {{ t('tutoring.overview.noBills') }}
           </p>
-          <ul v-else class="divide-y divide-slate-100">
+          <ul v-else class="divide-y divide-bimbel-border-soft">
             <li
               v-for="b in unpaid(data.bills)"
               :key="b.id"
               class="flex items-center justify-between py-1.5 text-xs"
             >
-              <span class="text-slate-700">
+              <span class="text-bimbel-text-mid">
                 {{ b.source_label ?? t('tutoring.overview.billDefault') }}
                 <template v-if="b.due_date">
                   · {{ t('tutoring.overview.due') }}
                   {{ formatDateShort(b.due_date) }}
                 </template>
               </span>
-              <span class="font-bold text-slate-900">
+              <span class="font-bold text-bimbel-text-hi">
                 {{ formatRupiah(b.amount ?? 0) }}
               </span>
             </li>
@@ -310,41 +310,41 @@ const sectionIconCls =
           <!-- Rekening / QRIS / instruksi pembayaran -->
           <div
             v-if="paymentAccount && (paymentAccount.bank_account_number || paymentAccount.qris_image_url || paymentAccount.payment_instructions)"
-            class="mt-3 border-t border-slate-100 pt-3 space-y-2"
+            class="mt-3 border-t border-bimbel-border-soft pt-3 space-y-2"
           >
-            <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+            <div class="text-[10px] font-extrabold uppercase tracking-widest text-bimbel-text-mid">
               Cara Pembayaran
             </div>
             <div
               v-if="paymentAccount.bank_account_number"
-              class="rounded-lg bg-slate-50 p-2.5 text-xs text-slate-700"
+              class="rounded-lg bg-bimbel-bg p-2.5 text-xs text-bimbel-text-mid"
             >
-              <div class="font-bold text-slate-900">{{ paymentAccount.bank_name ?? '—' }}</div>
+              <div class="font-bold text-bimbel-text-hi">{{ paymentAccount.bank_name ?? '—' }}</div>
               <button
                 type="button"
-                class="font-mono mt-0.5 text-slate-700 hover:text-role-parent"
+                class="font-mono mt-0.5 text-bimbel-text-mid hover:text-bimbel-accent"
                 @click="copyText(paymentAccount.bank_account_number)"
               >
                 {{ paymentAccount.bank_account_number }} ⧉
               </button>
-              <div v-if="paymentAccount.bank_account_holder" class="text-slate-500 mt-0.5">
+              <div v-if="paymentAccount.bank_account_holder" class="text-bimbel-text-mid mt-0.5">
                 a.n. {{ paymentAccount.bank_account_holder }}
               </div>
             </div>
             <div
               v-if="paymentAccount.qris_image_url"
-              class="rounded-lg bg-slate-50 p-2.5 text-xs"
+              class="rounded-lg bg-bimbel-bg p-2.5 text-xs"
             >
-              <div class="font-bold text-slate-900 mb-1.5">QRIS</div>
+              <div class="font-bold text-bimbel-text-hi mb-1.5">QRIS</div>
               <img
                 :src="paymentAccount.qris_image_url"
                 alt="QRIS"
-                class="max-w-[180px] rounded border border-slate-200"
+                class="max-w-[180px] rounded border border-bimbel-border"
               />
             </div>
             <div
               v-if="paymentAccount.payment_instructions"
-              class="rounded-lg bg-slate-50 p-2.5 text-[11px] text-slate-600 whitespace-pre-line"
+              class="rounded-lg bg-bimbel-bg p-2.5 text-[11px] text-bimbel-text-mid whitespace-pre-line"
             >
               {{ paymentAccount.payment_instructions }}
             </div>
@@ -357,13 +357,13 @@ const sectionIconCls =
             <span :class="sectionIconCls">
               <NavIcon name="calendar" :size="16" />
             </span>
-            <h3 class="text-sm font-bold text-slate-900 tracking-tight">
+            <h3 class="text-sm font-bold text-bimbel-text-hi tracking-tight">
               {{ t('tutoring.overview.schedule') }}
             </h3>
           </div>
           <p
             v-if="data.upcomingSessions.length === 0"
-            class="text-xs text-slate-500"
+            class="text-xs text-bimbel-text-mid"
           >
             {{ t('tutoring.overview.noSchedule') }}
           </p>
@@ -375,10 +375,10 @@ const sectionIconCls =
             >
               <span class="mt-2 h-1.5 w-1.5 rounded-full bg-slate-400 flex-shrink-0" />
               <div class="min-w-0">
-                <div class="text-sm font-semibold text-slate-900">
+                <div class="text-sm font-semibold text-bimbel-text-hi">
                   {{ s.scheduled_at ? formatDateShort(s.scheduled_at) : '—' }}
                 </div>
-                <div class="text-xs text-slate-500 truncate">
+                <div class="text-xs text-bimbel-text-mid truncate">
                   {{
                     [
                       s.group?.program?.name,

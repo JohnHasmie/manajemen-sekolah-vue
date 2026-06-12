@@ -17,12 +17,12 @@ defineProps<{
     <div class="min-w-0">
       <p
         v-if="crumbs"
-        class="text-[10.5px] font-bold text-slate-400 uppercase tracking-widest"
+        class="text-[10.5px] font-bold text-bimbel-text-lo uppercase tracking-widest"
       >
         {{ crumbs }}
       </p>
       <div class="flex items-center gap-2.5 mt-1">
-        <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">
+        <h1 class="text-xl font-extrabold text-bimbel-text-hi tracking-tight">
           {{ title }}
         </h1>
         <TutoringStatusPill label="Bimbel" tone="tenant" />

@@ -359,7 +359,7 @@ const kpiCards = computed<KpiCard[]>(() => {
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-teacher text-[12px] font-bold hover:bg-white/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
         @click="router.push({ name: 'teacher.tutoring.session-create' })"
       >
         <NavIcon name="plus" :size="13" />
@@ -367,7 +367,7 @@ const kpiCards = computed<KpiCard[]>(() => {
       </button>
     </BrandPageHeader>
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
@@ -406,13 +406,13 @@ const kpiCards = computed<KpiCard[]>(() => {
           />
         </template>
         <template #segmented>
-          <div class="inline-flex p-1 bg-slate-50 border border-slate-200 rounded-xl">
+          <div class="inline-flex p-1 bg-bimbel-bg border border-bimbel-border rounded-xl">
             <button
               type="button"
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
               :class="view === 'list'
                 ? 'bg-role-teacher text-white'
-                : 'text-slate-500 hover:text-slate-900'"
+                : 'text-bimbel-text-mid hover:text-bimbel-text-hi'"
               @click="view = 'list'"
             >
               <NavIcon name="list" :size="14" />
@@ -423,7 +423,7 @@ const kpiCards = computed<KpiCard[]>(() => {
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
               :class="view === 'calendar'
                 ? 'bg-role-teacher text-white'
-                : 'text-slate-500 hover:text-slate-900'"
+                : 'text-bimbel-text-mid hover:text-bimbel-text-hi'"
               @click="view = 'calendar'"
             >
               <NavIcon name="calendar" :size="14" />
@@ -461,7 +461,7 @@ const kpiCards = computed<KpiCard[]>(() => {
                   :href="s.meeting_url"
                   target="_blank"
                   rel="noopener"
-                  class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-role-teacher px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
+                  class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-bimbel-accent px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
                   @click.stop
                 >
                   <NavIcon name="external-link" :size="11" />
@@ -476,22 +476,22 @@ const kpiCards = computed<KpiCard[]>(() => {
 
       <!-- Calendar view ───────────────────────────────────────── -->
       <div v-else>
-        <div class="bg-white border border-slate-100 rounded-3xl p-4">
+        <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-3xl p-4">
           <!-- header — < Month YYYY > -->
           <div class="flex items-center gap-2 mb-2">
             <button
               type="button"
-              class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+              class="p-1.5 rounded-lg text-bimbel-text-mid hover:bg-bimbel-border-soft"
               @click="prevMonth"
             >
               <NavIcon name="chevron-left" :size="18" />
             </button>
-            <div class="flex-1 text-center text-sm font-extrabold text-slate-900 tracking-tight">
+            <div class="flex-1 text-center text-sm font-extrabold text-bimbel-text-hi tracking-tight">
               {{ monthLabel(focusedMonth.y, focusedMonth.m) }}
             </div>
             <button
               type="button"
-              class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+              class="p-1.5 rounded-lg text-bimbel-text-mid hover:bg-bimbel-border-soft"
               @click="nextMonth"
             >
               <NavIcon name="chevron-right" :size="18" />
@@ -502,7 +502,7 @@ const kpiCards = computed<KpiCard[]>(() => {
             <div
               v-for="d in ['S', 'S', 'R', 'K', 'J', 'S', 'M']"
               :key="d + Math.random()"
-              class="text-center text-[10.5px] font-bold text-slate-500 tracking-widest py-1"
+              class="text-center text-[10.5px] font-bold text-bimbel-text-mid tracking-widest py-1"
             >
               {{ d }}
             </div>
@@ -520,10 +520,10 @@ const kpiCards = computed<KpiCard[]>(() => {
                 cell && isFocused(cell.date)
                   ? 'bg-role-teacher text-white'
                   : cell && isToday(cell.date)
-                    ? 'bg-status-info-soft text-role-teacher'
-                    : 'text-slate-900 hover:bg-slate-100',
+                    ? 'bg-status-info-soft text-bimbel-accent'
+                    : 'text-bimbel-text-hi hover:bg-bimbel-border-soft',
                 cell && !isFocused(cell.date) && (sessionsByDay.get(dayKey(cell.date))?.length ?? 0) > 0
-                  ? 'border border-slate-200'
+                  ? 'border border-bimbel-border'
                   : '',
               ]"
               @click="cell && (focusedDay = cell.date)"
@@ -537,7 +537,7 @@ const kpiCards = computed<KpiCard[]>(() => {
                   v-for="n in Math.min(sessionsByDay.get(dayKey(cell.date))?.length ?? 0, 3)"
                   :key="n"
                   class="w-1 h-1 rounded-full"
-                  :class="isFocused(cell.date) ? 'bg-white' : 'bg-role-teacher'"
+                  :class="isFocused(cell.date) ? 'bg-bimbel-panel' : 'bg-role-teacher'"
                 ></span>
               </span>
             </button>
@@ -571,7 +571,7 @@ const kpiCards = computed<KpiCard[]>(() => {
                   :href="s.meeting_url"
                   target="_blank"
                   rel="noopener"
-                  class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-role-teacher px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
+                  class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-bimbel-accent px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
                   @click.stop
                 >
                   <NavIcon name="external-link" :size="11" />
@@ -594,8 +594,8 @@ const kpiCards = computed<KpiCard[]>(() => {
         <li v-for="o in RANGE_OPTIONS" :key="o.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-teacher/5 text-role-teacher font-bold': range === o.key }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-role-teacher/5 text-bimbel-accent font-bold': range === o.key }"
             @click="pickRange(o.key)"
           >
             {{ o.label }}
@@ -613,8 +613,8 @@ const kpiCards = computed<KpiCard[]>(() => {
         <li v-for="o in STATUS_OPTIONS" :key="o.value">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-teacher/5 text-role-teacher font-bold': statusFilter === o.value }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-role-teacher/5 text-bimbel-accent font-bold': statusFilter === o.value }"
             @click="pickStatus(o.value)"
           >
             {{ o.label }}
@@ -632,8 +632,8 @@ const kpiCards = computed<KpiCard[]>(() => {
         <li v-for="o in groupOptions" :key="String(o.value)">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-teacher/5 text-role-teacher font-bold': groupId === o.value }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-role-teacher/5 text-bimbel-accent font-bold': groupId === o.value }"
             @click="pickGroup(o.value)"
           >
             {{ o.label }}

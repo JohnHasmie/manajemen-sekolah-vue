@@ -48,7 +48,7 @@ onMounted(load);
       :meta="`${assessment?.questions?.length ?? 0} ${t('tutoring.assessment.questions')}`"
     />
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 

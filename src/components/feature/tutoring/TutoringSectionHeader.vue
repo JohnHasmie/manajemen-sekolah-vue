@@ -14,11 +14,11 @@ defineEmits<{ (e: 'action'): void }>();
 
 <template>
   <div class="flex items-center justify-between pt-4 pb-2">
-    <h3 class="text-[13px] font-bold text-slate-900 tracking-tight">{{ title }}</h3>
+    <h3 class="text-[13px] font-bold text-bimbel-text-hi tracking-tight">{{ title }}</h3>
     <button
       v-if="actionLabel"
       type="button"
-      class="inline-flex items-center gap-1 text-xs font-bold text-role-admin px-2 py-1 rounded-lg hover:bg-slate-100"
+      class="inline-flex items-center gap-1 text-xs font-bold text-bimbel-accent px-2 py-1 rounded-lg hover:bg-bimbel-border-soft"
       @click="$emit('action')"
     >
       <NavIcon name="plus" :size="14" />

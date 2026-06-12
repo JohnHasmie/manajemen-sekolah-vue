@@ -138,7 +138,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
         @click="showInvite = true"
       >
         <NavIcon name="user-plus" :size="13" />
@@ -160,7 +160,7 @@ const kpiCards = computed<KpiCard[]>(() => [
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -201,8 +201,8 @@ const kpiCards = computed<KpiCard[]>(() => [
         <li v-for="o in STATUS_OPTIONS" :key="o.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': filter === o.key }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': filter === o.key }"
             @click="pickStatus(o.key)"
           >
             {{ o.label }}

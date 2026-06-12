@@ -31,6 +31,21 @@ const auth = useAuthStore();
 const route = useRoute();
 const { t } = useI18n();
 const color = useRoleColor(() => auth.activeRole);
+
+// Bimbel routes render on the dark navy surface (mirrors mobile).
+// Route-name driven so school pages keep the light chrome untouched;
+// the role class picks the tier accent (admin deep / tutor mid / wali
+// light navy) consumed by the `bimbel-*` tailwind tokens.
+const isBimbelRoute = computed(() =>
+  String(route.name ?? '').includes('tutoring'),
+);
+const bimbelRoleClass = computed(() =>
+  auth.activeRole === 'teacher'
+    ? 'bimbel-tutor'
+    : auth.activeRole === 'parent'
+      ? 'bimbel-wali'
+      : 'bimbel-admin',
+);
 const menu = useNavMenu();
 const notifications = useNotificationsStore();
 
@@ -383,7 +398,10 @@ const schoolInitial = computed(() => {
         </div>
       </header>
 
-      <main class="flex-1 overflow-y-auto no-scrollbar bg-slate-50">
+      <main
+        class="flex-1 overflow-y-auto no-scrollbar"
+        :class="isBimbelRoute ? ['bimbel-dark', bimbelRoleClass] : 'bg-slate-50'"
+      >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <RouterView />
         </div>

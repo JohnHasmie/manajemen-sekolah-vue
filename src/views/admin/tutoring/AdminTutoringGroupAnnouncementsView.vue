@@ -126,7 +126,7 @@ async function remove(a: TutoringGroupAnnouncement) {
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
         @click="openCompose"
       >
         <NavIcon name="plus" :size="13" />
@@ -146,7 +146,7 @@ async function remove(a: TutoringGroupAnnouncement) {
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -158,14 +158,14 @@ async function remove(a: TutoringGroupAnnouncement) {
       <article
         v-for="a in rows"
         :key="a.id"
-        class="bg-white border border-slate-100 rounded-2xl p-4"
+        class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4"
       >
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0">
-            <h3 class="text-sm font-extrabold text-slate-900 tracking-tight">
+            <h3 class="text-sm font-extrabold text-bimbel-text-hi tracking-tight">
               {{ a.title }}
             </h3>
-            <p class="text-[11px] text-slate-500 mt-0.5">
+            <p class="text-[11px] text-bimbel-text-mid mt-0.5">
               {{ a.group_name ?? '—' }}
               <template v-if="a.author_name">· oleh {{ a.author_name }}</template>
               <template v-if="a.created_at">· {{ formatDateShort(a.created_at) }}</template>
@@ -173,14 +173,14 @@ async function remove(a: TutoringGroupAnnouncement) {
           </div>
           <button
             type="button"
-            class="p-1.5 rounded-lg text-slate-400 hover:text-status-danger hover:bg-status-danger-soft"
+            class="p-1.5 rounded-lg text-bimbel-text-lo hover:text-bimbel-red hover:bg-bimbel-red-soft"
             title="Hapus"
             @click="remove(a)"
           >
             <NavIcon name="trash-2" :size="14" />
           </button>
         </div>
-        <p class="text-sm text-slate-700 mt-2 whitespace-pre-wrap">
+        <p class="text-sm text-bimbel-text-mid mt-2 whitespace-pre-wrap">
           {{ a.body }}
         </p>
       </article>
@@ -191,8 +191,8 @@ async function remove(a: TutoringGroupAnnouncement) {
         <li>
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': groupId === '' }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': groupId === '' }"
             @click="pickGroup('')"
           >
             Semua kelompok
@@ -201,8 +201,8 @@ async function remove(a: TutoringGroupAnnouncement) {
         <li v-for="g in groups" :key="g.id">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': groupId === g.id }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': groupId === g.id }"
             @click="pickGroup(g.id)"
           >
             {{ g.name }}
@@ -214,40 +214,40 @@ async function remove(a: TutoringGroupAnnouncement) {
     <Modal v-if="showCompose" title="Pengumuman Baru" @close="showCompose = false">
       <div class="space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Kelompok
           </span>
           <select
             v-model="fGroupId"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           >
             <option value="" disabled>Pilih kelompok</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Judul
           </span>
           <input
             v-model="fTitle"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Isi
           </span>
           <textarea
             v-model="fBody"
             rows="6"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin resize-none"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent resize-none"
           />
         </label>
         <div class="flex items-center gap-2 justify-end pt-2">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
             @click="showCompose = false"
           >
             {{ t('tutoring.common.close') }}
@@ -255,7 +255,7 @@ async function remove(a: TutoringGroupAnnouncement) {
           <button
             type="button"
             :disabled="saving"
-            class="rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="submitCompose"
           >
             {{ saving ? t('tutoring.common.saving') : 'Terbitkan' }}

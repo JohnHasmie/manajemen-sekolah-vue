@@ -56,12 +56,12 @@ const resolved = computed<{ label: string; tone: Tone }>(() => {
   <span
     class="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide"
     :class="{
-      'bg-status-success-soft text-status-success': resolved.tone === 'ok',
-      'bg-status-warning-soft text-status-warning': resolved.tone === 'warn',
-      'bg-status-danger-soft text-status-danger': resolved.tone === 'danger',
-      'bg-status-info-soft text-status-info': resolved.tone === 'info',
-      'bg-slate-100 text-slate-700': resolved.tone === 'neutral',
-      'bg-brand-50 text-brand-700': resolved.tone === 'tenant',
+      'bg-bimbel-green-dim text-bimbel-green': resolved.tone === 'ok',
+      'bg-bimbel-amber-dim text-bimbel-amber': resolved.tone === 'warn',
+      'bg-bimbel-red-dim text-bimbel-red': resolved.tone === 'danger',
+      'bg-bimbel-accent-dim text-bimbel-accent': resolved.tone === 'info',
+      'bg-bimbel-grey-dim text-bimbel-text-mid': resolved.tone === 'neutral',
+      'bg-bimbel-accent-dim text-bimbel-accent-soft': resolved.tone === 'tenant',
     }"
   >
     <span

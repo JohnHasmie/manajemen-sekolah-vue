@@ -164,7 +164,7 @@ function onSearch(v: string) {
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -174,11 +174,11 @@ function onSearch(v: string) {
     />
     <div
       v-else
-      class="bg-white border border-slate-100 rounded-2xl overflow-hidden"
+      class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl overflow-hidden"
     >
       <table class="w-full text-sm">
-        <thead class="text-[10.5px] uppercase tracking-wider text-slate-500">
-          <tr class="border-b border-slate-200">
+        <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
+          <tr class="border-b border-bimbel-border">
             <th class="text-left font-bold px-3 py-2.5">Siswa</th>
             <th class="text-left font-bold px-3 py-2.5">Program · Paket</th>
             <th class="text-left font-bold px-3 py-2.5">Mode</th>
@@ -191,25 +191,25 @@ function onSearch(v: string) {
           <tr
             v-for="r in rows"
             :key="r.student_id"
-            class="border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-pointer"
+            class="border-b border-bimbel-border-soft last:border-0 hover:bg-bimbel-bg cursor-pointer"
             @click="openDetail(r)"
           >
-            <td class="px-3 py-3 font-semibold text-slate-900">{{ r.student_name }}</td>
-            <td class="px-3 py-3 text-slate-700">
+            <td class="px-3 py-3 font-semibold text-bimbel-text-hi">{{ r.student_name }}</td>
+            <td class="px-3 py-3 text-bimbel-text-mid">
               {{ [r.program_name, r.package_name].filter(Boolean).join(' · ') || '—' }}
             </td>
             <td class="px-3 py-3"><TutoringStatusPill :label="modeLabel(r.billing_mode)" tone="neutral" /></td>
-            <td class="px-3 py-3 text-slate-700">
+            <td class="px-3 py-3 text-bimbel-text-mid">
               {{ r.attendance_rate == null ? '—' : r.attendance_rate + '%' }}
             </td>
             <td class="px-3 py-3 text-right">
-              <span v-if="r.unpaid_count === 0" class="text-slate-400">—</span>
-              <span v-else class="font-semibold text-status-danger">
+              <span v-if="r.unpaid_count === 0" class="text-bimbel-text-lo">—</span>
+              <span v-else class="font-semibold text-bimbel-red">
                 {{ formatRupiah(r.unpaid_total) }}
               </span>
             </td>
             <td class="px-3 py-3 text-right">
-              <NavIcon name="chevron-right" :size="14" class="text-slate-400" />
+              <NavIcon name="chevron-right" :size="14" class="text-bimbel-text-lo" />
             </td>
           </tr>
         </tbody>
@@ -225,8 +225,8 @@ function onSearch(v: string) {
         <li>
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': programId === '' }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': programId === '' }"
             @click="pickProgram('')"
           >
             {{ t('tutoring.students.filterAll') }}
@@ -235,8 +235,8 @@ function onSearch(v: string) {
         <li v-for="p in programs" :key="p.id">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': programId === p.id }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': programId === p.id }"
             @click="pickProgram(p.id)"
           >
             {{ p.name }}

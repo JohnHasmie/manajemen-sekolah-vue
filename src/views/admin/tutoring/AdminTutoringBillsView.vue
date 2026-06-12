@@ -132,7 +132,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
         @click="router.push({ name: 'admin.tutoring.billing-settings' })"
       >
         <NavIcon name="settings" :size="13" />
@@ -154,7 +154,7 @@ const kpiCards = computed<KpiCard[]>(() => [
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -164,11 +164,11 @@ const kpiCards = computed<KpiCard[]>(() => [
     />
     <div
       v-else
-      class="bg-white border border-slate-100 rounded-2xl overflow-hidden"
+      class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl overflow-hidden"
     >
       <table class="w-full text-sm">
-        <thead class="text-[10.5px] uppercase tracking-wider text-slate-500">
-          <tr class="border-b border-slate-200">
+        <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
+          <tr class="border-b border-bimbel-border">
             <th class="text-left font-bold px-3 py-2.5">Siswa</th>
             <th class="text-left font-bold px-3 py-2.5">Sumber</th>
             <th class="text-left font-bold px-3 py-2.5">Periode</th>
@@ -181,15 +181,15 @@ const kpiCards = computed<KpiCard[]>(() => [
           <tr
             v-for="b in bills"
             :key="b.id"
-            class="border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-pointer"
+            class="border-b border-bimbel-border-soft last:border-0 hover:bg-bimbel-bg cursor-pointer"
             @click="openBillId = b.id"
           >
-            <td class="px-3 py-3 font-semibold text-slate-900">{{ b.student_name ?? '—' }}</td>
-            <td class="px-3 py-3 text-slate-700">{{ b.source_label ?? '—' }}</td>
-            <td class="px-3 py-3 text-slate-700">
+            <td class="px-3 py-3 font-semibold text-bimbel-text-hi">{{ b.student_name ?? '—' }}</td>
+            <td class="px-3 py-3 text-bimbel-text-mid">{{ b.source_label ?? '—' }}</td>
+            <td class="px-3 py-3 text-bimbel-text-mid">
               {{ b.month ?? (b.due_date ? formatDateShort(b.due_date) : '—') }}
             </td>
-            <td class="px-3 py-3 text-right font-semibold text-slate-900">
+            <td class="px-3 py-3 text-right font-semibold text-bimbel-text-hi">
               {{ formatRupiah(b.amount ?? 0) }}
             </td>
             <td class="px-3 py-3">
@@ -198,7 +198,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             <td class="px-3 py-3 text-right">
               <button
                 type="button"
-                class="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-bold text-role-admin hover:bg-role-admin/5"
+                class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[11px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5"
                 @click.stop="openBillId = b.id"
               >
                 Detail
@@ -225,8 +225,8 @@ const kpiCards = computed<KpiCard[]>(() => [
         <li v-for="o in FILTER_OPTIONS" :key="o.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': filter === o.key }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': filter === o.key }"
             @click="pickFilter(o.key)"
           >
             {{ o.label }}

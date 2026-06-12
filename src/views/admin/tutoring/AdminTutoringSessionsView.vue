@@ -153,7 +153,7 @@ onMounted(load);
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
       >
         <NavIcon name="download" :size="13" />
         Export
@@ -173,13 +173,13 @@ onMounted(load);
         />
       </template>
       <template #segmented>
-        <div class="inline-flex p-1 bg-slate-50 border border-slate-200 rounded-xl">
+        <div class="inline-flex p-1 bg-bimbel-bg border border-bimbel-border rounded-xl">
           <button
             type="button"
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
             :class="view === 'list'
-              ? 'bg-role-admin text-white'
-              : 'text-slate-500 hover:text-slate-900'"
+              ? 'bg-bimbel-accent text-bimbel-ring'
+              : 'text-bimbel-text-mid hover:text-bimbel-text-hi'"
             @click="view = 'list'"
           >
             <NavIcon name="list" :size="14" />
@@ -189,8 +189,8 @@ onMounted(load);
             type="button"
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition"
             :class="view === 'calendar'
-              ? 'bg-role-admin text-white'
-              : 'text-slate-500 hover:text-slate-900'"
+              ? 'bg-bimbel-accent text-bimbel-ring'
+              : 'text-bimbel-text-mid hover:text-bimbel-text-hi'"
             @click="view = 'calendar'"
           >
             <NavIcon name="calendar" :size="14" />
@@ -200,7 +200,7 @@ onMounted(load);
       </template>
     </PageFilterToolbar>
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
@@ -219,11 +219,11 @@ onMounted(load);
     />
     <div
       v-else
-      class="bg-white border border-slate-100 rounded-2xl overflow-hidden"
+      class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl overflow-hidden"
     >
       <table class="w-full text-sm">
-        <thead class="text-[10.5px] uppercase tracking-wider text-slate-500">
-          <tr class="border-b border-slate-200">
+        <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
+          <tr class="border-b border-bimbel-border">
             <th class="text-left font-bold px-3 py-2.5">Waktu</th>
             <th class="text-left font-bold px-3 py-2.5">Kelompok</th>
             <th class="text-left font-bold px-3 py-2.5">Tutor</th>
@@ -236,18 +236,18 @@ onMounted(load);
           <tr
             v-for="s in filtered"
             :key="s.id"
-            class="border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-pointer"
+            class="border-b border-bimbel-border-soft last:border-0 hover:bg-bimbel-bg cursor-pointer"
             :class="s.status === 'CANCELLED' ? 'opacity-60' : ''"
             @click="openAttendance(s)"
           >
-            <td class="px-3 py-3 font-semibold text-slate-900">
+            <td class="px-3 py-3 font-semibold text-bimbel-text-hi">
               {{ s.scheduled_at ? formatDateShort(s.scheduled_at) : '—' }}
             </td>
-            <td class="px-3 py-3 text-slate-700">
+            <td class="px-3 py-3 text-bimbel-text-mid">
               {{ s.group?.name ?? s.group?.program?.name ?? '—' }}
             </td>
-            <td class="px-3 py-3 text-slate-700">{{ s.tutor?.name ?? '—' }}</td>
-            <td class="px-3 py-3 text-slate-700">
+            <td class="px-3 py-3 text-bimbel-text-mid">{{ s.tutor?.name ?? '—' }}</td>
+            <td class="px-3 py-3 text-bimbel-text-mid">
               {{
                 [s.topic, s.room ? t('tutoring.sessions.room') + ' ' + s.room : null]
                   .filter(Boolean)
@@ -260,7 +260,7 @@ onMounted(load);
             <td class="px-3 py-3 text-right">
               <button
                 type="button"
-                class="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-bold text-role-admin hover:bg-role-admin/5 disabled:opacity-40 disabled:cursor-not-allowed"
+                class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[11px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5 disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="s.status === 'CANCELLED'"
                 :title="s.status === 'CANCELLED' ? 'Sesi dibatalkan' : 'Lihat / catat kehadiran'"
                 @click.stop="openAttendance(s)"
@@ -283,8 +283,8 @@ onMounted(load);
         <li v-for="o in FILTER_OPTIONS" :key="o.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': filter === o.key }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': filter === o.key }"
             @click="pickFilter(o.key)"
           >
             {{ o.label }}

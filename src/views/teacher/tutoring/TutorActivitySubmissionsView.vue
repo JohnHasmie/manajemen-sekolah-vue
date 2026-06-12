@@ -117,7 +117,7 @@ async function save() {
       :meta="`${rows.length} siswa`"
     />
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -135,18 +135,18 @@ async function save() {
         <div
           v-for="r in rows"
           :key="r.studentId"
-          class="bg-white border border-slate-100 rounded-2xl p-3"
+          class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-3"
         >
           <div class="flex items-center gap-3 mb-2">
-            <span class="w-9 h-9 rounded-xl bg-role-teacher-soft text-role-teacher grid place-items-center flex-shrink-0">
+            <span class="w-9 h-9 rounded-xl bg-bimbel-accent-dim text-bimbel-accent grid place-items-center flex-shrink-0">
               <NavIcon name="user" :size="18" />
             </span>
-            <span class="flex-1 text-sm font-semibold text-slate-900">{{ r.name }}</span>
+            <span class="flex-1 text-sm font-semibold text-bimbel-text-hi">{{ r.name }}</span>
           </div>
           <div class="flex gap-2">
             <select
               v-model="r.status"
-              class="flex-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+              class="flex-1 rounded-lg border border-bimbel-border px-2.5 py-1.5 text-xs font-semibold text-bimbel-text-mid focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
             >
               <option v-for="o in STATUS_OPTIONS" :key="o.key" :value="o.key">
                 {{ o.label }}
@@ -157,14 +157,14 @@ async function save() {
               type="number"
               step="0.1"
               placeholder="Nilai"
-              class="w-24 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+              class="w-24 rounded-lg border border-bimbel-border px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
             />
           </div>
         </div>
       </div>
 
       <!-- sticky save bar -->
-      <div class="fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 p-4 z-10">
+      <div class="fixed bottom-0 inset-x-0 bg-bimbel-panel border-t border-bimbel-border p-4 z-10">
         <div class="mx-auto max-w-3xl">
           <button
             :disabled="saving"

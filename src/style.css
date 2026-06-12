@@ -136,3 +136,93 @@
     @apply mt-1 mb-0.5 text-[12.5px];
   }
 }
+
+/* ─── Bimbel dark surface ─────────────────────────────────────────────
+   Role tier variables consumed by the tailwind `bimbel-hero` /
+   `bimbel-accent` / `bimbel-accent-soft` colors. Apply ONE of the role
+   classes together with .bimbel-dark on the tutoring page root; the
+   shared tutoring components then paint the right tier with zero
+   per-role props. Mirrors mobile: admin #152A47/#60A5FA, tutor
+   #1E3A66/#38BDF8, wali #27508C/#60A5FA. */
+.bimbel-admin {
+  --bimbel-hero: #152a47;
+  --bimbel-accent: #60a5fa;
+  --bimbel-accent-soft: #bfdbfe;
+}
+.bimbel-tutor {
+  --bimbel-hero: #1e3a66;
+  --bimbel-accent: #38bdf8;
+  --bimbel-accent-soft: #7dd3fc;
+}
+.bimbel-wali {
+  --bimbel-hero: #27508c;
+  --bimbel-accent: #60a5fa;
+  --bimbel-accent-soft: #bfdbfe;
+}
+.bimbel-dark {
+  background-color: #0f1419;
+  color: #f1f5f9;
+}
+.bimbel-dark ::-webkit-scrollbar-thumb {
+  background: #2a3147;
+}
+
+/* Safety net: school-shared chrome (BrandPageHeader, KpiStripCards,
+   PageFilterToolbar, Modal, …) rendered INSIDE a bimbel page must read
+   dark without forking those components. Scoped descendant overrides —
+   only active under .bimbel-dark, so the school surface is untouched. */
+.bimbel-dark .bg-white {
+  background-color: #161b26 !important;
+}
+.bimbel-dark .bg-slate-50 {
+  background-color: #0f1419 !important;
+}
+.bimbel-dark .bg-slate-100 {
+  background-color: #1f2738 !important;
+}
+.bimbel-dark .border-slate-100 {
+  border-color: #1f2738 !important;
+}
+.bimbel-dark .border-slate-200,
+.bimbel-dark .ring-slate-200 {
+  border-color: #2a3147 !important;
+}
+.bimbel-dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.bimbel-dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1f2738 !important;
+}
+.bimbel-dark .text-slate-900,
+.bimbel-dark .text-slate-800 {
+  color: #f1f5f9 !important;
+}
+.bimbel-dark .text-slate-700,
+.bimbel-dark .text-slate-600,
+.bimbel-dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+.bimbel-dark .text-slate-400,
+.bimbel-dark .text-slate-300 {
+  color: #64748b !important;
+}
+.bimbel-dark .shadow-card,
+.bimbel-dark .shadow-md,
+.bimbel-dark .shadow-sm {
+  box-shadow: none !important;
+}
+.bimbel-dark .bg-role-admin-soft {
+  background-color: color-mix(in srgb, var(--bimbel-accent) 16%, transparent) !important;
+}
+.bimbel-dark .text-role-admin {
+  color: var(--bimbel-accent) !important;
+}
+.bimbel-dark input,
+.bimbel-dark select,
+.bimbel-dark textarea {
+  background-color: #0f1419;
+  border-color: #2a3147;
+  color: #f1f5f9;
+}
+.bimbel-dark input::placeholder,
+.bimbel-dark textarea::placeholder {
+  color: #64748b;
+}

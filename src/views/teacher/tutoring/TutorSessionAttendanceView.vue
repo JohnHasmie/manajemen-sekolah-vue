@@ -124,7 +124,7 @@ onMounted(load);
       :meta="`${Object.keys(names).length} siswa`"
     />
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -142,17 +142,17 @@ onMounted(load);
         <div
           v-for="(name, studentId) in names"
           :key="studentId"
-          class="flex items-center gap-3 bg-white border border-slate-100 rounded-2xl p-3"
+          class="flex items-center gap-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-3"
         >
           <span
-            class="w-9 h-9 rounded-xl bg-role-teacher-soft text-role-teacher grid place-items-center flex-shrink-0"
+            class="w-9 h-9 rounded-xl bg-bimbel-accent-dim text-bimbel-accent grid place-items-center flex-shrink-0"
           >
             <NavIcon name="user" :size="18" />
           </span>
-          <span class="flex-1 text-sm font-semibold text-slate-900">{{ name }}</span>
+          <span class="flex-1 text-sm font-semibold text-bimbel-text-hi">{{ name }}</span>
           <select
             v-model="chosen[studentId]"
-            class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="rounded-lg border border-bimbel-border px-2.5 py-1.5 text-xs font-semibold text-bimbel-text-mid focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
             <option v-for="k in statusKeys" :key="k" :value="k">{{ statusLabel(k) }}</option>
           </select>
@@ -160,17 +160,17 @@ onMounted(load);
       </div>
 
       <!-- Catatan Sesi — surfaces on the wali "Yang Baru" feed -->
-      <section class="bg-white border border-slate-100 rounded-2xl p-4">
+      <section class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4">
         <div class="flex items-center gap-2 mb-1.5">
-          <NavIcon name="edit" :size="14" class="text-role-teacher" />
-          <h3 class="text-sm font-extrabold tracking-tight text-slate-900">
+          <NavIcon name="edit" :size="14" class="text-bimbel-accent" />
+          <h3 class="text-sm font-extrabold tracking-tight text-bimbel-text-hi">
             Catatan Sesi
           </h3>
-          <span class="rounded bg-role-parent/12 px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-widest text-role-parent">
+          <span class="rounded bg-role-parent/12 px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-widest text-bimbel-accent">
             Terbaca Wali
           </span>
         </div>
-        <p class="text-[11px] text-slate-500 mb-2">
+        <p class="text-[11px] text-bimbel-text-mid mb-2">
           Opsional. Akan tampil di "Yang Baru" wali.
         </p>
         <textarea
@@ -178,7 +178,7 @@ onMounted(load);
           rows="3"
           maxlength="1000"
           placeholder='Mis. "Hari ini fokus latihan PG mat dasar. PR: 1.4 no 5–10."'
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
+          class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
         />
       </section>
 

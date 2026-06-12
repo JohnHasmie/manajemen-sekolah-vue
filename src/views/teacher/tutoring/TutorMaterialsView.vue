@@ -143,7 +143,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-teacher text-[12px] font-bold hover:bg-white/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
@@ -153,7 +153,7 @@ const kpiCards = computed<KpiCard[]>(() => [
 
     <KpiStripCards v-if="!loading" :cards="kpiCards" :lg-cols="3" />
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -185,7 +185,7 @@ const kpiCards = computed<KpiCard[]>(() => [
               :href="m.file_url"
               target="_blank"
               rel="noopener"
-              class="p-1.5 rounded-lg text-role-teacher hover:bg-status-info-soft"
+              class="p-1.5 rounded-lg text-bimbel-accent hover:bg-status-info-soft"
               title="Buka file"
               @click.stop
             >
@@ -193,7 +193,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             </a>
             <button
               type="button"
-              class="p-1.5 rounded-lg text-status-danger hover:bg-status-danger-soft"
+              class="p-1.5 rounded-lg text-bimbel-red hover:bg-bimbel-red-soft"
               title="Hapus"
               @click.stop="remove(m)"
             >
@@ -207,46 +207,46 @@ const kpiCards = computed<KpiCard[]>(() => [
     <Modal v-if="showCreate" title="Bahan Ajar Baru" @close="showCreate = false">
       <div class="space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Kelompok
           </span>
           <select
             v-model="fGroupId"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
             <option value="" disabled>Pilih kelompok</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Judul
           </span>
           <input
             v-model="fTitle"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
             placeholder="cth. Ringkasan Trigonometri"
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Deskripsi (opsional)
           </span>
           <textarea
             v-model="fDesc"
             rows="3"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             URL file / link (opsional)
           </span>
           <input
             v-model="fUrl"
             type="url"
             placeholder="https://drive.google.com/…"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           />
         </label>
         <label class="flex items-center gap-2">
@@ -255,7 +255,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             type="checkbox"
             class="h-4 w-4 accent-role-teacher"
           />
-          <span class="text-sm text-slate-700">
+          <span class="text-sm text-bimbel-text-mid">
             Terbitkan sekarang (mati = draft)
           </span>
         </label>
@@ -263,7 +263,7 @@ const kpiCards = computed<KpiCard[]>(() => [
         <div class="flex items-center gap-2 justify-end pt-2">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
             @click="showCreate = false"
           >
             {{ t('tutoring.common.close') }}

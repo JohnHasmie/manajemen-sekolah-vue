@@ -169,7 +169,7 @@ function basisLabel(b: string) {
 
     <KpiStripCards :cards="kpiCards" />
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -179,11 +179,11 @@ function basisLabel(b: string) {
     />
     <div
       v-else
-      class="bg-white border border-slate-100 rounded-2xl overflow-hidden"
+      class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl overflow-hidden"
     >
       <table class="w-full text-sm">
-        <thead class="text-[10.5px] uppercase tracking-wider text-slate-500">
-          <tr class="border-b border-slate-200">
+        <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
+          <tr class="border-b border-bimbel-border">
             <th class="text-left font-bold px-3 py-2.5">Tutor</th>
             <th class="text-left font-bold px-3 py-2.5">Basis</th>
             <th class="text-right font-bold px-3 py-2.5">Rate</th>
@@ -194,25 +194,25 @@ function basisLabel(b: string) {
           <tr
             v-for="r in rows"
             :key="r.userId"
-            class="border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-pointer"
+            class="border-b border-bimbel-border-soft last:border-0 hover:bg-bimbel-bg cursor-pointer"
             @click="openEdit(r)"
           >
             <td class="px-3 py-3">
-              <div class="font-semibold text-slate-900">{{ r.name }}</div>
-              <div class="text-xs text-slate-500">{{ r.email }}</div>
+              <div class="font-semibold text-bimbel-text-hi">{{ r.name }}</div>
+              <div class="text-xs text-bimbel-text-mid">{{ r.email }}</div>
             </td>
-            <td class="px-3 py-3 text-slate-700">{{ basisLabel(r.basis) }}</td>
+            <td class="px-3 py-3 text-bimbel-text-mid">{{ basisLabel(r.basis) }}</td>
             <td class="px-3 py-3 text-right">
               <span
                 v-if="!r.configured"
-                class="text-status-warning text-xs font-bold"
+                class="text-bimbel-amber text-xs font-bold"
               >Belum diset</span>
-              <span v-else class="font-semibold text-slate-900">
+              <span v-else class="font-semibold text-bimbel-text-hi">
                 {{ formatRupiah(r.amount) }}
               </span>
             </td>
             <td class="px-3 py-3 text-right">
-              <NavIcon name="chevron-right" :size="14" class="text-slate-400" />
+              <NavIcon name="chevron-right" :size="14" class="text-bimbel-text-lo" />
             </td>
           </tr>
         </tbody>
@@ -226,39 +226,39 @@ function basisLabel(b: string) {
     >
       <div class="space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Basis
           </span>
           <select
             v-model="editBasis"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           >
             <option value="PER_SESSION">Per Sesi</option>
             <option value="PER_HOUR">Per Jam</option>
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Rate (Rp)
           </span>
           <input
             v-model.number="editAmount"
             type="number"
             min="0"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
             placeholder="cth. 150000"
           />
-          <p class="text-xs text-slate-500 mt-1">
+          <p class="text-xs text-bimbel-text-mid mt-1">
             Honor {{ basisLabel(editBasis) }}, dalam rupiah.
           </p>
         </label>
 
         <!-- Rekening tujuan transfer honor — tampil di payslip PDF -->
-        <div class="border-t border-slate-100 pt-3 mt-2">
-          <div class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+        <div class="border-t border-bimbel-border-soft pt-3 mt-2">
+          <div class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider mb-1.5">
             Rekening Tutor (opsional)
           </div>
-          <p class="text-[11px] text-slate-500 mb-2">
+          <p class="text-[11px] text-bimbel-text-mid mb-2">
             Tampil di slip honor PDF sebagai tujuan transfer dari bimbel.
           </p>
           <div class="grid grid-cols-2 gap-2">
@@ -267,14 +267,14 @@ function basisLabel(b: string) {
               type="text"
               maxlength="80"
               placeholder="Nama Bank"
-              class="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              class="rounded-lg border border-bimbel-border px-3 py-2 text-sm"
             />
             <input
               v-model="editBankNumber"
               type="text"
               maxlength="40"
               placeholder="Nomor Rekening"
-              class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
+              class="rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono"
             />
           </div>
           <input
@@ -282,13 +282,13 @@ function basisLabel(b: string) {
             type="text"
             maxlength="120"
             placeholder="Atas Nama"
-            class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+            class="mt-2 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
           />
         </div>
         <div class="flex items-center gap-2 justify-end pt-2">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
             @click="editing = null"
           >
             {{ t('tutoring.common.close') }}
@@ -296,7 +296,7 @@ function basisLabel(b: string) {
           <button
             type="button"
             :disabled="saving"
-            class="rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="saveEdit"
           >
             {{ saving ? t('tutoring.common.saving') : 'Simpan' }}

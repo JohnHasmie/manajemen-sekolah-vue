@@ -126,14 +126,14 @@ const DAYS: { iso: number; label: string }[] = [
       meta="Senin & Rabu jam 16:00 selama 2 bulan → satu kali submit"
     />
 
-    <div class="space-y-3 bg-white border border-slate-100 rounded-2xl p-4 sm:p-5">
+    <div class="space-y-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5">
       <label class="block">
-        <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+        <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
           Kelompok
         </span>
         <select
           v-model="groupId"
-          class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+          class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
         >
           <option value="" disabled>Pilih kelompok</option>
           <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
@@ -141,7 +141,7 @@ const DAYS: { iso: number; label: string }[] = [
       </label>
 
       <div>
-        <p class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+        <p class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider mb-2">
           Hari
         </p>
         <div class="flex flex-wrap gap-1.5">
@@ -152,7 +152,7 @@ const DAYS: { iso: number; label: string }[] = [
             class="rounded-lg px-3.5 py-1.5 text-xs font-bold border transition"
             :class="weekdays.has(d.iso)
               ? 'bg-role-teacher border-role-teacher text-white'
-              : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'"
+              : 'bg-bimbel-panel border-bimbel-border text-bimbel-text-mid hover:border-bimbel-accent/50'"
             @click="toggleDay(d.iso)"
           >
             {{ d.label }}
@@ -162,46 +162,46 @@ const DAYS: { iso: number; label: string }[] = [
 
       <div class="grid grid-cols-2 gap-2">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Mulai
           </span>
           <input
             v-model="startDate"
             type="date"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Sampai
           </span>
           <input
             v-model="endDate"
             type="date"
             :min="startDate"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           />
         </label>
       </div>
 
       <div class="grid grid-cols-2 gap-2">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Jam
           </span>
           <input
             v-model="time"
             type="time"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Durasi
           </span>
           <select
             v-model.number="duration"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
             <option :value="60">60 menit</option>
             <option :value="90">90 menit</option>
@@ -212,40 +212,40 @@ const DAYS: { iso: number; label: string }[] = [
       </div>
 
       <label class="block">
-        <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+        <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
           Ruang (opsional)
         </span>
         <input
           v-model="room"
-          class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+          class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
         />
       </label>
 
       <label class="block">
-        <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+        <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
           Link meeting (opsional)
         </span>
         <input
           v-model="meetingUrl"
           type="url"
           placeholder="https://zoom.us/j/…"
-          class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+          class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
         />
       </label>
 
       <label class="block">
-        <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+        <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
           Topik (opsional)
         </span>
         <input
           v-model="topic"
-          class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+          class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
         />
       </label>
 
       <div
         v-if="result"
-        class="rounded-xl bg-status-success-soft border border-status-success/30 p-3 text-sm font-bold text-status-success flex items-center gap-2"
+        class="rounded-xl bg-bimbel-green-soft border border-status-success/30 p-3 text-sm font-bold text-bimbel-green flex items-center gap-2"
       >
         <NavIcon name="check-circle" :size="16" />
         {{ result.created }} sesi dibuat<span v-if="result.skipped > 0">, {{ result.skipped }} dilewati (sudah ada)</span>.
@@ -254,7 +254,7 @@ const DAYS: { iso: number; label: string }[] = [
       <div class="flex items-center gap-2 justify-end pt-2">
         <button
           type="button"
-          class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
           @click="router.back"
         >
           {{ t('tutoring.common.close') }}

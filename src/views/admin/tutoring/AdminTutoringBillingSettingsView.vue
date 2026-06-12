@@ -132,7 +132,7 @@ onMounted(load);
       :meta="t('tutoring.billing.hint')"
     />
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
@@ -160,11 +160,11 @@ onMounted(load);
           },
         ]"
         :key="cfg.t"
-        class="flex items-center justify-between gap-3 bg-white border border-slate-100 rounded-2xl px-4 py-3 mb-2 cursor-pointer"
+        class="flex items-center justify-between gap-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl px-4 py-3 mb-2 cursor-pointer"
       >
         <span class="min-w-0">
-          <span class="block text-sm font-semibold text-slate-900">{{ cfg.t }}</span>
-          <span class="block text-xs text-slate-500 mt-0.5">{{ cfg.s }}</span>
+          <span class="block text-sm font-semibold text-bimbel-text-hi">{{ cfg.t }}</span>
+          <span class="block text-xs text-bimbel-text-mid mt-0.5">{{ cfg.s }}</span>
         </span>
         <input
           :checked="cfg.v"
@@ -177,7 +177,7 @@ onMounted(load);
       <TutoringSectionHeader :title="t('tutoring.billing.defaultMode')" />
       <select
         v-model="defaultMode"
-        class="w-full rounded-lg border border-slate-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+        class="w-full rounded-lg border border-bimbel-border px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
       >
         <option :value="null">{{ t('tutoring.billing.none') }}</option>
         <option v-for="m in enabledModes" :key="m" :value="m">
@@ -187,39 +187,39 @@ onMounted(load);
 
       <!-- ── Rekening Bimbel ─────────────────────────────────────── -->
       <TutoringSectionHeader title="Rekening Bimbel" />
-      <div class="bg-white border border-slate-100 rounded-2xl p-4 space-y-3">
-        <p class="text-xs text-slate-500">
+      <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-3">
+        <p class="text-xs text-bimbel-text-mid">
           Ditampilkan ke wali di halaman detail tagihan sebagai tujuan transfer.
         </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="block">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Nama Bank</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama Bank</span>
             <input
               v-model="bankName"
               type="text"
               maxlength="80"
               placeholder="Mis. BCA, BRI, Mandiri"
-              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
             />
           </label>
           <label class="block">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Nomor Rekening</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nomor Rekening</span>
             <input
               v-model="bankAccountNumber"
               type="text"
               maxlength="40"
               placeholder="1234567890"
-              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
+              class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono"
             />
           </label>
           <label class="block sm:col-span-2">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Atas Nama</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">Atas Nama</span>
             <input
               v-model="bankAccountHolder"
               type="text"
               maxlength="120"
               placeholder="Nama pemilik rekening"
-              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
             />
           </label>
         </div>
@@ -227,20 +227,20 @@ onMounted(load);
 
       <!-- ── QRIS ─────────────────────────────────────────────────── -->
       <TutoringSectionHeader title="QRIS" />
-      <div class="bg-white border border-slate-100 rounded-2xl p-4 space-y-3">
-        <p class="text-xs text-slate-500">
+      <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-3">
+        <p class="text-xs text-bimbel-text-mid">
           Unggah gambar QRIS (PNG/JPG, maks 2MB). Wali bisa langsung scan dari detail tagihan.
         </p>
         <div class="flex items-start gap-4">
           <div
             v-if="qrisImageUrl"
-            class="h-32 w-32 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center shrink-0"
+            class="h-32 w-32 rounded-lg border border-bimbel-border bg-bimbel-bg overflow-hidden flex items-center justify-center shrink-0"
           >
             <img :src="qrisImageUrl" alt="QRIS" class="max-h-full max-w-full" />
           </div>
           <div
             v-else
-            class="h-32 w-32 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center text-slate-300 shrink-0"
+            class="h-32 w-32 rounded-lg border-2 border-dashed border-bimbel-border bg-bimbel-bg flex items-center justify-center text-bimbel-text-lo shrink-0"
           >
             <NavIcon name="image" :size="32" />
           </div>
@@ -248,27 +248,27 @@ onMounted(load);
             <input
               type="file"
               accept="image/png,image/jpeg"
-              class="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-role-admin/10 file:text-role-admin file:px-3 file:py-2 file:font-bold file:text-[11px] file:cursor-pointer"
+              class="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-bimbel-accent/10 file:text-bimbel-accent file:px-3 file:py-2 file:font-bold file:text-[11px] file:cursor-pointer"
               :disabled="qrisUploading"
               @change="onQrisChange"
             />
             <button
               v-if="qrisImageUrl"
               type="button"
-              class="text-[11px] font-bold text-status-danger hover:underline"
+              class="text-[11px] font-bold text-bimbel-red hover:underline"
               @click="qrisImageUrl = null"
             >
               Hapus QRIS
             </button>
-            <p v-if="qrisUploading" class="text-[11px] text-slate-400">Mengunggah…</p>
+            <p v-if="qrisUploading" class="text-[11px] text-bimbel-text-lo">Mengunggah…</p>
           </div>
         </div>
       </div>
 
       <!-- ── Instruksi Pembayaran ────────────────────────────────── -->
       <TutoringSectionHeader title="Instruksi Pembayaran" />
-      <div class="bg-white border border-slate-100 rounded-2xl p-4 space-y-2">
-        <p class="text-xs text-slate-500">
+      <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-2">
+        <p class="text-xs text-bimbel-text-mid">
           Bebas — mis. nomor e-wallet, cicilan, konfirmasi via WhatsApp.
         </p>
         <textarea
@@ -276,17 +276,17 @@ onMounted(load);
           rows="4"
           maxlength="2000"
           placeholder="Mis. Setelah transfer, kirim bukti ke 0812xxx via WhatsApp."
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm resize-none"
+          class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm resize-none"
         />
       </div>
 
       <!-- ── Payment Gateway (placeholder) ───────────────────────── -->
       <TutoringSectionHeader title="Payment Gateway" />
-      <div class="bg-white border border-slate-100 rounded-2xl p-4 space-y-3">
+      <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 space-y-3">
         <label class="flex items-center justify-between gap-3 cursor-pointer">
           <span class="min-w-0">
-            <span class="block text-sm font-semibold text-slate-900">Aktifkan payment gateway</span>
-            <span class="block text-xs text-slate-500 mt-0.5">
+            <span class="block text-sm font-semibold text-bimbel-text-hi">Aktifkan payment gateway</span>
+            <span class="block text-xs text-bimbel-text-mid mt-0.5">
               Integrasi Midtrans / Xendit. Kredensial dikonfigurasi via admin platform.
             </span>
           </span>
@@ -298,10 +298,10 @@ onMounted(load);
         </label>
         <div v-if="paymentGatewayEnabled" class="space-y-2">
           <label class="block">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Provider</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">Provider</span>
             <select
               v-model="paymentGatewayProvider"
-              class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
             >
               <option value="">— Pilih —</option>
               <option value="midtrans">Midtrans</option>
@@ -319,7 +319,7 @@ onMounted(load);
 
       <button
         :disabled="saving"
-        class="mt-4 w-full rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+        class="mt-4 w-full rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="save"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.common.save') }}

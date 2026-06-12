@@ -184,7 +184,7 @@ interface FeedStyle { icon: string; tone: string }
 function feedStyle(type: string): FeedStyle {
   switch (type) {
     case 'enrollment_new':
-      return { icon: 'user-plus', tone: 'text-role-admin bg-role-admin/12' };
+      return { icon: 'user-plus', tone: 'text-bimbel-accent bg-bimbel-accent/12' };
     case 'lead_new':
       return { icon: 'fire', tone: 'text-amber-600 bg-amber-50' };
     case 'lead_converted':
@@ -194,7 +194,7 @@ function feedStyle(type: string): FeedStyle {
     case 'bill_paid':
       return { icon: 'wallet', tone: 'text-emerald-600 bg-emerald-50' };
     default:
-      return { icon: 'circle', tone: 'text-slate-500 bg-slate-100' };
+      return { icon: 'circle', tone: 'text-bimbel-text-mid bg-bimbel-grey-dim' };
   }
 }
 
@@ -254,23 +254,23 @@ const quickActions = [
       live-dot
     />
 
-    <div v-if="loading" class="py-16 text-center text-slate-500">
+    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
     <template v-else-if="stats">
       <!-- ── 2. Today snapshot ─────────────────────────────────── -->
       <div
-        class="flex items-center gap-3 rounded-lg border border-role-admin/25 bg-gradient-to-r from-role-admin/8 to-white px-3 py-2.5"
+        class="flex items-center gap-3 rounded-lg border border-bimbel-accent/25 bg-gradient-to-r from-role-admin/8 to-white px-3 py-2.5"
       >
-        <NavIcon name="calendar" :size="16" class="text-role-admin" />
+        <NavIcon name="calendar" :size="16" class="text-bimbel-accent" />
         <div class="flex flex-wrap gap-x-4 gap-y-1">
           <div v-for="p in todayStrip" :key="p.label" class="flex items-center gap-1">
             <span
               class="text-sm font-extrabold tracking-tight"
-              :class="p.warn ? 'text-status-danger' : 'text-slate-900'"
+              :class="p.warn ? 'text-bimbel-red' : 'text-bimbel-text-hi'"
             >{{ p.value }}</span>
-            <span class="text-[11px] font-semibold text-slate-500">{{ p.label }}</span>
+            <span class="text-[11px] font-semibold text-bimbel-text-mid">{{ p.label }}</span>
           </div>
         </div>
       </div>
@@ -295,7 +295,7 @@ const quickActions = [
       <TutoringSectionHeader title="Aktivitas Terbaru" />
       <div
         v-if="feedLoading"
-        class="py-6 text-center text-xs text-slate-400"
+        class="py-6 text-center text-xs text-bimbel-text-lo"
       >
         Memuat…
       </div>
@@ -308,7 +308,7 @@ const quickActions = [
         <div
           v-for="(ev, i) in feed"
           :key="i"
-          class="flex gap-3 rounded-lg border border-slate-200 bg-white p-3"
+          class="flex gap-3 rounded-lg border border-bimbel-border bg-bimbel-panel p-3"
         >
           <div
             class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
@@ -317,17 +317,17 @@ const quickActions = [
             <NavIcon :name="feedStyle(ev.type).icon" :size="14" />
           </div>
           <div class="flex-1 min-w-0">
-            <div class="line-clamp-2 text-[13px] font-bold text-slate-900">
+            <div class="line-clamp-2 text-[13px] font-bold text-bimbel-text-hi">
               {{ ev.title }}
             </div>
             <div
               v-if="ev.subtitle"
-              class="line-clamp-2 text-[11.5px] text-slate-500"
+              class="line-clamp-2 text-[11.5px] text-bimbel-text-mid"
             >
               {{ ev.subtitle }}
             </div>
           </div>
-          <div class="shrink-0 self-start text-[10px] font-semibold text-slate-400">
+          <div class="shrink-0 self-start text-[10px] font-semibold text-bimbel-text-lo">
             {{ feedTime(ev.occurred_at) }}
           </div>
         </div>
@@ -375,8 +375,8 @@ const quickActions = [
         <li>
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': programId === '' }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': programId === '' }"
             @click="pickProgram('')"
           >
             {{ t('tutoring.students.filterAll') }}
@@ -385,8 +385,8 @@ const quickActions = [
         <li v-for="p in programs" :key="p.id">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': programId === p.id }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': programId === p.id }"
             @click="pickProgram(p.id)"
           >
             {{ p.name }}

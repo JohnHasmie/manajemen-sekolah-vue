@@ -27,14 +27,14 @@ withDefaults(
 
 <template>
   <div
-    class="flex items-center gap-3 bg-white border border-slate-100 rounded-3xl p-4"
+    class="flex items-center gap-3 bg-bimbel-panel border border-bimbel-border-soft rounded-3xl p-4"
   >
     <div
       class="w-10 h-10 rounded-xl grid place-items-center flex-shrink-0"
       :class="{
-        'bg-role-admin-soft text-role-admin': accent === 'admin',
-        'bg-role-teacher-soft text-role-teacher': accent === 'tutor',
-        'bg-role-parent-soft text-role-parent': accent === 'wali',
+        'bg-bimbel-accent-dim text-bimbel-accent': accent === 'admin',
+        'bg-bimbel-accent-dim text-bimbel-accent': accent === 'tutor',
+        'bg-bimbel-accent-dim text-bimbel-accent': accent === 'wali',
       }"
     >
       <NavIcon :name="icon" :size="20" />
@@ -42,24 +42,24 @@ withDefaults(
     <div class="min-w-0 flex-1">
       <p
         v-if="greet"
-        class="text-[10px] font-bold text-slate-400 tracking-widest uppercase"
+        class="text-[10px] font-bold text-bimbel-text-lo tracking-widest uppercase"
       >
         {{ greet }}
       </p>
-      <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+      <h2 class="text-lg sm:text-xl font-extrabold text-bimbel-text-hi tracking-tight">
         <slot>{{ title }}</slot>
         <span
           v-if="accentName"
           :class="{
-            'text-role-admin': accent === 'admin',
-            'text-role-teacher': accent === 'tutor',
-            'text-role-parent': accent === 'wali',
+            'text-bimbel-accent': accent === 'admin',
+            'text-bimbel-accent': accent === 'tutor',
+            'text-bimbel-accent': accent === 'wali',
           }"
         >
           {{ accentName }}
         </span>
       </h2>
-      <p v-if="subtitle" class="text-xs text-slate-500 mt-0.5">{{ subtitle }}</p>
+      <p v-if="subtitle" class="text-xs text-bimbel-text-mid mt-0.5">{{ subtitle }}</p>
     </div>
     <div v-if="$slots.trailing" class="flex-shrink-0">
       <slot name="trailing" />

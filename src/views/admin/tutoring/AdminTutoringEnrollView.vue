@@ -168,9 +168,9 @@ async function submit() {
 onMounted(load);
 
 const fieldLabel =
-  'text-[10.5px] font-bold text-slate-500 uppercase tracking-wider';
+  'text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider';
 const inputCls =
-  'mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin';
+  'mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent';
 </script>
 
 <template>
@@ -182,13 +182,13 @@ const inputCls =
       meta="Pilih paket → kelompok → siswa → mode billing → Simpan"
     />
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
     <div
       v-else
-      class="space-y-3 bg-white border border-slate-100 rounded-2xl p-4 sm:p-5"
+      class="space-y-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5"
     >
       <label class="block">
         <span :class="fieldLabel">{{ t('tutoring.enroll.package') }}</span>
@@ -236,14 +236,14 @@ const inputCls =
           <input
             v-model="voucherCode"
             placeholder="cth. UTBK20OFF"
-            class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            class="flex-1 rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
             :disabled="!!voucherPreview"
           />
           <button
             v-if="!voucherPreview"
             type="button"
             :disabled="voucherChecking"
-            class="rounded-lg bg-role-admin hover:bg-role-admin/90 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="applyVoucher"
           >
             {{ voucherChecking ? 'Cek…' : 'Apply' }}
@@ -251,7 +251,7 @@ const inputCls =
           <button
             v-else
             type="button"
-            class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            class="rounded-lg border border-bimbel-border px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
             @click="clearVoucher"
           >
             Hapus
@@ -259,13 +259,13 @@ const inputCls =
         </div>
         <p
           v-if="voucherErr"
-          class="text-xs text-status-danger mt-1"
+          class="text-xs text-bimbel-red mt-1"
         >
           {{ voucherErr }}
         </p>
         <p
           v-else-if="voucherPreview"
-          class="text-xs text-status-success mt-1 font-semibold"
+          class="text-xs text-bimbel-green mt-1 font-semibold"
         >
           ✓ Diskon −{{ voucherPreview.discount_amount.toLocaleString('id-ID') }}
           · Total bayar
@@ -285,7 +285,7 @@ const inputCls =
 
       <button
         :disabled="saving"
-        class="w-full rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+        class="w-full rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
         @click="submit"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.enroll.submit') }}

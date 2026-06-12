@@ -55,6 +55,33 @@ const config: Config = {
           info: '#06B6D4',
           'info-soft': '#CFFAFE',
         },
+        // Bimbel dark surface — mirrors the mobile AdminPalette /
+        // TutorPalette / ParentPalette exactly. `hero` / `accent` /
+        // `accent-soft` resolve through CSS variables set by the
+        // .bimbel-admin / .bimbel-tutor / .bimbel-wali wrapper classes
+        // (see style.css) so one component serves all three roles.
+        bimbel: {
+          bg: '#0F1419',
+          panel: '#161B26',
+          'panel-navy': '#14182A',
+          border: '#2A3147',
+          'border-soft': '#1F2738',
+          'text-hi': '#F1F5F9',
+          'text-mid': '#94A3B8',
+          'text-lo': '#64748B',
+          green: '#4ADE80',
+          amber: '#FBBF24',
+          red: '#F87171',
+          ring: '#0B1424',
+          hero: 'var(--bimbel-hero)',
+          accent: 'var(--bimbel-accent)',
+          'accent-soft': 'var(--bimbel-accent-soft)',
+          'accent-dim': 'color-mix(in srgb, var(--bimbel-accent) 16%, transparent)',
+          'green-dim': 'color-mix(in srgb, #4ADE80 16%, transparent)',
+          'amber-dim': 'color-mix(in srgb, #FBBF24 16%, transparent)',
+          'red-dim': 'color-mix(in srgb, #F87171 14%, transparent)',
+          'grey-dim': 'color-mix(in srgb, #64748B 20%, transparent)',
+        },
       },
       spacing: {
         // AppSpacing.xs/sm/md/lg/xl → tailwind tokens

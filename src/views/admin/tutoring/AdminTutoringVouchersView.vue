@@ -179,7 +179,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
@@ -189,7 +189,7 @@ const kpiCards = computed<KpiCard[]>(() => [
 
     <KpiStripCards :cards="kpiCards" />
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty
@@ -216,7 +216,7 @@ const kpiCards = computed<KpiCard[]>(() => [
           <span class="inline-flex items-center gap-1.5">
             <button
               type="button"
-              class="p-1.5 rounded-lg text-slate-500 hover:text-role-admin hover:bg-role-admin/5"
+              class="p-1.5 rounded-lg text-bimbel-text-mid hover:text-bimbel-accent hover:bg-bimbel-accent/5"
               title="Salin kode"
               @click.stop="copyCode(v.code)"
             >
@@ -225,7 +225,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             <button
               type="button"
               class="text-[10.5px] font-bold uppercase tracking-wider px-1.5 hover:underline"
-              :class="v.is_active ? 'text-status-warning' : 'text-status-success'"
+              :class="v.is_active ? 'text-bimbel-amber' : 'text-bimbel-green'"
               @click.stop="toggleActive(v)"
             >
               {{ v.is_active ? 'Nonaktif' : 'Aktif' }}
@@ -236,7 +236,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             />
             <button
               type="button"
-              class="p-1.5 rounded-lg text-slate-400 hover:text-status-danger hover:bg-status-danger-soft"
+              class="p-1.5 rounded-lg text-bimbel-text-lo hover:text-bimbel-red hover:bg-bimbel-red-soft"
               title="Hapus"
               @click.stop="remove(v)"
             >
@@ -250,33 +250,33 @@ const kpiCards = computed<KpiCard[]>(() => [
     <Modal v-if="showCreate" title="Voucher Baru" @close="showCreate = false">
       <div class="space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Kode
           </span>
           <input
             v-model="fCode"
             placeholder="UTBK20OFF"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           />
-          <p class="text-[11px] text-slate-500 mt-1">
+          <p class="text-[11px] text-bimbel-text-mid mt-1">
             3–40 karakter: A-Z, 0-9, "_" atau "-". Otomatis uppercase.
           </p>
         </label>
         <div class="grid grid-cols-2 gap-2">
           <label class="block">
-            <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
               Tipe
             </span>
             <select
               v-model="fType"
-              class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
             >
               <option value="PERCENTAGE">Persentase (%)</option>
               <option value="AMOUNT">Rupiah (Rp)</option>
             </select>
           </label>
           <label class="block">
-            <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
               Nilai
             </span>
             <input
@@ -284,12 +284,12 @@ const kpiCards = computed<KpiCard[]>(() => [
               type="number"
               :min="1"
               :max="fType === 'PERCENTAGE' ? 100 : undefined"
-              class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
             />
           </label>
         </div>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Maks. pakai (opsional)
           </span>
           <input
@@ -297,46 +297,46 @@ const kpiCards = computed<KpiCard[]>(() => [
             type="number"
             min="1"
             placeholder="cth. 100 — kosongkan untuk tak terbatas"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           />
         </label>
         <div class="grid grid-cols-2 gap-2">
           <label class="block">
-            <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
               Berlaku dari (opsional)
             </span>
             <input
               v-model="fValidFrom"
               type="date"
-              class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
             />
           </label>
           <label class="block">
-            <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
               Sampai (opsional)
             </span>
             <input
               v-model="fValidUntil"
               type="date"
-              class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+              class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
             />
           </label>
         </div>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Catatan (opsional)
           </span>
           <textarea
             v-model="fNotes"
             rows="2"
-            class="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin resize-none"
+            class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent resize-none"
           />
         </label>
 
         <div class="flex items-center gap-2 justify-end pt-2">
           <button
             type="button"
-            class="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            class="rounded-lg px-3 py-2 text-sm font-semibold text-bimbel-text-mid hover:bg-bimbel-border-soft"
             @click="showCreate = false"
           >
             {{ t('tutoring.common.close') }}
@@ -344,7 +344,7 @@ const kpiCards = computed<KpiCard[]>(() => [
           <button
             type="button"
             :disabled="saving"
-            class="rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="submit"
           >
             {{ saving ? t('tutoring.common.saving') : 'Simpan' }}

@@ -117,27 +117,27 @@ const monthOptions = computed(() => {
         :href="payslipUrl"
         target="_blank"
         rel="noopener"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-teacher text-[12px] font-bold hover:bg-white/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
       >
         Slip Honor (PDF)
       </a>
     </BrandPageHeader>
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
 
     <template v-else-if="summary">
       <KpiStripCards :cards="kpiCards" />
 
-      <div class="bg-white border border-slate-100 rounded-2xl p-4 sm:p-5">
+      <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider">
+          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Pilih bulan
           </span>
           <select
             v-model="month"
-            class="mt-1.5 w-full sm:w-64 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
+            class="mt-1.5 w-full sm:w-64 rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
             <option
               v-for="o in monthOptions"
@@ -151,16 +151,16 @@ const monthOptions = computed(() => {
 
         <div
           v-if="!summary.rate.configured"
-          class="mt-4 rounded-xl bg-status-warning-soft border border-status-warning/30 p-3 text-sm text-status-warning"
+          class="mt-4 rounded-xl bg-bimbel-amber-soft border border-status-warning/30 p-3 text-sm text-bimbel-amber"
         >
           Rate honor Anda belum diset oleh admin. Hubungi admin bimbel
           untuk konfirmasi tarif per-sesi / per-jam yang berlaku.
         </div>
 
-        <div v-else class="mt-4 text-sm text-slate-600 leading-relaxed">
+        <div v-else class="mt-4 text-sm text-bimbel-text-mid leading-relaxed">
           <p>
             Honor:
-            <span class="font-bold text-slate-900">
+            <span class="font-bold text-bimbel-text-hi">
               {{ formatRupiah(summary.rate.amount) }}
             </span>
             {{ basisLabel(summary.rate.basis) }}
@@ -173,7 +173,7 @@ const monthOptions = computed(() => {
           </p>
           <p
             v-if="summary.rate.note"
-            class="mt-2 text-xs text-slate-500"
+            class="mt-2 text-xs text-bimbel-text-mid"
           >
             Catatan admin: {{ summary.rate.note }}
           </p>

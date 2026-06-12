@@ -178,7 +178,7 @@ onMounted(load);
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-role-admin text-[12px] font-bold hover:bg-white/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
         @click="showForm = !showForm"
       >
         <NavIcon name="plus" :size="13" />
@@ -207,34 +207,34 @@ onMounted(load);
     <!-- Create form -->
     <section
       v-if="showForm"
-      class="space-y-2.5 bg-white border border-slate-100 rounded-2xl p-4"
+      class="space-y-2.5 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4"
     >
       <input
         v-model="form.name"
         :placeholder="t('tutoring.programs.namePh')"
-        class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+        class="w-full rounded-lg border border-bimbel-border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
       />
       <input
         v-model="form.target_education_level"
         :placeholder="t('tutoring.programs.levelPh')"
-        class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+        class="w-full rounded-lg border border-bimbel-border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
       />
       <textarea
         v-model="form.description"
         :placeholder="t('tutoring.programs.descPh')"
         rows="2"
-        class="w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-role-admin"
+        class="w-full rounded-lg border border-bimbel-border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
       />
       <button
         :disabled="saving"
-        class="rounded-lg bg-role-admin hover:bg-role-admin/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        class="rounded-lg bg-bimbel-accent hover:opacity-90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
         @click="create"
       >
         {{ saving ? t('tutoring.common.saving') : t('tutoring.common.save') }}
       </button>
     </section>
 
-    <div v-if="loading" class="py-12 text-center text-slate-500">
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
     </div>
     <TutoringEmpty v-else-if="error" :text="error" icon="alert-circle" />
@@ -263,7 +263,7 @@ onMounted(load);
         <template #trailing>
           <button
             type="button"
-            class="p-1.5 rounded-lg text-status-danger hover:bg-status-danger-soft"
+            class="p-1.5 rounded-lg text-bimbel-red hover:bg-bimbel-red-soft"
             :title="t('tutoring.programs.delete')"
             @click.stop="remove(p)"
           >
@@ -282,8 +282,8 @@ onMounted(load);
         <li v-for="o in FILTER_OPTIONS" :key="o.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
-            :class="{ 'bg-role-admin/5 text-role-admin font-bold': filter === o.key }"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
+            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': filter === o.key }"
             @click="pickFilter(o.key)"
           >
             {{ o.label }}

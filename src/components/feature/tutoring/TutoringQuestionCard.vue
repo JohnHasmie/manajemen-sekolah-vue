@@ -23,9 +23,9 @@ function asStr(v: unknown): string {
 
 <template>
   <article
-    class="bg-white border border-slate-100 rounded-2xl p-4 mb-2"
+    class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 mb-2"
   >
-    <p class="font-semibold text-slate-900 tracking-tight">
+    <p class="font-semibold text-bimbel-text-hi tracking-tight">
       {{ index }}. {{ asStr((q as Record<string, unknown>).question) }}
     </p>
     <ul class="mt-2 space-y-1">
@@ -33,20 +33,20 @@ function asStr(v: unknown): string {
         v-for="(o, oi) in asOptions(q as Record<string, unknown>)"
         :key="oi"
         class="text-sm"
-        :class="o.is_correct ? 'font-bold text-status-success' : 'text-slate-700'"
+        :class="o.is_correct ? 'font-bold text-bimbel-green' : 'text-bimbel-text-mid'"
       >
         {{ o.label }}. {{ o.text }}
       </li>
     </ul>
     <p
       v-if="(q as Record<string, unknown>).correct_answer"
-      class="mt-2 text-xs font-bold text-status-success"
+      class="mt-2 text-xs font-bold text-bimbel-green"
     >
       Jawaban: {{ asStr((q as Record<string, unknown>).correct_answer) }}
     </p>
     <p
       v-if="(q as Record<string, unknown>).explanation"
-      class="mt-1 text-xs text-slate-500"
+      class="mt-1 text-xs text-bimbel-text-mid"
     >
       Pembahasan: {{ asStr((q as Record<string, unknown>).explanation) }}
     </p>

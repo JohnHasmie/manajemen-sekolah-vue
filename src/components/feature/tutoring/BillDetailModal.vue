@@ -85,22 +85,22 @@ onMounted(load);
 
 <template>
   <Modal title="Detail Tagihan" size="lg" @close="emit('close')">
-    <div v-if="loading" class="py-10 text-center text-sm text-slate-400">
+    <div v-if="loading" class="py-10 text-center text-sm text-bimbel-text-lo">
       Memuat detail…
     </div>
 
     <template v-else-if="detail">
       <!-- Header summary -->
-      <section class="rounded-xl border border-slate-200 bg-slate-50 p-3 mb-4">
+      <section class="rounded-xl border border-bimbel-border bg-bimbel-bg p-3 mb-4">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0 flex-1">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">
               {{ detail.bill.source_label ?? 'Tagihan' }}
             </div>
-            <div class="text-base font-extrabold text-slate-900 mt-0.5 tracking-tight">
+            <div class="text-base font-extrabold text-bimbel-text-hi mt-0.5 tracking-tight">
               {{ detail.student?.name ?? detail.bill.student_name ?? '—' }}
             </div>
-            <div class="text-xs text-slate-500 mt-0.5">
+            <div class="text-xs text-bimbel-text-mid mt-0.5">
               {{ detail.bill.due_date
                 ? `Jatuh tempo ${formatDateShort(detail.bill.due_date)}`
                 : 'Tanpa jatuh tempo' }}
@@ -110,16 +110,16 @@ onMounted(load);
         </div>
         <div class="grid grid-cols-3 gap-2 mt-3 text-center">
           <div>
-            <div class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Total</div>
-            <div class="text-sm font-extrabold text-slate-900">{{ formatRupiah(detail.bill.amount ?? 0) }}</div>
+            <div class="text-[9px] font-bold uppercase tracking-wider text-bimbel-text-mid">Total</div>
+            <div class="text-sm font-extrabold text-bimbel-text-hi">{{ formatRupiah(detail.bill.amount ?? 0) }}</div>
           </div>
           <div>
-            <div class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Sudah bayar</div>
+            <div class="text-[9px] font-bold uppercase tracking-wider text-bimbel-text-mid">Sudah bayar</div>
             <div class="text-sm font-extrabold text-emerald-600">{{ formatRupiah(detail.paid_total) }}</div>
           </div>
           <div>
-            <div class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Sisa</div>
-            <div class="text-sm font-extrabold" :class="detail.outstanding > 0 ? 'text-status-danger' : 'text-slate-500'">
+            <div class="text-[9px] font-bold uppercase tracking-wider text-bimbel-text-mid">Sisa</div>
+            <div class="text-sm font-extrabold" :class="detail.outstanding > 0 ? 'text-bimbel-red' : 'text-bimbel-text-mid'">
               {{ formatRupiah(detail.outstanding) }}
             </div>
           </div>
@@ -128,31 +128,31 @@ onMounted(load);
 
       <!-- Payment history -->
       <section class="mb-4">
-        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">
+        <h4 class="text-xs font-extrabold uppercase tracking-wider text-bimbel-text-mid mb-2">
           Riwayat Pembayaran
         </h4>
-        <div v-if="detail.payments.length === 0" class="text-xs text-slate-400 py-2 text-center bg-slate-50 rounded-lg">
+        <div v-if="detail.payments.length === 0" class="text-xs text-bimbel-text-lo py-2 text-center bg-bimbel-bg rounded-lg">
           Belum ada pembayaran tercatat.
         </div>
         <ul v-else class="space-y-1.5">
           <li
             v-for="p in detail.payments"
             :key="p.id"
-            class="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
+            class="flex items-center gap-3 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2"
           >
             <span class="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-50 text-emerald-600 shrink-0">
               <NavIcon name="wallet" :size="13" />
             </span>
             <div class="min-w-0 flex-1">
-              <div class="text-sm font-bold text-slate-900">{{ formatRupiah(p.amount) }}</div>
-              <div class="text-[11px] text-slate-500 truncate">
+              <div class="text-sm font-bold text-bimbel-text-hi">{{ formatRupiah(p.amount) }}</div>
+              <div class="text-[11px] text-bimbel-text-mid truncate">
                 {{ [
                   p.payment_method,
                   p.payment_date ? formatDateShort(p.payment_date) : null,
                   p.status,
                 ].filter(Boolean).join(' · ') }}
               </div>
-              <div v-if="p.admin_notes" class="text-[11px] text-slate-400 truncate">
+              <div v-if="p.admin_notes" class="text-[11px] text-bimbel-text-lo truncate">
                 {{ p.admin_notes }}
               </div>
             </div>
@@ -161,7 +161,7 @@ onMounted(load);
               :href="p.proof_proxy_url || p.proof_url || '#'"
               target="_blank"
               rel="noopener"
-              class="rounded-md border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-slate-50"
+              class="rounded-md border border-bimbel-border px-2 py-1 text-[10px] font-bold text-bimbel-text-mid hover:bg-bimbel-bg"
             >
               Bukti
             </a>
@@ -171,28 +171,28 @@ onMounted(load);
 
       <!-- Payment account (admin reference) -->
       <section v-if="detail.payment_account" class="mb-4">
-        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2">
+        <h4 class="text-xs font-extrabold uppercase tracking-wider text-bimbel-text-mid mb-2">
           Rekening Bimbel
         </h4>
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+        <div class="rounded-lg border border-bimbel-border bg-bimbel-bg p-3 text-xs text-bimbel-text-mid">
           <template v-if="detail.payment_account.bank_name || detail.payment_account.bank_account_number">
-            <div class="font-bold text-slate-900">{{ detail.payment_account.bank_name ?? '—' }}</div>
+            <div class="font-bold text-bimbel-text-hi">{{ detail.payment_account.bank_name ?? '—' }}</div>
             <button
               type="button"
-              class="font-mono mt-0.5 text-slate-700 hover:text-role-admin"
+              class="font-mono mt-0.5 text-bimbel-text-mid hover:text-bimbel-accent"
               :title="'Salin: ' + (detail.payment_account.bank_account_number ?? '')"
               @click="copy(detail.payment_account.bank_account_number)"
             >
               {{ detail.payment_account.bank_account_number ?? '—' }}
             </button>
-            <div v-if="detail.payment_account.bank_account_holder" class="text-slate-500 mt-0.5">
+            <div v-if="detail.payment_account.bank_account_holder" class="text-bimbel-text-mid mt-0.5">
               a.n. {{ detail.payment_account.bank_account_holder }}
             </div>
           </template>
-          <p v-else class="text-slate-400 italic">
+          <p v-else class="text-bimbel-text-lo italic">
             Rekening belum dikonfigurasi. Buka Pengaturan Billing.
           </p>
-          <div v-if="detail.payment_account.payment_instructions" class="mt-2 text-[11px] text-slate-500 whitespace-pre-line">
+          <div v-if="detail.payment_account.payment_instructions" class="mt-2 text-[11px] text-bimbel-text-mid whitespace-pre-line">
             {{ detail.payment_account.payment_instructions }}
           </div>
         </div>
@@ -203,7 +203,7 @@ onMounted(load);
         <button
           v-if="!showMarkPaid"
           type="button"
-          class="w-full rounded-lg bg-role-admin px-3 py-2.5 text-sm font-bold text-white hover:bg-role-admin/90"
+          class="w-full rounded-lg bg-bimbel-accent px-3 py-2.5 text-sm font-bold text-white hover:opacity-90"
           @click="showMarkPaid = true"
         >
           Tandai Lunas
@@ -214,28 +214,28 @@ onMounted(load);
           </h4>
           <div class="grid grid-cols-2 gap-2">
             <label class="block">
-              <span class="text-[10px] font-bold text-slate-500 uppercase">Nominal</span>
+              <span class="text-[10px] font-bold text-bimbel-text-mid uppercase">Nominal</span>
               <input
                 v-model.number="markAmount"
                 type="number"
                 min="0"
-                class="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+                class="mt-0.5 w-full rounded-md border border-bimbel-border px-2 py-1.5 text-sm"
               />
             </label>
             <label class="block">
-              <span class="text-[10px] font-bold text-slate-500 uppercase">Tanggal</span>
+              <span class="text-[10px] font-bold text-bimbel-text-mid uppercase">Tanggal</span>
               <input
                 v-model="markDate"
                 type="date"
-                class="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+                class="mt-0.5 w-full rounded-md border border-bimbel-border px-2 py-1.5 text-sm"
               />
             </label>
           </div>
           <label class="block">
-            <span class="text-[10px] font-bold text-slate-500 uppercase">Metode</span>
+            <span class="text-[10px] font-bold text-bimbel-text-mid uppercase">Metode</span>
             <select
               v-model="markMethod"
-              class="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+              class="mt-0.5 w-full rounded-md border border-bimbel-border px-2 py-1.5 text-sm"
             >
               <option value="manual_transfer">Transfer manual</option>
               <option value="cash">Tunai</option>
@@ -244,19 +244,19 @@ onMounted(load);
             </select>
           </label>
           <label class="block">
-            <span class="text-[10px] font-bold text-slate-500 uppercase">Catatan</span>
+            <span class="text-[10px] font-bold text-bimbel-text-mid uppercase">Catatan</span>
             <input
               v-model="markNotes"
               type="text"
               maxlength="500"
               placeholder="Mis. transfer BCA 14:32, bukti via WA"
-              class="mt-0.5 w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+              class="mt-0.5 w-full rounded-md border border-bimbel-border px-2 py-1.5 text-sm"
             />
           </label>
           <div class="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
-              class="rounded-md px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100"
+              class="rounded-md px-3 py-1.5 text-xs font-bold text-bimbel-text-mid hover:bg-bimbel-border-soft"
               @click="showMarkPaid = false"
             >
               Batal

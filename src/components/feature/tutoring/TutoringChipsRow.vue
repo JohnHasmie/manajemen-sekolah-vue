@@ -20,8 +20,8 @@ defineEmits<{ (e: 'update:modelValue', v: T): void }>();
       class="rounded-lg px-2.5 py-1.5 text-xs font-semibold border transition"
       :class="
         o.value === modelValue
-          ? 'bg-role-admin border-role-admin text-white'
-          : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+          ? 'bg-bimbel-accent border-bimbel-accent text-bimbel-ring'
+          : 'bg-bimbel-panel border-bimbel-border text-bimbel-text-mid hover:border-bimbel-accent/50'
       "
       @click="$emit('update:modelValue', o.value)"
     >
