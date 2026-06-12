@@ -408,6 +408,10 @@ function clamp(n: number, lo: number, hi: number): number {
 function mergeWithDefaults(partial: Partial<DemoWizardPayload>): DemoWizardPayload {
   const d = defaultWizardPayload();
   return {
+    // tenant_type was added with the bimbel feature; a persisted payload
+    // from before that has no field, leaving the wizard with `undefined`
+    // and no way to fork the questions. Default to the sekolah path.
+    tenant_type: partial.tenant_type ?? d.tenant_type,
     school: {
       ...d.school,
       ...(partial.school ?? {}),
@@ -427,6 +431,18 @@ function mergeWithDefaults(partial: Partial<DemoWizardPayload>): DemoWizardPaylo
     schedule: { ...d.schedule, ...(partial.schedule ?? {}) },
     billing: { ...d.billing, ...(partial.billing ?? {}) },
     scenarios: { ...d.scenarios, ...(partial.scenarios ?? {}) },
+    // The bimbel slice was added later, so any older persisted payload
+    // (from server or localStorage) is missing it. Without this merge,
+    // `payload.bimbel` was `undefined`, and as soon as the user picked
+    // the bimbel tenant the wizard's first `p.bimbel.name` / `p.bimbel.city`
+    // read crashed with "Cannot read properties of undefined".
+    bimbel: {
+      ...d.bimbel,
+      ...(partial.bimbel ?? {}),
+      // Same null-coercion pattern as `school.name`: keep the default
+      // empty string if a restored payload has `name: null`.
+      name: partial.bimbel?.name ?? d.bimbel.name,
+    },
     requester: {
       ...d.requester,
       ...(partial.requester ?? {}),
