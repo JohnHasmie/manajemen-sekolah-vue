@@ -72,15 +72,29 @@ export const DemoService = {
     education_level?: string | null;
     limit?: number;
   }): Promise<SchoolSearchHit[]> {
-    const res = await api.get('/schools/search', {
-      params: {
-        q: args.q,
-        education_level: args.education_level ?? undefined,
-        limit: args.limit ?? 12,
-      },
-    });
-    const body = res.data?.data ?? res.data ?? {};
-    return Array.isArray(body.results) ? (body.results as SchoolSearchHit[]) : [];
+    // The conversational wizard runs BEFORE OAuth — `/api/schools/search`
+    // 401s for unauthenticated callers. `/api/demo/schools/search` is
+    // the same controller mounted publicly + IP-rate-limited for the
+    // pre-login wizard. Falls back to the auth'd alias for older
+    // backends that haven't deployed the public alias yet.
+    const params = {
+      q: args.q,
+      education_level: args.education_level ?? undefined,
+      limit: args.limit ?? 12,
+    };
+    try {
+      const res = await api.get('/demo/schools/search', { params });
+      const body = res.data?.data ?? res.data ?? {};
+      return Array.isArray(body.results) ? (body.results as SchoolSearchHit[]) : [];
+    } catch {
+      try {
+        const res = await api.get('/schools/search', { params });
+        const body = res.data?.data ?? res.data ?? {};
+        return Array.isArray(body.results) ? (body.results as SchoolSearchHit[]) : [];
+      } catch {
+        return [];
+      }
+    }
   },
 
   /**

@@ -208,6 +208,13 @@ export interface DemoRequesterPayload {
 }
 
 export interface DemoWizardPayload {
+  /**
+   * Tenant kind chosen on the conversational wizard's landing screen.
+   * The legacy sekolah flow keeps the same school/subjects/… slices;
+   * 'bimbel' uses the `bimbel` slice instead. Backend will fork on
+   * this flag (formal school vs tutoring center provisioning).
+   */
+  tenant_type: TenantType;
   school: DemoSchoolPayload;
   identity: DemoIdentityPayload;
   subjects: DemoSubjectsPayload;
@@ -218,9 +225,200 @@ export interface DemoWizardPayload {
   schedule: DemoSchedulePayload;
   billing: DemoBillingPayload;
   scenarios: DemoScenariosPayload;
+  /** Bimbel/tutoring center answer slice — used when tenant_type='bimbel'. */
+  bimbel: DemoBimbelPayload;
   /** Requester identity — submitted with the pending demo request. */
   requester: DemoRequesterPayload;
 }
+
+/* ─── Bimbel (tutoring center) payload ─── */
+
+/**
+ * Which tenant flavour the requester is signing up for. Picked on the
+ * tenant-choice landing screen before any wizard question is asked.
+ */
+export type TenantType = 'sekolah' | 'bimbel';
+
+/**
+ * Jenjang yang dibimbing oleh bimbel — beda dari sekolah formal,
+ * karena bimbel kerap targetkan SNBT, karyawan, atau audience umum.
+ */
+export type BimbelJenjang =
+  | 'SD'
+  | 'SMP'
+  | 'SMA'
+  | 'SNBT'
+  | 'KARYAWAN'
+  | 'UMUM';
+
+export type BimbelStudentScale = 'lt50' | '50_200' | '200_500' | 'gt500';
+export type BimbelTutorScale = '1_3' | '4_10' | '11_30' | 'gt30';
+
+/**
+ * Default billing mode for a tutoring center. Mirrors
+ * `tutoring_packages.billing_mode` so the backend seeder can seed
+ * packages with the matching mode out of the box.
+ */
+export type BimbelBillingMode = 'PER_SESSION' | 'PER_MONTH' | 'PACKAGE';
+
+/**
+ * Skenario seeding for the bimbel-tenant flow. Each key flips one
+ * Phase-aware seeder branch on the backend (sesi + kehadiran,
+ * honor, tagihan, voucher, leads, pengumuman, dst).
+ */
+export type BimbelScenarioKey =
+  | 'sesi_kehadiran'
+  | 'honor'
+  | 'tagihan'
+  | 'voucher'
+  | 'leads'
+  | 'pengumuman'
+  | 'aktivitas'
+  | 'rating';
+
+/**
+ * Picked location (Nominatim/Leaflet result) for the bimbel — set when
+ * the requester picks a point on the map picker. `has_office=false`
+ * means the lat/lng is the operator's current location, not a fixed
+ * office (mobile/online-first bimbel) — useful signal for the team
+ * during verification.
+ */
+export interface DemoBimbelLocation {
+  lat: number;
+  lng: number;
+  /** Full address from Nominatim reverse-geocode (best effort). */
+  address: string | null;
+  /** True when the bimbel has a fixed office at the picked point. */
+  has_office: boolean;
+}
+
+export interface DemoBimbelPayload {
+  /** Nama bimbel/lembaga (3-160). */
+  name: string;
+  /** Kota domisili lembaga. */
+  city: string | null;
+  /** Jenjang target — minimal 1. */
+  target_levels: BimbelJenjang[];
+  /** Estimasi skala siswa aktif. */
+  student_scale: BimbelStudentScale;
+  /** Program utama yang dijalankan — minimal 1 nama. */
+  programs: string[];
+  /** Estimasi skala tutor. */
+  tutor_scale: BimbelTutorScale;
+  /** Mode penagihan default untuk paket-paket yang dibuat seeder. */
+  billing_mode: BimbelBillingMode;
+  /**
+   * Optional map pin. Null when the requester skipped the picker.
+   * Used during demo-request verification to confirm the lembaga is
+   * located where claimed.
+   */
+  location: DemoBimbelLocation | null;
+  /** Skenario data dummy yang ingin dibangkitkan. Default-on semua. */
+  scenarios: BimbelScenarioKey[];
+}
+
+export const BIMBEL_SCENARIO_DEFINITIONS: ReadonlyArray<{
+  key: BimbelScenarioKey;
+  label: string;
+  description: string;
+  icon: string;
+}> = [
+  {
+    key: 'sesi_kehadiran',
+    label: 'Sesi & Kehadiran',
+    description:
+      'Sesi terjadwal 14 hari + 30 hari mundur, plus catatan kehadiran per siswa (Hadir/Terlambat/Sakit/Izin/Alfa).',
+    icon: 'calendar',
+  },
+  {
+    key: 'honor',
+    label: 'Honor Tutor',
+    description:
+      'Rate honor per-sesi / per-jam per tutor + rekening tujuan transfer. Halaman Honor & slip PDF langsung terisi.',
+    icon: 'wallet',
+  },
+  {
+    key: 'tagihan',
+    label: 'Tagihan',
+    description:
+      'Tagihan per siswa sesuai billing_mode (per sesi / per bulan / paket), separuh lunas + separuh menunggu verifikasi.',
+    icon: 'rocket',
+  },
+  {
+    key: 'voucher',
+    label: 'Voucher Promo',
+    description:
+      '4-6 voucher diskon (mix persentase + rupiah) dengan used_count & kedaluwarsa beragam.',
+    icon: 'star',
+  },
+  {
+    key: 'leads',
+    label: 'Lead / Calon Siswa',
+    description:
+      '8-12 lead calon siswa (TRIAL/CONVERTED/DROPPED) berbagai sumber: IG ads, referral, walk-in.',
+    icon: 'user-plus',
+  },
+  {
+    key: 'pengumuman',
+    label: 'Pengumuman Kelompok',
+    description:
+      'Pengumuman per kelompok dari tutor + pengumuman global admin (libur, rapat wali, jadwal try-out).',
+    icon: 'mail',
+  },
+  {
+    key: 'aktivitas',
+    label: 'Aktivitas & Tugas',
+    description:
+      'Tugas / quiz / proyek + submissions siswa — campuran graded / pending / late, mengisi halaman Aktivitas tutor.',
+    icon: 'check',
+  },
+  {
+    key: 'rating',
+    label: 'Rating Tutor',
+    description:
+      'Feedback siswa per sesi (rating 4-5) + komentar — mengisi summary Rating Tutor.',
+    icon: 'check',
+  },
+];
+
+export const BIMBEL_JENJANG_LABEL: Record<BimbelJenjang, string> = {
+  SD: 'SD',
+  SMP: 'SMP',
+  SMA: 'SMA / SMK',
+  SNBT: 'SNBT / UTBK',
+  KARYAWAN: 'Karyawan',
+  UMUM: 'Umum',
+};
+
+export const BIMBEL_STUDENT_SCALE_LABEL: Record<BimbelStudentScale, string> = {
+  lt50: '< 50 siswa',
+  '50_200': '50 – 200 siswa',
+  '200_500': '200 – 500 siswa',
+  gt500: '> 500 siswa',
+};
+
+export const BIMBEL_TUTOR_SCALE_LABEL: Record<BimbelTutorScale, string> = {
+  '1_3': '1 – 3 tutor',
+  '4_10': '4 – 10 tutor',
+  '11_30': '11 – 30 tutor',
+  gt30: '> 30 tutor',
+};
+
+export const BIMBEL_BILLING_MODE_LABEL: Record<BimbelBillingMode, string> = {
+  PER_SESSION: 'Per sesi',
+  PER_MONTH: 'Per bulan',
+  PACKAGE: 'Paket',
+};
+
+/**
+ * Default program names suggested in the bimbel chips-add input.
+ * User can untoggle / add custom.
+ */
+export const BIMBEL_DEFAULT_PROGRAMS: readonly string[] = [
+  'Reguler',
+  'Intensif',
+  'Tryout',
+] as const;
 
 export const SCENARIO_DEFINITIONS: ReadonlyArray<{
   key: DemoScenarioKey;
@@ -433,14 +631,23 @@ export interface SchoolSearchHit {
   kind: SearchKind;
   id: string | null;
   name: string;
-  /** Canonical column: schools.education_level / npsn_registry.education_level */
+  /**
+   * For tenants the canonical column is `schools.education_level`;
+   * for registry hits the upstream Dapodik mirror returns `jenjang`
+   * (still surfaced here for back-compat with older callers).
+   */
   education_level: string | null;
-  /** Canonical column: schools.city / npsn_registry.city */
+  jenjang?: string | null;
+  /** Tenant column. Registry hits use `kota` instead — both kept. */
   city: string | null;
-  /** npsn_registry.province (only present for `registry` hits). */
+  kota?: string | null;
+  /** Registry only — Dapodik returns `provinsi`; some older mappers
+   *  pass through as `province`. Read either side. */
   province?: string | null;
-  /** npsn_registry.address (only present for `registry` hits). */
+  provinsi?: string | null;
+  /** Registry-only address (Dapodik `alamat`). */
   address?: string | null;
+  alamat?: string | null;
   npsn: string | null;
   is_demo: boolean;
   demo_owner_user_id?: string | null;
@@ -579,12 +786,90 @@ export function validateRequester(
   return errors;
 }
 
+/* ─── Bimbel validation ─── */
+
+export type BimbelErrorKey =
+  | 'name'
+  | 'city'
+  | 'target_levels'
+  | 'student_scale'
+  | 'programs'
+  | 'tutor_scale'
+  | 'billing_mode';
+
+/**
+ * Client-side validation of the bimbel payload (required-fields only;
+ * scenarios are always optional). Returns a partial map of field →
+ * i18n key. Empty map = valid.
+ */
+export function validateBimbel(
+  b: DemoBimbelPayload,
+): Partial<Record<BimbelErrorKey, string>> {
+  const errors: Partial<Record<BimbelErrorKey, string>> = {};
+  const name = (b.name ?? '').trim();
+  const city = (b.city ?? '').trim();
+
+  if (name.length < 3 || name.length > 160) {
+    errors.name = 'registerDemo.bimbelErrName';
+  }
+  if (city.length < 2 || city.length > 80) {
+    errors.city = 'registerDemo.bimbelErrCity';
+  }
+  if (!Array.isArray(b.target_levels) || b.target_levels.length === 0) {
+    errors.target_levels = 'registerDemo.bimbelErrTargetLevels';
+  }
+  if (!b.student_scale) {
+    errors.student_scale = 'registerDemo.bimbelErrStudentScale';
+  }
+  const programs = (b.programs ?? []).map((p) => p.trim()).filter(Boolean);
+  if (programs.length === 0) {
+    errors.programs = 'registerDemo.bimbelErrPrograms';
+  }
+  if (!b.tutor_scale) {
+    errors.tutor_scale = 'registerDemo.bimbelErrTutorScale';
+  }
+  if (!b.billing_mode) {
+    errors.billing_mode = 'registerDemo.bimbelErrBillingMode';
+  }
+  return errors;
+}
+
 /* ─── Defaults ─── */
+
+export function defaultBimbelPayload(): DemoBimbelPayload {
+  return {
+    name: '',
+    city: null,
+    target_levels: ['SMA'],
+    student_scale: '50_200',
+    programs: [],
+    tutor_scale: '4_10',
+    billing_mode: 'PER_MONTH',
+    location: null,
+    // Default-on so a fresh bimbel demo is populated end-to-end. The
+    // user can untoggle any they don't want before submit.
+    scenarios: [
+      'sesi_kehadiran',
+      'honor',
+      'tagihan',
+      'voucher',
+      'leads',
+      'pengumuman',
+      'aktivitas',
+      'rating',
+    ],
+  };
+}
 
 export function defaultWizardPayload(): DemoWizardPayload {
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
   return {
+    // 'sekolah' is the back-compat default — preserves behaviour for any
+    // partially-completed wizard state persisted before tenant_type
+    // existed. The new flow forces a choice on the tenant-choice landing.
+    tenant_type: 'sekolah',
+    bimbel: defaultBimbelPayload(),
     school: {
       name: '',
       education_level: 'SMP',

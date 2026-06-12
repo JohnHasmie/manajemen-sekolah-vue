@@ -227,9 +227,30 @@ const routes: RouteRecordRaw[] = [
   // existing school relation. Treated like the login flow: routes
   // are gated by auth.step rather than by role. The view itself is
   // a full-page wizard with no AppShell chrome.
+  // /register-demo is now the tenant-choice landing (sekolah vs bimbel).
+  // The actual wizard moved to /register-demo/wizard. The legacy stepped
+  // layout stays under /register-demo/legacy for back-compat in case any
+  // existing link / sign-in resume target sends users there — guard
+  // logic below still routes auth.step='register_demo' to /register-demo
+  // (the landing), so a partially-completed sekolah wizard hand-off
+  // continues to work via the conversational shell.
   {
     path: '/register-demo',
     name: 'register-demo',
+    component: () =>
+      import('@/views/register-demo/RegisterDemoTenantChoiceView.vue'),
+    meta: { public: true, registerDemo: true },
+  },
+  {
+    path: '/register-demo/wizard',
+    name: 'register-demo-wizard',
+    component: () =>
+      import('@/views/register-demo/conversational/ConversationalWizard.vue'),
+    meta: { public: true, registerDemo: true },
+  },
+  {
+    path: '/register-demo/legacy',
+    name: 'register-demo-legacy',
     component: () => import('@/views/register-demo/RegisterDemoView.vue'),
     meta: { public: true, registerDemo: true },
   },

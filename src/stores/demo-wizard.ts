@@ -225,6 +225,30 @@ export const useDemoWizardStore = defineStore('demoWizard', {
       this._scheduleRemoteSave();
     },
 
+    /**
+     * Replace the whole working payload immutably. Used by the
+     * conversational wizard: every question hands back a fully-built
+     * next-payload via its `setValue(payload, draft)` predicate, and
+     * we drop it in wholesale rather than slicing it back per-key.
+     * Keeps Pinia subscriptions in one fire instead of N.
+     */
+    replacePayload(next: DemoWizardPayload): void {
+      this.payload = next;
+      this._persist();
+      this._scheduleRemoteSave();
+    },
+
+    /**
+     * Pick the tenant kind on the landing screen. Defaults to
+     * 'sekolah' for back-compat with persisted payloads from before
+     * tenant_type existed.
+     */
+    setTenantType(t: 'sekolah' | 'bimbel'): void {
+      this.payload = { ...this.payload, tenant_type: t };
+      this._persist();
+      this._scheduleRemoteSave();
+    },
+
     goTo(step: number): void {
       this.currentStep = clamp(step, 0, DEMO_STEPS.length - 1);
       this._persist();

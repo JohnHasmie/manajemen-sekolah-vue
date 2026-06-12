@@ -53,6 +53,27 @@ const MAIN_BASE_URL =
 const AI_BASE_URL =
   import.meta.env.VITE_AI_API_URL ?? 'http://localhost:8000/api';
 
+/**
+ * Endpoints that look across the WHOLE registry rather than a single
+ * tenant. Sending an X-Tenant-ID for these flags the request as
+ * tenant-scoped and the backend's EnsureSchoolContext middleware 403s
+ * any stale tenant id from a previous session — the wizard then can't
+ * find any schools. The interceptor below skips the headers for these
+ * paths so the registry search just works regardless of LS state.
+ *
+ * Match is on the URL we feed axios — both the relative form
+ * (`/demo/schools/search`) and the absolute form land here.
+ */
+const TENANTLESS_PATTERNS: readonly RegExp[] = [
+  /\/schools\/search(\?|$)/,
+  /\/demo\/schools\/search(\?|$)/,
+  /\/npsn-lookup(\?|$)/,
+];
+function isTenantless(url?: string): boolean {
+  if (!url) return false;
+  return TENANTLESS_PATTERNS.some((re) => re.test(url));
+}
+
 function buildClient(
   baseURL: string,
   // Whether to auto-inject the selected `academic_year_id` on year-scoped
@@ -88,7 +109,7 @@ function buildClient(
     // public endpoint hit on the login page before sign-in). Only the
     // former should clear state + show the "session expired" toast.
     (config as AuthAwareRequestConfig).__hadAuthToken = Boolean(token);
-    if (schoolId) {
+    if (schoolId && !isTenantless(config.url)) {
       // Send BOTH the new X-Tenant-ID (preferred by the backend's
       // EnsureSchoolContext since Phase 0) and the legacy X-School-ID
       // alias, same value — the `schools` table hosts both formal
