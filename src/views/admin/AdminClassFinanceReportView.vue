@@ -30,7 +30,6 @@ import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
-import Toast from '@/components/ui/Toast.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -44,7 +43,8 @@ const students = ref<Student[]>([]);
 const bills = ref<Bill[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
+// Which student's per-bill detail is expanded inline (null = none).
+const expandedStudentId = ref<string | null>(null);
 
 async function reload() {
   if (!classId.value) {
@@ -244,15 +244,28 @@ function progressBarCls(bucket: StudentBillSummary['bucket']): string {
   return 'bg-red-500';
 }
 
-function openStudent(_s: StudentBillSummary) {
-  // The shared bill-group detail page is keyed by payment_type×class, not
-  // student. Without a per-student-bill drill route on the admin side, we
-  // surface a toast pointing back to the Tagihan tab for now.
-  toast.value = {
-    message:
-      'Tap salah satu tagihan dari tab Tagihan untuk melihat detail per siswa.',
-    tone: 'success',
-  };
+function openStudent(s: StudentBillSummary) {
+  // Toggle an inline per-student bill detail. This view already aggregates
+  // each student's bills (StudentBillSummary.bills), so we expand them in
+  // place — there's no per-student drill route on the admin side, and the
+  // old behaviour just showed a toast telling admins to go to the Tagihan
+  // tab, which is what the bug report was about.
+  expandedStudentId.value =
+    expandedStudentId.value === s.student.id ? null : s.student.id;
+}
+
+/** Status chip label + colour for a single bill in the expanded detail. */
+function billStatusChip(b: Bill): { label: string; cls: string } {
+  if (b.status === 'paid') {
+    return { label: 'LUNAS', cls: 'text-emerald-600' };
+  }
+  if (b.status === 'overdue' || b.is_overdue) {
+    return { label: 'TERLAMBAT', cls: 'text-red-600' };
+  }
+  if (b.latest_payment?.amount) {
+    return { label: 'SEBAGIAN', cls: 'text-amber-600' };
+  }
+  return { label: 'BELUM', cls: 'text-slate-500' };
 }
 
 function goBack() {
@@ -318,60 +331,105 @@ function goBack() {
     >
       <template #default>
         <section class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-          <article
+          <div
             v-for="(s, idx) in filtered"
             :key="s.student.id"
-            class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
             :class="idx > 0 ? 'border-t border-slate-100' : ''"
-            @click="openStudent(s)"
           >
-            <div class="w-10 h-10 rounded-full bg-role-admin/10 text-role-admin grid place-items-center flex-shrink-0 text-[12px] font-black">
-              {{ (s.student.name ?? '?').slice(0, 1).toUpperCase() }}
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <p class="text-[13.5px] font-bold text-slate-900 truncate">
-                  {{ s.student.name }}
+            <article
+              class="px-4 py-3 flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors"
+              @click="openStudent(s)"
+            >
+              <div class="w-10 h-10 rounded-full bg-role-admin/10 text-role-admin grid place-items-center flex-shrink-0 text-[12px] font-black">
+                {{ (s.student.name ?? '?').slice(0, 1).toUpperCase() }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <p class="text-[13.5px] font-bold text-slate-900 truncate">
+                    {{ s.student.name }}
+                  </p>
+                  <span
+                    class="px-2 py-0.5 rounded-md text-[9px] font-black tracking-widest"
+                    :class="bucketBadgeCls(s.bucket)"
+                  >
+                    {{ bucketLabel(s.bucket) }}
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5">
+                  {{ s.student.student_number || '—' }}
+                  · {{ s.paid_count }}/{{ s.total_count }} tagihan lunas
                 </p>
-                <span
-                  class="px-2 py-0.5 rounded-md text-[9px] font-black tracking-widest"
-                  :class="bucketBadgeCls(s.bucket)"
+                <!-- Progress bar -->
+                <div class="mt-2 h-1.5 rounded-full overflow-hidden bg-slate-100 max-w-xs">
+                  <div
+                    class="h-full transition-all"
+                    :class="progressBarCls(s.bucket)"
+                    :style="{ width: `${s.paid_pct}%` }"
+                  />
+                </div>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <p class="text-[12.5px] font-black text-slate-900 tabular-nums">
+                  {{ fmtIDR(s.outstanding_amount) }}
+                </p>
+                <p class="text-[10px] text-slate-500 tabular-nums">
+                  outstanding
+                </p>
+              </div>
+              <NavIcon
+                name="chevron-right"
+                :size="14"
+                class="text-slate-300 ml-1 transition-transform"
+                :class="expandedStudentId === s.student.id ? 'rotate-90' : ''"
+              />
+            </article>
+
+            <!-- Inline per-student bill detail (toggled by the row click) -->
+            <div
+              v-if="expandedStudentId === s.student.id"
+              class="px-4 pb-3 -mt-1"
+            >
+              <p
+                v-if="s.bills.length === 0"
+                class="text-[11.5px] text-slate-400 py-2"
+              >
+                Belum ada tagihan untuk siswa ini.
+              </p>
+              <ul
+                v-else
+                class="rounded-xl border border-slate-100 overflow-hidden divide-y divide-slate-100"
+              >
+                <li
+                  v-for="b in s.bills"
+                  :key="b.id"
+                  class="px-3 py-2 flex items-center justify-between gap-3 bg-slate-50/60"
                 >
-                  {{ bucketLabel(s.bucket) }}
-                </span>
-              </div>
-              <p class="text-[11px] text-slate-500 mt-0.5">
-                {{ s.student.student_number || '—' }}
-                · {{ s.paid_count }}/{{ s.total_count }} tagihan lunas
-              </p>
-              <!-- Progress bar -->
-              <div class="mt-2 h-1.5 rounded-full overflow-hidden bg-slate-100 max-w-xs">
-                <div
-                  class="h-full transition-all"
-                  :class="progressBarCls(s.bucket)"
-                  :style="{ width: `${s.paid_pct}%` }"
-                />
-              </div>
+                  <div class="min-w-0">
+                    <p class="text-[12px] font-semibold text-slate-800 truncate">
+                      {{ b.title }}
+                    </p>
+                    <p
+                      v-if="b.is_overdue"
+                      class="text-[10px] font-bold text-red-500"
+                    >
+                      Terlambat {{ b.overdue_days }} hari
+                    </p>
+                  </div>
+                  <div class="text-right flex-shrink-0">
+                    <p class="text-[12px] font-black text-slate-900 tabular-nums">
+                      {{ fmtIDR(b.amount) }}
+                    </p>
+                    <span
+                      class="text-[9px] font-black tracking-widest"
+                      :class="billStatusChip(b).cls"
+                    >{{ billStatusChip(b).label }}</span>
+                  </div>
+                </li>
+              </ul>
             </div>
-            <div class="text-right flex-shrink-0">
-              <p class="text-[12.5px] font-black text-slate-900 tabular-nums">
-                {{ fmtIDR(s.outstanding_amount) }}
-              </p>
-              <p class="text-[10px] text-slate-500 tabular-nums">
-                outstanding
-              </p>
-            </div>
-            <NavIcon name="chevron-right" :size="14" class="text-slate-300 ml-1" />
-          </article>
+          </div>
         </section>
       </template>
     </AsyncView>
-
-    <Toast
-      v-if="toast"
-      :message="toast.message"
-      :tone="toast.tone"
-      @close="toast = null"
-    />
   </div>
 </template>

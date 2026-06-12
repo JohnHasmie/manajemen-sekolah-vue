@@ -26,6 +26,7 @@ import { ClassroomService } from '@/services/classrooms.service';
 import type { DayKey, ScheduleSession, SessionSummary } from '@/types/schedule';
 import { DAY_LABELS, DAY_ORDER, sessionSummaryKey } from '@/types/schedule';
 import { semesterLabel } from '@/lib/labels';
+import { localISODate } from '@/lib/format';
 import type { Classroom } from '@/types/entities';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
@@ -500,7 +501,10 @@ function gotoAttendance(target?: ScheduleSession) {
       from: 'quick-action',
       class_id: s.class_id,
       subject_id: s.subject_id,
-      date: new Date().toISOString().slice(0, 10),
+      // Local (WIB) calendar date — NOT UTC. `toISOString()` would log
+      // presensi under yesterday for any teacher taking attendance
+      // before 07:00 WIB. See `localISODate` for the full rationale.
+      date: localISODate(),
     },
   });
   detail.value = null;

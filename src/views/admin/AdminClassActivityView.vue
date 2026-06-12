@@ -193,9 +193,9 @@ const kpiCards = computed<KpiCard[]>(() => {
 const typeTabs = computed<{ key: ActivityType | 'all'; label: string }[]>(() => [
   { key: 'all', label: $t('admin.classActivity.typeAll') },
   { key: 'tugas', label: $t('admin.classActivity.typeTask') },
-  { key: 'pr', label: $t('admin.classActivity.typePR') },
-  { key: 'ulangan', label: $t('admin.classActivity.typeQuiz') },
-  { key: 'lainnya', label: $t('admin.classActivity.typeOther') },
+  { key: 'aktivitas', label: $t('admin.classActivity.typeActivity') },
+  { key: 'ujian', label: $t('admin.classActivity.typeExam') },
+  { key: 'catatan', label: $t('admin.classActivity.typeNote') },
 ]);
 
 // Local labels so the period chips track the active locale; the static

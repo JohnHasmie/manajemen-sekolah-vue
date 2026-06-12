@@ -34,6 +34,30 @@ const emit = defineEmits<{
   save: [payload: Record<string, unknown>];
 }>();
 
+/**
+ * Fold a stored gender value down to the `L` / `P` codes the dropdown
+ * offers. The deployed teacher records mostly store gender as the English
+ * labels `male` / `female` (left over from the rename migration), but the
+ * <select> only has L/P options — so a male/female value would render the
+ * field blank and (before the backend `in:L,P` fix) get re-sent verbatim,
+ * tripping a 422 on edit guru. Normalising here makes the field pre-fill
+ * correctly and always submit a valid code. Unknown values fall back to ''.
+ */
+function normalizeGender(g: string | null | undefined): string {
+  switch ((g ?? '').toLowerCase()) {
+    case 'male':
+    case 'm':
+    case 'l':
+      return 'L';
+    case 'female':
+    case 'f':
+    case 'p':
+      return 'P';
+    default:
+      return '';
+  }
+}
+
 const form = reactive({
   name: props.teacher?.name ?? '',
   email: props.teacher?.email ?? '',
@@ -41,7 +65,7 @@ const form = reactive({
   employee_number: props.teacher?.employee_number ?? '',
   phone_number: props.teacher?.phone_number ?? '',
   address: props.teacher?.address ?? '',
-  gender: props.teacher?.gender ?? '',
+  gender: normalizeGender(props.teacher?.gender),
   employment_status: props.teacher?.employment_status ?? '',
   homeroom_class_id: props.teacher?.homeroom_class_id ?? '',
   subject_ids: props.teacher?.subject_ids ? [...props.teacher.subject_ids] : ([] as string[]),

@@ -143,18 +143,19 @@ function fmtDeadlineShort(iso?: string | null): string {
   return `${d.getDate()} ${SHORT_MONTHS.value[d.getMonth()]}`;
 }
 
-// `kind` = mobile-app `jenis`. Returns 'tugas' for assignment-like
-// activities (assignment/homework/test + legacy raws like 'tugas'/
-// 'pr'/'ulangan') and 'materi' for everything else. Matches the
-// mobile filter semantics so a "Materi" filter shows just material
+// `kind` = mobile-app `jenis`. Returns 'tugas' for the submission-
+// trackable types (tugas / ujian — plus legacy raws like 'pr' /
+// 'ulangan' / 'assignment' / 'test' that normalize onto them) and
+// 'materi' for everything else (aktivitas / catatan / materi). Matches
+// the mobile filter semantics so a "Materi" filter shows just material
 // rows.
 function parentKind(a: ClassActivity): 'tugas' | 'materi' {
   const raw = (a.raw_type ?? '').toLowerCase().trim();
   if (raw === 'materi' || raw === 'material' || raw === 'info') return 'materi';
-  if (a.type === 'assignment' || a.type === 'homework' || a.type === 'test') {
+  if (a.type === 'tugas' || a.type === 'ujian') {
     return 'tugas';
   }
-  // `other` defaults to materi (no submission tracking).
+  // aktivitas / catatan default to materi (no submission tracking).
   return 'materi';
 }
 </script>

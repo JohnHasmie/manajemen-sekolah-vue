@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
+import GeofenceMapPicker from '@/components/feature/GeofenceMapPicker.vue';
 import { useToast } from '@/composables/useToast';
 import type {
   TeacherAttendanceAdminSummary,
@@ -92,6 +93,13 @@ function parseCoord(raw: string): number | null {
   if (t === '') return null;
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
+}
+
+// Map picker → write the chosen point into the lat/long string fields
+// (which save() then parses), so manual entry and the map stay in sync.
+function onMapPick(p: { lat: number; lng: number }) {
+  geofenceLatStr.value = String(p.lat);
+  geofenceLngStr.value = String(p.lng);
 }
 
 async function saveSettings() {
@@ -578,6 +586,21 @@ onMounted(loadSettings);
               />
             </div>
           </div>
+
+          <!-- Interactive OpenStreetMap picker: tap/drag the pin to set the
+               geofence centre; it syncs to the Latitude/Longitude fields
+               above (and they sync back to it). -->
+          <GeofenceMapPicker
+            :lat="parseCoord(geofenceLatStr)"
+            :lng="parseCoord(geofenceLngStr)"
+            :radius="form.geofence_radius_m"
+            :fallback-lat="form.school_latitude ?? null"
+            :fallback-lng="form.school_longitude ?? null"
+            @pick="onMapPick"
+          />
+          <p class="text-[10px] text-slate-400 -mt-1">
+            Geser atau ketuk pin di peta untuk memilih titik pusat geofence.
+          </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>

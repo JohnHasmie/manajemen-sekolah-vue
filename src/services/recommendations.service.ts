@@ -833,6 +833,19 @@ export const RecommendationService = {
         message: body.message ?? 'Processing…',
       };
     }
+    // Surface any other 4xx (422 validation, 403, …) as a real error.
+    // `validateStatus` lets <500 through so we can special-case 429/202
+    // above, but a 4xx that reaches here is a FAILURE — without this the
+    // caller would treat it as success and show a green "berhasil" toast
+    // with zero results (the reported reko-generate symptom).
+    if (res.status >= 400) {
+      // Surface a warm, non-technical message — never the raw server /
+      // validation text or an "HTTP 4xx" code (per Yahya's request that
+      // the user-facing message be friendly).
+      throw new Error(
+        'Maaf, rekomendasi AI belum bisa dibuat saat ini. Coba lagi beberapa saat lagi ya.',
+      );
+    }
     return { async: false, data: body, message: body.message };
   },
 
@@ -857,6 +870,19 @@ export const RecommendationService = {
         poll_url: body.data?.poll_url ?? body.poll_url,
         message: body.message ?? 'Processing…',
       };
+    }
+    // Surface any other 4xx (422 validation, 403, …) as a real error.
+    // `validateStatus` lets <500 through so we can special-case 429/202
+    // above, but a 4xx that reaches here is a FAILURE — without this the
+    // caller would treat it as success and show a green "berhasil" toast
+    // with zero results (the reported reko-generate symptom).
+    if (res.status >= 400) {
+      // Surface a warm, non-technical message — never the raw server /
+      // validation text or an "HTTP 4xx" code (per Yahya's request that
+      // the user-facing message be friendly).
+      throw new Error(
+        'Maaf, rekomendasi AI belum bisa dibuat saat ini. Coba lagi beberapa saat lagi ya.',
+      );
     }
     return { async: false, data: body, message: body.message };
   },

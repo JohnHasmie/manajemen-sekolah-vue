@@ -21,6 +21,7 @@ import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import TeacherSelectionSheet from './TeacherSelectionSheet.vue';
+import { localISODate } from '@/lib/format';
 
 const emit = defineEmits<{
   close: [];
@@ -44,7 +45,10 @@ const lessonHours = ref<LessonHour[]>([]);
 
 const classId = ref<string>('');
 const subjectId = ref<string>('');
-const date = ref<string>(new Date().toISOString().slice(0, 10));
+// Local (WIB) calendar date — NOT UTC. This default is submitted as the
+// new session's attendance date; `toISOString()` would default it to
+// yesterday for admins opening the wizard before 07:00 WIB.
+const date = ref<string>(localISODate());
 const lessonHourId = ref<string>('');
 
 const isLoading = ref(false);

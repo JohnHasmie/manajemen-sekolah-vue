@@ -24,7 +24,8 @@
  * shortcuts are kept as service-level wrappers so legacy callers keep
  * working while we migrate to `updateStatus`.
  */
-import { api } from '@/lib/http';
+import { aiApi, api } from '@/lib/http';
+import { useAuthStore } from '@/stores/auth';
 import type { Pagination } from '@/types/api';
 import {
   adminQueueFromJson,
@@ -402,44 +403,62 @@ export const LessonPlanService = {
 
   // ── AI generation ──
   //
-  // KNOWN GAP — these endpoints live on the **kamiledu-ai** backend in
-  // Flutter (`${AiConfig.baseUrl}/lesson-plans/generate` etc.), not the
-  // core Laravel API that `api` is configured for. Until the Vue HTTP
-  // layer learns to swap base URLs (or the core API proxies these
-  // routes), the calls will 404 in production. The UI flow is wired
-  // correctly; only the URL base needs fixing.
+  // These endpoints live on the **kamiledu-ai** backend (the same one
+  // the Materi flow uses), NOT the core Laravel API. We therefore hit
+  // them through the `aiApi` axios instance (base = VITE_AI_API_URL),
+  // exactly like `MaterialService.generateWithAi`. The AI backend keys
+  // generation off a real `chapter_id` (uuid) and runs async: it
+  // returns 202 `{ data: { job_id, poll_url } }`, polled via
+  // `GET /ai-jobs/{id}`.
   //
-  // Flutter mapping for reference:
-  //   POST   /lesson-plans/generate                  → generateWithAi
-  //   POST   /lesson-plans/{id}/regen/{field}        → per-field regen
-  //   GET    /lesson-plans/{id}/regen-limits         → quota check
-  //   (no ai-jobs polling — Flutter's generate is sync, returns the
-  //    created row directly)
+  // Endpoint mapping:
+  //   POST   /lesson-plans/generate   (aiApi)  → generateWithAi
+  //   GET    /ai-jobs/{id}            (aiApi)  → getAiJob (poller)
 
   /**
    * Submit an AI generation job. Returns `job_id` for polling via
    * `getAiJob`. When the job finishes, its `result_id` is the
    * created RPP's id.
+   *
+   * The caller (the generate modal) passes a real `chapter_id` picked
+   * from the chapter tree; we map the form shape onto the AI contract:
+   *   teacher_id, subject_id, class_id, chapter_id (required) +
+   *   sub_chapter_id, time_allocation (string), format, extra_context
+   *   (optional).
    */
   async generateWithAi(payload: {
     subject_id: string;
     class_id: string;
     format: LessonPlanFormat;
-    chapter_id?: string;
-    chapter_label?: string;
-    topic?: string;
+    chapter_id: string;
+    sub_chapter_id?: string;
     duration_minutes?: number;
     approach?: string;
   }): Promise<{ job_id: string; result_id?: string }> {
-    const res = await api.post('/rpp/generate', payload);
-    const body = (res.data?.data ?? res.data ?? {}) as {
+    const auth = useAuthStore();
+    const body: Record<string, unknown> = {
+      teacher_id: auth.teacherId,
+      subject_id: payload.subject_id,
+      class_id: payload.class_id,
+      chapter_id: payload.chapter_id,
+      format: payload.format,
+    };
+    if (payload.sub_chapter_id) body.sub_chapter_id = payload.sub_chapter_id;
+    // The AI contract wants `time_allocation` as a STRING (max 50).
+    if (payload.duration_minutes != null) {
+      body.time_allocation = String(payload.duration_minutes);
+    }
+    if (payload.approach) body.extra_context = payload.approach;
+
+    const res = await aiApi.post('/lesson-plans/generate', body);
+    const data = (res.data?.data ?? res.data ?? {}) as {
       job_id?: string;
       id?: string;
       result_id?: string;
     };
     return {
-      job_id: String(body.job_id ?? ''),
-      result_id: body.result_id ?? body.id,
+      job_id: String(data.job_id ?? ''),
+      result_id: data.result_id ?? data.id,
     };
   },
 
@@ -449,7 +468,7 @@ export const LessonPlanService = {
     result_id?: string;
     error?: string;
   }> {
-    const res = await api.get(`/ai-jobs/${jobId}`);
+    const res = await aiApi.get(`/ai-jobs/${jobId}`);
     const body = (res.data?.data ?? res.data ?? {}) as Record<string, unknown>;
     const raw = String(body.status ?? 'pending').toLowerCase();
     const status =

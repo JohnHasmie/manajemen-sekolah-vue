@@ -314,6 +314,13 @@ export const useDemoWizardStore = defineStore('demoWizard', {
     },
 
     _scheduleRemoteSave(): void {
+      // The /register-demo wizard is PUBLIC, but /demo/wizard-state is behind
+      // auth:sanctum. An anonymous visitor firing this autosave just gets a
+      // 401 on every step change (harmless — localStorage already holds the
+      // answers — but it spams the network log + LogRocket). Skip the remote
+      // save until the user is authenticated; cross-device resume only matters
+      // for logged-in users anyway.
+      if (!useAuthStore().isAuthenticated) return;
       if (saveTimer) clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
         DemoService.saveWizardState({
@@ -335,6 +342,8 @@ export const useDemoWizardStore = defineStore('demoWizard', {
         clearTimeout(saveTimer);
         saveTimer = null;
       }
+      // Same guard as _scheduleRemoteSave — no anonymous 401s.
+      if (!useAuthStore().isAuthenticated) return;
       DemoService.saveWizardState({
         current_step: this.currentStep,
         payload: this.payload,
@@ -375,7 +384,16 @@ function clamp(n: number, lo: number, hi: number): number {
 function mergeWithDefaults(partial: Partial<DemoWizardPayload>): DemoWizardPayload {
   const d = defaultWizardPayload();
   return {
-    school: { ...d.school, ...(partial.school ?? {}) },
+    school: {
+      ...d.school,
+      ...(partial.school ?? {}),
+      // A restored payload (server wizard-state or localStorage) can carry
+      // `school.name: null`. The spread above would let that null OVERRIDE
+      // the '' default, and Step2School then does `query.value.length` /
+      // `q.trim()` on it → "Cannot read properties of null" → the School
+      // step renders blank on reload. Coerce null back to the default ''.
+      name: partial.school?.name ?? d.school.name,
+    },
     identity: { ...d.identity, ...(partial.identity ?? {}) },
     subjects: { ...d.subjects, ...(partial.subjects ?? {}) },
     teachers: { ...d.teachers, ...(partial.teachers ?? {}) },

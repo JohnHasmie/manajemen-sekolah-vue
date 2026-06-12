@@ -23,12 +23,15 @@
     POST /class-activity/{id}/submissions      bulk-upsert submissions
 -->
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { ClassActivityService } from '@/services/class-activity.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
+import { ScheduleService } from '@/services/schedule.service';
+import { MaterialService } from '@/services/materials.service';
+import { localISODate } from '@/lib/format';
 import type {
   ActivitySubmissionRow,
   ActivityType,
@@ -36,6 +39,9 @@ import type {
 } from '@/types/class-activity';
 import { ACTIVITY_TYPE_LABELS } from '@/types/class-activity';
 import type { Classroom, Subject } from '@/types/entities';
+import type { ScheduleSession } from '@/types/schedule';
+import { normalizeDayKey, type DayKey } from '@/types/schedule';
+import type { Chapter, SubChapter } from '@/types/materials';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import AppFilterChip from '@/components/filters/AppFilterChip.vue';
 import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
@@ -265,7 +271,7 @@ const kpiCards = computed<KpiCard[]>(() => {
     serverKpi.value?.pending_action ??
     items.value.filter(
       (i) =>
-        (i.type === 'assignment' || i.type === 'test') &&
+        (i.type === 'tugas' || i.type === 'ujian') &&
         i.submissions.total_students > 0 &&
         i.submissions.pending > 0,
     ).length;
@@ -306,72 +312,379 @@ const kpiCards = computed<KpiCard[]>(() => {
   ];
 });
 
+// Filter tabs (toolbar) — the 4 mobile types + an "all" option.
 const typeTabs: { key: ActivityType | 'all'; label: string }[] = [
   { key: 'all', label: 'Semua' },
   { key: 'tugas', label: 'Tugas' },
-  { key: 'pr', label: 'PR' },
-  { key: 'ulangan', label: 'Ulangan' },
-  { key: 'lainnya', label: 'Lainnya' },
+  { key: 'aktivitas', label: 'Aktivitas' },
+  { key: 'ujian', label: 'Ujian' },
+  { key: 'catatan', label: 'Catatan' },
+];
+
+// Add/Edit form tiles — same 4 types + the mobile descriptions
+// (`activity_form_sheet.dart`). Sends the raw mobile value as the
+// `type` payload field.
+const typeOptions: { key: ActivityType; label: string; desc: string }[] = [
+  { key: 'tugas', label: 'Tugas', desc: 'Pemberian tugas / PR' },
+  { key: 'aktivitas', label: 'Aktivitas', desc: 'Diskusi / praktik' },
+  { key: 'ujian', label: 'Ujian', desc: 'Kuis / penilaian' },
+  { key: 'catatan', label: 'Catatan', desc: 'Catatan kelas umum' },
 ];
 
 // ── Edit form state ──
+//
+// The form now carries its own kelas + mapel (mirroring the Flutter
+// `activity_form_sheet.dart`): the toolbar selection only seeds the
+// defaults — the teacher can change them in-form (add mode). In edit
+// mode kelas + mapel are locked (history consistency, same as mobile).
+//
+// `lessonHourId` persists the exact lesson-hour slot the teacher picked
+// from the schedule-derived "Jam ke-N" session list; `chapterId` /
+// `subChapterId` carry the optional Bab + Sub-bab linkage pulled from
+// the Materi service.
 const form = reactive<{
+  classId: string;
+  subjectId: string;
   title: string;
   date: string;
+  lessonHourId: string;
   time: string;
-  session: string;
   type: ActivityType;
+  chapterId: string;
+  subChapterId: string;
   description: string;
-  material: string;
   reflection: string;
 }>({
+  classId: '',
+  subjectId: '',
   title: '',
   date: todayIso(),
+  lessonHourId: '',
   time: '',
-  session: '',
-  type: 'lainnya',
+  type: 'tugas',
+  chapterId: '',
+  subChapterId: '',
   description: '',
-  material: '',
   reflection: '',
 });
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localISODate();
 }
+
+// ── Teacher schedule (drives the in-form Mapel + Jam pickers) ──
+//
+// Loaded lazily the first time the form opens; the same per-class /
+// per-day / per-lesson-hour source the Jadwal screen uses. Mirrors
+// Flutter's `ActivityScheduleOptions`.
+const schedules = ref<ScheduleSession[]>([]);
+const schedulesLoaded = ref(false);
+const isLoadingSchedules = ref(false);
+
+async function ensureSchedules() {
+  if (schedulesLoaded.value || isLoadingSchedules.value) return;
+  isLoadingSchedules.value = true;
+  try {
+    const teacherId = auth.teacherId ?? auth.user?.id;
+    schedules.value = await ScheduleService.myWeek(teacherId ?? undefined);
+  } catch {
+    schedules.value = [];
+  } finally {
+    schedulesLoaded.value = true;
+    isLoadingSchedules.value = false;
+  }
+}
+
+const hasScheduleContext = computed(() => schedules.value.length > 0);
+
+// True while openAdd / openEdit are seeding the form — see the
+// `form.date` watcher for why the date→Jam reset must pause.
+const isHydratingForm = ref(false);
+
+// Classes the teacher actually teaches (de-duped). Falls back to the
+// full reference list when no schedule context is available so the
+// picker never goes empty.
+const formClasses = computed<{ id: string; name: string }[]>(() => {
+  if (!hasScheduleContext.value) {
+    return classes.value.map((c) => ({ id: c.id, name: c.name }));
+  }
+  const seen = new Set<string>();
+  const out: { id: string; name: string }[] = [];
+  for (const s of schedules.value) {
+    if (!s.class_id || seen.has(s.class_id)) continue;
+    seen.add(s.class_id);
+    out.push({ id: s.class_id, name: s.class_name || '-' });
+  }
+  // Edit mode: keep the locked class visible even if not in the
+  // derived list (e.g. an old activity the teacher no longer teaches).
+  if (form.classId && !seen.has(form.classId)) {
+    out.push({ id: form.classId, name: formClassName(form.classId) });
+  }
+  return out;
+});
+
+// Subjects scoped to what the teacher teaches in the selected class
+// (Bug 1a). Without schedule context, falls back to the full list.
+const formSubjects = computed<{ id: string; name: string }[]>(() => {
+  if (!hasScheduleContext.value) {
+    return subjects.value.map((s) => ({ id: s.id, name: s.name }));
+  }
+  const seen = new Set<string>();
+  const out: { id: string; name: string }[] = [];
+  for (const s of schedules.value) {
+    if (!s.subject_id) continue;
+    if (form.classId && s.class_id !== form.classId) continue;
+    if (seen.has(s.subject_id)) continue;
+    seen.add(s.subject_id);
+    out.push({ id: s.subject_id, name: s.subject_name || '-' });
+  }
+  if (form.subjectId && !seen.has(form.subjectId)) {
+    out.push({ id: form.subjectId, name: formSubjectName(form.subjectId) });
+  }
+  return out;
+});
+
+function formClassName(id: string): string {
+  return (
+    classes.value.find((c) => c.id === id)?.name ??
+    schedules.value.find((s) => s.class_id === id)?.class_name ??
+    '-'
+  );
+}
+function formSubjectName(id: string): string {
+  return (
+    subjects.value.find((s) => s.id === id)?.name ??
+    schedules.value.find((s) => s.subject_id === id)?.subject_name ??
+    '-'
+  );
+}
+
+// ── Lesson-hour ("Jam ke-N") session options ──
+//
+// One option per lesson-hour slot the teacher has for (selected class,
+// selected subject) on the selected date's weekday. Mirrors Flutter's
+// `ActivityScheduleOptions.lessonHoursFor` (de-dupe by lesson_hour_id,
+// sort by hour number then start time).
+interface LessonHourOption {
+  lessonHourId: string;
+  hourNumber?: number;
+  startTime: string;
+  endTime: string;
+  /** "Jam ke-3 · 09:00–09:45". */
+  label: string;
+}
+
+function weekdayKey(dateIso: string): DayKey | null {
+  if (!dateIso) return null;
+  // Parse as local date (yyyy-mm-dd) — avoid UTC drift.
+  const [y, m, d] = dateIso.split('-').map((n) => Number(n));
+  if (!y || !m || !d) return null;
+  const dow = new Date(y, m - 1, d).getDay(); // 0=Sun..6=Sat
+  const map: Record<number, DayKey | null> = {
+    0: null, // Sunday — no school sessions
+    1: 'mon',
+    2: 'tue',
+    3: 'wed',
+    4: 'thu',
+    5: 'fri',
+    6: 'sat',
+  };
+  return map[dow] ?? null;
+}
+
+const lessonHourOptions = computed<LessonHourOption[]>(() => {
+  if (!hasScheduleContext.value || !form.classId) return [];
+  const dayKey = weekdayKey(form.date);
+  if (!dayKey) return [];
+  const seen = new Set<string>();
+  const out: LessonHourOption[] = [];
+  for (const s of schedules.value) {
+    if (s.class_id !== form.classId) continue;
+    if (form.subjectId && s.subject_id !== form.subjectId) continue;
+    // Match the slot's weekday against the selected date's weekday.
+    const sDay = s.day ?? normalizeDayKey(s.day_name);
+    if (sDay !== dayKey) continue;
+    const key =
+      s.lesson_hour_id && s.lesson_hour_id.length > 0
+        ? s.lesson_hour_id
+        : `h${s.hour_index ?? ''}-${s.start_time}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      lessonHourId: s.lesson_hour_id ?? '',
+      hourNumber: s.hour_index,
+      startTime: s.start_time,
+      endTime: s.end_time,
+      label: lessonHourLabel(s.hour_index, s.start_time, s.end_time),
+    });
+  }
+  out.sort((a, b) => {
+    const ah = a.hourNumber ?? 9999;
+    const bh = b.hourNumber ?? 9999;
+    if (ah !== bh) return ah - bh;
+    return a.startTime.localeCompare(b.startTime);
+  });
+  return out;
+});
+
+function lessonHourLabel(
+  hour: number | undefined,
+  start: string,
+  end: string,
+): string {
+  const parts: string[] = [];
+  if (hour) parts.push(`Jam ke-${hour}`);
+  const window = start && end ? `${start}–${end}` : start || end;
+  if (window) parts.push(window);
+  return parts.length ? parts.join(' · ') : 'Jam pelajaran';
+}
+
+// Apply the picked lesson-hour: stores both the slot UUID and the
+// derived HH:MM start (so the legacy `time` column stays populated).
+function pickLessonHour(opt: LessonHourOption) {
+  form.lessonHourId = opt.lessonHourId;
+  form.time = opt.startTime || '';
+}
+
+// ── Bab + Sub-bab pickers (from the Materi service) ──
+//
+// Chapters load once a subject is chosen; sub-chapters come along
+// nested in the chapter tree (`getTree` eager-loads them), so no
+// second fetch is needed. Both fields are optional.
+const chapters = ref<Chapter[]>([]);
+const isLoadingChapters = ref(false);
+
+async function loadChapters() {
+  const subjectId = form.subjectId;
+  if (!subjectId) {
+    chapters.value = [];
+    return;
+  }
+  isLoadingChapters.value = true;
+  try {
+    const tree = await MaterialService.getTree({ subject_id: subjectId });
+    chapters.value = tree.chapters;
+  } catch {
+    chapters.value = [];
+  } finally {
+    isLoadingChapters.value = false;
+  }
+}
+
+const activeChapter = computed<Chapter | null>(
+  () => chapters.value.find((c) => c.id === form.chapterId) ?? null,
+);
+const subChapterOptions = computed<SubChapter[]>(
+  () => activeChapter.value?.sub_chapters ?? [],
+);
+
+function onChapterChange(id: string) {
+  if (id === form.chapterId) return;
+  form.chapterId = id;
+  form.subChapterId = '';
+}
+
+// Reset Jam + Bab when the class changes (slots + chapter list are
+// class/subject-scoped, so a previous pick may no longer apply).
+function onFormClassChange(id: string) {
+  if (id === form.classId) return;
+  form.classId = id;
+  form.subjectId = '';
+  form.lessonHourId = '';
+  form.time = '';
+  form.chapterId = '';
+  form.subChapterId = '';
+  chapters.value = [];
+}
+
+function onFormSubjectChange(id: string) {
+  if (id === form.subjectId) return;
+  form.subjectId = id;
+  // Jam slots are subject-scoped; chapter list is subject-scoped.
+  form.lessonHourId = '';
+  form.time = '';
+  form.chapterId = '';
+  form.subChapterId = '';
+  loadChapters();
+}
+
+// When the date's weekday changes, a previously picked Jam may no
+// longer exist for the new day — clear it so the teacher re-picks.
+// Suppressed while a form is being hydrated (openAdd / openEdit set
+// date + lessonHourId together; the watcher must not wipe the just-set
+// slot when the edit's weekday differs from the prior form state).
+watch(
+  () => form.date,
+  (next, prev) => {
+    if (isHydratingForm.value) return;
+    if (!prev || !next) return;
+    if (weekdayKey(next) !== weekdayKey(prev)) {
+      form.lessonHourId = '';
+      form.time = '';
+    }
+  },
+);
 
 function resetForm() {
+  form.classId = classFilter.value || '';
+  form.subjectId = subjectFilter.value || '';
   form.title = '';
   form.date = todayIso();
+  form.lessonHourId = '';
   form.time = '';
-  form.session = '';
-  form.type = 'lainnya';
+  form.type = 'tugas';
+  form.chapterId = '';
+  form.subChapterId = '';
   form.description = '';
-  form.material = '';
   form.reflection = '';
+  chapters.value = [];
 }
 
-function openAdd() {
+async function openAdd() {
+  isHydratingForm.value = true;
   resetForm();
   editTarget.value = null;
+  await ensureSchedules();
+  if (form.subjectId) loadChapters();
+  // Release the date→Jam guard after watchers flush.
+  await nextTick();
+  isHydratingForm.value = false;
 }
 
-function openEdit(a: ClassActivity) {
-  form.title = a.title;
-  form.date = a.date;
-  form.time = a.time ?? '';
-  form.session = a.session ?? '';
-  form.type = a.type;
-  form.description = a.description ?? '';
-  form.material = a.material ?? '';
-  form.reflection = a.reflection ?? '';
-  editTarget.value = a;
+async function openEdit(a: ClassActivity) {
+  // Pull the full detail first so chapter_id / sub_chapter_id /
+  // lesson_hour_id (table columns absent from the list payload) are
+  // available to pre-select the pickers.
+  isHydratingForm.value = true;
   detailTarget.value = null;
+  editTarget.value = a;
+  await ensureSchedules();
+  let full: ClassActivity | null = a;
+  try {
+    full = (await ClassActivityService.getDetail(a.id)) ?? a;
+  } catch {
+    full = a;
+  }
+  form.classId = full.class_id || a.class_id || '';
+  form.subjectId = full.subject_id || a.subject_id || '';
+  form.title = full.title;
+  form.date = full.date;
+  form.lessonHourId = full.lesson_hour_id ?? '';
+  form.time = full.time ?? '';
+  form.type = full.type;
+  form.chapterId = full.chapter_id ?? '';
+  form.subChapterId = full.sub_chapter_id ?? '';
+  form.description = full.description ?? '';
+  form.reflection = full.reflection ?? '';
+  if (form.subjectId) await loadChapters();
+  await nextTick();
+  isHydratingForm.value = false;
 }
 
 async function saveActivity() {
-  if (!classFilter.value || !subjectFilter.value) {
+  if (!form.classId || !form.subjectId) {
     toast.value = {
-      message: 'Pilih kelas & mata pelajaran dulu sebelum menyimpan.',
+      message: 'Pilih kelas & mata pelajaran terlebih dahulu.',
       tone: 'error',
     };
     return;
@@ -382,23 +695,32 @@ async function saveActivity() {
   }
   isSaving.value = true;
   try {
-    const payload = {
-      class_id: classFilter.value,
-      subject_id: subjectFilter.value,
-      teacher_id: auth.teacherId ?? auth.user?.id,
+    const isEdit = !!(editTarget.value && editTarget.value.id);
+    // Bab + Sub-bab are optional. Send `null` when cleared so the
+    // backend treats it as "remove the link" on update (same as mobile).
+    const payload: Record<string, unknown> = {
       title: form.title.trim(),
       date: form.date,
       time: form.time || null,
-      session: form.session.trim() || null,
       type: form.type,
       description: form.description.trim() || null,
-      material: form.material.trim() || null,
       reflection: form.reflection.trim() || null,
+      chapter_id: form.chapterId || null,
+      sub_chapter_id: form.subChapterId || null,
     };
-    if (editTarget.value && editTarget.value.id) {
-      await ClassActivityService.update(editTarget.value.id, payload);
+    if (isEdit) {
+      await ClassActivityService.update(editTarget.value!.id, payload);
     } else {
-      await ClassActivityService.create(payload);
+      // Create requires class/subject/teacher + the lesson-hour slot.
+      // (The update path locks kelas+mapel and ignores lesson_hour_id,
+      // mirroring the mobile edit form.)
+      await ClassActivityService.create({
+        ...payload,
+        class_id: form.classId,
+        subject_id: form.subjectId,
+        teacher_id: auth.teacherId ?? auth.user?.id,
+        lesson_hour_id: form.lessonHourId || null,
+      });
     }
     editTarget.value = undefined;
     toast.value = { message: 'Kegiatan tersimpan.', tone: 'success' };
@@ -409,6 +731,18 @@ async function saveActivity() {
     isSaving.value = false;
   }
 }
+
+// Label for the Jam picker's selected state.
+const selectedLessonHourLabel = computed<string>(() => {
+  if (!form.lessonHourId && !form.time) return '';
+  const match = lessonHourOptions.value.find(
+    (o) => o.lessonHourId && o.lessonHourId === form.lessonHourId,
+  );
+  if (match) return match.label;
+  // Fall back to the stored time when the slot isn't in the current
+  // day's list (e.g. editing an old activity).
+  return form.time ? `Jam · ${form.time}` : '';
+});
 
 // ── Detail flow ──
 async function openDetail(a: ClassActivity) {
@@ -639,13 +973,51 @@ function pickSubject(id: string) {
       v-if="editTarget !== undefined"
       :title="editTarget ? 'Edit Kegiatan' : 'Tambah Kegiatan'"
       :subtitle="
-        activeClass && activeSubject
-          ? `${activeClass.name} · ${activeSubject.name}`
-          : 'Pilih kelas + mapel di toolbar dulu'
+        editTarget
+          ? 'Kelas & mapel terkunci untuk konsistensi riwayat'
+          : 'Pilih kelas, mapel, dan sesi jam pelajaran'
       "
       @close="editTarget = undefined"
     >
       <div class="space-y-3">
+        <!-- KELAS + MAPEL (in-form; locked in edit mode) -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Kelas
+            </label>
+            <select
+              :value="form.classId"
+              :disabled="!!editTarget || isSaving"
+              class="mt-1 w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2 bg-white disabled:bg-slate-50 disabled:text-slate-500"
+              @change="onFormClassChange(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="" disabled>Pilih kelas…</option>
+              <option v-for="c in formClasses" :key="c.id" :value="c.id">
+                {{ c.name }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Mapel
+            </label>
+            <select
+              :value="form.subjectId"
+              :disabled="!!editTarget || isSaving || (!editTarget && !form.classId)"
+              class="mt-1 w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2 bg-white disabled:bg-slate-50 disabled:text-slate-500"
+              @change="onFormSubjectChange(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="" disabled>
+                {{ !form.classId ? 'Pilih kelas dulu' : 'Pilih mapel…' }}
+              </option>
+              <option v-for="s in formSubjects" :key="s.id" :value="s.id">
+                {{ s.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+
         <div>
           <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             Judul
@@ -657,7 +1029,9 @@ function pickSubject(id: string) {
             class="mt-1 w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2"
           />
         </div>
-        <div class="grid grid-cols-3 gap-2">
+
+        <!-- TANGGAL + JAM (session picker) -->
+        <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
               Tanggal
@@ -670,58 +1044,134 @@ function pickSubject(id: string) {
           </div>
           <div>
             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Jam
+              Jam / Sesi
             </label>
+            <select
+              v-if="hasScheduleContext && lessonHourOptions.length > 0"
+              :value="form.lessonHourId"
+              :disabled="isSaving"
+              class="mt-1 w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2 bg-white"
+              @change="
+                pickLessonHour(
+                  lessonHourOptions.find(
+                    (o) => o.lessonHourId === ($event.target as HTMLSelectElement).value,
+                  ) ?? lessonHourOptions[0],
+                )
+              "
+            >
+              <option value="" disabled>Pilih jam ke-…</option>
+              <option
+                v-for="o in lessonHourOptions"
+                :key="o.lessonHourId || o.label"
+                :value="o.lessonHourId"
+              >
+                {{ o.label }}
+              </option>
+            </select>
+            <!-- No schedule slots for this class/day → time fallback so
+                 the field never blocks saving. -->
             <input
+              v-else
               v-model="form.time"
               type="time"
+              :disabled="isSaving"
               class="mt-1 w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2"
             />
-          </div>
-          <div>
-            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-              Sesi
-            </label>
-            <input
-              v-model="form.session"
-              type="text"
-              placeholder="Sesi 1"
-              class="mt-1 w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2"
-            />
+            <p
+              v-if="hasScheduleContext && form.classId && lessonHourOptions.length === 0"
+              class="mt-1 text-[10px] text-slate-400"
+            >
+              Tidak ada jadwal jam pelajaran di hari ini — isi waktu manual.
+            </p>
+            <p
+              v-else-if="selectedLessonHourLabel && form.lessonHourId"
+              class="mt-1 text-[10px] text-emerald-600 font-semibold"
+            >
+              {{ selectedLessonHourLabel }}
+            </p>
           </div>
         </div>
+
         <div>
           <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             Tipe
           </label>
-          <div class="flex gap-1.5 mt-1 flex-wrap">
+          <!-- 4 mobile types (Tugas / Aktivitas / Ujian / Catatan) with
+               the same descriptions as the Flutter form. Sends the raw
+               value (form.type) the backend expects. -->
+          <div class="grid grid-cols-2 gap-2 mt-1">
             <button
-              v-for="opt in typeTabs.filter((t) => t.key !== 'all')"
+              v-for="opt in typeOptions"
               :key="opt.key"
               type="button"
-              class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+              class="text-left px-3 py-2 rounded-xl transition border"
               :class="
                 form.type === opt.key
-                  ? 'bg-brand-cobalt text-white border-brand-cobalt'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-brand-cobalt/40'
+                  ? 'bg-brand-cobalt/5 border-brand-cobalt'
+                  : 'bg-white border-slate-200 hover:border-brand-cobalt/40'
               "
-              @click="form.type = opt.key as ActivityType"
+              @click="form.type = opt.key"
             >
-              {{ opt.label }}
+              <span
+                class="block text-[12px] font-bold"
+                :class="form.type === opt.key ? 'text-brand-cobalt' : 'text-slate-700'"
+              >
+                {{ opt.label }}
+              </span>
+              <span class="block text-[10px] text-slate-500 truncate">
+                {{ opt.desc }}
+              </span>
             </button>
           </div>
         </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            Materi terkait
-          </label>
-          <input
-            v-model="form.material"
-            type="text"
-            placeholder="Misal: Bab 3 — Energi & Perubahannya"
-            class="mt-1 w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2"
-          />
+
+        <!-- MATERI TERKAIT → Bab + Sub-bab (from Materi page). Optional;
+             only shown once a Mapel is chosen (chapter list is
+             subject-scoped). Saving without a Bab still works. -->
+        <div v-if="form.subjectId" class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Bab (opsional)
+            </label>
+            <select
+              :value="form.chapterId"
+              :disabled="isSaving || isLoadingChapters"
+              class="mt-1 w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2 bg-white"
+              @change="onChapterChange(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">
+                {{ isLoadingChapters ? 'Memuat bab…' : '— Tanpa bab —' }}
+              </option>
+              <option v-for="c in chapters" :key="c.id" :value="c.id">
+                {{ c.label }}{{ c.name ? ` · ${c.name}` : '' }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Sub-bab (opsional)
+            </label>
+            <select
+              v-model="form.subChapterId"
+              :disabled="isSaving || !form.chapterId || subChapterOptions.length === 0"
+              class="mt-1 w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2 bg-white disabled:bg-slate-50"
+            >
+              <option value="">
+                {{
+                  !form.chapterId
+                    ? 'Pilih bab dulu'
+                    : subChapterOptions.length === 0
+                      ? 'Tidak ada sub-bab'
+                      : '— Tanpa sub-bab —'
+                }}
+              </option>
+              <option v-for="s in subChapterOptions" :key="s.id" :value="s.id">
+                {{ s.number ? `${s.number} ` : '' }}{{ s.name }}
+              </option>
+            </select>
+          </div>
         </div>
+
         <div>
           <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
             Deskripsi

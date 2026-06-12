@@ -6,10 +6,10 @@
   much of the recap the responsible teacher has filled.
 
     1. BrandPageHeader (admin) + embedded search bar
-    2. KPI strip (3 cells) — SLICE / PROGRESS / FINAL ✓
+    2. KPI strip (3 cells) — REKAP / PROGRESS / FINAL ✓
     3. Filter chip row: "Belum lengkap" toggle + Sort selector
        (+ web-bonus Export CSV + Reload buttons)
-    4. "PER SLICE · N SLICE" section header with hairline
+    4. "PER REKAP · N REKAP" section header with hairline
     5. Per-slice cards — class pill, subject + chevron, teacher subline,
        3-stat row (PROGRESS / RATA-RATA / LULUS), slim progress bar,
        status chips (N/N bab, UTS ✓|belum, UAS ✓|belum)
@@ -30,6 +30,10 @@ import type {
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import AppFilterChip from '@/components/filters/AppFilterChip.vue';
+import FilterFacetPickerModal, {
+  type FacetOption,
+} from '@/components/feature/FilterFacetPickerModal.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const router = useRouter();
@@ -45,6 +49,40 @@ const onlyIncomplete = ref(false);
 type SortKey = 'progress' | 'class' | 'subject' | 'teacher' | 'avg';
 const sortKey = ref<SortKey>('progress');
 const sortDir = ref<'asc' | 'desc'>('asc');
+
+// Filter by a specific Kelas / Mapel / Guru. Uses the same chip + facet-picker
+// pattern as the other admin pages (AppFilterChip + FilterFacetPickerModal).
+// Empty string = "Semua".
+const filterClass = ref('');
+const filterSubject = ref('');
+const filterTeacher = ref('');
+
+const showClassPicker = ref(false);
+const showSubjectPicker = ref(false);
+const showTeacherPicker = ref(false);
+
+const classChipValue = computed(() => filterClass.value || 'Semua');
+const subjectChipValue = computed(() => filterSubject.value || 'Semua');
+const teacherChipValue = computed(() => filterTeacher.value || 'Semua');
+
+// Distinct facet options derived from the loaded rows, alphabetically sorted.
+// The value the list filters on is the name itself, so key === label.
+function toFacets(names: string[]): FacetOption[] {
+  return [...new Set(names)]
+    .sort((a, b) => a.localeCompare(b))
+    .map((n) => ({ key: n, label: n }));
+}
+const classOptions = computed<FacetOption[]>(() =>
+  toFacets(rows.value.map((r) => r.class_name)),
+);
+const subjectOptions = computed<FacetOption[]>(() =>
+  toFacets(rows.value.map((r) => r.subject_name)),
+);
+const teacherOptions = computed<FacetOption[]>(() =>
+  toFacets(
+    rows.value.map((r) => r.teacher_name).filter((n): n is string => Boolean(n)),
+  ),
+);
 
 async function load() {
   isLoading.value = true;
@@ -68,6 +106,11 @@ const filteredRows = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   const list = rows.value.filter((r) => {
     if (onlyIncomplete.value && r.is_complete) return false;
+    if (filterClass.value && r.class_name !== filterClass.value) return false;
+    if (filterSubject.value && r.subject_name !== filterSubject.value)
+      return false;
+    if (filterTeacher.value && (r.teacher_name ?? '') !== filterTeacher.value)
+      return false;
     if (q) {
       const blob =
         `${r.class_name} ${r.subject_name} ${r.teacher_name ?? ''}`.toLowerCase();
@@ -310,7 +353,7 @@ function exportCsv() {
       role="admin"
       kicker="AKADEMIK"
       title="Rekap Nilai"
-      :meta="`${kpiCells.totalSlice} slice · ${kpiCells.completed} final ✓ · rerata ${Math.round(kpiCells.avgProgress)}%`"
+      :meta="`${kpiCells.totalSlice} rekap · ${kpiCells.completed} final ✓ · rerata ${Math.round(kpiCells.avgProgress)}%`"
       :live-dot="false"
     >
       <template #default>
@@ -337,7 +380,7 @@ function exportCsv() {
           {{ kpiCells.totalSlice }}
         </p>
         <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">
-          Slice
+          Rekap
         </p>
       </div>
       <div class="text-center px-2">
@@ -378,6 +421,30 @@ function exportCsv() {
         />
         Belum lengkap
       </button>
+
+      <!-- Kelas / Mapel / Guru filters — same chip + facet-picker pattern as
+           the other admin pages. -->
+      <AppFilterChip
+        icon-name="layers"
+        label="Kelas"
+        :value="classChipValue"
+        tone="brand"
+        @click="showClassPicker = true"
+      />
+      <AppFilterChip
+        icon-name="book-open"
+        label="Mapel"
+        :value="subjectChipValue"
+        tone="violet"
+        @click="showSubjectPicker = true"
+      />
+      <AppFilterChip
+        icon-name="user"
+        label="Guru"
+        :value="teacherChipValue"
+        tone="amber"
+        @click="showTeacherPicker = true"
+      />
 
       <!-- Sort selector (replaces table column chevrons since cards
            have no column headers). -->
@@ -432,10 +499,10 @@ function exportCsv() {
     <header class="flex items-center gap-2 px-1 pt-1">
       <NavIcon name="layers" :size="12" class="text-slate-500" />
       <span class="text-[9.5px] font-black text-slate-500 uppercase tracking-widest">
-        Per Slice
+        Per Rekap
       </span>
       <span class="text-[9.5px] font-black text-slate-300 uppercase tracking-widest">
-        · {{ filteredRows.length }} slice
+        · {{ filteredRows.length }} rekap
       </span>
       <span class="flex-1 h-px bg-slate-100" />
     </header>
@@ -591,5 +658,31 @@ function exportCsv() {
         </div>
       </template>
     </AsyncView>
+
+    <!-- Per-facet pickers (shared style with other admin pages) -->
+    <FilterFacetPickerModal
+      v-if="showClassPicker"
+      title="Filter Kelas"
+      :options="classOptions"
+      :selected="filterClass"
+      @close="showClassPicker = false"
+      @apply="(v) => { filterClass = v; }"
+    />
+    <FilterFacetPickerModal
+      v-if="showSubjectPicker"
+      title="Filter Mapel"
+      :options="subjectOptions"
+      :selected="filterSubject"
+      @close="showSubjectPicker = false"
+      @apply="(v) => { filterSubject = v; }"
+    />
+    <FilterFacetPickerModal
+      v-if="showTeacherPicker"
+      title="Filter Guru"
+      :options="teacherOptions"
+      :selected="filterTeacher"
+      @close="showTeacherPicker = false"
+      @apply="(v) => { filterTeacher = v; }"
+    />
   </div>
 </template>

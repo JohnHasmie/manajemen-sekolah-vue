@@ -46,9 +46,27 @@ onMounted(async () => {
 watch(
   () => google.error.value,
   (msg) => {
-    if (msg) localError.value = msg;
+    // GIS load failures / in-app-browser blocks are shown inline in the
+    // Google area (with an "open in Chrome/Safari" hint) — NOT as a form
+    // error. Only surface genuine credential-stage messages here.
+    if (msg && msg !== 'IN_APP_BROWSER' && msg !== 'GIS_LOAD_FAILED') {
+      localError.value = msg;
+    }
   },
 );
+
+// Copy the current URL so a user stuck in an in-app browser can paste it
+// into a real browser (Chrome/Safari) where Google sign-in works.
+const linkCopied = ref(false);
+async function copyCurrentLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    linkCopied.value = true;
+    setTimeout(() => { linkCopied.value = false; }, 2000);
+  } catch {
+    // Clipboard may be blocked in the webview; the URL is still in the bar.
+  }
+}
 
 function validate(): boolean {
   if (!email.value.trim()) {
@@ -196,16 +214,38 @@ async function handleSubmit() {
         <div class="flex-grow border-t border-slate-200"></div>
       </div>
 
+      <!-- In-app browser (Threads/IG/FB/…) OR GIS failed to load: Google
+           can't work here. Show an accurate notice + a copy-link so the
+           user can open the page in a real browser. Email/password above
+           still works. -->
+      <div
+        v-if="google.isInAppBrowser.value || google.error.value === 'GIS_LOAD_FAILED'"
+        class="w-full rounded-xl border-1.5 border-amber-200 bg-amber-50 px-3.5 py-3 text-[11.5px] text-amber-800 leading-relaxed"
+      >
+        <p class="font-bold">
+          {{ google.isInAppBrowser.value ? t('auth.googleInAppBrowser') : t('auth.googleLoadFailed') }}
+        </p>
+        <button
+          v-if="google.isInAppBrowser.value"
+          type="button"
+          class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-white border border-amber-300 px-2.5 py-1.5 text-[11px] font-extrabold text-amber-900 hover:bg-amber-100 transition-colors"
+          @click="copyCurrentLink"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+          {{ linkCopied ? t('auth.linkCopied') : t('auth.copyLink') }}
+        </button>
+      </div>
+
       <!-- Google Button (GIS) -->
-      <div v-if="google.isEnabled.value" class="flex justify-center min-h-[44px]">
-        <div 
-          v-show="google.isReady.value" 
-          ref="googleButtonRef" 
+      <div v-else-if="google.isEnabled.value" class="flex justify-center min-h-[44px]">
+        <div
+          v-show="google.isReady.value"
+          ref="googleButtonRef"
           class="w-full flex justify-center"
         />
         <!-- Loading state while GIS script loads -->
-        <div 
-          v-if="!google.isReady.value" 
+        <div
+          v-if="!google.isReady.value"
           class="w-full rounded-xl border-1.5 border-slate-200 bg-slate-50 py-3 flex items-center justify-center gap-3 animate-pulse"
         >
           <div class="w-4 h-4 rounded-full bg-slate-200"></div>

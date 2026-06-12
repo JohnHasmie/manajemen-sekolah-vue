@@ -41,7 +41,7 @@ import KpiStripCards, {
 } from '@/components/feature/KpiStripCards.vue';
 import MaterialAiPollingOverlay from '@/components/feature/MaterialAiPollingOverlay.vue';
 import MaterialSectionEditorModal from '@/components/feature/MaterialSectionEditorModal.vue';
-import { formatDateShort } from '@/lib/format';
+import { formatDateShort, localISODate } from '@/lib/format';
 import { useQuickAction } from '@/composables/useQuickAction';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
@@ -397,7 +397,7 @@ async function toggleSubChapter(s: SubChapter, parent?: Chapter) {
   const next = !s.done;
   // Optimistic
   s.done = next;
-  s.taught_at = next ? new Date().toISOString().slice(0, 10) : null;
+  s.taught_at = next ? localISODate() : null;
   for (const c of tree.value.chapters) {
     c.done_count = c.sub_chapters.filter((x) => x.done).length;
   }
@@ -414,7 +414,7 @@ async function toggleSubChapter(s: SubChapter, parent?: Chapter) {
   } catch (e) {
     // Revert
     s.done = !next;
-    s.taught_at = !next ? new Date().toISOString().slice(0, 10) : null;
+    s.taught_at = !next ? localISODate() : null;
     for (const c of tree.value.chapters) {
       c.done_count = c.sub_chapters.filter((x) => x.done).length;
     }

@@ -398,7 +398,9 @@ export const MaterialService = {
     chapter_label?: string;
     topic?: string;
   }): Promise<{ job_id?: string; material_id?: string }> {
-    const res = await aiApi.post('/material/generate', payload);
+    // AI service mounts this under the `generated-materials` prefix
+    // (routes/api_ai_features.php) — `/material/generate` 404s.
+    const res = await aiApi.post('/generated-materials/generate', payload);
     const body = res.data?.data ?? res.data ?? {};
     return {
       job_id: body.job_id ?? undefined,

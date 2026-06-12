@@ -31,6 +31,7 @@ import Spinner from '@/components/ui/Spinner.vue';
 import ToastHost from '@/components/ui/ToastHost.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import PublicLanguageSwitcher from '@/components/feature/PublicLanguageSwitcher.vue';
+import { useToast } from '@/composables/useToast';
 
 import Step1Welcome from './steps/Step1Welcome.vue';
 import Step2School from './steps/Step2School.vue';
@@ -47,6 +48,7 @@ import Step10Scenarios from './steps/Step10Scenarios.vue';
 const { t } = useI18n();
 const wizard = useDemoWizardStore();
 const router = useRouter();
+const toast = useToast();
 
 onMounted(() => {
   // Hydrate from server / localStorage so a partial wizard resumes
@@ -88,6 +90,25 @@ const currentComponent = computed(() => stepComponentMap[wizard.currentKey]);
 const isLastStep = computed(() => wizard.currentStep === DEMO_STEPS.length - 1);
 const isFirstStep = computed(() => wizard.currentStep === 0);
 
+// Steps whose data is throwaway DEMO content (teachers, classes, students,
+// etc.) — the requester can fill them with random values to move fast and
+// re-enter real data later. Shown as a banner so people don't labour over it.
+// Deliberately EXCLUDES `school` and `identity` (the real school + the
+// requester's own role setup) and `welcome`/`scenarios` (no data entry). The
+// separate Data Diri screen carries the opposite guidance (match yourself).
+const SAMPLE_DATA_STEPS: DemoStepKey[] = [
+  'subjects',
+  'teacher',
+  'class',
+  'student',
+  'parent',
+  'schedule',
+  'billing',
+];
+const showSampleDataNote = computed(() =>
+  SAMPLE_DATA_STEPS.includes(wizard.currentKey),
+);
+
 function goTo(idx: number) {
   if (idx <= wizard.currentStep + 1) {
     // Allow loncat ke step yang sudah lewat atau langsung berikutnya.
@@ -97,6 +118,19 @@ function goTo(idx: number) {
 }
 
 function handleNext() {
+  // Block leaving the School step until a school is set — either typed as a
+  // custom name or picked from the search/NPSN results. `hasWizardData` is
+  // true once `school.name` is non-empty. Without it every downstream step
+  // (and the final provision) has no school, so surface a popup instead of
+  // silently advancing.
+  if (wizard.currentKey === 'school' && !wizard.hasWizardData) {
+    toast.show({
+      tone: 'error',
+      title: t('registerDemo.schoolRequiredTitle'),
+      message: t('registerDemo.schoolRequiredMsg'),
+    });
+    return;
+  }
   if (isLastStep.value) {
     // Finished the SCHOOL/demo-data steps — this is the "submit" the
     // founder described. We DON'T send anything yet; the school answers
@@ -245,6 +279,16 @@ const nextLabel = computed(() => {
                     : 'bg-slate-200'
                 "
               />
+            </div>
+
+            <!-- Throwaway demo-data steps: tell the requester they can fill
+                 random values to go fast and re-enter the real data later. -->
+            <div
+              v-if="showSampleDataNote"
+              class="mb-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3.5 py-2.5 text-[12px] leading-relaxed text-amber-800"
+            >
+              <NavIcon name="info" :size="15" class="mt-0.5 flex-shrink-0 text-amber-600" />
+              <span>{{ t('registerDemo.sampleDataNote') }}</span>
             </div>
 
             <Spinner v-if="wizard.isLoading && !wizard.hydrated" />

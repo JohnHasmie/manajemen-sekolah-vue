@@ -33,6 +33,7 @@ import { useAuthStore } from '@/stores/auth';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
 import { GradeService } from '@/services/grades.service';
+import { localISODate } from '@/lib/format';
 import type { Classroom, Subject } from '@/types/entities';
 import type {
   Assessment,
@@ -159,7 +160,7 @@ const columnEditFor = ref<Assessment | null>(null);
 const editForm = ref<{ type: AssessmentType; title: string; date: string }>({
   type: 'daily_test',
   title: '',
-  date: new Date().toISOString().slice(0, 10),
+  date: localISODate(),
 });
 const isSavingColumnEdit = ref(false);
 
@@ -173,7 +174,7 @@ const addForm = ref<{
 }>({
   type: 'daily_test',
   title: '',
-  date: new Date().toISOString().slice(0, 10),
+  date: localISODate(),
 });
 const matrixSearchQuery = ref<string>('');
 
@@ -668,7 +669,7 @@ function openEditColumn() {
   editForm.value = {
     type: a.type,
     title: a.raw_title ?? '',
-    date: a.date ?? new Date().toISOString().slice(0, 10),
+    date: a.date ?? localISODate(),
   };
   columnActionsFor.value = null;
 }
@@ -850,7 +851,7 @@ function openAddAsesmen() {
   addForm.value = {
     type: 'daily_test',
     title: '',
-    date: new Date().toISOString().slice(0, 10),
+    date: localISODate(),
   };
   showAddAsesmen.value = true;
 }

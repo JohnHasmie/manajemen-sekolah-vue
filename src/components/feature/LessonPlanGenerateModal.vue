@@ -6,14 +6,19 @@
 
     1. Format chooser row — k13 / 1 halaman / modul ajar
        (file routes to a separate upload sheet in Phase 5).
-    2. Setup form — Kelas + Mapel pickers, Bab / Sub-bab text,
-       Durasi (JP × menit), Pendekatan / fokus.
+    2. Setup form — Kelas + Mapel pickers, Bab dropdown + optional
+       Sub-bab dropdown, Durasi (JP × menit), Pendekatan / fokus.
     3. Submit → emits `generate` with the validated payload.
+
+  The Bab dropdown loads the chapter tree for the picked subject via
+  `MaterialService.getTree` (same source the Flutter setup sheet uses)
+  so the emitted payload carries a real `chapter_id` (uuid) — the AI
+  backend requires it, unlike the old free-text "Bab" field.
 
   The parent owns the polling overlay + navigation to detail on done.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import {
   FORMAT_COLORS,
   FORMAT_ICONS,
@@ -22,6 +27,8 @@ import {
   type LessonPlanFormat,
 } from '@/types/lesson-plans';
 import type { Classroom, Subject } from '@/types/entities';
+import type { Chapter } from '@/types/materials';
+import { MaterialService } from '@/services/materials.service';
 import Modal from '@/components/ui/Modal.vue';
 import Button from '@/components/ui/Button.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
@@ -48,7 +55,10 @@ interface GeneratePayload {
   format: Exclude<LessonPlanFormat, 'file'>;
   class_id: string;
   subject_id: string;
-  chapter_label: string;
+  chapter_id: string;
+  sub_chapter_id?: string;
+  /** Human label ("Bab 3 — Energi") for the polling overlay subtitle. */
+  chapter_label?: string;
   duration_minutes: number;
   approach?: string;
 }
@@ -62,11 +72,26 @@ const emit = defineEmits<{
 const format = ref<Exclude<LessonPlanFormat, 'file'>>(props.initialFormat);
 const classId = ref<string>(props.initialClassId);
 const subjectId = ref<string>(props.initialSubjectId);
-const chapterLabel = ref<string>('');
+const chapterId = ref<string>('');
+const subChapterId = ref<string>('');
 const durationMinutes = ref<number>(90);
 const approach = ref<string>('Project-based learning · diskusi kelompok');
 
 const error = ref<string | null>(null);
+
+// ── Chapter tree (loaded per selected subject) ──
+// The AI backend keys generation off a real `chapter_id`, so we load
+// the same chapter tree the Materi page / Flutter setup sheet uses and
+// let the teacher pick one. Reload whenever the subject changes; the
+// previous chapter / sub-chapter selection is cleared so we never send
+// a chapter that belongs to a different subject.
+const chapters = ref<Chapter[]>([]);
+const chaptersLoading = ref(false);
+
+const activeChapter = computed(
+  () => chapters.value.find((c) => c.id === chapterId.value) ?? null,
+);
+const subChapters = computed(() => activeChapter.value?.sub_chapters ?? []);
 
 const FORMAT_OPTIONS: { key: Exclude<LessonPlanFormat, 'file'>; tagline: string }[] =
   [
@@ -86,6 +111,40 @@ function pickFormat(f: Exclude<LessonPlanFormat, 'file'>) {
   format.value = f;
 }
 
+/**
+ * Load the chapter tree for the currently-selected subject. Clears any
+ * stale chapter / sub-chapter choice first so the dropdown never points
+ * at a chapter from a different subject while the fetch is in flight.
+ */
+async function loadChapters(subId: string) {
+  chapterId.value = '';
+  subChapterId.value = '';
+  if (!subId) {
+    chapters.value = [];
+    return;
+  }
+  chaptersLoading.value = true;
+  try {
+    // `getTree` is teacher-agnostic for our purposes here (we only need
+    // the chapter list + ids); grade_level is optional and the backend
+    // scopes by subject already, so we omit it.
+    const tree = await MaterialService.getTree({ subject_id: subId });
+    chapters.value = tree.chapters;
+  } catch {
+    chapters.value = [];
+  } finally {
+    chaptersLoading.value = false;
+  }
+}
+
+// React to subject changes (manual pick OR seeded initialSubjectId).
+watch(subjectId, (id) => loadChapters(id), { immediate: true });
+
+// Reset the sub-bab choice whenever the chapter changes.
+watch(chapterId, () => {
+  subChapterId.value = '';
+});
+
 function submit() {
   error.value = null;
   if (!classId.value) {
@@ -96,8 +155,8 @@ function submit() {
     error.value = 'Pilih mata pelajaran terlebih dahulu.';
     return;
   }
-  if (!chapterLabel.value.trim()) {
-    error.value = 'Isi bab / sub-bab yang akan dibuatkan RPP.';
+  if (!chapterId.value) {
+    error.value = 'Pilih bab terlebih dahulu.';
     return;
   }
   if (
@@ -108,11 +167,17 @@ function submit() {
     error.value = 'Durasi harus antara 30 sampai 180 menit.';
     return;
   }
+  const chapter = activeChapter.value;
+  const chapterLabel = chapter
+    ? [chapter.label, chapter.name].filter((p) => p && p.length > 0).join(' — ')
+    : undefined;
   emit('generate', {
     format: format.value,
     class_id: classId.value,
     subject_id: subjectId.value,
-    chapter_label: chapterLabel.value.trim(),
+    chapter_id: chapterId.value,
+    sub_chapter_id: subChapterId.value || undefined,
+    chapter_label: chapterLabel,
     duration_minutes: durationMinutes.value,
     approach: approach.value.trim() || undefined,
   });
@@ -209,21 +274,58 @@ function submit() {
         </div>
       </div>
 
-      <!-- BAB / SUB-BAB -->
-      <div>
-        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-          Bab / Sub-bab
-        </label>
-        <input
-          v-model="chapterLabel"
-          type="text"
-          placeholder="Contoh: Bab 3 · Energi & Perubahannya"
-          class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white"
-          :disabled="busy"
-        />
-        <p class="text-[10px] text-slate-400 mt-1">
-          Tulis judul bab / sub-bab persis seperti di buku panduan.
-        </p>
+      <!-- BAB (chapter dropdown) + optional SUB-BAB -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+            Bab
+          </label>
+          <select
+            v-model="chapterId"
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] font-medium focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400"
+            :disabled="busy || chaptersLoading || !subjectId || chapters.length === 0"
+          >
+            <option value="">
+              {{
+                !subjectId
+                  ? 'Pilih mapel dulu…'
+                  : chaptersLoading
+                    ? 'Memuat bab…'
+                    : chapters.length === 0
+                      ? 'Belum ada bab'
+                      : 'Pilih bab…'
+              }}
+            </option>
+            <option v-for="ch in chapters" :key="ch.id" :value="ch.id">
+              {{ ch.label }} — {{ ch.name }}
+            </option>
+          </select>
+          <p
+            v-if="subjectId && !chaptersLoading && chapters.length === 0"
+            class="text-[10px] text-amber-600 mt-1 leading-snug"
+          >
+            Mapel ini belum punya bab. Tambahkan materi di menu Materi
+            terlebih dahulu, atau pilih mapel lain.
+          </p>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+            Sub-bab <span class="text-slate-400 normal-case font-medium">(opsional)</span>
+          </label>
+          <select
+            v-model="subChapterId"
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] font-medium focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white disabled:bg-slate-50 disabled:text-slate-400"
+            :disabled="busy || !chapterId || subChapters.length === 0"
+          >
+            <option value="">Semua / tanpa sub-bab</option>
+            <option v-for="sub in subChapters" :key="sub.id" :value="sub.id">
+              {{ sub.name }}
+            </option>
+          </select>
+          <p class="text-[10px] text-slate-400 mt-1 leading-snug">
+            Kosongkan untuk membuat RPP untuk seluruh bab.
+          </p>
+        </div>
       </div>
 
       <!-- DURASI + PENDEKATAN -->

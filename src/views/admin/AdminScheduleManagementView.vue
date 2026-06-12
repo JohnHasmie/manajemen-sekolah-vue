@@ -1217,7 +1217,7 @@ async function bulkDelete() {
     <ConfirmationDialog
       v-if="deleteRow"
       title="Hapus Jadwal"
-      :message="`Hapus ${deleteRow.subject_name} (${deleteRow.class_name}) di ${deleteRow.start_time}? Tindakan ini dapat di-undo dari trash.`"
+      :message="`Hapus ${deleteRow.subject_name} (${deleteRow.class_name}) di ${deleteRow.start_time}? Tindakan ini permanen dan tidak bisa dibatalkan.`"
       confirm-label="Hapus"
       danger
       :loading="isDeleting"

@@ -25,11 +25,8 @@ defineEmits<{ close: [] }>();
 const isAssignment = computed(() => {
   const raw = (props.activity.raw_type ?? '').toLowerCase().trim();
   if (raw === 'materi' || raw === 'material' || raw === 'info') return false;
-  return (
-    props.activity.type === 'assignment' ||
-    props.activity.type === 'homework' ||
-    props.activity.type === 'test'
-  );
+  // Submission-trackable types only (tugas / ujian).
+  return props.activity.type === 'tugas' || props.activity.type === 'ujian';
 });
 
 function fmtDate(iso?: string | null): string {

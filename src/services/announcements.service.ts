@@ -162,6 +162,12 @@ export const AnnouncementService = {
     const body: Record<string, unknown> = { ...payload };
     if (payload.category && body.type === undefined) body.type = payload.category;
     delete body.category;
+    // The backend's required text column is `content`; the form/model field
+    // is `body`. Map it so create/update doesn't 422 with "content required".
+    if (payload.body !== undefined) {
+      if (body.content === undefined) body.content = payload.body;
+      delete body.body;
+    }
     const res = await api.post('/announcement', body);
     const respBody = res.data?.data ?? res.data ?? {};
     return announcementFromJson(respBody as Record<string, unknown>);
@@ -176,6 +182,12 @@ export const AnnouncementService = {
     const body: Record<string, unknown> = { ...payload };
     if (payload.category && body.type === undefined) body.type = payload.category;
     delete body.category;
+    // The backend's required text column is `content`; the form/model field
+    // is `body`. Map it so create/update doesn't 422 with "content required".
+    if (payload.body !== undefined) {
+      if (body.content === undefined) body.content = payload.body;
+      delete body.body;
+    }
     const res = await api.put(`/announcement/${id}`, body);
     const respBody = res.data?.data ?? res.data ?? {};
     return announcementFromJson(respBody as Record<string, unknown>);
@@ -210,7 +222,10 @@ export const AnnouncementService = {
     audience_matrix?: Record<string, (string | number)[]>;
   }): Promise<{ reach: number; breakdown?: Record<string, number> }> {
     try {
-      const res = await api.post('/announcement/preview-reach', payload);
+      // Route is registered plural-only (announcements/preview-reach); the
+      // singular alias has no preview-reach, so the old path 404'd and the
+      // chip always showed 0 ("0 penerima").
+      const res = await api.post('/announcements/preview-reach', payload);
       const body = res.data?.data ?? res.data ?? {};
       return {
         reach: Number(body.reach ?? body.total ?? 0),

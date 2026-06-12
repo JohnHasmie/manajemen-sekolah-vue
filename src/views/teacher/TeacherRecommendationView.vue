@@ -24,6 +24,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useAcademicYearStore } from '@/stores/academic-year';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 import {
   RateLimitError,
@@ -51,6 +52,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
 
 const auth = useAuthStore();
+const academicYear = useAcademicYearStore();
 const router = useRouter();
 
 // ── Mode toggle (Mengajar ↔ Wali Kelas) ──
@@ -98,10 +100,27 @@ const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
 // ── Subjects cache (drives the Generate sheet) ──
 const subjects = ref<Subject[]>([]);
-async function loadSubjects() {
+// Load the subject options for the Generate sheet, scoped to the active
+// context for the picked class:
+//  - Mengajar mode → ONLY the subjects the logged-in teacher teaches in
+//    this class (GET /teacher/{id}/subjects?scope=teaching&class_id=…).
+//  - Wali mode → all school subjects (homeroom oversight is cross-teacher).
+// Previously this always loaded every school subject, so the Mengajar tab
+// listed subjects the teacher doesn't teach.
+async function loadSheetSubjects(classId: string) {
   try {
-    const res = await SubjectService.list({ per_page: 100 });
-    subjects.value = res.items;
+    if (isHomeroomMode.value) {
+      const res = await SubjectService.list({ per_page: 100 });
+      subjects.value = res.items;
+    } else if (teacherId.value) {
+      subjects.value = await SubjectService.listForTeacher(
+        teacherId.value,
+        'teaching',
+        classId,
+      );
+    } else {
+      subjects.value = [];
+    }
   } catch {
     subjects.value = [];
   }
@@ -148,13 +167,18 @@ async function loadSummariesForVisible() {
   if (todo.length === 0) return;
   for (const c of todo) loadingSummaryFor.value.add(c.id);
   // Promise.all so all cards reveal numbers near-simultaneously;
-  // failures degrade to an empty stat strip per card. The HTTP
-  // interceptor auto-injects `academic_year_id` from the active-year
-  // store so we don't have to forward it explicitly here.
+  // failures degrade to an empty stat strip per card. Pass the active
+  // academic year EXPLICITLY: the AI client (aiApi) doesn't carry the
+  // year-injecting interceptor the core client does, so without this the
+  // summary counted ALL years (incl. recs with a null/old year) — that's
+  // why the web showed 62 pending vs mobile's 38 (mobile forwards the year).
+  const academicYearId = academicYear.selectedYearId ?? undefined;
   await Promise.all(
     todo.map(async (c) => {
       try {
-        const summary = await RecommendationService.getClassSummary(c.id);
+        const summary = await RecommendationService.getClassSummary(c.id, {
+          academic_year_id: academicYearId,
+        });
         summaryByClass.value[c.id] = summary;
       } catch {
         summaryByClass.value[c.id] = null;
@@ -166,7 +190,9 @@ async function loadSummariesForVisible() {
 }
 
 onMounted(async () => {
-  await Promise.all([loadClasses(), loadSubjects()]);
+  // Subjects are loaded per-class when the Generate sheet opens (scoped to
+  // teacher + class), so no school-wide preload here.
+  await loadClasses();
   await loadSummariesForVisible();
 });
 
@@ -267,7 +293,16 @@ function openStudents(cls: { id: string; name: string }) {
   router.push(target);
 }
 
-function openGenerate(cls: { id: string; name: string; student_count?: number }) {
+async function openGenerate(cls: {
+  id: string;
+  name: string;
+  student_count?: number;
+}) {
+  // Load the per-class subject options BEFORE opening the sheet so it mounts
+  // with the correct list (and so Mengajar mode is scoped to this teacher's
+  // subjects in this class).
+  await loadSheetSubjects(cls.id);
+
   const summary = summaryByClass.value[cls.id];
   generateTarget.value = {
     classId: cls.id,
@@ -349,8 +384,12 @@ async function runGenerate(cfg: GenerateConfig) {
         tone: 'error',
       };
     } else {
+      // Show the (already friendly) error message directly — no technical
+      // prefix or raw "AI error" fallback.
       toast.value = {
-        message: `Semua permintaan gagal: ${failed[0].error?.message ?? 'AI error'}.`,
+        message:
+          failed[0].error?.message ??
+          'Maaf, rekomendasi AI belum bisa dibuat saat ini. Coba lagi beberapa saat lagi ya.',
         tone: 'error',
       };
     }
