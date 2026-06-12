@@ -17,7 +17,7 @@
  *   - POST   /api/demo-requests/{id}/approve
  *   - POST   /api/demo-requests/{id}/reject
  */
-import type { DemoWizardPayload } from './demo';
+import type { DemoWizardPayload, DemoRegistrationItem, ActiveSchoolItem } from './demo';
 
 /** Lifecycle status of a demo request. */
 export type DemoRequestStatus =
@@ -90,6 +90,10 @@ export interface DemoRequest {
   activated_school_id: string | null;
   created_at: string | null;
   updated_at: string | null;
+
+  other_requests_count?: number;
+  other_requests?: DemoRegistrationItem[];
+  active_schools?: ActiveSchoolItem[];
 
   // Relations (detail only).
   requester?: DemoRequestRequester | null;

@@ -225,6 +225,12 @@ function goToDetail(row: DemoRequest) {
               >
                 {{ statusLabel(row.status) }}
               </span>
+              <span
+                v-if="row.other_requests_count"
+                class="text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1"
+              >
+                🔗 +{{ row.other_requests_count }} lainnya
+              </span>
             </div>
             <p class="text-xs text-slate-500 mt-0.5 truncate">
               {{ row.full_name }} · {{ row.jabatan }}

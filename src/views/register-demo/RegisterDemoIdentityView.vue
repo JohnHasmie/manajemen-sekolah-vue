@@ -33,6 +33,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { useAuthStore } from '@/stores/auth';
+import { useToast } from '@/composables/useToast';
 import {
   DEMO_SOCIAL_CHANNELS,
   validateRequester,
@@ -208,14 +209,14 @@ async function handleSend() {
   // existing /demo/provision endpoint — backend contract unchanged.
   const ok = await wizard.provision();
   if (ok) {
-    // The pending demo request is recorded; the requester's register_demo
-    // session has served its purpose. Releasing it now prevents the
-    // LoginView/route-guard `step==='register_demo'` redirect from bouncing
-    // the user back into the wizard when they hit Selesai (→/login) or
-    // reload. logout() is local+server best-effort, never navigates, and
-    // does NOT touch the demo-wizard localStorage (the persisted pending
-    // receipt survives, so the pending screen still renders).
-    await auth.logout();
+    // The pending demo request is recorded. If this is a brand new user who
+    // only has a 'register_demo' session, we log them out so they can log back
+    // in when activated. But if they are an existing user with active schools,
+    // we keep them signed in so they can continue to their dashboard.
+    const isExistingUser = auth.schools && auth.schools.length > 0;
+    if (!isExistingUser) {
+      await auth.logout();
+    }
     showPendingDialog.value = true;
   }
 }
@@ -231,9 +232,22 @@ function handleBack() {
 
 function handleFinish() {
   // Terminal — the demo isn't live yet (pending review). Clear local
-  // progress and return to login; activation arrives later via WA/email.
+  // progress and return to login or home dashboard depending on user status.
   wizard.clearLocalProgress();
-  router.replace('/login');
+  const isExistingUser = auth.schools && auth.schools.length > 0;
+  if (isExistingUser) {
+    // If they have an active role, they go straight to their dashboard.
+    // If they don't (because they logged in via ?intent=demo), we send them to /
+    // which will bounce them to /login to show the SchoolPicker.
+    // To avoid confusion ("beralih ke login"), we add a toast message.
+    if (!auth.activeRole) {
+      // Import the toast from composables
+      useToast().success(t('registerDemo.demoRequestedPleaseSelectSchool', 'Pendaftaran demo berhasil. Silakan pilih sekolah Anda.'));
+    }
+    router.replace('/');
+  } else {
+    router.replace('/login');
+  }
 }
 
 const sendLabel = computed(() =>

@@ -36,9 +36,28 @@ const toast = ref<{ message: string; tone: 'error' | 'success' } | null>(null);
 
 const isLoginStep = computed(() => auth.step === 'login');
 
+const hasDemoIntent = () => {
+  return route.query.intent === 'demo' || sessionStorage.getItem('demo_intent_v1') === '1';
+};
+
+const clearDemoIntent = () => {
+  try {
+    sessionStorage.removeItem('demo_intent_v1');
+  } catch {
+    // non-fatal
+  }
+};
+
 // Surface any initial error passed via the query string
 // (the 401 interceptor in http.ts redirects with ?reason=...).
 onMounted(async () => {
+  // If the user wants to register a demo and is already authenticated,
+  // skip the school/role selector and go straight to the wizard.
+  if (hasDemoIntent() && auth.isAuthenticated) {
+    clearDemoIntent();
+    router.replace('/register-demo');
+    return;
+  }
   // If the user is already fully authenticated, redirect immediately
   // instead of showing the "Menyiapkan Dashboard..." spinner forever.
   if (auth.isAuthenticated && auth.step === 'done') {
@@ -62,6 +81,11 @@ onMounted(async () => {
 watch(
   () => auth.step,
   (step) => {
+    if (hasDemoIntent() && (step === 'done' || step === 'school' || step === 'role')) {
+      clearDemoIntent();
+      router.replace('/register-demo');
+      return;
+    }
     if (step === 'done') {
       router.replace('/');
     } else if (step === 'register_demo') {

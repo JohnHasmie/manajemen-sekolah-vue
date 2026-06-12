@@ -956,3 +956,27 @@ export function defaultWizardPayload(): DemoWizardPayload {
     },
   };
 }
+
+export interface DemoRegistrationItem {
+  id: string;
+  status: 'pending' | 'approved' | 'rejected' | 'expired';
+  tenant_type: 'sekolah' | 'bimbel';
+  school_name: string | null;
+  demo_expires_at: string | null;
+  activated_school_id: string | null;
+  created_at: string | null;
+}
+
+export interface ActiveSchoolItem {
+  id: string;
+  name: string;
+  is_demo: boolean;
+  tenant_type: 'sekolah' | 'bimbel';
+  demo_expires_at: string | null;
+}
+
+export interface MyRegistrationsResponse {
+  demo_requests: DemoRegistrationItem[];
+  active_schools: ActiveSchoolItem[];
+}
+

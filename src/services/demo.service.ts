@@ -8,6 +8,7 @@ import type {
   DemoPendingResponse,
   DemoWizardPayload,
   SchoolSearchHit,
+  MyRegistrationsResponse,
 } from '@/types/demo';
 
 interface WizardStateResponse {
@@ -230,6 +231,16 @@ export const DemoService = {
       return body ?? null;
     } catch {
       return null;
+    }
+  },
+
+  async getMyRegistrations(): Promise<MyRegistrationsResponse> {
+    try {
+      const res = await api.get('/demo/my-registrations');
+      const data = res.data?.data;
+      return data ?? { demo_requests: [], active_schools: [] };
+    } catch {
+      return { demo_requests: [], active_schools: [] };
     }
   },
 };

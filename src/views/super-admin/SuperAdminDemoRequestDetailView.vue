@@ -496,6 +496,57 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
           </div>
         </section>
 
+        <!-- SECTION 1B · RIWAYAT PENDAFTARAN LAIN -->
+        <section v-if="detail && ((detail.active_schools && detail.active_schools.length > 0) || (detail.other_requests && detail.other_requests.length > 0))" class="bg-white border border-slate-200 rounded-2xl p-4">
+          <h2 class="text-[11px] font-black uppercase tracking-widest text-indigo-600 mb-3">
+            Riwayat Pendaftar (Multi-Tenant)
+          </h2>
+          <p class="text-xs text-slate-500 mb-3">
+            Pendaftar ini terdeteksi memiliki registrasi atau lembaga aktif lain di bawah akun yang sama.
+          </p>
+
+          <div class="space-y-2">
+            <!-- Active schools -->
+            <div v-for="school in detail.active_schools" :key="school.id" class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-xs">
+              <div class="flex items-center gap-2">
+                <span>{{ school.tenant_type === 'bimbel' ? '📚' : '🏫' }}</span>
+                <div>
+                  <div class="font-bold text-slate-800">{{ school.name }}</div>
+                  <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Lembaga Aktif</div>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold text-[10px] uppercase tracking-wider">
+                Aktif
+              </span>
+            </div>
+
+            <!-- Other requests -->
+            <div v-for="req in detail.other_requests" :key="req.id" class="flex items-center justify-between p-2.5 bg-slate-50/50 border border-slate-100/50 rounded-lg text-xs">
+              <div class="flex items-center gap-2">
+                <span>{{ req.tenant_type === 'bimbel' ? '📚' : '🏫' }}</span>
+                <div>
+                  <div class="font-semibold text-slate-700">{{ req.school_name || 'Tanpa Nama' }}</div>
+                  <div class="text-[10px] text-slate-400">Pengajuan: {{ formatDateTime(req.created_at) }}</div>
+                </div>
+              </div>
+              <div>
+                <span v-if="req.status === 'pending'" class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold text-[10px] uppercase tracking-wider">
+                  Pending
+                </span>
+                <span v-else-if="req.status === 'rejected'" class="px-2 py-0.5 rounded bg-red-50 text-red-700 font-semibold text-[10px] uppercase tracking-wider">
+                  Ditolak
+                </span>
+                <span v-else-if="req.status === 'expired'" class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold text-[10px] uppercase tracking-wider">
+                  Kedaluwarsa
+                </span>
+                <span v-else class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold text-[10px] uppercase tracking-wider">
+                  Disetujui
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- SECTION 2 · DATA SEKOLAH -->
         <section class="bg-white border border-slate-200 rounded-2xl p-4">
           <h2
