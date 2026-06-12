@@ -18,6 +18,7 @@ import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { DemoService } from '@/services/demo.service';
 import { useToast } from '@/composables/useToast';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import ToastHost from '@/components/ui/ToastHost.vue';
 import QuestionInput from './QuestionInput.vue';
 import {
   detectBadPhone,
@@ -190,19 +191,37 @@ function skip(): void {
 // ── submit ───────────────────────────────────────────────────────────
 
 const submitting = ref(false);
+/**
+ * Persistent error message rendered above the footer when submit fails.
+ * Toast disappears after a few seconds; this stays until the user
+ * dismisses it or successfully retries. Critical for throttle/network
+ * errors where the user needs time to read "wait 1 minute" copy.
+ */
+const submitError = ref<string | null>(null);
 
 async function submit(): Promise<void> {
   submitting.value = true;
+  submitError.value = null;
   try {
     const ok = await wizard.provision();
     if (ok) {
       router.push('/register-demo/identity?done=1');
     } else {
-      toast.error(wizard.error ?? 'Gagal mengirim permintaan demo.');
+      const msg = wizard.error ?? 'Gagal mengirim permintaan demo.';
+      submitError.value = msg;
+      toast.error(msg);
     }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Gagal mengirim permintaan demo.';
+    submitError.value = msg;
+    toast.error(msg);
   } finally {
     submitting.value = false;
   }
+}
+
+function dismissSubmitError(): void {
+  submitError.value = null;
 }
 
 // ── debounced remote save on each answer commit ─────────────────────
@@ -351,6 +370,42 @@ watch(
       </Transition>
     </main>
 
+    <!-- Submit error banner — persistent until dismissed or retried. -->
+    <Transition
+      enter-active-class="transition duration-200"
+      enter-from-class="opacity-0 -translate-y-1"
+      leave-active-class="transition duration-150"
+      leave-to-class="opacity-0 -translate-y-1"
+    >
+      <div
+        v-if="submitError"
+        class="bg-rose-50 border-t border-rose-200 text-rose-800"
+      >
+        <div class="max-w-3xl mx-auto px-6 py-3 flex items-start gap-3">
+          <NavIcon
+            name="alert-circle"
+            :size="16"
+            class="mt-0.5 flex-shrink-0 text-rose-600"
+          />
+          <div class="flex-1 min-w-0">
+            <p class="text-[13px] font-bold leading-tight">
+              Gagal mengirim permintaan demo
+            </p>
+            <p class="text-[12px] text-rose-700/90 leading-snug mt-0.5">
+              {{ submitError }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="text-[11px] font-semibold text-rose-700 hover:text-rose-900 flex-shrink-0"
+            @click="dismissSubmitError"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200">
       <div class="max-w-3xl mx-auto px-6 py-3.5 flex items-center justify-between">
@@ -379,5 +434,7 @@ watch(
         </button>
       </div>
     </footer>
+
+    <ToastHost />
   </div>
 </template>
