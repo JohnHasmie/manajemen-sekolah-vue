@@ -37,10 +37,13 @@ const emit = defineEmits<{
   click: [cls: RaportClassSummary];
 }>();
 
-// Belum = students - any-status raport
+// Belum = students - any-status raport. Coalesce both operands: if the
+// class summary omits either field, `undefined - n` is NaN and
+// `Math.max(0, NaN)` stays NaN — which rendered literally as "NaN" on the
+// "Belum" stat (founder report). Guard so it falls back to 0.
 const belumCount = computed(() => {
   const s = props.cls;
-  return Math.max(0, s.student_count - s.total_raports);
+  return Math.max(0, (s.student_count ?? 0) - (s.total_raports ?? 0));
 });
 
 const completionPct = computed(() => {
