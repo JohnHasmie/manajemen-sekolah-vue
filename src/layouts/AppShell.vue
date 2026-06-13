@@ -12,12 +12,14 @@
   `lib/features/dashboard/presentation/screens/dashboard_screen.dart`.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useBimbelThemeStore } from '@/stores/bimbel-theme';
 import { useI18n } from 'vue-i18n';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { useNavMenu } from '@/composables/useNavMenu';
+import { tenantKindFromRaw } from '@/composables/useTenant';
 import SchoolPill from '@/components/feature/SchoolPill.vue';
 import DemoCountdownBanner from '@/components/feature/DemoCountdownBanner.vue';
 import NotificationBell from '@/components/feature/NotificationBell.vue';
@@ -31,14 +33,51 @@ const auth = useAuthStore();
 const route = useRoute();
 const { t } = useI18n();
 const color = useRoleColor(() => auth.activeRole);
+const bimbelTheme = useBimbelThemeStore();
 
-// Bimbel routes render on the dark navy surface (mirrors mobile).
-// Route-name driven so school pages keep the light chrome untouched;
-// the role class picks the tier accent (admin deep / tutor mid / wali
-// light navy) consumed by the `bimbel-*` tailwind tokens.
-const isBimbelRoute = computed(() =>
-  String(route.name ?? '').includes('tutoring'),
-);
+// Active tenant is a tutoring center? The tenant_type lives on either
+// the User payload directly (post-login normalisation) or on the
+// active school in the user's schools list. Either source is fine;
+// we just need it cheaply at render time so we can branch the surface.
+const isBimbelTenant = computed(() => {
+  const raw =
+    auth.user?.tenant_type ??
+    (auth.user?.schools ?? []).find(
+      (s) => (s.id ?? s.school_id) === auth.schoolId,
+    )?.tenant_type;
+  return tenantKindFromRaw(raw) === 'TUTORING_CENTER';
+});
+
+// Bimbel routes render on the bimbel surface (dark by default, light
+// when the user picks it in Tutor → Tampilan). Two paths into this:
+//
+//  1. The dedicated tutor routes — their route names start with
+//     `teacher.tutoring` / contain `tutoring`, so the substring check
+//     catches them regardless of role.
+//  2. The role-home route (`teacher.home`) when the active tenant is
+//     a tutoring center — `TeacherHomeRouter` swaps the body to
+//     `TutorTutoringHomeView` there, and that view uses the
+//     `bg-bimbel-panel` / `text-bimbel-text-hi` tokens. Without this
+//     branch the wrapper class never lands, so those tokens fall
+//     through to their dark `:root` defaults and we get a half-light
+//     half-dark dashboard.
+//
+// School pages keep the light chrome untouched (neither branch matches).
+const isBimbelRoute = computed(() => {
+  const name = String(route.name ?? '');
+  if (name.includes('tutoring')) return true;
+  if (name === 'teacher.home' && isBimbelTenant.value) return true;
+  return false;
+});
+const isTutorBimbelRoute = computed(() => {
+  const name = String(route.name ?? '');
+  if (name.startsWith('teacher.tutoring')) return true;
+  // Same reasoning as `isBimbelRoute` — the bimbel tutor home is
+  // rendered on `teacher.home` for tutoring-center tenants, and its
+  // surface should obey the user's light/dark/auto pick.
+  if (name === 'teacher.home' && isBimbelTenant.value) return true;
+  return false;
+});
 const bimbelRoleClass = computed(() =>
   auth.activeRole === 'teacher'
     ? 'bimbel-tutor'
@@ -46,6 +85,66 @@ const bimbelRoleClass = computed(() =>
       ? 'bimbel-wali'
       : 'bimbel-admin',
 );
+/**
+ * Surface class for bimbel pages.
+ *
+ * Every bimbel surface (admin / tutor / wali) now obeys the user's
+ * mode pick (light / dark / auto) via the bimbel theme store. The
+ * whole tokenised CSS-var system (`--bimbel-panel`, `--bimbel-text-hi`,
+ * etc.) is the SHARED mechanism — each component already reads those
+ * vars, so flipping `.bimbel-light` ↔ `.bimbel-dark` on this single
+ * `<main>` element re-skins every page underneath at once. No
+ * per-page light/dark wiring needed.
+ *
+ * Previously the admin + wali branches were pinned to `'bimbel-dark'`,
+ * which is why "/admin/tutoring" and friends came out fully dark even
+ * with the tutor toggle set to light — the toggle simply wasn't
+ * consulted for those roles. Removing the branch lets the same store
+ * drive all three roles.
+ */
+const bimbelSurfaceClass = computed(() => bimbelTheme.rootClass);
+
+/**
+ * Mirror the bimbel surface classes (`.bimbel-light` / `.bimbel-dark`
+ * + role tier `.bimbel-tutor` / `.bimbel-admin` / `.bimbel-wali`)
+ * onto `<html>` whenever we're rendering a bimbel route.
+ *
+ * Why this exists: `<main>` already carries those classes for the
+ * in-tree cascade, but our `<Modal>` primitive teleports its content
+ * to `<body>` — outside the `<main>` cascade. Without this mirror,
+ * `bg-bimbel-panel` / `text-bimbel-text-hi` inside a teleported
+ * dialog fall through to the `:root` DARK defaults, so an admin
+ * with the toggle set to "Selalu terang" still sees a dark
+ * `Detail Tagihan` modal. By writing the classes to
+ * `document.documentElement` (i.e. `<html>`), every teleport target
+ * inherits the same CSS-var values as the rest of the page.
+ *
+ * On school routes (and after logout) we strip the classes so we
+ * don't leak the bimbel palette onto the standard school chrome.
+ */
+const BIMBEL_HTML_CLASSES = ['bimbel-light', 'bimbel-dark', 'bimbel-tutor', 'bimbel-admin', 'bimbel-wali'];
+function syncBimbelHtmlClasses() {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  // Clear any previous bimbel classes so role/mode swaps don't pile up.
+  root.classList.remove(...BIMBEL_HTML_CLASSES);
+  if (!isBimbelRoute.value) return;
+  root.classList.add(bimbelSurfaceClass.value);
+  root.classList.add(bimbelRoleClass.value);
+}
+watch(
+  [isBimbelRoute, bimbelSurfaceClass, bimbelRoleClass],
+  syncBimbelHtmlClasses,
+  { immediate: true },
+);
+onBeforeUnmount(() => {
+  // Logout / route to /login destroys AppShell — make sure the
+  // login screen doesn't inherit a stale dark palette.
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.remove(...BIMBEL_HTML_CLASSES);
+  }
+});
+
 const menu = useNavMenu();
 const notifications = useNotificationsStore();
 
@@ -404,7 +503,7 @@ const schoolInitial = computed(() => {
 
       <main
         class="flex-1 overflow-y-auto no-scrollbar"
-        :class="isBimbelRoute ? ['bimbel-dark', bimbelRoleClass] : 'bg-slate-50'"
+        :class="isBimbelRoute ? [bimbelSurfaceClass, bimbelRoleClass] : 'bg-slate-50'"
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <RouterView />

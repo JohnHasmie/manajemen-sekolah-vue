@@ -407,6 +407,13 @@ defineProps<{
       <line x1="10" y1="11" x2="10" y2="17" />
       <line x1="14" y1="11" x2="14" y2="17" />
     </template>
+    <template v-else-if="name === 'moon'">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </template>
+    <template v-else-if="name === 'smartphone'">
+      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+      <line x1="12" y1="18" x2="12.01" y2="18" />
+    </template>
     <template v-else>
       <circle cx="12" cy="12" r="10" />
     </template>

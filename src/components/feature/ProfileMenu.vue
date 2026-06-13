@@ -10,6 +10,8 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useI18n } from 'vue-i18n';
 import { usePreferencesStore } from '@/stores/preferences';
+import { useBimbelThemeStore, type BimbelThemeMode } from '@/stores/bimbel-theme';
+import { tenantKindFromRaw } from '@/composables/useTenant';
 import Modal from '@/components/ui/Modal.vue';
 import Toast from '@/components/ui/Toast.vue';
 import Spinner from '@/components/ui/Spinner.vue';
@@ -17,8 +19,40 @@ import type { Role, School } from '@/types/auth';
 
 const auth = useAuthStore();
 const prefs = usePreferencesStore();
+const bimbelTheme = useBimbelThemeStore();
 const router = useRouter();
 const { t } = useI18n();
+
+/**
+ * Appearance picker is only meaningful on the bimbel surface (the
+ * `--bimbel-*` CSS vars are the only thing the light/dark toggle
+ * controls). For school tenants the rest of the app is locked to
+ * the light chrome anyway, so we hide the menu item to avoid an
+ * inert affordance.
+ */
+const isBimbelTenant = computed(() => {
+  const raw =
+    auth.user?.tenant_type ??
+    (auth.user?.schools ?? []).find(
+      (s) => (s.id ?? s.school_id) === auth.schoolId,
+    )?.tenant_type;
+  return tenantKindFromRaw(raw) === 'TUTORING_CENTER';
+});
+
+const showAppearancePicker = ref(false);
+const appearanceOptions = computed<
+  Array<{ mode: BimbelThemeMode; icon: string; titleKey: string; subKey: string }>
+>(() => [
+  { mode: 'auto', icon: 'smartphone', titleKey: 'profileMenu.appearanceAuto', subKey: 'profileMenu.appearanceAutoSub' },
+  { mode: 'light', icon: 'sun', titleKey: 'profileMenu.appearanceLight', subKey: 'profileMenu.appearanceLightSub' },
+  { mode: 'dark', icon: 'moon', titleKey: 'profileMenu.appearanceDark', subKey: 'profileMenu.appearanceDarkSub' },
+]);
+
+function pickAppearance(m: BimbelThemeMode) {
+  bimbelTheme.setMode(m);
+  showAppearancePicker.value = false;
+  open.value = false;
+}
 
 const open = ref(false);
 const showSchoolPicker = ref(false);
@@ -381,6 +415,33 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
           <span class="text-xs text-slate-400 uppercase">{{ prefs.locale }}</span>
         </button>
 
+        <!--
+          Appearance (Tampilan) — only shown on bimbel tenants because
+          the light/dark switch is wired to the `--bimbel-*` CSS
+          variables; school tenants render on the locked-light school
+          chrome where the toggle would be a no-op.
+        -->
+        <button
+          v-if="isBimbelTenant"
+          type="button"
+          class="w-full text-left px-md py-sm rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm text-slate-700"
+          @click="showAppearancePicker = true; open = false;"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <span class="flex-1">{{ t('profileMenu.appearance') }}</span>
+          <span class="text-[10px] font-bold text-slate-400 uppercase">{{ t(`profileMenu.appearance${bimbelTheme.mode.charAt(0).toUpperCase() + bimbelTheme.mode.slice(1)}`) }}</span>
+        </button>
+
         <!-- Logout -->
         <div class="border-t border-slate-100 mt-1 pt-1">
           <button
@@ -506,6 +567,79 @@ onBeforeUnmount(() => document.removeEventListener('click', close));
               {{ t('profileMenu.activeBadge') }}
             </span>
             <Spinner v-else-if="switching === 'role'" size="sm" />
+          </button>
+        </li>
+      </ul>
+    </Modal>
+
+    <!--
+      Appearance picker — three radio tiles (Otomatis / Selalu terang /
+      Selalu gelap). Picking a mode calls `bimbelTheme.setMode` which
+      mutates the store + persists to localStorage; AppShell's
+      `bimbelSurfaceClass` is reactive so the surface flips on the
+      same frame.
+
+      We don't re-route to TutorAppearanceView because that screen is
+      tutor-themed (kicker "Bimbel · Tutor", role 'guru') and only
+      sits in the tutor nav — admins / wali wouldn't have a clean
+      back path. A small in-place modal keeps it role-agnostic.
+    -->
+    <Modal
+      v-if="showAppearancePicker"
+      :title="t('profileMenu.appearancePickerTitle')"
+      :subtitle="t('profileMenu.appearancePickerSubtitle')"
+      @close="showAppearancePicker = false"
+    >
+      <ul class="space-y-2">
+        <li v-for="opt in appearanceOptions" :key="opt.mode">
+          <button
+            type="button"
+            class="w-full text-left px-4 py-3 rounded-xl border flex items-start gap-3 transition-colors"
+            :class="
+              bimbelTheme.mode === opt.mode
+                ? 'border-brand-cobalt bg-brand-cobalt/5'
+                : 'border-slate-200 hover:bg-slate-50'
+            "
+            @click="pickAppearance(opt.mode)"
+          >
+            <span
+              class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
+              :class="
+                bimbelTheme.mode === opt.mode
+                  ? 'bg-brand-cobalt text-white'
+                  : 'bg-slate-100 text-slate-600'
+              "
+            >
+              <!-- Inline icon shapes — keeps this modal independent of NavIcon registration. -->
+              <svg v-if="opt.icon === 'smartphone'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                <line x1="12" y1="18" x2="12.01" y2="18" />
+              </svg>
+              <svg v-else-if="opt.icon === 'sun'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-bold text-slate-900">{{ t(opt.titleKey) }}</span>
+              <span class="block text-[11px] text-slate-500">{{ t(opt.subKey) }}</span>
+            </span>
+            <span
+              v-if="bimbelTheme.mode === opt.mode"
+              class="text-[10px] font-bold text-brand-cobalt bg-brand-cobalt/10 px-2 py-0.5 rounded-full uppercase tracking-wider"
+            >
+              {{ t('profileMenu.activeBadge') }}
+            </span>
           </button>
         </li>
       </ul>

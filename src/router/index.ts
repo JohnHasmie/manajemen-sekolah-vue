@@ -1015,6 +1015,19 @@ const routes: RouteRecordRaw[] = [
           import('@/views/teacher/tutoring/TutorRecurringSessionsView.vue'),
         meta: { role: 'guru' satisfies Role },
       },
+      {
+        // Tutor Tampilan — the light/dark mode picker for the bimbel
+        // (tutor) surface. Route NAME contains "tutoring" so AppShell's
+        // isBimbelRoute guard fires and the page renders on the bimbel
+        // surface; it picks `bimbel-light` / `bimbel-dark` via the
+        // useBimbelThemeStore state so the user can preview their choice
+        // live on this very screen.
+        path: 'teacher/tutoring/appearance',
+        name: 'teacher.tutoring.appearance',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorAppearanceView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
 
       // Staff subtree (placeholder until staff feature surfaces are
       // confirmed — see task #51).

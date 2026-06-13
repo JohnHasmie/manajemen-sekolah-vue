@@ -1389,7 +1389,16 @@
     "pendingFieldStatus": "Status",
     "pendingStatusBadge": "Menunggu tinjauan",
     "pendingNextSteps": "Informasi aktivasi — termasuk cara masuk — akan dikirimkan ke WhatsApp dan email Anda setelah permintaan disetujui.",
-    "pendingFinalNote": "Anda boleh menutup halaman ini. Kami akan menghubungi Anda."
+    "pendingFinalNote": "Anda boleh menutup halaman ini. Kami akan menghubungi Anda.",
+    "existingTenantTitle": "Akun Anda sudah terhubung",
+    "existingTenantLineSchool": "Sekolah {name} · sebagai {role}",
+    "existingTenantLineBimbel": "Bimbel {name} · sebagai {role}",
+    "existingTenantHint": "Anda tetap bisa membuat sekolah demo baru di sini untuk dicoba secara terpisah.",
+    "roleLabelTeacher": "Guru",
+    "roleLabelHomeroom": "Wali Kelas",
+    "roleLabelParent": "Wali Murid",
+    "roleLabelAdmin": "Admin",
+    "roleLabelStaff": "Staf"
   },
   "profileMenu": {
     "switchSchool": "Ganti Sekolah",
@@ -1413,7 +1422,16 @@
     "roleDescGuru": "Mengajar & input nilai",
     "roleDescWaliKelas": "Wali kelas — kelola homeroom & rapor",
     "roleDescWali": "Wali murid — pantau anak",
-    "roleDescStaff": "Staf tata usaha"
+    "roleDescStaff": "Staf tata usaha",
+    "appearance": "Tampilan",
+    "appearanceAuto": "Otomatis",
+    "appearanceLight": "Selalu terang",
+    "appearanceDark": "Selalu gelap",
+    "appearanceAutoSub": "Terang di pagi-sore, gelap di malam hari.",
+    "appearanceLightSub": "Latar putih sepanjang hari.",
+    "appearanceDarkSub": "Latar gelap untuk hemat mata di malam.",
+    "appearancePickerTitle": "Tampilan",
+    "appearancePickerSubtitle": "Pilih mode terang / gelap untuk seluruh tampilan bimbel."
   },
   "inbox": {
     "title": "Perlu Perhatian",
