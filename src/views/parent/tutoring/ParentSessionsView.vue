@@ -1,5 +1,5 @@
 <!--
-  ParentSesiView — wali Jadwal sesi list. Mockup parent_web_pages_browse
+  ParentSessionsView — wali Jadwal sesi list. Mockup parent_web_pages_browse
   frame 1: hero + range pill + table of sessions.
 -->
 <script setup lang="ts">

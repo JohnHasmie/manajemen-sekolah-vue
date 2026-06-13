@@ -1,5 +1,5 @@
 <!--
-  ParentPengumumanView — wali Pengumuman list. Mockup parent_web_pages_extra
+  ParentAnnouncementsView — wali Pengumuman list. Mockup parent_web_pages_extra
   frame 4: hero + Semua/Tutor/Admin pills + announcement cards.
 -->
 <script setup lang="ts">

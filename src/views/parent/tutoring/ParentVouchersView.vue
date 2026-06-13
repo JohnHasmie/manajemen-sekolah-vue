@@ -1,5 +1,5 @@
 <!--
-  ParentVoucherView — wali voucher list. Mockup parent_web_pages_extra
+  ParentVouchersView — wali voucher list. Mockup parent_web_pages_extra
   frame 2: hero + Aktif/Riwayat seg + voucher grid + "pakai kode" CTA.
 -->
 <script setup lang="ts">

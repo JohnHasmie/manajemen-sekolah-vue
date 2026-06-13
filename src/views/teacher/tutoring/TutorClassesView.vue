@@ -1,5 +1,5 @@
 <!--
-  TutorKelasView — list of all kelompok where the current user is
+  TutorClassesView — list of all kelompok where the current user is
   the assigned tutor. Mirrors mobile `TutorClassesScreen`.
 
   Header: navy hero with class count + a search box. Body: responsive

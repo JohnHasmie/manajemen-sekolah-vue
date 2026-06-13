@@ -1,5 +1,5 @@
 <!--
-  ParentLainnyaView — wali "Lainnya" hub. Mockup parent_web_pages_account
+  ParentMoreView — wali "Lainnya" hub. Mockup parent_web_pages_account
   frame 2: grouped tiles (Pembelajaran / Keuangan / Komunitas & Akun).
 -->
 <script setup lang="ts">

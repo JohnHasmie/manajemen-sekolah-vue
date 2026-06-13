@@ -197,7 +197,7 @@ const unpaidHint = computed(() => {
 function goPayFirstBill() {
   const first = unpaidBills.value[0];
   if (!first) return;
-  router.push({ name: 'parent.tutoring.bill-pay', params: { billId: first.id } });
+  router.push({ name: 'parent.tutoring.pay-bill', params: { billId: first.id } });
 }
 
 function goToTagihan() {

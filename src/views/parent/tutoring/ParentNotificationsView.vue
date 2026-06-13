@@ -1,5 +1,5 @@
 <!--
-  ParentNotifikasiView — wali notifications. Mockup parent_web_pages_account
+  ParentNotificationsView — wali notifications. Mockup parent_web_pages_account
   frame 1: hero + Semua/Belum-dibaca pill + Tandai-semua-dibaca CTA +
   styled notification rows (unread → faint cyan bg + dot).
 -->

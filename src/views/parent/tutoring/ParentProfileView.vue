@@ -1,5 +1,5 @@
 <!--
-  ParentProfilView — wali profile. Mockup parent_web_pages_account
+  ParentProfileView — wali profile. Mockup parent_web_pages_account
   frame 3: 2-col layout (avatar card on left, identitas form +
   anak terdaftar + keamanan on right).
 -->
@@ -28,7 +28,7 @@ function initial(name?: string | null): string {
 }
 
 function goToUbahSandi() {
-  router.push({ name: 'parent.tutoring.ubah-sandi' });
+  router.push({ name: 'parent.tutoring.change-password' });
 }
 </script>
 

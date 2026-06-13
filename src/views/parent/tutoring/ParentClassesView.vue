@@ -1,5 +1,5 @@
 <!--
-  ParentKelasView — wali Kelas list. Mirrors the mockup at
+  ParentClassesView — wali Kelas list. Mirrors the mockup at
   parent_web_pages_main frame 2 (responsive grid of gradient cards
   with search + status filter). Backed by getWaliClassMeta(studentId).
 -->
@@ -54,7 +54,7 @@ const filtered = computed(() => {
 
 function goToClass(c: TutoringWaliClassMeta) {
   router.push({
-    name: 'parent.tutoring.kelas-detail',
+    name: 'parent.tutoring.class-detail',
     params: { studentId: studentId.value, groupId: c.group_id },
   });
 }

@@ -1,5 +1,5 @@
 <!--
-  ParentTagihanView — wali Tagihan list. Mockup parent_web_pages_browse
+  ParentBillsView — wali Tagihan list. Mockup parent_web_pages_browse
   frame 2: hero + perlu-bayar ribbon + active/history seg + table.
 -->
 <script setup lang="ts">
@@ -68,7 +68,7 @@ function dueLabel(iso?: string | null): string {
 }
 
 function goPay(b: TutoringBill) {
-  router.push({ name: 'parent.tutoring.bill-pay', params: { billId: b.id } });
+  router.push({ name: 'parent.tutoring.pay-bill', params: { billId: b.id } });
 }
 </script>
 

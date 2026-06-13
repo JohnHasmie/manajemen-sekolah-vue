@@ -1,5 +1,5 @@
 <!--
-  ParentPeringkatView — wali leaderboard. Mockup parent_web_pages_extra
+  ParentLeaderboardView — wali leaderboard. Mockup parent_web_pages_extra
   frame 3: 2-col layout: leaderboard rows on left, child summary on right.
 -->
 <script setup lang="ts">

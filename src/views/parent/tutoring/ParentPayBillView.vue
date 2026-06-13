@@ -1,5 +1,5 @@
 <!--
-  ParentBayarTagihanView — wali submit-bukti-bayar page. Mockup
+  ParentPayBillView — wali submit-bukti-bayar page. Mockup
   parent_web_pages_create_update frame 3: accent-stripe tagihan info +
   form di kiri (metode + jumlah + tanggal + upload + catatan), bank
   info + tips di kanan.

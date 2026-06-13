@@ -1,5 +1,5 @@
 <!--
-  ParentDaftarLeadView — wali calon form. Mockup
+  ParentRegisterLeadView — wali calon form. Mockup
   parent_web_pages_create_update frame 1: form di kiri, info card di kanan.
   Submits to TutoringService.createLead.
 -->

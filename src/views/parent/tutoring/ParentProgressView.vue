@@ -1,5 +1,5 @@
 <!--
-  ParentNilaiView — wali nilai/progress. Mockup parent_web_pages_extra
+  ParentProgressView — wali nilai/progress. Mockup parent_web_pages_extra
   frame 1: hero + summary KPIs + per-mapel pills + trend chart +
   latest assessments table.
 -->

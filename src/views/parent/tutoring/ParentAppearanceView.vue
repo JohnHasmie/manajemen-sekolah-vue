@@ -1,5 +1,5 @@
 <!--
-  ParentTampilanView — wali Tampilan & bahasa & notifikasi settings.
+  ParentAppearanceView — wali Tampilan & bahasa & notifikasi settings.
   Mockup parent_web_pages_account frame 4: 3 form sections.
   Live wires to useBimbelThemeStore so the page itself flips theme
   the moment a mode card is picked.

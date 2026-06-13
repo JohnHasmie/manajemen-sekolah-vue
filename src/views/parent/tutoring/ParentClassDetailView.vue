@@ -1,5 +1,5 @@
 <!--
-  ParentKelasDetailView — wali kelas detail. 3 tabs (Aliran / Sesi
+  ParentClassDetailView — wali kelas detail. 3 tabs (Aliran / Sesi
   anak / Nilai anak). Mirrors mockup parent_web_pages_main frame 3
   (hero + tab + 2-col layout: feed/sesi/nilai on left, info-kelas
   card on right).

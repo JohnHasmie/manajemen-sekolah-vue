@@ -1,5 +1,5 @@
 <!--
-  TutorKelasDetailView — single kelompok detail page with 3 tabs:
+  TutorClassDetailView — single kelompok detail page with 3 tabs:
 
     - Aliran : chronological feed (recent sessions DONE + announcements
                + activities created), most recent first.

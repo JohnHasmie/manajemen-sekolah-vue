@@ -1,5 +1,5 @@
 <!--
-  ParentKegiatanView — wali kegiatan/tugas list. Mockup parent_web_pages_browse
+  ParentActivitiesView — wali kegiatan/tugas list. Mockup parent_web_pages_browse
   frame 3: hero + type filter + table.
 -->
 <script setup lang="ts">

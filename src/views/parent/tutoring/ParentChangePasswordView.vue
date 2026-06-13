@@ -1,5 +1,5 @@
 <!--
-  ParentUbahSandiView — wali ubah kata sandi page. Mockup
+  ParentChangePasswordView — wali ubah kata sandi page. Mockup
   parent_web_pages_create_update frame 4: 2-col layout (form left,
   tips on right).
 -->

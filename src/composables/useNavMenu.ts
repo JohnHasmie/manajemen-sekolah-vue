@@ -316,27 +316,27 @@ function parentTutoringNav(activeChildId: string): NavSection[] {
       titleKey: '',
       items: [
         { to: homePath, labelKey: 'tutoring.nav.home', icon: 'home' },
-        { to: `/parent/tutoring/${child}/kelas`, labelKey: 'tutoring.nav.classes', icon: 'layers' },
-        { to: `/parent/tutoring/${child}/sesi`, labelKey: 'tutoring.nav.sessions', icon: 'calendar' },
-        { to: `/parent/tutoring/${child}/tagihan`, labelKey: 'tutoring.nav.tagihan', icon: 'wallet' },
+        { to: `/parent/tutoring/${child}/classes`, labelKey: 'tutoring.nav.classes', icon: 'layers' },
+        { to: `/parent/tutoring/${child}/sessions`, labelKey: 'tutoring.nav.sessions', icon: 'calendar' },
+        { to: `/parent/tutoring/${child}/bills`, labelKey: 'tutoring.nav.bills', icon: 'wallet' },
       ],
     },
     {
       titleKey: 'tutoring.nav.sectionExtra',
       items: [
-        { to: `/parent/tutoring/${child}/kegiatan`, labelKey: 'tutoring.nav.kegiatan', icon: 'book' },
-        { to: `/parent/tutoring/${child}/nilai`, labelKey: 'tutoring.nav.nilai', icon: 'bar-chart' },
-        { to: `/parent/tutoring/${child}/peringkat`, labelKey: 'tutoring.nav.peringkat', icon: 'check-square' },
-        { to: `/parent/tutoring/${child}/pengumuman`, labelKey: 'nav.announcements', icon: 'megaphone' },
-        { to: '/parent/tutoring/voucher', labelKey: 'tutoring.nav.voucher', icon: 'sparkles' },
+        { to: `/parent/tutoring/${child}/activities`, labelKey: 'tutoring.nav.activities', icon: 'book' },
+        { to: `/parent/tutoring/${child}/progress`, labelKey: 'tutoring.nav.progress', icon: 'bar-chart' },
+        { to: `/parent/tutoring/${child}/leaderboard`, labelKey: 'tutoring.nav.leaderboard', icon: 'check-square' },
+        { to: `/parent/tutoring/${child}/announcements`, labelKey: 'nav.announcements', icon: 'megaphone' },
+        { to: '/parent/tutoring/vouchers', labelKey: 'tutoring.nav.myVouchers', icon: 'sparkles' },
       ],
     },
     {
       titleKey: 'tutoring.nav.sectionAccount',
       items: [
-        { to: '/parent/tutoring/notifikasi', labelKey: 'tutoring.nav.notifikasi', icon: 'bell' },
-        { to: '/parent/tutoring/profil', labelKey: 'tutoring.nav.profil', icon: 'user' },
-        { to: '/parent/tutoring/tampilan', labelKey: 'tutoring.nav.tampilan', icon: 'sun' },
+        { to: '/parent/tutoring/notifications', labelKey: 'tutoring.nav.notifications', icon: 'bell' },
+        { to: '/parent/tutoring/profile', labelKey: 'tutoring.nav.profile', icon: 'user' },
+        { to: '/parent/tutoring/appearance', labelKey: 'tutoring.nav.appearance', icon: 'sun' },
       ],
     },
   ];
