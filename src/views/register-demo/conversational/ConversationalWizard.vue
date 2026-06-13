@@ -203,16 +203,10 @@ async function submit(): Promise<void> {
   submitting.value = true;
   submitError.value = null;
   try {
-    const ok = await wizard.provision();
-    if (ok) {
-      router.push('/register-demo/identity?done=1');
-    } else {
-      const msg = wizard.error ?? 'Gagal mengirim permintaan demo.';
-      submitError.value = msg;
-      toast.error(msg);
-    }
+    wizard.prepareIdentityHandoff();
+    router.push('/register-demo/identity');
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Gagal mengirim permintaan demo.';
+    const msg = e instanceof Error ? e.message : 'Terjadi kesalahan.';
     submitError.value = msg;
     toast.error(msg);
   } finally {
@@ -233,7 +227,7 @@ watch(
     saveTimer = setTimeout(() => {
       DemoService.saveWizardState({
         payload: wizard.payload,
-        current_step: 0,
+        current_step: idx.value,
       }).catch(() => undefined);
     }, 600);
   },

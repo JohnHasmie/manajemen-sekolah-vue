@@ -226,8 +226,12 @@ function dismissPendingDialog() {
 }
 
 function handleBack() {
-  // Return to the wizard so the user can review/adjust school answers.
-  router.push('/register-demo');
+  // Return to the wizard so the user can review/adjust answers.
+  if (wizard.payload.tenant_type === 'bimbel') {
+    router.push('/register-demo/conversational');
+  } else {
+    router.push('/register-demo');
+  }
 }
 
 function handleFinish() {

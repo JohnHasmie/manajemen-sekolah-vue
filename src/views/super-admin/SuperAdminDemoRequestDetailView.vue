@@ -547,8 +547,58 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
           </div>
         </section>
 
-        <!-- SECTION 2 · DATA SEKOLAH -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-4">
+        <!-- SECTION 2 · DATA SEKOLAH ATAU BIMBEL -->
+        <section v-if="payload?.tenant_type === 'bimbel'" class="bg-white border border-slate-200 rounded-2xl p-4">
+          <h2
+            class="text-[11px] font-black uppercase tracking-widest text-role-admin mb-3"
+          >
+            DATA BIMBEL
+          </h2>
+          <dl class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-sm">
+            <div>
+              <dt class="text-[11px] text-slate-400">
+                Nama Bimbel
+              </dt>
+              <dd class="font-semibold text-slate-900">
+                {{ payload?.bimbel?.nama ?? detail.school_summary?.name ?? '—' }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-[11px] text-slate-400">
+                Jenjang
+              </dt>
+              <dd class="font-semibold text-slate-900">
+                {{ payload?.bimbel?.jenjang?.join(', ') ?? detail.school_summary?.education_level ?? '—' }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-[11px] text-slate-400">
+                Kota
+              </dt>
+              <dd class="font-semibold text-slate-900">
+                {{ payload?.bimbel?.location?.city ?? detail.school_summary?.city ?? '—' }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-[11px] text-slate-400">
+                Skala Siswa
+              </dt>
+              <dd class="font-semibold text-slate-900">
+                {{ payload?.bimbel?.student_scale ?? '—' }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-[11px] text-slate-400">
+                Skala Tutor
+              </dt>
+              <dd class="font-semibold text-slate-900">
+                {{ payload?.bimbel?.tutor_scale ?? '—' }}
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <section v-else class="bg-white border border-slate-200 rounded-2xl p-4">
           <h2
             class="text-[11px] font-black uppercase tracking-widest text-role-admin mb-3"
           >
@@ -619,6 +669,7 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
           </dl>
         </section>
 
+        <template v-if="payload?.tenant_type !== 'bimbel'">
         <!-- SECTION 3 · MATA PELAJARAN -->
         <section class="bg-white border border-slate-200 rounded-2xl p-4">
           <h2
@@ -922,6 +973,7 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
             {{ t('superAdmin.demoDetail.noScenarios') }}
           </p>
         </section>
+        </template>
 
         <!-- SECTION 10 · PEMBAYARAN -->
         <section class="bg-white border border-slate-200 rounded-2xl p-4">
