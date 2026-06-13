@@ -212,12 +212,12 @@ function goToDetail(row: DemoRequest) {
           <div
             class="w-10 h-10 rounded-xl bg-role-admin-soft text-role-admin grid place-items-center flex-shrink-0"
           >
-            <NavIcon name="school" :size="18" />
+            <NavIcon :name="row.school_summary.tenant_type === 'bimbel' ? 'book-open' : 'school'" :size="18" />
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="font-bold text-slate-900 truncate">
-                {{ row.school_summary.name ?? 'Sekolah tanpa nama' }}
+                {{ row.school_summary.name ?? 'Lembaga tanpa nama' }}
               </span>
               <span
                 class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border"
