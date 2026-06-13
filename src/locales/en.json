@@ -1417,7 +1417,16 @@
     "roleDescGuru": "Teach & input grades",
     "roleDescWaliKelas": "Homeroom teacher — class & report cards",
     "roleDescWali": "Parent — monitor child",
-    "roleDescStaff": "Administration staff"
+    "roleDescStaff": "Administration staff",
+    "appearance": "Appearance",
+    "appearanceAuto": "Auto",
+    "appearanceLight": "Always light",
+    "appearanceDark": "Always dark",
+    "appearanceAutoSub": "Light during the day, dark at night.",
+    "appearanceLightSub": "White background all day.",
+    "appearanceDarkSub": "Dark background — easier on the eyes at night.",
+    "appearancePickerTitle": "Appearance",
+    "appearancePickerSubtitle": "Choose light / dark mode for the whole bimbel surface."
   },
   "inbox": {
     "title": "Needs Attention",

@@ -1413,7 +1413,16 @@
     "roleDescGuru": "Mengajar & input nilai",
     "roleDescWaliKelas": "Wali kelas — kelola homeroom & rapor",
     "roleDescWali": "Wali murid — pantau anak",
-    "roleDescStaff": "Staf tata usaha"
+    "roleDescStaff": "Staf tata usaha",
+    "appearance": "Tampilan",
+    "appearanceAuto": "Otomatis",
+    "appearanceLight": "Selalu terang",
+    "appearanceDark": "Selalu gelap",
+    "appearanceAutoSub": "Terang di pagi-sore, gelap di malam hari.",
+    "appearanceLightSub": "Latar putih sepanjang hari.",
+    "appearanceDarkSub": "Latar gelap untuk hemat mata di malam.",
+    "appearancePickerTitle": "Tampilan",
+    "appearancePickerSubtitle": "Pilih mode terang / gelap untuk seluruh tampilan bimbel."
   },
   "inbox": {
     "title": "Perlu Perhatian",

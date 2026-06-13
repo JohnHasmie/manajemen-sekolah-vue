@@ -86,16 +86,23 @@ const bimbelRoleClass = computed(() =>
       : 'bimbel-admin',
 );
 /**
- * Surface class for bimbel pages:
- *   - TUTOR pages obey the user's mode pick (light / dark / auto) via
- *     the bimbel theme store, so the Tutor → Tampilan toggle flips the
- *     whole tutor surface live.
- *   - ADMIN and WALI tutoring pages are still dark-only this pass — the
- *     light palette is scoped to the tutor surface for now.
+ * Surface class for bimbel pages.
+ *
+ * Every bimbel surface (admin / tutor / wali) now obeys the user's
+ * mode pick (light / dark / auto) via the bimbel theme store. The
+ * whole tokenised CSS-var system (`--bimbel-panel`, `--bimbel-text-hi`,
+ * etc.) is the SHARED mechanism — each component already reads those
+ * vars, so flipping `.bimbel-light` ↔ `.bimbel-dark` on this single
+ * `<main>` element re-skins every page underneath at once. No
+ * per-page light/dark wiring needed.
+ *
+ * Previously the admin + wali branches were pinned to `'bimbel-dark'`,
+ * which is why "/admin/tutoring" and friends came out fully dark even
+ * with the tutor toggle set to light — the toggle simply wasn't
+ * consulted for those roles. Removing the branch lets the same store
+ * drive all three roles.
  */
-const bimbelSurfaceClass = computed(() =>
-  isTutorBimbelRoute.value ? bimbelTheme.rootClass : 'bimbel-dark',
-);
+const bimbelSurfaceClass = computed(() => bimbelTheme.rootClass);
 const menu = useNavMenu();
 const notifications = useNotificationsStore();
 
