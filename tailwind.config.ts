@@ -55,28 +55,34 @@ const config: Config = {
           info: '#06B6D4',
           'info-soft': '#CFFAFE',
         },
-        // Bimbel dark surface — mirrors the mobile AdminPalette /
-        // TutorPalette / ParentPalette exactly. `hero` / `accent` /
-        // `accent-soft` resolve through CSS variables set by the
-        // .bimbel-admin / .bimbel-tutor / .bimbel-wali wrapper classes
-        // (see style.css) so one component serves all three roles.
+        // Bimbel surface tokens — mirror the mobile AdminPalette /
+        // TutorPalette / ParentPalette and now resolve through CSS
+        // variables. `--bimbel-*` defaults to DARK values in style.css
+        // (preserves existing behavior); the `.bimbel-light` wrapper
+        // class flips the surface tokens to a light palette without
+        // touching the per-role `--bimbel-hero` / `--bimbel-accent` /
+        // `--bimbel-accent-soft` vars (those stay brand-identity).
+        //
+        // Status colors (green / amber / red) stay constant — they
+        // read on both light and dark surfaces and double as semantic
+        // tone tokens shared with the mobile palette.
         bimbel: {
-          bg: '#0F1419',
-          panel: '#161B26',
-          'panel-navy': '#14182A',
-          border: '#2A3147',
-          'border-soft': '#1F2738',
-          'text-hi': '#F1F5F9',
-          'text-mid': '#94A3B8',
-          'text-lo': '#64748B',
-          green: '#4ADE80',
-          amber: '#FBBF24',
-          red: '#F87171',
-          ring: '#0B1424',
+          bg: 'var(--bimbel-bg)',
+          panel: 'var(--bimbel-panel)',
+          'panel-navy': 'var(--bimbel-panel-navy)',
+          border: 'var(--bimbel-border)',
+          'border-soft': 'var(--bimbel-border-soft)',
+          'text-hi': 'var(--bimbel-text-hi)',
+          'text-mid': 'var(--bimbel-text-mid)',
+          'text-lo': 'var(--bimbel-text-lo)',
+          ring: 'var(--bimbel-ring)',
           hero: 'var(--bimbel-hero)',
           accent: 'var(--bimbel-accent)',
           'accent-soft': 'var(--bimbel-accent-soft)',
           'accent-dim': 'color-mix(in srgb, var(--bimbel-accent) 16%, transparent)',
+          green: '#4ADE80',
+          amber: '#FBBF24',
+          red: '#F87171',
           'green-dim': 'color-mix(in srgb, #4ADE80 16%, transparent)',
           'amber-dim': 'color-mix(in srgb, #FBBF24 16%, transparent)',
           'red-dim': 'color-mix(in srgb, #F87171 14%, transparent)',

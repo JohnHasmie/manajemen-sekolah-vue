@@ -15,6 +15,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useBimbelThemeStore } from '@/stores/bimbel-theme';
 import { useI18n } from 'vue-i18n';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { useNavMenu } from '@/composables/useNavMenu';
@@ -31,13 +32,18 @@ const auth = useAuthStore();
 const route = useRoute();
 const { t } = useI18n();
 const color = useRoleColor(() => auth.activeRole);
+const bimbelTheme = useBimbelThemeStore();
 
-// Bimbel routes render on the dark navy surface (mirrors mobile).
-// Route-name driven so school pages keep the light chrome untouched;
-// the role class picks the tier accent (admin deep / tutor mid / wali
-// light navy) consumed by the `bimbel-*` tailwind tokens.
+// Bimbel routes render on the bimbel surface (dark by default, light
+// when the user picks it in Tutor → Tampilan). Route-name driven so
+// school pages keep the light chrome untouched; the role class picks
+// the tier accent (admin deep / tutor mid / wali light navy) consumed
+// by the `bimbel-*` tailwind tokens.
 const isBimbelRoute = computed(() =>
   String(route.name ?? '').includes('tutoring'),
+);
+const isTutorBimbelRoute = computed(() =>
+  String(route.name ?? '').startsWith('teacher.tutoring'),
 );
 const bimbelRoleClass = computed(() =>
   auth.activeRole === 'teacher'
@@ -45,6 +51,17 @@ const bimbelRoleClass = computed(() =>
     : auth.activeRole === 'parent'
       ? 'bimbel-wali'
       : 'bimbel-admin',
+);
+/**
+ * Surface class for bimbel pages:
+ *   - TUTOR pages obey the user's mode pick (light / dark / auto) via
+ *     the bimbel theme store, so the Tutor → Tampilan toggle flips the
+ *     whole tutor surface live.
+ *   - ADMIN and WALI tutoring pages are still dark-only this pass — the
+ *     light palette is scoped to the tutor surface for now.
+ */
+const bimbelSurfaceClass = computed(() =>
+  isTutorBimbelRoute.value ? bimbelTheme.rootClass : 'bimbel-dark',
 );
 const menu = useNavMenu();
 const notifications = useNotificationsStore();
@@ -404,7 +421,7 @@ const schoolInitial = computed(() => {
 
       <main
         class="flex-1 overflow-y-auto no-scrollbar"
-        :class="isBimbelRoute ? ['bimbel-dark', bimbelRoleClass] : 'bg-slate-50'"
+        :class="isBimbelRoute ? [bimbelSurfaceClass, bimbelRoleClass] : 'bg-slate-50'"
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <RouterView />

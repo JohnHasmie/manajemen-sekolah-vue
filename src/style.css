@@ -137,13 +137,35 @@
   }
 }
 
-/* ─── Bimbel dark surface ─────────────────────────────────────────────
-   Role tier variables consumed by the tailwind `bimbel-hero` /
-   `bimbel-accent` / `bimbel-accent-soft` colors. Apply ONE of the role
-   classes together with .bimbel-dark on the tutoring page root; the
-   shared tutoring components then paint the right tier with zero
-   per-role props. Mirrors mobile: admin #152A47/#60A5FA, tutor
-   #1E3A66/#38BDF8, wali #27508C/#60A5FA. */
+/* ─── Bimbel surface ──────────────────────────────────────────────────
+   Two layers of variables:
+
+   1. Per-ROLE tier vars (--bimbel-hero / --bimbel-accent /
+      --bimbel-accent-soft) come from the role wrapper classes
+      (.bimbel-admin / .bimbel-tutor / .bimbel-wali). These are brand
+      identity — the navy hero + role accent — and stay the SAME in
+      light and dark mode.
+
+   2. Per-MODE surface vars (--bimbel-bg / --bimbel-panel /
+      --bimbel-text-*) default to DARK on :root. The .bimbel-light
+      class overrides them with a slate / white palette so every
+      `bg-bimbel-panel` / `text-bimbel-text-hi` utility flips the
+      surface without a single component edit.
+
+   Mirrors mobile palette: admin #152A47/#60A5FA, tutor #1E3A66/#38BDF8,
+   wali #27508C/#60A5FA. */
+:root {
+  --bimbel-bg: #0f1419;
+  --bimbel-panel: #161b26;
+  --bimbel-panel-navy: #14182a;
+  --bimbel-border: #2a3147;
+  --bimbel-border-soft: #1f2738;
+  --bimbel-text-hi: #f1f5f9;
+  --bimbel-text-mid: #94a3b8;
+  --bimbel-text-lo: #64748b;
+  --bimbel-ring: #0b1424;
+}
+
 .bimbel-admin {
   --bimbel-hero: #152a47;
   --bimbel-accent: #60a5fa;
@@ -159,18 +181,40 @@
   --bimbel-accent: #60a5fa;
   --bimbel-accent-soft: #bfdbfe;
 }
+
+/* Light surface — slate page bg, white panels, dark slate text. Hero
+   stays navy per brand identity (covered by the role tier vars above);
+   on-hero text must use literal `text-white` to stay legible in both
+   modes — `text-bimbel-text-hi` would flip to dark slate here. */
+.bimbel-light {
+  --bimbel-bg: #f8fafc;
+  --bimbel-panel: #ffffff;
+  --bimbel-panel-navy: #f1f5f9;
+  --bimbel-border: #e2e8f0;
+  --bimbel-border-soft: #f1f5f9;
+  --bimbel-text-hi: #0f172a;
+  --bimbel-text-mid: #64748b;
+  --bimbel-text-lo: #94a3b8;
+  --bimbel-ring: #0b1424;
+}
+
 .bimbel-dark {
   background-color: #0f1419;
   color: #f1f5f9;
+}
+.bimbel-light {
+  background-color: #f8fafc;
+  color: #0f172a;
 }
 .bimbel-dark ::-webkit-scrollbar-thumb {
   background: #2a3147;
 }
 
 /* Safety net: school-shared chrome (BrandPageHeader, KpiStripCards,
-   PageFilterToolbar, Modal, …) rendered INSIDE a bimbel page must read
-   dark without forking those components. Scoped descendant overrides —
-   only active under .bimbel-dark, so the school surface is untouched. */
+   PageFilterToolbar, Modal, …) rendered INSIDE a DARK bimbel page must
+   read dark without forking those components. The `.bimbel-light`
+   variant doesn't need a counterpart — the shared chrome is already
+   light by default — so these overrides stay scoped to `.bimbel-dark`. */
 .bimbel-dark .bg-white {
   background-color: #161b26 !important;
 }

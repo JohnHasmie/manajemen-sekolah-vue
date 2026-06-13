@@ -151,6 +151,12 @@ const quickActions = [
     sub: 'Estimasi honor bulan ini',
     to: 'teacher.tutoring.earnings',
   },
+  {
+    icon: 'sun',
+    title: 'Tampilan',
+    sub: 'Mode terang / gelap / otomatis',
+    to: 'teacher.tutoring.appearance',
+  },
 ] as const;
 </script>
 
