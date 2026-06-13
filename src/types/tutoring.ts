@@ -492,3 +492,35 @@ export interface TutoringActivitySubmission {
   note?: string | null;
   submitted_at?: string | null;
 }
+
+/** Rich per-class meta for the wali Kelas list page.
+ *  Mirrors GetWaliClassMetaAction (one row per kelompok the student
+ *  is enrolled in). */
+export interface TutoringWaliClassMeta {
+  group_id: string;
+  group_name: string;
+  program_id?: string | null;
+  program_name?: string | null;
+  tutor_user_id?: string | null;
+  tutor_name?: string | null;
+  status: string;
+  next_session?: {
+    id: string;
+    scheduled_at: string | null;
+    room?: string | null;
+    topic?: string | null;
+    duration_minutes: number;
+  } | null;
+  attendance: {
+    rate: number | null;
+    total_recorded: number;
+    attended: number;
+  };
+  latest_score?: {
+    title?: string;
+    score?: number | null;
+    max_score?: number | null;
+    held_at?: string | null;
+  } | null;
+  new_announcements_count_7d: number;
+}

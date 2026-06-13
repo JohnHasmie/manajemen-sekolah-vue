@@ -309,37 +309,34 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
  * route.
  */
 function parentTutoringNav(activeChildId: string): NavSection[] {
-  const monitoringPath = activeChildId
-    ? `/parent/tutoring/${activeChildId}`
-    : '/parent';
+  const child = activeChildId || ':studentId';
+  const homePath = activeChildId ? `/parent/tutoring/${child}` : '/parent';
   return [
     {
       titleKey: '',
       items: [
-        { to: '/parent', labelKey: 'nav.dashboard', icon: 'home' },
-        {
-          to: monitoringPath,
-          labelKey: 'tutoring.nav.monitoring',
-          icon: 'eye',
-        },
+        { to: homePath, labelKey: 'tutoring.nav.home', icon: 'home' },
+        { to: `/parent/tutoring/${child}/kelas`, labelKey: 'tutoring.nav.classes', icon: 'layers' },
+        { to: `/parent/tutoring/${child}/sesi`, labelKey: 'tutoring.nav.sessions', icon: 'calendar' },
+        { to: `/parent/tutoring/${child}/tagihan`, labelKey: 'tutoring.nav.tagihan', icon: 'wallet' },
       ],
     },
     {
-      titleKey: 'tutoring.nav.sectionFinance',
+      titleKey: 'tutoring.nav.sectionExtra',
       items: [
-        // Bills tenant-scoped via X-Tenant-ID, jadi shared view jalan
-        // baik untuk sekolah maupun bimbel tanpa duplikasi.
-        { to: '/parent/billing', labelKey: 'tutoring.nav.bills', icon: 'wallet' },
+        { to: `/parent/tutoring/${child}/kegiatan`, labelKey: 'tutoring.nav.kegiatan', icon: 'book' },
+        { to: `/parent/tutoring/${child}/nilai`, labelKey: 'tutoring.nav.nilai', icon: 'bar-chart' },
+        { to: `/parent/tutoring/${child}/peringkat`, labelKey: 'tutoring.nav.peringkat', icon: 'check-square' },
+        { to: `/parent/tutoring/${child}/pengumuman`, labelKey: 'nav.announcements', icon: 'megaphone' },
+        { to: '/parent/tutoring/voucher', labelKey: 'tutoring.nav.voucher', icon: 'sparkles' },
       ],
     },
     {
-      titleKey: 'tutoring.nav.sectionCommunity',
+      titleKey: 'tutoring.nav.sectionAccount',
       items: [
-        {
-          to: '/parent/announcements',
-          labelKey: 'nav.announcements',
-          icon: 'megaphone',
-        },
+        { to: '/parent/tutoring/notifikasi', labelKey: 'tutoring.nav.notifikasi', icon: 'bell' },
+        { to: '/parent/tutoring/profil', labelKey: 'tutoring.nav.profil', icon: 'user' },
+        { to: '/parent/tutoring/tampilan', labelKey: 'tutoring.nav.tampilan', icon: 'sun' },
       ],
     },
   ];

@@ -228,6 +228,18 @@ export const TutoringService = {
     return extractData(res);
   },
 
+  /** Rich per-class list for the wali Kelas page. Backed by
+   *  GetWaliClassMetaAction — one row per kelompok with attendance,
+   *  next session, latest score, and unread-7d announcement count. */
+  async getWaliClassMeta(
+    studentId: string,
+  ): Promise<import('@/types/tutoring').TutoringWaliClassMeta[]> {
+    const res = await api.get<ApiResponse<{
+      classes: import('@/types/tutoring').TutoringWaliClassMeta[];
+    }>>(`/tutoring/students/${studentId}/wali-class-meta`);
+    return (extractData(res)?.classes ?? []) as import('@/types/tutoring').TutoringWaliClassMeta[];
+  },
+
   /** One combined fetch for the parent overview page (Promise.all). */
   async getChildOverview(studentId: string): Promise<TutoringChildOverview> {
     const now = new Date();

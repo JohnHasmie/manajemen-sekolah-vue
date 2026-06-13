@@ -829,6 +829,120 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'wali' satisfies Role },
       },
       {
+        path: 'parent/tutoring/:studentId/kelas',
+        name: 'parent.tutoring.kelas',
+        component: () => import('@/views/parent/tutoring/ParentKelasView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/kelas/:groupId',
+        name: 'parent.tutoring.kelas-detail',
+        component: () =>
+          import('@/views/parent/tutoring/ParentKelasDetailView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/sesi',
+        name: 'parent.tutoring.sesi',
+        component: () => import('@/views/parent/tutoring/ParentSesiView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/tagihan',
+        name: 'parent.tutoring.tagihan',
+        component: () => import('@/views/parent/tutoring/ParentTagihanView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/bills/:billId/bayar',
+        name: 'parent.tutoring.bill-pay',
+        component: () =>
+          import('@/views/parent/tutoring/ParentBayarTagihanView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/kegiatan',
+        name: 'parent.tutoring.kegiatan',
+        component: () =>
+          import('@/views/parent/tutoring/ParentKegiatanView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/nilai',
+        name: 'parent.tutoring.nilai',
+        component: () => import('@/views/parent/tutoring/ParentNilaiView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/voucher',
+        name: 'parent.tutoring.voucher',
+        component: () =>
+          import('@/views/parent/tutoring/ParentVoucherView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/peringkat',
+        name: 'parent.tutoring.peringkat',
+        component: () =>
+          import('@/views/parent/tutoring/ParentPeringkatView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/pengumuman',
+        name: 'parent.tutoring.pengumuman',
+        component: () =>
+          import('@/views/parent/tutoring/ParentPengumumanView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/notifikasi',
+        name: 'parent.tutoring.notifikasi',
+        component: () =>
+          import('@/views/parent/tutoring/ParentNotifikasiView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/lainnya',
+        name: 'parent.tutoring.lainnya',
+        component: () =>
+          import('@/views/parent/tutoring/ParentLainnyaView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/profil',
+        name: 'parent.tutoring.profil',
+        component: () => import('@/views/parent/tutoring/ParentProfilView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/profil/ubah-sandi',
+        name: 'parent.tutoring.ubah-sandi',
+        component: () =>
+          import('@/views/parent/tutoring/ParentUbahSandiView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/tampilan',
+        name: 'parent.tutoring.tampilan',
+        component: () =>
+          import('@/views/parent/tutoring/ParentTampilanView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/daftar-calon',
+        name: 'parent.tutoring.daftar-lead',
+        component: () =>
+          import('@/views/parent/tutoring/ParentDaftarLeadView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/daftar-anak',
+        name: 'parent.tutoring.enroll-new',
+        component: () =>
+          import('@/views/parent/tutoring/ParentEnrollWizardView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
         path: 'admin/tutoring',
         name: 'admin.tutoring.dashboard',
         component: () =>

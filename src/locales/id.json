@@ -1707,7 +1707,17 @@
       "honor": "Honor",
       "rating": "Rating",
       "sectionMain": "Mengajar",
-      "sectionExtra": "Lainnya"
+      "sectionExtra": "Lainnya",
+      "sectionAccount": "Akun",
+      "tagihan": "Tagihan",
+      "kegiatan": "Kegiatan",
+      "nilai": "Nilai",
+      "peringkat": "Peringkat",
+      "voucher": "Voucher",
+      "notifikasi": "Notifikasi",
+      "profil": "Profil",
+      "tampilan": "Tampilan",
+      "moreHub": "Lainnya"
     },
     "dashboard": {
       "title": "Dasbor Bimbel",

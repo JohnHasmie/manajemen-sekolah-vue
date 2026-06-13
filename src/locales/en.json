@@ -1711,7 +1711,17 @@
       "honor": "Honor",
       "rating": "Rating",
       "sectionMain": "Teaching",
-      "sectionExtra": "More"
+      "sectionExtra": "More",
+      "sectionAccount": "Account",
+      "tagihan": "Bills",
+      "kegiatan": "Activities",
+      "nilai": "Grades",
+      "peringkat": "Leaderboard",
+      "voucher": "Vouchers",
+      "notifikasi": "Notifications",
+      "profil": "Profile",
+      "tampilan": "Appearance",
+      "moreHub": "More"
     },
     "dashboard": {
       "title": "Tutoring Dashboard",
