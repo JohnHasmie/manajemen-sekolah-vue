@@ -244,34 +244,29 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
 
 const TEACHER_TUTORING_NAV: NavSection[] = [
   {
-    titleKey: '',
+    titleKey: 'tutoring.nav.sectionMain',
     items: [
-      { to: '/teacher', labelKey: 'nav.dashboard', icon: 'home' },
+      { to: '/teacher', labelKey: 'tutoring.nav.home', icon: 'home' },
       {
-        to: '/teacher/announcements',
-        labelKey: 'nav.announcements',
-        icon: 'megaphone',
+        to: '/teacher/tutoring/kelas',
+        labelKey: 'tutoring.nav.classes',
+        icon: 'layers',
+      },
+      {
+        to: '/teacher/tutoring/sessions',
+        labelKey: 'tutoring.nav.jadwal',
+        icon: 'calendar',
+      },
+      {
+        to: '/teacher/tutoring/earnings',
+        labelKey: 'tutoring.nav.honor',
+        icon: 'wallet',
       },
     ],
   },
   {
-    titleKey: 'tutoring.tenant.center',
+    titleKey: 'tutoring.nav.sectionExtra',
     items: [
-      {
-        to: '/teacher/tutoring/sessions',
-        labelKey: 'tutoring.nav.sessions',
-        icon: 'calendar',
-      },
-      {
-        to: '/teacher/tutoring/recurring',
-        labelKey: 'tutoring.nav.recurring',
-        icon: 'calendar',
-      },
-      {
-        to: '/teacher/tutoring/activities',
-        labelKey: 'tutoring.nav.activities',
-        icon: 'book',
-      },
       {
         to: '/teacher/tutoring/materials',
         labelKey: 'tutoring.nav.materials',
@@ -283,9 +278,19 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
         icon: 'sparkles',
       },
       {
-        to: '/teacher/tutoring/earnings',
-        labelKey: 'tutoring.nav.earnings',
-        icon: 'wallet',
+        to: '/teacher/tutoring/recurring',
+        labelKey: 'tutoring.nav.recurring',
+        icon: 'calendar',
+      },
+      {
+        to: '/teacher/tutoring/activities',
+        labelKey: 'tutoring.nav.activities',
+        icon: 'check-circle',
+      },
+      {
+        to: '/teacher/announcements',
+        labelKey: 'nav.announcements',
+        icon: 'megaphone',
       },
     ],
   },

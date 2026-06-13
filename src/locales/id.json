@@ -1700,7 +1700,14 @@
       "scores": "Nilai & Progress",
       "sectionLearning": "Pembelajaran",
       "sectionFinance": "Keuangan",
-      "sectionCommunity": "Komunitas"
+      "sectionCommunity": "Komunitas",
+      "home": "Beranda",
+      "classes": "Kelas",
+      "jadwal": "Jadwal",
+      "honor": "Honor",
+      "rating": "Rating",
+      "sectionMain": "Mengajar",
+      "sectionExtra": "Lainnya"
     },
     "dashboard": {
       "title": "Dasbor Bimbel",

@@ -953,6 +953,20 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        path: 'teacher/tutoring/kelas',
+        name: 'teacher.tutoring.classes',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorKelasView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/kelas/:groupId',
+        name: 'teacher.tutoring.class-detail',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorKelasDetailView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
         path: 'teacher/tutoring/sessions',
         name: 'teacher.tutoring.sessions',
         component: () =>

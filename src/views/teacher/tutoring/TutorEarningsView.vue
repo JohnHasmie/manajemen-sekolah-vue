@@ -13,7 +13,7 @@ import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
 import type { TutorPayoutSummary } from '@/types/tutoring';
 
-import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -106,22 +106,22 @@ const monthOptions = computed(() => {
 
 <template>
   <div class="space-y-md pb-12">
-    <BrandPageHeader
-      role="guru"
-      kicker="Bimbel · Penghasilan"
-      title="Penghasilan Saya"
-      :meta="summary ? `Periode ${summary.period.label}` : ''"
-    >
+    <TutorBerandaHero
+      greeting="Honor Saya"
+      title="Penghasilan"
+      :subtitle="summary ? `Periode ${summary.period.label}` : undefined"
+      :stats="[]"
+    />
+    <div v-if="summary" class="flex justify-end -mt-2">
       <a
-        v-if="summary"
         :href="payslipUrl"
         target="_blank"
         rel="noopener"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-accent text-white text-[12px] font-bold hover:opacity-90"
       >
         Slip Honor (PDF)
       </a>
-    </BrandPageHeader>
+    </div>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}

@@ -921,6 +921,22 @@ export const TutoringService = {
     return extractData(res) ?? [];
   },
 
+  /** Tutor feed: submissions / ratings / enrollments / announcements / sessions done. */
+  async getTutorActivity(
+    opts: { limit?: number; sinceDays?: number } = {},
+  ): Promise<TutoringFeedEvent[]> {
+    const res = await api.get<ApiResponse<TutoringFeedEvent[]>>(
+      '/tutoring/tutor-activity',
+      {
+        params: {
+          ...(opts.limit ? { limit: opts.limit } : {}),
+          ...(opts.sinceDays ? { since_days: opts.sinceDays } : {}),
+        },
+      },
+    );
+    return extractData(res) ?? [];
+  },
+
   /** Partial update on a session — catatan sesi, topic, status. Used
    *  by the attendance flow to attach a tutor note after class. */
   async updateSession(
