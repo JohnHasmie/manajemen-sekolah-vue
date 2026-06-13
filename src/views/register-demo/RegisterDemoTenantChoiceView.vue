@@ -67,7 +67,7 @@ function pick(t: 'sekolah' | 'bimbel') {
         <div class="flex items-center gap-4">
           <PublicLanguageSwitcher />
           <router-link
-            to="/login?intent=demo"
+            to="/login"
             class="text-xs font-semibold text-slate-500 hover:text-brand-cobalt"
           >
             Sudah punya akun? <span class="text-brand-cobalt">Masuk</span>
