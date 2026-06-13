@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 import { useDemoWizardStore } from '@/stores/demo-wizard';
 import { DemoService } from '@/services/demo.service';
 import type { DemoRegistrationItem, ActiveSchoolItem } from '@/types/demo';
@@ -18,7 +19,21 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import PublicLanguageSwitcher from '@/components/feature/PublicLanguageSwitcher.vue';
 
 const router = useRouter();
+const auth = useAuthStore();
 const wizard = useDemoWizardStore();
+
+/**
+ * Logo / home click: log the user OUT (clear session, demo intent,
+ * cached state) then land on `/`, which the router redirects to
+ * `/login` for a now-unauth visitor. This is what the user expects
+ * "home" to mean from inside the demo flow — a clean reset to the
+ * front door of this same app, not the external marketing site nor a
+ * stale-token rebound into a half-state.
+ */
+async function goHomeAndLogout() {
+  await auth.logout();
+  await router.push('/');
+}
 
 const demoRequests = ref<DemoRegistrationItem[]>([]);
 const activeSchools = ref<ActiveSchoolItem[]>([]);
@@ -56,22 +71,29 @@ function pick(t: 'sekolah' | 'bimbel') {
     <header class="bg-white border-b border-slate-200">
       <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
         <!--
-          External link to the marketing landing (edu.kamillabs.com) —
-          NOT `router-link to="/"`. Reason: the app's `/` route
-          redirects unauthenticated users to `/login`, so a user on this
-          page who clicks the brand logo bounces back to /login instead
-          of going "home". The landing site lives on a separate origin
-          (Astro), so a plain `<a href>` is the right primitive here.
+          Logo doubles as "go home + log out". Previously bounced off
+          `/` (hub redirect → /login) which left a Google-signed-in
+          demo visitor authenticated with stale demo intent; the prior
+          take routed to the external marketing site, which also
+          didn't clear the session. A click here is a clean reset:
+          tear down auth locally + server-side, then push to `/`, and
+          the hub redirect lands the now-unauth user on /login. Same
+          hostname (edu-app.kamillabs.com), fresh session. Composes
+          for the unauth-from-the-start case too: logout is a no-op.
         -->
-        <a href="https://edu.kamillabs.com/" class="flex items-center gap-2.5">
+        <button
+          type="button"
+          class="flex items-center gap-2.5"
+          @click="goHomeAndLogout"
+        >
           <div class="w-8 h-8 rounded-lg bg-brand-dark-blue text-white text-sm font-black grid place-items-center">
             K
           </div>
-          <div>
+          <div class="text-left">
             <div class="text-sm font-bold text-slate-900 leading-tight">KamilEdu</div>
             <div class="text-[10px] text-slate-500 font-medium">Daftar demo gratis</div>
           </div>
-        </a>
+        </button>
         <div class="flex items-center gap-4">
           <PublicLanguageSwitcher />
           <router-link
