@@ -72,13 +72,13 @@ const styles = computed(() => {
       <NavIcon :name="icon" :size="18" />
     </span>
     <div class="min-w-0 flex-1">
-      <p class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+      <p class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
         {{ label }}
       </p>
       <p class="truncate text-base font-extrabold tracking-tight text-bimbel-text-hi">
         {{ value }}
       </p>
-      <p v-if="hint" class="truncate text-[11.5px] text-bimbel-text-mid">{{ hint }}</p>
+      <p v-if="hint" class="truncate text-[12px] text-bimbel-text-mid">{{ hint }}</p>
     </div>
     <NavIcon
       v-if="clickable"

@@ -60,14 +60,14 @@ const gradient = computed(() => {
     <div class="flex h-32 flex-col justify-between p-4">
       <div class="flex items-start justify-between">
         <span
-          class="rounded-full bg-white/15 px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-widest"
+          class="rounded-full bg-white/15 px-2 py-0.5 text-[12px] font-extrabold uppercase tracking-widest"
         >
           Kelas
         </span>
         <NavIcon name="chevron-right" :size="18" class="text-white/85" />
       </div>
       <div>
-        <p v-if="program" class="text-[11px] font-semibold uppercase tracking-wide text-white/80">
+        <p v-if="program" class="text-[12px] font-semibold uppercase tracking-wide text-white/80">
           {{ program }}
         </p>
         <h3 class="mt-0.5 text-base font-extrabold leading-tight tracking-tight line-clamp-2">
@@ -77,7 +77,7 @@ const gradient = computed(() => {
     </div>
     <div
       v-if="meta"
-      class="border-t border-white/15 bg-black/15 px-4 py-2 text-[11.5px] font-semibold text-white/90 backdrop-blur-sm"
+      class="border-t border-white/15 bg-black/15 px-4 py-2 text-[12px] font-semibold text-white/90 backdrop-blur-sm"
     >
       {{ meta }}
     </div>

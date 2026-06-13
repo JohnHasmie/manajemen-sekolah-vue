@@ -60,7 +60,7 @@ const sections = computed(() => [
     </ParentBerandaHero>
 
     <div v-for="s in sections" :key="s.title" class="space-y-2">
-      <h3 class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ s.title }}</h3>
+      <h3 class="text-[13px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ s.title }}</h3>
       <div class="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
         <button
           v-for="t in s.tiles"
@@ -73,8 +73,8 @@ const sections = computed(() => [
             <NavIcon :name="t.icon" :size="16" />
           </span>
           <div>
-            <p class="text-[13px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
-            <p class="text-[12px] text-bimbel-text-mid">{{ t.sub }}</p>
+            <p class="text-[14px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
+            <p class="text-[13px] text-bimbel-text-mid">{{ t.sub }}</p>
           </div>
         </button>
       </div>

@@ -91,7 +91,7 @@ async function tryRedeem() {
           ]"
           :key="opt.id"
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[12px] font-semibold"
+          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
           :class="
             view === opt.id
               ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
@@ -105,16 +105,16 @@ async function tryRedeem() {
           v-model="codeInput"
           type="text"
           placeholder="Kode voucher"
-          class="rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[12px] uppercase tracking-wider text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
+          class="rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[13px] uppercase tracking-wider text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
         />
         <button
           type="button"
-          class="inline-flex items-center gap-1 rounded-lg bg-[#21afe6] px-3 py-1.5 text-[12px] font-bold text-white hover:opacity-90"
+          class="inline-flex items-center gap-1 rounded-lg bg-[#21afe6] px-3 py-1.5 text-[13px] font-bold text-white hover:opacity-90"
           @click="tryRedeem"
         ><NavIcon name="check-circle" :size="13" /> Pakai</button>
       </div>
     </div>
-    <p v-if="codeMessage" class="text-[12px] text-bimbel-text-mid">{{ codeMessage }}</p>
+    <p v-if="codeMessage" class="text-[13px] text-bimbel-text-mid">{{ codeMessage }}</p>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 

@@ -117,7 +117,7 @@ const monthOptions = computed(() => {
         :href="payslipUrl"
         target="_blank"
         rel="noopener"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-accent text-white text-[12px] font-bold hover:opacity-90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-accent text-white text-[13px] font-bold hover:opacity-90"
       >
         Slip Honor (PDF)
       </a>
@@ -132,7 +132,7 @@ const monthOptions = computed(() => {
 
       <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Pilih bulan
           </span>
           <select

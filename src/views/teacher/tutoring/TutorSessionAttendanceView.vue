@@ -166,11 +166,11 @@ onMounted(load);
           <h3 class="text-sm font-extrabold tracking-tight text-bimbel-text-hi">
             Catatan Sesi
           </h3>
-          <span class="rounded bg-role-parent/12 px-1.5 py-0.5 text-[8.5px] font-extrabold uppercase tracking-widest text-bimbel-accent">
+          <span class="rounded bg-role-parent/12 px-1.5 py-0.5 text-[12px] font-extrabold uppercase tracking-widest text-bimbel-accent">
             Terbaca Wali
           </span>
         </div>
-        <p class="text-[11px] text-bimbel-text-mid mb-2">
+        <p class="text-[12px] text-bimbel-text-mid mb-2">
           Opsional. Akan tampil di "Yang Baru" wali.
         </p>
         <textarea

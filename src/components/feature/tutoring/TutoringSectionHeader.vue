@@ -14,7 +14,7 @@ defineEmits<{ (e: 'action'): void }>();
 
 <template>
   <div class="flex items-center justify-between pt-4 pb-2">
-    <h3 class="text-[13px] font-bold text-bimbel-text-hi tracking-tight">{{ title }}</h3>
+    <h3 class="text-[14px] font-bold text-bimbel-text-hi tracking-tight">{{ title }}</h3>
     <button
       v-if="actionLabel"
       type="button"

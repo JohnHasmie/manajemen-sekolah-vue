@@ -37,9 +37,9 @@ withDefaults(
     <div class="text-2xl font-extrabold text-bimbel-text-hi tracking-tight leading-none">
       {{ value }}
     </div>
-    <div class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+    <div class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
       {{ label }}
     </div>
-    <div v-if="hint" class="text-[11px] text-bimbel-text-mid -mt-1">{{ hint }}</div>
+    <div v-if="hint" class="text-[12px] text-bimbel-text-mid -mt-1">{{ hint }}</div>
   </div>
 </template>

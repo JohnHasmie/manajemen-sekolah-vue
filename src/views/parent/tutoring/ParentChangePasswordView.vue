@@ -78,7 +78,7 @@ async function submit() {
   <div class="space-y-4 pb-12">
     <button
       type="button"
-      class="inline-flex items-center gap-1 text-[12px] text-bimbel-text-mid hover:text-bimbel-text-hi"
+      class="inline-flex items-center gap-1 text-[13px] text-bimbel-text-mid hover:text-bimbel-text-hi"
       @click="router.push({ name: 'parent.tutoring.profile' })"
     >
       <NavIcon name="chevron-left" :size="13" /> Kembali ke profil
@@ -96,38 +96,38 @@ async function submit() {
         class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 lg:col-span-3 space-y-3"
         @submit.prevent="submit"
       >
-        <h4 class="text-[13px] font-bold tracking-tight text-bimbel-text-hi">Kata sandi baru</h4>
+        <h4 class="text-[14px] font-bold tracking-tight text-bimbel-text-hi">Kata sandi baru</h4>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Sandi saat ini</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Sandi saat ini</span>
           <input
             v-model="current"
             type="password"
             required
-            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
+            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
           />
         </label>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Sandi baru</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Sandi baru</span>
           <input
             v-model="next"
             type="password"
             required
             minlength="8"
-            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
+            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
           />
-          <span class="mt-0.5 block text-[12px] text-bimbel-text-lo">Minimal 8 karakter · campur huruf besar/kecil & angka</span>
+          <span class="mt-0.5 block text-[13px] text-bimbel-text-lo">Minimal 8 karakter · campur huruf besar/kecil & angka</span>
         </label>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Konfirmasi sandi</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Konfirmasi sandi</span>
           <input
             v-model="confirm"
             type="password"
             required
-            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
+            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
           />
         </label>
         <div>
-          <p class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Kekuatan sandi</p>
+          <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Kekuatan sandi</p>
           <div class="mt-1 flex gap-1">
             <div
               v-for="i in 4"
@@ -136,28 +136,28 @@ async function submit() {
               :style="{ background: strength >= i ? strengthColor : 'var(--bimbel-border)' }"
             />
           </div>
-          <p class="mt-1 text-[12px]" :style="{ color: strengthColor }">{{ strengthLabel }}</p>
+          <p class="mt-1 text-[13px]" :style="{ color: strengthColor }">{{ strengthLabel }}</p>
         </div>
-        <div v-if="message" class="rounded-lg px-3 py-2 text-[12px]" :class="message.kind === 'ok' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'">
+        <div v-if="message" class="rounded-lg px-3 py-2 text-[13px]" :class="message.kind === 'ok' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'">
           {{ message.text }}
         </div>
         <div class="flex gap-2 pt-2">
           <button
             type="button"
-            class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
+            class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
             @click="router.push({ name: 'parent.tutoring.profile' })"
           >Batal</button>
           <button
             type="submit"
             :disabled="!canSubmit"
-            class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50"
+            class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50"
           >{{ saving ? 'Menyimpan…' : 'Simpan sandi baru' }}</button>
         </div>
       </form>
 
       <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 lg:col-span-2 h-fit">
-        <h4 class="mb-2 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Tips sandi kuat</h4>
-        <ul class="space-y-1.5 text-[12px] text-bimbel-text-mid list-disc pl-4">
+        <h4 class="mb-2 text-[14px] font-bold tracking-tight text-bimbel-text-hi">Tips sandi kuat</h4>
+        <ul class="space-y-1.5 text-[13px] text-bimbel-text-mid list-disc pl-4">
           <li>Minimal 8 karakter</li>
           <li>Campur huruf besar, kecil, dan angka</li>
           <li>Hindari nama anak / tanggal lahir</li>

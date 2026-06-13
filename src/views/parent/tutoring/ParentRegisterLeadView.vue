@@ -79,37 +79,37 @@ async function submit() {
         class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 lg:col-span-3 space-y-3"
         @submit.prevent="submit"
       >
-        <h4 class="text-[13px] font-bold tracking-tight text-bimbel-text-hi">Data wali & anak</h4>
+        <h4 class="text-[14px] font-bold tracking-tight text-bimbel-text-hi">Data wali & anak</h4>
         <div class="grid gap-3 sm:grid-cols-2">
           <label class="block">
-            <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali <span class="text-rose-500">*</span></span>
-            <input v-model="form.name" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Nama lengkap" />
+            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali <span class="text-rose-500">*</span></span>
+            <input v-model="form.name" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Nama lengkap" />
           </label>
           <label class="block">
-            <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">No HP / WA <span class="text-rose-500">*</span></span>
-            <input v-model="form.phone" type="tel" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="08xx-xxxx-xxxx" />
+            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">No HP / WA <span class="text-rose-500">*</span></span>
+            <input v-model="form.phone" type="tel" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="08xx-xxxx-xxxx" />
           </label>
           <label class="block sm:col-span-2">
-            <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Email</span>
-            <input v-model="form.email" type="email" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Opsional" />
+            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Email</span>
+            <input v-model="form.email" type="email" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Opsional" />
           </label>
           <label class="block">
-            <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama anak <span class="text-rose-500">*</span></span>
-            <input v-model="form.childName" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Nama lengkap anak" />
+            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama anak <span class="text-rose-500">*</span></span>
+            <input v-model="form.childName" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Nama lengkap anak" />
           </label>
           <label class="block">
-            <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Jenjang / kelas</span>
-            <input v-model="form.jenjang" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="SMP VIII / SMA X / ..." />
+            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Jenjang / kelas</span>
+            <input v-model="form.jenjang" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="SMP VIII / SMA X / ..." />
           </label>
         </div>
         <div>
-          <p class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Program diminati <span class="text-rose-500">*</span></p>
+          <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Program diminati <span class="text-rose-500">*</span></p>
           <div class="mt-2 flex flex-wrap gap-1.5">
             <button
               v-for="p in programs"
               :key="p.id"
               type="button"
-              class="rounded-full border px-3 py-1.5 text-[12px] font-semibold"
+              class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
               :class="
                 selectedProgramId === p.id
                   ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
@@ -120,17 +120,17 @@ async function submit() {
           </div>
         </div>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Catatan untuk admin</span>
-          <textarea v-model="form.notes" rows="2" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Opsional — info tambahan"></textarea>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Catatan untuk admin</span>
+          <textarea v-model="form.notes" rows="2" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Opsional — info tambahan"></textarea>
         </label>
-        <div v-if="message" class="rounded-lg px-3 py-2 text-[12px]" :class="message.kind === 'ok' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'">
+        <div v-if="message" class="rounded-lg px-3 py-2 text-[13px]" :class="message.kind === 'ok' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'">
           {{ message.text }}
         </div>
       </form>
 
       <aside class="space-y-3 lg:col-span-2">
-        <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 text-[12px] text-bimbel-text-mid">
-          <h5 class="mb-2 text-[12px] font-bold text-bimbel-text-hi">Setelah submit</h5>
+        <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 text-[13px] text-bimbel-text-mid">
+          <h5 class="mb-2 text-[13px] font-bold text-bimbel-text-hi">Setelah submit</h5>
           <ul class="space-y-1 list-disc pl-4">
             <li>Admin menghubungi via WA dalam 24 jam</li>
             <li>Jadwalkan trial gratis 1 sesi</li>
@@ -144,13 +144,13 @@ async function submit() {
         <div class="flex gap-2">
           <button
             type="button"
-            class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
+            class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
             @click="router.back()"
           >Batal</button>
           <button
             type="button"
             :disabled="!canSubmit"
-            class="flex-1 rounded-lg bg-[#21afe6] px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50"
+            class="flex-1 rounded-lg bg-[#21afe6] px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50"
             @click="submit"
           >{{ saving ? 'Mengirim…' : 'Kirim pendaftaran' }}</button>
         </div>

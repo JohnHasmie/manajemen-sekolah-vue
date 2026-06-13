@@ -103,7 +103,7 @@ function goPay(b: TutoringBill) {
         ] as const"
         :key="opt.id"
         type="button"
-        class="rounded-full border px-3 py-1.5 text-[12px] font-semibold"
+        class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
         :class="
           view === opt.id
             ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
@@ -116,9 +116,9 @@ function goPay(b: TutoringBill) {
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
     <div v-else-if="filtered.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
-      <table class="w-full text-[12px]">
+      <table class="w-full text-[13px]">
         <thead class="bg-bimbel-bg/40">
-          <tr class="text-left text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+          <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
             <th class="px-3 py-2">Program</th>
             <th class="px-3 py-2 w-[120px]">Bulan</th>
             <th class="px-3 py-2 w-[140px]">Jatuh tempo</th>
@@ -135,25 +135,25 @@ function goPay(b: TutoringBill) {
           >
             <td class="px-3 py-2.5">
               <p class="font-bold text-bimbel-text-hi">{{ b.source_label ?? b.source_type ?? 'Tagihan' }}</p>
-              <p v-if="b.student_name" class="text-[12px] text-bimbel-text-mid">{{ b.student_name }}</p>
+              <p v-if="b.student_name" class="text-[13px] text-bimbel-text-mid">{{ b.student_name }}</p>
             </td>
             <td class="px-3 py-2.5 text-bimbel-text-mid">{{ b.month ?? '—' }}</td>
             <td class="px-3 py-2.5 text-bimbel-text-mid">{{ dueLabel(b.due_date) }}</td>
             <td class="px-3 py-2.5 font-bold text-bimbel-text-hi">{{ b.amount != null ? formatRupiah(b.amount) : '—' }}</td>
             <td class="px-3 py-2.5">
-              <span class="inline-flex rounded-full px-2 py-0.5 text-[12px] font-bold" :class="statusChip(b).cls">{{ statusChip(b).label }}</span>
+              <span class="inline-flex rounded-full px-2 py-0.5 text-[13px] font-bold" :class="statusChip(b).cls">{{ statusChip(b).label }}</span>
             </td>
             <td class="px-3 py-2.5">
               <button
                 v-if="isUnpaid(b)"
                 type="button"
-                class="rounded-lg bg-[#21afe6] px-3 py-1 text-[12px] font-bold text-white hover:opacity-90"
+                class="rounded-lg bg-[#21afe6] px-3 py-1 text-[13px] font-bold text-white hover:opacity-90"
                 @click="goPay(b)"
               >Bayar</button>
               <button
                 v-else
                 type="button"
-                class="text-[12px] font-semibold text-[#1a8fbe] dark:text-[#85d4f4] hover:underline"
+                class="text-[13px] font-semibold text-[#1a8fbe] dark:text-[#85d4f4] hover:underline"
               >Detail</button>
             </td>
           </tr>

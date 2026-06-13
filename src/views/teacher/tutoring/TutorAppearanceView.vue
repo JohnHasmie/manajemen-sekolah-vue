@@ -88,7 +88,7 @@ function goBack() {
 
     <!-- MODE TEMA ─────────────────────────────────────────────────── -->
     <div>
-      <p class="px-1 pb-2 text-[10.5px] font-extrabold tracking-widest text-bimbel-text-mid">
+      <p class="px-1 pb-2 text-[12px] font-extrabold tracking-widest text-bimbel-text-mid">
         MODE TEMA
       </p>
       <div class="space-y-2.5">
@@ -142,7 +142,7 @@ function goBack() {
               :size="13"
               class="mt-0.5 text-bimbel-green"
             />
-            <span class="text-[11px] leading-snug text-bimbel-text-hi">
+            <span class="text-[12px] leading-snug text-bimbel-text-hi">
               {{ theme.autoHint }}
             </span>
           </div>

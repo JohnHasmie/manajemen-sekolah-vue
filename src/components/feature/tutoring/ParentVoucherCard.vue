@@ -30,7 +30,7 @@ defineProps<{
       class="absolute right-[-7px] top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-bimbel-bg"
     />
     <span
-      class="inline-block rounded-md bg-bimbel-border-soft px-2 py-0.5 font-mono text-[12px] tracking-wider text-bimbel-text-hi"
+      class="inline-block rounded-md bg-bimbel-border-soft px-2 py-0.5 font-mono text-[13px] tracking-wider text-bimbel-text-hi"
     >
       {{ code }}
     </span>
@@ -40,11 +40,11 @@ defineProps<{
     >
       {{ amount }}
     </p>
-    <p v-if="description" class="mt-0.5 text-[12px] text-bimbel-text-mid">
+    <p v-if="description" class="mt-0.5 text-[13px] text-bimbel-text-mid">
       {{ description }}
     </p>
     <p
-      class="mt-2.5 inline-block rounded-full px-2.5 py-0.5 text-[12px] font-semibold"
+      class="mt-2.5 inline-block rounded-full px-2.5 py-0.5 text-[13px] font-semibold"
       :class="
         used
           ? 'text-bimbel-text-lo'

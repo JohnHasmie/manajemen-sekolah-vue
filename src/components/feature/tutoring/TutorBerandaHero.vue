@@ -28,11 +28,11 @@ withDefaults(
     class="rounded-3xl px-5 pt-4 pb-5 text-white shadow-lg"
     style="background: linear-gradient(135deg, var(--bimbel-hero), color-mix(in srgb, var(--bimbel-hero) 72%, black))"
   >
-    <p class="text-[12px] font-semibold tracking-wide text-white/75">{{ greeting }}</p>
+    <p class="text-[13px] font-semibold tracking-wide text-white/75">{{ greeting }}</p>
     <h1 class="mt-0.5 text-[22px] sm:text-2xl font-extrabold tracking-tight">
       {{ title }}
     </h1>
-    <p v-if="subtitle" class="mt-1 text-[13px] text-white/85">{{ subtitle }}</p>
+    <p v-if="subtitle" class="mt-1 text-[14px] text-white/85">{{ subtitle }}</p>
 
     <div
       v-if="stats.length"
@@ -48,11 +48,11 @@ withDefaults(
         :key="s.label"
         class="rounded-2xl bg-white/10 px-3 py-2.5 ring-1 ring-white/15"
       >
-        <p class="text-[10px] font-bold uppercase tracking-widest text-white/70">
+        <p class="text-[12px] font-bold uppercase tracking-widest text-white/70">
           {{ s.label }}
         </p>
         <p class="mt-0.5 text-xl font-extrabold tracking-tight">{{ s.value }}</p>
-        <p v-if="s.hint" class="mt-0.5 truncate text-[11px] text-white/65">
+        <p v-if="s.hint" class="mt-0.5 truncate text-[12px] text-white/65">
           {{ s.hint }}
         </p>
       </div>

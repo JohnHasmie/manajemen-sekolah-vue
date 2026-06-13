@@ -71,7 +71,7 @@ const adminCount = computed(() => announcements.value.filter((a) => sourceKind(a
         ]"
         :key="opt.id"
         type="button"
-        class="rounded-full border px-3 py-1.5 text-[12px] font-semibold"
+        class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
         :class="
           filter === opt.id
             ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'

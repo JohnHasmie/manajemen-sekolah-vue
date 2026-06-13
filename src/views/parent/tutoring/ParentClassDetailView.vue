@@ -102,7 +102,7 @@ const heroStats = computed(() => {
   <div class="space-y-4 pb-12">
     <button
       type="button"
-      class="inline-flex items-center gap-1 text-[12px] text-bimbel-text-mid hover:text-bimbel-text-hi"
+      class="inline-flex items-center gap-1 text-[13px] text-bimbel-text-mid hover:text-bimbel-text-hi"
       @click="router.push({ name: 'parent.tutoring.classes' })"
     >
       <NavIcon name="chevron-left" :size="13" /> Kembali ke daftar kelas
@@ -167,10 +167,10 @@ const heroStats = computed(() => {
             :key="s.id"
             class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3"
           >
-            <div class="flex items-center justify-between text-[12px] text-bimbel-text-mid">
+            <div class="flex items-center justify-between text-[13px] text-bimbel-text-mid">
               <span>{{ whenLabel(s.scheduled_at) }} · {{ s.duration_minutes }}m</span>
               <span
-                class="rounded-full px-2 py-0.5 text-[12px] font-bold"
+                class="rounded-full px-2 py-0.5 text-[13px] font-bold"
                 :class="
                   s.status === 'DONE'
                     ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
@@ -182,8 +182,8 @@ const heroStats = computed(() => {
                 {{ s.status_label ?? s.status }}
               </span>
             </div>
-            <p class="mt-1 text-[13px] font-bold text-bimbel-text-hi">{{ s.topic || 'Sesi terjadwal' }}</p>
-            <p v-if="s.room" class="text-[12px] text-bimbel-text-mid">ruang {{ s.room }}</p>
+            <p class="mt-1 text-[14px] font-bold text-bimbel-text-hi">{{ s.topic || 'Sesi terjadwal' }}</p>
+            <p v-if="s.room" class="text-[13px] text-bimbel-text-mid">ruang {{ s.room }}</p>
           </div>
         </template>
 
@@ -203,12 +203,12 @@ const heroStats = computed(() => {
               <NavIcon name="star" :size="15" />
             </span>
             <div class="min-w-0 flex-1">
-              <p class="truncate text-[13px] font-bold text-bimbel-text-hi">{{ p.title }}</p>
-              <p class="truncate text-[12px] text-bimbel-text-mid">
+              <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ p.title }}</p>
+              <p class="truncate text-[13px] text-bimbel-text-mid">
                 {{ [p.type_label, p.subject, whenLabel(p.held_at)].filter(Boolean).join(' · ') }}
               </p>
             </div>
-            <span class="flex-shrink-0 text-[15px] font-extrabold text-emerald-700 dark:text-emerald-300">
+            <span class="flex-shrink-0 text-[16px] font-extrabold text-emerald-700 dark:text-emerald-300">
               {{ p.score ?? '–' }}
             </span>
           </div>
@@ -216,8 +216,8 @@ const heroStats = computed(() => {
       </div>
 
       <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 h-fit">
-        <h4 class="mb-3 text-[12px] font-bold tracking-tight text-bimbel-text-hi">Info kelas</h4>
-        <dl class="space-y-2 text-[12px]">
+        <h4 class="mb-3 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Info kelas</h4>
+        <dl class="space-y-2 text-[13px]">
           <div><dt class="text-bimbel-text-mid">Tutor</dt><dd class="font-bold text-bimbel-text-hi">{{ meta?.tutor_name ?? '—' }}</dd></div>
           <div><dt class="text-bimbel-text-mid">Program</dt><dd class="font-bold text-bimbel-text-hi">{{ meta?.program_name ?? '—' }}</dd></div>
           <div><dt class="text-bimbel-text-mid">Status</dt><dd class="font-bold text-bimbel-text-hi">{{ meta?.status ?? '—' }}</dd></div>
@@ -232,11 +232,11 @@ const heroStats = computed(() => {
           v-if="meta?.next_session?.scheduled_at"
           class="mt-3 border-t border-bimbel-border-soft pt-3"
         >
-          <p class="text-[12px] text-bimbel-text-mid">Sesi berikutnya</p>
-          <p class="mt-0.5 text-[13px] font-bold text-bimbel-text-hi">
+          <p class="text-[13px] text-bimbel-text-mid">Sesi berikutnya</p>
+          <p class="mt-0.5 text-[14px] font-bold text-bimbel-text-hi">
             {{ whenLabel(meta.next_session.scheduled_at) }}
           </p>
-          <p v-if="meta.next_session.topic" class="text-[12px] text-bimbel-text-mid">
+          <p v-if="meta.next_session.topic" class="text-[13px] text-bimbel-text-mid">
             {{ meta.next_session.topic }} · {{ meta.next_session.duration_minutes }}m
           </p>
         </div>

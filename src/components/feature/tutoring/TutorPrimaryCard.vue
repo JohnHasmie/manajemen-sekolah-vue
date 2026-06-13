@@ -66,7 +66,7 @@ const TONE: Record<
       <div class="min-w-0 flex-1">
         <p
           v-if="kicker"
-          class="text-[10px] font-extrabold uppercase tracking-widest"
+          class="text-[12px] font-extrabold uppercase tracking-widest"
           :class="TONE[tone].chipText"
         >
           {{ kicker }}
@@ -82,7 +82,7 @@ const TONE: Record<
           />
           <span class="truncate">{{ title }}</span>
         </h3>
-        <p v-if="subtitle" class="mt-0.5 text-[12.5px] text-bimbel-text-mid">
+        <p v-if="subtitle" class="mt-0.5 text-[13px] text-bimbel-text-mid">
           {{ subtitle }}
         </p>
       </div>
@@ -92,7 +92,7 @@ const TONE: Record<
       </div>
     </div>
 
-    <div v-if="$slots.default" class="mt-3 text-[13px] text-bimbel-text-mid">
+    <div v-if="$slots.default" class="mt-3 text-[14px] text-bimbel-text-mid">
       <slot />
     </div>
 

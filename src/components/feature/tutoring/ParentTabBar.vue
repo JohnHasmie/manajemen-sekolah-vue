@@ -23,7 +23,7 @@ defineEmits<{ (e: 'update:modelValue', v: string): void }>();
       v-for="t in tabs"
       :key="t.id"
       type="button"
-      class="flex-1 rounded-lg px-3 py-1.5 text-[12px] font-bold tracking-tight transition"
+      class="flex-1 rounded-lg px-3 py-1.5 text-[13px] font-bold tracking-tight transition"
       :class="
         modelValue === t.id
           ? 'bg-[#21afe6] text-white shadow'

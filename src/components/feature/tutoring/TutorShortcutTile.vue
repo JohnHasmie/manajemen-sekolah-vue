@@ -49,10 +49,10 @@ const styles = computed(() => {
       <NavIcon :name="icon" :size="20" />
     </span>
     <div class="min-w-0">
-      <p class="text-[13px] font-bold tracking-tight text-bimbel-text-hi">
+      <p class="text-[14px] font-bold tracking-tight text-bimbel-text-hi">
         {{ label }}
       </p>
-      <p v-if="hint" class="mt-0.5 truncate text-[11px] text-bimbel-text-mid">
+      <p v-if="hint" class="mt-0.5 truncate text-[12px] text-bimbel-text-mid">
         {{ hint }}
       </p>
     </div>

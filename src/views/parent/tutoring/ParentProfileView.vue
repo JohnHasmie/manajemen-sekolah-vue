@@ -43,7 +43,7 @@ function goToUbahSandi() {
       <template #actions>
         <button
           type="button"
-          class="rounded-lg bg-white text-[#0c447c] px-3 py-1.5 text-[12px] font-bold hover:bg-white/95"
+          class="rounded-lg bg-white text-[#0c447c] px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
         >Simpan perubahan</button>
       </template>
     </ParentBerandaHero>
@@ -53,9 +53,9 @@ function goToUbahSandi() {
         <div class="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4] text-2xl font-extrabold">
           {{ initial(user?.name) }}
         </div>
-        <p class="mt-3 text-[14px] font-extrabold text-bimbel-text-hi">{{ user?.name ?? '—' }}</p>
-        <p class="text-[12px] text-bimbel-text-mid">Wali · {{ children.length }} anak terdaftar</p>
-        <dl class="mt-4 space-y-1 text-left text-[12px]">
+        <p class="mt-3 text-[15px] font-extrabold text-bimbel-text-hi">{{ user?.name ?? '—' }}</p>
+        <p class="text-[13px] text-bimbel-text-mid">Wali · {{ children.length }} anak terdaftar</p>
+        <dl class="mt-4 space-y-1 text-left text-[13px]">
           <div class="flex items-center gap-2 border-t border-bimbel-border-soft pt-2 text-bimbel-text-mid">
             <NavIcon name="mail" :size="13" />
             <span class="truncate">{{ user?.email ?? '—' }}</span>
@@ -67,53 +67,53 @@ function goToUbahSandi() {
         </dl>
         <button
           type="button"
-          class="mt-3 w-full rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[12px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
+          class="mt-3 w-full rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
         >Ganti foto</button>
       </aside>
 
       <div class="space-y-3 lg:col-span-3">
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
-          <h4 class="mb-3 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Identitas wali</h4>
+          <h4 class="mb-3 text-[14px] font-bold tracking-tight text-bimbel-text-hi">Identitas wali</h4>
           <div class="space-y-2.5">
             <label class="grid items-center gap-3" style="grid-template-columns: 140px 1fr;">
-              <span class="text-[12px] text-bimbel-text-mid">Nama lengkap</span>
+              <span class="text-[13px] text-bimbel-text-mid">Nama lengkap</span>
               <input
                 type="text"
                 :value="user?.name ?? ''"
-                class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[12px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
+                class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
               />
             </label>
             <label class="grid items-center gap-3" style="grid-template-columns: 140px 1fr;">
-              <span class="text-[12px] text-bimbel-text-mid">Email</span>
+              <span class="text-[13px] text-bimbel-text-mid">Email</span>
               <input
                 type="email"
                 :value="user?.email ?? ''"
                 disabled
-                class="rounded-lg border border-bimbel-border-soft bg-bimbel-bg px-3 py-1.5 text-[12px] text-bimbel-text-mid"
+                class="rounded-lg border border-bimbel-border-soft bg-bimbel-bg px-3 py-1.5 text-[13px] text-bimbel-text-mid"
               />
             </label>
             <label class="grid items-center gap-3" style="grid-template-columns: 140px 1fr;">
-              <span class="text-[12px] text-bimbel-text-mid">No HP / WA</span>
+              <span class="text-[13px] text-bimbel-text-mid">No HP / WA</span>
               <input
                 type="tel"
                 placeholder="08xx-xxxx-xxxx"
-                class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[12px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
+                class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
               />
             </label>
             <label class="grid items-start gap-3" style="grid-template-columns: 140px 1fr;">
-              <span class="pt-1 text-[12px] text-bimbel-text-mid">Alamat</span>
+              <span class="pt-1 text-[13px] text-bimbel-text-mid">Alamat</span>
               <textarea
                 rows="2"
                 placeholder="Alamat lengkap"
-                class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[12px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
+                class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
               ></textarea>
             </label>
           </div>
         </section>
 
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
-          <h4 class="mb-3 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Anak terdaftar</h4>
-          <div v-if="children.length === 0" class="py-4 text-center text-[12px] text-bimbel-text-mid">
+          <h4 class="mb-3 text-[14px] font-bold tracking-tight text-bimbel-text-hi">Anak terdaftar</h4>
+          <div v-if="children.length === 0" class="py-4 text-center text-[13px] text-bimbel-text-mid">
             Belum ada anak terdaftar.
           </div>
           <ul class="space-y-1.5">
@@ -122,18 +122,18 @@ function goToUbahSandi() {
               :key="c.student_id"
               class="flex items-center gap-3 rounded-lg border border-bimbel-border-soft p-2"
             >
-              <span class="grid h-8 w-8 place-items-center rounded-full bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4] text-[12px] font-bold">
+              <span class="grid h-8 w-8 place-items-center rounded-full bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4] text-[13px] font-bold">
                 {{ initial(c.name) }}
               </span>
               <div class="min-w-0 flex-1">
-                <p class="truncate text-[13px] font-bold text-bimbel-text-hi">{{ c.name }}</p>
-                <p class="truncate text-[12px] text-bimbel-text-mid">{{ c.class_name }}</p>
+                <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ c.name }}</p>
+                <p class="truncate text-[13px] text-bimbel-text-mid">{{ c.class_name }}</p>
               </div>
             </li>
           </ul>
           <button
             type="button"
-            class="mt-3 inline-flex items-center gap-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[12px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
+            class="mt-3 inline-flex items-center gap-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
             @click="router.push({ name: 'parent.tutoring.enroll-new' })"
           >
             <NavIcon name="plus" :size="12" /> Daftarkan anak baru
@@ -141,13 +141,13 @@ function goToUbahSandi() {
         </section>
 
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
-          <h4 class="mb-3 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Keamanan</h4>
+          <h4 class="mb-3 text-[14px] font-bold tracking-tight text-bimbel-text-hi">Keamanan</h4>
           <div class="grid items-center gap-3" style="grid-template-columns: 140px 1fr auto;">
-            <span class="text-[12px] text-bimbel-text-mid">Kata sandi</span>
-            <span class="text-[12px] text-bimbel-text-mid">Diperbarui beberapa waktu lalu</span>
+            <span class="text-[13px] text-bimbel-text-mid">Kata sandi</span>
+            <span class="text-[13px] text-bimbel-text-mid">Diperbarui beberapa waktu lalu</span>
             <button
               type="button"
-              class="inline-flex items-center gap-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[12px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
+              class="inline-flex items-center gap-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
               @click="goToUbahSandi"
             >
               <NavIcon name="lock" :size="12" /> Ubah sandi

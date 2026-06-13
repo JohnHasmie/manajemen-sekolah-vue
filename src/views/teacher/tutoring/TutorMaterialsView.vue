@@ -143,7 +143,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
@@ -207,7 +207,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     <Modal v-if="showCreate" title="Bahan Ajar Baru" @close="showCreate = false">
       <div class="space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Kelompok
           </span>
           <select
@@ -219,7 +219,7 @@ const kpiCards = computed<KpiCard[]>(() => [
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Judul
           </span>
           <input
@@ -229,7 +229,7 @@ const kpiCards = computed<KpiCard[]>(() => [
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Deskripsi (opsional)
           </span>
           <textarea
@@ -239,7 +239,7 @@ const kpiCards = computed<KpiCard[]>(() => [
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             URL file / link (opsional)
           </span>
           <input

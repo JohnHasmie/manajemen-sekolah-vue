@@ -48,24 +48,24 @@ const chipLabel = computed(() =>
 <template>
   <article class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
     <div class="mb-2 flex items-center gap-2">
-      <span class="grid h-6 w-6 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent text-[12px] font-bold">
+      <span class="grid h-6 w-6 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent text-[13px] font-bold">
         {{ initial(sourceName) }}
       </span>
-      <span class="text-[12px] text-bimbel-text-mid">
+      <span class="text-[13px] text-bimbel-text-mid">
         {{ sourceName }}<template v-if="context"> · {{ context }}</template>
         <template v-if="rel"> · {{ rel }}</template>
       </span>
       <span
-        class="ml-auto rounded-full px-2 py-0.5 text-[12px] font-bold uppercase tracking-wider"
+        class="ml-auto rounded-full px-2 py-0.5 text-[13px] font-bold uppercase tracking-wider"
         :class="chipClass"
       >
         {{ chipLabel }}
       </span>
     </div>
-    <h3 class="text-[13px] font-extrabold tracking-tight text-bimbel-text-hi">
+    <h3 class="text-[14px] font-extrabold tracking-tight text-bimbel-text-hi">
       {{ title }}
     </h3>
-    <p v-if="body" class="mt-1 text-[12px] leading-relaxed text-bimbel-text-mid">
+    <p v-if="body" class="mt-1 text-[13px] leading-relaxed text-bimbel-text-mid">
       {{ body }}
     </p>
   </article>

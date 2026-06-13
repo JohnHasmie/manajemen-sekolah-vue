@@ -217,7 +217,7 @@ function goToTagihan() {
         <ParentChildPickerChip />
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-[#0c447c] px-3 py-1.5 text-[12px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-[#0c447c] px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
           @click="router.push({ name: 'parent.tutoring.enroll-new' })"
         >
           <NavIcon name="plus" :size="13" />
@@ -255,13 +255,13 @@ function goToTagihan() {
                 :href="heroNext.meeting_url"
                 target="_blank"
                 rel="noopener"
-                class="inline-flex items-center gap-1.5 rounded-lg bg-[#21afe6] px-3.5 py-2 text-[12px] font-bold text-white hover:opacity-90"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-[#21afe6] px-3.5 py-2 text-[13px] font-bold text-white hover:opacity-90"
               >
                 <NavIcon name="link" :size="13" /> Buka Meet
               </a>
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-lg border border-bimbel-border px-3.5 py-2 text-[12px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-bimbel-border px-3.5 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
                 @click="router.push({ name: 'parent.tutoring.sessions' })"
               >
                 Lihat jadwal
@@ -300,10 +300,10 @@ function goToTagihan() {
         </div>
 
         <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <h4 class="mb-2 text-[12px] font-bold tracking-tight text-bimbel-text-hi">
+          <h4 class="mb-2 text-[13px] font-bold tracking-tight text-bimbel-text-hi">
             Yang baru
           </h4>
-          <div v-if="feed.length === 0" class="py-6 text-center text-[12px] text-bimbel-text-mid">
+          <div v-if="feed.length === 0" class="py-6 text-center text-[13px] text-bimbel-text-mid">
             Belum ada aktivitas baru.
           </div>
           <ParentActivityRow

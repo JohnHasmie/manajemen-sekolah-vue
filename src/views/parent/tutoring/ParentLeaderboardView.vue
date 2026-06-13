@@ -86,7 +86,7 @@ function rankClass(idx: number): string {
     <div class="flex flex-wrap gap-2">
       <select
         v-model="selectedGroupId"
-        class="rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[12px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
+        class="rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
       >
         <option v-for="g in groups" :key="g.group_id" :value="g.group_id">{{ g.group_name }}</option>
       </select>
@@ -96,10 +96,10 @@ function rankClass(idx: number): string {
 
     <div v-else class="grid gap-3 lg:grid-cols-5">
       <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 lg:col-span-3">
-        <h4 class="mb-2 text-[12px] font-bold tracking-tight text-bimbel-text-hi">Papan peringkat</h4>
+        <h4 class="mb-2 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Papan peringkat</h4>
         <div
           v-if="rows.length === 0"
-          class="py-6 text-center text-[12px] text-bimbel-text-mid"
+          class="py-6 text-center text-[13px] text-bimbel-text-mid"
         >Belum ada peringkat tercatat.</div>
         <div
           v-for="(r, i) in rows"
@@ -107,33 +107,33 @@ function rankClass(idx: number): string {
           class="flex items-center gap-3 border-b border-bimbel-border-soft py-2.5 last:border-b-0"
           :class="{ 'bg-[#21afe6]/10 rounded-xl px-2 -mx-2': r.student_id === studentId }"
         >
-          <span class="w-7 text-center text-[15px] font-extrabold" :class="rankClass(i)">{{ i + 1 }}</span>
+          <span class="w-7 text-center text-[16px] font-extrabold" :class="rankClass(i)">{{ i + 1 }}</span>
           <div class="min-w-0 flex-1">
-            <p class="truncate text-[13px] font-bold text-bimbel-text-hi">
+            <p class="truncate text-[14px] font-bold text-bimbel-text-hi">
               {{ r.name }}<span v-if="r.student_id === studentId" class="text-bimbel-text-mid"> (anda)</span>
             </p>
-            <p class="truncate text-[12px] text-bimbel-text-mid">
+            <p class="truncate text-[13px] text-bimbel-text-mid">
               {{ r.attendance_rate != null ? `${r.attendance_rate}% hadir` : 'belum tercatat' }}
             </p>
           </div>
-          <span class="text-[14px] font-extrabold text-bimbel-text-hi">{{ r.avg_score?.toFixed(1) ?? '–' }}</span>
+          <span class="text-[15px] font-extrabold text-bimbel-text-hi">{{ r.avg_score?.toFixed(1) ?? '–' }}</span>
         </div>
       </div>
 
       <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 lg:col-span-2 h-fit">
-        <h4 class="mb-3 text-[12px] font-bold tracking-tight text-bimbel-text-hi">Detail anak</h4>
-        <p class="text-[12px] text-bimbel-text-mid">
+        <h4 class="mb-3 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Detail anak</h4>
+        <p class="text-[13px] text-bimbel-text-mid">
           {{ activeChild()?.name ?? 'Anak' }} di {{ groups.find((g) => g.group_id === selectedGroupId)?.group_name ?? 'kelas' }}
         </p>
         <div class="mt-3 grid grid-cols-2 gap-2">
           <div class="rounded-xl bg-bimbel-bg/40 p-3">
-            <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">PERINGKAT</p>
+            <p class="text-[13px] font-bold uppercase tracking-widest text-bimbel-text-mid">PERINGKAT</p>
             <p class="mt-1 text-xl font-extrabold text-bimbel-text-hi">
               {{ myRank != null ? `${myRank} / ${rows.length}` : '—' }}
             </p>
           </div>
           <div class="rounded-xl bg-bimbel-bg/40 p-3">
-            <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">SKOR</p>
+            <p class="text-[13px] font-bold uppercase tracking-widest text-bimbel-text-mid">SKOR</p>
             <p class="mt-1 text-xl font-extrabold text-bimbel-text-hi">
               {{ myRow?.avg_score != null ? myRow.avg_score.toFixed(1) : '—' }}
             </p>

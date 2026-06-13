@@ -71,7 +71,7 @@ async function submit() {
     </p>
 
     <label class="block">
-      <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+      <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
         Komentar (opsional)
       </span>
       <textarea

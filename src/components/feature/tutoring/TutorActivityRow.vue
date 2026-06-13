@@ -70,16 +70,16 @@ const rel = computed(() => {
       <NavIcon :name="meta.icon" :size="16" />
     </span>
     <div class="min-w-0 flex-1">
-      <p class="truncate text-[13px] font-bold tracking-tight text-bimbel-text-hi">
+      <p class="truncate text-[14px] font-bold tracking-tight text-bimbel-text-hi">
         {{ title }}
       </p>
-      <p v-if="subtitle" class="truncate text-[12px] text-bimbel-text-mid">
+      <p v-if="subtitle" class="truncate text-[13px] text-bimbel-text-mid">
         {{ subtitle }}
       </p>
     </div>
     <span
       v-if="rel"
-      class="flex-shrink-0 text-[11px] font-semibold text-bimbel-text-lo"
+      class="flex-shrink-0 text-[12px] font-semibold text-bimbel-text-lo"
     >
       {{ rel }}
     </span>

@@ -160,7 +160,7 @@ function goCreateActivity() {
         v-for="t in ['aliran', 'tugas', 'siswa'] as const"
         :key="t"
         type="button"
-        class="flex-1 rounded-xl px-3 py-2 text-[12.5px] font-bold tracking-tight capitalize transition"
+        class="flex-1 rounded-xl px-3 py-2 text-[13px] font-bold tracking-tight capitalize transition"
         :class="
           tab === t
             ? 'bg-bimbel-accent text-white shadow'
@@ -235,10 +235,10 @@ function goCreateActivity() {
             <NavIcon name="user" :size="18" />
           </span>
           <span class="min-w-0">
-            <span class="block truncate text-[13px] font-bold text-bimbel-text-hi">
+            <span class="block truncate text-[14px] font-bold text-bimbel-text-hi">
               {{ e.student?.name || '—' }}
             </span>
-            <span class="block text-[11px] text-bimbel-text-mid">aktif</span>
+            <span class="block text-[12px] text-bimbel-text-mid">aktif</span>
           </span>
         </div>
       </div>

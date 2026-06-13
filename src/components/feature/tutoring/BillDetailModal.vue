@@ -94,7 +94,7 @@ onMounted(load);
       <section class="rounded-xl border border-bimbel-border bg-bimbel-bg p-3 mb-4">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0 flex-1">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+            <div class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
               {{ detail.bill.source_label ?? 'Tagihan' }}
             </div>
             <div class="text-base font-extrabold text-bimbel-text-hi mt-0.5 tracking-tight">
@@ -110,15 +110,15 @@ onMounted(load);
         </div>
         <div class="grid grid-cols-3 gap-2 mt-3 text-center">
           <div>
-            <div class="text-[9px] font-bold uppercase tracking-wider text-bimbel-text-mid">Total</div>
+            <div class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Total</div>
             <div class="text-sm font-extrabold text-bimbel-text-hi">{{ formatRupiah(detail.bill.amount ?? 0) }}</div>
           </div>
           <div>
-            <div class="text-[9px] font-bold uppercase tracking-wider text-bimbel-text-mid">Sudah bayar</div>
+            <div class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Sudah bayar</div>
             <div class="text-sm font-extrabold text-emerald-600">{{ formatRupiah(detail.paid_total) }}</div>
           </div>
           <div>
-            <div class="text-[9px] font-bold uppercase tracking-wider text-bimbel-text-mid">Sisa</div>
+            <div class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Sisa</div>
             <div class="text-sm font-extrabold" :class="detail.outstanding > 0 ? 'text-bimbel-red' : 'text-bimbel-text-mid'">
               {{ formatRupiah(detail.outstanding) }}
             </div>
@@ -145,14 +145,14 @@ onMounted(load);
             </span>
             <div class="min-w-0 flex-1">
               <div class="text-sm font-bold text-bimbel-text-hi">{{ formatRupiah(p.amount) }}</div>
-              <div class="text-[11px] text-bimbel-text-mid truncate">
+              <div class="text-[12px] text-bimbel-text-mid truncate">
                 {{ [
                   p.payment_method,
                   p.payment_date ? formatDateShort(p.payment_date) : null,
                   p.status,
                 ].filter(Boolean).join(' · ') }}
               </div>
-              <div v-if="p.admin_notes" class="text-[11px] text-bimbel-text-lo truncate">
+              <div v-if="p.admin_notes" class="text-[12px] text-bimbel-text-lo truncate">
                 {{ p.admin_notes }}
               </div>
             </div>
@@ -161,7 +161,7 @@ onMounted(load);
               :href="p.proof_proxy_url || p.proof_url || '#'"
               target="_blank"
               rel="noopener"
-              class="rounded-md border border-bimbel-border px-2 py-1 text-[10px] font-bold text-bimbel-text-mid hover:bg-bimbel-bg"
+              class="rounded-md border border-bimbel-border px-2 py-1 text-[12px] font-bold text-bimbel-text-mid hover:bg-bimbel-bg"
             >
               Bukti
             </a>
@@ -192,7 +192,7 @@ onMounted(load);
           <p v-else class="text-bimbel-text-lo italic">
             Rekening belum dikonfigurasi. Buka Pengaturan Billing.
           </p>
-          <div v-if="detail.payment_account.payment_instructions" class="mt-2 text-[11px] text-bimbel-text-mid whitespace-pre-line">
+          <div v-if="detail.payment_account.payment_instructions" class="mt-2 text-[12px] text-bimbel-text-mid whitespace-pre-line">
             {{ detail.payment_account.payment_instructions }}
           </div>
         </div>
@@ -214,7 +214,7 @@ onMounted(load);
           </h4>
           <div class="grid grid-cols-2 gap-2">
             <label class="block">
-              <span class="text-[10px] font-bold text-bimbel-text-mid uppercase">Nominal</span>
+              <span class="text-[12px] font-bold text-bimbel-text-mid uppercase">Nominal</span>
               <input
                 v-model.number="markAmount"
                 type="number"
@@ -223,7 +223,7 @@ onMounted(load);
               />
             </label>
             <label class="block">
-              <span class="text-[10px] font-bold text-bimbel-text-mid uppercase">Tanggal</span>
+              <span class="text-[12px] font-bold text-bimbel-text-mid uppercase">Tanggal</span>
               <input
                 v-model="markDate"
                 type="date"
@@ -232,7 +232,7 @@ onMounted(load);
             </label>
           </div>
           <label class="block">
-            <span class="text-[10px] font-bold text-bimbel-text-mid uppercase">Metode</span>
+            <span class="text-[12px] font-bold text-bimbel-text-mid uppercase">Metode</span>
             <select
               v-model="markMethod"
               class="mt-0.5 w-full rounded-md border border-bimbel-border px-2 py-1.5 text-sm"
@@ -244,7 +244,7 @@ onMounted(load);
             </select>
           </label>
           <label class="block">
-            <span class="text-[10px] font-bold text-bimbel-text-mid uppercase">Catatan</span>
+            <span class="text-[12px] font-bold text-bimbel-text-mid uppercase">Catatan</span>
             <input
               v-model="markNotes"
               type="text"

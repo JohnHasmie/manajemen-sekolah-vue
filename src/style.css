@@ -155,14 +155,17 @@
    Mirrors mobile palette: admin #152A47/#60A5FA, tutor #1E3A66/#38BDF8,
    wali #27508C/#60A5FA. */
 :root {
-  --bimbel-bg: #0f1419;
+  --bimbel-bg: #0b1018;
   --bimbel-panel: #161b26;
   --bimbel-panel-navy: #14182a;
-  --bimbel-border: #2a3147;
-  --bimbel-border-soft: #1f2738;
-  --bimbel-text-hi: #f1f5f9;
-  --bimbel-text-mid: #94a3b8;
-  --bimbel-text-lo: #64748b;
+  --bimbel-border: #334155;
+  --bimbel-border-soft: #243246;
+  /* text-hi → slate-50, text-mid raised from slate-400 to slate-300 for
+     readable sub-text on dark surfaces, text-lo from slate-500 to
+     slate-400 so hints/timestamps stay visible too. */
+  --bimbel-text-hi: #f8fafc;
+  --bimbel-text-mid: #cbd5e1;
+  --bimbel-text-lo: #94a3b8;
   --bimbel-ring: #0b1424;
 }
 

@@ -128,7 +128,7 @@ const DAYS: { iso: number; label: string }[] = [
 
     <div class="space-y-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5">
       <label class="block">
-        <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+        <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
           Kelompok
         </span>
         <select
@@ -141,7 +141,7 @@ const DAYS: { iso: number; label: string }[] = [
       </label>
 
       <div>
-        <p class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider mb-2">
+        <p class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider mb-2">
           Hari
         </p>
         <div class="flex flex-wrap gap-1.5">
@@ -162,7 +162,7 @@ const DAYS: { iso: number; label: string }[] = [
 
       <div class="grid grid-cols-2 gap-2">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Mulai
           </span>
           <input
@@ -172,7 +172,7 @@ const DAYS: { iso: number; label: string }[] = [
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Sampai
           </span>
           <input
@@ -186,7 +186,7 @@ const DAYS: { iso: number; label: string }[] = [
 
       <div class="grid grid-cols-2 gap-2">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Jam
           </span>
           <input
@@ -196,7 +196,7 @@ const DAYS: { iso: number; label: string }[] = [
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Durasi
           </span>
           <select
@@ -212,7 +212,7 @@ const DAYS: { iso: number; label: string }[] = [
       </div>
 
       <label class="block">
-        <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+        <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
           Ruang (opsional)
         </span>
         <input
@@ -222,7 +222,7 @@ const DAYS: { iso: number; label: string }[] = [
       </label>
 
       <label class="block">
-        <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+        <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
           Link meeting (opsional)
         </span>
         <input
@@ -234,7 +234,7 @@ const DAYS: { iso: number; label: string }[] = [
       </label>
 
       <label class="block">
-        <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+        <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
           Topik (opsional)
         </span>
         <input

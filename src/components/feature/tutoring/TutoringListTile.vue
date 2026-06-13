@@ -43,7 +43,7 @@ function handle() {
       <NavIcon :name="icon" :size="18" />
     </span>
     <span class="min-w-0 flex-1">
-      <span class="block text-[13.5px] font-semibold text-bimbel-text-hi tracking-tight">{{ title }}</span>
+      <span class="block text-[14px] font-semibold text-bimbel-text-hi tracking-tight">{{ title }}</span>
       <span v-if="subtitle" class="block text-xs text-bimbel-text-mid mt-0.5">{{ subtitle }}</span>
     </span>
     <span v-if="$slots.trailing" class="flex-shrink-0">

@@ -67,7 +67,7 @@ function toggle(key: string) {
     />
 
     <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 space-y-3">
-      <h4 class="text-[13px] font-bold tracking-tight text-bimbel-text-hi">Mode tampilan</h4>
+      <h4 class="text-[14px] font-bold tracking-tight text-bimbel-text-hi">Mode tampilan</h4>
       <div class="grid gap-2 sm:grid-cols-3">
         <button
           v-for="m in modes"
@@ -91,37 +91,37 @@ function toggle(key: string) {
                 : 'background:linear-gradient(90deg,#f7faff 50%,#0f1419 50%);border-color:#94a3b8;'
             "
           />
-          <p class="text-[12px] font-bold text-bimbel-text-hi">{{ m.label }}</p>
-          <p class="text-[12px] text-bimbel-text-mid">{{ m.sub }}</p>
+          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ m.label }}</p>
+          <p class="text-[13px] text-bimbel-text-mid">{{ m.sub }}</p>
         </button>
       </div>
-      <p v-if="theme.autoHint" class="text-[12px] text-bimbel-text-mid">{{ theme.autoHint }}</p>
+      <p v-if="theme.autoHint" class="text-[13px] text-bimbel-text-mid">{{ theme.autoHint }}</p>
       <div v-if="theme.mode === 'auto'" class="grid gap-2 sm:grid-cols-2 pt-2 border-t border-bimbel-border-soft">
         <label class="grid items-center gap-3" style="grid-template-columns: 140px 1fr;">
-          <span class="text-[12px] text-bimbel-text-mid">Jam terang mulai</span>
+          <span class="text-[13px] text-bimbel-text-mid">Jam terang mulai</span>
           <input
             v-model="lightStart"
             type="time"
-            class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[12px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
+            class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
           />
         </label>
         <label class="grid items-center gap-3" style="grid-template-columns: 140px 1fr;">
-          <span class="text-[12px] text-bimbel-text-mid">Jam gelap mulai</span>
+          <span class="text-[13px] text-bimbel-text-mid">Jam gelap mulai</span>
           <input
             v-model="darkStart"
             type="time"
-            class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[12px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
+            class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[13px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
           />
         </label>
       </div>
     </section>
 
     <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 space-y-3">
-      <h4 class="text-[13px] font-bold tracking-tight text-bimbel-text-hi">Bahasa</h4>
+      <h4 class="text-[14px] font-bold tracking-tight text-bimbel-text-hi">Bahasa</h4>
       <div class="flex gap-2">
         <button
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[12px] font-semibold"
+          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
           :class="
             locale === 'id'
               ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
@@ -131,7 +131,7 @@ function toggle(key: string) {
         >Bahasa Indonesia</button>
         <button
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[12px] font-semibold"
+          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
           :class="
             locale === 'en'
               ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
@@ -143,7 +143,7 @@ function toggle(key: string) {
     </section>
 
     <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
-      <h4 class="mb-2 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Notifikasi</h4>
+      <h4 class="mb-2 text-[14px] font-bold tracking-tight text-bimbel-text-hi">Notifikasi</h4>
       <div
         v-for="row in [
           { id: 'reminder', name: 'Pengingat sesi', sub: 'H-1 dan 30 menit sebelum mulai' },
@@ -156,8 +156,8 @@ function toggle(key: string) {
         class="flex items-center justify-between border-t border-bimbel-border-soft py-2.5 first:border-t-0"
       >
         <div>
-          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ row.name }}</p>
-          <p class="text-[12px] text-bimbel-text-mid">{{ row.sub }}</p>
+          <p class="text-[14px] font-bold text-bimbel-text-hi">{{ row.name }}</p>
+          <p class="text-[13px] text-bimbel-text-mid">{{ row.sub }}</p>
         </div>
         <button
           type="button"

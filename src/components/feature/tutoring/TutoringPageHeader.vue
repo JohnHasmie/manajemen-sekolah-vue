@@ -17,7 +17,7 @@ defineProps<{
     <div class="min-w-0">
       <p
         v-if="crumbs"
-        class="text-[10.5px] font-bold text-bimbel-text-lo uppercase tracking-widest"
+        class="text-[12px] font-bold text-bimbel-text-lo uppercase tracking-widest"
       >
         {{ crumbs }}
       </p>

@@ -213,7 +213,7 @@ function goToShortcut(name: string) {
       >
         <template #meta>
           <span
-            class="rounded-full px-2.5 py-1 text-[11px] font-extrabold tracking-tight"
+            class="rounded-full px-2.5 py-1 text-[12px] font-extrabold tracking-tight"
             :class="
               nextSessionTone === 'success'
                 ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'

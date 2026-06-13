@@ -93,21 +93,21 @@ function relTime(iso?: string | null): string {
     <template v-else>
       <div class="grid grid-cols-3 gap-2.5">
         <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">RATA-RATA</p>
+          <p class="text-[13px] font-bold uppercase tracking-widest text-bimbel-text-mid">RATA-RATA</p>
           <p class="mt-1 text-2xl font-extrabold text-bimbel-text-hi">
             {{ overall?.average != null ? Math.round(overall.average) : '–' }}
           </p>
-          <p class="text-[12px] text-bimbel-text-mid">{{ overall?.count ?? 0 }} nilai tercatat</p>
+          <p class="text-[13px] text-bimbel-text-mid">{{ overall?.count ?? 0 }} nilai tercatat</p>
         </div>
         <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">TERTINGGI</p>
+          <p class="text-[13px] font-bold uppercase tracking-widest text-bimbel-text-mid">TERTINGGI</p>
           <p class="mt-1 text-2xl font-extrabold text-bimbel-text-hi">{{ overall?.best ?? '–' }}</p>
-          <p class="text-[12px] text-bimbel-text-mid">nilai terbaik</p>
+          <p class="text-[13px] text-bimbel-text-mid">nilai terbaik</p>
         </div>
         <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">TERAKHIR</p>
+          <p class="text-[13px] font-bold uppercase tracking-widest text-bimbel-text-mid">TERAKHIR</p>
           <p class="mt-1 text-2xl font-extrabold text-bimbel-text-hi">{{ overall?.latest ?? '–' }}</p>
-          <p class="text-[12px] text-bimbel-text-mid">nilai terbaru</p>
+          <p class="text-[13px] text-bimbel-text-mid">nilai terbaru</p>
         </div>
       </div>
 
@@ -115,7 +115,7 @@ function relTime(iso?: string | null): string {
         <span
           v-for="(s, i) in subjects"
           :key="s"
-          class="inline-flex items-center gap-1.5 rounded-full bg-bimbel-panel border border-bimbel-border-soft px-3 py-1 text-[12px] text-bimbel-text-hi"
+          class="inline-flex items-center gap-1.5 rounded-full bg-bimbel-panel border border-bimbel-border-soft px-3 py-1 text-[13px] text-bimbel-text-hi"
         >
           <span class="h-2 w-2 rounded-full" :style="{ background: HUES[i % HUES.length] }" />
           {{ s }}
@@ -124,7 +124,7 @@ function relTime(iso?: string | null): string {
 
       <div class="grid gap-3 lg:grid-cols-5">
         <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 lg:col-span-2">
-          <h4 class="mb-3 text-[12px] font-bold tracking-tight text-bimbel-text-hi">Trend per mapel</h4>
+          <h4 class="mb-3 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Trend per mapel</h4>
           <div class="h-32 rounded-xl bg-bimbel-bg/40 p-2">
             <svg viewBox="0 0 280 100" preserveAspectRatio="none" class="h-full w-full">
               <polyline
@@ -139,10 +139,10 @@ function relTime(iso?: string | null): string {
           </div>
         </div>
         <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 lg:col-span-3">
-          <h4 class="mb-3 text-[12px] font-bold tracking-tight text-bimbel-text-hi">Penilaian terbaru</h4>
+          <h4 class="mb-3 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Penilaian terbaru</h4>
           <div
             v-if="entries.length === 0"
-            class="py-6 text-center text-[12px] text-bimbel-text-mid"
+            class="py-6 text-center text-[13px] text-bimbel-text-mid"
           >Belum ada nilai.</div>
           <div
             v-for="p in entries.slice(0, 8)"
@@ -150,12 +150,12 @@ function relTime(iso?: string | null): string {
             class="flex items-center justify-between gap-3 border-b border-bimbel-border-soft py-2 last:border-b-0"
           >
             <div class="min-w-0">
-              <p class="truncate text-[13px] font-bold text-bimbel-text-hi">{{ p.title }}</p>
-              <p class="truncate text-[12px] text-bimbel-text-mid">
+              <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ p.title }}</p>
+              <p class="truncate text-[13px] text-bimbel-text-mid">
                 {{ [p.subject, p.type_label, relTime(p.held_at) || dateShort(p.held_at)].filter(Boolean).join(' · ') }}
               </p>
             </div>
-            <span class="text-[15px] font-extrabold text-emerald-700 dark:text-emerald-300">{{ p.score ?? '–' }}</span>
+            <span class="text-[16px] font-extrabold text-emerald-700 dark:text-emerald-300">{{ p.score ?? '–' }}</span>
           </div>
         </div>
       </div>
