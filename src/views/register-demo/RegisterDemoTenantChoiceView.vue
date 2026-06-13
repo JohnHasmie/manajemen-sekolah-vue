@@ -55,7 +55,15 @@ function pick(t: 'sekolah' | 'bimbel') {
     <!-- Topbar -->
     <header class="bg-white border-b border-slate-200">
       <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-        <router-link to="/" class="flex items-center gap-2.5">
+        <!--
+          External link to the marketing landing (edu.kamillabs.com) —
+          NOT `router-link to="/"`. Reason: the app's `/` route
+          redirects unauthenticated users to `/login`, so a user on this
+          page who clicks the brand logo bounces back to /login instead
+          of going "home". The landing site lives on a separate origin
+          (Astro), so a plain `<a href>` is the right primitive here.
+        -->
+        <a href="https://edu.kamillabs.com/" class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-lg bg-brand-dark-blue text-white text-sm font-black grid place-items-center">
             K
           </div>
@@ -63,7 +71,7 @@ function pick(t: 'sekolah' | 'bimbel') {
             <div class="text-sm font-bold text-slate-900 leading-tight">KamilEdu</div>
             <div class="text-[10px] text-slate-500 font-medium">Daftar demo gratis</div>
           </div>
-        </router-link>
+        </a>
         <div class="flex items-center gap-4">
           <PublicLanguageSwitcher />
           <router-link
