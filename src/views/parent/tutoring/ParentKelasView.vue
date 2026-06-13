@@ -98,7 +98,7 @@ function classFooter(c: TutoringWaliClassMeta): string {
           v-model="query"
           type="text"
           placeholder="Cari kelas…"
-          class="w-full rounded-xl border border-bimbel-border bg-bimbel-panel pl-9 pr-3 py-2 text-[12.5px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-[#21afe6] focus:outline-none"
+          class="w-full rounded-xl border border-bimbel-border bg-bimbel-panel pl-9 pr-3 py-2 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-[#21afe6] focus:outline-none"
         />
       </div>
       <div class="flex gap-1.5">
@@ -110,7 +110,7 @@ function classFooter(c: TutoringWaliClassMeta): string {
           ] as const"
           :key="opt.id"
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[11.5px] font-semibold transition"
+          class="rounded-full border px-3 py-1.5 text-[12px] font-semibold transition"
           :class="
             status === opt.id
               ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'

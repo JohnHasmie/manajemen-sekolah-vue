@@ -47,7 +47,7 @@ function onChipClick() {
       @click="onChipClick"
     >
       <span
-        class="grid h-5 w-5 place-items-center rounded-full bg-white/25 text-[10px] font-bold"
+        class="grid h-5 w-5 place-items-center rounded-full bg-white/25 text-[12px] font-bold"
       >
         {{ initial(active?.name) }}
       </span>
@@ -66,11 +66,11 @@ function onChipClick() {
         v-for="c in children"
         :key="c.student_id"
         type="button"
-        class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[12.5px] text-bimbel-text-hi hover:bg-bimbel-border-soft"
+        class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] text-bimbel-text-hi hover:bg-bimbel-border-soft"
         :class="{ 'bg-bimbel-accent-dim': c.student_id === activeChildId }"
         @click="pick(c.student_id)"
       >
-        <span class="grid h-6 w-6 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent text-[10px] font-bold">
+        <span class="grid h-6 w-6 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent text-[12px] font-bold">
           {{ initial(c.name) }}
         </span>
         <span class="truncate">{{ c.name }}</span>

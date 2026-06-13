@@ -96,7 +96,7 @@ function statusChip(s: TutoringActivitySubmission) {
           ] as const"
           :key="opt.id"
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[11px] font-semibold"
+          class="rounded-full border px-3 py-1.5 text-[12px] font-semibold"
           :class="
             typeFilter === opt.id
               ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
@@ -112,7 +112,7 @@ function statusChip(s: TutoringActivitySubmission) {
     <div v-else-if="filtered.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
       <table class="w-full text-[12px]">
         <thead class="bg-bimbel-bg/40">
-          <tr class="text-left text-[10px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+          <tr class="text-left text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
             <th class="px-3 py-2">Tugas</th>
             <th class="px-3 py-2 w-[100px]">Jenis</th>
             <th class="px-3 py-2 w-[140px]">Kelas</th>
@@ -129,7 +129,7 @@ function statusChip(s: TutoringActivitySubmission) {
           >
             <td class="px-3 py-2.5">
               <p class="font-bold text-bimbel-text-hi">{{ (s as any).activity_title ?? 'Tugas' }}</p>
-              <p v-if="s.note" class="text-[10.5px] text-bimbel-text-mid line-clamp-1">{{ s.note }}</p>
+              <p v-if="s.note" class="text-[12px] text-bimbel-text-mid line-clamp-1">{{ s.note }}</p>
             </td>
             <td class="px-3 py-2.5 text-bimbel-text-mid">{{ (s as any).activity_type ?? '—' }}</td>
             <td class="px-3 py-2.5 text-bimbel-text-mid">{{ (s as any).group_name ?? '—' }}</td>
@@ -144,7 +144,7 @@ function statusChip(s: TutoringActivitySubmission) {
               {{ s.score ?? '—' }}
             </td>
             <td class="px-3 py-2.5">
-              <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold" :class="statusChip(s).cls">{{ statusChip(s).label }}</span>
+              <span class="inline-flex rounded-full px-2 py-0.5 text-[12px] font-bold" :class="statusChip(s).cls">{{ statusChip(s).label }}</span>
             </td>
           </tr>
         </tbody>

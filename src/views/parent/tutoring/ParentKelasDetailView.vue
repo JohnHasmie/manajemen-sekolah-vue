@@ -167,10 +167,10 @@ const heroStats = computed(() => {
             :key="s.id"
             class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3"
           >
-            <div class="flex items-center justify-between text-[11px] text-bimbel-text-mid">
+            <div class="flex items-center justify-between text-[12px] text-bimbel-text-mid">
               <span>{{ whenLabel(s.scheduled_at) }} · {{ s.duration_minutes }}m</span>
               <span
-                class="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                class="rounded-full px-2 py-0.5 text-[12px] font-bold"
                 :class="
                   s.status === 'DONE'
                     ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
@@ -183,7 +183,7 @@ const heroStats = computed(() => {
               </span>
             </div>
             <p class="mt-1 text-[13px] font-bold text-bimbel-text-hi">{{ s.topic || 'Sesi terjadwal' }}</p>
-            <p v-if="s.room" class="text-[11px] text-bimbel-text-mid">ruang {{ s.room }}</p>
+            <p v-if="s.room" class="text-[12px] text-bimbel-text-mid">ruang {{ s.room }}</p>
           </div>
         </template>
 
@@ -204,7 +204,7 @@ const heroStats = computed(() => {
             </span>
             <div class="min-w-0 flex-1">
               <p class="truncate text-[13px] font-bold text-bimbel-text-hi">{{ p.title }}</p>
-              <p class="truncate text-[11px] text-bimbel-text-mid">
+              <p class="truncate text-[12px] text-bimbel-text-mid">
                 {{ [p.type_label, p.subject, whenLabel(p.held_at)].filter(Boolean).join(' · ') }}
               </p>
             </div>
@@ -232,11 +232,11 @@ const heroStats = computed(() => {
           v-if="meta?.next_session?.scheduled_at"
           class="mt-3 border-t border-bimbel-border-soft pt-3"
         >
-          <p class="text-[11px] text-bimbel-text-mid">Sesi berikutnya</p>
+          <p class="text-[12px] text-bimbel-text-mid">Sesi berikutnya</p>
           <p class="mt-0.5 text-[13px] font-bold text-bimbel-text-hi">
             {{ whenLabel(meta.next_session.scheduled_at) }}
           </p>
-          <p v-if="meta.next_session.topic" class="text-[11px] text-bimbel-text-mid">
+          <p v-if="meta.next_session.topic" class="text-[12px] text-bimbel-text-mid">
             {{ meta.next_session.topic }} · {{ meta.next_session.duration_minutes }}m
           </p>
         </div>

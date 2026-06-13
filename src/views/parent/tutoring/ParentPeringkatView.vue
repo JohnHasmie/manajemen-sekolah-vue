@@ -109,10 +109,10 @@ function rankClass(idx: number): string {
         >
           <span class="w-7 text-center text-[15px] font-extrabold" :class="rankClass(i)">{{ i + 1 }}</span>
           <div class="min-w-0 flex-1">
-            <p class="truncate text-[12.5px] font-bold text-bimbel-text-hi">
+            <p class="truncate text-[13px] font-bold text-bimbel-text-hi">
               {{ r.name }}<span v-if="r.student_id === studentId" class="text-bimbel-text-mid"> (anda)</span>
             </p>
-            <p class="truncate text-[10.5px] text-bimbel-text-mid">
+            <p class="truncate text-[12px] text-bimbel-text-mid">
               {{ r.attendance_rate != null ? `${r.attendance_rate}% hadir` : 'belum tercatat' }}
             </p>
           </div>
@@ -122,18 +122,18 @@ function rankClass(idx: number): string {
 
       <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 lg:col-span-2 h-fit">
         <h4 class="mb-3 text-[12px] font-bold tracking-tight text-bimbel-text-hi">Detail anak</h4>
-        <p class="text-[11.5px] text-bimbel-text-mid">
+        <p class="text-[12px] text-bimbel-text-mid">
           {{ activeChild()?.name ?? 'Anak' }} di {{ groups.find((g) => g.group_id === selectedGroupId)?.group_name ?? 'kelas' }}
         </p>
         <div class="mt-3 grid grid-cols-2 gap-2">
           <div class="rounded-xl bg-bimbel-bg/40 p-3">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-bimbel-text-mid">PERINGKAT</p>
+            <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">PERINGKAT</p>
             <p class="mt-1 text-xl font-extrabold text-bimbel-text-hi">
               {{ myRank != null ? `${myRank} / ${rows.length}` : '—' }}
             </p>
           </div>
           <div class="rounded-xl bg-bimbel-bg/40 p-3">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-bimbel-text-mid">SKOR</p>
+            <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">SKOR</p>
             <p class="mt-1 text-xl font-extrabold text-bimbel-text-hi">
               {{ myRow?.avg_score != null ? myRow.avg_score.toFixed(1) : '—' }}
             </p>

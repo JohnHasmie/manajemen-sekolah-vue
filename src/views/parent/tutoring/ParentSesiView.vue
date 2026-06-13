@@ -125,7 +125,7 @@ function statusChip(s: TutoringSession) {
             ] as const"
             :key="r.id"
             type="button"
-            class="rounded-full border px-3 py-1.5 text-[11px] font-semibold"
+            class="rounded-full border px-3 py-1.5 text-[12px] font-semibold"
             :class="
               range === r.id
                 ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
@@ -142,7 +142,7 @@ function statusChip(s: TutoringSession) {
     <div v-else-if="filtered.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
       <table class="w-full text-[12px]">
         <thead class="bg-bimbel-bg/40">
-          <tr class="text-left text-[10px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+          <tr class="text-left text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
             <th class="px-3 py-2 w-[120px]">Waktu</th>
             <th class="px-3 py-2">Topik</th>
             <th class="px-3 py-2 w-[160px]">Kelas</th>
@@ -158,20 +158,20 @@ function statusChip(s: TutoringSession) {
           >
             <td class="px-3 py-2.5">
               <p class="font-bold text-bimbel-text-hi">{{ whenParts(s.scheduled_at).main }}</p>
-              <p class="text-[10.5px] text-bimbel-text-mid">{{ whenParts(s.scheduled_at).sub }} · {{ s.duration_minutes }}m</p>
+              <p class="text-[12px] text-bimbel-text-mid">{{ whenParts(s.scheduled_at).sub }} · {{ s.duration_minutes }}m</p>
             </td>
             <td class="px-3 py-2.5">
               <p class="font-bold text-bimbel-text-hi">{{ s.topic || 'Sesi terjadwal' }}</p>
-              <p v-if="s.room" class="text-[10.5px] text-bimbel-text-mid">ruang {{ s.room }}</p>
+              <p v-if="s.room" class="text-[12px] text-bimbel-text-mid">ruang {{ s.room }}</p>
             </td>
             <td class="px-3 py-2.5">
               <p class="text-bimbel-text-hi">{{ s.group?.name ?? '—' }}</p>
-              <p v-if="s.group?.program?.name" class="text-[10.5px] text-bimbel-text-mid">{{ s.group.program.name }}</p>
+              <p v-if="s.group?.program?.name" class="text-[12px] text-bimbel-text-mid">{{ s.group.program.name }}</p>
             </td>
             <td class="px-3 py-2.5 text-bimbel-text-hi">{{ s.tutor?.name ?? '—' }}</td>
             <td class="px-3 py-2.5">
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold"
+                class="inline-flex rounded-full px-2 py-0.5 text-[12px] font-bold"
                 :class="statusChip(s).cls"
               >{{ statusChip(s).label }}</span>
             </td>

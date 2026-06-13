@@ -93,21 +93,21 @@ function relTime(iso?: string | null): string {
     <template v-else>
       <div class="grid grid-cols-3 gap-2.5">
         <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-bimbel-text-mid">RATA-RATA</p>
+          <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">RATA-RATA</p>
           <p class="mt-1 text-2xl font-extrabold text-bimbel-text-hi">
             {{ overall?.average != null ? Math.round(overall.average) : '–' }}
           </p>
-          <p class="text-[10.5px] text-bimbel-text-mid">{{ overall?.count ?? 0 }} nilai tercatat</p>
+          <p class="text-[12px] text-bimbel-text-mid">{{ overall?.count ?? 0 }} nilai tercatat</p>
         </div>
         <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-bimbel-text-mid">TERTINGGI</p>
+          <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">TERTINGGI</p>
           <p class="mt-1 text-2xl font-extrabold text-bimbel-text-hi">{{ overall?.best ?? '–' }}</p>
-          <p class="text-[10.5px] text-bimbel-text-mid">nilai terbaik</p>
+          <p class="text-[12px] text-bimbel-text-mid">nilai terbaik</p>
         </div>
         <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-bimbel-text-mid">TERAKHIR</p>
+          <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">TERAKHIR</p>
           <p class="mt-1 text-2xl font-extrabold text-bimbel-text-hi">{{ overall?.latest ?? '–' }}</p>
-          <p class="text-[10.5px] text-bimbel-text-mid">nilai terbaru</p>
+          <p class="text-[12px] text-bimbel-text-mid">nilai terbaru</p>
         </div>
       </div>
 
@@ -115,7 +115,7 @@ function relTime(iso?: string | null): string {
         <span
           v-for="(s, i) in subjects"
           :key="s"
-          class="inline-flex items-center gap-1.5 rounded-full bg-bimbel-panel border border-bimbel-border-soft px-3 py-1 text-[11.5px] text-bimbel-text-hi"
+          class="inline-flex items-center gap-1.5 rounded-full bg-bimbel-panel border border-bimbel-border-soft px-3 py-1 text-[12px] text-bimbel-text-hi"
         >
           <span class="h-2 w-2 rounded-full" :style="{ background: HUES[i % HUES.length] }" />
           {{ s }}
@@ -150,8 +150,8 @@ function relTime(iso?: string | null): string {
             class="flex items-center justify-between gap-3 border-b border-bimbel-border-soft py-2 last:border-b-0"
           >
             <div class="min-w-0">
-              <p class="truncate text-[12.5px] font-bold text-bimbel-text-hi">{{ p.title }}</p>
-              <p class="truncate text-[11px] text-bimbel-text-mid">
+              <p class="truncate text-[13px] font-bold text-bimbel-text-hi">{{ p.title }}</p>
+              <p class="truncate text-[12px] text-bimbel-text-mid">
                 {{ [p.subject, p.type_label, relTime(p.held_at) || dateShort(p.held_at)].filter(Boolean).join(' · ') }}
               </p>
             </div>

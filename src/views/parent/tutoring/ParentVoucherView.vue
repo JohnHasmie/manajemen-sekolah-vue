@@ -91,7 +91,7 @@ async function tryRedeem() {
           ]"
           :key="opt.id"
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[11.5px] font-semibold"
+          class="rounded-full border px-3 py-1.5 text-[12px] font-semibold"
           :class="
             view === opt.id
               ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
@@ -114,7 +114,7 @@ async function tryRedeem() {
         ><NavIcon name="check-circle" :size="13" /> Pakai</button>
       </div>
     </div>
-    <p v-if="codeMessage" class="text-[11.5px] text-bimbel-text-mid">{{ codeMessage }}</p>
+    <p v-if="codeMessage" class="text-[12px] text-bimbel-text-mid">{{ codeMessage }}</p>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 

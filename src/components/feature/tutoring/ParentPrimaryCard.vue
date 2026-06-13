@@ -59,22 +59,22 @@ const TONE: Record<
       <div class="min-w-0 flex-1">
         <p
           v-if="kicker"
-          class="text-[10px] font-extrabold uppercase tracking-widest"
+          class="text-[12px] font-extrabold uppercase tracking-widest"
           :class="TONE[tone].kicker"
         >
           {{ kicker }}
         </p>
         <h3
-          class="mt-0.5 flex items-center gap-2 text-[14.5px] font-extrabold tracking-tight text-bimbel-text-hi"
+          class="mt-0.5 flex items-center gap-2 text-[14px] font-extrabold tracking-tight text-bimbel-text-hi"
         >
           <NavIcon v-if="icon" :name="icon" :size="15" :class="TONE[tone].chipText" />
           <span class="truncate">{{ title }}</span>
         </h3>
-        <p v-if="subtitle" class="mt-0.5 text-[11.5px] text-bimbel-text-mid">{{ subtitle }}</p>
+        <p v-if="subtitle" class="mt-0.5 text-[12px] text-bimbel-text-mid">{{ subtitle }}</p>
       </div>
       <span
         v-if="chip"
-        class="flex-shrink-0 rounded-full px-2.5 py-1 text-[10.5px] font-extrabold"
+        class="flex-shrink-0 rounded-full px-2.5 py-1 text-[12px] font-extrabold"
         :class="[TONE[tone].chip, TONE[tone].chipText]"
       >
         {{ chip }}

@@ -56,26 +56,26 @@ const gradient = computed(() => {
       <div class="flex items-start justify-between gap-2">
         <span
           v-if="subject"
-          class="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-widest"
+          class="rounded-full bg-white/15 px-2 py-0.5 text-[12px] font-extrabold uppercase tracking-widest"
         >
           {{ subject }}
         </span>
         <span
           v-if="newCount && newCount > 0"
-          class="flex-shrink-0 rounded-full bg-white px-2 py-0.5 text-[9.5px] font-extrabold tracking-tight"
+          class="flex-shrink-0 rounded-full bg-white px-2 py-0.5 text-[12px] font-extrabold tracking-tight"
           style="color: #0c447c;"
         >
           {{ newCount }} baru
         </span>
       </div>
-      <h3 class="mt-1.5 text-[13.5px] font-extrabold leading-tight tracking-tight line-clamp-2">
+      <h3 class="mt-1.5 text-[13px] font-extrabold leading-tight tracking-tight line-clamp-2">
         {{ name }}
       </h3>
-      <p v-if="tutorName" class="text-[10.5px] text-white/85">{{ tutorName }}</p>
+      <p v-if="tutorName" class="text-[12px] text-white/85">{{ tutorName }}</p>
     </div>
     <div
       v-if="footer"
-      class="border-t border-white/20 bg-black/15 px-3.5 py-1.5 text-[10.5px] font-semibold text-white/90"
+      class="border-t border-white/20 bg-black/15 px-3.5 py-1.5 text-[12px] font-semibold text-white/90"
     >
       {{ footer }}
     </div>
