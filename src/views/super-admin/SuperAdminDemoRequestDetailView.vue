@@ -560,7 +560,7 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
                 Nama Bimbel
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.bimbel?.nama ?? detail.school_summary?.name ?? '—' }}
+                {{ payload?.bimbel?.name ?? detail.school_summary?.name ?? '—' }}
               </dd>
             </div>
             <div>
@@ -568,7 +568,7 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
                 Jenjang
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.bimbel?.jenjang?.join(', ') ?? detail.school_summary?.education_level ?? '—' }}
+                {{ payload?.bimbel?.target_levels?.join(', ') ?? detail.school_summary?.education_level ?? '—' }}
               </dd>
             </div>
             <div>
@@ -576,7 +576,7 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
                 Kota
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ payload?.bimbel?.location?.city ?? detail.school_summary?.city ?? '—' }}
+                {{ payload?.bimbel?.city ?? detail.school_summary?.city ?? '—' }}
               </dd>
             </div>
             <div>
@@ -1032,7 +1032,7 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
           v-if="detail.status === 'approved' && detail.activated_school_id"
           :school-id="detail.activated_school_id"
           :school-name="
-            payload?.school?.name ?? detail.school_summary?.name ?? null
+            payload?.bimbel?.name ?? payload?.school?.name ?? detail.school_summary?.name ?? null
           "
           @deleted="onAccountsDeleted"
           @school-deleted="onSchoolDeleted"
