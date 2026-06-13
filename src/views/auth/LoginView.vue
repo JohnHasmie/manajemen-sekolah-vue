@@ -51,6 +51,21 @@ const clearDemoIntent = () => {
 // Surface any initial error passed via the query string
 // (the 401 interceptor in http.ts redirects with ?reason=...).
 onMounted(async () => {
+  // Wipe any stale `demo_intent_v1` flag left in sessionStorage from a
+  // previous visit to the demo flow, UNLESS the URL clearly marks this
+  // visit as a demo-intent flow (`?intent=demo`).
+  //
+  // Without this guard a stale flag survived across tabs/visits and made
+  // every subsequent login — including super-admin logins — redirect to
+  // /register-demo instead of the user's normal home, because the watcher's
+  // `hasDemoIntent() && step === 'done'` branch fires before the plain
+  // `step === 'done' → /` branch. Yahya (super-admin) hit this on
+  // 2026-06-13. The DemoCtaCard click sets the flag AFTER mount, so the
+  // legitimate demo-CTA flow on this same page is not affected.
+  if (route.query.intent !== 'demo') {
+    clearDemoIntent();
+  }
+
   // If the user wants to register a demo and is already authenticated,
   // skip the school/role selector and go straight to the wizard.
   if (hasDemoIntent() && auth.isAuthenticated) {
