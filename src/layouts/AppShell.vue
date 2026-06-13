@@ -12,7 +12,7 @@
   `lib/features/dashboard/presentation/screens/dashboard_screen.dart`.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useBimbelThemeStore } from '@/stores/bimbel-theme';
@@ -103,6 +103,48 @@ const bimbelRoleClass = computed(() =>
  * drive all three roles.
  */
 const bimbelSurfaceClass = computed(() => bimbelTheme.rootClass);
+
+/**
+ * Mirror the bimbel surface classes (`.bimbel-light` / `.bimbel-dark`
+ * + role tier `.bimbel-tutor` / `.bimbel-admin` / `.bimbel-wali`)
+ * onto `<html>` whenever we're rendering a bimbel route.
+ *
+ * Why this exists: `<main>` already carries those classes for the
+ * in-tree cascade, but our `<Modal>` primitive teleports its content
+ * to `<body>` — outside the `<main>` cascade. Without this mirror,
+ * `bg-bimbel-panel` / `text-bimbel-text-hi` inside a teleported
+ * dialog fall through to the `:root` DARK defaults, so an admin
+ * with the toggle set to "Selalu terang" still sees a dark
+ * `Detail Tagihan` modal. By writing the classes to
+ * `document.documentElement` (i.e. `<html>`), every teleport target
+ * inherits the same CSS-var values as the rest of the page.
+ *
+ * On school routes (and after logout) we strip the classes so we
+ * don't leak the bimbel palette onto the standard school chrome.
+ */
+const BIMBEL_HTML_CLASSES = ['bimbel-light', 'bimbel-dark', 'bimbel-tutor', 'bimbel-admin', 'bimbel-wali'];
+function syncBimbelHtmlClasses() {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  // Clear any previous bimbel classes so role/mode swaps don't pile up.
+  root.classList.remove(...BIMBEL_HTML_CLASSES);
+  if (!isBimbelRoute.value) return;
+  root.classList.add(bimbelSurfaceClass.value);
+  root.classList.add(bimbelRoleClass.value);
+}
+watch(
+  [isBimbelRoute, bimbelSurfaceClass, bimbelRoleClass],
+  syncBimbelHtmlClasses,
+  { immediate: true },
+);
+onBeforeUnmount(() => {
+  // Logout / route to /login destroys AppShell — make sure the
+  // login screen doesn't inherit a stale dark palette.
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.remove(...BIMBEL_HTML_CLASSES);
+  }
+});
+
 const menu = useNavMenu();
 const notifications = useNotificationsStore();
 

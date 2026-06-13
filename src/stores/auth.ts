@@ -601,7 +601,15 @@ export const useAuthStore = defineStore('auth', {
       this.pendingEmail = email;
       try {
         const res = await AuthService.login(email, password);
-        this._applyResponse(res);
+        // Email/password is a *sign-in* flow, never a *sign-up* flow.
+        // The `dapat_buat_demo` flag is only meaningful for Google
+        // login (a brand-new social account with no schools yet) —
+        // and stripping it here guarantees an email/password user
+        // can never be silently bounced into the demo wizard, even
+        // if a future backend tweak starts emitting the flag here
+        // too. Users who want a demo must click "Daftar Demo"
+        // explicitly from the login screen.
+        this._applyResponse(this._stripDapatBuatDemo(res));
         await this._autoAdvancePicker();
       } catch (e) {
         this._setError((e as Error).message);
@@ -611,6 +619,21 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    /**
+     * Removes the `dapat_buat_demo` (and the related `wizard_resume`)
+     * affordance from an auth response so `_applyResponse` cannot route
+     * the user into the demo-registration wizard. Used by the email/
+     * password and OTP flows — both are sign-in only.
+     */
+    _stripDapatBuatDemo(res: AuthResponse): AuthResponse {
+      if (res?.dapat_buat_demo) {
+        const { dapat_buat_demo: _ignored, wizard_resume: _ignored2, ...rest } =
+          res as AuthResponse & { wizard_resume?: unknown };
+        return rest as AuthResponse;
+      }
+      return res;
+    },
+
     async verifyOtp(otp: string) {
       if (!this.pendingEmail) {
         throw new Error('Email tidak tersedia. Silakan masuk ulang.');
@@ -618,7 +641,10 @@ export const useAuthStore = defineStore('auth', {
       this._setLoading(true);
       try {
         const res = await AuthService.verifyOtp(this.pendingEmail, otp);
-        this._applyResponse(res);
+        // OTP is the continuation of an email/password sign-in — same
+        // reasoning as `login()`: never auto-enroll into the demo
+        // wizard from a sign-in flow.
+        this._applyResponse(this._stripDapatBuatDemo(res));
         await this._autoAdvancePicker();
       } catch (e) {
         this._setError((e as Error).message);
