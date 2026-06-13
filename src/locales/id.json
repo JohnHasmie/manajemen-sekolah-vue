@@ -1389,7 +1389,16 @@
     "pendingFieldStatus": "Status",
     "pendingStatusBadge": "Menunggu tinjauan",
     "pendingNextSteps": "Informasi aktivasi — termasuk cara masuk — akan dikirimkan ke WhatsApp dan email Anda setelah permintaan disetujui.",
-    "pendingFinalNote": "Anda boleh menutup halaman ini. Kami akan menghubungi Anda."
+    "pendingFinalNote": "Anda boleh menutup halaman ini. Kami akan menghubungi Anda.",
+    "existingTenantTitle": "Akun Anda sudah terhubung",
+    "existingTenantLineSchool": "Sekolah {name} · sebagai {role}",
+    "existingTenantLineBimbel": "Bimbel {name} · sebagai {role}",
+    "existingTenantHint": "Anda tetap bisa membuat sekolah demo baru di sini untuk dicoba secara terpisah.",
+    "roleLabelTeacher": "Guru",
+    "roleLabelHomeroom": "Wali Kelas",
+    "roleLabelParent": "Wali Murid",
+    "roleLabelAdmin": "Admin",
+    "roleLabelStaff": "Staf"
   },
   "profileMenu": {
     "switchSchool": "Ganti Sekolah",

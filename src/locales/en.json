@@ -1393,7 +1393,16 @@
     "pendingFieldStatus": "Status",
     "pendingStatusBadge": "Awaiting review",
     "pendingNextSteps": "Activation information — including how to log in — will be sent to your WhatsApp and email once the request is approved.",
-    "pendingFinalNote": "You may close this page. We will contact you."
+    "pendingFinalNote": "You may close this page. We will contact you.",
+    "existingTenantTitle": "Your account is already connected",
+    "existingTenantLineSchool": "{name} school · as {role}",
+    "existingTenantLineBimbel": "{name} tutoring center · as {role}",
+    "existingTenantHint": "You can still create a new demo school here to try out separately.",
+    "roleLabelTeacher": "Teacher",
+    "roleLabelHomeroom": "Homeroom Teacher",
+    "roleLabelParent": "Parent",
+    "roleLabelAdmin": "Admin",
+    "roleLabelStaff": "Staff"
   },
   "profileMenu": {
     "switchSchool": "Switch School",
