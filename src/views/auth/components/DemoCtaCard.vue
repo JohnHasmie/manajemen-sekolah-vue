@@ -30,11 +30,14 @@ const google = useGoogleSignIn();
 const SESSION_KEY = 'demo_intent_v1';
 const googleButtonRef = ref<HTMLDivElement | null>(null);
 
-// Flag the demo intent for any future post-Google branch that wants to
-// distinguish "came from the demo CTA" from a plain login. Functionally
-// inert today (routing is driven by the backend `dapat_buat_demo` flag),
-// kept for the documented follow-up. Wrapped because sessionStorage can
-// throw in private mode.
+// Flag the demo intent so the post-auth router branch routes to the
+// wizard instead of the user's normal home — important for users who
+// already have schools (e.g. a super-admin testing the demo flow), who
+// would otherwise be short-circuited into their dashboard. The flag was
+// previously set at MOUNT time, which leaked the intent across every
+// page load and hijacked unrelated logins; we now set it ONLY when the
+// user actually clicks the Google button. Wrapped because sessionStorage
+// can throw in private mode.
 function flagDemoIntent() {
   try {
     sessionStorage.setItem(SESSION_KEY, '1');
@@ -48,8 +51,12 @@ function flagDemoIntent() {
 // id_token via the composable's shared callback.
 onMounted(async () => {
   if (!google.isEnabled.value) return;
-  flagDemoIntent();
   if (googleButtonRef.value) {
+    // Attach a capture-phase click listener BEFORE GIS sees the click,
+    // so the demo-intent flag is set the moment the user actually starts
+    // the demo flow — not on render. GIS owns the inner iframe but the
+    // event bubbles to this container's capture phase first.
+    googleButtonRef.value.addEventListener('click', flagDemoIntent, true);
     await google.mountButton(googleButtonRef.value, {
       theme: 'filled_blue',
       text: 'continue_with',
