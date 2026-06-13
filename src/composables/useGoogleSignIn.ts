@@ -148,6 +148,34 @@ function decodeJwtPayload(token: string): Record<string, unknown> {
   }
 }
 
+/**
+ * Recover the calling-button's intent from the focused GIS iframe.
+ *
+ * Why this dance: GIS renders its button INSIDE a cross-origin iframe,
+ * so click events on the actual button never bubble out — a listener on
+ * the outer container is silent. But the iframe ELEMENT itself lives in
+ * our DOM, and clicking inside it focuses the iframe (it becomes
+ * `document.activeElement`). We can `closest()` upward from there to
+ * find the nearest ancestor tagged by the mounting component, and act
+ * on that intent. Components opt in by adding `data-google-intent="…"`
+ * to the container they pass to `mountButton`.
+ *
+ * Side-effect-light by design: only writes the demo flag on a positive
+ * match, so a plain login is never misrouted.
+ */
+function flagIntentFromFocusedGisButton(): void {
+  try {
+    const active = document.activeElement;
+    if (!(active instanceof HTMLIFrameElement)) return;
+    const ancestor = active.closest<HTMLElement>('[data-google-intent]');
+    if (ancestor?.dataset.googleIntent === 'demo') {
+      sessionStorage.setItem('demo_intent_v1', '1');
+    }
+  } catch {
+    // sessionStorage can throw in private mode; non-fatal
+  }
+}
+
 async function handleCredentialResponse(response: { credential?: string }) {
   if (!response?.credential) {
     error.value = 'Tidak ada kredensial dari Google.';
@@ -164,6 +192,11 @@ async function handleCredentialResponse(response: { credential?: string }) {
     error.value = 'Token Google tidak memuat email.';
     return;
   }
+
+  // Recover demo intent from the just-clicked GIS button BEFORE handing
+  // off to the auth store, so LoginView's post-auth watcher reads the
+  // right flag and routes the user to /register-demo when appropriate.
+  flagIntentFromFocusedGisButton();
 
   try {
     const auth = useAuthStore();

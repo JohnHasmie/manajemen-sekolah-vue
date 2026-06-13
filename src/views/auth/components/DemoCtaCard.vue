@@ -27,44 +27,28 @@ import { useGoogleSignIn } from '@/composables/useGoogleSignIn';
 const { t } = useI18n();
 const google = useGoogleSignIn();
 
-const SESSION_KEY = 'demo_intent_v1';
 const googleButtonRef = ref<HTMLDivElement | null>(null);
-
-// Flag the demo intent so the post-auth router branch routes to the
-// wizard instead of the user's normal home — important for users who
-// already have schools (e.g. a super-admin testing the demo flow), who
-// would otherwise be short-circuited into their dashboard. The flag was
-// previously set at MOUNT time, which leaked the intent across every
-// page load and hijacked unrelated logins; we now set it ONLY when the
-// user actually clicks the Google button. Wrapped because sessionStorage
-// can throw in private mode.
-function flagDemoIntent() {
-  try {
-    sessionStorage.setItem(SESSION_KEY, '1');
-  } catch {
-    // non-fatal
-  }
-}
 
 // Render the real Google button into the card. The user clicks it
 // directly, which opens Google's account-chooser popup and yields an
 // id_token via the composable's shared callback.
+//
+// Intent is communicated to the shared callback via the
+// `data-google-intent="demo"` attribute on the container (see template).
+// When the user clicks the GIS button, focus moves into its iframe; the
+// composable reads `document.activeElement.closest('[data-google-intent]')`
+// and sets the demo flag for the post-auth router branch. This works
+// around the fact that GIS renders its button inside a cross-origin
+// iframe — DOM click listeners on the outer container never fire.
 onMounted(async () => {
   if (!google.isEnabled.value) return;
   if (googleButtonRef.value) {
-    // Attach a capture-phase click listener BEFORE GIS sees the click,
-    // so the demo-intent flag is set the moment the user actually starts
-    // the demo flow — not on render. GIS owns the inner iframe but the
-    // event bubbles to this container's capture phase first.
-    googleButtonRef.value.addEventListener('click', flagDemoIntent, true);
     await google.mountButton(googleButtonRef.value, {
       theme: 'filled_blue',
       text: 'continue_with',
       width: googleButtonRef.value.clientWidth || 320,
     });
   } else {
-    // Container not in the DOM yet — still prime GIS so the login form's
-    // own button (and a later mount) work.
     await google.ensureReady();
   }
 });
@@ -146,6 +130,7 @@ async function copyCurrentLink() {
         v-show="google.isReady.value"
         ref="googleButtonRef"
         class="w-full flex justify-center"
+        data-google-intent="demo"
       />
       <!-- Loading state while the GIS script loads -->
       <div
