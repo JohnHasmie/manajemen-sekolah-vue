@@ -19,6 +19,7 @@ import { useBimbelThemeStore } from '@/stores/bimbel-theme';
 import { useI18n } from 'vue-i18n';
 import { useRoleColor } from '@/composables/useRoleColor';
 import { useNavMenu } from '@/composables/useNavMenu';
+import { tenantKindFromRaw } from '@/composables/useTenant';
 import SchoolPill from '@/components/feature/SchoolPill.vue';
 import DemoCountdownBanner from '@/components/feature/DemoCountdownBanner.vue';
 import NotificationBell from '@/components/feature/NotificationBell.vue';
@@ -34,17 +35,49 @@ const { t } = useI18n();
 const color = useRoleColor(() => auth.activeRole);
 const bimbelTheme = useBimbelThemeStore();
 
+// Active tenant is a tutoring center? The tenant_type lives on either
+// the User payload directly (post-login normalisation) or on the
+// active school in the user's schools list. Either source is fine;
+// we just need it cheaply at render time so we can branch the surface.
+const isBimbelTenant = computed(() => {
+  const raw =
+    auth.user?.tenant_type ??
+    (auth.user?.schools ?? []).find(
+      (s) => (s.id ?? s.school_id) === auth.schoolId,
+    )?.tenant_type;
+  return tenantKindFromRaw(raw) === 'TUTORING_CENTER';
+});
+
 // Bimbel routes render on the bimbel surface (dark by default, light
-// when the user picks it in Tutor → Tampilan). Route-name driven so
-// school pages keep the light chrome untouched; the role class picks
-// the tier accent (admin deep / tutor mid / wali light navy) consumed
-// by the `bimbel-*` tailwind tokens.
-const isBimbelRoute = computed(() =>
-  String(route.name ?? '').includes('tutoring'),
-);
-const isTutorBimbelRoute = computed(() =>
-  String(route.name ?? '').startsWith('teacher.tutoring'),
-);
+// when the user picks it in Tutor → Tampilan). Two paths into this:
+//
+//  1. The dedicated tutor routes — their route names start with
+//     `teacher.tutoring` / contain `tutoring`, so the substring check
+//     catches them regardless of role.
+//  2. The role-home route (`teacher.home`) when the active tenant is
+//     a tutoring center — `TeacherHomeRouter` swaps the body to
+//     `TutorTutoringHomeView` there, and that view uses the
+//     `bg-bimbel-panel` / `text-bimbel-text-hi` tokens. Without this
+//     branch the wrapper class never lands, so those tokens fall
+//     through to their dark `:root` defaults and we get a half-light
+//     half-dark dashboard.
+//
+// School pages keep the light chrome untouched (neither branch matches).
+const isBimbelRoute = computed(() => {
+  const name = String(route.name ?? '');
+  if (name.includes('tutoring')) return true;
+  if (name === 'teacher.home' && isBimbelTenant.value) return true;
+  return false;
+});
+const isTutorBimbelRoute = computed(() => {
+  const name = String(route.name ?? '');
+  if (name.startsWith('teacher.tutoring')) return true;
+  // Same reasoning as `isBimbelRoute` — the bimbel tutor home is
+  // rendered on `teacher.home` for tutoring-center tenants, and its
+  // surface should obey the user's light/dark/auto pick.
+  if (name === 'teacher.home' && isBimbelTenant.value) return true;
+  return false;
+});
 const bimbelRoleClass = computed(() =>
   auth.activeRole === 'teacher'
     ? 'bimbel-tutor'
