@@ -79,7 +79,7 @@ async function submit() {
     <button
       type="button"
       class="inline-flex items-center gap-1 text-[12px] text-bimbel-text-mid hover:text-bimbel-text-hi"
-      @click="router.push({ name: 'parent.tutoring.profil' })"
+      @click="router.push({ name: 'parent.tutoring.profile' })"
     >
       <NavIcon name="chevron-left" :size="13" /> Kembali ke profil
     </button>
@@ -145,7 +145,7 @@ async function submit() {
           <button
             type="button"
             class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
-            @click="router.push({ name: 'parent.tutoring.profil' })"
+            @click="router.push({ name: 'parent.tutoring.profile' })"
           >Batal</button>
           <button
             type="submit"

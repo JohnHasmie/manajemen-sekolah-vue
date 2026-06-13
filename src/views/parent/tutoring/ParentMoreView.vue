@@ -25,24 +25,24 @@ const sections = computed(() => [
   {
     title: 'Pembelajaran',
     tiles: [
-      { icon: 'book', label: 'Kegiatan', sub: 'PR, quiz & try-out', to: 'parent.tutoring.kegiatan' },
-      { icon: 'star', label: 'Nilai & progress', sub: 'Per mapel & riwayat', to: 'parent.tutoring.nilai' },
-      { icon: 'check-circle', label: 'Peringkat', sub: 'Posisi anak di kelas', to: 'parent.tutoring.peringkat' },
+      { icon: 'book', label: 'Kegiatan', sub: 'PR, quiz & try-out', to: 'parent.tutoring.activities' },
+      { icon: 'star', label: 'Nilai & progress', sub: 'Per mapel & riwayat', to: 'parent.tutoring.progress' },
+      { icon: 'check-circle', label: 'Peringkat', sub: 'Posisi anak di kelas', to: 'parent.tutoring.leaderboard' },
     ],
   },
   {
     title: 'Keuangan',
     tiles: [
-      { icon: 'wallet', label: 'Riwayat tagihan', sub: 'Lunas + belum bayar', to: 'parent.tutoring.tagihan' },
-      { icon: 'sparkles', label: 'Voucher saya', sub: 'Promo & kode diskon', to: 'parent.tutoring.voucher' },
+      { icon: 'wallet', label: 'Riwayat tagihan', sub: 'Lunas + belum bayar', to: 'parent.tutoring.bills' },
+      { icon: 'sparkles', label: 'Voucher saya', sub: 'Promo & kode diskon', to: 'parent.tutoring.vouchers' },
     ],
   },
   {
     title: 'Komunitas & akun',
     tiles: [
-      { icon: 'megaphone', label: 'Pengumuman', sub: 'Dari tutor & admin', to: 'parent.tutoring.pengumuman' },
-      { icon: 'user', label: 'Profil & sandi', sub: 'Identitas wali', to: 'parent.tutoring.profil' },
-      { icon: 'sun', label: 'Tampilan & bahasa', sub: 'Mode terang/gelap', to: 'parent.tutoring.tampilan' },
+      { icon: 'megaphone', label: 'Pengumuman', sub: 'Dari tutor & admin', to: 'parent.tutoring.announcements' },
+      { icon: 'user', label: 'Profil & sandi', sub: 'Identitas wali', to: 'parent.tutoring.profile' },
+      { icon: 'sun', label: 'Tampilan & bahasa', sub: 'Mode terang/gelap', to: 'parent.tutoring.appearance' },
     ],
   },
 ]);

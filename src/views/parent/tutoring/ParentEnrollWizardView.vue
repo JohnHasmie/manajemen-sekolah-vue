@@ -152,7 +152,7 @@ async function submit() {
       <button
         type="button"
         class="mt-4 rounded-lg bg-[#21afe6] px-4 py-2 text-[13px] font-bold text-white hover:opacity-90"
-        @click="router.push({ name: 'parent.tutoring.tagihan' })"
+        @click="router.push({ name: 'parent.tutoring.bills' })"
       >Lihat tagihan</button>
     </div>
 

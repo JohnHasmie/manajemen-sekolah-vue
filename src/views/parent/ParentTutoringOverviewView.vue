@@ -88,7 +88,7 @@ const childName = computed(() => activeChild()?.name || 'anak');
 const heroStats = computed(() => {
   const d = data.value;
   const upcoming = d?.upcomingSessions ?? [];
-  const sesiMgg = upcoming.filter((s) => {
+  const sessionsThisWeek = upcoming.filter((s) => {
     if (!s.scheduled_at) return false;
     const t = new Date(s.scheduled_at).valueOf();
     const week = Date.now() + 7 * 86_400_000;
@@ -109,7 +109,7 @@ const heroStats = computed(() => {
   return [
     {
       label: 'SESI MGG INI',
-      value: String(sesiMgg),
+      value: String(sessionsThisWeek),
       hint: todayCount > 0 ? `${todayCount} hari ini` : 'tidak ada hari ini',
     },
     {
@@ -201,7 +201,7 @@ function goPayFirstBill() {
 }
 
 function goToTagihan() {
-  router.push({ name: 'parent.tutoring.tagihan' });
+  router.push({ name: 'parent.tutoring.bills' });
 }
 </script>
 
@@ -262,7 +262,7 @@ function goToTagihan() {
               <button
                 type="button"
                 class="inline-flex items-center gap-1.5 rounded-lg border border-bimbel-border px-3.5 py-2 text-[12px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
-                @click="router.push({ name: 'parent.tutoring.sesi' })"
+                @click="router.push({ name: 'parent.tutoring.sessions' })"
               >
                 Lihat jadwal
               </button>

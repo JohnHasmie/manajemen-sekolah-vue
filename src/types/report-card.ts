@@ -296,7 +296,7 @@ export interface PipelineNode {
   active?: boolean;
 }
 
-export interface KelasMiniChip {
+export interface ClassMiniChip {
   id: string;
   name: string;
   /** Backend computes status label per kelas ("Selesai", "Perlu", etc). */
@@ -320,7 +320,7 @@ export interface TingkatGroup {
   reviewed_pct?: number;
   /** True when at least one class in this tingkat needs admin attention. */
   alert?: boolean;
-  classes: KelasMiniChip[];
+  classes: ClassMiniChip[];
 }
 
 export interface AdminReportCardPeriod {

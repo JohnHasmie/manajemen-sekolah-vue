@@ -70,7 +70,7 @@ async function submit() {
       payment_method: method.value === 'qris' ? 'qris' : 'bank_transfer',
     });
     message.value = { kind: 'ok', text: 'Bukti terkirim. Admin akan memverifikasi dalam 1 jam kerja.' };
-    setTimeout(() => router.push({ name: 'parent.tutoring.tagihan' }), 1500);
+    setTimeout(() => router.push({ name: 'parent.tutoring.bills' }), 1500);
   } catch (e) {
     message.value = { kind: 'err', text: e instanceof Error ? e.message : 'Gagal mengirim bukti.' };
   } finally { saving.value = false; }
@@ -82,7 +82,7 @@ async function submit() {
     <button
       type="button"
       class="inline-flex items-center gap-1 text-[12px] text-bimbel-text-mid hover:text-bimbel-text-hi"
-      @click="router.push({ name: 'parent.tutoring.tagihan' })"
+      @click="router.push({ name: 'parent.tutoring.bills' })"
     >
       <NavIcon name="chevron-left" :size="13" /> Kembali ke tagihan
     </button>
@@ -198,7 +198,7 @@ async function submit() {
             {{ message.text }}
           </div>
           <div class="flex gap-2 pt-2">
-            <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="router.push({ name: 'parent.tutoring.tagihan' })">Batal</button>
+            <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="router.push({ name: 'parent.tutoring.bills' })">Batal</button>
             <button type="submit" :disabled="!canSubmit" class="flex-1 rounded-lg bg-[#21afe6] px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50">{{ saving ? 'Mengirim…' : 'Kirim bukti bayar' }}</button>
           </div>
         </form>

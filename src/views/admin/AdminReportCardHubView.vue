@@ -23,7 +23,7 @@ import { useRouter } from 'vue-router';
 import { ReportCardService } from '@/services/report-card.service';
 import type {
   AdminRaportPipeline,
-  KelasMiniChip,
+  ClassMiniChip,
   PipelineKey,
   TingkatGroup,
   ReportCardStatus,
@@ -86,7 +86,7 @@ const pipelineNodes = computed(() => pipeline.value?.pipeline ?? []);
 const tingkats = computed(() => pipeline.value?.tingkats ?? []);
 
 // Filter chips by status when activeFilter set (matches Flutter status label check)
-function chipMatches(chip: KelasMiniChip): boolean {
+function chipMatches(chip: ClassMiniChip): boolean {
   if (activeFilter.value === 'all') return true;
   const label = (chip.status_label ?? '').toLowerCase().trim();
   const wanted = (activeFilter.value === 'reviewed' ? 'diperiksa' : activeFilter.value === 'published' ? 'terbit' : activeFilter.value === 'distributed' ? 'dibagikan' : 'draft');
@@ -241,7 +241,7 @@ function pipelineClick(key: PipelineKey) {
   activeFilter.value = activeFilter.value === key ? 'all' : key;
 }
 
-function chipClick(chip: KelasMiniChip) {
+function chipClick(chip: ClassMiniChip) {
   // If we're in selection mode (≥1 selected), toggle. Otherwise drill.
   if (selectedChipIds.value.size > 0) {
     toggleSelect(chip.id);
@@ -253,7 +253,7 @@ function chipClick(chip: KelasMiniChip) {
   });
 }
 
-function chipLongPress(chip: KelasMiniChip) {
+function chipLongPress(chip: ClassMiniChip) {
   toggleSelect(chip.id);
 }
 

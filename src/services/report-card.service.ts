@@ -24,7 +24,7 @@ import {
   normalizePromotionDecision,
   normalizeReportCardStatus,
   type AdminReportCardPipeline,
-  type KelasMiniChip,
+  type ClassMiniChip,
   type ParentReportCardRow,
   type PipelineKey,
   type PipelineNode,
@@ -438,7 +438,7 @@ function pipelineNodeFromJson(raw: AnyRecord): PipelineNode {
   };
 }
 
-function kelasMiniChipFromJson(raw: AnyRecord): KelasMiniChip {
+function classMiniChipFromJson(raw: AnyRecord): ClassMiniChip {
   const countsRaw = (raw.counts as AnyRecord | undefined) ?? {};
   return {
     id: String(raw.id ?? ''),
@@ -468,7 +468,7 @@ function tingkatGroupFromJson(raw: AnyRecord): TingkatGroup {
       raw.reviewed_pct !== undefined ? num(raw.reviewed_pct) : undefined,
     alert: raw.alert === true,
     classes: Array.isArray(raw.classes)
-      ? (raw.classes as AnyRecord[]).map(kelasMiniChipFromJson)
+      ? (raw.classes as AnyRecord[]).map(classMiniChipFromJson)
       : [],
   };
 }

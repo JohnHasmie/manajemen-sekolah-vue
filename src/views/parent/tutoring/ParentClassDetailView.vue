@@ -103,7 +103,7 @@ const heroStats = computed(() => {
     <button
       type="button"
       class="inline-flex items-center gap-1 text-[12px] text-bimbel-text-mid hover:text-bimbel-text-hi"
-      @click="router.push({ name: 'parent.tutoring.kelas' })"
+      @click="router.push({ name: 'parent.tutoring.classes' })"
     >
       <NavIcon name="chevron-left" :size="13" /> Kembali ke daftar kelas
     </button>
