@@ -1,18 +1,16 @@
 <!--
-  ParentClassDetailView — wali kelas detail. 3 tabs (Aliran / Sesi
-  anak / Nilai anak). Mirrors mockup parent_web_pages_main frame 3
-  (hero + tab + 2-col layout: feed/sesi/nilai on left, info-kelas
-  card on right).
+  ParentClassDetailView — wali kelas detail. 4 tabs (Aliran / Tugas /
+  Nilai / Siswa) per redesigned mockup. Single-column card layout under
+  a tab bar; no sidebar.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type {
   TutoringFeedEvent,
   TutoringProgress,
-  TutoringSession,
   TutoringWaliClassMeta,
 } from '@/types/tutoring';
 
@@ -21,19 +19,23 @@ import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPick
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const route = useRoute();
-const router = useRouter();
-const { activeChildId } = useChildPicker();
+const { activeChildId, activeChild } = useChildPicker();
 
 const studentId = computed(() =>
   String(route.params.studentId || activeChildId.value || ''),
 );
 const groupId = computed(() => String(route.params.groupId || ''));
 
-const tab = ref<'aliran' | 'sesi' | 'nilai'>('aliran');
+type TabId = 'aliran' | 'tugas' | 'nilai' | 'siswa';
+const activeTab = ref<TabId>('aliran');
+
 const loading = ref(true);
-const meta = ref<TutoringWaliClassMeta | null>(null);
+const meta = ref<(TutoringWaliClassMeta & {
+  subject?: string | null;
+  schedule_label?: string | null;
+  students_count?: number | null;
+}) | null>(null);
 const feed = ref<TutoringFeedEvent[]>([]);
-const sessions = ref<TutoringSession[]>([]);
 const progress = ref<TutoringProgress | null>(null);
 
 async function load() {
@@ -41,37 +43,32 @@ async function load() {
   const gid = groupId.value;
   if (!sid || !gid) { loading.value = false; return; }
   loading.value = true;
-  const now = new Date();
-  const from = new Date(now.getTime() - 60 * 86_400_000);
-  const to = new Date(now.getTime() + 30 * 86_400_000);
   try {
-    const [allMeta, f, sched, prog] = await Promise.all([
-      TutoringService.getWaliClassMeta(sid).catch(() => []),
-      TutoringService.getStudentFeed(sid, { limit: 30, sinceDays: 60 }).catch(() => []),
-      TutoringService.getSchedule(sid, from, to).catch(() => []),
-      TutoringService.getProgress(sid).catch(() => null),
+    const [allMeta, f, prog] = await Promise.all([
+      TutoringService.getWaliClassMeta(sid).catch(() => [] as TutoringWaliClassMeta[]),
+      TutoringService.getStudentFeed(sid, { limit: 30, sinceDays: 60 }).catch(() => [] as TutoringFeedEvent[]),
+      TutoringService.getProgress(sid).catch(() => null as TutoringProgress | null),
     ]);
     meta.value = (allMeta as TutoringWaliClassMeta[]).find((m) => m.group_id === gid) ?? null;
     feed.value = (f as TutoringFeedEvent[]).filter((e) => {
       const m = e.meta as Record<string, unknown> | undefined;
       return !m || !m.group_id || String(m.group_id) === gid;
     });
-    sessions.value = (sched as TutoringSession[]).filter((s) => s.group_id === gid);
     progress.value = prog;
   } finally { loading.value = false; }
 }
 onMounted(load);
 watch([studentId, groupId], load);
 
-const sessionsSorted = computed(() =>
-  [...sessions.value].sort((a, b) => {
-    const ta = a.scheduled_at ? new Date(a.scheduled_at).valueOf() : 0;
-    const tb = b.scheduled_at ? new Date(b.scheduled_at).valueOf() : 0;
-    return tb - ta;
-  }),
-);
-
-const progressEntries = computed(() => progress.value?.timeline ?? []);
+// ── Derived rows per tab ────────────────────────────────────────
+type AliranRow = {
+  id?: string;
+  type?: string;
+  title: string;
+  subtitle?: string | null;
+  time_label?: string;
+  pill?: { cls: string; label: string } | null;
+};
 
 function whenLabel(iso?: string | null): string {
   if (!iso) return '—';
@@ -86,242 +83,257 @@ function whenLabel(iso?: string | null): string {
   });
 }
 
-const heroStats = computed(() => {
-  const m = meta.value;
+const aliran = computed<AliranRow[]>(() =>
+  feed.value.map((e, i) => ({
+    id: `${e.type}-${i}`,
+    type: e.type,
+    title: e.title,
+    subtitle: e.subtitle ?? null,
+    time_label: whenLabel(e.occurred_at),
+    pill: null,
+  })),
+);
+
+type TugasRow = { id?: string; title: string; subtitle: string; pillCls: string; pillLabel: string };
+
+const tugas = computed<TugasRow[]>(() => {
+  const out: TugasRow[] = [];
+  for (const e of feed.value) {
+    if (e.type !== 'note' && e.type !== 'new_submission' && e.type !== 'score') continue;
+    const m = e.meta as Record<string, unknown> | undefined;
+    const status = String(m?.status ?? '').toUpperCase();
+    const isDone = status === 'GRADED' || status === 'SUBMITTED' || e.type === 'score';
+    out.push({
+      id: String((m?.id ?? m?.assessment_id ?? Math.random())),
+      title: e.title,
+      subtitle: e.subtitle ?? whenLabel(e.occurred_at),
+      pillCls: isDone
+        ? 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-bimbel-green-dim text-green-700'
+        : 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-bimbel-amber-dim text-amber-700',
+      pillLabel: isDone ? 'Selesai' : 'Belum',
+    });
+  }
+  return out;
+});
+
+type NilaiRow = { title: string; subtitle: string; score: string };
+
+const nilai = computed<NilaiRow[]>(() => {
+  const entries = progress.value?.timeline ?? [];
+  return entries.map((p) => ({
+    title: p.title,
+    subtitle: [p.type_label, p.subject, whenLabel(p.held_at)].filter(Boolean).join(' · '),
+    score: p.score != null ? String(p.score) : '–',
+  }));
+});
+
+type SiswaRow = { id?: string; name: string; attendance_rate: number | null };
+
+const siswa = computed<SiswaRow[]>(() => {
+  const child = activeChild();
+  if (!child) return [];
   return [
-    { label: 'KEHADIRAN', value: m?.attendance.rate != null ? `${m.attendance.rate}%` : '–' },
-    { label: 'SESI', value: String(sessions.value.length) },
-    { label: 'TUGAS BARU', value: String(meta.value?.new_announcements_count_7d ?? 0) },
+    {
+      id: child.student_id,
+      name: child.name,
+      attendance_rate: meta.value?.attendance?.rate ?? null,
+    },
   ];
+});
+
+const tabs = computed(() => [
+  { id: 'aliran' as TabId, label: 'Aliran' },
+  { id: 'tugas' as TabId, label: 'Tugas' },
+  { id: 'nilai' as TabId, label: 'Nilai' },
+  { id: 'siswa' as TabId, label: `Siswa (${siswa.value.length})` },
+]);
+
+// ── Aliran icon mapping ──────────────────────────────────────────
+function rowIconName(r: AliranRow): string {
+  const t = r.type ?? '';
+  if (t === 'announcement' || t === 'announcement_posted') return 'megaphone';
+  if (t === 'note' || t === 'new_submission') return 'book';
+  if (t === 'score') return 'check-circle';
+  return 'school';
+}
+
+function rowIconStyle(r: AliranRow): Record<string, string> {
+  const t = r.type ?? '';
+  if (t === 'announcement' || t === 'announcement_posted') {
+    return { background: 'var(--bimbel-accent-dim, rgba(12,68,124,.12))', color: 'var(--bimbel-hero, #0c447c)' };
+  }
+  if (t === 'note' || t === 'new_submission') {
+    return { background: 'var(--bimbel-amber-dim, rgba(217,119,6,.15))', color: '#b45309' };
+  }
+  if (t === 'score') {
+    return { background: 'var(--bimbel-green-dim, rgba(22,163,74,.15))', color: '#15803d' };
+  }
+  // attendance / session / default
+  return { background: 'var(--bimbel-green-dim, rgba(22,163,74,.15))', color: '#15803d' };
+}
+
+function initials(name: string): string {
+  if (!name) return '';
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+// ── Hero subtitle pieces ─────────────────────────────────────────
+const heroSubtitle = computed(() => {
+  const m = meta.value;
+  const tutor = m?.tutor_name ?? '—';
+  const sched = (m as { schedule_label?: string | null } | null)?.schedule_label ?? '';
+  const count = (m as { students_count?: number | null } | null)?.students_count
+    ?? m?.attendance?.total_recorded ?? 0;
+  return `${tutor}${sched ? ` · ${sched}` : ''} · ${count} siswa`;
+});
+
+const heroTitle = computed(() => {
+  const m = meta.value;
+  const subj = (m as { subject?: string | null } | null)?.subject ?? m?.program_name ?? 'Kelas';
+  const grp = m?.group_name ?? '';
+  return `${subj}${grp ? ` · ${grp}` : ''}`;
 });
 </script>
 
 <template>
   <div class="space-y-3 pb-12">
-    <button
-      type="button"
-      class="inline-flex items-center gap-1 text-[12px] text-bimbel-text-mid hover:text-bimbel-text-hi"
-      @click="router.push({ name: 'parent.tutoring.classes' })"
-    >
-      <NavIcon name="chevron-left" :size="13" /> Kembali ke daftar kelas
-    </button>
-
     <ParentBerandaHero
       kicker="BIMBEL · KELAS"
-      :title="meta?.group_name || 'Memuat…'"
-      :subtitle="
-        meta
-          ? [
-              meta.tutor_name ? `Tutor ${meta.tutor_name}` : null,
-              meta.program_name,
-              `${meta.attendance.total_recorded || sessions.length} siswa`,
-            ].filter(Boolean).join(' · ')
-          : undefined
-      "
-      :stats="heroStats"
+      :title="heroTitle"
+      :subtitle="heroSubtitle"
+      :stats="[]"
     >
       <template #actions><ParentChildPickerChip /></template>
     </ParentBerandaHero>
 
-    <!-- Underline tab bar -->
+    <!-- Tabs (4) -->
     <div
-      class="flex gap-0.5 border-b border-bimbel-border-soft bg-bimbel-bg -mt-0 px-3 sm:px-4"
+      class="flex gap-1 px-3.5 -mt-1 border-b border-bimbel-border-soft bg-bimbel-bg rounded-t-lg overflow-x-auto"
       role="tablist"
     >
       <button
-        v-for="t in [
-          { id: 'aliran' as const, label: 'Aliran' },
-          { id: 'sesi' as const, label: 'Sesi anak' },
-          { id: 'nilai' as const, label: 'Nilai anak' },
-        ]"
+        v-for="t in tabs"
         :key="t.id"
         type="button"
         role="tab"
-        :aria-selected="tab === t.id"
-        class="px-3 py-2 text-[12px] border-b-2 transition-colors"
+        :aria-selected="activeTab === t.id"
+        class="px-3 py-2 text-[12px] border-b-2 -mb-px transition-colors whitespace-nowrap"
         :class="
-          tab === t.id
+          activeTab === t.id
             ? 'text-bimbel-hero border-bimbel-hero font-bold bg-bimbel-panel'
-            : 'text-bimbel-text-mid border-transparent hover:text-bimbel-text-hi'
+            : 'text-bimbel-text-mid border-transparent'
         "
-        @click="tab = t.id"
-      >
-        {{ t.label }}
-      </button>
+        @click="activeTab = t.id"
+      >{{ t.label }}</button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-[12px] text-bimbel-text-mid">Memuat…</div>
-
-    <div v-else class="grid gap-3 lg:grid-cols-3">
-      <div class="rounded-lg border border-bimbel-border-soft bg-bimbel-panel p-3 lg:col-span-2">
-        <!-- Aliran tab — chronological feed -->
-        <template v-if="tab === 'aliran'">
-          <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-1">
-            Aliran kelas
-          </p>
-          <div
-            v-if="feed.length === 0"
-            class="py-8 text-center text-[12px] text-bimbel-text-mid"
-          >
-            Belum ada aktivitas di kelas ini.
-          </div>
-          <div v-else>
-            <div
-              v-for="(e, i) in feed"
-              :key="i"
-              class="flex items-center gap-2.5 border-b border-bimbel-border-soft py-2 last:border-b-0"
-            >
-              <span
-                class="grid h-[30px] w-[30px] flex-shrink-0 place-items-center rounded-md"
-                :class="
-                  e.type === 'note' || e.type === 'score' || e.type === 'new_submission'
-                    ? 'bg-bimbel-amber-dim text-amber-700'
-                    : e.type === 'announcement' || e.type === 'announcement_posted'
-                    ? 'bg-bimbel-accent-dim text-bimbel-hero'
-                    : 'bg-bimbel-green-dim text-green-700'
-                "
-              >
-                <NavIcon
-                  :name="
-                    e.type === 'announcement' || e.type === 'announcement_posted'
-                      ? 'megaphone'
-                      : e.type === 'note' || e.type === 'score' || e.type === 'new_submission'
-                      ? 'book'
-                      : 'school'
-                  "
-                  :size="14"
-                />
-              </span>
-              <div class="min-w-0 flex-1">
-                <p class="text-[12px] font-bold text-bimbel-text-hi truncate">{{ e.title }}</p>
-                <p
-                  v-if="e.subtitle"
-                  class="text-[11px] text-bimbel-text-mid truncate"
-                >{{ e.subtitle }}</p>
-              </div>
-              <span class="flex-shrink-0 text-[11px] text-bimbel-text-lo">
-                {{ whenLabel(e.occurred_at) }}
-              </span>
-            </div>
-          </div>
-        </template>
-
-        <!-- Sesi anak tab -->
-        <template v-else-if="tab === 'sesi'">
-          <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-1">
-            Sesi anak
-          </p>
-          <div
-            v-if="sessionsSorted.length === 0"
-            class="py-8 text-center text-[12px] text-bimbel-text-mid"
-          >
-            Belum ada sesi di kelas ini.
-          </div>
-          <div v-else>
-            <div
-              v-for="s in sessionsSorted"
-              :key="s.id"
-              class="flex items-center gap-2.5 border-b border-bimbel-border-soft py-2 last:border-b-0"
-            >
-              <span class="grid h-[30px] w-[30px] flex-shrink-0 place-items-center rounded-md bg-bimbel-accent-dim text-bimbel-hero">
-                <NavIcon name="calendar" :size="14" />
-              </span>
-              <div class="min-w-0 flex-1">
-                <p class="text-[12px] font-bold text-bimbel-text-hi truncate">
-                  {{ s.topic || 'Sesi terjadwal' }}
-                </p>
-                <p class="text-[11px] text-bimbel-text-mid truncate">
-                  {{ whenLabel(s.scheduled_at) }} · {{ s.duration_minutes }} menit<template v-if="s.room"> · ruang {{ s.room }}</template>
-                </p>
-              </div>
-              <span
-                class="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                :class="
-                  s.status === 'DONE'
-                    ? 'bg-bimbel-green-dim text-green-700'
-                    : s.status === 'CANCELLED'
-                    ? 'bg-bimbel-red-dim text-red-700'
-                    : 'bg-bimbel-accent-dim text-bimbel-hero'
-                "
-              >
-                {{ s.status_label ?? s.status }}
-              </span>
-            </div>
-          </div>
-        </template>
-
-        <!-- Nilai anak tab -->
-        <template v-else>
-          <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-1">
-            Nilai anak
-          </p>
-          <div
-            v-if="progressEntries.length === 0"
-            class="py-8 text-center text-[12px] text-bimbel-text-mid"
-          >
-            Belum ada nilai tercatat.
-          </div>
-          <div v-else>
-            <div
-              v-for="p in progressEntries"
-              :key="p.assessment_id"
-              class="flex items-center gap-2.5 border-b border-bimbel-border-soft py-2 last:border-b-0"
-            >
-              <span class="grid h-[30px] w-[30px] flex-shrink-0 place-items-center rounded-md bg-bimbel-amber-dim text-amber-700">
-                <NavIcon name="star" :size="14" />
-              </span>
-              <div class="min-w-0 flex-1">
-                <p class="text-[12px] font-bold text-bimbel-text-hi truncate">{{ p.title }}</p>
-                <p class="text-[11px] text-bimbel-text-mid truncate">
-                  {{ [p.type_label, p.subject, whenLabel(p.held_at)].filter(Boolean).join(' · ') }}
-                </p>
-              </div>
-              <span class="flex-shrink-0 text-[13px] font-extrabold text-green-700">
-                {{ p.score ?? '–' }}
-              </span>
-            </div>
-          </div>
-        </template>
-      </div>
-
-      <!-- Info kelas sidebar -->
-      <aside class="h-fit rounded-lg border border-bimbel-border-soft bg-bimbel-panel p-3">
-        <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-1">
-          Info kelas
-        </p>
-        <dl class="space-y-2 text-[12px]">
-          <div>
-            <dt class="text-bimbel-text-mid">Tutor</dt>
-            <dd class="font-bold text-bimbel-text-hi">{{ meta?.tutor_name ?? '—' }}</dd>
-          </div>
-          <div>
-            <dt class="text-bimbel-text-mid">Program</dt>
-            <dd class="font-bold text-bimbel-text-hi">{{ meta?.program_name ?? '—' }}</dd>
-          </div>
-          <div>
-            <dt class="text-bimbel-text-mid">Status</dt>
-            <dd class="font-bold text-bimbel-text-hi">{{ meta?.status ?? '—' }}</dd>
-          </div>
-          <div v-if="meta?.attendance.total_recorded">
-            <dt class="text-bimbel-text-mid">Kehadiran</dt>
-            <dd class="font-bold text-bimbel-text-hi">
-              {{ meta.attendance.attended }} dari {{ meta.attendance.total_recorded }} sesi
-            </dd>
-          </div>
-        </dl>
+    <!-- Aliran tab -->
+    <div
+      v-if="activeTab === 'aliran'"
+      class="rounded-b-lg bg-bimbel-panel border border-bimbel-border-soft border-t-0 p-3.5"
+    >
+      <div
+        v-for="(r, i) in aliran"
+        :key="r.id || i"
+        class="flex gap-2.5 py-2 border-b border-bimbel-border-soft last:border-b-0 items-start"
+      >
         <div
-          v-if="meta?.next_session?.scheduled_at"
-          class="mt-3 border-t border-bimbel-border-soft pt-3"
+          class="w-[30px] h-[30px] rounded-lg grid place-items-center flex-shrink-0"
+          :style="rowIconStyle(r)"
         >
-          <p class="text-[11px] text-bimbel-text-mid">Sesi berikutnya</p>
-          <p class="mt-0.5 text-[12px] font-bold text-bimbel-text-hi">
-            {{ whenLabel(meta.next_session.scheduled_at) }}
-          </p>
-          <p v-if="meta.next_session.topic" class="text-[11px] text-bimbel-text-mid">
-            {{ meta.next_session.topic }} · {{ meta.next_session.duration_minutes }} menit
+          <NavIcon :name="rowIconName(r)" :size="13" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[12px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
+          <p class="text-[11px] text-bimbel-text-mid">
+            {{ r.subtitle }}
+            <span v-if="r.pill" :class="r.pill.cls">{{ r.pill.label }}</span>
           </p>
         </div>
-      </aside>
+        <span class="text-[11px] text-bimbel-text-lo flex-shrink-0">{{ r.time_label }}</span>
+      </div>
+      <p v-if="!aliran.length && !loading" class="text-center text-[12px] text-bimbel-text-mid py-6">
+        Belum ada aktivitas di kelas ini.
+      </p>
+      <p v-if="loading" class="text-center text-[12px] text-bimbel-text-mid py-6">Memuat…</p>
+    </div>
+
+    <!-- Tugas tab -->
+    <div
+      v-if="activeTab === 'tugas'"
+      class="rounded-b-lg bg-bimbel-panel border border-bimbel-border-soft border-t-0 p-3.5"
+    >
+      <div
+        v-for="(r, i) in tugas"
+        :key="r.id || i"
+        class="flex gap-2.5 py-2 border-b border-bimbel-border-soft last:border-b-0 items-start"
+      >
+        <div class="w-[30px] h-[30px] rounded-lg bg-bimbel-amber-dim text-amber-700 grid place-items-center flex-shrink-0">
+          <NavIcon name="book" :size="13" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[12px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
+          <p class="text-[11px] text-bimbel-text-mid">{{ r.subtitle }}</p>
+        </div>
+        <span :class="r.pillCls">{{ r.pillLabel }}</span>
+      </div>
+      <p v-if="!tugas.length" class="text-center text-[12px] text-bimbel-text-mid py-6">
+        Belum ada tugas.
+      </p>
+    </div>
+
+    <!-- Nilai tab -->
+    <div
+      v-if="activeTab === 'nilai'"
+      class="rounded-b-lg bg-bimbel-panel border border-bimbel-border-soft border-t-0 p-3.5"
+    >
+      <div
+        v-for="(r, i) in nilai"
+        :key="i"
+        class="flex gap-2.5 py-2 border-b border-bimbel-border-soft last:border-b-0 items-center"
+      >
+        <div class="w-[30px] h-[30px] rounded-lg bg-bimbel-green-dim text-green-700 grid place-items-center flex-shrink-0">
+          <NavIcon name="check-circle" :size="13" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[12px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
+          <p class="text-[11px] text-bimbel-text-mid">{{ r.subtitle }}</p>
+        </div>
+        <span class="text-[16px] font-extrabold text-bimbel-text-hi">{{ r.score }}</span>
+      </div>
+      <p v-if="!nilai.length" class="text-center text-[12px] text-bimbel-text-mid py-6">
+        Belum ada nilai.
+      </p>
+    </div>
+
+    <!-- Siswa tab -->
+    <div
+      v-if="activeTab === 'siswa'"
+      class="rounded-b-lg bg-bimbel-panel border border-bimbel-border-soft border-t-0 p-3.5"
+    >
+      <div
+        v-for="(s, i) in siswa"
+        :key="s.id || i"
+        class="flex gap-2.5 py-2 border-b border-bimbel-border-soft last:border-b-0 items-center"
+      >
+        <div class="w-8 h-8 rounded-full bg-bimbel-accent-dim text-bimbel-hero grid place-items-center text-[11px] font-bold">
+          {{ initials(s.name) }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[12px] font-bold text-bimbel-text-hi">{{ s.name }}</p>
+          <p class="text-[11px] text-bimbel-text-mid">
+            Kehadiran {{ s.attendance_rate ?? 0 }}%
+          </p>
+        </div>
+      </div>
+      <p v-if="!siswa.length" class="text-center text-[12px] text-bimbel-text-mid py-6">
+        Belum ada siswa.
+      </p>
     </div>
   </div>
 </template>

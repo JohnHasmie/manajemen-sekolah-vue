@@ -1,6 +1,7 @@
 <!--
   ParentVouchersView — wali voucher list. Mockup parent_web_pages_extra
-  frame 2: hero + 2-col voucher grid (active + used).
+  frame 2: hero + 2-col voucher grid with dashed border / urgent flag /
+  used-out opacity.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -9,12 +10,11 @@ import { formatRupiah } from '@/lib/format';
 import type { TutoringVoucher } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 
 const loading = ref(true);
 const vouchers = ref<TutoringVoucher[]>([]);
 const view = ref<'active' | 'history'>('active');
-const codeInput = ref('');
-const codeMessage = ref<string | null>(null);
 
 async function load() {
   loading.value = true;
@@ -24,32 +24,28 @@ async function load() {
 }
 onMounted(load);
 
+// ── Active / used predicates ──────────────────────────────────────
 function isExpired(v: TutoringVoucher): boolean {
   if (!v.valid_until) return false;
   return new Date(v.valid_until).valueOf() < Date.now();
 }
-
 function isMaxUsed(v: TutoringVoucher): boolean {
   return v.max_uses != null && v.used_count >= v.max_uses;
 }
-
 function isActive(v: TutoringVoucher): boolean {
   return v.is_active && !isExpired(v) && !isMaxUsed(v);
 }
 
-const active = computed(() => vouchers.value.filter(isActive));
-const history = computed(() => vouchers.value.filter((v) => !isActive(v)));
+const activeList = computed(() => vouchers.value.filter(isActive));
+const historyList = computed(() => vouchers.value.filter((v) => !isActive(v)));
 
-const shown = computed(() => (view.value === 'active' ? active.value : history.value));
-
-// "Segera kedaluwarsa" = aktif & valid_until <= 7 hari.
-const expiringSoon = computed(() => {
+const activeCount = computed(() => activeList.value.length);
+const expiringCount = computed(() => {
   const sevenDays = 7 * 24 * 60 * 60 * 1000;
-  return active.value.filter((v) => {
+  return activeList.value.filter((v) => {
     if (!v.valid_until) return false;
-    const t = new Date(v.valid_until).valueOf();
-    return t - Date.now() <= sevenDays;
-  });
+    return new Date(v.valid_until).valueOf() - Date.now() <= sevenDays;
+  }).length;
 });
 
 function isUrgent(v: TutoringVoucher): boolean {
@@ -58,45 +54,80 @@ function isUrgent(v: TutoringVoucher): boolean {
   return new Date(v.valid_until).valueOf() - Date.now() <= sevenDays;
 }
 
-function amountLabel(v: TutoringVoucher): string {
-  if (v.type === 'PERCENTAGE') return `${v.value}%`;
-  return formatRupiah(v.value);
+// ── Display shape ─────────────────────────────────────────────────
+interface VoucherView {
+  id: string;
+  valueLabel: string;
+  valueCls: string;
+  description: string;
+  code: string;
+  urgent: boolean;
+  used: boolean;
+  footerText: string;
+  footerCls: string;
 }
 
-// Color for the big amount per voucher type.
-function amountColor(v: TutoringVoucher): string {
-  if (!isActive(v)) return 'text-bimbel-text-mid';
-  if (v.type === 'PERCENTAGE') return 'text-orange-700';
-  // AMOUNT → hero blue. Referral / "gratis" not represented in API yet.
-  return 'text-bimbel-hero';
+function dateShort(iso?: string | null): string {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function validity(v: TutoringVoucher): string {
-  if (!isActive(v)) {
-    if (isExpired(v)) {
-      return `Kedaluwarsa ${new Date(v.valid_until!).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`;
-    }
-    return `Dipakai ${v.used_count}×`;
+function mapVoucher(v: TutoringVoucher): VoucherView {
+  const active = isActive(v);
+  const urgent = active && isUrgent(v);
+  const used = !active;
+
+  // Big amount label + color.
+  let valueLabel = '';
+  let valueCls = '';
+  if (v.type === 'PERCENTAGE') {
+    valueLabel = `${v.value}%`;
+    valueCls = used ? 'text-bimbel-text-mid' : 'text-orange-700';
+  } else {
+    valueLabel = formatRupiah(v.value);
+    valueCls = used ? 'text-bimbel-text-mid' : 'text-bimbel-hero';
   }
-  if (v.valid_until) {
-    return `Berlaku sampai ${new Date(v.valid_until).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  // "Gratis 1 sesi" — backend never ships a free-session voucher type
+  // yet, but if value === 0 and it's PERCENTAGE 100, show the friendlier
+  // label per spec.
+  if (v.type === 'PERCENTAGE' && v.value === 100) {
+    valueLabel = 'Gratis';
+    valueCls = used ? 'text-bimbel-text-mid' : 'text-green-700';
   }
-  return 'Tanpa batas waktu';
+
+  // Footer line — urgency / validity / usage.
+  let footerText = '';
+  let footerCls = 'text-bimbel-text-lo';
+  if (used) {
+    footerText = isExpired(v)
+      ? `Kedaluwarsa ${dateShort(v.valid_until)}`
+      : `Dipakai ${v.used_count}×`;
+  } else if (urgent && v.valid_until) {
+    footerText = `Berakhir ${dateShort(v.valid_until)}`;
+    footerCls = 'text-red-800 font-semibold';
+  } else if (v.valid_until) {
+    footerText = `Berlaku sampai ${dateShort(v.valid_until)}`;
+  } else {
+    footerText = 'Tanpa batas waktu';
+  }
+
+  return {
+    id: v.id,
+    valueLabel,
+    valueCls,
+    description: v.notes || 'Diskon biaya bimbel',
+    code: v.code,
+    urgent,
+    used,
+    footerText,
+    footerCls,
+  };
 }
 
-async function tryRedeem() {
-  if (!codeInput.value.trim()) return;
-  try {
-    const preview = await TutoringService.validateVoucher(codeInput.value.trim().toUpperCase(), 100_000);
-    codeMessage.value = `Kode valid · diskon ${formatRupiah(preview.discount_amount)} pada simulasi Rp 100rb.`;
-  } catch (e) {
-    codeMessage.value = e instanceof Error ? e.message : 'Kode tidak valid.';
-  }
-}
-
-const heroSubtitle = computed(
-  () => `${active.value.length} aktif · ${expiringSoon.value.length} segera kedaluwarsa`,
-);
+const visible = computed<VoucherView[]>(() => {
+  const src = view.value === 'history' ? historyList.value : activeList.value;
+  return src.map(mapVoucher);
+});
 </script>
 
 <template>
@@ -104,80 +135,47 @@ const heroSubtitle = computed(
     <ParentBerandaHero
       kicker="BIMBEL · VOUCHER"
       title="Voucher & promo aktif"
-      :subtitle="heroSubtitle"
+      :subtitle="`${activeCount} aktif · ${expiringCount} segera kedaluwarsa`"
       :stats="[]"
     >
       <template #actions>
         <button
           type="button"
-          class="rounded-full bg-white text-bimbel-hero px-2.5 py-1 text-[12px] font-bold hover:bg-white/95"
-          @click="view = view === 'active' ? 'history' : 'active'"
-        >{{ view === 'active' ? 'Riwayat' : 'Aktif' }}</button>
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          @click="view = view === 'history' ? 'active' : 'history'"
+        >{{ view === 'history' ? 'Aktif' : 'Riwayat' }}</button>
       </template>
     </ParentBerandaHero>
-
-    <!-- Redeem strip — kept from prior view, restyled to body palette -->
-    <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-lg p-3 flex flex-wrap items-center gap-2">
-      <input
-        v-model="codeInput"
-        type="text"
-        placeholder="Kode voucher"
-        class="flex-1 min-w-[140px] rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-1.5 text-[12px] uppercase tracking-wider text-bimbel-text-hi focus:border-bimbel-hero focus:outline-none"
-      />
-      <button
-        type="button"
-        class="rounded-lg bg-bimbel-hero px-3 py-1.5 text-[12px] font-bold text-white hover:opacity-90"
-        @click="tryRedeem"
-      >Pakai kode</button>
-      <p v-if="codeMessage" class="w-full text-[11px] text-bimbel-text-mid">{{ codeMessage }}</p>
-    </div>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
     <template v-else>
-      <h4 class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-        {{ view === 'active' ? 'VOUCHER TERSEDIA' : 'RIWAYAT VOUCHER' }}
-      </h4>
+      <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+        {{ view === 'history' ? 'VOUCHER TERPAKAI' : 'VOUCHER TERSEDIA' }}
+      </p>
 
-      <div v-if="shown.length" class="grid grid-cols-2 gap-2">
+      <div class="grid sm:grid-cols-2 gap-2">
         <div
-          v-for="v in shown"
+          v-for="v in visible"
           :key="v.id"
-          class="rounded-lg bg-bimbel-panel p-3 relative overflow-hidden flex flex-col"
+          class="rounded-lg bg-bimbel-panel border border-dashed border-bimbel-border-soft p-3 relative overflow-hidden"
           :class="[
-            isActive(v) ? 'border border-dashed' : 'border border-solid opacity-60',
-            isActive(v) && isUrgent(v) ? 'border-orange-600' : 'border-bimbel-border-soft',
+            v.urgent ? 'border-solid border-orange-600' : '',
+            v.used ? 'opacity-60 border-solid' : '',
           ]"
         >
-          <p
-            class="text-[24px] font-extrabold leading-none"
-            :class="amountColor(v)"
-          >{{ amountLabel(v) }}</p>
-
-          <p class="text-[11px] text-bimbel-text-mid my-1 line-clamp-2">
-            {{ v.notes || 'Diskon biaya bimbel' }}
-          </p>
-
-          <span
-            class="font-mono text-[11px] bg-bimbel-bg px-2 py-1 rounded inline-block tracking-wider mt-2 self-start text-bimbel-text-hi"
-          >{{ v.code }}</span>
-
-          <p
-            class="text-[10px] mt-1.5 inline-flex items-center gap-1"
-            :class="isActive(v) && isUrgent(v) ? 'text-red-800 font-semibold' : 'text-bimbel-text-lo'"
-          >
-            <i class="ti ti-clock" />
-            <span>{{ validity(v) }}</span>
+          <p class="text-[24px] font-extrabold leading-none" :class="v.valueCls">{{ v.valueLabel }}</p>
+          <p class="text-[11px] text-bimbel-text-mid my-1">{{ v.description }}</p>
+          <span class="font-mono text-[11px] bg-bimbel-bg px-2 py-1 rounded inline-block tracking-wider mt-2">{{ v.code }}</span>
+          <p class="text-[10px] mt-1.5" :class="v.footerCls">
+            <NavIcon name="clock" :size="11" class="inline align-text-bottom" />{{ ' ' }}{{ v.footerText }}
           </p>
         </div>
-      </div>
 
-      <div
-        v-else
-        class="rounded-lg bg-bimbel-panel border border-bimbel-border-soft p-8 text-center text-[13px] text-bimbel-text-mid"
-      >
-        <template v-if="view === 'active'">Belum ada voucher aktif.</template>
-        <template v-else>Belum ada voucher di riwayat.</template>
+        <p
+          v-if="!visible.length"
+          class="col-span-full text-center text-[12px] text-bimbel-text-mid py-6"
+        >{{ view === 'history' ? 'Belum ada voucher terpakai.' : 'Tidak ada voucher aktif.' }}</p>
       </div>
     </template>
   </div>

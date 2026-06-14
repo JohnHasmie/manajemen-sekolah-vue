@@ -1,6 +1,7 @@
 <!--
-  ParentAnnouncementsView — wali Pengumuman list. Mockup parent_web_pages_extra
-  frame 4: hero + Semua/Tutor/Admin pills + announcement cards.
+  ParentAnnouncementsView — wali pengumuman list. Redesign: hero +
+  group filter chips ("Semua kelompok" + per-group) + announcement
+  cards (NEW pill for <48h, rel-time otherwise).
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -21,7 +22,7 @@ const studentId = computed(() =>
 
 const loading = ref(true);
 const announcements = ref<TutoringGroupAnnouncement[]>([]);
-const groupFilter = ref<string>('');
+const groupFilter = ref<string>('all');
 
 async function load() {
   const sid = studentId.value;
@@ -35,28 +36,29 @@ async function load() {
 onMounted(load);
 watch(studentId, load);
 
-// ── Redesigned template helpers ──────────────────────────────────
-const groups = computed(() => {
+const groupChips = computed(() => {
   const seen = new Set<string>();
-  const out: string[] = [];
+  const out: { id: string; label: string }[] = [{ id: 'all', label: 'Semua kelompok' }];
   for (const a of announcements.value) {
-    const g = a.group_name;
-    if (g && !seen.has(g)) { seen.add(g); out.push(g); }
+    const id = a.tutoring_group_id;
+    if (id && !seen.has(id)) {
+      seen.add(id);
+      out.push({ id, label: a.group_name ?? id });
+    }
   }
   return out;
 });
 
 function isNew(a: TutoringGroupAnnouncement): boolean {
   if (!a.created_at) return false;
-  const ageMs = Date.now() - new Date(a.created_at).valueOf();
-  return ageMs < 48 * 3_600_000; // < 48h
+  return Date.now() - new Date(a.created_at).valueOf() < 48 * 3_600_000;
 }
 
 const newCount = computed(() => announcements.value.filter(isNew).length);
 
 const visible = computed(() => {
-  if (!groupFilter.value) return announcements.value;
-  return announcements.value.filter((a) => a.group_name === groupFilter.value);
+  if (groupFilter.value === 'all') return announcements.value;
+  return announcements.value.filter((a) => a.tutoring_group_id === groupFilter.value);
 });
 
 function relTime(iso?: string | null): string {
@@ -72,10 +74,10 @@ function relTime(iso?: string | null): string {
   return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 }
 
-function snippet(body?: string | null, max = 150): string {
+function snippet(body?: string | null, n = 150): string {
   if (!body) return '';
   const trimmed = body.trim();
-  return trimmed.length > max ? `${trimmed.slice(0, max).trimEnd()}…` : trimmed;
+  return trimmed.length > n ? `${trimmed.slice(0, n).trimEnd()}…` : trimmed;
 }
 </script>
 
@@ -91,63 +93,50 @@ function snippet(body?: string | null, max = 150): string {
     </ParentBerandaHero>
 
     <!-- Group filter chips -->
-    <div class="flex gap-1.5 mb-2.5 flex-wrap">
+    <div class="flex gap-1.5 flex-wrap">
       <button
+        v-for="g in groupChips"
+        :key="g.id"
         type="button"
         class="rounded-full px-2.5 py-1 text-[11px] transition-colors"
         :class="
-          groupFilter === ''
+          groupFilter === g.id
             ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
-            : 'bg-bimbel-bg text-bimbel-text-mid hover:text-bimbel-text-hi'
+            : 'bg-bimbel-bg text-bimbel-text-mid'
         "
-        @click="groupFilter = ''"
-      >Semua kelompok</button>
-      <button
-        v-for="g in groups"
-        :key="g"
-        type="button"
-        class="rounded-full px-2.5 py-1 text-[11px] transition-colors"
-        :class="
-          groupFilter === g
-            ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
-            : 'bg-bimbel-bg text-bimbel-text-mid hover:text-bimbel-text-hi'
-        "
-        @click="groupFilter = g"
-      >{{ g }}</button>
+        @click="groupFilter = g.id"
+      >{{ g.label }}</button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-[12px] text-bimbel-text-mid">Memuat…</div>
-
-    <div v-else-if="visible.length">
-      <article
+    <div class="space-y-2">
+      <div
         v-for="a in visible"
         :key="a.id"
-        class="rounded-lg bg-bimbel-bg p-2.5 mb-2"
+        class="rounded-lg bg-bimbel-bg p-2.5"
         :class="isNew(a) ? 'border-l-2 border-bimbel-hero pl-3' : ''"
       >
         <div class="flex justify-between items-start gap-2">
           <div class="min-w-0 flex-1">
-            <p class="text-[10px] text-bimbel-text-lo tracking-wider font-bold uppercase truncate">
-              {{ (a.author_name ?? 'TUTOR').toUpperCase() }}<template v-if="a.group_name"> · {{ a.group_name.toUpperCase() }}</template>
+            <p class="text-[10px] text-bimbel-text-lo tracking-wider font-bold uppercase">
+              {{ a.author_name }} · {{ a.group_name }}
             </p>
-            <h3 class="text-[13px] font-bold text-bimbel-text-hi mt-0.5 mb-1">{{ a.title }}</h3>
+            <p class="text-[13px] font-bold text-bimbel-text-hi mt-0.5">{{ a.title }}</p>
           </div>
           <span
             v-if="isNew(a)"
-            class="flex-shrink-0 rounded-full bg-red-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
-          >Baru</span>
+            class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-red-900 text-white flex-shrink-0"
+          >BARU</span>
           <span
             v-else
-            class="flex-shrink-0 text-[11px] text-bimbel-text-lo whitespace-nowrap"
+            class="text-[11px] text-bimbel-text-lo flex-shrink-0"
           >{{ relTime(a.created_at) }}</span>
         </div>
-        <p class="text-[11px] text-bimbel-text-mid leading-relaxed">{{ snippet(a.body) }}</p>
-      </article>
+        <p class="text-[11px] text-bimbel-text-mid leading-relaxed mt-1">{{ snippet(a.body) }}</p>
+      </div>
+      <p v-if="!visible.length && !loading" class="text-center text-[12px] text-bimbel-text-mid py-6">
+        Belum ada pengumuman di kelompok ini.
+      </p>
+      <p v-if="loading" class="text-center text-[12px] text-bimbel-text-mid py-6">Memuat…</p>
     </div>
-
-    <div
-      v-else
-      class="rounded-lg border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-[12px] text-bimbel-text-mid"
-    >Belum ada pengumuman.</div>
   </div>
 </template>

@@ -1,20 +1,18 @@
 <!--
-  ParentNotificationsView — wali notifications. Mockup parent_web_pages_account
-  frame 1: hero + date-grouped timeline (HARI INI / KEMARIN / MINGGU LALU).
-  Per spec: visual redesign only. The load()/markAll() stubs stay as-is —
-  backend wiring lives in a separate task.
+  ParentNotificationsView — wali notifications. Mockup
+  parent_web_pages_account frame 1: hero + date-grouped timeline
+  (HARI INI / KEMARIN / MINGGU LALU / LEBIH LAMA).
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { NotificationService } from '@/services/notification.service';
-import type { AppNotification } from '@/types/notification';
+import type { AppNotification, NotificationCategory } from '@/types/notification';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const loading = ref(true);
 const items = ref<AppNotification[]>([]);
-const filter = ref<'all' | 'unread'>('all');
 
 async function load() {
   loading.value = true;
@@ -33,48 +31,41 @@ async function markAll() {
 
 onMounted(load);
 
-const filtered = computed(() => {
-  if (filter.value === 'unread') return items.value.filter((n) => !n.read_at);
-  return items.value;
-});
 const unreadCount = computed(() => items.value.filter((n) => !n.read_at).length);
 
-const iconByCategory: Record<string, string> = {
-  PERHATIAN_FINANCE: 'wallet',
-  PERHATIAN_GRADE: 'star',
-  PERHATIAN_ATTENDANCE: 'check-circle',
-  PERHATIAN_ANNOUNCEMENT: 'megaphone',
-  TUGAS: 'book',
-  UJIAN: 'check-circle',
-  MATERI: 'book',
-  KEGIATAN: 'calendar',
-  KELAS: 'megaphone',
-  LAIN: 'circle',
+// ── Icon + colour ramp per backend category ──────────────────────
+const ICON_BY_CATEGORY: Record<NotificationCategory, string> = {
+  billing: 'wallet',
+  grade: 'star',
+  attendance: 'check-circle',
+  announcement: 'megaphone',
+  class_activity: 'book',
+  lesson_plan: 'file-text',
+  system: 'info',
+  other: 'circle',
 };
 
-// Background + foreground per event type (mirrors Beranda spec).
-const STYLE_BY_CATEGORY: Record<string, { bg: string; fg: string }> = {
-  PERHATIAN_FINANCE: { bg: '#FEF3C7', fg: '#92400E' }, // amber
-  PERHATIAN_GRADE: { bg: '#DCFCE7', fg: '#166534' }, // green
-  PERHATIAN_ATTENDANCE: { bg: '#DBEAFE', fg: '#1E40AF' }, // blue
-  PERHATIAN_ANNOUNCEMENT: { bg: '#EDE9FE', fg: '#5B21B6' }, // purple
-  TUGAS: { bg: '#FFE4E1', fg: '#9A3412' }, // coral
-  UJIAN: { bg: '#FEF3C7', fg: '#92400E' },
-  MATERI: { bg: '#DBEAFE', fg: '#1E40AF' },
-  KEGIATAN: { bg: '#DCFCE7', fg: '#166534' },
-  KELAS: { bg: '#EDE9FE', fg: '#5B21B6' },
-  LAIN: { bg: '#E5E7EB', fg: '#374151' },
+const STYLE_BY_CATEGORY: Record<NotificationCategory, { bg: string; fg: string }> = {
+  billing: { bg: '#FEF3C7', fg: '#92400E' }, // amber
+  grade: { bg: '#DCFCE7', fg: '#166534' }, // green
+  attendance: { bg: '#DBEAFE', fg: '#1E40AF' }, // blue
+  announcement: { bg: '#EDE9FE', fg: '#5B21B6' }, // purple
+  class_activity: { bg: '#FFE4E1', fg: '#9A3412' }, // coral
+  lesson_plan: { bg: '#DBEAFE', fg: '#1E40AF' },
+  system: { bg: '#E5E7EB', fg: '#374151' },
+  other: { bg: '#E5E7EB', fg: '#374151' },
 };
 
-function iconFor(n: AppNotification): string {
-  return iconByCategory[n.category] || 'circle';
+function iconName(n: AppNotification): string {
+  return ICON_BY_CATEGORY[n.category] ?? 'circle';
 }
 
-function iconStyle(n: AppNotification) {
-  return STYLE_BY_CATEGORY[n.category] || STYLE_BY_CATEGORY.LAIN;
+function iconStyle(n: AppNotification): Record<string, string> {
+  const p = STYLE_BY_CATEGORY[n.category] ?? STYLE_BY_CATEGORY.other;
+  return { background: p.bg, color: p.fg };
 }
 
-function rel(iso: string): string {
+function relTime(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.valueOf())) return '';
   const diffMin = (Date.now() - d.valueOf()) / 60_000;
@@ -104,24 +95,23 @@ function bucketOf(iso: string): GroupKey {
   return 'older';
 }
 
-const grouped = computed(() => {
+const grouped = computed<Record<GroupKey, AppNotification[]>>(() => {
   const buckets: Record<GroupKey, AppNotification[]> = {
     today: [], yesterday: [], week: [], older: [],
   };
-  for (const n of filtered.value) {
+  for (const n of items.value) {
     buckets[bucketOf(n.created_at)].push(n);
   }
   return buckets;
 });
 
-const GROUP_LABELS: Record<GroupKey, string> = {
+const groupOrder: GroupKey[] = ['today', 'yesterday', 'week', 'older'];
+const groupLabels: Record<GroupKey, string> = {
   today: 'HARI INI',
   yesterday: 'KEMARIN',
   week: 'MINGGU LALU',
   older: 'LEBIH LAMA',
 };
-
-const groupOrder: GroupKey[] = ['today', 'yesterday', 'week', 'older'];
 </script>
 
 <template>
@@ -136,59 +126,39 @@ const groupOrder: GroupKey[] = ['today', 'yesterday', 'week', 'older'];
         <button
           v-if="unreadCount > 0"
           type="button"
-          class="rounded-full bg-white text-bimbel-hero px-2.5 py-1 text-[12px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
           @click="markAll"
         >Tandai semua dibaca</button>
       </template>
     </ParentBerandaHero>
 
-    <!-- Filter pills -->
-    <div class="flex gap-1.5">
-      <button
-        v-for="opt in [
-          { id: 'all' as const, label: `Semua (${items.length})` },
-          { id: 'unread' as const, label: `Belum dibaca (${unreadCount})` },
-        ]"
-        :key="opt.id"
-        type="button"
-        class="rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors"
-        :class="
-          filter === opt.id
-            ? 'bg-bimbel-hero text-white'
-            : 'bg-bimbel-bg text-bimbel-text-mid hover:text-bimbel-text-hi'
-        "
-        @click="filter = opt.id"
-      >{{ opt.label }}</button>
-    </div>
-
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
     <div
-      v-else-if="filtered.length"
-      class="bg-bimbel-panel border border-bimbel-border-soft rounded-lg p-3.5 overflow-hidden"
+      v-else-if="items.length"
+      class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3.5"
     >
       <template v-for="key in groupOrder" :key="key">
         <template v-if="grouped[key].length">
-          <h4 class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
-            {{ GROUP_LABELS[key] }}
-          </h4>
+          <p class="text-[10px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+            {{ groupLabels[key] }}
+          </p>
           <div
-            v-for="(n, idx) in grouped[key]"
+            v-for="(n, i) in grouped[key]"
             :key="n.id"
-            class="flex items-start gap-2.5 py-2.5"
             :class="[
+              'flex items-start gap-2.5 py-2.5',
               !n.read_at ? 'bg-bimbel-accent-dim -mx-3.5 px-3.5' : '',
-              key === 'week' && idx === grouped[key].length - 1 ? 'opacity-70' : '',
+              key === 'week' && i === grouped[key].length - 1 ? 'opacity-70' : '',
             ]"
           >
-            <span
-              class="grid place-items-center rounded-lg flex-shrink-0"
-              style="width:30px;height:30px"
-              :style="{ background: iconStyle(n).bg, color: iconStyle(n).fg }"
+            <div
+              class="w-[30px] h-[30px] rounded-lg grid place-items-center flex-shrink-0"
+              :style="iconStyle(n)"
             >
-              <NavIcon :name="iconFor(n)" :size="14" />
-            </span>
-            <div class="min-w-0 flex-1">
+              <NavIcon :name="iconName(n)" :size="14" />
+            </div>
+            <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-bimbel-text-hi">{{ n.title }}</p>
               <p v-if="n.body" class="text-[11px] text-bimbel-text-mid">{{ n.body }}</p>
             </div>
@@ -199,7 +169,7 @@ const groupOrder: GroupKey[] = ['today', 'yesterday', 'week', 'older'];
             <span
               v-else
               class="text-[11px] text-bimbel-text-lo flex-shrink-0"
-            >{{ rel(n.created_at) }}</span>
+            >{{ relTime(n.created_at) }}</span>
           </div>
         </template>
       </template>
@@ -207,10 +177,7 @@ const groupOrder: GroupKey[] = ['today', 'yesterday', 'week', 'older'];
 
     <div
       v-else
-      class="rounded-lg bg-bimbel-panel border border-bimbel-border-soft p-8 text-center text-[13px] text-bimbel-text-mid"
-    >
-      <template v-if="filter === 'unread'">Tidak ada notifikasi baru.</template>
-      <template v-else>Belum ada notifikasi.</template>
-    </div>
+      class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-8 text-center text-[13px] text-bimbel-text-mid"
+    >Belum ada notifikasi.</div>
   </div>
 </template>

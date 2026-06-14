@@ -1,22 +1,29 @@
 <!--
-  ParentAppearanceView — wali Tampilan settings. 3 theme cards
-  (Terang / Gelap / Otomatis) with literal preview swatches, plus
-  auto-schedule time inputs and an info note pinned to bimbel scope.
-  Still live-wires to `useBimbelThemeStore` so the page reflects mode
-  changes immediately.
+  ParentAppearanceView — wali Tampilan settings. 3 mode cards (Terang /
+  Gelap / Otomatis) with literal preview swatches, time inputs for the
+  auto schedule, and an info note pinned to bimbel scope. Live-wires to
+  useBimbelThemeStore so the page reflects mode changes immediately.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useBimbelThemeStore } from '@/stores/bimbel-theme';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 
 const theme = useBimbelThemeStore();
 
-const modes = [
-  { id: 'light' as const, label: 'Terang', sub: 'Selalu terang' },
-  { id: 'dark' as const, label: 'Gelap', sub: 'Selalu gelap' },
-  { id: 'auto' as const, label: 'Otomatis', sub: 'Ikut jam' },
+interface ModeOption {
+  id: 'light' | 'dark' | 'auto';
+  label: string;
+  sub: string;
+  preview: string;
+}
+
+const modes: ModeOption[] = [
+  { id: 'light', label: 'Terang', sub: 'Selalu terang', preview: 'background:#f7faff;' },
+  { id: 'dark', label: 'Gelap', sub: 'Selalu gelap', preview: 'background:#0f1419;' },
+  { id: 'auto', label: 'Otomatis', sub: 'Ikut jam', preview: 'background:linear-gradient(90deg,#f7faff 50%,#0f1419 50%);' },
 ];
 
 const lightStart = computed({
@@ -31,16 +38,12 @@ const darkStart = computed({
   get: () =>
     `${String(theme.darkStartHour).padStart(2, '0')}:${String(theme.darkStartMinute).padStart(2, '0')}`,
   set: (v: string) => {
-    const [hh, mm] = v.split(':').map((x) => Number.parseInt(x, 10));
+    const parts = v.split(':');
+    const hh = Number.parseInt(parts[0] ?? '18', 10);
+    const mm = Number.parseInt(parts[1] ?? '30', 10);
     theme.setDarkStart(Number.isFinite(hh) ? hh : 18, Number.isFinite(mm) ? mm : 30);
   },
 });
-
-function swatchStyle(id: 'light' | 'dark' | 'auto') {
-  if (id === 'light') return 'background:#f7faff;';
-  if (id === 'dark') return 'background:#0f1419;';
-  return 'background: linear-gradient(90deg, #f7faff 50%, #0f1419 50%);';
-}
 </script>
 
 <template>
@@ -48,60 +51,57 @@ function swatchStyle(id: 'light' | 'dark' | 'auto') {
     <ParentBerandaHero
       kicker="BIMBEL · TAMPILAN"
       title="Tampilan"
-      :subtitle="theme.autoHint ?? 'Pilih mode tampilan untuk halaman bimbel'"
+      :subtitle="theme.autoHint || 'Atur mode warna & jadwal otomatis'"
       :stats="[]"
     />
 
-    <!-- 1. Mode warna -->
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      Mode warna
+    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+      MODE WARNA
     </p>
-    <div class="grid grid-cols-3 gap-2 mb-3">
+    <div class="grid grid-cols-3 gap-2">
       <button
         v-for="m in modes"
         :key="m.id"
         type="button"
-        class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-3 text-center cursor-pointer"
-        :class="theme.mode === m.id ? 'border-2 border-bimbel-hero p-[11px]' : ''"
+        :class="[
+          'rounded-md bg-bimbel-panel border text-center',
+          theme.mode === m.id ? 'border-2 border-bimbel-hero p-[11px]' : 'border-bimbel-border-soft p-3',
+        ]"
         @click="theme.setMode(m.id)"
       >
         <span
           class="block h-14 w-full rounded-md mb-2 border border-bimbel-border-soft"
-          :style="swatchStyle(m.id)"
-        />
+          :style="m.preview"
+        ></span>
         <p class="text-[12px] font-bold text-bimbel-text-hi">{{ m.label }}</p>
-        <p class="text-[11px] text-bimbel-text-mid">{{ m.sub }}</p>
+        <p class="text-[11px] text-bimbel-text-mid mt-0.5">{{ m.sub }}</p>
       </button>
     </div>
 
-    <!-- 2. Jadwal otomatis -->
     <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      Jadwal otomatis
+      JADWAL OTOMATIS
     </p>
-    <div class="grid grid-cols-2 gap-2.5 mb-3">
+    <div class="grid grid-cols-2 gap-2.5">
       <div>
-        <p class="text-[11px] text-bimbel-text-mid mb-1">Jam terang mulai</p>
+        <label class="block text-[11px] text-bimbel-text-mid mb-1">Jam terang mulai</label>
         <input
           v-model="lightStart"
           type="time"
-          :disabled="theme.mode !== 'auto'"
-          class="rounded-md bg-bimbel-bg px-3 py-1.5 text-[13px] font-mono text-bimbel-text-hi block w-full focus:outline-none disabled:opacity-50"
+          class="rounded-md bg-bimbel-bg px-3 py-1.5 text-[13px] font-mono text-bimbel-text-hi w-full focus:outline-none"
         />
       </div>
       <div>
-        <p class="text-[11px] text-bimbel-text-mid mb-1">Jam gelap mulai</p>
+        <label class="block text-[11px] text-bimbel-text-mid mb-1">Jam gelap mulai</label>
         <input
           v-model="darkStart"
           type="time"
-          :disabled="theme.mode !== 'auto'"
-          class="rounded-md bg-bimbel-bg px-3 py-1.5 text-[13px] font-mono text-bimbel-text-hi block w-full focus:outline-none disabled:opacity-50"
+          class="rounded-md bg-bimbel-bg px-3 py-1.5 text-[13px] font-mono text-bimbel-text-hi w-full focus:outline-none"
         />
       </div>
     </div>
 
-    <!-- 3. Info note -->
-    <div class="rounded-md bg-bimbel-accent-dim p-2.5 flex gap-2.5 items-center">
-      <i class="ti ti-info-circle text-[14px] text-bimbel-hero flex-shrink-0"></i>
+    <div class="rounded-md bg-bimbel-accent-dim p-2.5 flex gap-2.5 items-center mt-2">
+      <NavIcon name="info-circle" :size="14" class="text-bimbel-hero flex-shrink-0" />
       <p class="text-[11px] text-bimbel-hero">
         Pengaturan ini hanya berlaku untuk halaman Bimbel. Halaman sekolah pakai tema browser Anda.
       </p>

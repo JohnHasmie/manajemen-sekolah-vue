@@ -1,8 +1,8 @@
 <!--
-  ParentRegisterLeadView — wali calon "daftar anak baru" form. New
-  bimbel-token styled inputs, choice cards for program, secondary
-  "Simpan draft" + primary "Kirim" CTA. Script (TutoringService.createLead
-  payload, validation) unchanged.
+  ParentRegisterLeadView — wali calon "daftar anak baru" form.
+  Hero + Batal chip, "Data anak" inputs, program choice cards with
+  bimbel border-2 + offset-pad active style, notes textarea, and
+  Simpan draft / Kirim CTA row. Keeps TutoringService.createLead path.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -11,35 +11,65 @@ import { TutoringService } from '@/services/tutoring.service';
 import type { TutoringProgram } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 
 const router = useRouter();
 
-const programs = ref<TutoringProgram[]>([]);
-const selectedProgramId = ref<string>('');
-const form = ref({
-  name: '',
-  phone: '',
-  email: '',
+interface LeadForm {
+  childName: string;
+  grade: string;
+  school: string;
+  programId: string;
+  notes: string;
+}
+
+const form = ref<LeadForm>({
   childName: '',
-  jenjang: '',
+  grade: '',
+  school: '',
+  programId: '',
   notes: '',
 });
+const programs = ref<TutoringProgram[]>([]);
 const saving = ref(false);
 const message = ref<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
-async function loadPrograms() {
+const grades = [
+  'Kelas 1 SD', 'Kelas 2 SD', 'Kelas 3 SD', 'Kelas 4 SD', 'Kelas 5 SD', 'Kelas 6 SD',
+  'Kelas 7 SMP', 'Kelas 8 SMP', 'Kelas 9 SMP',
+  'Kelas 10 SMA', 'Kelas 11 SMA', 'Kelas 12 SMA',
+];
+
+onMounted(async () => {
   try { programs.value = await TutoringService.getPrograms(); }
   catch {/* non-fatal */}
-}
-onMounted(loadPrograms);
+
+  // Hydrate from local draft if present — non-fatal if absent.
+  try {
+    const raw = localStorage.getItem('parent.registerLead.draft');
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<LeadForm>;
+      form.value = { ...form.value, ...parsed };
+    }
+  } catch {/* ignore */}
+});
 
 const canSubmit = computed(() =>
-  form.value.name.trim().length >= 2 &&
-  form.value.phone.trim().length >= 8 &&
   form.value.childName.trim().length >= 2 &&
-  !!selectedProgramId.value &&
+  !!form.value.programId &&
   !saving.value,
 );
+
+function saveDraft() {
+  try {
+    localStorage.setItem('parent.registerLead.draft', JSON.stringify(form.value));
+    message.value = { kind: 'ok', text: 'Draft disimpan di perangkat ini.' };
+  } catch {/* ignore */}
+}
+
+function cancel() {
+  router.back();
+}
 
 async function submit() {
   if (!canSubmit.value) return;
@@ -47,37 +77,21 @@ async function submit() {
   message.value = null;
   try {
     await TutoringService.createLead({
-      name: form.value.name,
-      email: form.value.email || undefined,
-      phone: form.value.phone,
-      program_id: selectedProgramId.value,
+      name: form.value.childName,
+      program_id: form.value.programId,
       notes: [
-        `Nama anak: ${form.value.childName}`,
-        form.value.jenjang && `Jenjang: ${form.value.jenjang}`,
+        form.value.grade && `Kelas: ${form.value.grade}`,
+        form.value.school && `Sekolah: ${form.value.school}`,
         form.value.notes && `Catatan: ${form.value.notes}`,
       ].filter(Boolean).join(' · '),
     });
     message.value = { kind: 'ok', text: 'Pendaftaran terkirim. Admin akan menghubungi Anda dalam 1×24 jam.' };
-    form.value = { name: '', phone: '', email: '', childName: '', jenjang: '', notes: '' };
-    selectedProgramId.value = '';
+    form.value = { childName: '', grade: '', school: '', programId: '', notes: '' };
+    try { localStorage.removeItem('parent.registerLead.draft'); } catch {/* ignore */}
   } catch (e) {
     message.value = { kind: 'err', text: e instanceof Error ? e.message : 'Gagal mengirim pendaftaran.' };
   } finally { saving.value = false; }
 }
-
-function saveDraft() {
-  // Local draft stash — non-fatal if quota fails.
-  try {
-    localStorage.setItem(
-      'parent.registerLead.draft',
-      JSON.stringify({ form: form.value, programId: selectedProgramId.value }),
-    );
-    message.value = { kind: 'ok', text: 'Draft disimpan di perangkat ini.' };
-  } catch {/* ignore */}
-}
-
-const programTone = (idx: number) =>
-  ['blue', 'green', 'amber', 'blue', 'green'][idx % 5];
 </script>
 
 <template>
@@ -91,124 +105,87 @@ const programTone = (idx: number) =>
       <template #actions>
         <button
           type="button"
-          class="inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1.5 text-[13px] font-bold text-bimbel-hero hover:bg-white/95"
-          @click="router.back()"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          @click="cancel"
         >
-          <i class="ti ti-x text-[13px]"></i>
+          <NavIcon name="x" :size="12" />
           Batal
         </button>
       </template>
     </ParentBerandaHero>
 
-    <!-- 1. Data anak -->
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      Data anak
+    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+      DATA ANAK
     </p>
-    <p class="text-[11px] text-bimbel-text-mid mb-1">Nama lengkap anak</p>
+    <label class="block text-[11px] text-bimbel-text-mid mb-1">Nama lengkap anak</label>
     <input
       v-model="form.childName"
       type="text"
-      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo block w-full mb-2 focus:outline-none"
-      placeholder="Nama lengkap anak"
+      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi block w-full focus:outline-none mb-2"
     />
-
-    <div class="grid grid-cols-2 gap-2 mb-2">
+    <div class="grid grid-cols-2 gap-2">
       <div>
-        <p class="text-[11px] text-bimbel-text-mid mb-1">Kelas</p>
+        <label class="block text-[11px] text-bimbel-text-mid mb-1">Kelas</label>
         <select
-          v-model="form.jenjang"
+          v-model="form.grade"
           class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi block w-full focus:outline-none"
         >
-          <option value="">— pilih kelas —</option>
-          <option value="SD 1">SD kelas 1</option>
-          <option value="SD 2">SD kelas 2</option>
-          <option value="SD 3">SD kelas 3</option>
-          <option value="SD 4">SD kelas 4</option>
-          <option value="SD 5">SD kelas 5</option>
-          <option value="SD 6">SD kelas 6</option>
-          <option value="SMP 7">SMP kelas 7</option>
-          <option value="SMP 8">SMP kelas 8</option>
-          <option value="SMP 9">SMP kelas 9</option>
-          <option value="SMA 10">SMA kelas 10</option>
-          <option value="SMA 11">SMA kelas 11</option>
-          <option value="SMA 12">SMA kelas 12</option>
+          <option value="">Pilih kelas</option>
+          <option v-for="g in grades" :key="g" :value="g">{{ g }}</option>
         </select>
       </div>
       <div>
-        <p class="text-[11px] text-bimbel-text-mid mb-1">Sekolah asal</p>
+        <label class="block text-[11px] text-bimbel-text-mid mb-1">Sekolah asal</label>
         <input
-          v-model="form.name"
+          v-model="form.school"
           type="text"
-          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo block w-full focus:outline-none"
-          placeholder="Nama sekolah"
+          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi block w-full focus:outline-none"
         />
       </div>
     </div>
 
-    <!-- contact (kept for valid payload but quiet styling) -->
-    <div class="grid grid-cols-2 gap-2 mb-2">
-      <div>
-        <p class="text-[11px] text-bimbel-text-mid mb-1">No HP / WA wali</p>
-        <input
-          v-model="form.phone"
-          type="tel"
-          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo block w-full focus:outline-none"
-          placeholder="08xx-xxxx-xxxx"
-        />
-      </div>
-      <div>
-        <p class="text-[11px] text-bimbel-text-mid mb-1">Email wali (opsional)</p>
-        <input
-          v-model="form.email"
-          type="email"
-          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo block w-full focus:outline-none"
-          placeholder="opsional"
-        />
-      </div>
-    </div>
-
-    <!-- 2. Program -->
     <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      Program yang diminati
+      PROGRAM YANG DIMINATI
     </p>
-    <div v-if="!programs.length" class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[12px] text-bimbel-text-mid">
+    <div
+      v-if="!programs.length"
+      class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[12px] text-bimbel-text-mid"
+    >
       Memuat daftar program…
     </div>
     <button
-      v-for="(p, idx) in programs"
+      v-for="p in programs"
       :key="p.id"
       type="button"
-      class="w-full rounded-md bg-bimbel-panel border border-bimbel-border-soft p-3 mb-1.5 flex gap-2.5 items-center text-left"
-      :class="selectedProgramId === p.id ? 'border-2 border-bimbel-hero p-[11px]' : ''"
-      @click="selectedProgramId = p.id"
+      :class="[
+        'w-full rounded-md bg-bimbel-panel border flex gap-2.5 items-center mb-1.5 text-left',
+        form.programId === p.id ? 'border-2 border-bimbel-hero p-[11px]' : 'border-bimbel-border-soft p-3',
+      ]"
+      @click="form.programId = p.id"
     >
-      <span
-        class="grid h-10 w-10 flex-shrink-0 place-items-center rounded-lg"
-        :class="
-          programTone(idx) === 'green'
-            ? 'bg-bimbel-green-dim text-green-700'
-            : programTone(idx) === 'amber'
-            ? 'bg-bimbel-amber-dim text-amber-700'
-            : 'bg-bimbel-accent-dim text-bimbel-hero'
-        "
-      >
-        <i class="ti ti-book-2 text-[18px]"></i>
-      </span>
-      <div class="min-w-0 flex-1">
-        <p class="text-[13px] font-bold text-bimbel-text-hi truncate">{{ p.name }}</p>
-        <p v-if="p.description" class="text-[11px] text-bimbel-text-mid truncate">{{ p.description }}</p>
+      <div class="w-10 h-10 rounded-lg bg-bimbel-accent-dim text-bimbel-hero grid place-items-center flex-shrink-0">
+        <NavIcon name="school" :size="18" />
       </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ p.name }}</p>
+        <p class="text-[11px] text-bimbel-text-mid">{{ p.description || '—' }}</p>
+      </div>
+      <span
+        :class="[
+          'w-4 h-4 rounded-full border-2 flex-shrink-0',
+          form.programId === p.id ? 'border-bimbel-hero bg-bimbel-hero/20' : 'border-bimbel-border',
+        ]"
+      ></span>
     </button>
 
-    <!-- 3. Catatan ortu -->
     <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      Catatan orang tua (opsional)
+      CATATAN ORANG TUA (opsional)
     </p>
     <textarea
       v-model="form.notes"
       rows="3"
-      placeholder="Misal: anak butuh fokus mapel Matematika, jadwal sore lebih pas, dll."
-      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo block w-full min-h-12 focus:outline-none"
+      placeholder="Misal: jadwal preferensi, kemampuan saat ini, materi yang ingin difokuskan…"
+      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi w-full focus:outline-none placeholder:text-bimbel-text-lo min-h-12"
     ></textarea>
 
     <div
@@ -217,11 +194,10 @@ const programTone = (idx: number) =>
       :class="message.kind === 'ok' ? 'bg-bimbel-green-dim text-green-700' : 'bg-bimbel-red-dim text-red-700'"
     >{{ message.text }}</div>
 
-    <!-- 4. CTA -->
     <div class="flex gap-2 mt-3">
       <button
         type="button"
-        class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[13px] font-bold px-3.5 py-2.5"
+        class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[13px] px-3.5 py-2.5"
         @click="saveDraft"
       >Simpan draft</button>
       <button

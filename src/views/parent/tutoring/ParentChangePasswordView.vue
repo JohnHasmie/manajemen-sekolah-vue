@@ -1,8 +1,8 @@
 <!--
-  ParentChangePasswordView — wali ubah kata sandi. 2-col layout: form
-  on the left with row layout (label-col + input with eye/check icons),
-  strength bar + label, tips checklist on the right with live state.
-  Script (strength compute, submit) unchanged.
+  ParentChangePasswordView — wali ubah kata sandi. 2-column layout:
+  form on the left (label-col + input with eye/check icons + strength
+  bar) and tips checklist on the right with live met/unmet state.
+  Keeps SettingsService.updatePassword submit path.
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -10,65 +10,63 @@ import { useRouter } from 'vue-router';
 import { SettingsService } from '@/services/settings.service';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import NavIcon from '@/components/feature/NavIcon.vue';
 
 const router = useRouter();
 
-const current = ref('');
-const next = ref('');
-const confirm = ref('');
-const saving = ref(false);
-const message = ref<{ kind: 'ok' | 'err'; text: string } | null>(null);
-
+const form = ref({ current: '', next: '', confirm: '' });
 const showCurrent = ref(false);
 const showNext = ref(false);
 const showConfirm = ref(false);
+const saving = ref(false);
+const message = ref<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
-const strength = computed(() => {
-  const p = next.value;
-  if (!p) return 0;
-  let score = 0;
-  if (p.length >= 8) score++;
-  if (/[A-Z]/.test(p) && /[a-z]/.test(p)) score++;
-  if (/\d/.test(p)) score++;
-  if (/[^\w\s]/.test(p)) score++;
-  return score;
+const tips = computed(() => {
+  const next = form.value.next;
+  return [
+    { label: 'Minimal 8 karakter', met: next.length >= 8 },
+    { label: 'Angka & huruf', met: /\d/.test(next) && /[a-z]/i.test(next) },
+    { label: 'Karakter spesial', met: /[^a-z0-9]/i.test(next) },
+    { label: 'Bukan kata umum', met: next.length > 0 && !['password', '12345678', 'qwerty'].includes(next.toLowerCase()) },
+  ];
 });
 
-const strengthLabel = computed(() => {
-  if (strength.value === 0) return 'Belum diisi';
-  if (strength.value === 1) return 'Lemah — tambah panjang & variasi';
-  if (strength.value === 2) return 'Sedang — bisa lebih kuat';
-  if (strength.value === 3) return 'Kuat — sandi diterima';
-  return 'Sangat kuat — bagus!';
+const strengthLevel = computed(() => tips.value.filter((t) => t.met).length);
+
+const strengthBarCls = computed(() => {
+  const lvl = strengthLevel.value;
+  if (lvl <= 1) return 'bg-red-600';
+  if (lvl <= 3) return 'bg-amber-500';
+  return 'bg-green-600';
 });
 
-const strengthTextClass = computed(() => {
-  if (strength.value <= 1) return 'text-red-700';
-  if (strength.value === 2) return 'text-amber-700';
+const strengthTextCls = computed(() => {
+  const lvl = strengthLevel.value;
+  if (lvl <= 1) return 'text-red-700';
+  if (lvl <= 3) return 'text-amber-700';
   return 'text-green-700';
 });
 
-const strengthBarClass = computed(() => {
-  if (strength.value <= 1) return 'bg-red-500';
-  if (strength.value === 2) return 'bg-amber-500';
-  return 'bg-green-700';
+const strengthLabel = computed(() => {
+  const lvl = strengthLevel.value;
+  if (lvl === 0) return 'Belum diisi';
+  if (lvl === 1) return 'Lemah — tambah panjang & variasi';
+  if (lvl === 2) return 'Sedang — bisa lebih kuat';
+  if (lvl === 3) return 'Kuat — sandi diterima';
+  return 'Sangat kuat — bagus!';
 });
 
-const tips = computed(() => [
-  { label: 'Minimal 8 karakter', ok: next.value.length >= 8 },
-  { label: 'Angka & huruf', ok: /[A-Za-z]/.test(next.value) && /\d/.test(next.value) },
-  { label: 'Karakter spesial', ok: /[^\w\s]/.test(next.value) },
-  { label: 'Bukan kata umum', ok: next.value.length >= 8 && !/^(password|12345678|qwerty)/i.test(next.value) },
-]);
-
-const matches = computed(() => confirm.value.length > 0 && next.value === confirm.value);
-
-const canSubmit = computed(() =>
-  current.value.length >= 6 &&
-  next.value.length >= 8 &&
-  next.value === confirm.value &&
-  !saving.value,
+const matches = computed(
+  () => form.value.next.length > 0 && form.value.next === form.value.confirm,
 );
+
+const canSubmit = computed(
+  () => strengthLevel.value >= 3 && matches.value && form.value.current.length > 0 && !saving.value,
+);
+
+function cancel() {
+  router.push({ name: 'parent.tutoring.profile' });
+}
 
 async function submit() {
   if (!canSubmit.value) return;
@@ -76,14 +74,12 @@ async function submit() {
   message.value = null;
   try {
     await SettingsService.updatePassword({
-      old_password: current.value,
-      new_password: next.value,
-      confirm_password: confirm.value,
+      old_password: form.value.current,
+      new_password: form.value.next,
+      confirm_password: form.value.confirm,
     });
     message.value = { kind: 'ok', text: 'Kata sandi berhasil diperbarui.' };
-    current.value = '';
-    next.value = '';
-    confirm.value = '';
+    form.value = { current: '', next: '', confirm: '' };
   } catch (e) {
     message.value = {
       kind: 'err',
@@ -98,98 +94,71 @@ async function submit() {
     <ParentBerandaHero
       kicker="BIMBEL · KEAMANAN"
       title="Ubah kata sandi"
-      subtitle="Disarankan setiap 90 hari · gunakan sandi yang tidak dipakai di akun lain"
+      subtitle="Disarankan setiap 90 hari · terakhir diubah 4 bulan lalu"
       :stats="[]"
-    >
-      <template #actions>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1.5 text-[13px] font-bold text-bimbel-hero hover:bg-white/95"
-          @click="router.push({ name: 'parent.tutoring.profile' })"
+    />
+
+    <div class="grid lg:grid-cols-2 gap-4">
+      <div>
+        <div
+          class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
+          style="grid-template-columns: 130px 1fr;"
         >
-          <i class="ti ti-arrow-left text-[13px]"></i>
-          Kembali
-        </button>
-      </template>
-    </ParentBerandaHero>
-
-    <div class="grid gap-4 lg:grid-cols-2 mt-3">
-      <!-- LEFT: form -->
-      <div class="rounded-lg bg-bimbel-panel border border-bimbel-border-soft p-3">
-        <!-- Sandi sekarang -->
-        <div class="grid grid-cols-[130px_1fr] gap-3 items-center py-2 border-b border-bimbel-border-soft">
           <span class="text-[12px] text-bimbel-text-mid">Sandi sekarang</span>
-          <div class="flex justify-between items-center gap-2 rounded-md bg-bimbel-bg px-3 py-2">
+          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[13px] flex justify-between items-center">
             <input
-              v-model="current"
+              v-model="form.current"
               :type="showCurrent ? 'text' : 'password'"
-              class="flex-1 bg-transparent text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:outline-none"
-              placeholder="Masukkan sandi saat ini"
+              class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi"
             />
-            <button
-              type="button"
-              class="text-bimbel-text-mid hover:text-bimbel-text-hi"
-              @click="showCurrent = !showCurrent"
-            >
-              <i class="ti text-[14px]" :class="showCurrent ? 'ti-eye-off' : 'ti-eye'"></i>
+            <button type="button" class="text-bimbel-text-mid" @click="showCurrent = !showCurrent">
+              <NavIcon :name="showCurrent ? 'eye-off' : 'eye'" :size="14" />
             </button>
           </div>
         </div>
 
-        <!-- Sandi baru -->
-        <div class="grid grid-cols-[130px_1fr] gap-3 items-center py-2 border-b border-bimbel-border-soft">
+        <div
+          class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
+          style="grid-template-columns: 130px 1fr;"
+        >
           <span class="text-[12px] text-bimbel-text-mid">Sandi baru</span>
-          <div class="flex justify-between items-center gap-2 rounded-md bg-bimbel-bg px-3 py-2">
+          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[13px] flex justify-between items-center">
             <input
-              v-model="next"
+              v-model="form.next"
               :type="showNext ? 'text' : 'password'"
-              minlength="8"
-              class="flex-1 bg-transparent text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:outline-none"
-              placeholder="Min 8 karakter"
+              class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi"
             />
-            <button
-              type="button"
-              class="text-bimbel-text-mid hover:text-bimbel-text-hi"
-              @click="showNext = !showNext"
-            >
-              <i class="ti text-[14px]" :class="showNext ? 'ti-eye-off' : 'ti-eye'"></i>
+            <button type="button" class="text-bimbel-text-mid" @click="showNext = !showNext">
+              <NavIcon :name="showNext ? 'eye-off' : 'eye'" :size="14" />
             </button>
           </div>
         </div>
 
-        <!-- Strength bar -->
-        <div class="pl-[142px] py-2 border-b border-bimbel-border-soft">
+        <div class="pl-[142px]">
           <div class="flex gap-1 mt-1.5">
-            <div
+            <span
               v-for="i in 4"
               :key="i"
-              class="flex-1 h-1 rounded-sm"
-              :class="strength >= i ? strengthBarClass : 'bg-bimbel-border-soft'"
-            />
+              :class="['flex-1 h-1 rounded-sm', i <= strengthLevel ? strengthBarCls : 'bg-bimbel-bg']"
+            ></span>
           </div>
-          <p class="mt-1 text-[11px]" :class="strengthTextClass">{{ strengthLabel }}</p>
+          <p class="text-[11px] mt-1" :class="strengthTextCls">{{ strengthLabel }}</p>
         </div>
 
-        <!-- Konfirmasi -->
-        <div class="grid grid-cols-[130px_1fr] gap-3 items-center py-2 border-b border-bimbel-border-soft">
+        <div
+          class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
+          style="grid-template-columns: 130px 1fr;"
+        >
           <span class="text-[12px] text-bimbel-text-mid">Konfirmasi</span>
-          <div class="flex justify-between items-center gap-2 rounded-md bg-bimbel-bg px-3 py-2">
+          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[13px] flex justify-between items-center">
             <input
-              v-model="confirm"
+              v-model="form.confirm"
               :type="showConfirm ? 'text' : 'password'"
-              class="flex-1 bg-transparent text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:outline-none"
-              placeholder="Ulangi sandi baru"
+              class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi"
             />
-            <i
-              v-if="matches"
-              class="ti ti-check text-[14px] text-green-700"
-            ></i>
-            <button
-              type="button"
-              class="text-bimbel-text-mid hover:text-bimbel-text-hi"
-              @click="showConfirm = !showConfirm"
-            >
-              <i class="ti text-[14px]" :class="showConfirm ? 'ti-eye-off' : 'ti-eye'"></i>
+            <NavIcon v-if="matches" name="check" :size="14" class="text-green-700" />
+            <button v-else type="button" class="text-bimbel-text-mid" @click="showConfirm = !showConfirm">
+              <NavIcon :name="showConfirm ? 'eye-off' : 'eye'" :size="14" />
             </button>
           </div>
         </div>
@@ -203,8 +172,8 @@ async function submit() {
         <div class="flex gap-2 mt-3.5">
           <button
             type="button"
-            class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[13px] font-bold px-3.5 py-2.5"
-            @click="router.push({ name: 'parent.tutoring.profile' })"
+            class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[13px] px-3.5 py-2.5"
+            @click="cancel"
           >Batal</button>
           <button
             type="button"
@@ -215,27 +184,20 @@ async function submit() {
         </div>
       </div>
 
-      <!-- RIGHT: tips -->
-      <div class="rounded-md bg-bimbel-bg p-3.5 h-fit">
+      <div class="rounded-md bg-bimbel-bg p-3.5">
         <p class="text-[12px] font-bold text-bimbel-text-hi mb-1.5">Tips kata sandi kuat</p>
         <div class="grid grid-cols-2 gap-1.5">
           <div
             v-for="t in tips"
             :key="t.label"
             class="flex gap-1.5 items-center text-[11px]"
-            :class="t.ok ? 'text-bimbel-text-hi' : 'text-bimbel-text-mid'"
+            :class="t.met ? 'text-green-700' : 'text-bimbel-text-lo'"
           >
-            <i
-              class="ti text-[13px]"
-              :class="t.ok ? 'ti-check text-green-700' : 'ti-x text-bimbel-text-lo'"
-            ></i>
-            <span>{{ t.label }}</span>
+            <NavIcon :name="t.met ? 'check' : 'x'" :size="13" />{{ t.label }}
           </div>
         </div>
-        <div class="border-t border-bimbel-border-soft mt-3 pt-2.5">
-          <p class="text-[11px] text-bimbel-text-mid leading-relaxed">
-            Sandi disimpan ter-enkripsi. Jika lupa, gunakan reset via email yang terdaftar di profil.
-          </p>
+        <div class="border-t border-bimbel-border-soft mt-3 pt-2.5 text-[11px] text-bimbel-text-mid leading-relaxed">
+          Sandi disimpan ter-enkripsi. Jika lupa, gunakan reset via email yang terdaftar di profil.
         </div>
       </div>
     </div>

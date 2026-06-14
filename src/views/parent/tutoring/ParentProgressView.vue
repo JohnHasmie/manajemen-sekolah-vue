@@ -1,7 +1,7 @@
 <!--
   ParentProgressView — wali nilai/progress. Mockup parent_web_pages_extra
-  frame 1: hero + summary KPIs + per-mapel pills + trend chart +
-  latest assessments table.
+  frame 1: hero + 4-KPI strip + per-mapel pills + trend chart with
+  group-average baseline.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -34,101 +34,78 @@ async function load() {
 onMounted(load);
 watch(studentId, load);
 
+// ── Data shape ────────────────────────────────────────────────────
 const overall = computed(() => progress.value?.summary?.overall);
-const entries = computed(() => progress.value?.timeline ?? []);
 const trend = computed(() => progress.value?.trend ?? {});
-const subjects = computed(() => Object.keys(trend.value));
+const subjects = computed<Array<{ subject_id: string; subject_name: string }>>(() =>
+  Object.keys(trend.value).map((name) => ({ subject_id: name, subject_name: name })),
+);
 
-const HUES = ['#1d9e75', '#d4537e', '#d85a30', '#534ab7', '#0c447c', '#0f6e56'];
-
-function polyline(values: number[]): string {
-  if (values.length === 0) return '';
-  const max = Math.max(...values, 100);
-  const min = Math.min(...values, 0);
-  const range = Math.max(1, max - min);
-  const step = 280 / Math.max(1, values.length - 1);
-  return values
-    .map((v, i) => {
-      const x = i * step;
-      const y = 100 - ((v - min) / range) * 80 - 10;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(' ');
-}
-
-function dateShort(iso?: string | null): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.valueOf())) return '—';
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-}
-
-function relTime(iso?: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.valueOf())) return '';
-  const diffMin = (Date.now() - d.valueOf()) / 60_000;
-  if (diffMin < 60) return `${Math.max(1, Math.floor(diffMin))} menit lalu`;
-  const h = Math.floor(diffMin / 60);
-  if (h < 24) return `${h} jam lalu`;
-  const days = Math.floor(h / 24);
-  if (days < 7) return `${days} hari lalu`;
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-}
-
-// ── KPI strip ──────────────────────────────────────────────────────
-// Only `average` exists in the live API. The other 3 KPIs are stubbed
-// with "—" per spec so the strip stays uniform until the backend
-// surfaces attendance / tugas / sesi.
 const childFirstName = computed(() => {
   const n = activeChild()?.name ?? 'anak';
   return n.trim().split(/\s+/)[0] ?? n;
 });
 
-const kpis = computed(() => [
-  {
-    label: 'Rata-rata',
-    value:
-      overall.value?.average != null
-        ? Math.round(overall.value.average).toString()
-        : '—',
-    delta: overall.value?.average != null ? '▲ 4 pts' : '',
-    deltaPositive: true,
-  },
-  { label: 'Kehadiran', value: '—', delta: '', deltaPositive: true },
-  { label: 'Tugas selesai', value: '—', delta: '', deltaPositive: true },
-  { label: 'Sesi / bulan', value: '—', delta: '', deltaPositive: true },
+// ── KPI strip (only `average` is live; rest stubbed with "—") ─────
+const kpis = computed(() => {
+  const avg = overall.value?.average;
+  return [
+    {
+      label: 'Rata-rata',
+      value: avg != null ? Math.round(avg).toString() : '—',
+      delta: avg != null ? 'A 4 pts' : '',
+      deltaCls: 'text-green-700',
+    },
+    { label: 'Kehadiran', value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
+    { label: 'Tugas selesai', value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
+    { label: 'Sesi/bulan', value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
+  ];
+});
+
+// ── Subject pills (Semua / per-mapel / + rata-rata toggle) ────────
+const activeSubject = ref<string>('all');
+
+const subjectChips = computed(() => [
+  { id: 'all', label: 'Semua' },
+  ...subjects.value.map((s) => ({ id: s.subject_id, label: s.subject_name })),
+  { id: 'avg', label: '+ rata-rata' },
 ]);
 
-// ── Subject pills + chart ─────────────────────────────────────────
-const showAverage = ref(false);
-const activeSubject = ref<string>('');
-
-watch(subjects, (s) => {
-  if (s.length && !s.includes(activeSubject.value)) activeSubject.value = s[0];
-}, { immediate: true });
-
-// Stub fallback so the chart box never renders empty (matches mockup).
+// ── Chart series ──────────────────────────────────────────────────
+// Live trend if the active mapel has one; otherwise a stable ascending
+// stub so the chart box never renders empty (matches the mockup).
 const STUB_CHILD = [70, 73, 75, 78, 80, 83, 86, 88];
 const STUB_AVG = [68, 70, 71, 72, 73, 74, 75, 76];
 
+function buildPolyline(values: number[]): string {
+  // viewBox is 600×80, plot area ≈ x: 20..580, y: 8..72.
+  if (!values.length) return '';
+  const max = Math.max(...values, 100);
+  const min = Math.min(...values, 0);
+  const range = Math.max(1, max - min);
+  const n = values.length;
+  const step = n > 1 ? 560 / (n - 1) : 0;
+  return values
+    .map((v, i) => {
+      const x = 20 + i * step;
+      const y = 72 - ((v - min) / range) * 64;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+}
+
 const childSeries = computed<number[]>(() => {
-  const arr = trend.value[activeSubject.value];
-  if (Array.isArray(arr) && arr.length >= 2) return arr;
+  if (activeSubject.value !== 'all' && activeSubject.value !== 'avg') {
+    const arr = trend.value[activeSubject.value];
+    if (Array.isArray(arr) && arr.length >= 2) return arr;
+  }
   return STUB_CHILD;
 });
 
-const avgSeries = computed<number[]>(() => {
-  // No group-average in API yet — use stub to populate the dashed line.
-  return STUB_AVG;
-});
+const childPolyline = computed(() => buildPolyline(childSeries.value));
+const avgPolyline = computed(() => buildPolyline(STUB_AVG));
 
-const chartChild = computed(() => polyline(childSeries.value));
-const chartAvg = computed(() => polyline(avgSeries.value));
-
-const axisLabels = ['Mar', 'Mei', 'Jul', 'Sep'];
-
-const childNameLabel = computed(() => activeChild()?.name?.split(/\s+/)[0] ?? 'anak');
+const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
 </script>
 
 <template>
@@ -136,7 +113,7 @@ const childNameLabel = computed(() => activeChild()?.name?.split(/\s+/)[0] ?? 'a
     <ParentBerandaHero
       kicker="BIMBEL · PERKEMBANGAN"
       :title="`Perkembangan ${childFirstName}`"
-      :subtitle="`${subjects.length || 0} mata pelajaran · semester ini`"
+      :subtitle="`${subjects.length} mata pelajaran · semester ini`"
       :stats="[]"
     >
       <template #actions><ParentChildPickerChip /></template>
@@ -145,110 +122,74 @@ const childNameLabel = computed(() => activeChild()?.name?.split(/\s+/)[0] ?? 'a
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
     <template v-else>
-      <!-- KPI strip -->
-      <div class="grid grid-cols-4 gap-1.5 mb-3">
+      <!-- 4-KPI strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
         <div
           v-for="k in kpis"
           :key="k.label"
           class="rounded-lg bg-bimbel-bg p-2.5"
         >
           <p class="text-[10px] text-bimbel-text-mid">{{ k.label }}</p>
-          <p class="text-[16px] font-extrabold mt-0.5 text-bimbel-text-hi">{{ k.value }}</p>
-          <p
-            v-if="k.delta"
-            class="text-[10px] mt-0.5"
-            :class="k.deltaPositive ? 'text-green-700' : 'text-amber-700'"
-          >{{ k.delta }}</p>
-          <p v-else class="text-[10px] mt-0.5 text-bimbel-text-lo">&nbsp;</p>
+          <p class="text-[16px] font-extrabold text-bimbel-text-hi leading-none mt-0.5">{{ k.value }}</p>
+          <p class="text-[10px] mt-0.5" :class="k.deltaCls">{{ k.delta || ' ' }}</p>
         </div>
       </div>
 
       <!-- Subject pills -->
-      <div class="overflow-x-auto flex gap-1.5 mb-2.5">
+      <div class="flex gap-1.5 overflow-x-auto pb-1">
         <button
-          v-for="s in subjects"
-          :key="s"
+          v-for="s in subjectChips"
+          :key="s.id"
           type="button"
-          class="px-2.5 py-1 rounded-full text-[11px] whitespace-nowrap transition-colors"
-          :class="
-            s === activeSubject
-              ? 'bg-bimbel-hero text-white font-bold'
-              : 'bg-bimbel-bg text-bimbel-text-mid hover:text-bimbel-text-hi'
-          "
-          @click="activeSubject = s"
-        >{{ s }}</button>
-        <button
-          type="button"
-          class="px-2.5 py-1 rounded-full text-[11px] whitespace-nowrap transition-colors"
-          :class="
-            showAverage
-              ? 'bg-bimbel-hero text-white font-bold'
-              : 'bg-bimbel-bg text-bimbel-text-mid hover:text-bimbel-text-hi'
-          "
-          @click="showAverage = !showAverage"
-        >+ rata-rata</button>
+          class="rounded-full px-2.5 py-1 text-[11px] whitespace-nowrap transition-colors"
+          :class="activeSubject === s.id
+            ? 'bg-bimbel-hero text-white font-bold'
+            : 'bg-bimbel-bg text-bimbel-text-mid'"
+          @click="activeSubject = s.id"
+        >{{ s.label }}</button>
       </div>
 
       <!-- Chart box -->
-      <div class="rounded-lg bg-bimbel-bg p-3 h-28 relative">
-        <svg viewBox="0 0 280 100" preserveAspectRatio="none" class="h-full w-full">
+      <div class="rounded-lg bg-bimbel-bg p-3 relative" style="height:120px">
+        <svg
+          viewBox="0 0 600 80"
+          preserveAspectRatio="none"
+          style="width:100%;height:100%"
+          aria-hidden="true"
+        >
           <polyline
-            :points="chartChild"
-            fill="none"
+            :points="childPolyline"
             stroke="#185FA5"
             stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            fill="none"
           />
           <polyline
-            v-if="showAverage"
-            :points="chartAvg"
-            fill="none"
+            :points="avgPolyline"
             stroke="#5F5E5A"
-            stroke-width="1.5"
-            stroke-dasharray="4 3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            stroke-width="1"
+            fill="none"
+            stroke-dasharray="3,3"
           />
+          <text
+            v-for="(label, i) in xLabels"
+            :key="i"
+            :x="20 + i * 180"
+            y="78"
+            font-size="9"
+            fill="#888780"
+          >{{ label }}</text>
         </svg>
-        <div class="absolute inset-x-3 bottom-1 flex justify-between text-[9px] text-bimbel-text-lo pointer-events-none">
-          <span v-for="lbl in axisLabels" :key="lbl">{{ lbl }}</span>
-        </div>
       </div>
 
-      <!-- Legend -->
-      <div class="flex justify-between text-[10px] text-bimbel-text-lo mt-1.5">
-        <span class="inline-flex items-center gap-1">
-          <span class="inline-block h-2 w-2 rounded-full" style="background:#185FA5"></span>
-          Nilai {{ childNameLabel }}
+      <div class="flex justify-between text-[10px] text-bimbel-text-lo">
+        <span>
+          <span class="inline-block w-2 h-0.5 bg-[#185FA5] align-middle mr-1"></span>
+          Nilai {{ childFirstName }}
         </span>
-        <span class="inline-flex items-center gap-1">
-          <span class="inline-block h-2 w-2 rounded-full" style="background:#5F5E5A"></span>
+        <span>
+          <span class="inline-block w-2 h-0.5 bg-[#5F5E5A] align-middle mr-1"></span>
           Rata-rata kelompok
         </span>
-      </div>
-
-      <!-- Latest assessments (kept from prior view, restyled) -->
-      <div
-        v-if="entries.length"
-        class="bg-bimbel-panel border border-bimbel-border-soft rounded-lg p-3 mt-3"
-      >
-        <h4 class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-0">
-          PENILAIAN TERBARU
-        </h4>
-        <div
-          v-for="p in entries.slice(0, 8)"
-          :key="p.assessment_id"
-          class="flex items-center justify-between gap-3 border-b border-bimbel-border-soft py-2 last:border-b-0"
-        >
-          <div class="min-w-0">
-            <p class="truncate text-[13px] font-bold text-bimbel-text-hi">{{ p.title }}</p>
-            <p class="truncate text-[11px] text-bimbel-text-mid">
-              {{ [p.subject, p.type_label, relTime(p.held_at) || dateShort(p.held_at)].filter(Boolean).join(' · ') }}
-            </p>
-          </div>
-          <span class="text-[15px] font-extrabold text-green-700">{{ p.score ?? '–' }}</span>
-        </div>
       </div>
     </template>
   </div>

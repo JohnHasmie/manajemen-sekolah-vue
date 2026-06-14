@@ -1,10 +1,10 @@
 <!--
   ParentClassesView — wali Kelas list.
 
-  Redesigned per approved mockup: hero + search row + 2-col class grid
-  with tutor initials, subject, meta (tutor + schedule), and a
-  "kehadiran" footer bar. Final cell is a dashed "Daftarkan ke program
-  baru" CTA. Data shape unchanged (TutoringWaliClassMeta).
+  Mockup-exact: hero + search/filter row + 2-col grid of class cards
+  with tutor initials chip, subject, meta (tutor + schedule), and
+  attendance footer bar. Trailing dashed "Daftarkan ke program baru"
+  CTA tile. Data via TutoringService.getWaliClassMeta.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -27,56 +27,92 @@ const studentId = computed(() =>
 
 const loading = ref(true);
 const classes = ref<TutoringWaliClassMeta[]>([]);
-const query = ref('');
-const status = ref<'all' | 'active' | 'completed'>('all');
 
 async function load() {
   const sid = studentId.value;
   if (!sid) { loading.value = false; return; }
   loading.value = true;
-  try {
-    classes.value = await TutoringService.getWaliClassMeta(sid);
-  } catch {/* non-fatal */}
+  try { classes.value = await TutoringService.getWaliClassMeta(sid); }
+  catch { /* non-fatal */ }
   finally { loading.value = false; }
 }
 onMounted(load);
 watch(studentId, load);
 
-const filtered = computed(() => {
-  let list = classes.value;
-  if (status.value === 'active') {
+// ── Search + status filter (3-way cycle) ─────────────────────────
+const q = ref('');
+type StatusKey = 'semua' | 'aktif' | 'selesai';
+const status = ref<StatusKey>('semua');
+const STATUS_ORDER: StatusKey[] = ['semua', 'aktif', 'selesai'];
+const statusLabel = computed(() => {
+  switch (status.value) {
+    case 'aktif': return 'Aktif saja';
+    case 'selesai': return 'Selesai saja';
+    default: return 'Semester ini';
+  }
+});
+function cycleStatus() {
+  const i = STATUS_ORDER.indexOf(status.value);
+  status.value = STATUS_ORDER[(i + 1) % STATUS_ORDER.length];
+}
+
+type ClassRow = TutoringWaliClassMeta & {
+  subject?: string;
+  schedule_label?: string;
+  attendance_rate?: number | null;
+};
+
+const decorated = computed<ClassRow[]>(() =>
+  classes.value.map((c) => ({
+    ...c,
+    subject: c.program_name || c.group_name,
+    schedule_label: scheduleLabel(c),
+    attendance_rate: c.attendance?.rate ?? null,
+  })),
+);
+
+const filteredClasses = computed<ClassRow[]>(() => {
+  let list = decorated.value;
+  if (status.value === 'aktif') {
     list = list.filter((c) => /active|aktif|open/i.test(c.status));
-  } else if (status.value === 'completed') {
+  } else if (status.value === 'selesai') {
     list = list.filter((c) => /completed|selesai|closed/i.test(c.status));
   }
-  const q = query.value.trim().toLowerCase();
-  if (q) list = list.filter((c) => c.group_name.toLowerCase().includes(q));
+  const needle = q.value.trim().toLowerCase();
+  if (needle) {
+    list = list.filter((c) => {
+      const hay = `${c.subject ?? ''} ${c.group_name ?? ''} ${c.tutor_name ?? ''}`.toLowerCase();
+      return hay.includes(needle);
+    });
+  }
   return list;
 });
 
-function goToClass(c: TutoringWaliClassMeta) {
-  router.push({
-    name: 'parent.tutoring.class-detail',
-    params: { studentId: studentId.value, groupId: c.group_id },
-  });
-}
-
-function goToEnroll() {
-  router.push({ name: 'parent.tutoring.enroll-new' });
-}
-
+// ── Display helpers ──────────────────────────────────────────────
 const childFirstName = computed(() => {
   const n = activeChild()?.name ?? 'Anak';
   return n.split(/\s+/)[0];
 });
 
-function tutorInitials(name?: string | null): string {
+function initials(name?: string | null): string {
   if (!name) return '?';
   return name
     .split(/\s+/)
     .slice(0, 2)
     .map((s) => s[0]?.toUpperCase() ?? '')
     .join('');
+}
+
+// Cycle through bimbel-palette chip styles so siblings/tutors get
+// distinct hues without raw slate/sky tokens.
+const TUTOR_CHIPS = [
+  'bg-bimbel-accent-dim text-bimbel-hero',
+  'bg-bimbel-green-dim text-green-700',
+  'bg-bimbel-amber-dim text-amber-700',
+  'bg-purple-200 text-purple-800',
+];
+function tutorChipClass(i: number): string {
+  return TUTOR_CHIPS[i % TUTOR_CHIPS.length];
 }
 
 function scheduleLabel(c: TutoringWaliClassMeta): string {
@@ -91,16 +127,26 @@ function scheduleLabel(c: TutoringWaliClassMeta): string {
   });
 }
 
-function attendanceColor(rate: number | null | undefined): string {
+function attBarClass(rate: number | null | undefined): string {
   if (rate == null) return 'bg-bimbel-text-lo';
-  if (rate >= 85) return 'bg-bimbel-green';
-  if (rate >= 70) return 'bg-bimbel-amber';
-  return 'bg-bimbel-red';
+  if (rate >= 85) return 'bg-green-600';
+  if (rate >= 70) return 'bg-amber-500';
+  return 'bg-red-600';
+}
+
+function openClass(c: TutoringWaliClassMeta) {
+  router.push({
+    name: 'parent.tutoring.class-detail',
+    params: { studentId: studentId.value, groupId: c.group_id },
+  });
+}
+function goEnroll() {
+  router.push({ name: 'parent.tutoring.enroll-new' });
 }
 </script>
 
 <template>
-  <div class="space-y-4 pb-12">
+  <div class="space-y-3 pb-12">
     <ParentBerandaHero
       kicker="BIMBEL · WALI"
       :title="`Kelas ${childFirstName}`"
@@ -112,115 +158,77 @@ function attendanceColor(rate: number | null | undefined): string {
       </template>
     </ParentBerandaHero>
 
-    <!-- Search + filter row -->
-    <div class="flex flex-wrap items-center gap-2">
-      <div class="relative min-w-0 flex-1">
-        <NavIcon
-          name="search"
-          :size="14"
-          class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-bimbel-text-lo"
-        />
+    <!-- Search + filter -->
+    <div class="flex gap-2">
+      <div class="flex-1 rounded-lg bg-bimbel-bg px-3 py-2 text-[12px] text-bimbel-text-mid flex items-center gap-2">
+        <NavIcon name="search" :size="14" />
         <input
-          v-model="query"
-          type="text"
-          placeholder="Cari kelas…"
-          class="w-full rounded-lg bg-bimbel-bg pl-9 pr-3 py-2 text-[12px] text-bimbel-text-mid placeholder:text-bimbel-text-lo focus:outline-none"
+          v-model="q"
+          placeholder="Cari mata pelajaran atau tutor"
+          class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi placeholder:text-bimbel-text-mid"
         />
       </div>
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 rounded-lg bg-bimbel-bg px-3 py-2 text-[12px] text-bimbel-text-mid"
-        @click="status = status === 'all' ? 'active' : status === 'active' ? 'completed' : 'all'"
+        class="rounded-lg bg-bimbel-bg px-3 py-2 text-[12px] text-bimbel-text-mid flex items-center gap-1.5"
+        @click="cycleStatus"
       >
-        {{
-          status === 'all'
-            ? 'Semester ini'
-            : status === 'active'
-              ? 'Aktif saja'
-              : 'Selesai saja'
-        }}
-        <NavIcon name="chevron-down" :size="12" />
+        {{ statusLabel }}<NavIcon name="chevron-down" :size="12" />
       </button>
     </div>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
-    <!-- Class grid: 2-col -->
-    <div v-else class="grid gap-2.5 sm:grid-cols-2">
-      <template v-if="filtered.length">
-        <div
-          v-for="c in filtered"
-          :key="c.group_id"
-          role="button"
-          tabindex="0"
-          class="flex cursor-pointer flex-col gap-1.5 rounded-xl border border-bimbel-border-soft bg-bimbel-panel p-3 hover:border-bimbel-accent/40"
-          @click="goToClass(c)"
-          @keydown.enter="goToClass(c)"
-        >
-          <!-- Header: tutor initials circle + subject -->
-          <div class="flex items-center gap-2">
-            <span
-              class="grid h-7 w-7 flex-shrink-0 place-items-center rounded-full bg-bimbel-accent-dim text-[11px] font-bold text-bimbel-hero"
-            >
-              {{ tutorInitials(c.tutor_name) }}
-            </span>
-            <p class="truncate text-[13px] font-bold text-bimbel-text-hi">
-              {{ c.program_name || c.group_name }}
-            </p>
-          </div>
-
-          <!-- Meta row: tutor + schedule -->
-          <div class="flex flex-wrap items-center gap-2.5 text-[11px] text-bimbel-text-mid">
-            <span class="inline-flex items-center gap-1">
-              <NavIcon name="user" :size="11" />
-              {{ c.tutor_name ?? '—' }}
-            </span>
-            <span class="inline-flex items-center gap-1">
-              <NavIcon name="calendar" :size="11" />
-              {{ scheduleLabel(c) }}
-            </span>
-          </div>
-
-          <!-- Footer: attendance bar -->
-          <div
-            class="mt-1 flex items-center justify-between gap-2 border-t border-bimbel-border-soft pt-2"
+    <!-- Class grid 2-col -->
+    <div v-else class="grid sm:grid-cols-2 gap-2.5">
+      <button
+        v-for="(c, i) in filteredClasses"
+        :key="c.group_id"
+        type="button"
+        class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3 flex flex-col gap-1.5 text-left hover:border-bimbel-border"
+        @click="openClass(c)"
+      >
+        <div class="flex items-center gap-2">
+          <span
+            class="w-7 h-7 rounded-full grid place-items-center text-[11px] font-bold"
+            :class="tutorChipClass(i)"
           >
-            <span class="text-[11px] text-bimbel-text-mid">Kehadiran</span>
-            <div class="flex items-center gap-2">
-              <span class="block h-1 w-20 overflow-hidden rounded-full bg-bimbel-bg">
-                <span
-                  class="block h-full rounded-full"
-                  :class="attendanceColor(c.attendance.rate)"
-                  :style="{ width: `${Math.max(0, Math.min(100, c.attendance.rate ?? 0))}%` }"
-                />
-              </span>
-              <span class="text-[11px] font-bold text-bimbel-text-hi">
-                {{ c.attendance.rate == null ? '—' : `${c.attendance.rate}%` }}
-              </span>
-            </div>
-          </div>
+            {{ initials(c.tutor_name) }}
+          </span>
+          <span class="text-[13px] font-bold text-bimbel-text-hi truncate">
+            {{ c.subject || c.group_name }}
+          </span>
         </div>
-      </template>
+        <div class="text-[11px] text-bimbel-text-mid flex gap-2.5">
+          <span class="inline-flex items-center gap-1">
+            <NavIcon name="user" :size="12" />{{ c.tutor_name || '—' }}
+          </span>
+          <span class="inline-flex items-center gap-1">
+            <NavIcon name="calendar" :size="12" />{{ c.schedule_label || '—' }}
+          </span>
+        </div>
+        <div class="text-[11px] flex justify-between items-center mt-1 pt-2 border-t border-bimbel-border-soft">
+          <span class="text-bimbel-text-mid">Kehadiran</span>
+          <span class="flex-1 mx-2 h-1 bg-bimbel-bg rounded-full overflow-hidden max-w-[80px]">
+            <span
+              class="block h-full"
+              :class="attBarClass(c.attendance_rate)"
+              :style="{ width: `${Math.max(0, Math.min(100, c.attendance_rate ?? 0))}%` }"
+            />
+          </span>
+          <span class="font-bold text-bimbel-text-hi">{{ c.attendance_rate ?? 0 }}%</span>
+        </div>
+      </button>
 
-      <!-- Empty-state cell when nothing filtered (still show CTA) -->
-      <div
-        v-if="!filtered.length && query"
-        class="rounded-xl border border-bimbel-border-soft bg-bimbel-panel p-3 text-center text-[12px] text-bimbel-text-mid sm:col-span-2"
+      <!-- Daftarkan tile -->
+      <button
+        type="button"
+        class="rounded-xl border border-dashed border-bimbel-border bg-bimbel-bg p-3 flex flex-col items-center justify-center text-center min-h-[110px]"
+        @click="goEnroll"
       >
-        Tidak ada kelas yang cocok dengan "{{ query }}".
-      </div>
-
-      <!-- Always-present dashed CTA cell -->
-      <div
-        role="button"
-        tabindex="0"
-        class="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-bimbel-border bg-bimbel-bg p-4 text-center hover:border-bimbel-accent/40"
-        @click="goToEnroll"
-        @keydown.enter="goToEnroll"
-      >
-        <NavIcon name="plus" :size="22" class="text-bimbel-text-lo" />
-        <span class="text-[12px] text-bimbel-text-mid">Daftarkan ke program baru</span>
-      </div>
+        <NavIcon name="plus" :size="22" />
+        <p class="text-[12px] text-bimbel-text-mid mt-1">Daftarkan ke program baru</p>
+      </button>
     </div>
   </div>
 </template>

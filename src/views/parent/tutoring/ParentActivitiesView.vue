@@ -1,6 +1,6 @@
 <!--
-  ParentActivitiesView — wali kegiatan/tugas list. Mockup parent_web_pages_browse
-  frame 3: hero + type filter + table.
+  ParentActivitiesView — wali tugas/ulangan list. Redesign: hero + type
+  filter chips + single-column rows (icon | title/subtitle | pill).
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -20,142 +20,161 @@ const studentId = computed(() =>
   String(route.params.studentId || activeChildId.value || ''),
 );
 
+type FilterId = 'all' | 'pending' | 'ULANGAN' | 'TUGAS' | 'KUIS';
+type RichSubmission = TutoringActivitySubmission & {
+  activity_title?: string;
+  activity_type?: string;
+  subject_name?: string;
+  group_name?: string;
+  tutor_name?: string;
+  due_at?: string;
+};
+
 const loading = ref(true);
-const submissions = ref<TutoringActivitySubmission[]>([]);
-const typeFilter = ref<'all' | 'PENDING' | 'HOMEWORK' | 'QUIZ' | 'EXAM' | 'PROJECT'>('all');
-const query = ref('');
+const activities = ref<RichSubmission[]>([]);
+const typeFilter = ref<FilterId>('all');
 
 async function load() {
   const sid = studentId.value;
   if (!sid) { loading.value = false; return; }
   loading.value = true;
   try {
-    submissions.value = await TutoringService.getStudentActivitySubmissions(sid);
+    activities.value = (await TutoringService.getStudentActivitySubmissions(sid)) as RichSubmission[];
   } catch {/* non-fatal */}
   finally { loading.value = false; }
 }
 onMounted(load);
 watch(studentId, load);
 
-const filtered = computed(() => {
-  let list = submissions.value;
-  if (typeFilter.value === 'PENDING') {
-    list = list.filter((s) => s.status === 'ASSIGNED' || s.status === 'LATE' || s.status === 'MISSED');
-  } else if (typeFilter.value !== 'all') {
-    list = list.filter((s) => {
-      const t = (s as TutoringActivitySubmission & { activity_type?: string }).activity_type;
-      return (t ?? '').toUpperCase() === typeFilter.value;
-    });
-  }
-  const q = query.value.trim().toLowerCase();
-  if (q) {
-    list = list.filter((s) => {
-      const title = (s as TutoringActivitySubmission & { activity_title?: string }).activity_title;
-      return (title ?? '').toLowerCase().includes(q);
-    });
-  }
-  return list;
-});
-
-// ── Redesigned template helpers ──────────────────────────────────
-const childFirstName = computed(() => {
-  const name = activeChild()?.name ?? 'anak';
-  return name.trim().split(' ')[0] ?? name;
-});
-
-function isPending(s: TutoringActivitySubmission): boolean {
-  return s.status === 'ASSIGNED' || s.status === 'LATE' || s.status === 'MISSED';
+// ── Type normalization ─────────────────────────────────────────
+function rawType(a: RichSubmission): string {
+  return (a.activity_type ?? '').toUpperCase();
 }
 
-const pendingCount = computed(() => submissions.value.filter(isPending).length);
+function bucketOf(a: RichSubmission): 'ULANGAN' | 'TUGAS' | 'KUIS' | 'OTHER' {
+  const t = rawType(a);
+  if (t === 'EXAM' || t === 'ULANGAN') return 'ULANGAN';
+  if (t === 'QUIZ' || t === 'KUIS') return 'KUIS';
+  if (t === 'HOMEWORK' || t === 'TUGAS' || t === 'PROJECT' || t === 'ESSAY') return 'TUGAS';
+  return 'OTHER';
+}
 
-const completedThisMonth = computed(() => {
+function isPending(a: RichSubmission): boolean {
+  return a.status === 'ASSIGNED' || a.status === 'LATE' || a.status === 'MISSED';
+}
+
+function isDone(a: RichSubmission): boolean {
+  return a.status === 'GRADED' || a.status === 'SUBMITTED';
+}
+
+const childFirstName = computed(() => {
+  const name = activeChild()?.name ?? 'anak';
+  return name.trim().split(' ')[0] || name;
+});
+
+const pendingCount = computed(() => activities.value.filter(isPending).length);
+
+const doneThisMonth = computed(() => {
   const now = new Date();
-  return submissions.value.filter((s) => {
-    if (s.status !== 'GRADED' && s.status !== 'SUBMITTED') return false;
-    if (!s.submitted_at) return false;
-    const d = new Date(s.submitted_at);
+  return activities.value.filter((a) => {
+    if (!isDone(a)) return false;
+    if (!a.submitted_at) return false;
+    const d = new Date(a.submitted_at);
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }).length;
 });
 
-const countByType = (t: string) =>
-  submissions.value.filter((s) =>
-    ((s as TutoringActivitySubmission & { activity_type?: string }).activity_type ?? '').toUpperCase() === t,
-  ).length;
-
-const filterOptions = computed(() => [
-  { id: 'all' as const, label: `Semua (${submissions.value.length})` },
-  { id: 'PENDING' as const, label: `Belum (${pendingCount.value})` },
-  { id: 'EXAM' as const, label: `Ulangan (${countByType('EXAM')})` },
-  { id: 'HOMEWORK' as const, label: `Tugas (${countByType('HOMEWORK')})` },
-  { id: 'QUIZ' as const, label: `Kuis (${countByType('QUIZ')})` },
+const filters = computed(() => [
+  { id: 'all' as FilterId, label: `Semua (${activities.value.length})` },
+  { id: 'pending' as FilterId, label: `Belum (${pendingCount.value})` },
+  { id: 'ULANGAN' as FilterId, label: 'Ulangan' },
+  { id: 'TUGAS' as FilterId, label: 'Tugas' },
+  { id: 'KUIS' as FilterId, label: 'Kuis' },
 ]);
 
-function iconMeta(s: TutoringActivitySubmission): { icon: string; cls: string } {
-  const t = ((s as TutoringActivitySubmission & { activity_type?: string }).activity_type ?? '').toUpperCase();
-  if (t === 'EXAM') {
-    return s.status === 'GRADED' || s.status === 'SUBMITTED'
-      ? { icon: 'check-circle', cls: 'bg-bimbel-green-dim text-green-700' }
-      : { icon: 'clipboard', cls: 'bg-bimbel-amber-dim text-amber-700' };
-  }
-  if (t === 'QUIZ') return { icon: 'help-circle', cls: 'bg-bimbel-accent-dim text-bimbel-hero' };
-  if (t === 'PROJECT') return { icon: 'edit', cls: 'bg-bimbel-red-dim text-red-700' };
-  return { icon: 'book', cls: 'bg-bimbel-amber-dim text-amber-700' };
+const visible = computed(() => {
+  if (typeFilter.value === 'all') return activities.value;
+  if (typeFilter.value === 'pending') return activities.value.filter(isPending);
+  return activities.value.filter((a) => bucketOf(a) === typeFilter.value);
+});
+
+// ── Icon mapping ────────────────────────────────────────────────
+function iconName(a: RichSubmission): string {
+  const b = bucketOf(a);
+  const t = rawType(a);
+  if (b === 'ULANGAN') return 'check-circle';
+  if (b === 'KUIS') return 'check-circle';
+  if (t === 'ESSAY' || t === 'PROJECT') return 'edit';
+  return 'book';
 }
 
-function daysUntilDue(s: TutoringActivitySubmission): number | null {
-  const due = (s as TutoringActivitySubmission & { due_at?: string }).due_at;
+function iconStyle(a: RichSubmission): Record<string, string> {
+  const b = bucketOf(a);
+  const t = rawType(a);
+  if (b === 'ULANGAN') {
+    return isDone(a)
+      ? { background: 'var(--bimbel-green-dim, rgba(22,163,74,.15))', color: '#15803d' }
+      : { background: 'var(--bimbel-amber-dim, rgba(217,119,6,.15))', color: '#b45309' };
+  }
+  if (b === 'KUIS') {
+    return { background: 'var(--bimbel-accent-dim, rgba(12,68,124,.12))', color: 'var(--bimbel-hero, #0c447c)' };
+  }
+  if (t === 'ESSAY' || t === 'PROJECT') {
+    return { background: 'var(--bimbel-red-dim, rgba(220,38,38,.12))', color: '#b91c1c' };
+  }
+  return { background: 'var(--bimbel-amber-dim, rgba(217,119,6,.15))', color: '#b45309' };
+}
+
+// ── Subtitle / pill ─────────────────────────────────────────────
+function daysUntilDue(a: RichSubmission): number | null {
+  const due = a.due_at;
   if (!due) return null;
   const d = new Date(due);
   if (Number.isNaN(d.valueOf())) return null;
   return Math.ceil((d.valueOf() - Date.now()) / 86_400_000);
 }
 
-function rowSubtitle(s: TutoringActivitySubmission): string {
-  const subj = (s as TutoringActivitySubmission & { subject_name?: string; group_name?: string }).subject_name
-    ?? (s as TutoringActivitySubmission & { group_name?: string }).group_name;
-  const tutor = (s as TutoringActivitySubmission & { tutor_name?: string }).tutor_name;
+function subtitle(a: RichSubmission): string {
   const parts: string[] = [];
+  const subj = a.subject_name ?? a.group_name;
   if (subj) parts.push(subj);
-  if (tutor) parts.push(tutor);
-  if (s.status === 'GRADED' && s.score != null) {
-    parts.push(`nilai ${s.score}${s.max_score ? `/${s.max_score}` : '/100'}`);
+  if (a.tutor_name) parts.push(a.tutor_name);
+  if (a.status === 'GRADED' && a.score != null) {
+    parts.push(`nilai ${a.score}/${a.max_score ?? 100}`);
   } else {
-    const days = daysUntilDue(s);
+    const days = daysUntilDue(a);
     if (days != null) {
       parts.push(days < 0 ? `lewat ${Math.abs(days)} hari` : `deadline ${days} hari`);
-    } else if (s.submitted_at) {
-      parts.push(`dikumpul ${new Date(s.submitted_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`);
+    } else if (a.submitted_at) {
+      parts.push(
+        `dikumpul ${new Date(a.submitted_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`,
+      );
     }
   }
   return parts.join(' · ');
 }
 
-function pillMeta(s: TutoringActivitySubmission): { cls: string; label: string } {
-  if (s.status === 'GRADED') {
-    return {
-      cls: 'bg-bimbel-green-dim text-green-700',
-      label: `Selesai · ${s.score ?? '–'}`,
-    };
+const PILL_BASE = 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide';
+
+function pillCls(a: RichSubmission): string {
+  if (a.status === 'GRADED') return `${PILL_BASE} bg-bimbel-green-dim text-green-700`;
+  if (a.status === 'SUBMITTED') return `${PILL_BASE} bg-bimbel-accent-dim text-bimbel-hero`;
+  if (a.status === 'LATE' || a.status === 'MISSED') return `${PILL_BASE} bg-bimbel-red-dim text-red-700`;
+  const days = daysUntilDue(a);
+  if (days != null && days <= 3) return `${PILL_BASE} bg-bimbel-red-dim text-red-700`;
+  return `${PILL_BASE} bg-bimbel-amber-dim text-amber-700`;
+}
+
+function pillLabel(a: RichSubmission): string {
+  if (a.status === 'GRADED') return `Selesai · ${a.score ?? '–'}`;
+  if (a.status === 'SUBMITTED') return 'Dikumpul';
+  if (a.status === 'LATE' || a.status === 'MISSED') {
+    const days = daysUntilDue(a);
+    return days != null && days < 0 ? `Telat · ${Math.abs(days)} hari` : 'Telat';
   }
-  if (s.status === 'SUBMITTED') {
-    return { cls: 'bg-bimbel-accent-dim text-bimbel-hero', label: 'Dikumpul' };
-  }
-  if (s.status === 'LATE' || s.status === 'MISSED') {
-    const days = daysUntilDue(s);
-    const tail = days != null && days < 0 ? ` · ${Math.abs(days)} hari` : '';
-    return { cls: 'bg-bimbel-red-dim text-red-700', label: `Telat${tail}` };
-  }
-  // ASSIGNED / pending
-  const days = daysUntilDue(s);
-  if (days != null && days <= 3) {
-    return { cls: 'bg-bimbel-red-dim text-red-700', label: `Belum · ${days} hari` };
-  }
-  if (days != null) {
-    return { cls: 'bg-bimbel-amber-dim text-amber-700', label: `Belum · ${days} hari` };
-  }
-  return { cls: 'bg-bimbel-amber-dim text-amber-700', label: 'Belum' };
+  const days = daysUntilDue(a);
+  if (days != null) return `Belum · ${days} hari`;
+  return 'Belum';
 }
 </script>
 
@@ -164,77 +183,50 @@ function pillMeta(s: TutoringActivitySubmission): { cls: string; label: string }
     <ParentBerandaHero
       kicker="BIMBEL · AKTIVITAS"
       :title="`Tugas & ulangan ${childFirstName}`"
-      :subtitle="`${pendingCount} menunggu · ${completedThisMonth} selesai bulan ini`"
+      :subtitle="`${pendingCount} menunggu · ${doneThisMonth} selesai bulan ini`"
       :stats="[]"
     >
       <template #actions><ParentChildPickerChip /></template>
     </ParentBerandaHero>
 
     <!-- Filter chips -->
-    <div class="flex gap-1.5 mb-2.5 flex-wrap">
+    <div class="flex gap-1.5 flex-wrap">
       <button
-        v-for="opt in filterOptions"
+        v-for="opt in filters"
         :key="opt.id"
         type="button"
         class="rounded-full px-2.5 py-1 text-[11px] transition-colors"
         :class="
           typeFilter === opt.id
             ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
-            : 'bg-bimbel-bg text-bimbel-text-mid hover:text-bimbel-text-hi'
+            : 'bg-bimbel-bg text-bimbel-text-mid'
         "
         @click="typeFilter = opt.id"
       >{{ opt.label }}</button>
     </div>
 
-    <!-- Search -->
-    <div class="relative">
-      <NavIcon
-        name="search"
-        :size="13"
-        class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-bimbel-text-lo"
-      />
-      <input
-        v-model="query"
-        type="text"
-        placeholder="Cari tugas…"
-        class="w-full rounded-lg border border-bimbel-border-soft bg-bimbel-panel pl-8 pr-3 py-1.5 text-[12px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-hero focus:outline-none"
-      />
-    </div>
-
-    <div v-if="loading" class="py-12 text-center text-[12px] text-bimbel-text-mid">Memuat…</div>
-
-    <div v-else-if="filtered.length" class="rounded-lg border border-bimbel-border-soft bg-bimbel-panel p-3">
+    <div class="space-y-1.5">
       <div
-        v-for="s in filtered"
-        :key="s.id"
-        class="grid grid-cols-[32px_1fr_auto] gap-2.5 items-center p-2.5 rounded-lg bg-bimbel-bg mb-1.5"
+        v-for="a in visible"
+        :key="a.id"
+        class="grid items-center gap-2.5 p-2.5 rounded-lg bg-bimbel-bg"
+        style="grid-template-columns: 32px 1fr auto;"
       >
-        <span
-          class="grid h-8 w-8 place-items-center rounded-md"
-          :class="iconMeta(s).cls"
-        >
-          <NavIcon :name="iconMeta(s).icon" :size="14" />
-        </span>
-        <div class="min-w-0">
-          <p class="text-[13px] font-bold text-bimbel-text-hi truncate">
-            {{ (s as any).activity_title ?? 'Tugas' }}
-          </p>
-          <p class="text-[11px] text-bimbel-text-mid truncate">
-            {{ rowSubtitle(s) }}
-          </p>
+        <div class="w-8 h-8 rounded-lg grid place-items-center" :style="iconStyle(a)">
+          <NavIcon :name="iconName(a)" :size="14" />
         </div>
-        <span
-          class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-          :class="pillMeta(s).cls"
-        >
-          {{ pillMeta(s).label }}
-        </span>
+        <div class="min-w-0">
+          <p class="text-[13px] font-bold text-bimbel-text-hi">
+            {{ a.activity_title ?? 'Tugas' }}
+          </p>
+          <p class="text-[11px] text-bimbel-text-mid">{{ subtitle(a) }}</p>
+        </div>
+        <span :class="pillCls(a)">{{ pillLabel(a) }}</span>
       </div>
+      <p v-if="!visible.length && !loading" class="text-center text-[12px] text-bimbel-text-mid py-6">
+        Tidak ada aktivitas di kategori ini.
+      </p>
+      <p v-if="loading" class="text-center text-[12px] text-bimbel-text-mid py-6">Memuat…</p>
     </div>
-
-    <div
-      v-else
-      class="rounded-lg border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-[12px] text-bimbel-text-mid"
-    >Belum ada kegiatan.</div>
   </div>
 </template>
