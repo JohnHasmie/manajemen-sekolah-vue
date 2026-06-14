@@ -134,9 +134,19 @@ function syncBimbelHtmlClasses() {
   const root = document.documentElement;
   // Clear any previous bimbel classes so role/mode swaps don't pile up.
   root.classList.remove(...BIMBEL_HTML_CLASSES);
-  if (!isBimbelRoute.value) return;
-  root.classList.add(bimbelSurfaceClass.value);
-  root.classList.add(bimbelRoleClass.value);
+  if (isBimbelRoute.value) {
+    root.classList.add(bimbelSurfaceClass.value);
+    root.classList.add(bimbelRoleClass.value);
+    return;
+  }
+  // School (non-bimbel) routes still render the sidebar with
+  // `bg-bimbel-panel` / `text-bimbel-text-*` utilities. Those tokens
+  // default to the DARK palette on `:root` — without a class on <html>
+  // the school sidebar comes out fully dark while the page body is
+  // light, which is what was reported. School has light-only mode, so
+  // force `bimbel-light` here. The role tier class isn't needed
+  // because the navy hero gradient isn't used on school pages.
+  root.classList.add('bimbel-light');
 }
 watch(
   [isBimbelRoute, bimbelSurfaceClass, bimbelRoleClass],
