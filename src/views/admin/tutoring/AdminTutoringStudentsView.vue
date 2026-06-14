@@ -1,248 +1,173 @@
 <!--
-  AdminTutoringStudentsView — list of bimbel students (derived from
-  active enrollments). Uses the school-pattern chrome (BrandPageHeader
-  + KpiStripCards + PageFilterToolbar) so it visually matches the rest
-  of the app.
+  AdminTutoringStudentsView — full rewrite per mockup
+  admin_redesign_w1_people frame 1.
+
+  Hero (navy) → search + status pill filter → table with avatar +
+  parent + group + tunggakan + 30-day attendance bar + status.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
-import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
-import type { TutoringProgram, TutoringStudentRow } from '@/types/tutoring';
+import type { TutoringStudentRow } from '@/types/tutoring';
 
-import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import KpiStripCards, {
-  type KpiCard,
-} from '@/components/feature/KpiStripCards.vue';
-import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
-import AppFilterChip from '@/components/filters/AppFilterChip.vue';
-import Modal from '@/components/ui/Modal.vue';
-import TutoringStatusPill from '@/components/feature/tutoring/TutoringStatusPill.vue';
-import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
-const { t } = useI18n();
 const router = useRouter();
-const toast = useToast();
 
 const loading = ref(true);
 const rows = ref<TutoringStudentRow[]>([]);
-const programs = ref<TutoringProgram[]>([]);
-const programId = ref<string>(''); // '' = Semua program
-const search = ref('');
-const showProgramPicker = ref(false);
-
-const activeProgramLabel = computed(() =>
-  programId.value === ''
-    ? t('tutoring.students.filterAll')
-    : programs.value.find((p) => p.id === programId.value)?.name ?? '—',
-);
-
-const MODE_KEYS: Record<string, string> = {
-  PREPAID: 'tutoring.billing.prepaid',
-  MONTHLY: 'tutoring.billing.monthly',
-  PER_SESSION: 'tutoring.billing.perSession',
-};
-const modeLabel = (m: string) => (MODE_KEYS[m] ? t(MODE_KEYS[m]) : m);
+const query = ref('');
+const status = ref<'all' | 'active' | 'risk' | 'graduated' | 'leave'>('all');
 
 async function load() {
   loading.value = true;
-  try {
-    rows.value = await TutoringService.getAdminStudents({
-      program_id: programId.value || undefined,
-      search: search.value.trim() || undefined,
-    });
-  } catch (e) {
-    toast.error(e instanceof Error ? e.message : t('tutoring.students.empty'));
-  } finally {
-    loading.value = false;
-  }
+  try { rows.value = await TutoringService.getAdminStudents(); }
+  catch {/* non-fatal */}
+  finally { loading.value = false; }
+}
+onMounted(load);
+
+function classify(r: TutoringStudentRow): 'active' | 'risk' | 'graduated' | 'leave' {
+  if (r.attendance_rate != null && r.attendance_rate < 70) return 'risk';
+  return 'active';
 }
 
-onMounted(async () => {
-  await load();
-  try {
-    programs.value = await TutoringService.getPrograms();
-  } catch {/* non-fatal */}
+const filtered = computed(() => {
+  let list = rows.value;
+  if (status.value !== 'all') list = list.filter((r) => classify(r) === status.value);
+  const q = query.value.trim().toLowerCase();
+  if (q) list = list.filter((r) => r.student_name.toLowerCase().includes(q) || r.group_name?.toLowerCase().includes(q));
+  return list;
 });
 
-watch(programId, load);
+const counts = computed(() => ({
+  all: rows.value.length,
+  active: rows.value.filter((r) => classify(r) === 'active').length,
+  risk: rows.value.filter((r) => classify(r) === 'risk').length,
+}));
 
-function openDetail(r: TutoringStudentRow) {
-  router.push({
-    name: 'parent.tutoring.overview',
-    params: { studentId: r.student_id },
-    query: { name: r.student_name },
-  });
+function initial(name: string): string {
+  return name.trim()[0]?.toUpperCase() ?? '?';
 }
 
-function pickProgram(id: string) {
-  programId.value = id;
-  showProgramPicker.value = false;
+function attendanceBar(rate: number | null): { width: string; color: string } {
+  if (rate == null) return { width: '0%', color: 'var(--bimbel-border)' };
+  return {
+    width: `${rate}%`,
+    color: rate >= 90 ? '#1d9e75' : rate >= 75 ? '#efaf07' : '#e24b4a',
+  };
 }
 
-// Client-side aggregates for the KPI strip (no extra round-trip).
-const totalOutstanding = computed(() =>
-  rows.value.reduce((s, r) => s + (r.unpaid_total ?? 0), 0),
-);
-const unpaidStudents = computed(() =>
-  rows.value.filter((r) => (r.unpaid_count ?? 0) > 0).length,
-);
-const avgAttendance = computed(() => {
-  const withRate = rows.value.filter((r) => r.attendance_rate != null);
-  if (withRate.length === 0) return null;
-  return Math.round(
-    withRate.reduce((s, r) => s + (r.attendance_rate ?? 0), 0) / withRate.length,
-  );
-});
-
-const kpiCards = computed<KpiCard[]>(() => [
-  {
-    icon: 'users',
-    label: t('tutoring.students.title'),
-    value: rows.value.length,
-    suffix: 'siswa',
-    tone: 'brand',
-    accented: true,
-  },
-  {
-    icon: 'layers',
-    label: 'Program aktif',
-    value: programs.value.filter((p) => p.is_active !== false).length,
-    tone: 'violet',
-  },
-  {
-    icon: 'check-circle',
-    label: t('tutoring.students.attendance'),
-    value: avgAttendance.value == null ? '–' : `${avgAttendance.value}%`,
-    tone: 'green',
-  },
-  {
-    icon: 'wallet',
-    label: t('tutoring.students.outstanding'),
-    value: formatRupiah(totalOutstanding.value),
-    suffix: unpaidStudents.value > 0 ? `${unpaidStudents.value} siswa` : undefined,
-    tone: totalOutstanding.value > 0 ? 'amber' : 'green',
-  },
-]);
-
-let searchTimer: ReturnType<typeof setTimeout> | null = null;
-function onSearch(v: string) {
-  search.value = v;
-  if (searchTimer) clearTimeout(searchTimer);
-  searchTimer = setTimeout(load, 300);
-}
+function goEnroll() { router.push({ name: 'admin.tutoring.enroll' }); }
 </script>
 
 <template>
-  <div class="space-y-md pb-12">
-    <BrandPageHeader
-      role="admin"
-      kicker="Bimbel · Siswa"
-      :title="t('tutoring.students.title')"
-      :meta="`${rows.length} siswa terdaftar`"
-    />
-
-    <KpiStripCards :cards="kpiCards" />
-
-    <PageFilterToolbar
-      :search="search"
-      search-placeholder="Cari nama siswa…"
-      @update:search="onSearch"
+  <div class="space-y-4 pb-12">
+    <TutorBerandaHero
+      greeting="BIMBEL · SISWA"
+      title="Daftar siswa"
+      :subtitle="`${counts.active} aktif · ${counts.risk} berisiko · kelola enrollment dan kontak wali`"
+      :stats="[]"
     >
-      <template #chips>
-        <AppFilterChip
-          label="Program"
-          :value="activeProgramLabel"
-          icon-name="layers"
-          tone="violet"
-          @click="showProgramPicker = true"
-        />
+      <template #actions>
+        <button class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white">
+          <NavIcon name="download" :size="13" class="inline -mt-0.5" /> Export
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold"
+          @click="goEnroll"
+        >
+          <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> Daftarkan siswa
+        </button>
       </template>
-    </PageFilterToolbar>
+    </TutorBerandaHero>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
-      {{ t('tutoring.common.loading') }}
+    <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 flex flex-wrap items-center gap-2">
+      <div class="relative min-w-[200px] flex-1">
+        <NavIcon name="search" :size="14" class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-bimbel-text-lo" />
+        <input
+          v-model="query"
+          type="text"
+          placeholder="Cari nama siswa / kelompok…"
+          class="w-full rounded-lg border border-bimbel-border bg-bimbel-bg pl-9 pr-3 py-1.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
+        />
+      </div>
+      <div class="flex gap-1.5">
+        <button
+          v-for="opt in [
+            { id: 'all' as const, label: `Semua (${counts.all})` },
+            { id: 'active' as const, label: `Aktif (${counts.active})` },
+            { id: 'risk' as const, label: `Berisiko (${counts.risk})` },
+          ]"
+          :key="opt.id"
+          type="button"
+          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+          :class="status === opt.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
+          @click="status = opt.id"
+        >{{ opt.label }}</button>
+      </div>
     </div>
-    <TutoringEmpty
-      v-else-if="rows.length === 0"
-      :text="t('tutoring.students.empty')"
-      icon="users"
-    />
-    <div
-      v-else
-      class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl overflow-hidden"
-    >
-      <table class="w-full text-sm">
-        <thead class="text-[10.5px] uppercase tracking-wider text-bimbel-text-mid">
-          <tr class="border-b border-bimbel-border">
-            <th class="text-left font-bold px-3 py-2.5">Siswa</th>
-            <th class="text-left font-bold px-3 py-2.5">Program · Paket</th>
-            <th class="text-left font-bold px-3 py-2.5">Mode</th>
-            <th class="text-left font-bold px-3 py-2.5">{{ t('tutoring.students.attendance') }}</th>
-            <th class="text-right font-bold px-3 py-2.5">{{ t('tutoring.students.outstanding') }}</th>
-            <th></th>
+
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+
+    <div v-else-if="filtered.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
+      <table class="w-full text-[13px]">
+        <thead class="bg-bimbel-bg/40">
+          <tr class="text-left text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+            <th class="px-3 py-2">Siswa</th>
+            <th class="px-3 py-2 w-[160px]">Program & paket</th>
+            <th class="px-3 py-2 w-[140px]">Kelompok</th>
+            <th class="px-3 py-2 w-[110px]">Tunggakan</th>
+            <th class="px-3 py-2 w-[120px]">Hadir 30h</th>
+            <th class="px-3 py-2 w-[80px]">Status</th>
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="r in rows"
-            :key="r.student_id"
-            class="border-b border-bimbel-border-soft last:border-0 hover:bg-bimbel-bg cursor-pointer"
-            @click="openDetail(r)"
-          >
-            <td class="px-3 py-3 font-semibold text-bimbel-text-hi">{{ r.student_name }}</td>
-            <td class="px-3 py-3 text-bimbel-text-mid">
-              {{ [r.program_name, r.package_name].filter(Boolean).join(' · ') || '—' }}
+          <tr v-for="r in filtered" :key="r.enrollment_id" class="border-t border-bimbel-border-soft hover:bg-bimbel-border-soft/30">
+            <td class="px-3 py-2.5">
+              <div class="flex items-center gap-2.5">
+                <span class="grid h-7 w-7 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent text-[12px] font-bold">{{ initial(r.student_name) }}</span>
+                <div>
+                  <p class="font-bold text-bimbel-text-hi">{{ r.student_name }}</p>
+                  <p class="text-[12px] text-bimbel-text-mid">{{ r.billing_mode }}</p>
+                </div>
+              </div>
             </td>
-            <td class="px-3 py-3"><TutoringStatusPill :label="modeLabel(r.billing_mode)" tone="neutral" /></td>
-            <td class="px-3 py-3 text-bimbel-text-mid">
-              {{ r.attendance_rate == null ? '—' : r.attendance_rate + '%' }}
+            <td class="px-3 py-2.5">
+              <p class="text-bimbel-text-hi">{{ r.program_name ?? '—' }}</p>
+              <p v-if="r.package_name" class="text-[12px] text-bimbel-text-mid">{{ r.package_name }}</p>
             </td>
-            <td class="px-3 py-3 text-right">
-              <span v-if="r.unpaid_count === 0" class="text-bimbel-text-lo">—</span>
-              <span v-else class="font-semibold text-bimbel-red">
-                {{ formatRupiah(r.unpaid_total) }}
-              </span>
+            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.group_name ?? '—' }}</td>
+            <td class="px-3 py-2.5">
+              <p v-if="r.unpaid_count === 0" class="font-bold text-emerald-700 dark:text-emerald-300">Lunas</p>
+              <p v-else class="font-bold text-rose-700 dark:text-rose-300">{{ formatRupiah(r.unpaid_total) }}</p>
+              <p v-if="r.unpaid_count > 0" class="text-[12px] text-bimbel-text-mid">{{ r.unpaid_count }} tagihan</p>
             </td>
-            <td class="px-3 py-3 text-right">
-              <NavIcon name="chevron-right" :size="14" class="text-bimbel-text-lo" />
+            <td class="px-3 py-2.5">
+              <div class="flex items-center gap-2">
+                <span class="inline-block w-16 h-1.5 rounded-full bg-bimbel-border overflow-hidden">
+                  <span class="block h-full" :style="{ width: attendanceBar(r.attendance_rate).width, background: attendanceBar(r.attendance_rate).color }" />
+                </span>
+                <span>{{ r.attendance_rate ?? '–' }}%</span>
+              </div>
+            </td>
+            <td class="px-3 py-2.5">
+              <span
+                class="inline-flex rounded-full px-2 py-0.5 text-[12px] font-bold"
+                :class="classify(r) === 'risk' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'"
+              >{{ classify(r) === 'risk' ? 'Berisiko' : 'Aktif' }}</span>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <Modal
-      v-if="showProgramPicker"
-      title="Filter Program"
-      @close="showProgramPicker = false"
-    >
-      <ul class="space-y-1">
-        <li>
-          <button
-            type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
-            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': programId === '' }"
-            @click="pickProgram('')"
-          >
-            {{ t('tutoring.students.filterAll') }}
-          </button>
-        </li>
-        <li v-for="p in programs" :key="p.id">
-          <button
-            type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
-            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': programId === p.id }"
-            @click="pickProgram(p.id)"
-          >
-            {{ p.name }}
-          </button>
-        </li>
-      </ul>
-    </Modal>
+    <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
+      Tidak ada siswa sesuai filter.
+    </div>
   </div>
 </template>
