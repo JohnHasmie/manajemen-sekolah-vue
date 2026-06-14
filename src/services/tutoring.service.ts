@@ -898,6 +898,13 @@ export const TutoringService = {
     return extractData(res) ?? [];
   },
 
+  async getLeaderboardByGroup(): Promise<TutoringLeaderboardGroupRow[]> {
+    const res = await api.get<ApiResponse<TutoringLeaderboardGroupRow[]>>(
+      '/tutoring/leaderboard/by-group',
+    );
+    return extractData(res) ?? [];
+  },
+
   // ── Activity feeds (dashboard "What's New" widget) ──────────────
 
   /** Wali feed: notes / scores / announcements / bills / attendance. */

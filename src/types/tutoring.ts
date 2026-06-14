@@ -46,6 +46,16 @@ export interface TutoringLeaderboardRow {
   composite: number;
 }
 
+/** One row from /leaderboard/by-group — per-group avg composite, used
+ *  by the admin leaderboard antar-kelompok strip. */
+export interface TutoringLeaderboardGroupRow {
+  group_id: string;
+  group_name: string;
+  program_name: string | null;
+  student_count: number;
+  avg_composite: number;
+}
+
 /** Calon siswa (lead). Status drives the funnel column on the admin
  *  list. converted_enrollment_id is set when the lead is converted. */
 export interface TutoringLead {
