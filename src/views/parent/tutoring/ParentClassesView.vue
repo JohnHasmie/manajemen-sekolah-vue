@@ -39,22 +39,31 @@ async function load() {
 onMounted(load);
 watch(studentId, load);
 
-// ── Search + status filter (3-way cycle) ─────────────────────────
+// ── Search + status filter (chip row with counts) ────────────────
+// Previously a cycle button "Semester ini → Aktif → Selesai" — lost the
+// at-a-glance count and required 3 clicks to land on a specific filter.
+// Mobile shows three chips with badge counts; mirror that.
 const q = ref('');
 type StatusKey = 'semua' | 'aktif' | 'selesai';
 const status = ref<StatusKey>('semua');
-const STATUS_ORDER: StatusKey[] = ['semua', 'aktif', 'selesai'];
-const statusLabel = computed(() => {
-  switch (status.value) {
-    case 'aktif': return 'Aktif saja';
-    case 'selesai': return 'Selesai saja';
-    default: return 'Semester ini';
-  }
-});
-function cycleStatus() {
-  const i = STATUS_ORDER.indexOf(status.value);
-  status.value = STATUS_ORDER[(i + 1) % STATUS_ORDER.length];
+
+function matchAktif(s: string): boolean {
+  return /active|aktif|open/i.test(s);
 }
+function matchSelesai(s: string): boolean {
+  return /completed|selesai|closed/i.test(s);
+}
+
+const statusChips = computed<{ id: StatusKey; label: string; count: number }[]>(() => {
+  const total = decorated.value.length;
+  const aktif = decorated.value.filter((c) => matchAktif(c.status)).length;
+  const selesai = decorated.value.filter((c) => matchSelesai(c.status)).length;
+  return [
+    { id: 'semua', label: 'Semua', count: total },
+    { id: 'aktif', label: 'Aktif', count: aktif },
+    { id: 'selesai', label: 'Selesai', count: selesai },
+  ];
+});
 
 type ClassRow = TutoringWaliClassMeta & {
   subject?: string;
@@ -73,11 +82,8 @@ const decorated = computed<ClassRow[]>(() =>
 
 const filteredClasses = computed<ClassRow[]>(() => {
   let list = decorated.value;
-  if (status.value === 'aktif') {
-    list = list.filter((c) => /active|aktif|open/i.test(c.status));
-  } else if (status.value === 'selesai') {
-    list = list.filter((c) => /completed|selesai|closed/i.test(c.status));
-  }
+  if (status.value === 'aktif') list = list.filter((c) => matchAktif(c.status));
+  else if (status.value === 'selesai') list = list.filter((c) => matchSelesai(c.status));
   const needle = q.value.trim().toLowerCase();
   if (needle) {
     list = list.filter((c) => {
@@ -158,23 +164,30 @@ function goEnroll() {
       </template>
     </ParentBerandaHero>
 
-    <!-- Search + filter -->
-    <div class="flex gap-2">
-      <div class="flex-1 rounded-lg bg-bimbel-bg px-3 py-2 text-[12px] text-bimbel-text-mid flex items-center gap-2">
-        <NavIcon name="search" :size="14" />
-        <input
-          v-model="q"
-          placeholder="Cari mata pelajaran atau tutor"
-          class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi placeholder:text-bimbel-text-mid"
-        />
-      </div>
+    <!-- Search row -->
+    <div class="rounded-lg bg-bimbel-bg px-3 py-2 text-[12px] text-bimbel-text-mid flex items-center gap-2">
+      <NavIcon name="search" :size="14" />
+      <input
+        v-model="q"
+        placeholder="Cari mata pelajaran atau tutor"
+        class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi placeholder:text-bimbel-text-mid"
+      />
+    </div>
+
+    <!-- Status chips with counts -->
+    <div class="flex gap-1.5 flex-wrap">
       <button
+        v-for="s in statusChips"
+        :key="s.id"
         type="button"
-        class="rounded-lg bg-bimbel-bg px-3 py-2 text-[12px] text-bimbel-text-mid flex items-center gap-1.5"
-        @click="cycleStatus"
-      >
-        {{ statusLabel }}<NavIcon name="chevron-down" :size="12" />
-      </button>
+        class="rounded-full px-2.5 py-1 text-[11px] transition-colors"
+        :class="
+          status === s.id
+            ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
+            : 'bg-bimbel-bg text-bimbel-text-mid'
+        "
+        @click="status = s.id"
+      >{{ s.label }} ({{ s.count }})</button>
     </div>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>

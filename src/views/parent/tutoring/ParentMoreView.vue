@@ -13,9 +13,34 @@ import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.v
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const router = useRouter();
-const { activeChildId } = useChildPicker();
+const { children, activeChildId, setActive } = useChildPicker();
 
 const childId = computed(() => activeChildId.value);
+
+function initials(name?: string | null): string {
+  if (!name) return '?';
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+// Cycle a small palette so multi-child rows aren't all the same hue.
+const CHIP_RAMP = [
+  'bg-bimbel-accent-dim text-bimbel-hero',
+  'bg-bimbel-green-dim text-green-700',
+  'bg-bimbel-amber-dim text-amber-700',
+  'bg-bimbel-red-dim text-red-700',
+];
+function chipClass(i: number): string {
+  return CHIP_RAMP[i % CHIP_RAMP.length];
+}
+
+function pickChild(id: string) {
+  setActive(id);
+  router.push({ name: 'parent.tutoring.overview', params: { studentId: id } });
+}
 
 interface Tile {
   label: string;
@@ -57,6 +82,37 @@ function go(name: string) {
       subtitle="Voucher, profil, notifikasi, & pengaturan"
       :stats="[]"
     />
+
+    <!-- ANAK SAYA — quick switch row, mirrors mobile parent_more_hub -->
+    <template v-if="children.length > 0">
+      <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+        ANAK SAYA
+      </p>
+      <div class="grid gap-2" :class="children.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'">
+        <button
+          v-for="(c, i) in children"
+          :key="c.student_id"
+          type="button"
+          class="rounded-lg bg-bimbel-panel border border-bimbel-border-soft p-3 flex items-center gap-2.5 text-left transition-colors"
+          :class="c.student_id === activeChildId ? 'border-bimbel-hero ring-1 ring-bimbel-hero/30' : 'hover:border-bimbel-border'"
+          @click="pickChild(c.student_id)"
+        >
+          <span
+            class="w-9 h-9 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0"
+            :class="chipClass(i)"
+          >{{ initials(c.name) }}</span>
+          <div class="min-w-0 flex-1">
+            <p class="text-[13px] font-bold text-bimbel-text-hi truncate">{{ c.name }}</p>
+            <p class="text-[11px] text-bimbel-text-mid truncate">{{ c.class_name || 'Kelas —' }}</p>
+          </div>
+          <span
+            v-if="c.student_id === activeChildId"
+            class="text-[10px] font-bold uppercase tracking-wider text-bimbel-hero flex-shrink-0"
+          >Aktif</span>
+          <NavIcon v-else name="chevron-right" :size="14" class="text-bimbel-text-mid flex-shrink-0" />
+        </button>
+      </div>
+    </template>
 
     <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
       AKADEMIK ANAK

@@ -1,49 +1,112 @@
 <!--
-  ParentAnnouncementsView — wali pengumuman list. Redesign: hero +
-  group filter chips ("Semua kelompok" + per-group) + announcement
-  cards (NEW pill for <48h, rel-time otherwise).
+  ParentAnnouncementsView — wali pengumuman list.
+
+  Fetches announcements for EVERY child the wali has (Promise.all +
+  dedupe), so a multi-child family sees the full picture. Mirrors the
+  mobile `parent_announcements_screen.dart:74` implementation.
+
+  Two filter axes:
+    - Anak chip (Semua anak / per-anak)        — drives the fetch scope
+    - Kelompok chip (Semua kelompok / per-group) — client-side filter
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { TutoringGroupAnnouncement } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
-import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 
-const route = useRoute();
-const { activeChildId } = useChildPicker();
+const { children, activeChildId } = useChildPicker();
 
-const studentId = computed(() =>
-  String(route.params.studentId || activeChildId.value || ''),
-);
+// Row carries the child it belongs to so the chip filter + subtitle
+// can show "milik anak X" without an extra lookup.
+type Row = {
+  a: TutoringGroupAnnouncement;
+  child_id: string;
+  child_name: string;
+};
 
 const loading = ref(true);
-const announcements = ref<TutoringGroupAnnouncement[]>([]);
+const rows = ref<Row[]>([]);
+// Two-axis filter: which child, which group.
+const childFilter = ref<string>('all');
 const groupFilter = ref<string>('all');
 
 async function load() {
-  const sid = studentId.value;
-  if (!sid) { loading.value = false; return; }
   loading.value = true;
   try {
-    announcements.value = await TutoringService.getGroupAnnouncements({ student_id: sid });
-  } catch {/* non-fatal */}
-  finally { loading.value = false; }
+    const kids = children.value;
+    if (kids.length === 0) {
+      rows.value = [];
+      return;
+    }
+    const fetched = await Promise.all(
+      kids.map(async (c) => {
+        try {
+          const list = await TutoringService.getGroupAnnouncements({
+            student_id: c.student_id,
+          });
+          return list.map<Row>((a) => ({
+            a,
+            child_id: c.student_id,
+            child_name: c.name,
+          }));
+        } catch {
+          return [] as Row[];
+        }
+      }),
+    );
+    // Flatten + dedupe by announcement id (siblings sometimes share a
+    // kelompok and would otherwise create double rows).
+    const seen = new Set<string>();
+    const out: Row[] = [];
+    for (const group of fetched) {
+      for (const r of group) {
+        if (r.a.id && !seen.has(r.a.id)) {
+          seen.add(r.a.id);
+          out.push(r);
+        }
+      }
+    }
+    // Newest first.
+    out.sort((x, y) => {
+      const ax = x.a.created_at ? new Date(x.a.created_at).valueOf() : 0;
+      const by = y.a.created_at ? new Date(y.a.created_at).valueOf() : 0;
+      return by - ax;
+    });
+    rows.value = out;
+  } finally {
+    loading.value = false;
+  }
 }
 onMounted(load);
-watch(studentId, load);
+// Re-fetch when the children list itself changes (login flow, etc.).
+// activeChildId doesn't trigger because filtering is now in-page.
+watch(() => children.value.map((c) => c.student_id).join(','), load);
+
+const childChips = computed(() => {
+  const out: { id: string; label: string }[] = [{ id: 'all', label: 'Semua anak' }];
+  for (const c of children.value) {
+    out.push({ id: c.student_id, label: c.name.split(' ')[0] });
+  }
+  return out;
+});
 
 const groupChips = computed(() => {
+  // Group chips reflect only the kelompok present in the currently-
+  // visible-by-child rows. Switching to "Anak A" should narrow the
+  // group chips to A's kelompok only.
+  const pool = childFilter.value === 'all'
+    ? rows.value
+    : rows.value.filter((r) => r.child_id === childFilter.value);
   const seen = new Set<string>();
   const out: { id: string; label: string }[] = [{ id: 'all', label: 'Semua kelompok' }];
-  for (const a of announcements.value) {
-    const id = a.tutoring_group_id;
+  for (const r of pool) {
+    const id = r.a.tutoring_group_id;
     if (id && !seen.has(id)) {
       seen.add(id);
-      out.push({ id, label: a.group_name ?? id });
+      out.push({ id, label: r.a.group_name ?? id });
     }
   }
   return out;
@@ -54,11 +117,17 @@ function isNew(a: TutoringGroupAnnouncement): boolean {
   return Date.now() - new Date(a.created_at).valueOf() < 48 * 3_600_000;
 }
 
-const newCount = computed(() => announcements.value.filter(isNew).length);
+const newCount = computed(() => rows.value.filter((r) => isNew(r.a)).length);
 
 const visible = computed(() => {
-  if (groupFilter.value === 'all') return announcements.value;
-  return announcements.value.filter((a) => a.tutoring_group_id === groupFilter.value);
+  let list = rows.value;
+  if (childFilter.value !== 'all') {
+    list = list.filter((r) => r.child_id === childFilter.value);
+  }
+  if (groupFilter.value !== 'all') {
+    list = list.filter((r) => r.a.tutoring_group_id === groupFilter.value);
+  }
+  return list;
 });
 
 function relTime(iso?: string | null): string {
@@ -79,6 +148,12 @@ function snippet(body?: string | null, n = 150): string {
   const trimmed = body.trim();
   return trimmed.length > n ? `${trimmed.slice(0, n).trimEnd()}…` : trimmed;
 }
+
+const subtitle = computed(() => {
+  const parts: string[] = [`${newCount.value} baru`, `${rows.value.length} total`];
+  if (children.value.length > 1) parts.push(`${children.value.length} anak`);
+  return parts.join(' · ');
+});
 </script>
 
 <template>
@@ -86,11 +161,29 @@ function snippet(body?: string | null, n = 150): string {
     <ParentBerandaHero
       kicker="BIMBEL · PENGUMUMAN"
       title="Pengumuman semua kelompok"
-      :subtitle="`${newCount} baru · ${announcements.length} total · semua anak`"
+      :subtitle="subtitle"
       :stats="[]"
-    >
-      <template #actions><ParentChildPickerChip /></template>
-    </ParentBerandaHero>
+    />
+
+    <!-- Anak filter chips (only when wali has >1 child) -->
+    <div v-if="children.length > 1" class="flex gap-1.5 flex-wrap">
+      <button
+        v-for="c in childChips"
+        :key="c.id"
+        type="button"
+        class="rounded-full px-2.5 py-1 text-[11px] transition-colors"
+        :class="
+          childFilter === c.id
+            ? 'bg-bimbel-hero text-white font-bold'
+            : 'bg-bimbel-bg text-bimbel-text-mid'
+        "
+        @click="
+          childFilter = c.id;
+          // Reset kelompok filter — chips change when child changes.
+          groupFilter = 'all';
+        "
+      >{{ c.label }}</button>
+    </div>
 
     <!-- Group filter chips -->
     <div class="flex gap-1.5 flex-wrap">
@@ -110,31 +203,32 @@ function snippet(body?: string | null, n = 150): string {
 
     <div class="space-y-2">
       <div
-        v-for="a in visible"
-        :key="a.id"
+        v-for="r in visible"
+        :key="r.a.id"
         class="rounded-lg bg-bimbel-bg p-2.5"
-        :class="isNew(a) ? 'border-l-2 border-bimbel-hero pl-3' : ''"
+        :class="isNew(r.a) ? 'border-l-2 border-bimbel-hero pl-3' : ''"
       >
         <div class="flex justify-between items-start gap-2">
           <div class="min-w-0 flex-1">
             <p class="text-[10px] text-bimbel-text-lo tracking-wider font-bold uppercase">
-              {{ a.author_name }} · {{ a.group_name }}
+              {{ r.a.author_name }} · {{ r.a.group_name }}
+              <span v-if="children.length > 1" class="text-bimbel-hero">· {{ r.child_name }}</span>
             </p>
-            <p class="text-[13px] font-bold text-bimbel-text-hi mt-0.5">{{ a.title }}</p>
+            <p class="text-[13px] font-bold text-bimbel-text-hi mt-0.5">{{ r.a.title }}</p>
           </div>
           <span
-            v-if="isNew(a)"
+            v-if="isNew(r.a)"
             class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-red-900 text-white flex-shrink-0"
           >BARU</span>
           <span
             v-else
             class="text-[11px] text-bimbel-text-lo flex-shrink-0"
-          >{{ relTime(a.created_at) }}</span>
+          >{{ relTime(r.a.created_at) }}</span>
         </div>
-        <p class="text-[11px] text-bimbel-text-mid leading-relaxed mt-1">{{ snippet(a.body) }}</p>
+        <p class="text-[11px] text-bimbel-text-mid leading-relaxed mt-1">{{ snippet(r.a.body) }}</p>
       </div>
       <p v-if="!visible.length && !loading" class="text-center text-[12px] text-bimbel-text-mid py-6">
-        Belum ada pengumuman di kelompok ini.
+        Belum ada pengumuman di kategori ini.
       </p>
       <p v-if="loading" class="text-center text-[12px] text-bimbel-text-mid py-6">Memuat…</p>
     </div>
