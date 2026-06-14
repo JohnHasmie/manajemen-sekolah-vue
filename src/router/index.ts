@@ -1018,6 +1018,16 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        // Standalone enroll route — used from the Siswa list where the
+        // admin hasn't picked a program yet. The wizard picks program
+        // + package in step 2.
+        path: 'admin/tutoring/enroll',
+        name: 'admin.tutoring.enroll-any',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringEnrollView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'admin/tutoring/assessments/:assessmentId',
         name: 'admin.tutoring.assessment-detail',
         component: () =>

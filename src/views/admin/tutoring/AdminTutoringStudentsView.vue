@@ -112,7 +112,36 @@ function attendanceBar(rate: number | null): { width: string; color: string } {
   };
 }
 
-function goEnroll() { router.push({ name: 'admin.tutoring.enroll' }); }
+function goEnroll() { router.push({ name: 'admin.tutoring.enroll-any' }); }
+
+function exportCsv() {
+  const headers = [
+    'Nama', 'Program', 'Paket', 'Kelompok',
+    'Mode', 'Hadir 30h (%)', 'Tunggakan (Rp)', 'Tunggakan (jumlah tagihan)',
+  ];
+  const csvRows = [
+    headers.join(','),
+    ...filtered.value.map((r) => [
+      JSON.stringify(r.student_name ?? ''),
+      JSON.stringify(r.program_name ?? ''),
+      JSON.stringify(r.package_name ?? ''),
+      JSON.stringify(r.group_name ?? ''),
+      r.billing_mode,
+      r.attendance_rate ?? '',
+      r.unpaid_total ?? 0,
+      r.unpaid_count ?? 0,
+    ].join(',')),
+  ];
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `bimbel-siswa-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 </script>
 
 <template>
@@ -124,12 +153,16 @@ function goEnroll() { router.push({ name: 'admin.tutoring.enroll' }); }
       :stats="[]"
     >
       <template #actions>
-        <button class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white">
+        <button
+          type="button"
+          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white hover:bg-white/25"
+          @click="exportCsv"
+        >
           <NavIcon name="download" :size="13" class="inline -mt-0.5" /> Export
         </button>
         <button
           type="button"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold"
+          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold hover:opacity-90"
           @click="goEnroll"
         >
           <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> Daftarkan siswa
