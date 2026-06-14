@@ -130,6 +130,8 @@ export interface SessionReport {
   start_time?: string | null;
   end_time?: string | null;
   /** Lesson hour number (1, 2, 3, …). */
+  hour_number?: number | null;
+  /** @deprecated Use `hour_number`. Indonesian alias kept for back-compat. */
   jam_ke?: number | null;
   lesson_hour_id?: string | null;
   /** Total enrolled students in the class. */
@@ -255,6 +257,8 @@ export interface AdminAttendanceSummary {
   date: string;
   lesson_hour_id?: string | null;
   lesson_hour_name?: string | null;
+  hour_number?: number | null;
+  /** @deprecated Use `hour_number`. Indonesian alias kept for back-compat. */
   jam_ke?: number | null;
   total_students: number;
   present: number;

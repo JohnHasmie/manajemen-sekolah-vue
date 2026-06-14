@@ -23,7 +23,7 @@ import type {
   TutoringTutorStats,
 } from '@/types/tutoring';
 
-import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
+import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 import KpiStripCards, {
   type KpiCard,
 } from '@/components/feature/KpiStripCards.vue';
@@ -350,22 +350,22 @@ const kpiCards = computed<KpiCard[]>(() => {
 
 <template>
   <div class="space-y-md pb-12">
-    <BrandPageHeader
-      role="guru"
-      kicker="Bimbel · Sesi Saya"
+    <TutorBerandaHero
+      greeting="Jadwal Sesi"
       :title="t('tutoring.sessions.title')"
-      :meta="auth.user?.name ? `Halo, ${auth.user.name}` : undefined"
-      live-dot
-    >
+      :subtitle="auth.user?.name ? `Halo, ${auth.user.name}` : undefined"
+      :stats="[]"
+    />
+    <div class="flex justify-end -mt-2">
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-accent text-white text-[13px] font-bold hover:opacity-90"
         @click="router.push({ name: 'teacher.tutoring.session-create' })"
       >
         <NavIcon name="plus" :size="13" />
         {{ t('tutoring.sessions.addBtn') }}
       </button>
-    </BrandPageHeader>
+    </div>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
       {{ t('tutoring.common.loading') }}
@@ -461,7 +461,7 @@ const kpiCards = computed<KpiCard[]>(() => {
                   :href="s.meeting_url"
                   target="_blank"
                   rel="noopener"
-                  class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-bimbel-accent px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
+                  class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-bimbel-accent px-2 py-0.5 text-[12px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
                   @click.stop
                 >
                   <NavIcon name="external-link" :size="11" />
@@ -502,7 +502,7 @@ const kpiCards = computed<KpiCard[]>(() => {
             <div
               v-for="d in ['S', 'S', 'R', 'K', 'J', 'S', 'M']"
               :key="d + Math.random()"
-              class="text-center text-[10.5px] font-bold text-bimbel-text-mid tracking-widest py-1"
+              class="text-center text-[12px] font-bold text-bimbel-text-mid tracking-widest py-1"
             >
               {{ d }}
             </div>
@@ -571,7 +571,7 @@ const kpiCards = computed<KpiCard[]>(() => {
                   :href="s.meeting_url"
                   target="_blank"
                   rel="noopener"
-                  class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-bimbel-accent px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
+                  class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-bimbel-accent px-2 py-0.5 text-[12px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
                   @click.stop
                 >
                   <NavIcon name="external-link" :size="11" />

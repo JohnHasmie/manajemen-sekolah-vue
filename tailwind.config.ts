@@ -14,6 +14,14 @@ import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: ['./index.html', './src/**/*.{vue,ts,tsx}'],
+  // Drive Tailwind's `dark:` variant from the same `.bimbel-dark`
+  // wrapper class that useBimbelThemeStore applies to AppShell. The
+  // default (`media`) hard-binds to the OS theme, which made
+  // `dark:text-emerald-300` & friends activate at night even when the
+  // user explicitly picked "Terang" — light mode looked broken. With
+  // the selector tied to .bimbel-dark, every `dark:` in the project
+  // now follows the in-app picker.
+  darkMode: ['selector', '.bimbel-dark'],
   theme: {
     extend: {
       fontFamily: {

@@ -54,7 +54,7 @@ const resolved = computed<{ label: string; tone: Tone }>(() => {
 
 <template>
   <span
-    class="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide"
+    class="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[12px] font-bold uppercase tracking-wide"
     :class="{
       'bg-bimbel-green-dim text-bimbel-green': resolved.tone === 'ok',
       'bg-bimbel-amber-dim text-bimbel-amber': resolved.tone === 'warn',

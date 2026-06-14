@@ -157,7 +157,7 @@ const inputCls =
       v-if="questions.length > 0 && mode === 'tryout'"
       class="mt-4 space-y-2 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4"
     >
-      <p class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+      <p class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
         {{ t('tutoring.ai.saveForGroup') }}
       </p>
       <select v-model="groupId" :class="inputCls">

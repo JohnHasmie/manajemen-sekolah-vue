@@ -171,7 +171,7 @@ const DOT_BG = computed(() => ({
         <div
           v-for="(d, i) in ['S', 'S', 'R', 'K', 'J', 'S', 'M']"
           :key="i"
-          class="text-center text-[10.5px] font-bold text-bimbel-text-mid tracking-widest py-1"
+          class="text-center text-[12px] font-bold text-bimbel-text-mid tracking-widest py-1"
         >
           {{ d }}
         </div>
@@ -241,7 +241,7 @@ const DOT_BG = computed(() => ({
               :href="s.meeting_url"
               target="_blank"
               rel="noopener"
-              class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-brand-cobalt px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
+              class="inline-flex items-center gap-1 rounded-lg bg-status-info-soft text-brand-cobalt px-2 py-0.5 text-[12px] font-bold uppercase tracking-wider hover:bg-status-info-soft/80"
               @click.stop
             >
               <NavIcon name="external-link" :size="11" />

@@ -492,3 +492,113 @@ export interface TutoringActivitySubmission {
   note?: string | null;
   submitted_at?: string | null;
 }
+
+/** Rich per-class meta for the wali Kelas list page.
+ *  Mirrors GetWaliClassMetaAction (one row per kelompok the student
+ *  is enrolled in). */
+export interface TutoringWaliClassMeta {
+  group_id: string;
+  group_name: string;
+  program_id?: string | null;
+  program_name?: string | null;
+  tutor_user_id?: string | null;
+  tutor_name?: string | null;
+  status: string;
+  next_session?: {
+    id: string;
+    scheduled_at: string | null;
+    room?: string | null;
+    topic?: string | null;
+    duration_minutes: number;
+  } | null;
+  attendance: {
+    rate: number | null;
+    total_recorded: number;
+    attended: number;
+  };
+  latest_score?: {
+    title?: string;
+    score?: number | null;
+    max_score?: number | null;
+    held_at?: string | null;
+  } | null;
+  new_announcements_count_7d: number;
+}
+
+/** Admin activity report — per-group activity creation + submission +
+ *  graded counts. Backs AdminActivityReportView. */
+export interface AdminActivityReport {
+  kpi: {
+    total_activities: number;
+    submitted_pct: number | null;
+    graded_pct: number | null;
+    avg_score: number | null;
+  };
+  rows: Array<{
+    group_id: string;
+    group_name: string;
+    program_name?: string | null;
+    tutor_name?: string | null;
+    type: string;
+    created: number;
+    submitted: number;
+    avg_score: number | null;
+    status: string;
+  }>;
+}
+
+/** Admin attendance report — 4-pill breakdown + per-group rates +
+ *  watch-list of low-attendance students. */
+export interface AdminAttendanceReport {
+  pills: { hadir: number; izin: number; sakit: number; alpha: number };
+  rows: Array<{
+    group_id: string;
+    group_name: string;
+    students: number;
+    sessions: number;
+    hadir_pct: number | null;
+    tutor_name?: string | null;
+  }>;
+  watch: Array<{
+    student_id: string;
+    student_name: string;
+    group_name: string;
+    sessions_done: number;
+    hadir: number;
+    hadir_pct: number | null;
+  }>;
+}
+
+/** Tutor's own rating summary — drives the Rating page.
+ *  Mirrors GetTutorRatingsSummaryAction. */
+export interface TutorRatingsSummary {
+  overall: {
+    avg: number | null;
+    count: number;
+    delta: number | null;
+    window_label: string;
+  };
+  week: { avg: number | null; count: number };
+  response: { rate: number | null; rated_sessions: number; done_sessions: number };
+  distribution: Record<string, number>;
+  groups: Array<{
+    group_id: string;
+    group_name: string;
+    avg: number | null;
+    count: number;
+  }>;
+  recent: Array<{
+    id: string;
+    student_name?: string | null;
+    group_name?: string | null;
+    rating: number;
+    comment?: string | null;
+    scheduled_at?: string | null;
+    created_at?: string | null;
+  }>;
+  filters: {
+    group_id: string | null;
+    stars: number[] | null;
+    has_comment: boolean | null;
+  };
+}

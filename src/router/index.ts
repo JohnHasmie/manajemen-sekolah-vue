@@ -829,6 +829,120 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'wali' satisfies Role },
       },
       {
+        path: 'parent/tutoring/:studentId/classes',
+        name: 'parent.tutoring.classes',
+        component: () => import('@/views/parent/tutoring/ParentClassesView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/classes/:groupId',
+        name: 'parent.tutoring.class-detail',
+        component: () =>
+          import('@/views/parent/tutoring/ParentClassDetailView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/sessions',
+        name: 'parent.tutoring.sessions',
+        component: () => import('@/views/parent/tutoring/ParentSessionsView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/bills',
+        name: 'parent.tutoring.bills',
+        component: () => import('@/views/parent/tutoring/ParentBillsView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/bills/:billId/pay',
+        name: 'parent.tutoring.pay-bill',
+        component: () =>
+          import('@/views/parent/tutoring/ParentPayBillView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/activities',
+        name: 'parent.tutoring.activities',
+        component: () =>
+          import('@/views/parent/tutoring/ParentActivitiesView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/progress',
+        name: 'parent.tutoring.progress',
+        component: () => import('@/views/parent/tutoring/ParentProgressView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/voucher',
+        name: 'parent.tutoring.vouchers',
+        component: () =>
+          import('@/views/parent/tutoring/ParentVouchersView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/leaderboard',
+        name: 'parent.tutoring.leaderboard',
+        component: () =>
+          import('@/views/parent/tutoring/ParentLeaderboardView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/:studentId/announcements',
+        name: 'parent.tutoring.announcements',
+        component: () =>
+          import('@/views/parent/tutoring/ParentAnnouncementsView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/notifikasi',
+        name: 'parent.tutoring.notifications',
+        component: () =>
+          import('@/views/parent/tutoring/ParentNotificationsView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/lainnya',
+        name: 'parent.tutoring.more',
+        component: () =>
+          import('@/views/parent/tutoring/ParentMoreView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/profil',
+        name: 'parent.tutoring.profile',
+        component: () => import('@/views/parent/tutoring/ParentProfileView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/profil/ubah-sandi',
+        name: 'parent.tutoring.change-password',
+        component: () =>
+          import('@/views/parent/tutoring/ParentChangePasswordView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/tampilan',
+        name: 'parent.tutoring.appearance',
+        component: () =>
+          import('@/views/parent/tutoring/ParentAppearanceView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/daftar-calon',
+        name: 'parent.tutoring.register-lead',
+        component: () =>
+          import('@/views/parent/tutoring/ParentRegisterLeadView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
+        path: 'parent/tutoring/daftar-anak',
+        name: 'parent.tutoring.enroll-new',
+        component: () =>
+          import('@/views/parent/tutoring/ParentEnrollWizardView.vue'),
+        meta: { role: 'wali' satisfies Role },
+      },
+      {
         path: 'admin/tutoring',
         name: 'admin.tutoring.dashboard',
         component: () =>
@@ -953,6 +1067,68 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        path: 'admin/tutoring/groups',
+        name: 'admin.tutoring.groups',
+        component: () => import('@/views/admin/tutoring/AdminTutoringGroupsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/groups/:groupId',
+        name: 'admin.tutoring.group-detail',
+        component: () => import('@/views/admin/tutoring/AdminTutoringGroupDetailView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/reports/activity',
+        name: 'admin.tutoring.report-activity',
+        component: () => import('@/views/admin/tutoring/AdminTutoringActivityReportView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/reports/attendance',
+        name: 'admin.tutoring.report-attendance',
+        component: () => import('@/views/admin/tutoring/AdminTutoringAttendanceReportView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/profile',
+        name: 'admin.tutoring.profile',
+        component: () => import('@/views/admin/tutoring/AdminTutoringProfileView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/profile/change-password',
+        name: 'admin.tutoring.change-password',
+        component: () => import('@/views/admin/tutoring/AdminTutoringChangePasswordView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/appearance',
+        name: 'admin.tutoring.appearance',
+        component: () => import('@/views/admin/tutoring/AdminTutoringAppearanceView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/notifications',
+        name: 'admin.tutoring.notifications',
+        component: () => import('@/views/admin/tutoring/AdminTutoringNotificationsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/kelas',
+        name: 'teacher.tutoring.classes',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorClassesView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/kelas/:groupId',
+        name: 'teacher.tutoring.class-detail',
+        component: () =>
+          import('@/views/teacher/tutoring/TutorClassDetailView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
         path: 'teacher/tutoring/sessions',
         name: 'teacher.tutoring.sessions',
         component: () =>
@@ -1026,6 +1202,42 @@ const routes: RouteRecordRaw[] = [
         name: 'teacher.tutoring.appearance',
         component: () =>
           import('@/views/teacher/tutoring/TutorAppearanceView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/profile',
+        name: 'teacher.tutoring.profile',
+        component: () => import('@/views/teacher/tutoring/TutorProfileView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/profile/change-password',
+        name: 'teacher.tutoring.change-password',
+        component: () => import('@/views/teacher/tutoring/TutorChangePasswordView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/ratings',
+        name: 'teacher.tutoring.ratings',
+        component: () => import('@/views/teacher/tutoring/TutorRatingsView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/notifications',
+        name: 'teacher.tutoring.notifications',
+        component: () => import('@/views/teacher/tutoring/TutorNotificationsView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/announcements',
+        name: 'teacher.tutoring.announcements',
+        component: () => import('@/views/teacher/tutoring/TutorAnnouncementsView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/leaderboard',
+        name: 'teacher.tutoring.leaderboard',
+        component: () => import('@/views/teacher/tutoring/TutorLeaderboardView.vue'),
         meta: { role: 'guru' satisfies Role },
       },
 

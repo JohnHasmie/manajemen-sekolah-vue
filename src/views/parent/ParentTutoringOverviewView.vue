@@ -1,398 +1,321 @@
 <!--
-  ParentTutoringOverviewView — parent's monitoring page for one child's
-  bimbel. Uses the BrandPageHeader (wali role → azure gradient) +
-  KpiStripCards chrome, with detail sections below.
+  ParentTutoringOverviewView — wali Beranda.
+
+  Layout matches the approved mockup (parent_web_pages_main frame 1):
+
+    Hero  (azure, greeting + child-picker + 4 KPI stats)
+    Two-col body:
+      LEFT  : Hari ini (accent-stripe card) + Tagihan ribbon
+      RIGHT : Yang baru feed (panel)
+
+  Reads:
+    - getChildOverview(studentId)         → bills + attendance + progress + upcoming
+    - getStudentFeed(studentId)           → "Yang baru" rows
+    - getPaymentAccount()                 → unused here, kept for ribbon CTA
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
-import { useI18n } from 'vue-i18n';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { TutoringService } from '@/services/tutoring.service';
-import { formatDateShort, formatRupiah } from '@/lib/format';
+import { useAuthStore } from '@/stores/auth';
+import { useChildPicker } from '@/composables/useChildPicker';
+import { formatRupiah } from '@/lib/format';
 import type {
-  TutoringBill,
   TutoringChildOverview,
   TutoringFeedEvent,
-  TutoringPaymentAccount,
 } from '@/types/tutoring';
 
-import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import KpiStripCards, {
-  type KpiCard,
-} from '@/components/feature/KpiStripCards.vue';
-import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
+import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
+import ParentPrimaryCard from '@/components/feature/tutoring/ParentPrimaryCard.vue';
+import ParentRibbon from '@/components/feature/tutoring/ParentRibbon.vue';
+import ParentActivityRow from '@/components/feature/tutoring/ParentActivityRow.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
-const { t } = useI18n();
 const route = useRoute();
-const studentId = String(route.params.studentId ?? '');
-const studentName = String(route.query.name ?? 'Anak');
+const router = useRouter();
+const auth = useAuthStore();
+const { activeChildId, activeChild } = useChildPicker();
+
+const studentId = computed(() =>
+  String(route.params.studentId || activeChildId.value || ''),
+);
 
 const loading = ref(true);
-const error = ref<string | null>(null);
 const data = ref<TutoringChildOverview | null>(null);
 const feed = ref<TutoringFeedEvent[]>([]);
-const feedLoading = ref(true);
 
 async function load() {
+  const sid = studentId.value;
+  if (!sid) {
+    loading.value = false;
+    return;
+  }
   loading.value = true;
-  error.value = null;
   try {
-    data.value = await TutoringService.getChildOverview(studentId);
-  } catch (e) {
-    error.value =
-      e instanceof Error ? e.message : t('tutoring.overview.loadError');
+    const [overview, f] = await Promise.all([
+      TutoringService.getChildOverview(sid),
+      TutoringService.getStudentFeed(sid, { limit: 8, sinceDays: 30 }).catch(
+        () => [] as TutoringFeedEvent[],
+      ),
+    ]);
+    data.value = overview;
+    feed.value = f;
   } finally {
     loading.value = false;
   }
 }
+onMounted(load);
+watch(studentId, load);
 
-async function loadFeed() {
-  feedLoading.value = true;
-  try {
-    feed.value = await TutoringService.getStudentFeed(studentId, {
-      limit: 12,
-      sinceDays: 30,
-    });
-  } catch {/* non-fatal */} finally {
-    feedLoading.value = false;
-  }
+// ── Greeting ─────────────────────────────────────────────────────
+function timeGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 11) return 'Selamat pagi';
+  if (h < 15) return 'Selamat siang';
+  if (h < 19) return 'Selamat sore';
+  return 'Selamat malam';
 }
 
-const paymentAccount = ref<TutoringPaymentAccount | null>(null);
-async function loadPaymentAccount() {
-  try {
-    paymentAccount.value = await TutoringService.getPaymentAccount();
-  } catch {/* non-fatal */}
-}
-
-function copyText(text?: string | null) {
-  if (!text) return;
-  navigator.clipboard?.writeText(text);
-}
-
-onMounted(async () => {
-  await load();
-  await Promise.all([loadFeed(), loadPaymentAccount()]);
+const firstName = computed(() => {
+  const n = auth.user?.name || 'Wali';
+  return n.split(/\s+/)[0];
 });
 
-/** Tutor notes first (sticky), then everything else. */
-const feedSorted = computed<TutoringFeedEvent[]>(() => {
-  const notes = feed.value.filter((e) => e.type === 'note');
-  const rest = feed.value.filter((e) => e.type !== 'note');
-  return [...notes, ...rest].slice(0, 8);
-});
+const childName = computed(() => activeChild()?.name || 'anak');
 
-const dateFmt = new Intl.DateTimeFormat('id-ID', {
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-function feedTime(iso: string | null): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return Number.isNaN(d.valueOf()) ? '—' : dateFmt.format(d);
-}
-
-interface FeedStyle { icon: string; tone: string }
-function feedStyle(type: string): FeedStyle {
-  switch (type) {
-    case 'note':
-      return { icon: 'edit', tone: 'text-bimbel-accent bg-role-parent/12' };
-    case 'score':
-      return { icon: 'check-circle', tone: 'text-emerald-600 bg-emerald-50' };
-    case 'announcement':
-      return { icon: 'message-square', tone: 'text-bimbel-accent bg-bimbel-accent/12' };
-    case 'bill':
-      return { icon: 'wallet', tone: 'text-bimbel-red bg-rose-50' };
-    case 'attendance':
-      return { icon: 'calendar', tone: 'text-role-guru bg-role-guru/12' };
-    default:
-      return { icon: 'circle', tone: 'text-bimbel-text-mid bg-bimbel-grey-dim' };
-  }
-}
-
-function unpaid(bills: TutoringBill[]): TutoringBill[] {
-  return bills.filter((b) => b.status.toLowerCase() !== 'paid');
-}
-function billTotal(bills: TutoringBill[]): number {
-  return unpaid(bills).reduce((sum, b) => sum + (b.amount ?? 0), 0);
-}
-
-const kpiCards = computed<KpiCard[]>(() => {
-  if (!data.value) return [];
+// ── KPI strip (4 cells) ──────────────────────────────────────────
+const heroStats = computed(() => {
   const d = data.value;
+  const upcoming = d?.upcomingSessions ?? [];
+  const sessionsThisWeek = upcoming.filter((s) => {
+    if (!s.scheduled_at) return false;
+    const t = new Date(s.scheduled_at).valueOf();
+    const week = Date.now() + 7 * 86_400_000;
+    return t <= week;
+  }).length;
+  const att = d?.attendance?.attendance_rate;
+  const avgScore = d?.progress?.summary?.overall?.average;
+  const unpaid = (d?.bills ?? []).filter((b) =>
+    /unpaid|pending|due|overdue|belum/i.test(b.status ?? ''),
+  );
+  const unpaidTotal = unpaid.reduce((s, b) => s + (b.amount ?? 0), 0);
+  const todayCount = upcoming.filter((s) => {
+    if (!s.scheduled_at) return false;
+    const d = new Date(s.scheduled_at);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  }).length;
   return [
     {
-      icon: 'check-circle',
-      label: t('tutoring.overview.attendance'),
-      value:
-        d.attendance.attendance_rate == null
-          ? '–'
-          : `${Math.round(d.attendance.attendance_rate)}%`,
-      suffix:
-        d.attendance.total_recorded > 0
-          ? `${d.attendance.attended}/${d.attendance.total_recorded}`
-          : undefined,
-      tone: 'green',
-      accented: true,
+      label: 'SESI MGG INI',
+      value: String(sessionsThisWeek),
+      hint: todayCount > 0 ? `${todayCount} hari ini` : 'tidak ada hari ini',
     },
     {
-      icon: 'trending-up',
-      label: t('tutoring.overview.latest'),
-      value:
-        d.progress.summary.overall.latest == null
-          ? '–'
-          : `${Math.round(d.progress.summary.overall.latest)}%`,
-      suffix:
-        d.progress.summary.overall.average != null
-          ? `avg ${Math.round(d.progress.summary.overall.average)}%`
-          : undefined,
-      tone: 'violet',
+      label: 'KEHADIRAN 30H',
+      value: att == null ? '–' : `${att}%`,
+      hint: d?.attendance?.total_recorded
+        ? `${d.attendance.attended} dari ${d.attendance.total_recorded} hadir`
+        : 'belum tercatat',
     },
     {
-      icon: 'calendar',
-      label: t('tutoring.overview.schedule'),
-      value: d.upcomingSessions.length,
-      suffix: 'sesi',
-      tone: 'brand',
+      label: 'RATA-RATA NILAI',
+      value: avgScore == null ? '–' : String(Math.round(avgScore)),
+      hint: d?.progress?.summary?.overall?.count
+        ? `${d.progress.summary.overall.count} nilai`
+        : 'belum ada',
     },
     {
-      icon: 'wallet',
-      label: t('tutoring.overview.bills'),
-      value: unpaid(d.bills).length,
-      suffix:
-        unpaid(d.bills).length > 0
-          ? formatRupiah(billTotal(d.bills))
-          : undefined,
-      tone: unpaid(d.bills).length > 0 ? 'amber' : 'green',
+      label: 'TAGIHAN AKTIF',
+      value: unpaid.length === 0 ? 'Lunas' : formatRupiah(unpaidTotal),
+      hint: unpaid.length === 0 ? 'tidak ada tagihan' : `${unpaid.length} tagihan`,
     },
   ];
 });
 
-const sectionCls = 'bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5';
-const sectionTitleRow = 'flex items-center gap-2.5 mb-3';
-const sectionIconCls =
-  'w-7 h-7 rounded-lg bg-bimbel-accent-dim text-bimbel-accent grid place-items-center flex-shrink-0';
+// ── Hari ini card ────────────────────────────────────────────────
+const heroNext = computed(() => data.value?.upcomingSessions?.[0] ?? null);
+
+const heroNextCountdown = computed(() => {
+  const ns = heroNext.value;
+  if (!ns?.scheduled_at) return null;
+  const d = new Date(ns.scheduled_at);
+  if (Number.isNaN(d.valueOf())) return null;
+  const diffMin = (d.valueOf() - Date.now()) / 60_000;
+  if (diffMin < 0) return 'mulai';
+  if (diffMin < 60) return `${Math.round(diffMin)} menit lagi`;
+  const h = diffMin / 60;
+  if (h < 24) return `${Math.round(h)} jam lagi`;
+  return `${Math.round(h / 24)} hari lagi`;
+});
+
+const heroNextTone = computed<'success' | 'brand'>(() => {
+  const ns = heroNext.value;
+  if (!ns?.scheduled_at) return 'brand';
+  const d = new Date(ns.scheduled_at);
+  if (Number.isNaN(d.valueOf())) return 'brand';
+  const diffH = (d.valueOf() - Date.now()) / 3_600_000;
+  return diffH <= 24 ? 'success' : 'brand';
+});
+
+const heroNextWhen = computed(() => {
+  const ns = heroNext.value;
+  if (!ns?.scheduled_at) return '';
+  const d = new Date(ns.scheduled_at);
+  if (Number.isNaN(d.valueOf())) return '';
+  const isToday = d.toDateString() === new Date().toDateString();
+  return d.toLocaleString('id-ID', {
+    weekday: isToday ? undefined : 'short',
+    day: isToday ? undefined : 'numeric',
+    month: isToday ? undefined : 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+});
+
+// ── Tagihan ribbon ───────────────────────────────────────────────
+const unpaidBills = computed(() =>
+  (data.value?.bills ?? []).filter((b) =>
+    /unpaid|pending|due|overdue|belum/i.test(b.status ?? ''),
+  ),
+);
+const unpaidTotal = computed(() =>
+  unpaidBills.value.reduce((s, b) => s + (b.amount ?? 0), 0),
+);
+const unpaidHint = computed(() => {
+  const list = unpaidBills.value;
+  if (list.length === 0) return '';
+  const first = list[0];
+  const due = first.due_date ? new Date(first.due_date) : null;
+  const lbl = due
+    ? `Jatuh tempo ${due.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`
+    : 'Jatuh tempo segera';
+  return list.length > 1 ? `${lbl} · +${list.length - 1} lagi` : lbl;
+});
+
+function goPayFirstBill() {
+  const first = unpaidBills.value[0];
+  if (!first) return;
+  router.push({ name: 'parent.tutoring.pay-bill', params: { billId: first.id } });
+}
+
+function goToTagihan() {
+  router.push({ name: 'parent.tutoring.bills' });
+}
 </script>
 
 <template>
-  <div class="space-y-md pb-12">
-    <BrandPageHeader
-      role="wali"
-      kicker="Bimbel · Monitoring"
-      :title="studentName"
-      :meta="data
-        ? `${data.upcomingSessions.length} sesi mendatang · ${unpaid(data.bills).length} tagihan`
-        : ''"
-    />
+  <div class="space-y-4 pb-12">
+    <ParentBerandaHero
+      kicker="BIMBEL · BERANDA"
+      :title="`Halo, ${firstName}`"
+      :subtitle="`${timeGreeting()} · Wali dari ${childName}`"
+      :stats="heroStats"
+    >
+      <template #actions>
+        <ParentChildPickerChip />
+        <button
+          type="button"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-[#0c447c] px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          @click="router.push({ name: 'parent.tutoring.enroll-new' })"
+        >
+          <NavIcon name="plus" :size="13" />
+          Daftar program
+        </button>
+      </template>
+    </ParentBerandaHero>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
-      {{ t('tutoring.common.loading') }}
+    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">
+      Memuat…
     </div>
 
-    <TutoringEmpty v-else-if="error" :text="error" icon="alert-circle" />
-
-    <template v-else-if="data">
-      <KpiStripCards :cards="kpiCards" />
-
-      <!-- ── Yang Baru (activity feed) ───────────────────────────── -->
-      <section :class="sectionCls">
-        <div :class="sectionTitleRow">
-          <span :class="sectionIconCls">
-            <NavIcon name="bell" :size="16" />
-          </span>
-          <h3 class="text-sm font-bold text-bimbel-text-hi tracking-tight">
-            Yang Baru
-          </h3>
-        </div>
-        <p v-if="feedLoading" class="text-xs text-bimbel-text-lo">Memuat…</p>
-        <p v-else-if="feedSorted.length === 0" class="text-xs text-bimbel-text-mid">
-          Belum ada aktivitas 30 hari terakhir.
-        </p>
-        <ul v-else class="space-y-2">
-          <li
-            v-for="(ev, i) in feedSorted"
-            :key="i"
-            class="flex gap-2.5"
+    <template v-else>
+      <div class="grid gap-3 lg:grid-cols-3">
+        <div class="space-y-3 lg:col-span-2">
+          <ParentPrimaryCard
+            v-if="heroNext"
+            icon="calendar"
+            kicker="HARI INI"
+            :title="heroNext.topic || (heroNext.group as any)?.name || 'Sesi terjadwal'"
+            :subtitle="
+              [
+                (heroNext.group as any)?.program?.name,
+                heroNext.room ? `ruang ${heroNext.room}` : null,
+                heroNext.duration_minutes ? `${heroNext.duration_minutes} menit` : null,
+                heroNextWhen,
+              ].filter(Boolean).join(' · ') || undefined
+            "
+            :tone="heroNextTone"
+            :chip="heroNextCountdown ?? undefined"
           >
-            <span
-              class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
-              :class="feedStyle(ev.type).tone"
-            >
-              <NavIcon :name="feedStyle(ev.type).icon" :size="13" />
-            </span>
-            <div class="min-w-0 flex-1">
-              <div class="line-clamp-2 text-[13px] font-bold text-bimbel-text-hi">
-                {{ ev.title }}
-              </div>
-              <div
-                v-if="ev.subtitle"
-                class="line-clamp-3 text-[11.5px] text-bimbel-text-mid"
+            <template #actions>
+              <a
+                v-if="heroNext.meeting_url"
+                :href="heroNext.meeting_url"
+                target="_blank"
+                rel="noopener"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-[#21afe6] px-3.5 py-2 text-[13px] font-bold text-white hover:opacity-90"
               >
-                {{ ev.subtitle }}
-              </div>
-              <div class="mt-0.5 text-[9.5px] font-semibold text-bimbel-text-lo">
-                {{ feedTime(ev.occurred_at) }}
-              </div>
-            </div>
-          </li>
-        </ul>
-      </section>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <!-- Progress detail -->
-        <section :class="sectionCls">
-          <div :class="sectionTitleRow">
-            <span :class="sectionIconCls">
-              <NavIcon name="trending-up" :size="16" />
-            </span>
-            <h3 class="text-sm font-bold text-bimbel-text-hi tracking-tight">
-              {{ t('tutoring.overview.progress') }}
-            </h3>
-          </div>
-          <p
-            v-if="data.progress.timeline.length === 0"
-            class="text-xs text-bimbel-text-mid"
-          >
-            {{ t('tutoring.overview.noScores') }}
-          </p>
-          <ul v-else class="divide-y divide-bimbel-border-soft">
-            <li
-              v-for="e in data.progress.timeline.slice(0, 5)"
-              :key="e.assessment_id"
-              class="flex items-center justify-between py-1.5 text-sm"
-            >
-              <span class="text-bimbel-text-mid">{{ e.title }}</span>
-              <span class="font-bold text-bimbel-text-hi">
-                {{ e.percentage == null ? '–' : Math.round(e.percentage) + '%' }}
-              </span>
-            </li>
-          </ul>
-        </section>
-
-        <!-- Bills detail + rekening pembayaran -->
-        <section :class="sectionCls">
-          <div :class="sectionTitleRow">
-            <span :class="sectionIconCls">
-              <NavIcon name="wallet" :size="16" />
-            </span>
-            <h3 class="text-sm font-bold text-bimbel-text-hi tracking-tight">
-              {{ t('tutoring.overview.bills') }}
-            </h3>
-          </div>
-          <p
-            v-if="unpaid(data.bills).length === 0"
-            class="text-xs text-bimbel-text-mid"
-          >
-            {{ t('tutoring.overview.noBills') }}
-          </p>
-          <ul v-else class="divide-y divide-bimbel-border-soft">
-            <li
-              v-for="b in unpaid(data.bills)"
-              :key="b.id"
-              class="flex items-center justify-between py-1.5 text-xs"
-            >
-              <span class="text-bimbel-text-mid">
-                {{ b.source_label ?? t('tutoring.overview.billDefault') }}
-                <template v-if="b.due_date">
-                  · {{ t('tutoring.overview.due') }}
-                  {{ formatDateShort(b.due_date) }}
-                </template>
-              </span>
-              <span class="font-bold text-bimbel-text-hi">
-                {{ formatRupiah(b.amount ?? 0) }}
-              </span>
-            </li>
-          </ul>
-
-          <!-- Rekening / QRIS / instruksi pembayaran -->
-          <div
-            v-if="paymentAccount && (paymentAccount.bank_account_number || paymentAccount.qris_image_url || paymentAccount.payment_instructions)"
-            class="mt-3 border-t border-bimbel-border-soft pt-3 space-y-2"
-          >
-            <div class="text-[10px] font-extrabold uppercase tracking-widest text-bimbel-text-mid">
-              Cara Pembayaran
-            </div>
-            <div
-              v-if="paymentAccount.bank_account_number"
-              class="rounded-lg bg-bimbel-bg p-2.5 text-xs text-bimbel-text-mid"
-            >
-              <div class="font-bold text-bimbel-text-hi">{{ paymentAccount.bank_name ?? '—' }}</div>
+                <NavIcon name="link" :size="13" /> Buka Meet
+              </a>
               <button
                 type="button"
-                class="font-mono mt-0.5 text-bimbel-text-mid hover:text-bimbel-accent"
-                @click="copyText(paymentAccount.bank_account_number)"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-bimbel-border px-3.5 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
+                @click="router.push({ name: 'parent.tutoring.sessions' })"
               >
-                {{ paymentAccount.bank_account_number }} ⧉
+                Lihat jadwal
               </button>
-              <div v-if="paymentAccount.bank_account_holder" class="text-bimbel-text-mid mt-0.5">
-                a.n. {{ paymentAccount.bank_account_holder }}
-              </div>
-            </div>
-            <div
-              v-if="paymentAccount.qris_image_url"
-              class="rounded-lg bg-bimbel-bg p-2.5 text-xs"
-            >
-              <div class="font-bold text-bimbel-text-hi mb-1.5">QRIS</div>
-              <img
-                :src="paymentAccount.qris_image_url"
-                alt="QRIS"
-                class="max-w-[180px] rounded border border-bimbel-border"
-              />
-            </div>
-            <div
-              v-if="paymentAccount.payment_instructions"
-              class="rounded-lg bg-bimbel-bg p-2.5 text-[11px] text-bimbel-text-mid whitespace-pre-line"
-            >
-              {{ paymentAccount.payment_instructions }}
-            </div>
-          </div>
-        </section>
+            </template>
+          </ParentPrimaryCard>
 
-        <!-- Schedule detail (full-width on mobile, half on >=sm) -->
-        <section :class="sectionCls" class="sm:col-span-2">
-          <div :class="sectionTitleRow">
-            <span :class="sectionIconCls">
-              <NavIcon name="calendar" :size="16" />
-            </span>
-            <h3 class="text-sm font-bold text-bimbel-text-hi tracking-tight">
-              {{ t('tutoring.overview.schedule') }}
-            </h3>
-          </div>
-          <p
-            v-if="data.upcomingSessions.length === 0"
-            class="text-xs text-bimbel-text-mid"
+          <div
+            v-else
+            class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-6 text-center text-sm text-bimbel-text-mid"
           >
-            {{ t('tutoring.overview.noSchedule') }}
-          </p>
-          <ul v-else class="space-y-2">
-            <li
-              v-for="s in data.upcomingSessions.slice(0, 5)"
-              :key="s.id"
-              class="flex gap-2"
-            >
-              <span class="mt-2 h-1.5 w-1.5 rounded-full bg-slate-400 flex-shrink-0" />
-              <div class="min-w-0">
-                <div class="text-sm font-semibold text-bimbel-text-hi">
-                  {{ s.scheduled_at ? formatDateShort(s.scheduled_at) : '—' }}
-                </div>
-                <div class="text-xs text-bimbel-text-mid truncate">
-                  {{
-                    [
-                      s.group?.program?.name,
-                      s.topic,
-                      s.room ? t('tutoring.overview.room') + ' ' + s.room : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')
-                  }}
-                </div>
-              </div>
-            </li>
-          </ul>
-        </section>
+            Tidak ada sesi hari ini.
+          </div>
+
+          <ParentRibbon
+            v-if="unpaidBills.length > 0"
+            icon="wallet"
+            label="TAGIHAN AKTIF"
+            :value="formatRupiah(unpaidTotal)"
+            :hint="unpaidHint"
+            tone="warning"
+            action-label="Bayar"
+            @action="goPayFirstBill"
+            @click="goToTagihan"
+          />
+          <ParentRibbon
+            v-else
+            icon="check-circle"
+            label="TAGIHAN"
+            value="Lunas semua"
+            hint="Belum ada tagihan aktif bulan ini"
+            tone="success"
+            clickable
+            @click="goToTagihan"
+          />
+        </div>
+
+        <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
+          <h4 class="mb-2 text-[13px] font-bold tracking-tight text-bimbel-text-hi">
+            Yang baru
+          </h4>
+          <div v-if="feed.length === 0" class="py-6 text-center text-[13px] text-bimbel-text-mid">
+            Belum ada aktivitas baru.
+          </div>
+          <ParentActivityRow
+            v-for="(e, i) in feed.slice(0, 8)"
+            :key="i"
+            compact
+            :type="e.type"
+            :title="e.title"
+            :subtitle="e.subtitle"
+            :occurred-at="e.occurred_at"
+          />
+        </aside>
       </div>
     </template>
   </div>

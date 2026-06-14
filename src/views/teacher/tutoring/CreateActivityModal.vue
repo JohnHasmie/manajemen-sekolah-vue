@@ -79,7 +79,7 @@ async function submit() {
 
       <div class="mt-4 space-y-3">
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Kelompok
           </span>
           <select
@@ -91,7 +91,7 @@ async function submit() {
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Tipe
           </span>
           <select
@@ -105,7 +105,7 @@ async function submit() {
           </select>
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Judul
           </span>
           <input
@@ -115,7 +115,7 @@ async function submit() {
           />
         </label>
         <label class="block">
-          <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+          <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
             Deskripsi / instruksi (opsional)
           </span>
           <textarea
@@ -126,7 +126,7 @@ async function submit() {
         </label>
         <div class="flex gap-2">
           <label class="block flex-1">
-            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+            <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
               Tenggat (opsional)
             </span>
             <input
@@ -136,7 +136,7 @@ async function submit() {
             />
           </label>
           <label class="block w-32">
-            <span class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider">
+            <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
               Jam
             </span>
             <input

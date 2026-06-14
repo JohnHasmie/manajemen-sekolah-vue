@@ -34,6 +34,36 @@ const filter = ref<Filter>('all');
 const bills = ref<TutoringBill[]>([]);
 const showFilterPicker = ref(false);
 const openBillId = ref<string | null>(null);
+const markPaidBillId = ref<string | null>(null);
+const markPaidForm = ref({
+  payment_method: 'bank_transfer',
+  payment_date: new Date().toISOString().slice(0, 10),
+  amount: undefined as number | undefined,
+  admin_notes: '',
+});
+const markPaidSaving = ref(false);
+
+const markPaidBill = computed(() =>
+  bills.value.find((b) => b.id === markPaidBillId.value) ?? null,
+);
+
+async function confirmMarkPaid() {
+  if (!markPaidBillId.value) return;
+  markPaidSaving.value = true;
+  try {
+    await TutoringService.markBillPaid(markPaidBillId.value, {
+      payment_method: markPaidForm.value.payment_method,
+      payment_date: markPaidForm.value.payment_date,
+      amount: markPaidForm.value.amount,
+      admin_notes: markPaidForm.value.admin_notes || undefined,
+    });
+    toast.success('Tagihan ditandai lunas.');
+    markPaidBillId.value = null;
+    await load();
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Gagal menandai lunas.');
+  } finally { markPaidSaving.value = false; }
+}
 
 const FILTER_OPTIONS = computed<{ key: Filter; label: string }[]>(() => [
   { key: 'all', label: 'Semua' },
@@ -196,17 +226,74 @@ const kpiCards = computed<KpiCard[]>(() => [
               <TutoringStatusPill :bill="b.status" />
             </td>
             <td class="px-3 py-3 text-right">
-              <button
-                type="button"
-                class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[11px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5"
-                @click.stop="openBillId = b.id"
-              >
-                Detail
-              </button>
+              <div class="inline-flex items-center gap-1.5">
+                <button
+                  v-if="b.status !== 'paid'"
+                  type="button"
+                  class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white hover:opacity-90"
+                  @click.stop="markPaidBillId = b.id"
+                >
+                  Tandai lunas
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[11px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5"
+                  @click.stop="openBillId = b.id"
+                >
+                  Detail
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Mark as paid modal -->
+    <div v-if="markPaidBillId && markPaidBill" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="markPaidBillId = null">
+      <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl">
+        <h3 class="text-[16px] font-bold text-bimbel-text-hi">Tandai sebagai lunas</h3>
+        <p class="text-[13px] text-bimbel-text-mid mt-0.5">Catat pembayaran manual yang sudah diterima admin.</p>
+
+        <div class="relative my-3 overflow-hidden rounded-xl border border-bimbel-border-soft bg-bimbel-bg/40 pl-4 pr-3 py-3">
+          <span class="absolute left-0 top-0 h-full w-1.5 bg-emerald-500" />
+          <p class="text-[12px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">TAGIHAN</p>
+          <p class="mt-0.5 text-[20px] font-extrabold text-bimbel-text-hi">{{ formatRupiah(markPaidBill.amount ?? 0) }}</p>
+          <p class="text-[13px] text-bimbel-text-mid">
+            {{ [markPaidBill.source_label, markPaidBill.student_name, markPaidBill.due_date ? `jatuh tempo ${formatDateShort(markPaidBill.due_date)}` : null].filter(Boolean).join(' · ') }}
+          </p>
+        </div>
+
+        <div class="space-y-2.5">
+          <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
+            <span class="text-[13px] text-bimbel-text-mid">Metode</span>
+            <select v-model="markPaidForm.payment_method" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
+              <option value="bank_transfer">Transfer bank</option>
+              <option value="qris">QRIS</option>
+              <option value="cash">Tunai</option>
+            </select>
+          </label>
+          <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
+            <span class="text-[13px] text-bimbel-text-mid">Tanggal bayar</span>
+            <input v-model="markPaidForm.payment_date" type="date" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          </label>
+          <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
+            <span class="text-[13px] text-bimbel-text-mid">Jumlah diterima</span>
+            <input v-model.number="markPaidForm.amount" type="number" :placeholder="markPaidBill.amount?.toString()" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          </label>
+          <label class="grid items-start gap-3" style="grid-template-columns: 120px 1fr;">
+            <span class="pt-2 text-[13px] text-bimbel-text-mid">Catatan admin</span>
+            <textarea v-model="markPaidForm.admin_notes" rows="2" placeholder="Opsional — bukti transfer diverifikasi, dll." class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"></textarea>
+          </label>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="markPaidBillId = null">Batal</button>
+          <button type="button" :disabled="markPaidSaving" class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="confirmMarkPaid">
+            {{ markPaidSaving ? 'Menyimpan…' : 'Tandai lunas' }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <BillDetailModal

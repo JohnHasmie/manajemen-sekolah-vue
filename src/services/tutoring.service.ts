@@ -228,6 +228,18 @@ export const TutoringService = {
     return extractData(res);
   },
 
+  /** Rich per-class list for the wali Kelas page. Backed by
+   *  GetWaliClassMetaAction — one row per kelompok with attendance,
+   *  next session, latest score, and unread-7d announcement count. */
+  async getWaliClassMeta(
+    studentId: string,
+  ): Promise<import('@/types/tutoring').TutoringWaliClassMeta[]> {
+    const res = await api.get<ApiResponse<{
+      classes: import('@/types/tutoring').TutoringWaliClassMeta[];
+    }>>(`/tutoring/students/${studentId}/wali-class-meta`);
+    return (extractData(res)?.classes ?? []) as import('@/types/tutoring').TutoringWaliClassMeta[];
+  },
+
   /** One combined fetch for the parent overview page (Promise.all). */
   async getChildOverview(studentId: string): Promise<TutoringChildOverview> {
     const now = new Date();
@@ -911,6 +923,62 @@ export const TutoringService = {
   ): Promise<TutoringFeedEvent[]> {
     const res = await api.get<ApiResponse<TutoringFeedEvent[]>>(
       '/tutoring/admin-activity',
+      {
+        params: {
+          ...(opts.limit ? { limit: opts.limit } : {}),
+          ...(opts.sinceDays ? { since_days: opts.sinceDays } : {}),
+        },
+      },
+    );
+    return extractData(res) ?? [];
+  },
+
+  /** Admin: activity/tasks report — per-group counts + KPIs. */
+  async getAdminActivityReport(
+    opts: { type?: string } = {},
+  ): Promise<import('@/types/tutoring').AdminActivityReport> {
+    const res = await api.get<ApiResponse<import('@/types/tutoring').AdminActivityReport>>(
+      '/tutoring/admin/reports/activity',
+      { params: { ...(opts.type ? { type: opts.type } : {}) } },
+    );
+    return extractData(res);
+  },
+
+  /** Admin: attendance report — 4-pill + per-group + low-attendance watch. */
+  async getAdminAttendanceReport(
+    opts: { from?: string; to?: string } = {},
+  ): Promise<import('@/types/tutoring').AdminAttendanceReport> {
+    const res = await api.get<ApiResponse<import('@/types/tutoring').AdminAttendanceReport>>(
+      '/tutoring/admin/reports/attendance',
+      { params: opts },
+    );
+    return extractData(res);
+  },
+
+  /** Tutor's own rating summary — overall avg + per-group + recent
+   *  comments. Backed by GetTutorRatingsSummaryAction. */
+  async getTutorRatingsSummary(
+    opts: { group_id?: string; stars?: number[]; has_comment?: boolean } = {},
+  ): Promise<import('@/types/tutoring').TutorRatingsSummary> {
+    const res = await api.get<ApiResponse<import('@/types/tutoring').TutorRatingsSummary>>(
+      '/tutoring/tutor/ratings/summary',
+      {
+        params: {
+          ...(opts.group_id ? { group_id: opts.group_id } : {}),
+          ...(opts.stars ? { stars: opts.stars.join(',') } : {}),
+          ...(opts.has_comment != null ? { has_comment: opts.has_comment ? 1 : 0 } : {}),
+        },
+      },
+    );
+    return extractData(res);
+  },
+
+  /** Tutor feed: submissions / ratings / enrollments / announcements / sessions done. */
+  async getTutorActivity(
+    opts: { limit?: number; sinceDays?: number } = {},
+  ): Promise<TutoringFeedEvent[]> {
+    const res = await api.get<ApiResponse<TutoringFeedEvent[]>>(
+      '/tutoring/tutor-activity',
       {
         params: {
           ...(opts.limit ? { limit: opts.limit } : {}),

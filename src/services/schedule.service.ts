@@ -123,6 +123,7 @@ function sessionFromJson(raw: any): ScheduleSession {
     lessonHour?.hour_number ??
     lessonHour?.jam_ke ??
     raw.hour_index ??
+    raw.hour_number ??
     raw.jam_ke ??
     raw.lesson_hour;
   const hourNum =

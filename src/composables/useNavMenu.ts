@@ -178,115 +178,82 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
   {
     titleKey: 'tutoring.nav.manajemen',
     items: [
-      {
-        to: '/admin/tutoring/students',
-        labelKey: 'tutoring.nav.students',
-        icon: 'users',
-      },
-      {
-        to: '/admin/tutoring/tutors',
-        labelKey: 'tutoring.nav.tutors',
-        icon: 'user-check',
-      },
+      { to: '/admin/tutoring/students', labelKey: 'tutoring.nav.students', icon: 'users' },
+      { to: '/admin/tutoring/tutors', labelKey: 'tutoring.nav.tutors', icon: 'user-check' },
+      { to: '/admin/tutoring/groups', labelKey: 'tutoring.nav.classes', icon: 'layers' },
     ],
   },
   {
     titleKey: 'tutoring.tenant.center',
     items: [
-      {
-        to: '/admin/tutoring/programs',
-        labelKey: 'tutoring.nav.programs',
-        icon: 'layers',
-      },
-      {
-        to: '/admin/tutoring/sessions',
-        labelKey: 'tutoring.nav.sessions',
-        icon: 'calendar',
-      },
-      {
-        to: '/admin/tutoring/bills',
-        labelKey: 'tutoring.nav.bills',
-        icon: 'wallet',
-      },
-      {
-        to: '/admin/tutoring/billing-settings',
-        labelKey: 'tutoring.nav.billingSettings',
-        icon: 'settings',
-      },
-      {
-        to: '/admin/tutoring/payouts',
-        labelKey: 'tutoring.nav.payouts',
-        icon: 'wallet',
-      },
-      {
-        to: '/admin/tutoring/leads',
-        labelKey: 'tutoring.nav.leads',
-        icon: 'users',
-      },
-      {
-        to: '/admin/tutoring/vouchers',
-        labelKey: 'tutoring.nav.vouchers',
-        icon: 'wallet',
-      },
-      {
-        to: '/admin/tutoring/group-announcements',
-        labelKey: 'tutoring.nav.groupAnnouncements',
-        icon: 'megaphone',
-      },
-      {
-        to: '/admin/tutoring/leaderboard',
-        labelKey: 'tutoring.nav.leaderboard',
-        icon: 'bar-chart-2',
-      },
+      { to: '/admin/tutoring/programs', labelKey: 'tutoring.nav.programs', icon: 'layers' },
+      { to: '/admin/tutoring/sessions', labelKey: 'tutoring.nav.sessions', icon: 'calendar' },
+      { to: '/admin/tutoring/bills', labelKey: 'tutoring.nav.bills', icon: 'wallet' },
+      { to: '/admin/tutoring/billing-settings', labelKey: 'tutoring.nav.billingSettings', icon: 'settings' },
+      { to: '/admin/tutoring/payouts', labelKey: 'tutoring.nav.payouts', icon: 'wallet' },
+      { to: '/admin/tutoring/leads', labelKey: 'tutoring.nav.leads', icon: 'users' },
+      { to: '/admin/tutoring/vouchers', labelKey: 'tutoring.nav.vouchers', icon: 'wallet' },
+      { to: '/admin/tutoring/group-announcements', labelKey: 'tutoring.nav.groupAnnouncements', icon: 'megaphone' },
+      { to: '/admin/tutoring/leaderboard', labelKey: 'tutoring.nav.leaderboard', icon: 'bar-chart' },
+    ],
+  },
+  {
+    titleKey: 'tutoring.nav.sectionExtra',
+    items: [
+      { to: '/admin/tutoring/reports/activity', labelKey: 'tutoring.nav.activities', icon: 'bar-chart' },
+      { to: '/admin/tutoring/reports/attendance', labelKey: 'tutoring.nav.attendance', icon: 'check-square' },
+    ],
+  },
+  {
+    titleKey: 'tutoring.nav.sectionAccount',
+    items: [
+      { to: '/admin/tutoring/notifications', labelKey: 'tutoring.nav.notifications', icon: 'bell' },
+      { to: '/admin/tutoring/profile', labelKey: 'tutoring.nav.profile', icon: 'user' },
+      { to: '/admin/tutoring/appearance', labelKey: 'tutoring.nav.appearance', icon: 'sun' },
     ],
   },
 ];
 
 const TEACHER_TUTORING_NAV: NavSection[] = [
   {
-    titleKey: '',
+    titleKey: 'tutoring.nav.sectionMain',
     items: [
-      { to: '/teacher', labelKey: 'nav.dashboard', icon: 'home' },
+      { to: '/teacher', labelKey: 'tutoring.nav.home', icon: 'home' },
       {
-        to: '/teacher/announcements',
-        labelKey: 'nav.announcements',
-        icon: 'megaphone',
+        to: '/teacher/tutoring/kelas',
+        labelKey: 'tutoring.nav.classes',
+        icon: 'layers',
+      },
+      {
+        to: '/teacher/tutoring/sessions',
+        labelKey: 'tutoring.nav.jadwal',
+        icon: 'calendar',
+      },
+      {
+        to: '/teacher/tutoring/earnings',
+        labelKey: 'tutoring.nav.honor',
+        icon: 'wallet',
       },
     ],
   },
   {
-    titleKey: 'tutoring.tenant.center',
+    titleKey: 'tutoring.nav.sectionExtra',
     items: [
-      {
-        to: '/teacher/tutoring/sessions',
-        labelKey: 'tutoring.nav.sessions',
-        icon: 'calendar',
-      },
-      {
-        to: '/teacher/tutoring/recurring',
-        labelKey: 'tutoring.nav.recurring',
-        icon: 'calendar',
-      },
-      {
-        to: '/teacher/tutoring/activities',
-        labelKey: 'tutoring.nav.activities',
-        icon: 'book',
-      },
-      {
-        to: '/teacher/tutoring/materials',
-        labelKey: 'tutoring.nav.materials',
-        icon: 'book',
-      },
-      {
-        to: '/teacher/tutoring/tryout-generator',
-        labelKey: 'tutoring.nav.ai',
-        icon: 'sparkles',
-      },
-      {
-        to: '/teacher/tutoring/earnings',
-        labelKey: 'tutoring.nav.earnings',
-        icon: 'wallet',
-      },
+      { to: '/teacher/tutoring/materials', labelKey: 'tutoring.nav.materials', icon: 'book' },
+      { to: '/teacher/tutoring/tryout-generator', labelKey: 'tutoring.nav.ai', icon: 'sparkles' },
+      { to: '/teacher/tutoring/recurring', labelKey: 'tutoring.nav.recurring', icon: 'calendar' },
+      { to: '/teacher/tutoring/activities', labelKey: 'tutoring.nav.activities', icon: 'check-circle' },
+      { to: '/teacher/tutoring/ratings', labelKey: 'tutoring.nav.rating', icon: 'star' },
+      { to: '/teacher/tutoring/announcements', labelKey: 'nav.announcements', icon: 'megaphone' },
+      { to: '/teacher/tutoring/leaderboard', labelKey: 'tutoring.nav.leaderboard', icon: 'bar-chart' },
+    ],
+  },
+  {
+    titleKey: 'tutoring.nav.sectionAccount',
+    items: [
+      { to: '/teacher/tutoring/notifications', labelKey: 'tutoring.nav.notifications', icon: 'bell' },
+      { to: '/teacher/tutoring/profile', labelKey: 'tutoring.nav.profile', icon: 'user' },
+      { to: '/teacher/tutoring/appearance', labelKey: 'tutoring.nav.appearance', icon: 'sun' },
     ],
   },
 ];
@@ -304,37 +271,34 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
  * route.
  */
 function parentTutoringNav(activeChildId: string): NavSection[] {
-  const monitoringPath = activeChildId
-    ? `/parent/tutoring/${activeChildId}`
-    : '/parent';
+  const child = activeChildId || ':studentId';
+  const homePath = activeChildId ? `/parent/tutoring/${child}` : '/parent';
   return [
     {
       titleKey: '',
       items: [
-        { to: '/parent', labelKey: 'nav.dashboard', icon: 'home' },
-        {
-          to: monitoringPath,
-          labelKey: 'tutoring.nav.monitoring',
-          icon: 'eye',
-        },
+        { to: homePath, labelKey: 'tutoring.nav.home', icon: 'home' },
+        { to: `/parent/tutoring/${child}/classes`, labelKey: 'tutoring.nav.classes', icon: 'layers' },
+        { to: `/parent/tutoring/${child}/sessions`, labelKey: 'tutoring.nav.sessions', icon: 'calendar' },
+        { to: `/parent/tutoring/${child}/bills`, labelKey: 'tutoring.nav.bills', icon: 'wallet' },
       ],
     },
     {
-      titleKey: 'tutoring.nav.sectionFinance',
+      titleKey: 'tutoring.nav.sectionExtra',
       items: [
-        // Bills tenant-scoped via X-Tenant-ID, jadi shared view jalan
-        // baik untuk sekolah maupun bimbel tanpa duplikasi.
-        { to: '/parent/billing', labelKey: 'tutoring.nav.bills', icon: 'wallet' },
+        { to: `/parent/tutoring/${child}/activities`, labelKey: 'tutoring.nav.activities', icon: 'book' },
+        { to: `/parent/tutoring/${child}/progress`, labelKey: 'tutoring.nav.progress', icon: 'bar-chart' },
+        { to: `/parent/tutoring/${child}/leaderboard`, labelKey: 'tutoring.nav.leaderboard', icon: 'check-square' },
+        { to: `/parent/tutoring/${child}/announcements`, labelKey: 'nav.announcements', icon: 'megaphone' },
+        { to: '/parent/tutoring/vouchers', labelKey: 'tutoring.nav.myVouchers', icon: 'sparkles' },
       ],
     },
     {
-      titleKey: 'tutoring.nav.sectionCommunity',
+      titleKey: 'tutoring.nav.sectionAccount',
       items: [
-        {
-          to: '/parent/announcements',
-          labelKey: 'nav.announcements',
-          icon: 'megaphone',
-        },
+        { to: '/parent/tutoring/notifications', labelKey: 'tutoring.nav.notifications', icon: 'bell' },
+        { to: '/parent/tutoring/profile', labelKey: 'tutoring.nav.profile', icon: 'user' },
+        { to: '/parent/tutoring/appearance', labelKey: 'tutoring.nav.appearance', icon: 'sun' },
       ],
     },
   ];

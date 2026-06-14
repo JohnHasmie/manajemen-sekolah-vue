@@ -1,95 +1,129 @@
 <!--
-  TutorTutoringHomeView — tutor's home tab inside the BIMBEL tenant.
+  TutorTutoringHomeView — bimbel tutor Beranda.
 
-  Replaces the school teacher dashboard body when the active tenant is
-  a tutoring center. The school dashboard's KPIs (RPP / E-Rapor /
-  Kehadiran siswa kelas) read empty for a bimbel tenant and the quick
-  actions point at modules that don't apply (Draft RPP / E-Rapor).
-  This view ships the bimbel-native equivalents: tutor KPI strip +
-  quick actions for Sesi / Buat Sesi / AI Generator.
+  Layout mirrors mobile `tutor_beranda_screen.dart`:
+
+    1. Greeting hero (navy, role-tier cyan) + 3-stat strip
+       Kelas / Sesi mgg ini / Rating
+    2. Sesi berikutnya — accent-stripe card with countdown chip
+       (success-tinted if ≤ 24h away) + Catatan kehadiran CTA
+    3. Kelas saya — 3-col gradient class cards (filtered to groups
+       where tutor_user_id = me)
+    4. 4 shortcuts row — Bahan Ajar / Soal AI / Rating / Sesi Berulang
+    5. Honor ribbon — month_earnings (success tone, always shown)
+    6. Yang baru feed — last 6 events from /tutoring/tutor-activity
+
+  Light/dark is automatic via the `bimbel-light` / `bimbel-dark`
+  wrapper class applied by AppShell from useBimbelThemeStore.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useAuthStore } from '@/stores/auth';
-import type { TutoringTutorStats } from '@/types/tutoring';
+import type {
+  TutoringTutorStats,
+  TutoringGroup,
+  TutoringFeedEvent,
+} from '@/types/tutoring';
 
-import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import KpiStripCards, {
-  type KpiCard,
-} from '@/components/feature/KpiStripCards.vue';
-import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue';
+import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorPrimaryCard from '@/components/feature/tutoring/TutorPrimaryCard.vue';
+import TutorClassCard from '@/components/feature/tutoring/TutorClassCard.vue';
+import TutorShortcutTile from '@/components/feature/tutoring/TutorShortcutTile.vue';
+import TutorRibbon from '@/components/feature/tutoring/TutorRibbon.vue';
+import TutorActivityRow from '@/components/feature/tutoring/TutorActivityRow.vue';
 import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSectionHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { formatRupiah } from '@/lib/format';
 
-const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
 
 const loading = ref(true);
 const stats = ref<TutoringTutorStats | null>(null);
+const groups = ref<TutoringGroup[]>([]);
+const feed = ref<TutoringFeedEvent[]>([]);
 
 async function load() {
   loading.value = true;
   try {
-    stats.value = await TutoringService.getTutorStats();
-  } catch {/* non-fatal — page still works */}
-  finally {
+    const [s, g, f] = await Promise.all([
+      TutoringService.getTutorStats().catch(() => null),
+      TutoringService.getAllGroups().catch(() => [] as TutoringGroup[]),
+      TutoringService.getTutorActivity({ limit: 6 }).catch(
+        () => [] as TutoringFeedEvent[],
+      ),
+    ]);
+    stats.value = s;
+    groups.value = g;
+    feed.value = f;
+  } finally {
     loading.value = false;
   }
 }
 onMounted(load);
 
-function hoursLabel(h: number): string {
-  return h === Math.round(h) ? `${h}h` : `${h.toFixed(1)}h`;
+// ── Greeting + first-name (no gender on User payload yet) ─────────
+function timeGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 11) return 'Selamat pagi';
+  if (h < 15) return 'Selamat siang';
+  if (h < 19) return 'Selamat sore';
+  return 'Selamat malam';
 }
 
-const kpiCards = computed<KpiCard[]>(() => {
+const firstName = computed(() => {
+  const n = auth.user?.name || 'Tutor';
+  return n.split(/\s+/)[0];
+});
+
+const subtitle = computed(() => {
+  const kelas = myGroups.value.length;
+  return kelas > 0 ? `Tutor · ${kelas} kelas aktif` : 'Tutor';
+});
+
+// ── 3-stat hero strip ─────────────────────────────────────────────
+const heroStats = computed(() => {
   const s = stats.value;
-  if (!s) return [];
   return [
     {
-      icon: 'calendar',
-      label: 'Sesi hari ini',
-      value: s.sessions_today,
-      suffix: s.sessions_this_week > 0
-        ? `${s.sessions_this_week} pekan ini`
-        : undefined,
-      tone: 'brand',
-      accented: true,
+      label: 'Kelas',
+      value: String(myGroups.value.length),
+      hint: 'aktif',
     },
     {
-      icon: 'clock',
-      label: 'Jam pekan ini',
-      value: hoursLabel(s.hours_this_week),
-      tone: 'violet',
+      label: 'Sesi mgg ini',
+      value: String(s?.sessions_this_week ?? 0),
+      hint:
+        s && s.sessions_today > 0
+          ? `${s.sessions_today} hari ini`
+          : undefined,
     },
     {
-      icon: 'check-circle',
-      label: 'Kehadiran 30h',
-      value: s.attendance_rate == null ? '–' : `${s.attendance_rate}%`,
-      tone: 'green',
-    },
-    {
-      icon: 'check-circle',
-      label: 'Perlu nilai',
-      value: s.pending_submissions,
-      suffix: s.pending_submissions === 0
-        ? 'Tidak ada antrean'
-        : 'Tugas belum dinilai',
-      tone: s.pending_submissions > 0 ? 'amber' : 'green',
+      label: 'Rating',
+      value: s?.rating_avg == null ? '–' : s.rating_avg.toFixed(1),
+      hint:
+        s && s.rating_count > 0 ? `${s.rating_count} ulasan` : 'belum ada',
     },
   ];
 });
 
+// ── My groups filter ─────────────────────────────────────────────
+const myGroups = computed(() =>
+  groups.value.filter((g) => g.tutor_user_id === auth.user?.id),
+);
+
+const visibleGroups = computed(() => myGroups.value.slice(0, 6));
+
+// ── Sesi berikutnya — countdown + tone ────────────────────────────
+const nextSession = computed(() => stats.value?.next_session ?? null);
+
 const nextSessionLabel = computed(() => {
-  const ns = stats.value?.next_session;
-  if (!ns?.scheduled_at) return '—';
+  const ns = nextSession.value;
+  if (!ns?.scheduled_at) return null;
   const d = new Date(ns.scheduled_at);
-  if (Number.isNaN(d.valueOf())) return '—';
+  if (Number.isNaN(d.valueOf())) return null;
   return d.toLocaleString('id-ID', {
     weekday: 'short',
     day: 'numeric',
@@ -99,8 +133,30 @@ const nextSessionLabel = computed(() => {
   });
 });
 
+const nextSessionCountdown = computed(() => {
+  const ns = nextSession.value;
+  if (!ns?.scheduled_at) return null;
+  const d = new Date(ns.scheduled_at);
+  if (Number.isNaN(d.valueOf())) return null;
+  const diffMin = (d.valueOf() - Date.now()) / 60_000;
+  if (diffMin < 0) return 'mulai';
+  if (diffMin < 60) return `${Math.round(diffMin)} menit lagi`;
+  const h = diffMin / 60;
+  if (h < 24) return `${Math.round(h)} jam lagi`;
+  return `${Math.round(h / 24)} hari lagi`;
+});
+
+const nextSessionTone = computed<'success' | 'brand'>(() => {
+  const ns = nextSession.value;
+  if (!ns?.scheduled_at) return 'brand';
+  const d = new Date(ns.scheduled_at);
+  if (Number.isNaN(d.valueOf())) return 'brand';
+  const diffH = (d.valueOf() - Date.now()) / 3_600_000;
+  return diffH <= 24 ? 'success' : 'brand';
+});
+
 function goToAttendance() {
-  const ns = stats.value?.next_session;
+  const ns = nextSession.value;
   if (!ns) return;
   router.push({
     name: 'teacher.tutoring.attendance',
@@ -108,167 +164,167 @@ function goToAttendance() {
   });
 }
 
-const quickActions = [
-  {
-    icon: 'calendar',
-    title: t('tutoring.sessions.title'),
-    sub: 'List + kalender mengajar',
-    to: 'teacher.tutoring.sessions',
-  },
-  {
-    icon: 'plus',
-    title: 'Buat Sesi',
-    sub: 'Jadwalkan pertemuan baru',
-    to: 'teacher.tutoring.session-create',
-  },
-  {
-    icon: 'sparkles',
-    title: 'Generator Soal AI',
-    sub: 'Try-out / latihan via AI',
-    to: 'teacher.tutoring.tryout-generator',
-  },
-  {
-    icon: 'calendar',
-    title: 'Sesi Berulang',
-    sub: 'Generate jadwal mingguan sekali klik',
-    to: 'teacher.tutoring.recurring',
-  },
-  {
-    icon: 'book',
-    title: 'Aktivitas & Tugas',
-    sub: 'Beri tugas / quiz ke kelompok',
-    to: 'teacher.tutoring.activities',
-  },
-  {
-    icon: 'book',
-    title: 'Bahan Ajar',
-    sub: 'Unggah materi PDF / link ke kelompok',
-    to: 'teacher.tutoring.materials',
-  },
-  {
-    icon: 'wallet',
-    title: 'Penghasilan Saya',
-    sub: 'Estimasi honor bulan ini',
-    to: 'teacher.tutoring.earnings',
-  },
-  {
-    icon: 'sun',
-    title: 'Tampilan',
-    sub: 'Mode terang / gelap / otomatis',
-    to: 'teacher.tutoring.appearance',
-  },
+function goToClass(g: TutoringGroup) {
+  router.push({ name: 'teacher.tutoring.class-detail', params: { groupId: g.id } });
+}
+
+// ── 4 shortcuts ───────────────────────────────────────────────────
+const shortcuts = [
+  { icon: 'book', label: 'Bahan Ajar', hint: 'PDF / link', to: 'teacher.tutoring.materials' },
+  { icon: 'sparkles', label: 'Soal AI', hint: 'Try-out generator', to: 'teacher.tutoring.tryout-generator' },
+  { icon: 'star', label: 'Rating', hint: 'Feedback siswa', to: 'teacher.tutoring.appearance' },
+  { icon: 'calendar', label: 'Sesi Berulang', hint: 'Generate mingguan', to: 'teacher.tutoring.recurring' },
 ] as const;
+
+function goToShortcut(name: string) {
+  router.push({ name });
+}
 </script>
 
 <template>
-  <div class="space-y-md pb-12">
-    <BrandPageHeader
-      role="guru"
-      kicker="Bimbel · Beranda"
-      :title="auth.user?.name ? `Halo, ${auth.user.name}` : 'Halo, Tutor'"
-      meta="Pantau sesi mengajar, kelompok, dan kehadiran"
-      live-dot
-    />
-
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
-      {{ t('tutoring.common.loading') }}
+  <div class="space-y-4 pb-12">
+    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">
+      Memuat…
     </div>
 
     <template v-else>
-      <!-- ── Pinned next session ─────────────────────────────────── -->
-      <div
-        v-if="stats?.next_session"
-        class="rounded-xl border border-role-guru/25 bg-gradient-to-br from-role-guru/8 to-white p-4"
+      <!-- 1. Hero -->
+      <TutorBerandaHero
+        :greeting="timeGreeting()"
+        :title="`Halo, ${firstName}`"
+        :subtitle="subtitle"
+        :stats="heroStats"
+      />
+
+      <!-- 2. Sesi berikutnya -->
+      <TutorPrimaryCard
+        v-if="nextSession"
+        icon="calendar"
+        kicker="SESI BERIKUTNYA"
+        :title="nextSession.group_name || nextSession.topic || 'Sesi terjadwal'"
+        :subtitle="[
+          nextSession.program_name,
+          nextSession.room ? `Ruang ${nextSession.room}` : null,
+          nextSession.duration_minutes
+            ? `${nextSession.duration_minutes} menit`
+            : null,
+        ].filter(Boolean).join(' · ') || undefined"
+        :tone="nextSessionTone"
       >
-        <div class="flex items-center justify-between">
-          <span class="rounded-full bg-role-guru px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-widest text-white">
-            Sesi Berikutnya
+        <template #meta>
+          <span
+            class="rounded-full px-2.5 py-1 text-[12px] font-extrabold tracking-tight"
+            :class="
+              nextSessionTone === 'success'
+                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                : 'bg-bimbel-accent-dim text-bimbel-accent'
+            "
+          >
+            {{ nextSessionCountdown }}
           </span>
-          <span class="text-xs font-bold text-bimbel-text-mid">{{ nextSessionLabel }}</span>
-        </div>
-        <h3 class="mt-2 text-base font-extrabold tracking-tight text-bimbel-text-hi">
-          {{ stats.next_session.group_name || stats.next_session.topic || 'Sesi terjadwal' }}
-        </h3>
-        <p v-if="stats.next_session.program_name" class="text-xs text-bimbel-text-mid">
-          {{ [
-            stats.next_session.program_name,
-            stats.next_session.room ? `Ruang ${stats.next_session.room}` : null,
-            `${stats.next_session.duration_minutes} menit`,
-          ].filter(Boolean).join(' · ') }}
+        </template>
+        <p v-if="nextSessionLabel" class="text-bimbel-text-mid">
+          <NavIcon name="clock" :size="13" class="inline -mt-0.5" />
+          {{ nextSessionLabel }}
         </p>
-        <div class="mt-3 flex flex-wrap gap-2">
+        <template #actions>
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 rounded-lg bg-role-guru px-3.5 py-2 text-sm font-bold text-white hover:bg-role-guru/90"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-bimbel-accent px-3.5 py-2 text-sm font-bold text-white hover:opacity-90"
             @click="goToAttendance"
           >
             <NavIcon name="check-circle" :size="14" />
             Catat Kehadiran
           </button>
           <a
-            v-if="stats.next_session.meeting_url"
-            :href="stats.next_session.meeting_url"
+            v-if="nextSession.meeting_url"
+            :href="nextSession.meeting_url"
             target="_blank"
             rel="noopener"
-            class="inline-flex items-center gap-1.5 rounded-lg border border-role-guru/40 px-3.5 py-2 text-sm font-bold text-role-guru hover:bg-role-guru/5"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-bimbel-accent/40 px-3.5 py-2 text-sm font-bold text-bimbel-accent hover:bg-bimbel-accent-dim"
           >
             <NavIcon name="link" :size="14" />
             Meet
           </a>
-        </div>
-      </div>
+        </template>
+      </TutorPrimaryCard>
 
-      <KpiStripCards v-if="stats" :cards="kpiCards" />
-
-      <!-- ── Honor + rating preview strip ───────────────────────── -->
-      <div v-if="stats" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div class="rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2.5">
-          <div class="flex items-center gap-2">
-            <NavIcon name="wallet" :size="16" class="text-role-guru" />
-            <div class="min-w-0 flex-1">
-              <div class="truncate text-sm font-extrabold tracking-tight text-bimbel-text-hi">
-                {{ stats.month_earnings > 0 ? formatRupiah(stats.month_earnings) : 'Rp 0' }}
-              </div>
-              <div class="text-[10px] font-semibold uppercase tracking-wider text-bimbel-text-mid">
-                Honor bulan ini
-              </div>
-              <div class="truncate text-[10px] text-bimbel-text-lo">
-                {{ stats.month_sessions_done > 0
-                  ? `${stats.month_sessions_done} sesi DONE`
-                  : 'Belum ada sesi DONE' }}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2.5">
-          <div class="flex items-center gap-2">
-            <NavIcon name="check-circle" :size="16" class="text-role-guru" />
-            <div class="min-w-0 flex-1">
-              <div class="truncate text-sm font-extrabold tracking-tight text-bimbel-text-hi">
-                {{ stats.rating_avg == null ? '–' : stats.rating_avg.toFixed(1) }}
-              </div>
-              <div class="text-[10px] font-semibold uppercase tracking-wider text-bimbel-text-mid">
-                Rating 30h
-              </div>
-              <div class="truncate text-[10px] text-bimbel-text-lo">
-                {{ stats.rating_count === 0 ? 'Belum ada rating' : `${stats.rating_count} ulasan` }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <TutoringSectionHeader title="Aksi Cepat" />
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <TutoringListTile
-          v-for="a in quickActions"
-          :key="a.title"
-          :icon="a.icon"
-          accent="tutor"
-          :title="a.title"
-          :subtitle="a.sub"
-          :to="() => router.push({ name: a.to })"
+      <!-- 3. Kelas saya -->
+      <div>
+        <TutoringSectionHeader
+          title="Kelas saya"
+          :action-label="myGroups.length > 6 ? 'Lihat semua' : undefined"
+          @action="router.push({ name: 'teacher.tutoring.classes' })"
         />
+        <div
+          v-if="visibleGroups.length"
+          class="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          <TutorClassCard
+            v-for="g in visibleGroups"
+            :key="g.id"
+            :identity-key="g.id"
+            :name="g.name"
+            :program="g.tutor?.name ? `Tutor: ${g.tutor.name}` : undefined"
+            :meta="g.enrollments_count != null ? `${g.enrollments_count} siswa` : undefined"
+            @click="goToClass(g)"
+          />
+        </div>
+        <p v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-6 text-center text-sm text-bimbel-text-mid">
+          Belum ada kelas — admin akan menugaskan Anda ke kelompok.
+        </p>
+      </div>
+
+      <!-- 4. Shortcuts -->
+      <div>
+        <TutoringSectionHeader title="Akses cepat" />
+        <div class="grid gap-2.5 grid-cols-2 lg:grid-cols-4">
+          <TutorShortcutTile
+            v-for="sc in shortcuts"
+            :key="sc.label"
+            :icon="sc.icon"
+            :label="sc.label"
+            :hint="sc.hint"
+            @click="goToShortcut(sc.to)"
+          />
+        </div>
+      </div>
+
+      <!-- 5. Honor ribbon -->
+      <TutorRibbon
+        v-if="stats"
+        icon="wallet"
+        label="HONOR BULAN INI"
+        :value="formatRupiah(stats.month_earnings)"
+        :hint="
+          stats.month_sessions_done > 0
+            ? `${stats.month_sessions_done} sesi DONE`
+            : 'Belum ada sesi DONE'
+        "
+        tone="success"
+        clickable
+        @click="router.push({ name: 'teacher.tutoring.earnings' })"
+      />
+
+      <!-- 6. Yang baru -->
+      <div>
+        <TutoringSectionHeader title="Yang baru" />
+        <div v-if="feed.length" class="space-y-2">
+          <TutorActivityRow
+            v-for="(e, i) in feed"
+            :key="i"
+            :type="e.type"
+            :title="e.title"
+            :subtitle="e.subtitle"
+            :occurred-at="e.occurred_at"
+          />
+        </div>
+        <p
+          v-else
+          class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-6 text-center text-sm text-bimbel-text-mid"
+        >
+          Belum ada aktivitas di 14 hari terakhir.
+        </p>
       </div>
     </template>
   </div>

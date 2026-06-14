@@ -988,7 +988,7 @@ function onSchoolDeleted(result: DeleteDemoSchoolResult) {
                 {{ t('superAdmin.demoDetail.billingMode') }}
               </dt>
               <dd class="font-semibold text-slate-900">
-                {{ billingModeLabel(payload?.billing?.mode) }}
+                {{ billingModeLabel(payload?.bimbel?.billing_mode ?? payload?.billing?.mode) }}
               </dd>
             </div>
             <div>

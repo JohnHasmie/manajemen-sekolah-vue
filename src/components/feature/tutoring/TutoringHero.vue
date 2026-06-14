@@ -42,7 +42,7 @@ withDefaults(
     <div class="min-w-0 flex-1">
       <p
         v-if="greet"
-        class="text-[10px] font-bold text-bimbel-text-lo tracking-widest uppercase"
+        class="text-[12px] font-bold text-bimbel-text-lo tracking-widest uppercase"
       >
         {{ greet }}
       </p>
