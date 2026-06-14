@@ -19,10 +19,50 @@ import type {
 
 import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import AdminConfirmDialog from '@/components/feature/tutoring/AdminConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
 
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
 const userId = computed(() => String(route.params.userId || ''));
+
+const showEdit = ref(false);
+const editName = ref('');
+const editBusy = ref(false);
+const showDeactivate = ref(false);
+const deactivateBusy = ref(false);
+
+function openEdit() {
+  editName.value = tutor.value?.name ?? '';
+  showEdit.value = true;
+}
+
+async function submitEdit() {
+  if (!tutor.value) return;
+  if (editName.value.trim().length < 2) { toast.error('Nama minimal 2 huruf'); return; }
+  editBusy.value = true;
+  try {
+    await TutoringService.updateTutor(tutor.value.user_id, { name: editName.value.trim() });
+    toast.success('Profil tutor diperbarui.');
+    showEdit.value = false;
+    await load();
+  } catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.'); }
+  finally { editBusy.value = false; }
+}
+
+async function confirmDeactivate() {
+  if (!tutor.value) return;
+  deactivateBusy.value = true;
+  try {
+    const r = await TutoringService.deactivateTutor(tutor.value.user_id);
+    toast.success(r.groups_unassigned > 0
+      ? `Tutor nonaktif. ${r.groups_unassigned} kelompok perlu tutor baru.`
+      : 'Tutor nonaktif.');
+    router.push({ name: 'admin.tutoring.tutors' });
+  } catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal menonaktifkan.'); }
+  finally { deactivateBusy.value = false; }
+}
 
 const loading = ref(true);
 const tutor = ref<TutoringTutorRow | null>(null);
@@ -106,14 +146,55 @@ function whenLabel(iso?: string | null): string {
       :stats="heroStats"
     >
       <template #actions>
-        <button class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white">
+        <button
+          type="button"
+          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white hover:bg-white/25"
+          @click="openEdit"
+        >
           <NavIcon name="edit" :size="13" class="inline -mt-0.5" /> Edit
         </button>
-        <button class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold">
+        <button
+          type="button"
+          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-rose-200 hover:bg-rose-500/30"
+          @click="showDeactivate = true"
+        >
+          <NavIcon name="user-x" :size="13" class="inline -mt-0.5" /> Nonaktifkan
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold"
+          @click="router.push({ name: 'admin.tutoring.payouts' })"
+        >
           <NavIcon name="wallet" :size="13" class="inline -mt-0.5" /> Atur honor
         </button>
       </template>
     </TutorBerandaHero>
+
+    <div v-if="showEdit" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="showEdit = false">
+      <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
+        <h3 class="text-[16px] font-bold text-bimbel-text-hi">Ubah profil tutor</h3>
+        <p class="text-[13px] text-bimbel-text-mid">{{ tutor?.email }}</p>
+        <label class="block">
+          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama</span>
+          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+        </label>
+        <div class="flex gap-2 pt-1">
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="showEdit = false">Batal</button>
+          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? 'Menyimpan…' : 'Simpan' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <AdminConfirmDialog
+      :open="showDeactivate"
+      title="Nonaktifkan tutor?"
+      :message="`${tutor?.name ?? ''} akan dikeluarkan dari semua kelompok yang dia ajar dan kehilangan akses bimbel. Akun-nya tetap ada — admin bisa undang ulang nanti.`"
+      confirm-label="Nonaktifkan"
+      danger
+      :busy="deactivateBusy"
+      @cancel="showDeactivate = false"
+      @confirm="confirmDeactivate"
+    />
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 

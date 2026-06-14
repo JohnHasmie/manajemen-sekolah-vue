@@ -9,18 +9,25 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { TutoringService } from '@/services/tutoring.service';
+import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
 import type { TutoringStudentRow } from '@/types/tutoring';
 
 import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import AdminActionMenu from '@/components/feature/tutoring/AdminActionMenu.vue';
+import AdminConfirmDialog from '@/components/feature/tutoring/AdminConfirmDialog.vue';
 
 const router = useRouter();
+const toast = useToast();
 
 const loading = ref(true);
 const rows = ref<TutoringStudentRow[]>([]);
 const query = ref('');
 const status = ref<'all' | 'active' | 'risk' | 'graduated' | 'leave'>('all');
+
+const cancelTarget = ref<TutoringStudentRow | null>(null);
+const cancelBusy = ref(false);
 
 async function load() {
   loading.value = true;
@@ -29,6 +36,23 @@ async function load() {
   finally { loading.value = false; }
 }
 onMounted(load);
+
+function pickRow(r: TutoringStudentRow, key: string) {
+  if (key === 'cancel') cancelTarget.value = r;
+}
+
+async function confirmCancel() {
+  if (!cancelTarget.value) return;
+  cancelBusy.value = true;
+  try {
+    await TutoringService.cancelEnrollment(cancelTarget.value.enrollment_id);
+    toast.success('Enrollment dihentikan.');
+    cancelTarget.value = null;
+    await load();
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Gagal menghentikan.');
+  } finally { cancelBusy.value = false; }
+}
 
 function classify(r: TutoringStudentRow): 'active' | 'risk' | 'graduated' | 'leave' {
   if (r.attendance_rate != null && r.attendance_rate < 70) return 'risk';
@@ -124,6 +148,7 @@ function goEnroll() { router.push({ name: 'admin.tutoring.enroll' }); }
             <th class="px-3 py-2 w-[110px]">Tunggakan</th>
             <th class="px-3 py-2 w-[120px]">Hadir 30h</th>
             <th class="px-3 py-2 w-[80px]">Status</th>
+            <th class="px-3 py-2 w-[40px]"></th>
           </tr>
         </thead>
         <tbody>
@@ -161,6 +186,13 @@ function goEnroll() { router.push({ name: 'admin.tutoring.enroll' }); }
                 :class="classify(r) === 'risk' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'"
               >{{ classify(r) === 'risk' ? 'Berisiko' : 'Aktif' }}</span>
             </td>
+            <td class="px-3 py-2.5 text-right">
+              <AdminActionMenu
+                :items="[{ key: 'cancel', label: 'Hentikan enrollment', icon: 'user-x', danger: true }]"
+                aria-label="Aksi siswa"
+                @pick="(k) => pickRow(r, k)"
+              />
+            </td>
           </tr>
         </tbody>
       </table>
@@ -169,5 +201,16 @@ function goEnroll() { router.push({ name: 'admin.tutoring.enroll' }); }
     <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
       Tidak ada siswa sesuai filter.
     </div>
+
+    <AdminConfirmDialog
+      :open="!!cancelTarget"
+      title="Hentikan enrollment?"
+      :message="`Siswa ${cancelTarget?.student_name ?? ''} akan berhenti aktif di kelompok ini. Tagihan tertunda tetap berlaku.`"
+      confirm-label="Hentikan"
+      danger
+      :busy="cancelBusy"
+      @cancel="cancelTarget = null"
+      @confirm="confirmCancel"
+    />
   </div>
 </template>

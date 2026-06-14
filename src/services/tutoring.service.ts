@@ -343,6 +343,38 @@ export const TutoringService = {
     return extractData(res);
   },
 
+  async updateGroup(
+    groupId: string,
+    payload: { name?: string; capacity?: number },
+  ): Promise<void> {
+    await api.put(`/tutoring/groups/${groupId}`, payload);
+  },
+
+  async deleteGroup(groupId: string): Promise<void> {
+    await api.delete(`/tutoring/groups/${groupId}`);
+  },
+
+  async assignGroupTutor(groupId: string, tutorUserId: string | null): Promise<void> {
+    await api.post(`/tutoring/groups/${groupId}/assign-tutor`, {
+      tutor_user_id: tutorUserId,
+    });
+  },
+
+  async updateTutor(userId: string, payload: { name: string }): Promise<void> {
+    await api.put(`/tutoring/tutors/${userId}`, payload);
+  },
+
+  async deactivateTutor(userId: string): Promise<{ groups_unassigned: number }> {
+    const res = await api.post<ApiResponse<{ groups_unassigned: number }>>(
+      `/tutoring/tutors/${userId}/deactivate`,
+    );
+    return extractData(res) ?? { groups_unassigned: 0 };
+  },
+
+  async cancelEnrollment(enrollmentId: string): Promise<void> {
+    await api.post(`/tutoring/enrollments/${enrollmentId}/cancel`);
+  },
+
   // ── Admin: enrollment ───────────────────────────────────────────
 
   /** Tenant students (for the enroll picker) via the core /student. */
