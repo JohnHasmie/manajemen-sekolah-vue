@@ -21,7 +21,25 @@ const studentId = computed(() =>
 );
 
 type FilterId = 'all' | 'pending' | 'ULANGAN' | 'TUGAS' | 'KUIS';
+
+// Backend resource (TutoringActivitySubmissionResource) eager-loads
+// `activity` + `activity.group`. The TS type for the submission only
+// declares scalar fields, so we extend it locally with the nested
+// shape returned by the API. Pulling activity.title / type_label /
+// due_at / group.name out of here is what gives each row real content
+// instead of just "Tugas · dikumpul X".
+type Activity = {
+  title?: string | null;
+  type?: string | null;
+  type_label?: string | null;
+  due_at?: string | null;
+  description?: string | null;
+  group?: { id?: string; name?: string | null } | null;
+};
 type RichSubmission = TutoringActivitySubmission & {
+  activity?: Activity | null;
+  // Legacy flat fields kept as fallbacks in case some endpoint
+  // variant ships them at the root.
   activity_title?: string;
   activity_type?: string;
   subject_name?: string;
@@ -29,6 +47,23 @@ type RichSubmission = TutoringActivitySubmission & {
   tutor_name?: string;
   due_at?: string;
 };
+
+// ── Field accessors (nested-first, flat-fallback) ──────────────
+function actTitle(a: RichSubmission): string {
+  return a.activity?.title ?? a.activity_title ?? 'Tugas';
+}
+function actType(a: RichSubmission): string {
+  return (a.activity?.type ?? a.activity_type ?? '').toUpperCase();
+}
+function actTypeLabel(a: RichSubmission): string {
+  return a.activity?.type_label ?? actType(a) ?? '';
+}
+function actGroup(a: RichSubmission): string | null {
+  return a.activity?.group?.name ?? a.group_name ?? null;
+}
+function actDueAt(a: RichSubmission): string | null {
+  return a.activity?.due_at ?? a.due_at ?? null;
+}
 
 const loading = ref(true);
 const activities = ref<RichSubmission[]>([]);
@@ -47,12 +82,8 @@ onMounted(load);
 watch(studentId, load);
 
 // ── Type normalization ─────────────────────────────────────────
-function rawType(a: RichSubmission): string {
-  return (a.activity_type ?? '').toUpperCase();
-}
-
 function bucketOf(a: RichSubmission): 'ULANGAN' | 'TUGAS' | 'KUIS' | 'OTHER' {
-  const t = rawType(a);
+  const t = actType(a);
   if (t === 'EXAM' || t === 'ULANGAN') return 'ULANGAN';
   if (t === 'QUIZ' || t === 'KUIS') return 'KUIS';
   if (t === 'HOMEWORK' || t === 'TUGAS' || t === 'PROJECT' || t === 'ESSAY') return 'TUGAS';
@@ -101,7 +132,7 @@ const visible = computed(() => {
 // ── Icon mapping ────────────────────────────────────────────────
 function iconName(a: RichSubmission): string {
   const b = bucketOf(a);
-  const t = rawType(a);
+  const t = actType(a);
   if (b === 'ULANGAN') return 'check-circle';
   if (b === 'KUIS') return 'check-circle';
   if (t === 'ESSAY' || t === 'PROJECT') return 'edit';
@@ -110,7 +141,7 @@ function iconName(a: RichSubmission): string {
 
 function iconStyle(a: RichSubmission): Record<string, string> {
   const b = bucketOf(a);
-  const t = rawType(a);
+  const t = actType(a);
   if (b === 'ULANGAN') {
     return isDone(a)
       ? { background: 'var(--bimbel-green-dim, rgba(22,163,74,.15))', color: '#15803d' }
@@ -126,29 +157,44 @@ function iconStyle(a: RichSubmission): Record<string, string> {
 }
 
 // ── Subtitle / pill ─────────────────────────────────────────────
+function fmtDate(iso?: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.valueOf())) return null;
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+}
+
 function daysUntilDue(a: RichSubmission): number | null {
-  const due = a.due_at;
+  const due = actDueAt(a);
   if (!due) return null;
   const d = new Date(due);
   if (Number.isNaN(d.valueOf())) return null;
   return Math.ceil((d.valueOf() - Date.now()) / 86_400_000);
 }
 
+// Build the row subtitle from real backend fields. Always shows
+// kelompok if present, plus a status-appropriate trailing fact:
+//   - GRADED   → "Nilai X/Y"
+//   - SUBMITTED→ "Dikumpul DD MMM"
+//   - others   → "Deadline DD MMM" or "Lewat N hari"
 function subtitle(a: RichSubmission): string {
   const parts: string[] = [];
-  const subj = a.subject_name ?? a.group_name;
-  if (subj) parts.push(subj);
-  if (a.tutor_name) parts.push(a.tutor_name);
+  const typeLabel = actTypeLabel(a);
+  if (typeLabel) parts.push(typeLabel);
+  const group = actGroup(a);
+  if (group) parts.push(group);
+
   if (a.status === 'GRADED' && a.score != null) {
-    parts.push(`nilai ${a.score}/${a.max_score ?? 100}`);
+    parts.push(`Nilai ${a.score}${a.max_score ? `/${a.max_score}` : ''}`);
+  } else if (a.status === 'SUBMITTED' && a.submitted_at) {
+    parts.push(`Dikumpul ${fmtDate(a.submitted_at)}`);
   } else {
-    const days = daysUntilDue(a);
-    if (days != null) {
-      parts.push(days < 0 ? `lewat ${Math.abs(days)} hari` : `deadline ${days} hari`);
-    } else if (a.submitted_at) {
-      parts.push(
-        `dikumpul ${new Date(a.submitted_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`,
-      );
+    const due = actDueAt(a);
+    if (due) {
+      const days = daysUntilDue(a);
+      const dueLabel = fmtDate(due);
+      if (days != null && days < 0) parts.push(`Lewat ${Math.abs(days)} hari · ${dueLabel}`);
+      else parts.push(`Deadline ${dueLabel}`);
     }
   }
   return parts.join(' · ');
@@ -217,7 +263,7 @@ function pillLabel(a: RichSubmission): string {
         </div>
         <div class="min-w-0">
           <p class="text-[13px] font-bold text-bimbel-text-hi">
-            {{ a.activity_title ?? 'Tugas' }}
+            {{ actTitle(a) }}
           </p>
           <p class="text-[11px] text-bimbel-text-mid">{{ subtitle(a) }}</p>
         </div>

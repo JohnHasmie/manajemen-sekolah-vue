@@ -174,9 +174,10 @@ watch(() => route.fullPath, () => {
 });
 
 const isActive = (to: string) => {
-  // The role home (e.g. /admin, /super-admin) is active only on exact
-  // match; everything else is active on prefix match.
+  // Exact match always wins.
   if (to === route.path) return true;
+  // Role-home roots are exact-match only — otherwise /admin would
+  // light up on every /admin/* page.
   if (
     to === '/admin' ||
     to === '/teacher' ||
@@ -184,6 +185,14 @@ const isActive = (to: string) => {
     to === '/staff' ||
     to === '/super-admin'
   ) {
+    return false;
+  }
+  // Bimbel parent's "Beranda" link is /parent/tutoring/:sid (with no
+  // further segments). Without this exception its prefix would match
+  // every sibling page like /parent/tutoring/:sid/announcements and
+  // both Beranda + that page would highlight. Same shape applies to
+  // any tutoring-home pattern (3 path segments under /parent/tutoring/).
+  if (/^\/parent\/tutoring\/[^/]+$/.test(to)) {
     return false;
   }
   return route.path.startsWith(`${to}/`) || route.path === to;
