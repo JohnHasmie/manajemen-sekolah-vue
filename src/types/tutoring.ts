@@ -558,24 +558,39 @@ export interface AdminActivityReport {
 }
 
 /** Admin attendance report — 4-pill breakdown + per-group rates +
- *  watch-list of low-attendance students. */
+ *  watch-list of low-attendance students. Keys mirror
+ *  GetAdminAttendanceReportAction's payload verbatim. */
 export interface AdminAttendanceReport {
-  pills: { hadir: number; izin: number; sakit: number; alpha: number };
-  rows: Array<{
+  window: { from: string; to: string };
+  pills: {
+    hadir: number;
+    izin: number;
+    sakit: number;
+    alpa: number;
+    total: number;
+  };
+  tenant: {
+    attendance_rate: number | null;
+    attendance_rate_delta: number | null;
+    done_sessions: number;
+  };
+  groups: Array<{
     group_id: string;
     group_name: string;
-    students: number;
-    sessions: number;
-    hadir_pct: number | null;
-    tutor_name?: string | null;
+    tutor_name: string | null;
+    students_count: number;
+    sessions_count: number;
+    attendance_rate: number | null;
   }>;
-  watch: Array<{
+  watchlist: Array<{
     student_id: string;
     student_name: string;
-    group_name: string;
-    sessions_done: number;
-    hadir: number;
-    hadir_pct: number | null;
+    attended: number;
+    total: number;
+    attendance_rate: number;
+    alpha_count: number;
+    excused_count: number;
+    sick_count: number;
   }>;
 }
 

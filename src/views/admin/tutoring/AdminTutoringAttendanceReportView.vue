@@ -1,10 +1,10 @@
 <!--
   AdminTutoringAttendanceReportView — tenant-wide attendance report
   with 4-pill strip + per-group rates + low-attendance watch list.
-  Mockup admin_web_pages_reports_markpaid frame 2.
+  Payload keys mirror GetAdminAttendanceReportAction.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch as watchRef } from 'vue';
 import { TutoringService } from '@/services/tutoring.service';
 import type { AdminAttendanceReport } from '@/types/tutoring';
 
@@ -26,12 +26,11 @@ async function load() {
   finally { loading.value = false; }
 }
 onMounted(load);
-watch(range, load);
+watchRef(range, load);
 
-const total = computed(() => {
-  const p = data.value?.pills;
-  return p ? p.hadir + p.izin + p.sakit + p.alpha : 0;
-});
+const total = computed(() => data.value?.pills.total ?? 0);
+const groups = computed(() => data.value?.groups ?? []);
+const watchlist = computed(() => data.value?.watchlist ?? []);
 
 function pct(n: number): number {
   return total.value > 0 ? Math.round((n / total.value) * 100) : 0;
@@ -89,7 +88,7 @@ function pctClass(p: number | null): string {
         </div>
         <div class="rounded-2xl bg-rose-500/15 p-3.5">
           <p class="text-[12px] font-bold uppercase tracking-widest text-rose-700 dark:text-rose-300">ALPHA</p>
-          <p class="mt-1 text-[22px] font-extrabold text-rose-700 dark:text-rose-300">{{ pct(data.pills.alpha) }}%</p>
+          <p class="mt-1 text-[22px] font-extrabold text-rose-700 dark:text-rose-300">{{ pct(data.pills.alpa) }}%</p>
         </div>
       </div>
 
@@ -105,17 +104,22 @@ function pctClass(p: number | null): string {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="r in data.rows" :key="r.group_id" class="border-t border-bimbel-border-soft">
+              <tr v-if="groups.length === 0">
+                <td colspan="4" class="px-3 py-6 text-center text-[13px] text-bimbel-text-mid">
+                  Belum ada data presensi pada rentang ini.
+                </td>
+              </tr>
+              <tr v-for="r in groups" :key="r.group_id" class="border-t border-bimbel-border-soft">
                 <td class="px-3 py-2.5">
                   <p class="font-bold text-bimbel-text-hi">{{ r.group_name }}</p>
-                  <p class="text-[12px] text-bimbel-text-mid">{{ r.students }} siswa</p>
+                  <p class="text-[12px] text-bimbel-text-mid">{{ r.students_count }} siswa</p>
                 </td>
-                <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.sessions }} sesi</td>
+                <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.sessions_count }} sesi</td>
                 <td class="px-3 py-2.5">
                   <span class="inline-block w-16 h-1.5 rounded-full bg-bimbel-border align-middle overflow-hidden mr-1.5">
-                    <span class="block h-full" :class="pctClass(r.hadir_pct)" :style="{ width: r.hadir_pct != null ? `${r.hadir_pct}%` : '0%' }" />
+                    <span class="block h-full" :class="pctClass(r.attendance_rate)" :style="{ width: r.attendance_rate != null ? `${r.attendance_rate}%` : '0%' }" />
                   </span>
-                  <span class="text-[13px]">{{ r.hadir_pct ?? '–' }}%</span>
+                  <span class="text-[13px]">{{ r.attendance_rate ?? '–' }}%</span>
                 </td>
                 <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.tutor_name ?? '—' }}</td>
               </tr>
@@ -126,19 +130,19 @@ function pctClass(p: number | null): string {
         <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 lg:col-span-2 h-fit">
           <h4 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi">Siswa perlu perhatian</h4>
           <p class="text-[13px] text-bimbel-text-mid mb-3">Kehadiran di bawah 80%.</p>
-          <div v-if="data.watch.length === 0" class="text-[13px] text-bimbel-text-mid py-4 text-center">
+          <div v-if="watchlist.length === 0" class="text-[13px] text-bimbel-text-mid py-4 text-center">
             Tidak ada siswa di bawah ambang.
           </div>
           <div
-            v-for="w in data.watch"
+            v-for="w in watchlist"
             :key="w.student_id"
             class="border-t border-bimbel-border-soft py-2.5 first:border-t-0 first:pt-0"
           >
             <p class="text-[14px] font-bold text-bimbel-text-hi">{{ w.student_name }}</p>
-            <p class="text-[12px] text-bimbel-text-mid">{{ w.group_name }} · {{ w.hadir }} dari {{ w.sessions_done }} sesi ({{ w.hadir_pct ?? '–' }}%)</p>
+            <p class="text-[12px] text-bimbel-text-mid">{{ w.attended }} dari {{ w.total }} sesi ({{ w.attendance_rate }}%) · {{ w.alpha_count }} alpha</p>
           </div>
           <button
-            v-if="data.watch.length > 0"
+            v-if="watchlist.length > 0"
             type="button"
             class="mt-3 inline-flex items-center gap-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
           >
