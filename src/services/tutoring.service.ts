@@ -476,6 +476,37 @@ export const TutoringService = {
     return extractData(res);
   },
 
+  // ── Session reminder offsets (admin-configurable list) ────────
+  async getSessionReminderOffsets(): Promise<{
+    offsets_minutes: number[];
+    is_default: boolean;
+    max_offset_minutes: number;
+  }> {
+    const res = await api.get<ApiResponse<{
+      offsets_minutes: number[];
+      is_default: boolean;
+      max_offset_minutes: number;
+    }>>('/tutoring/settings/session-reminders');
+    return extractData(res);
+  },
+
+  async updateSessionReminderOffsets(
+    offsetsMinutes: number[],
+  ): Promise<{
+    offsets_minutes: number[];
+    is_default: boolean;
+    max_offset_minutes: number;
+  }> {
+    const res = await api.put<ApiResponse<{
+      offsets_minutes: number[];
+      is_default: boolean;
+      max_offset_minutes: number;
+    }>>('/tutoring/settings/session-reminders', {
+      offsets_minutes: offsetsMinutes,
+    });
+    return extractData(res);
+  },
+
   // ── Tutor: sessions + attendance ────────────────────────────────
 
   /** KPI strip for the tutor's own dashboard — sessions/hours this
