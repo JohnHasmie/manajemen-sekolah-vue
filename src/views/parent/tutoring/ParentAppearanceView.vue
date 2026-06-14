@@ -55,7 +55,7 @@ const darkStart = computed({
       :stats="[]"
     />
 
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
       MODE WARNA
     </p>
     <div class="grid grid-cols-3 gap-2">
@@ -73,36 +73,36 @@ const darkStart = computed({
           class="block h-14 w-full rounded-md mb-2 border border-bimbel-border-soft"
           :style="m.preview"
         ></span>
-        <p class="text-[12px] font-bold text-bimbel-text-hi">{{ m.label }}</p>
-        <p class="text-[11px] text-bimbel-text-mid mt-0.5">{{ m.sub }}</p>
+        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ m.label }}</p>
+        <p class="text-[12px] text-bimbel-text-mid mt-0.5">{{ m.sub }}</p>
       </button>
     </div>
 
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
       JADWAL OTOMATIS
     </p>
     <div class="grid grid-cols-2 gap-2.5">
       <div>
-        <label class="block text-[11px] text-bimbel-text-mid mb-1">Jam terang mulai</label>
+        <label class="block text-[12px] text-bimbel-text-mid mb-1">Jam terang mulai</label>
         <input
           v-model="lightStart"
           type="time"
-          class="rounded-md bg-bimbel-bg px-3 py-1.5 text-[13px] font-mono text-bimbel-text-hi w-full focus:outline-none"
+          class="rounded-md bg-bimbel-bg px-3 py-1.5 text-[14px] font-mono text-bimbel-text-hi w-full focus:outline-none"
         />
       </div>
       <div>
-        <label class="block text-[11px] text-bimbel-text-mid mb-1">Jam gelap mulai</label>
+        <label class="block text-[12px] text-bimbel-text-mid mb-1">Jam gelap mulai</label>
         <input
           v-model="darkStart"
           type="time"
-          class="rounded-md bg-bimbel-bg px-3 py-1.5 text-[13px] font-mono text-bimbel-text-hi w-full focus:outline-none"
+          class="rounded-md bg-bimbel-bg px-3 py-1.5 text-[14px] font-mono text-bimbel-text-hi w-full focus:outline-none"
         />
       </div>
     </div>
 
     <div class="rounded-md bg-bimbel-accent-dim p-2.5 flex gap-2.5 items-center mt-2">
       <NavIcon name="info-circle" :size="14" class="text-bimbel-hero flex-shrink-0" />
-      <p class="text-[11px] text-bimbel-hero">
+      <p class="text-[12px] text-bimbel-hero">
         Pengaturan ini hanya berlaku untuk halaman Bimbel. Halaman sekolah pakai tema browser Anda.
       </p>
     </div>

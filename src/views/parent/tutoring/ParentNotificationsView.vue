@@ -126,7 +126,7 @@ const groupLabels: Record<GroupKey, string> = {
         <button
           v-if="unreadCount > 0"
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="markAll"
         >Tandai semua dibaca</button>
       </template>
@@ -159,8 +159,8 @@ const groupLabels: Record<GroupKey, string> = {
               <NavIcon :name="iconName(n)" :size="14" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-[13px] font-bold text-bimbel-text-hi">{{ n.title }}</p>
-              <p v-if="n.body" class="text-[11px] text-bimbel-text-mid">{{ n.body }}</p>
+              <p class="text-[14px] font-bold text-bimbel-text-hi">{{ n.title }}</p>
+              <p v-if="n.body" class="text-[12px] text-bimbel-text-mid">{{ n.body }}</p>
             </div>
             <span
               v-if="!n.read_at"
@@ -168,7 +168,7 @@ const groupLabels: Record<GroupKey, string> = {
             >BARU</span>
             <span
               v-else
-              class="text-[11px] text-bimbel-text-lo flex-shrink-0"
+              class="text-[12px] text-bimbel-text-lo flex-shrink-0"
             >{{ relTime(n.created_at) }}</span>
           </div>
         </template>
@@ -177,7 +177,7 @@ const groupLabels: Record<GroupKey, string> = {
 
     <div
       v-else
-      class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-8 text-center text-[13px] text-bimbel-text-mid"
+      class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-8 text-center text-[14px] text-bimbel-text-mid"
     >Belum ada notifikasi.</div>
   </div>
 </template>

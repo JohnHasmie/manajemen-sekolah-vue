@@ -222,7 +222,7 @@ const heroTitle = computed(() => {
         type="button"
         role="tab"
         :aria-selected="activeTab === t.id"
-        class="px-3 py-2 text-[12px] border-b-2 -mb-px transition-colors whitespace-nowrap"
+        class="px-3 py-2 text-[13px] border-b-2 -mb-px transition-colors whitespace-nowrap"
         :class="
           activeTab === t.id
             ? 'text-bimbel-hero border-bimbel-hero font-bold bg-bimbel-panel'
@@ -249,18 +249,18 @@ const heroTitle = computed(() => {
           <NavIcon :name="rowIconName(r)" :size="13" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[12px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
-          <p class="text-[11px] text-bimbel-text-mid">
+          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
+          <p class="text-[12px] text-bimbel-text-mid">
             {{ r.subtitle }}
             <span v-if="r.pill" :class="r.pill.cls">{{ r.pill.label }}</span>
           </p>
         </div>
-        <span class="text-[11px] text-bimbel-text-lo flex-shrink-0">{{ r.time_label }}</span>
+        <span class="text-[12px] text-bimbel-text-lo flex-shrink-0">{{ r.time_label }}</span>
       </div>
-      <p v-if="!aliran.length && !loading" class="text-center text-[12px] text-bimbel-text-mid py-6">
+      <p v-if="!aliran.length && !loading" class="text-center text-[13px] text-bimbel-text-mid py-6">
         Belum ada aktivitas di kelas ini.
       </p>
-      <p v-if="loading" class="text-center text-[12px] text-bimbel-text-mid py-6">Memuat…</p>
+      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">Memuat…</p>
     </div>
 
     <!-- Tugas tab -->
@@ -277,12 +277,12 @@ const heroTitle = computed(() => {
           <NavIcon name="book" :size="13" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[12px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
-          <p class="text-[11px] text-bimbel-text-mid">{{ r.subtitle }}</p>
+          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
+          <p class="text-[12px] text-bimbel-text-mid">{{ r.subtitle }}</p>
         </div>
         <span :class="r.pillCls">{{ r.pillLabel }}</span>
       </div>
-      <p v-if="!tugas.length" class="text-center text-[12px] text-bimbel-text-mid py-6">
+      <p v-if="!tugas.length" class="text-center text-[13px] text-bimbel-text-mid py-6">
         Belum ada tugas.
       </p>
     </div>
@@ -301,12 +301,12 @@ const heroTitle = computed(() => {
           <NavIcon name="check-circle" :size="13" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[12px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
-          <p class="text-[11px] text-bimbel-text-mid">{{ r.subtitle }}</p>
+          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ r.title }}</p>
+          <p class="text-[12px] text-bimbel-text-mid">{{ r.subtitle }}</p>
         </div>
         <span class="text-[16px] font-extrabold text-bimbel-text-hi">{{ r.score }}</span>
       </div>
-      <p v-if="!nilai.length" class="text-center text-[12px] text-bimbel-text-mid py-6">
+      <p v-if="!nilai.length" class="text-center text-[13px] text-bimbel-text-mid py-6">
         Belum ada nilai.
       </p>
     </div>
@@ -321,17 +321,17 @@ const heroTitle = computed(() => {
         :key="s.id || i"
         class="flex gap-2.5 py-2 border-b border-bimbel-border-soft last:border-b-0 items-center"
       >
-        <div class="w-8 h-8 rounded-full bg-bimbel-accent-dim text-bimbel-hero grid place-items-center text-[11px] font-bold">
+        <div class="w-8 h-8 rounded-full bg-bimbel-accent-dim text-bimbel-hero grid place-items-center text-[12px] font-bold">
           {{ initials(s.name) }}
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[12px] font-bold text-bimbel-text-hi">{{ s.name }}</p>
-          <p class="text-[11px] text-bimbel-text-mid">
+          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ s.name }}</p>
+          <p class="text-[12px] text-bimbel-text-mid">
             Kehadiran {{ s.attendance_rate ?? 0 }}%
           </p>
         </div>
       </div>
-      <p v-if="!siswa.length" class="text-center text-[12px] text-bimbel-text-mid py-6">
+      <p v-if="!siswa.length" class="text-center text-[13px] text-bimbel-text-mid py-6">
         Belum ada siswa.
       </p>
     </div>

@@ -314,7 +314,7 @@ watch(sliceKey, () => {
                 <h2 class="text-2xl sm:text-3xl font-black mt-1">
                   {{ t('parent.dashboard.attendanceTitle', { rate: attendanceRate }) }}
                 </h2>
-                <p class="text-[12px] text-white/85 mt-2">
+                <p class="text-[13px] text-white/85 mt-2">
                   {{ attendanceTotal
                     ? t('parent.dashboard.daysPresentOf', { count: attendancePresent, total: attendanceTotal })
                     : t('parent.dashboard.daysPresent', { count: attendancePresent }) }}
@@ -386,7 +386,7 @@ watch(sliceKey, () => {
           <section>
             <header class="flex items-center justify-between gap-3 mb-3 px-1">
               <div class="flex items-center gap-2">
-                <h3 class="text-[12px] font-black text-slate-500 uppercase tracking-widest">
+                <h3 class="text-[13px] font-black text-slate-500 uppercase tracking-widest">
                   {{ t('parent.dashboard.needsAttention') }}
                 </h3>
                 <span
@@ -420,7 +420,7 @@ watch(sliceKey, () => {
                 </div>
                 <button
                   type="button"
-                  class="text-[11px] font-bold text-role-parent hover:underline"
+                  class="text-[12px] font-bold text-role-parent hover:underline"
                 >
                   {{ t('parent.dashboard.viewAll') }}
                 </button>
@@ -465,12 +465,12 @@ watch(sliceKey, () => {
                       />
                     </span>
                     <div class="flex-1 min-w-0">
-                      <p class="text-[12px] font-bold text-slate-900 truncate">{{ item.title }}</p>
+                      <p class="text-[13px] font-bold text-slate-900 truncate">{{ item.title }}</p>
                       <p v-if="item.source" class="text-[10px] text-slate-400 truncate">{{ item.source }}</p>
-                      <p v-if="item.extra" class="text-[11px] text-slate-500 mt-0.5 truncate">{{ item.extra }}</p>
+                      <p v-if="item.extra" class="text-[12px] text-slate-500 mt-0.5 truncate">{{ item.extra }}</p>
                     </div>
                     <div class="text-right flex-shrink-0">
-                      <p v-if="item.badge" class="text-[11px] font-bold text-role-parent">{{ item.badge }}</p>
+                      <p v-if="item.badge" class="text-[12px] font-bold text-role-parent">{{ item.badge }}</p>
                       <p class="text-[10px] text-slate-400">
                         {{ item.time_ago || formatRelative(item.created_at) }}
                       </p>
@@ -501,7 +501,7 @@ watch(sliceKey, () => {
                   >
                     <NavIcon :name="a.icon" :size="16" />
                   </div>
-                  <p class="text-[12px] font-black text-slate-900 leading-none">{{ a.label }}</p>
+                  <p class="text-[13px] font-black text-slate-900 leading-none">{{ a.label }}</p>
                   <p class="text-[10px] font-bold text-slate-400 mt-1.5 truncate">{{ a.hint }}</p>
                 </button>
               </div>

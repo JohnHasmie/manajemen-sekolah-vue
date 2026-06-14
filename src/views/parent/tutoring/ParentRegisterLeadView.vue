@@ -105,7 +105,7 @@ async function submit() {
       <template #actions>
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="cancel"
         >
           <NavIcon name="x" :size="12" />
@@ -114,42 +114,42 @@ async function submit() {
       </template>
     </ParentBerandaHero>
 
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
       DATA ANAK
     </p>
-    <label class="block text-[11px] text-bimbel-text-mid mb-1">Nama lengkap anak</label>
+    <label class="block text-[12px] text-bimbel-text-mid mb-1">Nama lengkap anak</label>
     <input
       v-model="form.childName"
       type="text"
-      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi block w-full focus:outline-none mb-2"
+      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[14px] text-bimbel-text-hi block w-full focus:outline-none mb-2"
     />
     <div class="grid grid-cols-2 gap-2">
       <div>
-        <label class="block text-[11px] text-bimbel-text-mid mb-1">Kelas</label>
+        <label class="block text-[12px] text-bimbel-text-mid mb-1">Kelas</label>
         <select
           v-model="form.grade"
-          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi block w-full focus:outline-none"
+          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[14px] text-bimbel-text-hi block w-full focus:outline-none"
         >
           <option value="">Pilih kelas</option>
           <option v-for="g in grades" :key="g" :value="g">{{ g }}</option>
         </select>
       </div>
       <div>
-        <label class="block text-[11px] text-bimbel-text-mid mb-1">Sekolah asal</label>
+        <label class="block text-[12px] text-bimbel-text-mid mb-1">Sekolah asal</label>
         <input
           v-model="form.school"
           type="text"
-          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi block w-full focus:outline-none"
+          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[14px] text-bimbel-text-hi block w-full focus:outline-none"
         />
       </div>
     </div>
 
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
       PROGRAM YANG DIMINATI
     </p>
     <div
       v-if="!programs.length"
-      class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[12px] text-bimbel-text-mid"
+      class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[13px] text-bimbel-text-mid"
     >
       Memuat daftar program…
     </div>
@@ -167,8 +167,8 @@ async function submit() {
         <NavIcon name="school" :size="18" />
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ p.name }}</p>
-        <p class="text-[11px] text-bimbel-text-mid">{{ p.description || '—' }}</p>
+        <p class="text-[14px] font-bold text-bimbel-text-hi">{{ p.name }}</p>
+        <p class="text-[12px] text-bimbel-text-mid">{{ p.description || '—' }}</p>
       </div>
       <span
         :class="[
@@ -178,32 +178,32 @@ async function submit() {
       ></span>
     </button>
 
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
       CATATAN ORANG TUA (opsional)
     </p>
     <textarea
       v-model="form.notes"
       rows="3"
       placeholder="Misal: jadwal preferensi, kemampuan saat ini, materi yang ingin difokuskan…"
-      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi w-full focus:outline-none placeholder:text-bimbel-text-lo min-h-12"
+      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[14px] text-bimbel-text-hi w-full focus:outline-none placeholder:text-bimbel-text-lo min-h-12"
     ></textarea>
 
     <div
       v-if="message"
-      class="rounded-md mt-3 px-3 py-2 text-[12px]"
+      class="rounded-md mt-3 px-3 py-2 text-[13px]"
       :class="message.kind === 'ok' ? 'bg-bimbel-green-dim text-green-700' : 'bg-bimbel-red-dim text-red-700'"
     >{{ message.text }}</div>
 
     <div class="flex gap-2 mt-3">
       <button
         type="button"
-        class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[13px] px-3.5 py-2.5"
+        class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[14px] px-3.5 py-2.5"
         @click="saveDraft"
       >Simpan draft</button>
       <button
         type="button"
         :disabled="!canSubmit"
-        class="flex-1 rounded-lg bg-bimbel-hero text-white text-[13px] font-bold px-3.5 py-2.5 disabled:opacity-50"
+        class="flex-1 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
         @click="submit"
       >{{ saving ? 'Mengirim…' : 'Kirim — admin akan hubungi dalam 1×24 jam' }}</button>
     </div>

@@ -240,7 +240,7 @@ const heroChipLabel = computed(() => {
     <div class="flex items-center gap-2">
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 text-[12px] font-bold text-slate-600 hover:text-role-wali"
+        class="inline-flex items-center gap-1.5 text-[13px] font-bold text-slate-600 hover:text-role-wali"
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
@@ -274,7 +274,7 @@ const heroChipLabel = computed(() => {
               </span>
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition disabled:opacity-60"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[12px] font-bold transition disabled:opacity-60"
                 :disabled="!isPublished || isPrinting"
                 :title="isPublished ? 'Cetak PDF' : 'Rapor belum diterbitkan'"
                 @click="downloadPdf('certificate')"
@@ -289,7 +289,7 @@ const heroChipLabel = computed(() => {
           <div class="flex items-center gap-2">
             <button
               type="button"
-              class="flex-1 inline-flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl bg-role-wali text-white text-[11px] font-bold shadow-sm shadow-role-wali/30"
+              class="flex-1 inline-flex items-center justify-between gap-1.5 px-3 py-2 rounded-xl bg-role-wali text-white text-[12px] font-bold shadow-sm shadow-role-wali/30"
               @click="semesterSheetOpen = true"
             >
               <span class="truncate">{{ heroChipLabel }}</span>
@@ -297,7 +297,7 @@ const heroChipLabel = computed(() => {
             </button>
             <button
               type="button"
-              class="px-3 py-2 rounded-xl text-[11px] font-bold border transition"
+              class="px-3 py-2 rounded-xl text-[12px] font-bold border transition"
               :class="
                 assessmentFilter === 'uts'
                   ? 'bg-role-wali text-white border-role-wali shadow-sm'
@@ -309,7 +309,7 @@ const heroChipLabel = computed(() => {
             </button>
             <button
               type="button"
-              class="px-3 py-2 rounded-xl text-[11px] font-bold border transition"
+              class="px-3 py-2 rounded-xl text-[12px] font-bold border transition"
               :class="
                 assessmentFilter === 'uas'
                   ? 'bg-role-wali text-white border-role-wali shadow-sm'
@@ -346,7 +346,7 @@ const heroChipLabel = computed(() => {
                   v-if="row.rank !== null && row.total_in_class !== null"
                 >
                   {{ row.rank
-                  }}<span class="text-slate-400 text-[12px]"
+                  }}<span class="text-slate-400 text-[13px]"
                     >/{{ row.total_in_class }}</span
                   >
                 </template>
@@ -362,7 +362,7 @@ const heroChipLabel = computed(() => {
               <p class="text-lg font-black mt-1 text-emerald-700 tabular-nums">
                 <template v-if="row.attendance_pct !== null">
                   {{ Math.round(row.attendance_pct)
-                  }}<span class="text-slate-400 text-[12px]">%</span>
+                  }}<span class="text-slate-400 text-[13px]">%</span>
                 </template>
                 <template v-else>—</template>
               </p>
@@ -442,7 +442,7 @@ const heroChipLabel = computed(() => {
               />
               <p
                 v-if="row.reportCard.subjects.length === 0"
-                class="text-[12px] text-slate-500 italic text-center py-4"
+                class="text-[13px] text-slate-500 italic text-center py-4"
               >
                 {{ t('reportCard.noSubjectGrades') }}
               </p>
@@ -508,7 +508,7 @@ const heroChipLabel = computed(() => {
                   <p class="font-semibold text-slate-900">{{ a.name }}</p>
                   <p
                     v-if="a.type || a.description"
-                    class="text-[11px] text-slate-500 mt-0.5"
+                    class="text-[12px] text-slate-500 mt-0.5"
                   >
                     <template v-if="a.type">{{ a.type }}</template>
                     <template v-if="a.type && a.description"> · </template>
@@ -681,7 +681,7 @@ const heroChipLabel = computed(() => {
     <!-- Semester sheet (mirrors mobile — confirms back to list to change sem) -->
     <Modal v-if="semesterSheetOpen" :title="t('common.chooseSemester')" @close="semesterSheetOpen = false">
       <div class="space-y-3">
-        <p class="text-[12px] text-slate-600 leading-relaxed">
+        <p class="text-[13px] text-slate-600 leading-relaxed">
           {{ t('reportCard.chooseOtherSemesterNote') }}
           <strong>{{ t('reportCard.eReportList') }}</strong> lalu ubah pilihan semester pada
           filter di atas.

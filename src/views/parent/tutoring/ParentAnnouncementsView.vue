@@ -171,7 +171,7 @@ const subtitle = computed(() => {
         v-for="c in childChips"
         :key="c.id"
         type="button"
-        class="rounded-full px-2.5 py-1 text-[11px] transition-colors"
+        class="rounded-full px-2.5 py-1 text-[12px] transition-colors"
         :class="
           childFilter === c.id
             ? 'bg-bimbel-hero text-white font-bold'
@@ -191,7 +191,7 @@ const subtitle = computed(() => {
         v-for="g in groupChips"
         :key="g.id"
         type="button"
-        class="rounded-full px-2.5 py-1 text-[11px] transition-colors"
+        class="rounded-full px-2.5 py-1 text-[12px] transition-colors"
         :class="
           groupFilter === g.id
             ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
@@ -214,7 +214,7 @@ const subtitle = computed(() => {
               {{ r.a.author_name }} · {{ r.a.group_name }}
               <span v-if="children.length > 1" class="text-bimbel-hero">· {{ r.child_name }}</span>
             </p>
-            <p class="text-[13px] font-bold text-bimbel-text-hi mt-0.5">{{ r.a.title }}</p>
+            <p class="text-[14px] font-bold text-bimbel-text-hi mt-0.5">{{ r.a.title }}</p>
           </div>
           <span
             v-if="isNew(r.a)"
@@ -222,15 +222,15 @@ const subtitle = computed(() => {
           >BARU</span>
           <span
             v-else
-            class="text-[11px] text-bimbel-text-lo flex-shrink-0"
+            class="text-[12px] text-bimbel-text-lo flex-shrink-0"
           >{{ relTime(r.a.created_at) }}</span>
         </div>
-        <p class="text-[11px] text-bimbel-text-mid leading-relaxed mt-1">{{ snippet(r.a.body) }}</p>
+        <p class="text-[12px] text-bimbel-text-mid leading-relaxed mt-1">{{ snippet(r.a.body) }}</p>
       </div>
-      <p v-if="!visible.length && !loading" class="text-center text-[12px] text-bimbel-text-mid py-6">
+      <p v-if="!visible.length && !loading" class="text-center text-[13px] text-bimbel-text-mid py-6">
         Belum ada pengumuman di kategori ini.
       </p>
-      <p v-if="loading" class="text-center text-[12px] text-bimbel-text-mid py-6">Memuat…</p>
+      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">Memuat…</p>
     </div>
   </div>
 </template>

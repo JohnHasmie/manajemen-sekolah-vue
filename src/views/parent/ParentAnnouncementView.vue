@@ -432,7 +432,7 @@ function pickStatus(k: StatusFilter) {
             </button>
           </div>
 
-          <h4 class="text-[13px] font-extrabold mt-0.5 text-slate-900 truncate">
+          <h4 class="text-[14px] font-extrabold mt-0.5 text-slate-900 truncate">
             {{ ev.title }}
           </h4>
 
@@ -455,7 +455,7 @@ function pickStatus(k: StatusFilter) {
           <div v-for="g in grouped" :key="g.label" class="space-y-2.5">
             <!-- Section header with month and badge count -->
             <header class="flex items-center gap-2 px-1 pt-4 pb-1">
-              <span class="text-[12px] font-extrabold uppercase tracking-widest text-slate-500">
+              <span class="text-[13px] font-extrabold uppercase tracking-widest text-slate-500">
                 {{ g.label }}
               </span>
               <div class="flex-1 h-px bg-slate-100"></div>

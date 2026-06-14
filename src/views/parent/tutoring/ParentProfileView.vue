@@ -72,7 +72,7 @@ function goPwd() {
       <template #actions>
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="save"
         >
           Simpan perubahan
@@ -87,13 +87,13 @@ function goPwd() {
           {{ initials(user?.name) }}
         </div>
         <p class="mt-2 text-[14px] font-bold text-bimbel-text-hi">{{ user?.name ?? '—' }}</p>
-        <p class="text-[11px] text-bimbel-text-mid">{{ user?.email ?? '—' }}</p>
-        <button type="button" class="mt-2.5 text-[11px] font-bold text-bimbel-hero hover:underline">
+        <p class="text-[12px] text-bimbel-text-mid">{{ user?.email ?? '—' }}</p>
+        <button type="button" class="mt-2.5 text-[12px] font-bold text-bimbel-hero hover:underline">
           Ubah foto
         </button>
         <div class="my-3.5 border-t border-bimbel-border-soft" />
-        <p class="text-left text-[11px] font-bold uppercase tracking-wider text-bimbel-text-lo">Anak saya</p>
-        <p v-if="!children.length" class="mt-2 text-left text-[12px] text-bimbel-text-mid">
+        <p class="text-left text-[12px] font-bold uppercase tracking-wider text-bimbel-text-lo">Anak saya</p>
+        <p v-if="!children.length" class="mt-2 text-left text-[13px] text-bimbel-text-mid">
           Belum ada anak terdaftar.
         </p>
         <div
@@ -102,14 +102,14 @@ function goPwd() {
           class="mt-2 flex items-center gap-2.5 rounded-lg bg-bimbel-panel p-2.5 text-left"
         >
           <span
-            class="w-[30px] h-[30px] rounded-full grid place-items-center text-[11px] font-bold flex-shrink-0"
+            class="w-[30px] h-[30px] rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0"
             :class="childChipClass(i)"
           >
             {{ initials(c.name) }}
           </span>
           <div class="min-w-0">
-            <p class="text-[12px] font-bold text-bimbel-text-hi truncate">{{ c.name }}</p>
-            <p class="text-[11px] text-bimbel-text-mid truncate">{{ c.class_name || 'Kelas —' }}</p>
+            <p class="text-[13px] font-bold text-bimbel-text-hi truncate">{{ c.name }}</p>
+            <p class="text-[12px] text-bimbel-text-mid truncate">{{ c.class_name || 'Kelas —' }}</p>
           </div>
         </div>
       </aside>
@@ -117,57 +117,57 @@ function goPwd() {
       <!-- RIGHT: Identitas + Keamanan -->
       <div class="lg:col-span-3 space-y-3.5">
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <h4 class="mb-2 text-[13px] font-bold text-bimbel-text-hi">Identitas</h4>
+          <h4 class="mb-2 text-[14px] font-bold text-bimbel-text-hi">Identitas</h4>
           <label class="grid items-center gap-3 border-b border-bimbel-border-soft py-2" style="grid-template-columns: 110px 1fr;">
-            <span class="text-[12px] text-bimbel-text-mid">Nama lengkap</span>
+            <span class="text-[13px] text-bimbel-text-mid">Nama lengkap</span>
             <input
               v-model="form.name"
               type="text"
-              class="rounded-lg bg-bimbel-bg px-2.5 py-1.5 text-[12px] text-bimbel-text-hi focus:outline-none"
+              class="rounded-lg bg-bimbel-bg px-2.5 py-1.5 text-[13px] text-bimbel-text-hi focus:outline-none"
             />
           </label>
           <label class="grid items-center gap-3 border-b border-bimbel-border-soft py-2" style="grid-template-columns: 110px 1fr;">
-            <span class="text-[12px] text-bimbel-text-mid">Email</span>
+            <span class="text-[13px] text-bimbel-text-mid">Email</span>
             <input
               :value="user?.email ?? ''"
               type="email"
               disabled
-              class="rounded-lg bg-bimbel-bg px-2.5 py-1.5 text-[12px] text-bimbel-text-mid"
+              class="rounded-lg bg-bimbel-bg px-2.5 py-1.5 text-[13px] text-bimbel-text-mid"
             />
           </label>
           <label class="grid items-center gap-3 border-b border-bimbel-border-soft py-2" style="grid-template-columns: 110px 1fr;">
-            <span class="text-[12px] text-bimbel-text-mid">No. telepon</span>
+            <span class="text-[13px] text-bimbel-text-mid">No. telepon</span>
             <input
               v-model="form.phone"
               type="tel"
               placeholder="08xx-xxxx-xxxx"
-              class="rounded-lg bg-bimbel-bg px-2.5 py-1.5 text-[12px] text-bimbel-text-hi focus:outline-none"
+              class="rounded-lg bg-bimbel-bg px-2.5 py-1.5 text-[13px] text-bimbel-text-hi focus:outline-none"
             />
           </label>
           <label class="grid items-start gap-3 py-2" style="grid-template-columns: 110px 1fr;">
-            <span class="pt-1 text-[12px] text-bimbel-text-mid">Alamat</span>
+            <span class="pt-1 text-[13px] text-bimbel-text-mid">Alamat</span>
             <textarea
               v-model="form.address"
               rows="2"
               placeholder="Alamat lengkap"
-              class="min-h-12 rounded-lg bg-bimbel-bg px-2.5 py-1.5 text-[12px] text-bimbel-text-hi focus:outline-none"
+              class="min-h-12 rounded-lg bg-bimbel-bg px-2.5 py-1.5 text-[13px] text-bimbel-text-hi focus:outline-none"
             />
           </label>
         </section>
 
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <h4 class="mb-2 text-[13px] font-bold text-bimbel-text-hi">Keamanan</h4>
+          <h4 class="mb-2 text-[14px] font-bold text-bimbel-text-hi">Keamanan</h4>
           <div class="grid items-center gap-3 border-b border-bimbel-border-soft py-2" style="grid-template-columns: 110px 1fr auto;">
-            <span class="text-[12px] text-bimbel-text-mid">Kata sandi</span>
-            <span class="text-[12px] text-bimbel-text-hi tracking-widest">••••••••</span>
-            <button type="button" class="text-[12px] font-bold text-bimbel-hero hover:underline" @click="goPwd">
+            <span class="text-[13px] text-bimbel-text-mid">Kata sandi</span>
+            <span class="text-[13px] text-bimbel-text-hi tracking-widest">••••••••</span>
+            <button type="button" class="text-[13px] font-bold text-bimbel-hero hover:underline" @click="goPwd">
               Ubah
             </button>
           </div>
           <div class="grid items-center gap-3 py-2" style="grid-template-columns: 110px 1fr auto;">
-            <span class="text-[12px] text-bimbel-text-mid">Sesi aktif</span>
-            <span class="text-[12px] text-bimbel-text-mid">2 perangkat</span>
-            <button type="button" class="text-[12px] font-bold text-bimbel-hero hover:underline">
+            <span class="text-[13px] text-bimbel-text-mid">Sesi aktif</span>
+            <span class="text-[13px] text-bimbel-text-mid">2 perangkat</span>
+            <button type="button" class="text-[13px] font-bold text-bimbel-hero hover:underline">
               Kelola
             </button>
           </div>

@@ -141,7 +141,7 @@ const visible = computed<VoucherView[]>(() => {
       <template #actions>
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="view = view === 'history' ? 'active' : 'history'"
         >{{ view === 'history' ? 'Aktif' : 'Riwayat' }}</button>
       </template>
@@ -150,7 +150,7 @@ const visible = computed<VoucherView[]>(() => {
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
     <template v-else>
-      <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
         {{ view === 'history' ? 'VOUCHER TERPAKAI' : 'VOUCHER TERSEDIA' }}
       </p>
 
@@ -165,8 +165,8 @@ const visible = computed<VoucherView[]>(() => {
           ]"
         >
           <p class="text-[24px] font-extrabold leading-none" :class="v.valueCls">{{ v.valueLabel }}</p>
-          <p class="text-[11px] text-bimbel-text-mid my-1">{{ v.description }}</p>
-          <span class="font-mono text-[11px] bg-bimbel-bg px-2 py-1 rounded inline-block tracking-wider mt-2">{{ v.code }}</span>
+          <p class="text-[12px] text-bimbel-text-mid my-1">{{ v.description }}</p>
+          <span class="font-mono text-[12px] bg-bimbel-bg px-2 py-1 rounded inline-block tracking-wider mt-2">{{ v.code }}</span>
           <p class="text-[10px] mt-1.5" :class="v.footerCls">
             <NavIcon name="clock" :size="11" class="inline align-text-bottom" />{{ ' ' }}{{ v.footerText }}
           </p>
@@ -174,7 +174,7 @@ const visible = computed<VoucherView[]>(() => {
 
         <p
           v-if="!visible.length"
-          class="col-span-full text-center text-[12px] text-bimbel-text-mid py-6"
+          class="col-span-full text-center text-[13px] text-bimbel-text-mid py-6"
         >{{ view === 'history' ? 'Belum ada voucher terpakai.' : 'Tidak ada voucher aktif.' }}</p>
       </div>
     </template>

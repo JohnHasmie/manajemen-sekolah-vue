@@ -153,7 +153,7 @@ onMounted(load);
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
       >
         <NavIcon name="download" :size="13" />
         Export
@@ -260,7 +260,7 @@ onMounted(load);
             <td class="px-3 py-3 text-right">
               <button
                 type="button"
-                class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[11px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5 disabled:opacity-40 disabled:cursor-not-allowed"
+                class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[12px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5 disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="s.status === 'CANCELLED'"
                 :title="s.status === 'CANCELLED' ? 'Sesi dibatalkan' : 'Lihat / catat kehadiran'"
                 @click.stop="openAttendance(s)"

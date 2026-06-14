@@ -131,7 +131,7 @@ async function submit() {
       <template #actions>
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="back"
         >
           <NavIcon name="arrow-left" :size="12" />
@@ -146,10 +146,10 @@ async function submit() {
       <p class="text-[22px] font-extrabold text-bimbel-hero leading-tight mt-0.5">
         {{ formatRupiah(billDisplay?.amount ?? 0) }}
       </p>
-      <p class="text-[11px] text-bimbel-hero/80">Tenggat {{ dueLabel }} · {{ daysLeftLabel }}</p>
+      <p class="text-[12px] text-bimbel-hero/80">Tenggat {{ dueLabel }} · {{ daysLeftLabel }}</p>
     </div>
 
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
       PILIH METODE PEMBAYARAN
     </p>
     <button
@@ -166,8 +166,8 @@ async function submit() {
         <NavIcon :name="m.icon" :size="17" />
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ m.name }}</p>
-        <p class="text-[11px] text-bimbel-text-mid">{{ m.sub }}</p>
+        <p class="text-[14px] font-bold text-bimbel-text-hi">{{ m.name }}</p>
+        <p class="text-[12px] text-bimbel-text-mid">{{ m.sub }}</p>
       </div>
       <span
         :class="[
@@ -179,28 +179,28 @@ async function submit() {
       </span>
     </button>
 
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
       PUNYA KODE VOUCHER?
     </p>
     <div class="flex gap-1.5">
       <input
         v-model="voucherCode"
         placeholder="Masukkan kode"
-        class="flex-1 rounded-md bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:outline-none"
+        class="flex-1 rounded-md bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:outline-none"
       />
       <button
         type="button"
-        class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-3.5 py-2 text-[13px]"
+        class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-3.5 py-2 text-[14px]"
         @click="applyVoucher"
       >
         Pakai
       </button>
     </div>
-    <p v-if="voucherMsg" class="mt-1 text-[11px] text-bimbel-text-mid">{{ voucherMsg }}</p>
+    <p v-if="voucherMsg" class="mt-1 text-[12px] text-bimbel-text-mid">{{ voucherMsg }}</p>
 
     <div
       v-if="message"
-      class="rounded-md mt-3 px-3 py-2 text-[12px]"
+      class="rounded-md mt-3 px-3 py-2 text-[13px]"
       :class="message.kind === 'ok' ? 'bg-bimbel-green-dim text-green-700' : 'bg-bimbel-red-dim text-red-700'"
     >
       {{ message.text }}
@@ -209,7 +209,7 @@ async function submit() {
     <button
       type="button"
       :disabled="saving"
-      class="w-full mt-3 rounded-lg bg-bimbel-hero text-white text-[13px] font-bold py-2.5 disabled:opacity-50"
+      class="w-full mt-3 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold py-2.5 disabled:opacity-50"
       @click="submit"
     >
       {{ saving ? 'Memproses…' : `Lanjut bayar via ${methodLabel}` }}

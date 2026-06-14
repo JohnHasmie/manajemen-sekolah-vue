@@ -193,7 +193,7 @@ onMounted(load);
         </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label class="block">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama Bank</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama Bank</span>
             <input
               v-model="bankName"
               type="text"
@@ -203,7 +203,7 @@ onMounted(load);
             />
           </label>
           <label class="block">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nomor Rekening</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nomor Rekening</span>
             <input
               v-model="bankAccountNumber"
               type="text"
@@ -213,7 +213,7 @@ onMounted(load);
             />
           </label>
           <label class="block sm:col-span-2">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">Atas Nama</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Atas Nama</span>
             <input
               v-model="bankAccountHolder"
               type="text"
@@ -248,19 +248,19 @@ onMounted(load);
             <input
               type="file"
               accept="image/png,image/jpeg"
-              class="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-bimbel-accent/10 file:text-bimbel-accent file:px-3 file:py-2 file:font-bold file:text-[11px] file:cursor-pointer"
+              class="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-bimbel-accent/10 file:text-bimbel-accent file:px-3 file:py-2 file:font-bold file:text-[12px] file:cursor-pointer"
               :disabled="qrisUploading"
               @change="onQrisChange"
             />
             <button
               v-if="qrisImageUrl"
               type="button"
-              class="text-[11px] font-bold text-bimbel-red hover:underline"
+              class="text-[12px] font-bold text-bimbel-red hover:underline"
               @click="qrisImageUrl = null"
             >
               Hapus QRIS
             </button>
-            <p v-if="qrisUploading" class="text-[11px] text-bimbel-text-lo">Mengunggah…</p>
+            <p v-if="qrisUploading" class="text-[12px] text-bimbel-text-lo">Mengunggah…</p>
           </div>
         </div>
       </div>
@@ -298,7 +298,7 @@ onMounted(load);
         </label>
         <div v-if="paymentGatewayEnabled" class="space-y-2">
           <label class="block">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-bimbel-text-mid">Provider</span>
+            <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Provider</span>
             <select
               v-model="paymentGatewayProvider"
               class="mt-1 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm"
@@ -308,10 +308,10 @@ onMounted(load);
               <option value="xendit">Xendit</option>
             </select>
           </label>
-          <p v-if="paymentGatewayConfigured" class="text-[11px] text-emerald-600 font-bold">
+          <p v-if="paymentGatewayConfigured" class="text-[12px] text-emerald-600 font-bold">
             ✓ Kredensial sudah dikonfigurasi.
           </p>
-          <p v-else class="text-[11px] text-amber-600">
+          <p v-else class="text-[12px] text-amber-600">
             Kredensial belum disetel. Hubungi admin platform.
           </p>
         </div>

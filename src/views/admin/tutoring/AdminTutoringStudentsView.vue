@@ -199,21 +199,21 @@ function exportCsv() {
       <template #actions>
         <button
           type="button"
-          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white hover:bg-white/25"
+          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[14px] font-bold text-white hover:bg-white/25"
           @click="exportCsv"
         >
           <NavIcon name="download" :size="13" class="inline -mt-0.5" /> Export
         </button>
         <button
           type="button"
-          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white hover:bg-white/25"
+          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[14px] font-bold text-white hover:bg-white/25"
           @click="openCreate"
         >
           <NavIcon name="user-plus" :size="13" class="inline -mt-0.5" /> Tambah siswa
         </button>
         <button
           type="button"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold hover:opacity-90"
+          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold hover:opacity-90"
           @click="goEnroll"
         >
           <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> Daftarkan ke program
@@ -228,7 +228,7 @@ function exportCsv() {
           v-model="query"
           type="text"
           placeholder="Cari nama siswa / kelompok…"
-          class="w-full rounded-lg border border-bimbel-border bg-bimbel-bg pl-9 pr-3 py-1.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
+          class="w-full rounded-lg border border-bimbel-border bg-bimbel-bg pl-9 pr-3 py-1.5 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
         />
       </div>
       <div class="flex gap-1.5">
@@ -240,7 +240,7 @@ function exportCsv() {
           ]"
           :key="opt.id"
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+          class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
           :class="status === opt.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
           @click="status = opt.id"
         >{{ opt.label }}</button>
@@ -250,9 +250,9 @@ function exportCsv() {
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
     <div v-else-if="filtered.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
-      <table class="w-full text-[13px]">
+      <table class="w-full text-[14px]">
         <thead class="bg-bimbel-bg/40">
-          <tr class="text-left text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+          <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
             <th class="px-3 py-2">Siswa</th>
             <th class="px-3 py-2 w-[160px]">Program & paket</th>
             <th class="px-3 py-2 w-[140px]">Kelompok</th>
@@ -266,22 +266,22 @@ function exportCsv() {
           <tr v-for="r in filtered" :key="r.enrollment_id" class="border-t border-bimbel-border-soft hover:bg-bimbel-border-soft/30">
             <td class="px-3 py-2.5">
               <div class="flex items-center gap-2.5">
-                <span class="grid h-7 w-7 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent text-[12px] font-bold">{{ initial(r.student_name) }}</span>
+                <span class="grid h-7 w-7 place-items-center rounded-full bg-bimbel-accent-dim text-bimbel-accent text-[13px] font-bold">{{ initial(r.student_name) }}</span>
                 <div>
                   <p class="font-bold text-bimbel-text-hi">{{ r.student_name }}</p>
-                  <p class="text-[12px] text-bimbel-text-mid">{{ r.billing_mode }}</p>
+                  <p class="text-[13px] text-bimbel-text-mid">{{ r.billing_mode }}</p>
                 </div>
               </div>
             </td>
             <td class="px-3 py-2.5">
               <p class="text-bimbel-text-hi">{{ r.program_name ?? '—' }}</p>
-              <p v-if="r.package_name" class="text-[12px] text-bimbel-text-mid">{{ r.package_name }}</p>
+              <p v-if="r.package_name" class="text-[13px] text-bimbel-text-mid">{{ r.package_name }}</p>
             </td>
             <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.group_name ?? '—' }}</td>
             <td class="px-3 py-2.5">
               <p v-if="r.unpaid_count === 0" class="font-bold text-emerald-700 dark:text-emerald-300">Lunas</p>
               <p v-else class="font-bold text-rose-700 dark:text-rose-300">{{ formatRupiah(r.unpaid_total) }}</p>
-              <p v-if="r.unpaid_count > 0" class="text-[12px] text-bimbel-text-mid">{{ r.unpaid_count }} tagihan</p>
+              <p v-if="r.unpaid_count > 0" class="text-[13px] text-bimbel-text-mid">{{ r.unpaid_count }} tagihan</p>
             </td>
             <td class="px-3 py-2.5">
               <div class="flex items-center gap-2">
@@ -293,7 +293,7 @@ function exportCsv() {
             </td>
             <td class="px-3 py-2.5">
               <span
-                class="inline-flex rounded-full px-2 py-0.5 text-[12px] font-bold"
+                class="inline-flex rounded-full px-2 py-0.5 text-[13px] font-bold"
                 :class="classify(r) === 'risk' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'"
               >{{ classify(r) === 'risk' ? 'Berisiko' : 'Aktif' }}</span>
             </td>
@@ -319,22 +319,22 @@ function exportCsv() {
     <div v-if="showCreate" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="showCreate = false">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
         <h3 class="text-[16px] font-bold text-bimbel-text-hi">Tambah siswa baru</h3>
-        <p class="text-[12px] text-bimbel-text-mid">Buat data siswa dulu. Setelah selesai, klik "Daftarkan ke program" untuk enroll.</p>
+        <p class="text-[13px] text-bimbel-text-mid">Buat data siswa dulu. Setelah selesai, klik "Daftarkan ke program" untuk enroll.</p>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama <span class="text-rose-500">*</span></span>
-          <input v-model="createForm.name" type="text" required placeholder="Nama lengkap siswa" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama <span class="text-rose-500">*</span></span>
+          <input v-model="createForm.name" type="text" required placeholder="Nama lengkap siswa" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali (opsional)</span>
-          <input v-model="createForm.guardian_name" type="text" placeholder="Ibu / Bapak" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali (opsional)</span>
+          <input v-model="createForm.guardian_name" type="text" placeholder="Ibu / Bapak" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">No. WA wali (opsional)</span>
-          <input v-model="createForm.guardian_phone" type="tel" placeholder="08xxxxxxxxxx" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">No. WA wali (opsional)</span>
+          <input v-model="createForm.guardian_phone" type="tel" placeholder="08xxxxxxxxxx" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="showCreate = false">Batal</button>
-          <button type="button" :disabled="createBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitCreate">{{ createBusy ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="showCreate = false">Batal</button>
+          <button type="button" :disabled="createBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitCreate">{{ createBusy ? 'Menyimpan…' : 'Simpan' }}</button>
         </div>
       </div>
     </div>
@@ -342,22 +342,22 @@ function exportCsv() {
     <div v-if="editTarget" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="editTarget = null">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
         <h3 class="text-[16px] font-bold text-bimbel-text-hi">Ubah siswa</h3>
-        <p class="text-[12px] text-bimbel-text-mid">{{ editTarget.program_name ?? '—' }}<template v-if="editTarget.group_name"> · {{ editTarget.group_name }}</template></p>
+        <p class="text-[13px] text-bimbel-text-mid">{{ editTarget.program_name ?? '—' }}<template v-if="editTarget.group_name"> · {{ editTarget.group_name }}</template></p>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama <span class="text-rose-500">*</span></span>
-          <input v-model="editForm.name" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama <span class="text-rose-500">*</span></span>
+          <input v-model="editForm.name" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali (opsional)</span>
-          <input v-model="editForm.guardian_name" type="text" placeholder="Kosongkan jika tidak diubah" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali (opsional)</span>
+          <input v-model="editForm.guardian_name" type="text" placeholder="Kosongkan jika tidak diubah" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">No. WA wali (opsional)</span>
-          <input v-model="editForm.guardian_phone" type="tel" placeholder="Kosongkan jika tidak diubah" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">No. WA wali (opsional)</span>
+          <input v-model="editForm.guardian_phone" type="tel" placeholder="Kosongkan jika tidak diubah" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">Batal</button>
-          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">Batal</button>
+          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? 'Menyimpan…' : 'Simpan' }}</button>
         </div>
       </div>
     </div>

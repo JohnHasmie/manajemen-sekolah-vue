@@ -269,7 +269,7 @@ function pillLabel(r: Row): string {
         v-for="opt in filters"
         :key="opt.id"
         type="button"
-        class="rounded-full px-2.5 py-1 text-[11px] transition-colors"
+        class="rounded-full px-2.5 py-1 text-[12px] transition-colors"
         :class="
           typeFilter === opt.id
             ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
@@ -290,17 +290,17 @@ function pillLabel(r: Row): string {
           <NavIcon :name="iconName(r)" :size="14" />
         </div>
         <div class="min-w-0">
-          <p class="text-[13px] font-bold text-bimbel-text-hi">
+          <p class="text-[14px] font-bold text-bimbel-text-hi">
             {{ title(r) }}
           </p>
-          <p class="text-[11px] text-bimbel-text-mid">{{ subtitle(r) }}</p>
+          <p class="text-[12px] text-bimbel-text-mid">{{ subtitle(r) }}</p>
         </div>
         <span :class="pillCls(r)">{{ pillLabel(r) }}</span>
       </div>
-      <p v-if="!visible.length && !loading" class="text-center text-[12px] text-bimbel-text-mid py-6">
+      <p v-if="!visible.length && !loading" class="text-center text-[13px] text-bimbel-text-mid py-6">
         Tidak ada aktivitas di kategori ini.
       </p>
-      <p v-if="loading" class="text-center text-[12px] text-bimbel-text-mid py-6">Memuat…</p>
+      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">Memuat…</p>
     </div>
   </div>
 </template>

@@ -365,20 +365,20 @@ function dotCls(s: ParentAttendanceStatus): string {
             {{ PARENT_ATTENDANCE_LABELS[record.status] }}
           </div>
 
-          <h5 class="text-[13px] font-extrabold text-slate-900 leading-tight">
+          <h5 class="text-[14px] font-extrabold text-slate-900 leading-tight">
             {{ record.subject_name || 'Presensi Harian' }}
           </h5>
 
           <p
             v-if="record.lesson_hour_name || record.session"
-            class="text-[11px] text-slate-500 font-medium"
+            class="text-[12px] text-slate-500 font-medium"
           >
             {{ record.lesson_hour_name || record.session }}
           </p>
 
           <p
             v-if="record.notes"
-            class="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 mt-1"
+            class="text-[12px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 mt-1"
           >
             Catatan: {{ record.notes }}
           </p>

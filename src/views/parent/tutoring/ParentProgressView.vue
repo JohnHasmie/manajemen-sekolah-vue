@@ -141,7 +141,7 @@ const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
           v-for="s in subjectChips"
           :key="s.id"
           type="button"
-          class="rounded-full px-2.5 py-1 text-[11px] whitespace-nowrap transition-colors"
+          class="rounded-full px-2.5 py-1 text-[12px] whitespace-nowrap transition-colors"
           :class="activeSubject === s.id
             ? 'bg-bimbel-hero text-white font-bold'
             : 'bg-bimbel-bg text-bimbel-text-mid'"

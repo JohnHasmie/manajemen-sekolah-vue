@@ -104,8 +104,8 @@ async function submit() {
           class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
           style="grid-template-columns: 130px 1fr;"
         >
-          <span class="text-[12px] text-bimbel-text-mid">Sandi sekarang</span>
-          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[13px] flex justify-between items-center">
+          <span class="text-[13px] text-bimbel-text-mid">Sandi sekarang</span>
+          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
             <input
               v-model="form.current"
               :type="showCurrent ? 'text' : 'password'"
@@ -121,8 +121,8 @@ async function submit() {
           class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
           style="grid-template-columns: 130px 1fr;"
         >
-          <span class="text-[12px] text-bimbel-text-mid">Sandi baru</span>
-          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[13px] flex justify-between items-center">
+          <span class="text-[13px] text-bimbel-text-mid">Sandi baru</span>
+          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
             <input
               v-model="form.next"
               :type="showNext ? 'text' : 'password'"
@@ -142,15 +142,15 @@ async function submit() {
               :class="['flex-1 h-1 rounded-sm', i <= strengthLevel ? strengthBarCls : 'bg-bimbel-bg']"
             ></span>
           </div>
-          <p class="text-[11px] mt-1" :class="strengthTextCls">{{ strengthLabel }}</p>
+          <p class="text-[12px] mt-1" :class="strengthTextCls">{{ strengthLabel }}</p>
         </div>
 
         <div
           class="grid items-center gap-3 border-b border-bimbel-border-soft py-2"
           style="grid-template-columns: 130px 1fr;"
         >
-          <span class="text-[12px] text-bimbel-text-mid">Konfirmasi</span>
-          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[13px] flex justify-between items-center">
+          <span class="text-[13px] text-bimbel-text-mid">Konfirmasi</span>
+          <div class="bg-bimbel-bg rounded-md px-3 py-2 text-[14px] flex justify-between items-center">
             <input
               v-model="form.confirm"
               :type="showConfirm ? 'text' : 'password'"
@@ -165,38 +165,38 @@ async function submit() {
 
         <div
           v-if="message"
-          class="rounded-md mt-3 px-3 py-2 text-[12px]"
+          class="rounded-md mt-3 px-3 py-2 text-[13px]"
           :class="message.kind === 'ok' ? 'bg-bimbel-green-dim text-green-700' : 'bg-bimbel-red-dim text-red-700'"
         >{{ message.text }}</div>
 
         <div class="flex gap-2 mt-3.5">
           <button
             type="button"
-            class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[13px] px-3.5 py-2.5"
+            class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[14px] px-3.5 py-2.5"
             @click="cancel"
           >Batal</button>
           <button
             type="button"
             :disabled="!canSubmit"
-            class="flex-1 rounded-lg bg-bimbel-hero text-white text-[13px] font-bold px-3.5 py-2.5 disabled:opacity-50"
+            class="flex-1 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
             @click="submit"
           >{{ saving ? 'Menyimpan…' : 'Simpan kata sandi' }}</button>
         </div>
       </div>
 
       <div class="rounded-md bg-bimbel-bg p-3.5">
-        <p class="text-[12px] font-bold text-bimbel-text-hi mb-1.5">Tips kata sandi kuat</p>
+        <p class="text-[13px] font-bold text-bimbel-text-hi mb-1.5">Tips kata sandi kuat</p>
         <div class="grid grid-cols-2 gap-1.5">
           <div
             v-for="t in tips"
             :key="t.label"
-            class="flex gap-1.5 items-center text-[11px]"
+            class="flex gap-1.5 items-center text-[12px]"
             :class="t.met ? 'text-green-700' : 'text-bimbel-text-lo'"
           >
             <NavIcon :name="t.met ? 'check' : 'x'" :size="13" />{{ t.label }}
           </div>
         </div>
-        <div class="border-t border-bimbel-border-soft mt-3 pt-2.5 text-[11px] text-bimbel-text-mid leading-relaxed">
+        <div class="border-t border-bimbel-border-soft mt-3 pt-2.5 text-[12px] text-bimbel-text-mid leading-relaxed">
           Sandi disimpan ter-enkripsi. Jika lupa, gunakan reset via email yang terdaftar di profil.
         </div>
       </div>

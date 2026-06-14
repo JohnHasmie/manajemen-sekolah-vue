@@ -164,7 +164,7 @@ function rankClass(rank: number): string {
       </ul>
     </Modal>
 
-    <p v-if="groupId" class="text-[11px] text-bimbel-text-mid italic px-1">
+    <p v-if="groupId" class="text-[12px] text-bimbel-text-mid italic px-1">
       <NavIcon name="info" :size="11" class="inline-block align-text-bottom" />
       Skor = kehadiran 30h × 0.5 + rata-rata nilai assessment × 0.5
     </p>

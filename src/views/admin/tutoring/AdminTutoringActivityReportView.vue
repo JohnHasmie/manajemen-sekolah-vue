@@ -53,7 +53,7 @@ function pctClass(pct: number | null): string {
       :stats="[]"
     >
       <template #actions>
-        <button class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white">
+        <button class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[14px] font-bold text-white">
           <NavIcon name="download" :size="13" class="inline -mt-0.5" /> Export
         </button>
       </template>
@@ -70,7 +70,7 @@ function pctClass(pct: number | null): string {
         ]"
         :key="opt.id"
         type="button"
-        class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+        class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
         :class="type === opt.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
         @click="type = opt.id"
       >{{ opt.label }}</button>
@@ -78,7 +78,7 @@ function pctClass(pct: number | null): string {
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
       <div v-for="s in stats" :key="s.label" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-        <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ s.label }}</p>
+        <p class="text-[13px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ s.label }}</p>
         <p class="mt-1 text-[22px] font-extrabold text-bimbel-text-hi">{{ s.value }}</p>
       </div>
     </div>
@@ -88,7 +88,7 @@ function pctClass(pct: number | null): string {
     <div v-else-if="data?.rows?.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
       <table class="w-full text-[14px]">
         <thead class="bg-bimbel-bg/40">
-          <tr class="text-left text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+          <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
             <th class="px-3 py-2">Kelompok</th>
             <th class="px-3 py-2 w-[120px]">Tutor</th>
             <th class="px-3 py-2 w-[80px]">Tipe</th>
@@ -102,7 +102,7 @@ function pctClass(pct: number | null): string {
           <tr v-for="r in data.rows" :key="r.group_id + r.type" class="border-t border-bimbel-border-soft">
             <td class="px-3 py-2.5">
               <p class="font-bold text-bimbel-text-hi">{{ r.group_name }}</p>
-              <p v-if="r.program_name" class="text-[12px] text-bimbel-text-mid">{{ r.program_name }}</p>
+              <p v-if="r.program_name" class="text-[13px] text-bimbel-text-mid">{{ r.program_name }}</p>
             </td>
             <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.tutor_name ?? '—' }}</td>
             <td class="px-3 py-2.5 text-bimbel-text-mid">{{ r.type }}</td>
@@ -111,10 +111,10 @@ function pctClass(pct: number | null): string {
               <span class="inline-block w-16 h-1.5 rounded-full bg-bimbel-border align-middle overflow-hidden mr-1.5">
                 <span class="block h-full" :class="pctClass(r.created > 0 ? Math.round((r.submitted / r.created) * 100) : null)" :style="{ width: r.created > 0 ? `${Math.min(100, Math.round((r.submitted / r.created) * 100))}%` : '0%' }" />
               </span>
-              <span class="text-[13px]">{{ r.submitted }}/{{ r.created }}</span>
+              <span class="text-[14px]">{{ r.submitted }}/{{ r.created }}</span>
             </td>
             <td class="px-3 py-2.5 font-bold text-emerald-700 dark:text-emerald-300">{{ r.avg_score != null ? Math.round(r.avg_score) : '—' }}</td>
-            <td class="px-3 py-2.5 text-[12px]" :class="r.status === 'on track' ? 'text-emerald-700 dark:text-emerald-300' : r.status === 'belum mulai' ? 'text-rose-700 dark:text-rose-300' : 'text-amber-700 dark:text-amber-300'">{{ r.status }}</td>
+            <td class="px-3 py-2.5 text-[13px]" :class="r.status === 'on track' ? 'text-emerald-700 dark:text-emerald-300' : r.status === 'belum mulai' ? 'text-rose-700 dark:text-rose-300' : 'text-amber-700 dark:text-amber-300'">{{ r.status }}</td>
           </tr>
         </tbody>
       </table>

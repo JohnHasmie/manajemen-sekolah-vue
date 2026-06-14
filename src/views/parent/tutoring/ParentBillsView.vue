@@ -151,15 +151,15 @@ function payFirst() {
       class="rounded-xl bg-bimbel-red-dim border border-red-300 p-3.5 flex justify-between items-center"
     >
       <div>
-        <p class="text-[11px] text-red-800 tracking-wider font-bold">TOTAL BELUM DIBAYAR</p>
+        <p class="text-[12px] text-red-800 tracking-wider font-bold">TOTAL BELUM DIBAYAR</p>
         <p class="text-[22px] font-extrabold text-red-900 leading-tight mt-0.5">{{ totalUnpaidFmt }}</p>
-        <p class="text-[11px] text-red-800">
+        <p class="text-[12px] text-red-800">
           {{ unpaidCount }} tagihan{{ urgentCount ? ` · ${urgentCount} jatuh tempo dalam 3 hari` : '' }}
         </p>
       </div>
       <button
         type="button"
-        class="bg-red-900 text-white text-[12px] font-bold px-3 py-2 rounded-lg flex-shrink-0"
+        class="bg-red-900 text-white text-[13px] font-bold px-3 py-2 rounded-lg flex-shrink-0"
         @click="payFirst"
       >
         Bayar semua
@@ -172,7 +172,7 @@ function payFirst() {
         v-for="t in tabs"
         :key="t.id"
         type="button"
-        class="px-3.5 py-2 text-[12px] border-b-2 -mb-px transition-colors"
+        class="px-3.5 py-2 text-[13px] border-b-2 -mb-px transition-colors"
         :class="
           activeTab === t.id
             ? 'text-bimbel-hero border-bimbel-hero font-bold'
@@ -196,10 +196,10 @@ function payFirst() {
       >
         <div class="flex justify-between items-start gap-3">
           <div class="min-w-0 flex-1">
-            <p class="text-[13px] font-bold text-bimbel-text-hi">
+            <p class="text-[14px] font-bold text-bimbel-text-hi">
               {{ b.source_label ?? b.source_type ?? 'Tagihan' }}
             </p>
-            <p class="text-[11px] text-bimbel-text-mid mt-0.5">
+            <p class="text-[12px] text-bimbel-text-mid mt-0.5">
               {{ b.month ?? '—' }}
               <template v-if="b.student_name"> · {{ b.student_name }}</template>
             </p>
@@ -211,12 +211,12 @@ function payFirst() {
             <p class="text-[18px] font-extrabold text-bimbel-text-hi">
               {{ b.amount != null ? formatRupiah(b.amount) : '—' }}
             </p>
-            <p class="text-[11px] text-bimbel-text-mid">{{ dueLine(b) }}</p>
+            <p class="text-[12px] text-bimbel-text-mid">{{ dueLine(b) }}</p>
           </div>
           <button
             v-if="!isPaid(b)"
             type="button"
-            class="bg-bimbel-hero text-white text-[12px] font-bold px-3.5 py-2 rounded-lg"
+            class="bg-bimbel-hero text-white text-[13px] font-bold px-3.5 py-2 rounded-lg"
             @click="pay(b)"
           >
             Bayar
@@ -224,14 +224,14 @@ function payFirst() {
           <button
             v-else
             type="button"
-            class="bg-bimbel-bg text-bimbel-text-mid text-[12px] px-3.5 py-2 rounded-lg"
+            class="bg-bimbel-bg text-bimbel-text-mid text-[13px] px-3.5 py-2 rounded-lg"
           >
             Unduh bukti
           </button>
         </div>
       </div>
     </div>
-    <p v-else class="text-center text-[13px] text-bimbel-text-mid py-8">
+    <p v-else class="text-center text-[14px] text-bimbel-text-mid py-8">
       Belum ada tagihan di kategori ini.
     </p>
   </div>

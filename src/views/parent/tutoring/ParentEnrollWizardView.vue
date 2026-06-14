@@ -208,7 +208,7 @@ function cancel() {
       <template #actions>
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="cancel"
         >
           <NavIcon name="x" :size="12" />
@@ -225,10 +225,10 @@ function cancel() {
         <NavIcon name="check" :size="18" />
       </div>
       <h3 class="text-[14px] font-bold text-bimbel-text-hi">Pendaftaran berhasil</h3>
-      <p class="mt-1 text-[12px] text-bimbel-text-mid">ID enrolment: {{ successId }}</p>
+      <p class="mt-1 text-[13px] text-bimbel-text-mid">ID enrolment: {{ successId }}</p>
       <button
         type="button"
-        class="mt-4 rounded-lg bg-bimbel-hero text-white text-[13px] font-bold px-4 py-2"
+        class="mt-4 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-4 py-2"
         @click="router.push({ name: 'parent.tutoring.bills' })"
       >Lihat tagihan</button>
     </div>
@@ -240,7 +240,7 @@ function cancel() {
           <div class="flex items-center gap-1.5">
             <div
               :class="[
-                'w-[22px] h-[22px] rounded-full grid place-items-center text-[11px] font-bold',
+                'w-[22px] h-[22px] rounded-full grid place-items-center text-[12px] font-bold',
                 s.state === 'done'
                   ? 'bg-green-700 text-white'
                   : s.state === 'on'
@@ -253,7 +253,7 @@ function cancel() {
             </div>
             <span
               :class="[
-                'text-[11px]',
+                'text-[12px]',
                 s.state === 'on'
                   ? 'text-bimbel-text-hi font-bold'
                   : s.state === 'done'
@@ -273,13 +273,13 @@ function cancel() {
       </div>
 
       <!-- Step header + body -->
-      <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
         {{ stepHeader }}
       </p>
 
       <div
         v-if="!stepOptions.length"
-        class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[12px] text-bimbel-text-mid"
+        class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[13px] text-bimbel-text-mid"
       >
         Belum ada pilihan tersedia untuk langkah ini.
       </div>
@@ -300,30 +300,30 @@ function cancel() {
           <NavIcon :name="opt.icon || 'package'" :size="18" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ opt.title }}</p>
-          <p class="text-[11px] text-bimbel-text-mid">{{ opt.subtitle }}</p>
+          <p class="text-[14px] font-bold text-bimbel-text-hi">{{ opt.title }}</p>
+          <p class="text-[12px] text-bimbel-text-mid">{{ opt.subtitle }}</p>
         </div>
-        <p v-if="opt.priceLabel" class="text-[13px] font-bold text-bimbel-hero flex-shrink-0">
+        <p v-if="opt.priceLabel" class="text-[14px] font-bold text-bimbel-hero flex-shrink-0">
           {{ opt.priceLabel }}
         </p>
       </button>
 
       <div
         v-if="errorMsg"
-        class="rounded-md mt-3 bg-bimbel-red-dim text-red-700 px-3 py-2 text-[12px]"
+        class="rounded-md mt-3 bg-bimbel-red-dim text-red-700 px-3 py-2 text-[13px]"
       >{{ errorMsg }}</div>
 
       <div class="flex gap-2 mt-3">
         <button
           v-if="currentStep > 1"
           type="button"
-          class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[13px] px-3.5 py-2.5"
+          class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[14px] px-3.5 py-2.5"
           @click="prev"
         >Kembali</button>
         <button
           type="button"
           :disabled="!canAdvance"
-          class="flex-1 rounded-lg bg-bimbel-hero text-white text-[13px] font-bold px-3.5 py-2.5 disabled:opacity-50"
+          class="flex-1 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
           @click="next"
         >{{ nextLabel }}</button>
       </div>

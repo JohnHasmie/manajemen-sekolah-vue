@@ -162,7 +162,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
         @click="router.push({ name: 'admin.tutoring.billing-settings' })"
       >
         <NavIcon name="settings" :size="13" />
@@ -230,14 +230,14 @@ const kpiCards = computed<KpiCard[]>(() => [
                 <button
                   v-if="b.status !== 'paid'"
                   type="button"
-                  class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white hover:opacity-90"
+                  class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[12px] font-bold text-white hover:opacity-90"
                   @click.stop="markPaidBillId = b.id"
                 >
                   Tandai lunas
                 </button>
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[11px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5"
+                  class="inline-flex items-center gap-1 rounded-md border border-bimbel-border px-2 py-1 text-[12px] font-bold text-bimbel-accent hover:bg-bimbel-accent/5"
                   @click.stop="openBillId = b.id"
                 >
                   Detail
@@ -253,20 +253,20 @@ const kpiCards = computed<KpiCard[]>(() => [
     <div v-if="markPaidBillId && markPaidBill" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="markPaidBillId = null">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl">
         <h3 class="text-[16px] font-bold text-bimbel-text-hi">Tandai sebagai lunas</h3>
-        <p class="text-[13px] text-bimbel-text-mid mt-0.5">Catat pembayaran manual yang sudah diterima admin.</p>
+        <p class="text-[14px] text-bimbel-text-mid mt-0.5">Catat pembayaran manual yang sudah diterima admin.</p>
 
         <div class="relative my-3 overflow-hidden rounded-xl border border-bimbel-border-soft bg-bimbel-bg/40 pl-4 pr-3 py-3">
           <span class="absolute left-0 top-0 h-full w-1.5 bg-emerald-500" />
-          <p class="text-[12px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">TAGIHAN</p>
+          <p class="text-[13px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">TAGIHAN</p>
           <p class="mt-0.5 text-[20px] font-extrabold text-bimbel-text-hi">{{ formatRupiah(markPaidBill.amount ?? 0) }}</p>
-          <p class="text-[13px] text-bimbel-text-mid">
+          <p class="text-[14px] text-bimbel-text-mid">
             {{ [markPaidBill.source_label, markPaidBill.student_name, markPaidBill.due_date ? `jatuh tempo ${formatDateShort(markPaidBill.due_date)}` : null].filter(Boolean).join(' · ') }}
           </p>
         </div>
 
         <div class="space-y-2.5">
           <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="text-[13px] text-bimbel-text-mid">Metode</span>
+            <span class="text-[14px] text-bimbel-text-mid">Metode</span>
             <select v-model="markPaidForm.payment_method" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
               <option value="bank_transfer">Transfer bank</option>
               <option value="qris">QRIS</option>
@@ -274,15 +274,15 @@ const kpiCards = computed<KpiCard[]>(() => [
             </select>
           </label>
           <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="text-[13px] text-bimbel-text-mid">Tanggal bayar</span>
+            <span class="text-[14px] text-bimbel-text-mid">Tanggal bayar</span>
             <input v-model="markPaidForm.payment_date" type="date" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
           </label>
           <label class="grid items-center gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="text-[13px] text-bimbel-text-mid">Jumlah diterima</span>
+            <span class="text-[14px] text-bimbel-text-mid">Jumlah diterima</span>
             <input v-model.number="markPaidForm.amount" type="number" :placeholder="markPaidBill.amount?.toString()" class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
           </label>
           <label class="grid items-start gap-3" style="grid-template-columns: 120px 1fr;">
-            <span class="pt-2 text-[13px] text-bimbel-text-mid">Catatan admin</span>
+            <span class="pt-2 text-[14px] text-bimbel-text-mid">Catatan admin</span>
             <textarea v-model="markPaidForm.admin_notes" rows="2" placeholder="Opsional — bukti transfer diverifikasi, dll." class="rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"></textarea>
           </label>
         </div>

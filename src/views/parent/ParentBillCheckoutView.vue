@@ -203,7 +203,7 @@ const adminFee = computed(() => {
     <div class="flex items-center justify-between gap-2">
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 text-[12px] font-bold text-slate-600 hover:text-role-wali"
+        class="inline-flex items-center gap-1.5 text-[13px] font-bold text-slate-600 hover:text-role-wali"
         @click="router.back()"
       >
         <NavIcon name="chevron-left" :size="14" />
@@ -239,7 +239,7 @@ const adminFee = computed(() => {
               Total dibayar
             </p>
             <p class="text-3xl sm:text-4xl font-black tracking-tight">{{ formatRupiah(totalToPay) }}</p>
-            <p class="text-[12px] text-white/80">
+            <p class="text-[13px] text-white/80">
               {{ session!.bill_name ?? bill?.title ?? 'Tagihan' }}
               <span v-if="session!.student_name">· {{ session!.student_name }}</span>
             </p>
@@ -264,19 +264,19 @@ const adminFee = computed(() => {
               QRIS · placeholder
             </div>
           </div>
-          <p class="text-[12px] text-slate-500">
+          <p class="text-[13px] text-slate-500">
             Scan QR di aplikasi pembayaran (GoPay, OVO, Dana, ShopeePay, dst.).
           </p>
           <div class="bg-slate-50 rounded-xl p-3">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Kode QR
             </p>
-            <p class="font-mono text-[12px] font-bold text-slate-900 break-all mt-1">
+            <p class="font-mono text-[13px] font-bold text-slate-900 break-all mt-1">
               {{ session!.qr_string }}
             </p>
             <button
               type="button"
-              class="mt-2 text-[11px] font-bold text-role-wali hover:underline"
+              class="mt-2 text-[12px] font-bold text-role-wali hover:underline"
               @click="copy(session!.qr_string, 'Kode QR disalin.')"
             >
               Salin kode
@@ -293,7 +293,7 @@ const adminFee = computed(() => {
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Bank
             </span>
-            <span class="text-[13px] font-bold text-slate-900">{{ session!.va_bank }}</span>
+            <span class="text-[14px] font-bold text-slate-900">{{ session!.va_bank }}</span>
           </div>
           <div class="border-t border-slate-100 pt-3">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -305,14 +305,14 @@ const adminFee = computed(() => {
               </p>
               <button
                 type="button"
-                class="text-[11px] font-bold text-role-wali hover:underline px-2 py-1 rounded-lg hover:bg-role-wali/5"
+                class="text-[12px] font-bold text-role-wali hover:underline px-2 py-1 rounded-lg hover:bg-role-wali/5"
                 @click="copy(session!.va_number.replace(/\s/g, ''), 'Nomor VA disalin.')"
               >
                 Salin
               </button>
             </div>
           </div>
-          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-700">
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[12px] text-amber-700">
             Transfer ke nomor VA di atas dari aplikasi mobile banking. Status tagihan
             akan otomatis berubah setelah pembayaran diterima bank.
           </div>
@@ -324,7 +324,7 @@ const adminFee = computed(() => {
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Rekening sekolah
             </p>
-            <div v-if="session!.manual_bank_list.length === 0" class="text-[12px] text-slate-500">
+            <div v-if="session!.manual_bank_list.length === 0" class="text-[13px] text-slate-500">
               Belum ada rekening sekolah terdaftar. Hubungi admin sekolah.
             </div>
             <div
@@ -332,20 +332,20 @@ const adminFee = computed(() => {
               :key="`${b.bank}-${b.account_number}`"
               class="bg-slate-50 rounded-xl p-3 space-y-1"
             >
-              <p class="text-[11px] font-bold text-slate-500">{{ formatBank(b) }}</p>
+              <p class="text-[12px] font-bold text-slate-500">{{ formatBank(b) }}</p>
               <div class="flex items-center gap-2">
                 <p class="font-mono text-[14px] font-bold text-slate-900 flex-1">
                   {{ b.account_number }}
                 </p>
                 <button
                   type="button"
-                  class="text-[11px] font-bold text-role-wali hover:underline"
+                  class="text-[12px] font-bold text-role-wali hover:underline"
                   @click="copy(b.account_number, 'Nomor rekening disalin.')"
                 >
                   Salin
                 </button>
               </div>
-              <p class="text-[11px] text-slate-500">a.n. {{ b.account_name }}</p>
+              <p class="text-[12px] text-slate-500">a.n. {{ b.account_name }}</p>
             </div>
           </div>
 
@@ -373,10 +373,10 @@ const adminFee = computed(() => {
                   <NavIcon name="upload" :size="18" />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-[13px] font-bold text-slate-900 truncate">
+                  <p class="text-[14px] font-bold text-slate-900 truncate">
                     {{ file ? file.name : 'Pilih file bukti' }}
                   </p>
-                  <p class="text-[11px] text-slate-500 mt-0.5">
+                  <p class="text-[12px] text-slate-500 mt-0.5">
                     JPG / PNG / WebP / HEIC / PDF · maks 5 MB
                   </p>
                 </div>
@@ -391,7 +391,7 @@ const adminFee = computed(() => {
                 <input
                   v-model="paymentDate"
                   type="date"
-                  class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-wali"
+                  class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[14px] font-bold text-slate-900 outline-none focus:border-role-wali"
                 />
               </div>
               <div>
@@ -401,7 +401,7 @@ const adminFee = computed(() => {
                 <input
                   v-model.number="uploadAmount"
                   type="number"
-                  class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-wali"
+                  class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[14px] font-bold text-slate-900 outline-none focus:border-role-wali"
                 />
               </div>
             </div>

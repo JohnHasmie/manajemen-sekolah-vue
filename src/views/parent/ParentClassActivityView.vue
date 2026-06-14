@@ -326,7 +326,7 @@ function resetFilter() {
             class="space-y-2"
           >
             <h3
-              class="text-[11px] font-bold text-slate-500 uppercase tracking-widest px-1"
+              class="text-[12px] font-bold text-slate-500 uppercase tracking-widest px-1"
             >
               {{ group.label }}
             </h3>

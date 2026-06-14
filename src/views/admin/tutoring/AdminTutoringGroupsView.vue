@@ -160,7 +160,7 @@ function cardActions(g: TutoringGroup) {
       <template #actions>
         <button
           type="button"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold hover:opacity-90"
+          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold hover:opacity-90"
           @click="openCreate"
         >
           <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> Buat kelompok
@@ -188,7 +188,7 @@ function cardActions(g: TutoringGroup) {
           ]"
           :key="opt.id"
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+          class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
           :class="status === opt.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
           @click="status = opt.id"
         >{{ opt.label }}</button>
@@ -210,7 +210,7 @@ function cardActions(g: TutoringGroup) {
             @click="router.push({ name: 'admin.tutoring.group-detail', params: { groupId: g.id } })"
           >
             <p class="text-[14px] font-bold text-bimbel-text-hi truncate">{{ g.name }}</p>
-            <p class="text-[12px] text-bimbel-text-mid truncate">{{ programNameFor(g) }}</p>
+            <p class="text-[13px] text-bimbel-text-mid truncate">{{ programNameFor(g) }}</p>
           </button>
           <AdminActionMenu
             :items="cardActions(g)"
@@ -218,14 +218,14 @@ function cardActions(g: TutoringGroup) {
             @pick="(k) => pickAction(g, k)"
           />
         </div>
-        <div class="mt-2.5 flex items-center gap-2 text-[12px] text-bimbel-text-mid">
+        <div class="mt-2.5 flex items-center gap-2 text-[13px] text-bimbel-text-mid">
           <span class="inline-flex items-center gap-1">
             <NavIcon name="users" :size="12" /> {{ g.enrollments_count ?? 0 }} / {{ g.capacity }}
           </span>
           <span v-if="g.tutor?.name" class="inline-flex items-center gap-1 truncate">
             · <NavIcon name="user-check" :size="12" /> {{ g.tutor.name }}
           </span>
-          <span v-else class="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300">
+          <span v-else class="inline-flex items-center gap-1 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[12px] font-bold text-amber-700 dark:text-amber-300">
             <NavIcon name="alert-circle" :size="10" /> Perlu tutor
           </span>
         </div>
@@ -243,29 +243,29 @@ function cardActions(g: TutoringGroup) {
           {{ modal === 'create' ? 'Kelompok baru' : 'Ubah kelompok' }}
         </h3>
         <label v-if="modal === 'create'" class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Program <span class="text-rose-500">*</span></span>
-          <select v-model="form.program_id" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Program <span class="text-rose-500">*</span></span>
+          <select v-model="form.program_id" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
             <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
         </label>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama kelompok <span class="text-rose-500">*</span></span>
-          <input v-model="form.name" type="text" placeholder="SMA-IPA-12-A" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama kelompok <span class="text-rose-500">*</span></span>
+          <input v-model="form.name" type="text" placeholder="SMA-IPA-12-A" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Kapasitas</span>
-          <input v-model.number="form.capacity" type="number" min="1" max="100" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Kapasitas</span>
+          <input v-model.number="form.capacity" type="number" min="1" max="100" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <label v-if="modal === 'create'" class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Tutor (opsional)</span>
-          <select v-model="form.tutor_user_id" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Tutor (opsional)</span>
+          <select v-model="form.tutor_user_id" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
             <option value="">— belum ada tutor —</option>
             <option v-for="t in tutors" :key="t.user_id" :value="t.user_id">{{ t.name }}</option>
           </select>
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="modal = null">Batal</button>
-          <button type="button" :disabled="saving" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="modal === 'create' ? submitCreate() : submitEdit()">{{ saving ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="modal = null">Batal</button>
+          <button type="button" :disabled="saving" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="modal === 'create' ? submitCreate() : submitEdit()">{{ saving ? 'Menyimpan…' : 'Simpan' }}</button>
         </div>
       </div>
     </div>
@@ -274,17 +274,17 @@ function cardActions(g: TutoringGroup) {
     <div v-if="modal === 'assign'" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="modal = null">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
         <h3 class="text-[16px] font-bold text-bimbel-text-hi">Tugaskan tutor</h3>
-        <p class="text-[13px] text-bimbel-text-mid">{{ target?.name }}</p>
+        <p class="text-[14px] text-bimbel-text-mid">{{ target?.name }}</p>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Tutor</span>
-          <select v-model="form.tutor_user_id" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Tutor</span>
+          <select v-model="form.tutor_user_id" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none">
             <option value="">— belum ada tutor —</option>
             <option v-for="t in tutors" :key="t.user_id" :value="t.user_id">{{ t.name }}</option>
           </select>
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="modal = null">Batal</button>
-          <button type="button" :disabled="saving" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitAssign">{{ saving ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="modal = null">Batal</button>
+          <button type="button" :disabled="saving" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitAssign">{{ saving ? 'Menyimpan…' : 'Simpan' }}</button>
         </div>
       </div>
     </div>

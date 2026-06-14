@@ -85,7 +85,7 @@ function go(name: string) {
 
     <!-- ANAK SAYA — quick switch row, mirrors mobile parent_more_hub -->
     <template v-if="children.length > 0">
-      <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
         ANAK SAYA
       </p>
       <div class="grid gap-2" :class="children.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'">
@@ -98,12 +98,12 @@ function go(name: string) {
           @click="pickChild(c.student_id)"
         >
           <span
-            class="w-9 h-9 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0"
+            class="w-9 h-9 rounded-full grid place-items-center text-[13px] font-bold flex-shrink-0"
             :class="chipClass(i)"
           >{{ initials(c.name) }}</span>
           <div class="min-w-0 flex-1">
-            <p class="text-[13px] font-bold text-bimbel-text-hi truncate">{{ c.name }}</p>
-            <p class="text-[11px] text-bimbel-text-mid truncate">{{ c.class_name || 'Kelas —' }}</p>
+            <p class="text-[14px] font-bold text-bimbel-text-hi truncate">{{ c.name }}</p>
+            <p class="text-[12px] text-bimbel-text-mid truncate">{{ c.class_name || 'Kelas —' }}</p>
           </div>
           <span
             v-if="c.student_id === activeChildId"
@@ -114,7 +114,7 @@ function go(name: string) {
       </div>
     </template>
 
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
       AKADEMIK ANAK
     </p>
     <div class="grid grid-cols-3 gap-2">
@@ -128,12 +128,12 @@ function go(name: string) {
         <div class="w-[38px] h-[38px] rounded-lg mx-auto mb-1.5 grid place-items-center" :class="t.iconCls">
           <NavIcon :name="t.icon" :size="18" />
         </div>
-        <p class="text-[12px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
+        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
         <p class="text-[10px] text-bimbel-text-mid mt-0.5">{{ t.sub }}</p>
       </button>
     </div>
 
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
       DAFTAR &amp; PROMO
     </p>
     <div class="grid grid-cols-3 gap-2">
@@ -147,12 +147,12 @@ function go(name: string) {
         <div class="w-[38px] h-[38px] rounded-lg mx-auto mb-1.5 grid place-items-center" :class="t.iconCls">
           <NavIcon :name="t.icon" :size="18" />
         </div>
-        <p class="text-[12px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
+        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
         <p class="text-[10px] text-bimbel-text-mid mt-0.5">{{ t.sub }}</p>
       </button>
     </div>
 
-    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
       AKUN
     </p>
     <div class="grid grid-cols-3 gap-2">
@@ -166,7 +166,7 @@ function go(name: string) {
         <div class="w-[38px] h-[38px] rounded-lg mx-auto mb-1.5 grid place-items-center bg-bimbel-bg text-bimbel-text-hi">
           <NavIcon :name="t.icon" :size="18" />
         </div>
-        <p class="text-[12px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
+        <p class="text-[13px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
         <p class="text-[10px] text-bimbel-text-mid mt-0.5">{{ t.sub }}</p>
       </button>
     </div>

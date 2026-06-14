@@ -165,7 +165,7 @@ function goEnroll() {
     </ParentBerandaHero>
 
     <!-- Search row -->
-    <div class="rounded-lg bg-bimbel-bg px-3 py-2 text-[12px] text-bimbel-text-mid flex items-center gap-2">
+    <div class="rounded-lg bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-mid flex items-center gap-2">
       <NavIcon name="search" :size="14" />
       <input
         v-model="q"
@@ -180,7 +180,7 @@ function goEnroll() {
         v-for="s in statusChips"
         :key="s.id"
         type="button"
-        class="rounded-full px-2.5 py-1 text-[11px] transition-colors"
+        class="rounded-full px-2.5 py-1 text-[12px] transition-colors"
         :class="
           status === s.id
             ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
@@ -203,16 +203,16 @@ function goEnroll() {
       >
         <div class="flex items-center gap-2">
           <span
-            class="w-7 h-7 rounded-full grid place-items-center text-[11px] font-bold"
+            class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold"
             :class="tutorChipClass(i)"
           >
             {{ initials(c.tutor_name) }}
           </span>
-          <span class="text-[13px] font-bold text-bimbel-text-hi truncate">
+          <span class="text-[14px] font-bold text-bimbel-text-hi truncate">
             {{ c.subject || c.group_name }}
           </span>
         </div>
-        <div class="text-[11px] text-bimbel-text-mid flex gap-2.5">
+        <div class="text-[12px] text-bimbel-text-mid flex gap-2.5">
           <span class="inline-flex items-center gap-1">
             <NavIcon name="user" :size="12" />{{ c.tutor_name || '—' }}
           </span>
@@ -220,7 +220,7 @@ function goEnroll() {
             <NavIcon name="calendar" :size="12" />{{ c.schedule_label || '—' }}
           </span>
         </div>
-        <div class="text-[11px] flex justify-between items-center mt-1 pt-2 border-t border-bimbel-border-soft">
+        <div class="text-[12px] flex justify-between items-center mt-1 pt-2 border-t border-bimbel-border-soft">
           <span class="text-bimbel-text-mid">Kehadiran</span>
           <span class="flex-1 mx-2 h-1 bg-bimbel-bg rounded-full overflow-hidden max-w-[80px]">
             <span
@@ -240,7 +240,7 @@ function goEnroll() {
         @click="goEnroll"
       >
         <NavIcon name="plus" :size="22" />
-        <p class="text-[12px] text-bimbel-text-mid mt-1">Daftarkan ke program baru</p>
+        <p class="text-[13px] text-bimbel-text-mid mt-1">Daftarkan ke program baru</p>
       </button>
     </div>
   </div>

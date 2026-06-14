@@ -179,7 +179,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     >
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[12px] font-bold hover:bg-bimbel-panel/90"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-panel text-bimbel-accent text-[13px] font-bold hover:bg-bimbel-panel/90"
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
@@ -258,7 +258,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             placeholder="UTBK20OFF"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm font-mono uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-role-admin/20 focus:border-bimbel-accent"
           />
-          <p class="text-[11px] text-bimbel-text-mid mt-1">
+          <p class="text-[12px] text-bimbel-text-mid mt-1">
             3–40 karakter: A-Z, 0-9, "_" atau "-". Otomatis uppercase.
           </p>
         </label>

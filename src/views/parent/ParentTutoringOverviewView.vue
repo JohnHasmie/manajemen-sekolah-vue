@@ -268,7 +268,7 @@ function goPayBill() {
         <ParentChildPickerChip />
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="goEnroll"
         >
           <NavIcon name="plus" :size="13" />Daftar program
@@ -282,31 +282,31 @@ function goPayBill() {
       <!-- KPI strip (3 cells) -->
       <div class="grid grid-cols-3 gap-2">
         <div class="rounded-lg bg-bimbel-bg p-3">
-          <p class="text-[11px] text-bimbel-text-mid">Sesi hadir bulan ini</p>
+          <p class="text-[12px] text-bimbel-text-mid">Sesi hadir bulan ini</p>
           <p class="text-[20px] font-extrabold text-bimbel-text-hi leading-none mt-0.5">
-            {{ attKpi.attended }}<span class="text-[13px] text-bimbel-text-mid font-normal">/{{ attKpi.total }}</span>
+            {{ attKpi.attended }}<span class="text-[14px] text-bimbel-text-mid font-normal">/{{ attKpi.total }}</span>
           </p>
-          <p class="text-[11px] text-bimbel-text-lo mt-1">{{ attKpi.meta }}</p>
+          <p class="text-[12px] text-bimbel-text-lo mt-1">{{ attKpi.meta }}</p>
         </div>
         <div class="rounded-lg bg-bimbel-bg p-3">
-          <p class="text-[11px] text-bimbel-text-mid">Rata-rata nilai</p>
+          <p class="text-[12px] text-bimbel-text-mid">Rata-rata nilai</p>
           <p class="text-[20px] font-extrabold text-bimbel-text-hi leading-none mt-0.5">{{ scoreKpi.value }}</p>
-          <p class="text-[11px] text-bimbel-text-lo mt-1">{{ scoreKpi.meta }}</p>
+          <p class="text-[12px] text-bimbel-text-lo mt-1">{{ scoreKpi.meta }}</p>
         </div>
         <div class="rounded-lg bg-bimbel-bg p-3">
-          <p class="text-[11px] text-bimbel-text-mid">Tagihan jatuh tempo</p>
+          <p class="text-[12px] text-bimbel-text-mid">Tagihan jatuh tempo</p>
           <p
             class="text-[20px] font-extrabold leading-none mt-0.5"
             :class="billKpi.unpaid ? 'text-red-800' : 'text-bimbel-text-hi'"
           >
             {{ billKpi.value }}
           </p>
-          <p class="text-[11px] text-bimbel-text-lo mt-1">{{ billKpi.meta }}</p>
+          <p class="text-[12px] text-bimbel-text-lo mt-1">{{ billKpi.meta }}</p>
         </div>
       </div>
 
       <!-- Sesi hari ini -->
-      <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">SESI HARI INI</p>
+      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">SESI HARI INI</p>
       <div
         v-if="heroNext"
         class="rounded-xl bg-bimbel-accent-dim border border-bimbel-accent/30 p-3.5 flex gap-3 items-center"
@@ -315,13 +315,13 @@ function goPayBill() {
           <NavIcon name="school" :size="20" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[11px] text-bimbel-hero tracking-wider font-bold uppercase">{{ heroNextTimeKicker }}</p>
+          <p class="text-[12px] text-bimbel-hero tracking-wider font-bold uppercase">{{ heroNextTimeKicker }}</p>
           <p class="text-[14px] font-bold text-bimbel-hero">{{ heroNextTitle }}</p>
-          <p class="text-[12px] text-bimbel-hero/80">{{ heroNextSub }}</p>
+          <p class="text-[13px] text-bimbel-hero/80">{{ heroNextSub }}</p>
         </div>
         <button
           type="button"
-          class="bg-bimbel-hero text-white px-3 py-2 rounded-lg text-[12px] font-bold flex-shrink-0"
+          class="bg-bimbel-hero text-white px-3 py-2 rounded-lg text-[13px] font-bold flex-shrink-0"
           @click="goSesi"
         >
           Lihat detail
@@ -329,7 +329,7 @@ function goPayBill() {
       </div>
       <div
         v-else
-        class="rounded-xl bg-bimbel-bg border border-bimbel-border-soft p-4 text-center text-[12px] text-bimbel-text-mid"
+        class="rounded-xl bg-bimbel-bg border border-bimbel-border-soft p-4 text-center text-[13px] text-bimbel-text-mid"
       >
         Tidak ada sesi hari ini.
       </div>
@@ -343,12 +343,12 @@ function goPayBill() {
           <NavIcon name="wallet" :size="16" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[12px] font-bold text-red-900">{{ topUnpaid.label }} – {{ topUnpaid.amountFmt }}</p>
-          <p class="text-[11px] text-red-800">{{ topUnpaid.dueLine }}</p>
+          <p class="text-[13px] font-bold text-red-900">{{ topUnpaid.label }} – {{ topUnpaid.amountFmt }}</p>
+          <p class="text-[12px] text-red-800">{{ topUnpaid.dueLine }}</p>
         </div>
         <button
           type="button"
-          class="bg-red-900 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-md flex-shrink-0"
+          class="bg-red-900 text-white text-[12px] font-bold px-2.5 py-1.5 rounded-md flex-shrink-0"
           @click="goPayBill"
         >
           Bayar sekarang
@@ -356,7 +356,7 @@ function goPayBill() {
       </div>
 
       <!-- YANG BARU feed -->
-      <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">YANG BARU</p>
+      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">YANG BARU</p>
       <div class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3.5">
         <div
           v-for="(ev, i) in feed"
@@ -370,12 +370,12 @@ function goPayBill() {
             <NavIcon :name="feedIconName(ev)" :size="14" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[13px] font-bold text-bimbel-text-hi">{{ ev.title }}</p>
-            <p class="text-[11px] text-bimbel-text-mid">{{ ev.subtitle }}</p>
+            <p class="text-[14px] font-bold text-bimbel-text-hi">{{ ev.title }}</p>
+            <p class="text-[12px] text-bimbel-text-mid">{{ ev.subtitle }}</p>
           </div>
-          <span class="text-[11px] text-bimbel-text-lo flex-shrink-0">{{ relTime(ev.occurred_at) }}</span>
+          <span class="text-[12px] text-bimbel-text-lo flex-shrink-0">{{ relTime(ev.occurred_at) }}</span>
         </div>
-        <p v-if="!feed.length" class="text-center text-[12px] text-bimbel-text-mid py-6">Belum ada aktivitas baru.</p>
+        <p v-if="!feed.length" class="text-center text-[13px] text-bimbel-text-mid py-6">Belum ada aktivitas baru.</p>
       </div>
     </template>
   </div>

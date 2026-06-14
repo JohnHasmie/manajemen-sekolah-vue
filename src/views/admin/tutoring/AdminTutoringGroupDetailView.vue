@@ -71,7 +71,7 @@ function whenLabel(iso?: string | null): string {
   <div class="space-y-4 pb-12">
     <button
       type="button"
-      class="inline-flex items-center gap-1 text-[13px] text-bimbel-text-mid hover:text-bimbel-text-hi"
+      class="inline-flex items-center gap-1 text-[14px] text-bimbel-text-mid hover:text-bimbel-text-hi"
       @click="router.push({ name: 'admin.tutoring.groups' })"
     >
       <NavIcon name="chevron-left" :size="13" /> Kembali ke daftar kelompok
@@ -84,8 +84,8 @@ function whenLabel(iso?: string | null): string {
       :stats="heroStats"
     >
       <template #actions>
-        <button class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white"><NavIcon name="edit" :size="12" class="inline -mt-0.5" /> Edit</button>
-        <button class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold"><NavIcon name="plus" :size="12" class="inline -mt-0.5" /> Tambah siswa</button>
+        <button class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[14px] font-bold text-white"><NavIcon name="edit" :size="12" class="inline -mt-0.5" /> Edit</button>
+        <button class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"><NavIcon name="plus" :size="12" class="inline -mt-0.5" /> Tambah siswa</button>
       </template>
     </TutorBerandaHero>
 
@@ -94,7 +94,7 @@ function whenLabel(iso?: string | null): string {
         v-for="t in ['students', 'sessions', 'tasks', 'perf'] as const"
         :key="t"
         type="button"
-        class="flex-1 rounded-lg px-3 py-1.5 text-[13px] font-bold tracking-tight transition"
+        class="flex-1 rounded-lg px-3 py-1.5 text-[14px] font-bold tracking-tight transition"
         :class="tab === t ? 'bg-bimbel-accent text-white' : 'text-bimbel-text-mid hover:text-bimbel-text-hi'"
         @click="tab = t"
       >
@@ -112,7 +112,7 @@ function whenLabel(iso?: string | null): string {
         <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
           <table class="w-full text-[14px]">
             <thead class="bg-bimbel-bg/40">
-              <tr class="text-left text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+              <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
                 <th class="px-3 py-2">Siswa</th>
                 <th class="px-3 py-2 w-[120px]">Status</th>
               </tr>
@@ -120,7 +120,7 @@ function whenLabel(iso?: string | null): string {
             <tbody>
               <tr v-for="e in enrollees" :key="e.id" class="border-t border-bimbel-border-soft">
                 <td class="px-3 py-2.5 font-bold text-bimbel-text-hi">{{ e.student?.name ?? '—' }}</td>
-                <td class="px-3 py-2.5"><span class="inline-flex rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 text-[12px] font-bold">Aktif</span></td>
+                <td class="px-3 py-2.5"><span class="inline-flex rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 text-[13px] font-bold">Aktif</span></td>
               </tr>
             </tbody>
           </table>
@@ -133,9 +133,9 @@ function whenLabel(iso?: string | null): string {
         </div>
         <div v-else class="space-y-2">
           <div v-for="s in sessions" :key="s.id" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3">
-            <div class="flex items-center justify-between text-[12px] text-bimbel-text-mid">
+            <div class="flex items-center justify-between text-[13px] text-bimbel-text-mid">
               <span>{{ whenLabel(s.scheduled_at) }} · {{ s.duration_minutes }}m</span>
-              <span class="rounded-full px-2 py-0.5 text-[12px] font-bold" :class="s.status === 'DONE' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-bimbel-accent-dim text-bimbel-accent'">{{ s.status_label ?? s.status }}</span>
+              <span class="rounded-full px-2 py-0.5 text-[13px] font-bold" :class="s.status === 'DONE' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-bimbel-accent-dim text-bimbel-accent'">{{ s.status_label ?? s.status }}</span>
             </div>
             <p class="mt-1 text-[14px] font-bold text-bimbel-text-hi">{{ s.topic ?? 'Sesi terjadwal' }}</p>
           </div>
@@ -151,7 +151,7 @@ function whenLabel(iso?: string | null): string {
             <NavIcon :name="a.type === 'EXAM' ? 'check-circle' : a.type === 'QUIZ' ? 'sparkles' : 'book'" :size="20" class="text-bimbel-accent" />
             <div class="flex-1 min-w-0">
               <p class="text-[14px] font-bold text-bimbel-text-hi truncate">{{ a.title }}</p>
-              <p class="text-[12px] text-bimbel-text-mid">{{ a.type_label ?? a.type }} · {{ a.submissions_count ?? 0 }} pengumpulan</p>
+              <p class="text-[13px] text-bimbel-text-mid">{{ a.type_label ?? a.type }} · {{ a.submissions_count ?? 0 }} pengumpulan</p>
             </div>
           </div>
         </div>
