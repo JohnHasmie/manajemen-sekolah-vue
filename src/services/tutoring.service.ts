@@ -409,32 +409,30 @@ export const TutoringService = {
 
   // ── Admin: enrollment ───────────────────────────────────────────
 
-  /** Tenant students (for the enroll picker) via the school `/students`
-   *  endpoint. Pass `page=1` so the controller returns the predictable
-   *  paginated envelope `{ success, data: [...], pagination }` instead
-   *  of the non-paginated `StudentResource::collection(...)->response()`
-   *  shape which double-wraps via `JsonResource::collection`. */
+  /** Tenant students for the enroll picker.
+   *
+   *  Previously this hit /students (school endpoint) which kept coming
+   *  back empty in this tenant because of subtle response-envelope
+   *  differences between paginated and non-paginated branches.
+   *  Switch to the same /tutoring/students endpoint that the Siswa
+   *  list page uses (getAdminStudents) — that one is confirmed
+   *  working. It returns currently-enrolled students; freshly-created
+   *  students without enrollments yet won't appear here, but the
+   *  Siswa list also covers them once they're enrolled.
+   *
+   *  Dedup by student_id since one student with two enrollments comes
+   *  back as two rows. */
   async getTenantStudents(): Promise<{ id: string; name: string }[]> {
-    const res = await api.get('/students', {
-      params: { page: 1, limit: 500 },
-    });
-    const body = res.data;
-    // Two known shapes: paginated `{ data: [...] }`, or
-    // double-wrapped `{ data: { data: [...] } }` from
-    // ResourceCollection->response().
-    let raw: unknown = body?.data;
-    if (raw && !Array.isArray(raw) && typeof raw === 'object' && Array.isArray((raw as { data?: unknown }).data)) {
-      raw = (raw as { data: unknown[] }).data;
+    const rows = await TutoringService.getAdminStudents();
+    const seen = new Set<string>();
+    const out: { id: string; name: string }[] = [];
+    for (const r of rows) {
+      const id = String(r.student_id);
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      out.push({ id, name: String(r.student_name ?? '—') });
     }
-    const list = Array.isArray(raw)
-      ? raw
-      : Array.isArray(body)
-        ? body
-        : [];
-    return (list as Record<string, unknown>[]).map((m) => ({
-      id: String(m.id),
-      name: String(m.name ?? m.nama ?? '—'),
-    }));
+    return out;
   },
 
   async createEnrollment(payload: {
