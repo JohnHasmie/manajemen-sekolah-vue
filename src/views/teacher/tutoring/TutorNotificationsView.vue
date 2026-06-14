@@ -48,6 +48,13 @@ const iconByCategory: Record<string, string> = {
   tutoring_group_assigned: 'users',
   tutoring_rating_received: 'star',
   tutoring_session_cancelled: 'x-circle',
+  // Finance (admin sees payment_submitted, wali sees the other three;
+  // tutor doesn't recipient on these but we map for completeness).
+  bill_generated: 'wallet',
+  payment_submitted: 'upload',
+  payment_verified: 'check-circle',
+  payment_rejected: 'x-circle',
+  payment_confirmed: 'check-circle',
 };
 function iconFor(n: AppNotification): string {
   if (iconByCategory[n.category]) return iconByCategory[n.category];

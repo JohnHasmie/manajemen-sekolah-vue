@@ -507,6 +507,37 @@ export const TutoringService = {
     return extractData(res);
   },
 
+  // ── Bill reminder offsets (days before due_date) ──────────────
+  async getBillReminderOffsets(): Promise<{
+    offsets_days: number[];
+    is_default: boolean;
+    max_offset_days: number;
+  }> {
+    const res = await api.get<ApiResponse<{
+      offsets_days: number[];
+      is_default: boolean;
+      max_offset_days: number;
+    }>>('/tutoring/settings/bill-reminders');
+    return extractData(res);
+  },
+
+  async updateBillReminderOffsets(
+    offsetsDays: number[],
+  ): Promise<{
+    offsets_days: number[];
+    is_default: boolean;
+    max_offset_days: number;
+  }> {
+    const res = await api.put<ApiResponse<{
+      offsets_days: number[];
+      is_default: boolean;
+      max_offset_days: number;
+    }>>('/tutoring/settings/bill-reminders', {
+      offsets_days: offsetsDays,
+    });
+    return extractData(res);
+  },
+
   // ── Tutor: sessions + attendance ────────────────────────────────
 
   /** KPI strip for the tutor's own dashboard — sessions/hours this
