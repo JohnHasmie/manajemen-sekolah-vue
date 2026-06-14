@@ -55,9 +55,9 @@ function stars(rating: number): string {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="RATING DARI SISWA"
-      :title="data?.overall.avg != null ? `${data.overall.avg.toFixed(1)} ★` : 'Belum ada rating'"
-      :subtitle="data?.overall.window_label ?? '30 hari terakhir'"
+      greeting="LAINNYA · RATING"
+      title="Rating dari siswa"
+      :subtitle="`Feedback masuk · ${data?.overall.window_label ?? '30 hari terakhir'}`"
       :stats="[]"
     >
       <template #actions>

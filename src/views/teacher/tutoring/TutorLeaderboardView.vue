@@ -61,9 +61,9 @@ function rankColor(idx: number): string {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="PERINGKAT KELAS SAYA"
-      title="Papan peringkat"
-      subtitle="Berdasarkan PR + try-out + kehadiran"
+      greeting="LAINNYA · PERINGKAT"
+      title="Peringkat kelas saya"
+      subtitle="Skor siswa berdasarkan PR + try-out + kehadiran"
       :stats="[]"
     >
       <template #actions>

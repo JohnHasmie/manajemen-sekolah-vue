@@ -49,8 +49,8 @@ function pctClass(p: number | null): string {
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
       greeting="LAPORAN · PRESENSI"
-      title="Tingkat kehadiran"
-      subtitle="Per kelompok + watch-list siswa di bawah 80%"
+      title="Laporan presensi"
+      subtitle="Tingkat kehadiran siswa per kelompok"
       :stats="[]"
     >
       <template #actions>

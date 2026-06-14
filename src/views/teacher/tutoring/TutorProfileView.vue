@@ -37,9 +37,9 @@ function initials(name?: string | null): string {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="PROFIL TUTOR"
-      :title="user?.name ?? 'Tutor'"
-      :subtitle="`${stats?.groups ?? 0} kelas aktif · ${stats?.students ?? 0} siswa`"
+      greeting="AKUN · PROFIL TUTOR"
+      title="Profil tutor"
+      subtitle="Identitas, kontak, dan keamanan akun"
       :stats="[]"
     >
       <template #actions>

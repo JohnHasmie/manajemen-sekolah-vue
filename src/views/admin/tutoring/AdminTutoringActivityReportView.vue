@@ -48,7 +48,7 @@ function pctClass(pct: number | null): string {
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
       greeting="LAPORAN · AKTIVITAS"
-      title="Aktivitas & tugas"
+      title="Laporan aktivitas & tugas"
       subtitle="PR, quiz, try-out, materi · 30 hari terakhir"
       :stats="[]"
     >

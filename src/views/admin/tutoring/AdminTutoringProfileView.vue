@@ -23,9 +23,9 @@ function initials(name?: string | null): string {
 <template>
   <div class="space-y-4 pb-12">
     <TutorBerandaHero
-      greeting="PROFIL ADMIN"
-      :title="user?.name ?? 'Admin'"
-      :subtitle="`Admin · ${user?.school_name ?? 'Bimbel'}`"
+      greeting="AKUN · PROFIL"
+      title="Profil admin"
+      subtitle="Identitas operator + profil bimbel + keamanan"
       :stats="[]"
     >
       <template #actions>
