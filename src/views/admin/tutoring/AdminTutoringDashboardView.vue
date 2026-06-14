@@ -1,398 +1,258 @@
 <!--
-  AdminTutoringDashboardView — admin home for a tutoring-center tenant.
+  AdminTutoringDashboardView — admin Beranda redesign matching the
+  approved mockup admin_web_pages_beranda_groups frame 1:
 
-  Adopts the same chrome as the school admin/teacher pages
-  (BrandPageHeader + KpiStripCards + PageFilterToolbar) so the
-  bimbel surfaces visually match the rest of the app.
-
-  Pulls bimbel-native KPIs from GET /tutoring/admin-stats. The program
-  slice filter scopes the four "per-program" counters; bills stay
-  tenant-wide.
+    1. Navy hero with kicker + greeting + subtitle + 3-stat strip
+       (Siswa / Kelompok / Sesi mgg)
+    2. Two-column body:
+       LEFT col
+         a. "Perlu perhatian" accent card (first no-tutor group,
+            warning-tone amber stripe)
+         b. "Lead panas" amber ribbon with "Lihat leads" CTA
+         c. 2-col grid of two panels:
+            - Kelompok perlu tutor (rows of groups without tutor)
+            - Tagihan tertunggak (top unpaid bills)
+       RIGHT col
+         - Yang baru feed (TutorActivityRow rows from
+           getAdminActivity, limit 6)
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
-import { useToast } from '@/composables/useToast';
+import { useAuthStore } from '@/stores/auth';
 import { formatRupiah } from '@/lib/format';
 import type {
   TutoringAdminStats,
+  TutoringBill,
   TutoringFeedEvent,
-  TutoringProgram,
+  TutoringGroup,
+  TutoringLead,
 } from '@/types/tutoring';
 
-import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
-import KpiStripCards, {
-  type KpiCard,
-} from '@/components/feature/KpiStripCards.vue';
-import PageFilterToolbar from '@/components/filters/PageFilterToolbar.vue';
-import AppFilterChip from '@/components/filters/AppFilterChip.vue';
-import Modal from '@/components/ui/Modal.vue';
-import TutoringListTile from '@/components/feature/tutoring/TutoringListTile.vue';
-import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSectionHeader.vue';
-import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
+import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
+import TutorPrimaryCard from '@/components/feature/tutoring/TutorPrimaryCard.vue';
+import TutorRibbon from '@/components/feature/tutoring/TutorRibbon.vue';
+import TutorActivityRow from '@/components/feature/tutoring/TutorActivityRow.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
-const { t } = useI18n();
 const router = useRouter();
-const toast = useToast();
+const auth = useAuthStore();
 
 const loading = ref(true);
 const stats = ref<TutoringAdminStats | null>(null);
-const programs = ref<TutoringProgram[]>([]);
+const groups = ref<TutoringGroup[]>([]);
+const bills = ref<TutoringBill[]>([]);
+const leads = ref<TutoringLead[]>([]);
 const feed = ref<TutoringFeedEvent[]>([]);
-const feedLoading = ref(true);
-/** '' = aggregate; otherwise a program id. */
-const programId = ref<string>('');
-const showProgramPicker = ref(false);
-
-const activeProgramLabel = computed(() =>
-  programId.value === ''
-    ? t('tutoring.students.filterAll')
-    : programs.value.find((p) => p.id === programId.value)?.name ?? '—',
-);
 
 async function load() {
   loading.value = true;
   try {
-    stats.value = await TutoringService.getAdminStats(
-      programId.value || undefined,
-    );
-  } catch (e) {
-    toast.error(
-      e instanceof Error ? e.message : t('tutoring.dashboard.loadError'),
-    );
-  } finally {
-    loading.value = false;
-  }
+    const [s, g, b, l, f] = await Promise.all([
+      TutoringService.getAdminStats().catch(() => null),
+      TutoringService.getAllGroups().catch(() => [] as TutoringGroup[]),
+      TutoringService.getAllBills().catch(() => [] as TutoringBill[]),
+      TutoringService.getLeads({ status: 'TRIAL' }).catch(() => [] as TutoringLead[]),
+      TutoringService.getAdminActivity({ limit: 8 }).catch(() => [] as TutoringFeedEvent[]),
+    ]);
+    stats.value = s;
+    groups.value = g;
+    bills.value = b;
+    leads.value = l;
+    feed.value = f;
+  } finally { loading.value = false; }
 }
+onMounted(load);
 
-async function loadFeed() {
-  feedLoading.value = true;
-  try {
-    feed.value = await TutoringService.getAdminActivity({
-      limit: 8,
-      sinceDays: 7,
-    });
-  } catch {/* non-fatal — empty state covers */} finally {
-    feedLoading.value = false;
-  }
+function timeGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 11) return 'Selamat pagi';
+  if (h < 15) return 'Selamat siang';
+  if (h < 19) return 'Selamat sore';
+  return 'Selamat malam';
 }
+const firstName = computed(() => (auth.user?.name || 'Admin').split(/\s+/)[0]);
 
-onMounted(async () => {
-  await load();
-  try {
-    programs.value = await TutoringService.getPrograms();
-  } catch {/* non-fatal */}
-  await loadFeed();
-});
-
-watch(programId, load);
-
-function pickProgram(id: string) {
-  programId.value = id;
-  showProgramPicker.value = false;
-}
-
-function shortRupiah(value: number): string {
-  if (value >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(1)}M`;
-  if (value >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(1)}jt`;
-  if (value >= 1_000) return `Rp ${Math.round(value / 1_000)}rb`;
-  return formatRupiah(value);
-}
-
-const kpiCards = computed<KpiCard[]>(() => {
+const heroStats = computed(() => {
   const s = stats.value;
-  if (!s) return [];
+  const groupsNoTutor = groups.value.filter((g) => !g.tutor_user_id).length;
   return [
     {
-      icon: 'users',
-      label: t('tutoring.dashboard.students'),
-      value: s.students,
-      suffix: s.groups > 0 ? `· ${s.groups} kelompok` : undefined,
-      tone: 'brand',
-      accented: true,
+      label: 'SISWA',
+      value: String(s?.students ?? 0),
+      hint: s?.new_enrollments_today ? `+${s.new_enrollments_today} hari ini` : undefined,
     },
     {
-      icon: 'layers',
-      label: t('tutoring.dashboard.programs'),
-      value: s.active_programs,
-      tone: 'violet',
+      label: 'KELOMPOK',
+      value: String(s?.groups ?? 0),
+      hint: groupsNoTutor > 0 ? `${groupsNoTutor} perlu perhatian` : undefined,
     },
     {
-      icon: 'check-circle',
-      label: 'Pemasukan bulan ini',
-      value: s.month_revenue > 0 ? shortRupiah(s.month_revenue) : 'Rp 0',
-      suffix: 'Lunas selama 30h',
-      tone: 'green',
-    },
-    {
-      icon: 'check-circle',
-      label: t('tutoring.dashboard.attendance'),
-      value: s.attendance_rate == null ? '–' : `${s.attendance_rate}%`,
-      tone: 'green',
-    },
-    {
-      icon: 'wallet',
-      label: t('tutoring.dashboard.unpaid'),
-      value: s.unpaid_bills,
-      suffix: s.unpaid_total > 0 ? formatRupiah(s.unpaid_total) : undefined,
-      tone: s.unpaid_bills > 0 ? 'amber' : 'green',
-    },
-    {
-      icon: 'users',
-      label: 'Calon siswa (TRIAL)',
-      value: s.hot_leads,
-      suffix: s.new_enrollments_today > 0
-        ? `+${s.new_enrollments_today} daftar hari ini`
-        : undefined,
-      tone: s.hot_leads > 0 ? 'amber' : 'brand',
+      label: 'SESI MGG',
+      value: String(s?.sessions_this_week ?? 0),
+      hint: s?.sessions_today ? `${s.sessions_today} hari ini` : undefined,
     },
   ];
 });
 
-/** Today snapshot pills. */
-const todayStrip = computed(() => {
-  const s = stats.value;
-  if (!s) return [];
-  return [
-    { label: 'Sesi', value: s.sessions_today, warn: false },
-    {
-      label: 'Tagihan jatuh tempo',
-      value: s.bills_due_today,
-      warn: s.bills_due_today > 0,
-    },
-    { label: 'Daftar baru', value: s.new_enrollments_today, warn: false },
-  ];
+const attentionGroup = computed(() => groups.value.find((g) => !g.tutor_user_id) ?? null);
+const groupsNoTutor = computed(() => groups.value.filter((g) => !g.tutor_user_id));
+
+const unpaidBills = computed(() =>
+  bills.value
+    .filter((b) => /unpaid|pending|due|overdue|belum/i.test(b.status ?? ''))
+    .sort((a, b) => {
+      const da = a.due_date ? new Date(a.due_date).valueOf() : Infinity;
+      const db = b.due_date ? new Date(b.due_date).valueOf() : Infinity;
+      return da - db;
+    }),
+);
+const unpaidTotal = computed(() => unpaidBills.value.reduce((s, b) => s + (b.amount ?? 0), 0));
+
+const oldestLead = computed(() => {
+  const sorted = [...leads.value].sort((a, b) => {
+    const da = a.created_at ? new Date(a.created_at).valueOf() : 0;
+    const db = b.created_at ? new Date(b.created_at).valueOf() : 0;
+    return da - db;
+  });
+  return sorted[0] ?? null;
+});
+const leadHintLine = computed(() => {
+  const l = oldestLead.value;
+  if (!l) return '';
+  const days = l.created_at
+    ? Math.floor((Date.now() - new Date(l.created_at).valueOf()) / 86_400_000)
+    : 0;
+  return `terlama ${days} hari lalu · ${l.name}`;
 });
 
-/** Relative time formatter for feed rows. */
-const dateFmt = new Intl.DateTimeFormat('id-ID', {
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-function feedTime(iso: string | null): string {
+function goLeads() { router.push({ name: 'admin.tutoring.leads' }); }
+function goBills() { router.push({ name: 'admin.tutoring.bills' }); }
+function goGroupDetail(g: TutoringGroup) {
+  router.push({ name: 'admin.tutoring.group-detail', params: { groupId: g.id } });
+}
+function dueLabel(iso?: string | null): string {
   if (!iso) return '—';
   const d = new Date(iso);
-  return Number.isNaN(d.valueOf()) ? '—' : dateFmt.format(d);
+  if (Number.isNaN(d.valueOf())) return '—';
+  return `jt ${d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`;
 }
-
-interface FeedStyle { icon: string; tone: string }
-function feedStyle(type: string): FeedStyle {
-  switch (type) {
-    case 'enrollment_new':
-      return { icon: 'user-plus', tone: 'text-bimbel-accent bg-bimbel-accent/12' };
-    case 'lead_new':
-      return { icon: 'fire', tone: 'text-amber-600 bg-amber-50' };
-    case 'lead_converted':
-      return { icon: 'check-circle', tone: 'text-emerald-600 bg-emerald-50' };
-    case 'session_done':
-      return { icon: 'check-circle', tone: 'text-role-guru bg-role-guru/12' };
-    case 'bill_paid':
-      return { icon: 'wallet', tone: 'text-emerald-600 bg-emerald-50' };
-    default:
-      return { icon: 'circle', tone: 'text-bimbel-text-mid bg-bimbel-grey-dim' };
-  }
-}
-
-const manageTiles = [
-  {
-    icon: 'users',
-    label: 'Siswa Bimbel',
-    sub: 'Daftar siswa terdaftar',
-    to: 'admin.tutoring.students',
-  },
-  {
-    icon: 'user-check',
-    label: 'Tutor',
-    sub: 'Daftar tutor & beban mengajar',
-    to: 'admin.tutoring.tutors',
-  },
-] as const;
-
-const quickActions = [
-  {
-    key: 'quickPrograms',
-    icon: 'layers',
-    sub: 'Kelola katalog akademik',
-    to: 'admin.tutoring.programs',
-  },
-  {
-    key: 'quickSessions',
-    icon: 'calendar',
-    sub: 'Semua sesi + absensi',
-    to: 'admin.tutoring.sessions',
-  },
-  {
-    key: 'quickBills',
-    icon: 'wallet',
-    sub: 'Status pembayaran per siswa',
-    to: 'admin.tutoring.bills',
-  },
-  {
-    key: 'quickBilling',
-    icon: 'settings',
-    sub: 'Mode prabayar / bulanan / per sesi',
-    to: 'admin.tutoring.billing-settings',
-  },
-] as const;
 </script>
 
 <template>
-  <div class="space-y-md pb-12">
-    <!-- ── 1. Header ─────────────────────────────────────────── -->
-    <BrandPageHeader
-      role="admin"
-      kicker="Bimbel · Dashboard"
-      :title="t('tutoring.dashboard.title')"
-      :meta="stats
-        ? `${stats.students} siswa · ${stats.groups} kelompok · ${stats.active_programs} program aktif`
-        : ''"
-      live-dot
+  <div class="space-y-4 pb-12">
+    <TutorBerandaHero
+      :greeting="`${timeGreeting()} · BIMBEL · BERANDA`"
+      :title="`Halo, ${firstName}`"
+      :subtitle="`${auth.user?.school_name ?? 'Bimbel'} · ${stats?.students ?? 0} siswa aktif`"
+      :stats="heroStats"
     />
 
-    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">
-      {{ t('tutoring.common.loading') }}
-    </div>
+    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">Memuat…</div>
 
-    <template v-else-if="stats">
-      <!-- ── 2. Today snapshot ─────────────────────────────────── -->
-      <div
-        class="flex items-center gap-3 rounded-lg border border-bimbel-accent/25 bg-gradient-to-r from-role-admin/8 to-white px-3 py-2.5"
-      >
-        <NavIcon name="calendar" :size="16" class="text-bimbel-accent" />
-        <div class="flex flex-wrap gap-x-4 gap-y-1">
-          <div v-for="p in todayStrip" :key="p.label" class="flex items-center gap-1">
-            <span
-              class="text-sm font-extrabold tracking-tight"
-              :class="p.warn ? 'text-bimbel-red' : 'text-bimbel-text-hi'"
-            >{{ p.value }}</span>
-            <span class="text-[11px] font-semibold text-bimbel-text-mid">{{ p.label }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── 3. KPI strip ────────────────────────────────────── -->
-      <KpiStripCards :cards="kpiCards" />
-
-      <!-- ── 4. Filter toolbar — program slice picker ────────── -->
-      <PageFilterToolbar :hide-default-search="true">
-        <template #chips>
-          <AppFilterChip
-            label="Program"
-            :value="activeProgramLabel"
-            icon-name="layers"
-            tone="violet"
-            @click="showProgramPicker = true"
-          />
-        </template>
-      </PageFilterToolbar>
-
-      <!-- ── 5. Activity feed (last 7d) ───────────────────────── -->
-      <TutoringSectionHeader title="Aktivitas Terbaru" />
-      <div
-        v-if="feedLoading"
-        class="py-6 text-center text-xs text-bimbel-text-lo"
-      >
-        Memuat…
-      </div>
-      <TutoringEmpty
-        v-else-if="feed.length === 0"
-        text="Belum ada aktivitas 7 hari terakhir."
-        icon="clock"
-      />
-      <div v-else class="space-y-1.5">
-        <div
-          v-for="(ev, i) in feed"
-          :key="i"
-          class="flex gap-3 rounded-lg border border-bimbel-border bg-bimbel-panel p-3"
+    <div v-else class="grid gap-4 lg:grid-cols-3">
+      <div class="space-y-3 lg:col-span-2">
+        <TutorPrimaryCard
+          v-if="attentionGroup"
+          icon="alert-triangle"
+          kicker="PERLU PERHATIAN"
+          :title="`Kelompok ${attentionGroup.name} belum punya tutor`"
+          subtitle="Klik untuk pilih tutor cadangan agar sesi minggu ini tidak terlewat."
+          tone="warning"
         >
-          <div
-            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
-            :class="feedStyle(ev.type).tone"
-          >
-            <NavIcon :name="feedStyle(ev.type).icon" :size="14" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="line-clamp-2 text-[13px] font-bold text-bimbel-text-hi">
-              {{ ev.title }}
-            </div>
-            <div
-              v-if="ev.subtitle"
-              class="line-clamp-2 text-[11.5px] text-bimbel-text-mid"
+          <template #actions>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-2 text-[13px] font-bold text-white hover:opacity-90"
+              @click="goGroupDetail(attentionGroup)"
             >
-              {{ ev.subtitle }}
+              <NavIcon name="user-check" :size="13" /> Tugaskan tutor
+            </button>
+          </template>
+        </TutorPrimaryCard>
+
+        <TutorRibbon
+          v-if="leads.length > 0"
+          icon="sparkles"
+          label="LEAD PANAS"
+          :value="`${leads.length} calon belum di-follow-up`"
+          :hint="leadHintLine || undefined"
+          tone="warning"
+          clickable
+          @click="goLeads"
+        />
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
+            <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Kelompok perlu tutor</h4>
+            <div v-if="groupsNoTutor.length === 0" class="py-3 text-center text-[13px] text-bimbel-text-mid">
+              Semua kelompok ada tutor.
             </div>
-          </div>
-          <div class="shrink-0 self-start text-[10px] font-semibold text-bimbel-text-lo">
-            {{ feedTime(ev.occurred_at) }}
-          </div>
+            <button
+              v-for="g in groupsNoTutor.slice(0, 4)"
+              :key="g.id"
+              type="button"
+              class="flex w-full items-center gap-2.5 border-b border-bimbel-border-soft py-2 text-left last:border-b-0 hover:bg-bimbel-border-soft/30"
+              @click="goGroupDetail(g)"
+            >
+              <span class="grid h-7 w-7 flex-shrink-0 place-items-center rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                <NavIcon name="alert-triangle" :size="13" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ g.name }}</p>
+                <p class="text-[13px] text-bimbel-text-mid">belum ada tutor</p>
+              </div>
+            </button>
+          </section>
+
+          <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
+            <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Tagihan tertunggak</h4>
+            <div v-if="unpaidBills.length === 0" class="py-3 text-center text-[13px] text-bimbel-text-mid">
+              Tidak ada tagihan tertunggak.
+            </div>
+            <div v-else>
+              <div class="flex items-center justify-between border-b border-bimbel-border-soft pb-2 mb-1">
+                <span class="text-[13px] text-bimbel-text-mid">Total</span>
+                <span class="text-[15px] font-extrabold text-bimbel-text-hi">{{ formatRupiah(unpaidTotal) }}</span>
+              </div>
+              <button
+                v-for="b in unpaidBills.slice(0, 3)"
+                :key="b.id"
+                type="button"
+                class="flex w-full items-center gap-2.5 border-b border-bimbel-border-soft py-2 text-left last:border-b-0 hover:bg-bimbel-border-soft/30"
+                @click="goBills"
+              >
+                <span class="grid h-7 w-7 flex-shrink-0 place-items-center rounded-lg bg-rose-500/15 text-rose-700 dark:text-rose-300">
+                  <NavIcon name="wallet" :size="13" />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ formatRupiah(b.amount ?? 0) }}</p>
+                  <p class="truncate text-[13px] text-bimbel-text-mid">
+                    {{ [b.student_name, dueLabel(b.due_date)].filter(Boolean).join(' · ') }}
+                  </p>
+                </div>
+              </button>
+            </div>
+          </section>
         </div>
       </div>
 
-      <!-- ── 6. Management tiles ─────────────────────────────── -->
-      <TutoringSectionHeader :title="t('tutoring.nav.manajemen')" />
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <TutoringListTile
-          v-for="m in manageTiles"
-          :key="m.label"
-          :icon="m.icon"
-          :title="m.label"
-          :subtitle="m.sub"
-          :to="() => router.push({ name: m.to })"
+      <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
+        <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Yang baru</h4>
+        <div v-if="feed.length === 0" class="py-6 text-center text-[13px] text-bimbel-text-mid">
+          Belum ada aktivitas baru.
+        </div>
+        <TutorActivityRow
+          v-for="(e, i) in feed.slice(0, 6)"
+          :key="i"
+          compact
+          :type="e.type"
+          :title="e.title"
+          :subtitle="e.subtitle"
+          :occurred-at="e.occurred_at"
         />
-      </div>
-
-      <TutoringSectionHeader :title="t('tutoring.dashboard.manage')" />
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <TutoringListTile
-          v-for="a in quickActions"
-          :key="a.key"
-          :icon="a.icon"
-          :title="t('tutoring.dashboard.' + a.key)"
-          :subtitle="a.sub"
-          :to="() => router.push({ name: a.to })"
-        />
-      </div>
-    </template>
-
-    <TutoringEmpty
-      v-else
-      :text="t('tutoring.dashboard.loadError')"
-      icon="alert-circle"
-    />
-
-    <!-- Program picker modal -->
-    <Modal
-      v-if="showProgramPicker"
-      title="Pilih Program"
-      @close="showProgramPicker = false"
-    >
-      <ul class="space-y-1">
-        <li>
-          <button
-            type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
-            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': programId === '' }"
-            @click="pickProgram('')"
-          >
-            {{ t('tutoring.students.filterAll') }}
-          </button>
-        </li>
-        <li v-for="p in programs" :key="p.id">
-          <button
-            type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-bg"
-            :class="{ 'bg-bimbel-accent/5 text-bimbel-accent font-bold': programId === p.id }"
-            @click="pickProgram(p.id)"
-          >
-            {{ p.name }}
-          </button>
-        </li>
-      </ul>
-    </Modal>
+      </aside>
+    </div>
   </div>
 </template>
