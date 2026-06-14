@@ -1156,6 +1156,42 @@ const routes: RouteRecordRaw[] = [
           import('@/views/teacher/tutoring/TutorAppearanceView.vue'),
         meta: { role: 'guru' satisfies Role },
       },
+      {
+        path: 'teacher/tutoring/profile',
+        name: 'teacher.tutoring.profile',
+        component: () => import('@/views/teacher/tutoring/TutorProfileView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/profile/change-password',
+        name: 'teacher.tutoring.change-password',
+        component: () => import('@/views/teacher/tutoring/TutorChangePasswordView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/ratings',
+        name: 'teacher.tutoring.ratings',
+        component: () => import('@/views/teacher/tutoring/TutorRatingsView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/notifications',
+        name: 'teacher.tutoring.notifications',
+        component: () => import('@/views/teacher/tutoring/TutorNotificationsView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/announcements',
+        name: 'teacher.tutoring.announcements',
+        component: () => import('@/views/teacher/tutoring/TutorAnnouncementsView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
+      {
+        path: 'teacher/tutoring/leaderboard',
+        name: 'teacher.tutoring.leaderboard',
+        component: () => import('@/views/teacher/tutoring/TutorLeaderboardView.vue'),
+        meta: { role: 'guru' satisfies Role },
+      },
 
       // Staff subtree (placeholder until staff feature surfaces are
       // confirmed — see task #51).

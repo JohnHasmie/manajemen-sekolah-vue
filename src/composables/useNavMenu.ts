@@ -267,31 +267,21 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
   {
     titleKey: 'tutoring.nav.sectionExtra',
     items: [
-      {
-        to: '/teacher/tutoring/materials',
-        labelKey: 'tutoring.nav.materials',
-        icon: 'book',
-      },
-      {
-        to: '/teacher/tutoring/tryout-generator',
-        labelKey: 'tutoring.nav.ai',
-        icon: 'sparkles',
-      },
-      {
-        to: '/teacher/tutoring/recurring',
-        labelKey: 'tutoring.nav.recurring',
-        icon: 'calendar',
-      },
-      {
-        to: '/teacher/tutoring/activities',
-        labelKey: 'tutoring.nav.activities',
-        icon: 'check-circle',
-      },
-      {
-        to: '/teacher/announcements',
-        labelKey: 'nav.announcements',
-        icon: 'megaphone',
-      },
+      { to: '/teacher/tutoring/materials', labelKey: 'tutoring.nav.materials', icon: 'book' },
+      { to: '/teacher/tutoring/tryout-generator', labelKey: 'tutoring.nav.ai', icon: 'sparkles' },
+      { to: '/teacher/tutoring/recurring', labelKey: 'tutoring.nav.recurring', icon: 'calendar' },
+      { to: '/teacher/tutoring/activities', labelKey: 'tutoring.nav.activities', icon: 'check-circle' },
+      { to: '/teacher/tutoring/ratings', labelKey: 'tutoring.nav.rating', icon: 'star' },
+      { to: '/teacher/tutoring/announcements', labelKey: 'nav.announcements', icon: 'megaphone' },
+      { to: '/teacher/tutoring/leaderboard', labelKey: 'tutoring.nav.leaderboard', icon: 'bar-chart-2' },
+    ],
+  },
+  {
+    titleKey: 'tutoring.nav.sectionAccount',
+    items: [
+      { to: '/teacher/tutoring/notifications', labelKey: 'tutoring.nav.notifications', icon: 'bell' },
+      { to: '/teacher/tutoring/profile', labelKey: 'tutoring.nav.profile', icon: 'user' },
+      { to: '/teacher/tutoring/appearance', labelKey: 'tutoring.nav.appearance', icon: 'sun' },
     ],
   },
 ];

@@ -933,6 +933,24 @@ export const TutoringService = {
     return extractData(res) ?? [];
   },
 
+  /** Tutor's own rating summary — overall avg + per-group + recent
+   *  comments. Backed by GetTutorRatingsSummaryAction. */
+  async getTutorRatingsSummary(
+    opts: { group_id?: string; stars?: number[]; has_comment?: boolean } = {},
+  ): Promise<import('@/types/tutoring').TutorRatingsSummary> {
+    const res = await api.get<ApiResponse<import('@/types/tutoring').TutorRatingsSummary>>(
+      '/tutoring/tutor/ratings/summary',
+      {
+        params: {
+          ...(opts.group_id ? { group_id: opts.group_id } : {}),
+          ...(opts.stars ? { stars: opts.stars.join(',') } : {}),
+          ...(opts.has_comment != null ? { has_comment: opts.has_comment ? 1 : 0 } : {}),
+        },
+      },
+    );
+    return extractData(res);
+  },
+
   /** Tutor feed: submissions / ratings / enrollments / announcements / sessions done. */
   async getTutorActivity(
     opts: { limit?: number; sinceDays?: number } = {},

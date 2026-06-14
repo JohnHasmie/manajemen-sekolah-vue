@@ -524,3 +524,37 @@ export interface TutoringWaliClassMeta {
   } | null;
   new_announcements_count_7d: number;
 }
+
+/** Tutor's own rating summary — drives the Rating page.
+ *  Mirrors GetTutorRatingsSummaryAction. */
+export interface TutorRatingsSummary {
+  overall: {
+    avg: number | null;
+    count: number;
+    delta: number | null;
+    window_label: string;
+  };
+  week: { avg: number | null; count: number };
+  response: { rate: number | null; rated_sessions: number; done_sessions: number };
+  distribution: Record<string, number>;
+  groups: Array<{
+    group_id: string;
+    group_name: string;
+    avg: number | null;
+    count: number;
+  }>;
+  recent: Array<{
+    id: string;
+    student_name?: string | null;
+    group_name?: string | null;
+    rating: number;
+    comment?: string | null;
+    scheduled_at?: string | null;
+    created_at?: string | null;
+  }>;
+  filters: {
+    group_id: string | null;
+    stars: number[] | null;
+    has_comment: boolean | null;
+  };
+}
