@@ -1,6 +1,8 @@
 <!--
-  ParentMoreView — wali "Lainnya" hub. Mockup parent_web_pages_account
-  frame 2: grouped tiles (Pembelajaran / Keuangan / Komunitas & Akun).
+  ParentMoreView — wali "Lainnya" hub. Grouped section headers
+  (AKADEMIK ANAK / DAFTAR & PROMO / AKUN) with 3-up tile grids. Each
+  tile is bimbel-panel + colored icon box + label + sub. Routes
+  preserved via go(name).
 -->
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
@@ -8,8 +10,6 @@ import { computed } from 'vue';
 import { useChildPicker } from '@/composables/useChildPicker';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
-import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
-import NavIcon from '@/components/feature/NavIcon.vue';
 
 const router = useRouter();
 const { activeChildId } = useChildPicker();
@@ -21,61 +21,90 @@ function go(name: string) {
   router.push({ name, params });
 }
 
-const sections = computed(() => [
+type Tone = 'blue' | 'green' | 'amber' | 'purple' | 'coral' | 'neutral';
+
+interface Tile {
+  icon: string;
+  label: string;
+  sub: string;
+  to: string;
+  tone: Tone;
+}
+
+interface Section {
+  title: string;
+  tiles: Tile[];
+}
+
+const sections = computed<Section[]>(() => [
   {
-    title: 'Pembelajaran',
+    title: 'Akademik anak',
     tiles: [
-      { icon: 'book', label: 'Kegiatan', sub: 'PR, quiz & try-out', to: 'parent.tutoring.activities' },
-      { icon: 'star', label: 'Nilai & progress', sub: 'Per mapel & riwayat', to: 'parent.tutoring.progress' },
-      { icon: 'check-circle', label: 'Peringkat', sub: 'Posisi anak di kelas', to: 'parent.tutoring.leaderboard' },
+      { icon: 'ti-chart-bar', label: 'Perkembangan', sub: 'Nilai & tren', to: 'parent.tutoring.progress', tone: 'blue' },
+      { icon: 'ti-trophy', label: 'Peringkat', sub: 'Per kelompok', to: 'parent.tutoring.leaderboard', tone: 'amber' },
+      { icon: 'ti-book-2', label: 'Aktivitas', sub: 'Tugas & ulangan', to: 'parent.tutoring.activities', tone: 'purple' },
     ],
   },
   {
-    title: 'Keuangan',
+    title: 'Daftar & promo',
     tiles: [
-      { icon: 'wallet', label: 'Riwayat tagihan', sub: 'Lunas + belum bayar', to: 'parent.tutoring.bills' },
-      { icon: 'sparkles', label: 'Voucher saya', sub: 'Promo & kode diskon', to: 'parent.tutoring.vouchers' },
+      { icon: 'ti-discount-2', label: 'Voucher', sub: 'Promo & kode', to: 'parent.tutoring.vouchers', tone: 'coral' },
+      { icon: 'ti-user-plus', label: 'Daftar anak baru', sub: 'Ke bimbel ini', to: 'parent.tutoring.register-lead', tone: 'green' },
+      { icon: 'ti-package', label: 'Daftar program', sub: 'Untuk anak terdaftar', to: 'parent.tutoring.enroll-new', tone: 'blue' },
     ],
   },
   {
-    title: 'Komunitas & akun',
+    title: 'Akun',
     tiles: [
-      { icon: 'megaphone', label: 'Pengumuman', sub: 'Dari tutor & admin', to: 'parent.tutoring.announcements' },
-      { icon: 'user', label: 'Profil & sandi', sub: 'Identitas wali', to: 'parent.tutoring.profile' },
-      { icon: 'sun', label: 'Tampilan & bahasa', sub: 'Mode terang/gelap', to: 'parent.tutoring.appearance' },
+      { icon: 'ti-bell', label: 'Notifikasi', sub: 'Pengingat & info', to: 'parent.tutoring.notifications', tone: 'neutral' },
+      { icon: 'ti-user', label: 'Profil', sub: 'Identitas & anak', to: 'parent.tutoring.profile', tone: 'neutral' },
+      { icon: 'ti-sun', label: 'Tampilan', sub: 'Otomatis', to: 'parent.tutoring.appearance', tone: 'neutral' },
     ],
   },
 ]);
+
+function toneClass(t: Tone): string {
+  switch (t) {
+    case 'blue': return 'bg-bimbel-accent-dim text-bimbel-hero';
+    case 'green': return 'bg-bimbel-green-dim text-green-700';
+    case 'amber': return 'bg-bimbel-amber-dim text-amber-700';
+    case 'purple': return 'bg-[color-mix(in_srgb,#a855f7_16%,transparent)] text-purple-700';
+    case 'coral': return 'bg-bimbel-red-dim text-red-700';
+    case 'neutral':
+    default: return 'bg-bimbel-bg text-bimbel-text-mid';
+  }
+}
 </script>
 
 <template>
-  <div class="space-y-4 pb-12">
+  <div class="space-y-3 pb-12">
     <ParentBerandaHero
       kicker="BIMBEL · LAINNYA"
-      title="Akses cepat"
-      subtitle="Semua menu dalam satu tempat"
+      title="Lainnya"
+      subtitle="Voucher, profil, notifikasi, & pengaturan"
       :stats="[]"
-    >
-      <template #actions><ParentChildPickerChip /></template>
-    </ParentBerandaHero>
+    />
 
-    <div v-for="s in sections" :key="s.title" class="space-y-2">
-      <h3 class="text-[13px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ s.title }}</h3>
-      <div class="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+    <div v-for="s in sections" :key="s.title">
+      <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+        {{ s.title }}
+      </p>
+      <div class="grid grid-cols-3 gap-2">
         <button
           v-for="t in s.tiles"
           :key="t.label"
           type="button"
-          class="flex flex-col items-start gap-2 rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 text-left transition hover:border-[#21afe6]/50"
+          class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-3.5 text-center cursor-pointer hover:border-bimbel-hero/50"
           @click="go(t.to)"
         >
-          <span class="grid h-9 w-9 place-items-center rounded-xl bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]">
-            <NavIcon :name="t.icon" :size="16" />
+          <span
+            class="mx-auto grid h-[38px] w-[38px] place-items-center rounded-lg mb-1.5"
+            :class="toneClass(t.tone)"
+          >
+            <i class="ti text-[18px]" :class="t.icon"></i>
           </span>
-          <div>
-            <p class="text-[14px] font-bold text-bimbel-text-hi">{{ t.label }}</p>
-            <p class="text-[13px] text-bimbel-text-mid">{{ t.sub }}</p>
-          </div>
+          <p class="text-[12px] font-bold text-bimbel-text-hi truncate">{{ t.label }}</p>
+          <p class="text-[10px] text-bimbel-text-mid mt-0.5 truncate">{{ t.sub }}</p>
         </button>
       </div>
     </div>

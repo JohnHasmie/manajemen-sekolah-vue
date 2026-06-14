@@ -1,6 +1,9 @@
 <!--
-  ParentBillsView — wali Tagihan list. Mockup parent_web_pages_browse
-  frame 2: hero + perlu-bayar ribbon + active/history seg + table.
+  ParentBillsView — wali Tagihan list.
+
+  Redesigned per mockup: hero + red outstanding banner (when unpaid) +
+  3-tab row (Belum lunas / Sudah lunas / Semua) + bill cards. Data
+  source (TutoringService.getBills) and routing unchanged.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -12,11 +15,10 @@ import type { TutoringBill } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
-import ParentRibbon from '@/components/feature/tutoring/ParentRibbon.vue';
 
 const route = useRoute();
 const router = useRouter();
-const { activeChildId, activeChild } = useChildPicker();
+const { activeChildId } = useChildPicker();
 
 const studentId = computed(() =>
   String(route.params.studentId || activeChildId.value || ''),
@@ -24,7 +26,9 @@ const studentId = computed(() =>
 
 const loading = ref(true);
 const bills = ref<TutoringBill[]>([]);
-const view = ref<'all' | 'unpaid' | 'paid'>('all');
+// Default active tab is "unpaid" (Belum lunas) per spec — that's the
+// most-actionable view when wali lands here.
+const activeTab = ref<'unpaid' | 'paid' | 'all'>('unpaid');
 
 async function load() {
   const sid = studentId.value;
@@ -43,126 +47,231 @@ function isUnpaid(b: TutoringBill): boolean {
 function isPaid(b: TutoringBill): boolean {
   return /paid|lunas/i.test(b.status ?? '');
 }
+function isPending(b: TutoringBill): boolean {
+  return /pending/i.test(b.status ?? '');
+}
 
 const unpaid = computed(() => bills.value.filter(isUnpaid));
-const unpaidTotal = computed(() => unpaid.value.reduce((s, b) => s + (b.amount ?? 0), 0));
+const paid = computed(() => bills.value.filter(isPaid));
+const unpaidTotal = computed(() =>
+  unpaid.value.reduce((s, b) => s + (b.amount ?? 0), 0),
+);
+
 const filtered = computed(() => {
-  if (view.value === 'unpaid') return unpaid.value;
-  if (view.value === 'paid') return bills.value.filter(isPaid);
+  if (activeTab.value === 'unpaid') return unpaid.value;
+  if (activeTab.value === 'paid') return paid.value;
   return bills.value;
 });
 
-function statusChip(b: TutoringBill) {
-  if (isPaid(b))
-    return { cls: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', label: 'Lunas' };
-  if (isUnpaid(b))
-    return { cls: 'bg-rose-500/15 text-rose-700 dark:text-rose-300', label: 'Belum' };
-  return { cls: 'bg-bimbel-border-soft text-bimbel-text-mid', label: b.status ?? '—' };
+// ── Banner copy ─────────────────────────────────────────────────
+function daysUntil(iso?: string | null): number | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.valueOf())) return null;
+  return Math.ceil((d.valueOf() - Date.now()) / 86_400_000);
 }
 
+const dueSoonCount = computed(() => {
+  return unpaid.value.filter((b) => {
+    const days = daysUntil(b.due_date);
+    return days != null && days >= 0 && days <= 7;
+  }).length;
+});
+
+const bannerSub = computed(() => {
+  const list = unpaid.value;
+  if (list.length === 0) return '';
+  const due = dueSoonCount.value;
+  if (due > 0) {
+    return `${list.length} tagihan · ${due} jatuh tempo dalam 7 hari`;
+  }
+  return `${list.length} tagihan tertunggak`;
+});
+
+// ── Per-bill rendering helpers ──────────────────────────────────
 function dueLabel(iso?: string | null): string {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.valueOf())) return '—';
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function statusPill(b: TutoringBill): { label: string; cls: string } {
+  if (isPaid(b)) {
+    return {
+      label: 'Lunas',
+      cls: 'bg-bimbel-green-dim text-green-700',
+    };
+  }
+  if (isPending(b)) {
+    return {
+      label: 'Pending',
+      cls: 'bg-bimbel-amber-dim text-amber-700',
+    };
+  }
+  if (isUnpaid(b)) {
+    const days = daysUntil(b.due_date);
+    if (days != null && days < 0) {
+      return {
+        label: `Telat ${Math.abs(days)}h`,
+        cls: 'bg-bimbel-red-dim text-red-700',
+      };
+    }
+    if (days != null && days <= 7) {
+      return {
+        label: `Jatuh tempo ${days}h`,
+        cls: 'bg-bimbel-red-dim text-red-700',
+      };
+    }
+    return {
+      label: 'Belum lunas',
+      cls: 'bg-bimbel-accent-dim text-bimbel-hero',
+    };
+  }
+  return {
+    label: b.status ?? '—',
+    cls: 'bg-bimbel-border-soft text-bimbel-text-mid',
+  };
 }
 
 function goPay(b: TutoringBill) {
   router.push({ name: 'parent.tutoring.pay-bill', params: { billId: b.id } });
+}
+
+function payAll() {
+  if (unpaid.value[0]) goPay(unpaid.value[0]);
 }
 </script>
 
 <template>
   <div class="space-y-4 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · TAGIHAN"
-      title="Tagihan & riwayat"
-      :subtitle="`${activeChild()?.name ?? 'Anak'} · ${unpaid.length} aktif · ${bills.length - unpaid.length} lunas`"
+      kicker="BIMBEL · WALI"
+      title="Tagihan"
+      subtitle="SPP, paket prabayar, dan biaya lain"
       :stats="[]"
     >
-      <template #actions><ParentChildPickerChip /></template>
+      <template #actions>
+        <ParentChildPickerChip />
+      </template>
     </ParentBerandaHero>
 
-    <ParentRibbon
+    <!-- Outstanding banner -->
+    <div
       v-if="unpaid.length > 0"
-      icon="alert-triangle"
-      label="PERLU DIBAYAR"
-      :value="formatRupiah(unpaidTotal)"
-      :hint="`${unpaid.length} tagihan tertunggak`"
-      tone="warning"
-      action-label="Bayar sekarang"
-      @action="goPay(unpaid[0])"
-    />
+      class="mb-3.5 flex items-center justify-between gap-3 rounded-xl border border-red-300 bg-bimbel-red-dim p-3.5"
+    >
+      <div class="min-w-0">
+        <p class="text-[11px] font-bold uppercase tracking-wider text-red-800">
+          Total belum dibayar
+        </p>
+        <p class="text-[22px] font-extrabold text-red-900">
+          {{ formatRupiah(unpaidTotal) }}
+        </p>
+        <p class="text-[11px] text-red-800">{{ bannerSub }}</p>
+      </div>
+      <button
+        type="button"
+        class="flex-shrink-0 rounded-lg bg-red-900 px-3 py-2 text-[12px] font-bold text-white hover:opacity-90"
+        @click="payAll"
+      >
+        Bayar semua
+      </button>
+    </div>
 
-    <div class="flex gap-1">
+    <!-- Tabs -->
+    <div class="flex gap-4 border-b border-bimbel-border-soft">
       <button
         v-for="opt in [
+          { id: 'unpaid', label: `Belum lunas (${unpaid.length})` },
+          { id: 'paid', label: `Sudah lunas (${paid.length})` },
           { id: 'all', label: 'Semua' },
-          { id: 'unpaid', label: 'Belum bayar' },
-          { id: 'paid', label: 'Lunas' },
         ] as const"
         :key="opt.id"
         type="button"
-        class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+        class="-mb-px border-b-2 px-1 py-2 text-[13px] transition"
         :class="
-          view === opt.id
-            ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
-            : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'
+          activeTab === opt.id
+            ? 'border-bimbel-hero font-bold text-bimbel-hero'
+            : 'border-transparent text-bimbel-text-mid hover:text-bimbel-text-hi'
         "
-        @click="view = opt.id"
-      >{{ opt.label }}</button>
+        @click="activeTab = opt.id"
+      >
+        {{ opt.label }}
+      </button>
     </div>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
-    <div v-else-if="filtered.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
-      <table class="w-full text-[13px]">
-        <thead class="bg-bimbel-bg/40">
-          <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
-            <th class="px-3 py-2">Program</th>
-            <th class="px-3 py-2 w-[120px]">Bulan</th>
-            <th class="px-3 py-2 w-[140px]">Jatuh tempo</th>
-            <th class="px-3 py-2 w-[120px]">Jumlah</th>
-            <th class="px-3 py-2 w-[90px]">Status</th>
-            <th class="px-3 py-2 w-[110px]"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="b in filtered"
-            :key="b.id"
-            class="border-t border-bimbel-border-soft hover:bg-bimbel-border-soft/30"
+    <!-- Bill cards -->
+    <div v-else-if="filtered.length" class="space-y-2.5">
+      <div
+        v-for="b in filtered"
+        :key="b.id"
+        class="rounded-xl border border-bimbel-border-soft bg-bimbel-panel p-3.5"
+        :class="isPaid(b) ? 'opacity-70' : ''"
+      >
+        <!-- Top row: title + status pill -->
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-[13px] font-bold text-bimbel-text-hi">
+              {{ b.source_label ?? b.source_type ?? 'Tagihan' }}
+            </p>
+            <p class="mt-0.5 text-[11px] text-bimbel-text-mid">
+              {{ b.month ?? '—' }}
+              <template v-if="b.student_name"> · {{ b.student_name }}</template>
+            </p>
+          </div>
+          <span
+            class="inline-flex flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+            :class="statusPill(b).cls"
           >
-            <td class="px-3 py-2.5">
-              <p class="font-bold text-bimbel-text-hi">{{ b.source_label ?? b.source_type ?? 'Tagihan' }}</p>
-              <p v-if="b.student_name" class="text-[13px] text-bimbel-text-mid">{{ b.student_name }}</p>
-            </td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ b.month ?? '—' }}</td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ dueLabel(b.due_date) }}</td>
-            <td class="px-3 py-2.5 font-bold text-bimbel-text-hi">{{ b.amount != null ? formatRupiah(b.amount) : '—' }}</td>
-            <td class="px-3 py-2.5">
-              <span class="inline-flex rounded-full px-2 py-0.5 text-[13px] font-bold" :class="statusChip(b).cls">{{ statusChip(b).label }}</span>
-            </td>
-            <td class="px-3 py-2.5">
-              <button
-                v-if="isUnpaid(b)"
-                type="button"
-                class="rounded-lg bg-[#21afe6] px-3 py-1 text-[13px] font-bold text-white hover:opacity-90"
-                @click="goPay(b)"
-              >Bayar</button>
-              <button
-                v-else
-                type="button"
-                class="text-[13px] font-semibold text-[#1a8fbe] dark:text-[#85d4f4] hover:underline"
-              >Detail</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            {{ statusPill(b).label }}
+          </span>
+        </div>
+
+        <!-- Bottom row: amount + CTA -->
+        <div
+          class="mt-2.5 flex items-center justify-between gap-3 border-t border-bimbel-border-soft pt-2.5"
+        >
+          <div class="min-w-0">
+            <p class="text-[18px] font-extrabold text-bimbel-text-hi">
+              {{ b.amount != null ? formatRupiah(b.amount) : '—' }}
+            </p>
+            <p class="text-[11px] text-bimbel-text-mid">
+              Jatuh tempo {{ dueLabel(b.due_date) }}
+            </p>
+          </div>
+          <button
+            v-if="isPaid(b)"
+            type="button"
+            class="rounded-lg bg-bimbel-bg px-3.5 py-2 text-[12px] font-bold text-bimbel-text-mid hover:bg-bimbel-border-soft"
+          >
+            Unduh bukti
+          </button>
+          <button
+            v-else
+            type="button"
+            class="rounded-lg bg-bimbel-hero px-3.5 py-2 text-[12px] font-bold text-white hover:opacity-90"
+            @click="goPay(b)"
+          >
+            Bayar
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
-      Belum ada tagihan.
+    <div
+      v-else
+      class="rounded-xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-[13px] text-bimbel-text-mid"
+    >
+      <template v-if="activeTab === 'unpaid'">Tidak ada tagihan yang harus dibayar.</template>
+      <template v-else-if="activeTab === 'paid'">Belum ada tagihan yang lunas.</template>
+      <template v-else>Belum ada tagihan.</template>
     </div>
   </div>
 </template>

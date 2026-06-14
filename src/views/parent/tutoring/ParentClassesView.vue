@@ -1,7 +1,10 @@
 <!--
-  ParentClassesView — wali Kelas list. Mirrors the mockup at
-  parent_web_pages_main frame 2 (responsive grid of gradient cards
-  with search + status filter). Backed by getWaliClassMeta(studentId).
+  ParentClassesView — wali Kelas list.
+
+  Redesigned per approved mockup: hero + search row + 2-col class grid
+  with tutor initials, subject, meta (tutor + schedule), and a
+  "kehadiran" footer bar. Final cell is a dashed "Daftarkan ke program
+  baru" CTA. Data shape unchanged (TutoringWaliClassMeta).
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -12,7 +15,6 @@ import type { TutoringWaliClassMeta } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
-import ParentClassCard from '@/components/feature/tutoring/ParentClassCard.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const route = useRoute();
@@ -59,34 +61,58 @@ function goToClass(c: TutoringWaliClassMeta) {
   });
 }
 
-function classFooter(c: TutoringWaliClassMeta): string {
-  const parts: string[] = [];
-  if (c.next_session?.scheduled_at) {
-    const d = new Date(c.next_session.scheduled_at);
-    if (!Number.isNaN(d.valueOf())) {
-      parts.push(
-        d.toLocaleString('id-ID', { weekday: 'short', hour: '2-digit', minute: '2-digit' }),
-      );
-    }
-  }
-  if (c.attendance.rate != null) {
-    parts.push(`hadir ${c.attendance.rate}%`);
-  }
-  return parts.join(' · ') || 'belum ada sesi';
+function goToEnroll() {
+  router.push({ name: 'parent.tutoring.enroll-new' });
+}
+
+const childFirstName = computed(() => {
+  const n = activeChild()?.name ?? 'Anak';
+  return n.split(/\s+/)[0];
+});
+
+function tutorInitials(name?: string | null): string {
+  if (!name) return '?';
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+function scheduleLabel(c: TutoringWaliClassMeta): string {
+  const ns = c.next_session;
+  if (!ns?.scheduled_at) return 'belum ada sesi';
+  const d = new Date(ns.scheduled_at);
+  if (Number.isNaN(d.valueOf())) return 'belum ada sesi';
+  return d.toLocaleString('id-ID', {
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function attendanceColor(rate: number | null | undefined): string {
+  if (rate == null) return 'bg-bimbel-text-lo';
+  if (rate >= 85) return 'bg-bimbel-green';
+  if (rate >= 70) return 'bg-bimbel-amber';
+  return 'bg-bimbel-red';
 }
 </script>
 
 <template>
   <div class="space-y-4 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · KELAS"
-      title="Kelas anak"
-      :subtitle="`${activeChild()?.name ?? 'Anak'} · ${classes.length} kelas aktif`"
+      kicker="BIMBEL · WALI"
+      :title="`Kelas ${childFirstName}`"
+      :subtitle="`${classes.length} kelompok aktif semester ini`"
       :stats="[]"
     >
-      <template #actions><ParentChildPickerChip /></template>
+      <template #actions>
+        <ParentChildPickerChip />
+      </template>
     </ParentBerandaHero>
 
+    <!-- Search + filter row -->
     <div class="flex flex-wrap items-center gap-2">
       <div class="relative min-w-0 flex-1">
         <NavIcon
@@ -98,56 +124,103 @@ function classFooter(c: TutoringWaliClassMeta): string {
           v-model="query"
           type="text"
           placeholder="Cari kelas…"
-          class="w-full rounded-xl border border-bimbel-border bg-bimbel-panel pl-9 pr-3 py-2 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-[#21afe6] focus:outline-none"
+          class="w-full rounded-lg bg-bimbel-bg pl-9 pr-3 py-2 text-[12px] text-bimbel-text-mid placeholder:text-bimbel-text-lo focus:outline-none"
         />
       </div>
-      <div class="flex gap-1.5">
-        <button
-          v-for="opt in [
-            { id: 'all', label: 'Semua' },
-            { id: 'active', label: 'Aktif' },
-            { id: 'completed', label: 'Selesai' },
-          ] as const"
-          :key="opt.id"
-          type="button"
-          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold transition"
-          :class="
-            status === opt.id
-              ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
-              : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid hover:text-bimbel-text-hi'
-          "
-          @click="status = opt.id"
-        >
-          {{ opt.label }}
-        </button>
-      </div>
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 rounded-lg bg-bimbel-bg px-3 py-2 text-[12px] text-bimbel-text-mid"
+        @click="status = status === 'all' ? 'active' : status === 'active' ? 'completed' : 'all'"
+      >
+        {{
+          status === 'all'
+            ? 'Semester ini'
+            : status === 'active'
+              ? 'Aktif saja'
+              : 'Selesai saja'
+        }}
+        <NavIcon name="chevron-down" :size="12" />
+      </button>
     </div>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
-    <div
-      v-else-if="filtered.length"
-      class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-    >
-      <ParentClassCard
-        v-for="c in filtered"
-        :key="c.group_id"
-        :identity-key="c.group_id"
-        :name="c.group_name"
-        :subject="c.program_name"
-        :tutor-name="c.tutor_name ? `Tutor: ${c.tutor_name}` : undefined"
-        :footer="classFooter(c)"
-        :new-count="c.new_announcements_count_7d"
-        @click="goToClass(c)"
-      />
-    </div>
+    <!-- Class grid: 2-col -->
+    <div v-else class="grid gap-2.5 sm:grid-cols-2">
+      <template v-if="filtered.length">
+        <div
+          v-for="c in filtered"
+          :key="c.group_id"
+          role="button"
+          tabindex="0"
+          class="flex cursor-pointer flex-col gap-1.5 rounded-xl border border-bimbel-border-soft bg-bimbel-panel p-3 hover:border-bimbel-accent/40"
+          @click="goToClass(c)"
+          @keydown.enter="goToClass(c)"
+        >
+          <!-- Header: tutor initials circle + subject -->
+          <div class="flex items-center gap-2">
+            <span
+              class="grid h-7 w-7 flex-shrink-0 place-items-center rounded-full bg-bimbel-accent-dim text-[11px] font-bold text-bimbel-hero"
+            >
+              {{ tutorInitials(c.tutor_name) }}
+            </span>
+            <p class="truncate text-[13px] font-bold text-bimbel-text-hi">
+              {{ c.program_name || c.group_name }}
+            </p>
+          </div>
 
-    <div
-      v-else
-      class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid"
-    >
-      <template v-if="query">Tidak ada kelas yang cocok dengan "{{ query }}".</template>
-      <template v-else>Belum ada kelas — daftarkan anak ke program dulu.</template>
+          <!-- Meta row: tutor + schedule -->
+          <div class="flex flex-wrap items-center gap-2.5 text-[11px] text-bimbel-text-mid">
+            <span class="inline-flex items-center gap-1">
+              <NavIcon name="user" :size="11" />
+              {{ c.tutor_name ?? '—' }}
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <NavIcon name="calendar" :size="11" />
+              {{ scheduleLabel(c) }}
+            </span>
+          </div>
+
+          <!-- Footer: attendance bar -->
+          <div
+            class="mt-1 flex items-center justify-between gap-2 border-t border-bimbel-border-soft pt-2"
+          >
+            <span class="text-[11px] text-bimbel-text-mid">Kehadiran</span>
+            <div class="flex items-center gap-2">
+              <span class="block h-1 w-20 overflow-hidden rounded-full bg-bimbel-bg">
+                <span
+                  class="block h-full rounded-full"
+                  :class="attendanceColor(c.attendance.rate)"
+                  :style="{ width: `${Math.max(0, Math.min(100, c.attendance.rate ?? 0))}%` }"
+                />
+              </span>
+              <span class="text-[11px] font-bold text-bimbel-text-hi">
+                {{ c.attendance.rate == null ? '—' : `${c.attendance.rate}%` }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Empty-state cell when nothing filtered (still show CTA) -->
+      <div
+        v-if="!filtered.length && query"
+        class="rounded-xl border border-bimbel-border-soft bg-bimbel-panel p-3 text-center text-[12px] text-bimbel-text-mid sm:col-span-2"
+      >
+        Tidak ada kelas yang cocok dengan "{{ query }}".
+      </div>
+
+      <!-- Always-present dashed CTA cell -->
+      <div
+        role="button"
+        tabindex="0"
+        class="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-bimbel-border bg-bimbel-bg p-4 text-center hover:border-bimbel-accent/40"
+        @click="goToEnroll"
+        @keydown.enter="goToEnroll"
+      >
+        <NavIcon name="plus" :size="22" class="text-bimbel-text-lo" />
+        <span class="text-[12px] text-bimbel-text-mid">Daftarkan ke program baru</span>
+      </div>
     </div>
   </div>
 </template>

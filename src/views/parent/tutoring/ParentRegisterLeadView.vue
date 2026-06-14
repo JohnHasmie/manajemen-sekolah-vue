@@ -1,7 +1,8 @@
 <!--
-  ParentRegisterLeadView — wali calon form. Mockup
-  parent_web_pages_create_update frame 1: form di kiri, info card di kanan.
-  Submits to TutoringService.createLead.
+  ParentRegisterLeadView — wali calon "daftar anak baru" form. New
+  bimbel-token styled inputs, choice cards for program, secondary
+  "Simpan draft" + primary "Kirim" CTA. Script (TutoringService.createLead
+  payload, validation) unchanged.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
@@ -63,98 +64,172 @@ async function submit() {
     message.value = { kind: 'err', text: e instanceof Error ? e.message : 'Gagal mengirim pendaftaran.' };
   } finally { saving.value = false; }
 }
+
+function saveDraft() {
+  // Local draft stash — non-fatal if quota fails.
+  try {
+    localStorage.setItem(
+      'parent.registerLead.draft',
+      JSON.stringify({ form: form.value, programId: selectedProgramId.value }),
+    );
+    message.value = { kind: 'ok', text: 'Draft disimpan di perangkat ini.' };
+  } catch {/* ignore */}
+}
+
+const programTone = (idx: number) =>
+  ['blue', 'green', 'amber', 'blue', 'green'][idx % 5];
 </script>
 
 <template>
-  <div class="space-y-4 pb-12">
+  <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="DAFTAR CALON"
-      title="Daftarkan diri"
-      subtitle="Form singkat — admin akan menghubungi Anda dalam 1×24 jam"
+      kicker="BIMBEL · DAFTAR ANAK"
+      title="Daftarkan anak baru"
+      subtitle="Anak akan dibuat akun siswa baru di bimbel ini"
       :stats="[]"
+    >
+      <template #actions>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1.5 text-[13px] font-bold text-bimbel-hero hover:bg-white/95"
+          @click="router.back()"
+        >
+          <i class="ti ti-x text-[13px]"></i>
+          Batal
+        </button>
+      </template>
+    </ParentBerandaHero>
+
+    <!-- 1. Data anak -->
+    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+      Data anak
+    </p>
+    <p class="text-[11px] text-bimbel-text-mid mb-1">Nama lengkap anak</p>
+    <input
+      v-model="form.childName"
+      type="text"
+      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo block w-full mb-2 focus:outline-none"
+      placeholder="Nama lengkap anak"
     />
 
-    <div class="grid gap-4 lg:grid-cols-5">
-      <form
-        class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 lg:col-span-3 space-y-3"
-        @submit.prevent="submit"
-      >
-        <h4 class="text-[14px] font-bold tracking-tight text-bimbel-text-hi">Data wali & anak</h4>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <label class="block">
-            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali <span class="text-rose-500">*</span></span>
-            <input v-model="form.name" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Nama lengkap" />
-          </label>
-          <label class="block">
-            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">No HP / WA <span class="text-rose-500">*</span></span>
-            <input v-model="form.phone" type="tel" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="08xx-xxxx-xxxx" />
-          </label>
-          <label class="block sm:col-span-2">
-            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Email</span>
-            <input v-model="form.email" type="email" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Opsional" />
-          </label>
-          <label class="block">
-            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama anak <span class="text-rose-500">*</span></span>
-            <input v-model="form.childName" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Nama lengkap anak" />
-          </label>
-          <label class="block">
-            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Jenjang / kelas</span>
-            <input v-model="form.jenjang" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="SMP VIII / SMA X / ..." />
-          </label>
-        </div>
-        <div>
-          <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Program diminati <span class="text-rose-500">*</span></p>
-          <div class="mt-2 flex flex-wrap gap-1.5">
-            <button
-              v-for="p in programs"
-              :key="p.id"
-              type="button"
-              class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
-              :class="
-                selectedProgramId === p.id
-                  ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
-                  : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'
-              "
-              @click="selectedProgramId = p.id"
-            >{{ p.name }}</button>
-          </div>
-        </div>
-        <label class="block">
-          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Catatan untuk admin</span>
-          <textarea v-model="form.notes" rows="2" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none" placeholder="Opsional — info tambahan"></textarea>
-        </label>
-        <div v-if="message" class="rounded-lg px-3 py-2 text-[13px]" :class="message.kind === 'ok' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'">
-          {{ message.text }}
-        </div>
-      </form>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <div>
+        <p class="text-[11px] text-bimbel-text-mid mb-1">Kelas</p>
+        <select
+          v-model="form.jenjang"
+          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi block w-full focus:outline-none"
+        >
+          <option value="">— pilih kelas —</option>
+          <option value="SD 1">SD kelas 1</option>
+          <option value="SD 2">SD kelas 2</option>
+          <option value="SD 3">SD kelas 3</option>
+          <option value="SD 4">SD kelas 4</option>
+          <option value="SD 5">SD kelas 5</option>
+          <option value="SD 6">SD kelas 6</option>
+          <option value="SMP 7">SMP kelas 7</option>
+          <option value="SMP 8">SMP kelas 8</option>
+          <option value="SMP 9">SMP kelas 9</option>
+          <option value="SMA 10">SMA kelas 10</option>
+          <option value="SMA 11">SMA kelas 11</option>
+          <option value="SMA 12">SMA kelas 12</option>
+        </select>
+      </div>
+      <div>
+        <p class="text-[11px] text-bimbel-text-mid mb-1">Sekolah asal</p>
+        <input
+          v-model="form.name"
+          type="text"
+          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo block w-full focus:outline-none"
+          placeholder="Nama sekolah"
+        />
+      </div>
+    </div>
 
-      <aside class="space-y-3 lg:col-span-2">
-        <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 text-[13px] text-bimbel-text-mid">
-          <h5 class="mb-2 text-[13px] font-bold text-bimbel-text-hi">Setelah submit</h5>
-          <ul class="space-y-1 list-disc pl-4">
-            <li>Admin menghubungi via WA dalam 24 jam</li>
-            <li>Jadwalkan trial gratis 1 sesi</li>
-            <li>Jika cocok → diundang ke akun penuh</li>
-          </ul>
-          <p class="mt-3 pt-2 border-t border-bimbel-border-soft">
-            Sudah punya akun?
-            <a class="text-[#1a8fbe] dark:text-[#85d4f4] font-bold cursor-pointer" @click="router.push({ name: 'auth.login' })">Masuk di sini</a>
-          </p>
-        </div>
-        <div class="flex gap-2">
-          <button
-            type="button"
-            class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
-            @click="router.back()"
-          >Batal</button>
-          <button
-            type="button"
-            :disabled="!canSubmit"
-            class="flex-1 rounded-lg bg-[#21afe6] px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50"
-            @click="submit"
-          >{{ saving ? 'Mengirim…' : 'Kirim pendaftaran' }}</button>
-        </div>
-      </aside>
+    <!-- contact (kept for valid payload but quiet styling) -->
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <div>
+        <p class="text-[11px] text-bimbel-text-mid mb-1">No HP / WA wali</p>
+        <input
+          v-model="form.phone"
+          type="tel"
+          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo block w-full focus:outline-none"
+          placeholder="08xx-xxxx-xxxx"
+        />
+      </div>
+      <div>
+        <p class="text-[11px] text-bimbel-text-mid mb-1">Email wali (opsional)</p>
+        <input
+          v-model="form.email"
+          type="email"
+          class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo block w-full focus:outline-none"
+          placeholder="opsional"
+        />
+      </div>
+    </div>
+
+    <!-- 2. Program -->
+    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+      Program yang diminati
+    </p>
+    <div v-if="!programs.length" class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[12px] text-bimbel-text-mid">
+      Memuat daftar program…
+    </div>
+    <button
+      v-for="(p, idx) in programs"
+      :key="p.id"
+      type="button"
+      class="w-full rounded-md bg-bimbel-panel border border-bimbel-border-soft p-3 mb-1.5 flex gap-2.5 items-center text-left"
+      :class="selectedProgramId === p.id ? 'border-2 border-bimbel-hero p-[11px]' : ''"
+      @click="selectedProgramId = p.id"
+    >
+      <span
+        class="grid h-10 w-10 flex-shrink-0 place-items-center rounded-lg"
+        :class="
+          programTone(idx) === 'green'
+            ? 'bg-bimbel-green-dim text-green-700'
+            : programTone(idx) === 'amber'
+            ? 'bg-bimbel-amber-dim text-amber-700'
+            : 'bg-bimbel-accent-dim text-bimbel-hero'
+        "
+      >
+        <i class="ti ti-book-2 text-[18px]"></i>
+      </span>
+      <div class="min-w-0 flex-1">
+        <p class="text-[13px] font-bold text-bimbel-text-hi truncate">{{ p.name }}</p>
+        <p v-if="p.description" class="text-[11px] text-bimbel-text-mid truncate">{{ p.description }}</p>
+      </div>
+    </button>
+
+    <!-- 3. Catatan ortu -->
+    <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+      Catatan orang tua (opsional)
+    </p>
+    <textarea
+      v-model="form.notes"
+      rows="3"
+      placeholder="Misal: anak butuh fokus mapel Matematika, jadwal sore lebih pas, dll."
+      class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo block w-full min-h-12 focus:outline-none"
+    ></textarea>
+
+    <div
+      v-if="message"
+      class="rounded-md mt-3 px-3 py-2 text-[12px]"
+      :class="message.kind === 'ok' ? 'bg-bimbel-green-dim text-green-700' : 'bg-bimbel-red-dim text-red-700'"
+    >{{ message.text }}</div>
+
+    <!-- 4. CTA -->
+    <div class="flex gap-2 mt-3">
+      <button
+        type="button"
+        class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[13px] font-bold px-3.5 py-2.5"
+        @click="saveDraft"
+      >Simpan draft</button>
+      <button
+        type="button"
+        :disabled="!canSubmit"
+        class="flex-1 rounded-lg bg-bimbel-hero text-white text-[13px] font-bold px-3.5 py-2.5 disabled:opacity-50"
+        @click="submit"
+      >{{ saving ? 'Mengirim…' : 'Kirim — admin akan hubungi dalam 1×24 jam' }}</button>
     </div>
   </div>
 </template>

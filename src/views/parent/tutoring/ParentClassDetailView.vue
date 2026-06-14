@@ -18,13 +18,11 @@ import type {
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
-import ParentTabBar from '@/components/feature/tutoring/ParentTabBar.vue';
-import ParentActivityRow from '@/components/feature/tutoring/ParentActivityRow.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const route = useRoute();
 const router = useRouter();
-const { activeChildId, activeChild } = useChildPicker();
+const { activeChildId } = useChildPicker();
 
 const studentId = computed(() =>
   String(route.params.studentId || activeChildId.value || ''),
@@ -99,23 +97,24 @@ const heroStats = computed(() => {
 </script>
 
 <template>
-  <div class="space-y-4 pb-12">
+  <div class="space-y-3 pb-12">
     <button
       type="button"
-      class="inline-flex items-center gap-1 text-[13px] text-bimbel-text-mid hover:text-bimbel-text-hi"
+      class="inline-flex items-center gap-1 text-[12px] text-bimbel-text-mid hover:text-bimbel-text-hi"
       @click="router.push({ name: 'parent.tutoring.classes' })"
     >
       <NavIcon name="chevron-left" :size="13" /> Kembali ke daftar kelas
     </button>
 
     <ParentBerandaHero
-      kicker="KELAS"
+      kicker="BIMBEL · KELAS"
       :title="meta?.group_name || 'Memuat…'"
       :subtitle="
         meta
           ? [
+              meta.tutor_name ? `Tutor ${meta.tutor_name}` : null,
               meta.program_name,
-              meta.tutor_name ? `Tutor: ${meta.tutor_name}` : null,
+              `${meta.attendance.total_recorded || sessions.length} siswa`,
             ].filter(Boolean).join(' · ')
           : undefined
       "
@@ -124,103 +123,185 @@ const heroStats = computed(() => {
       <template #actions><ParentChildPickerChip /></template>
     </ParentBerandaHero>
 
-    <ParentTabBar
-      v-model="tab"
-      :tabs="[
-        { id: 'aliran', label: 'Aliran' },
-        { id: 'sesi', label: 'Sesi anak' },
-        { id: 'nilai', label: 'Nilai anak' },
-      ]"
-      fit
-    />
+    <!-- Underline tab bar -->
+    <div
+      class="flex gap-0.5 border-b border-bimbel-border-soft bg-bimbel-bg -mt-0 px-3 sm:px-4"
+      role="tablist"
+    >
+      <button
+        v-for="t in [
+          { id: 'aliran' as const, label: 'Aliran' },
+          { id: 'sesi' as const, label: 'Sesi anak' },
+          { id: 'nilai' as const, label: 'Nilai anak' },
+        ]"
+        :key="t.id"
+        type="button"
+        role="tab"
+        :aria-selected="tab === t.id"
+        class="px-3 py-2 text-[12px] border-b-2 transition-colors"
+        :class="
+          tab === t.id
+            ? 'text-bimbel-hero border-bimbel-hero font-bold bg-bimbel-panel'
+            : 'text-bimbel-text-mid border-transparent hover:text-bimbel-text-hi'
+        "
+        @click="tab = t.id"
+      >
+        {{ t.label }}
+      </button>
+    </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-[12px] text-bimbel-text-mid">Memuat…</div>
 
     <div v-else class="grid gap-3 lg:grid-cols-3">
-      <div class="space-y-2 lg:col-span-2">
+      <div class="rounded-lg border border-bimbel-border-soft bg-bimbel-panel p-3 lg:col-span-2">
+        <!-- Aliran tab — chronological feed -->
         <template v-if="tab === 'aliran'">
+          <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-1">
+            Aliran kelas
+          </p>
           <div
             v-if="feed.length === 0"
-            class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid"
+            class="py-8 text-center text-[12px] text-bimbel-text-mid"
           >
             Belum ada aktivitas di kelas ini.
           </div>
-          <ParentActivityRow
-            v-for="(e, i) in feed"
-            :key="i"
-            :type="e.type"
-            :title="e.title"
-            :subtitle="e.subtitle"
-            :occurred-at="e.occurred_at"
-          />
+          <div v-else>
+            <div
+              v-for="(e, i) in feed"
+              :key="i"
+              class="flex items-center gap-2.5 border-b border-bimbel-border-soft py-2 last:border-b-0"
+            >
+              <span
+                class="grid h-[30px] w-[30px] flex-shrink-0 place-items-center rounded-md"
+                :class="
+                  e.type === 'note' || e.type === 'score' || e.type === 'new_submission'
+                    ? 'bg-bimbel-amber-dim text-amber-700'
+                    : e.type === 'announcement' || e.type === 'announcement_posted'
+                    ? 'bg-bimbel-accent-dim text-bimbel-hero'
+                    : 'bg-bimbel-green-dim text-green-700'
+                "
+              >
+                <NavIcon
+                  :name="
+                    e.type === 'announcement' || e.type === 'announcement_posted'
+                      ? 'megaphone'
+                      : e.type === 'note' || e.type === 'score' || e.type === 'new_submission'
+                      ? 'book'
+                      : 'school'
+                  "
+                  :size="14"
+                />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-[12px] font-bold text-bimbel-text-hi truncate">{{ e.title }}</p>
+                <p
+                  v-if="e.subtitle"
+                  class="text-[11px] text-bimbel-text-mid truncate"
+                >{{ e.subtitle }}</p>
+              </div>
+              <span class="flex-shrink-0 text-[11px] text-bimbel-text-lo">
+                {{ whenLabel(e.occurred_at) }}
+              </span>
+            </div>
+          </div>
         </template>
 
+        <!-- Sesi anak tab -->
         <template v-else-if="tab === 'sesi'">
+          <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-1">
+            Sesi anak
+          </p>
           <div
             v-if="sessionsSorted.length === 0"
-            class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid"
+            class="py-8 text-center text-[12px] text-bimbel-text-mid"
           >
             Belum ada sesi di kelas ini.
           </div>
-          <div
-            v-for="s in sessionsSorted"
-            :key="s.id"
-            class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3"
-          >
-            <div class="flex items-center justify-between text-[13px] text-bimbel-text-mid">
-              <span>{{ whenLabel(s.scheduled_at) }} · {{ s.duration_minutes }}m</span>
+          <div v-else>
+            <div
+              v-for="s in sessionsSorted"
+              :key="s.id"
+              class="flex items-center gap-2.5 border-b border-bimbel-border-soft py-2 last:border-b-0"
+            >
+              <span class="grid h-[30px] w-[30px] flex-shrink-0 place-items-center rounded-md bg-bimbel-accent-dim text-bimbel-hero">
+                <NavIcon name="calendar" :size="14" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-[12px] font-bold text-bimbel-text-hi truncate">
+                  {{ s.topic || 'Sesi terjadwal' }}
+                </p>
+                <p class="text-[11px] text-bimbel-text-mid truncate">
+                  {{ whenLabel(s.scheduled_at) }} · {{ s.duration_minutes }} menit<template v-if="s.room"> · ruang {{ s.room }}</template>
+                </p>
+              </div>
               <span
-                class="rounded-full px-2 py-0.5 text-[13px] font-bold"
+                class="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
                 :class="
                   s.status === 'DONE'
-                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                    ? 'bg-bimbel-green-dim text-green-700'
                     : s.status === 'CANCELLED'
-                    ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
-                    : 'bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
+                    ? 'bg-bimbel-red-dim text-red-700'
+                    : 'bg-bimbel-accent-dim text-bimbel-hero'
                 "
               >
                 {{ s.status_label ?? s.status }}
               </span>
             </div>
-            <p class="mt-1 text-[14px] font-bold text-bimbel-text-hi">{{ s.topic || 'Sesi terjadwal' }}</p>
-            <p v-if="s.room" class="text-[13px] text-bimbel-text-mid">ruang {{ s.room }}</p>
           </div>
         </template>
 
+        <!-- Nilai anak tab -->
         <template v-else>
+          <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-1">
+            Nilai anak
+          </p>
           <div
             v-if="progressEntries.length === 0"
-            class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid"
+            class="py-8 text-center text-[12px] text-bimbel-text-mid"
           >
             Belum ada nilai tercatat.
           </div>
-          <div
-            v-for="p in progressEntries"
-            :key="p.assessment_id"
-            class="flex items-center gap-3 rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3"
-          >
-            <span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300">
-              <NavIcon name="star" :size="15" />
-            </span>
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ p.title }}</p>
-              <p class="truncate text-[13px] text-bimbel-text-mid">
-                {{ [p.type_label, p.subject, whenLabel(p.held_at)].filter(Boolean).join(' · ') }}
-              </p>
+          <div v-else>
+            <div
+              v-for="p in progressEntries"
+              :key="p.assessment_id"
+              class="flex items-center gap-2.5 border-b border-bimbel-border-soft py-2 last:border-b-0"
+            >
+              <span class="grid h-[30px] w-[30px] flex-shrink-0 place-items-center rounded-md bg-bimbel-amber-dim text-amber-700">
+                <NavIcon name="star" :size="14" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-[12px] font-bold text-bimbel-text-hi truncate">{{ p.title }}</p>
+                <p class="text-[11px] text-bimbel-text-mid truncate">
+                  {{ [p.type_label, p.subject, whenLabel(p.held_at)].filter(Boolean).join(' · ') }}
+                </p>
+              </div>
+              <span class="flex-shrink-0 text-[13px] font-extrabold text-green-700">
+                {{ p.score ?? '–' }}
+              </span>
             </div>
-            <span class="flex-shrink-0 text-[16px] font-extrabold text-emerald-700 dark:text-emerald-300">
-              {{ p.score ?? '–' }}
-            </span>
           </div>
         </template>
       </div>
 
-      <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 h-fit">
-        <h4 class="mb-3 text-[13px] font-bold tracking-tight text-bimbel-text-hi">Info kelas</h4>
-        <dl class="space-y-2 text-[13px]">
-          <div><dt class="text-bimbel-text-mid">Tutor</dt><dd class="font-bold text-bimbel-text-hi">{{ meta?.tutor_name ?? '—' }}</dd></div>
-          <div><dt class="text-bimbel-text-mid">Program</dt><dd class="font-bold text-bimbel-text-hi">{{ meta?.program_name ?? '—' }}</dd></div>
-          <div><dt class="text-bimbel-text-mid">Status</dt><dd class="font-bold text-bimbel-text-hi">{{ meta?.status ?? '—' }}</dd></div>
+      <!-- Info kelas sidebar -->
+      <aside class="h-fit rounded-lg border border-bimbel-border-soft bg-bimbel-panel p-3">
+        <p class="text-[11px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-1">
+          Info kelas
+        </p>
+        <dl class="space-y-2 text-[12px]">
+          <div>
+            <dt class="text-bimbel-text-mid">Tutor</dt>
+            <dd class="font-bold text-bimbel-text-hi">{{ meta?.tutor_name ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt class="text-bimbel-text-mid">Program</dt>
+            <dd class="font-bold text-bimbel-text-hi">{{ meta?.program_name ?? '—' }}</dd>
+          </div>
+          <div>
+            <dt class="text-bimbel-text-mid">Status</dt>
+            <dd class="font-bold text-bimbel-text-hi">{{ meta?.status ?? '—' }}</dd>
+          </div>
           <div v-if="meta?.attendance.total_recorded">
             <dt class="text-bimbel-text-mid">Kehadiran</dt>
             <dd class="font-bold text-bimbel-text-hi">
@@ -232,12 +313,12 @@ const heroStats = computed(() => {
           v-if="meta?.next_session?.scheduled_at"
           class="mt-3 border-t border-bimbel-border-soft pt-3"
         >
-          <p class="text-[13px] text-bimbel-text-mid">Sesi berikutnya</p>
-          <p class="mt-0.5 text-[14px] font-bold text-bimbel-text-hi">
+          <p class="text-[11px] text-bimbel-text-mid">Sesi berikutnya</p>
+          <p class="mt-0.5 text-[12px] font-bold text-bimbel-text-hi">
             {{ whenLabel(meta.next_session.scheduled_at) }}
           </p>
-          <p v-if="meta.next_session.topic" class="text-[13px] text-bimbel-text-mid">
-            {{ meta.next_session.topic }} · {{ meta.next_session.duration_minutes }}m
+          <p v-if="meta.next_session.topic" class="text-[11px] text-bimbel-text-mid">
+            {{ meta.next_session.topic }} · {{ meta.next_session.duration_minutes }} menit
           </p>
         </div>
       </aside>
