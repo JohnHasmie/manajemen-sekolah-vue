@@ -382,11 +382,29 @@ export const TutoringService = {
     studentId: string,
     payload: {
       name?: string;
-      parent_name?: string | null;
-      parent_phone?: string | null;
+      guardian_name?: string | null;
+      guardian_phone?: string | null;
     },
   ): Promise<void> {
     await api.put(`/students/${studentId}`, payload);
+  },
+
+  /** Create a brand-new student record in the tenant. Only `name` is
+   *  required by the backend (CreateStudentRequest); everything else
+   *  is optional. Returns the new student's id so the caller can
+   *  immediately enroll them into a program. */
+  async createStudent(payload: {
+    name: string;
+    guardian_name?: string | null;
+    guardian_phone?: string | null;
+    guardian_email?: string | null;
+  }): Promise<string> {
+    const res = await api.post<{ data?: { id?: string } }>(
+      '/students',
+      payload,
+    );
+    const id = res.data?.data?.id;
+    return id ? String(id) : '';
   },
 
   // ── Admin: enrollment ───────────────────────────────────────────

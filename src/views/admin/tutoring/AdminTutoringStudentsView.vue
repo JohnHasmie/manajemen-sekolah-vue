@@ -114,6 +114,35 @@ function attendanceBar(rate: number | null): { width: string; color: string } {
 
 function goEnroll() { router.push({ name: 'admin.tutoring.enroll-any' }); }
 
+const showCreate = ref(false);
+const createForm = ref({ name: '', guardian_name: '', guardian_phone: '' });
+const createBusy = ref(false);
+
+function openCreate() {
+  createForm.value = { name: '', guardian_name: '', guardian_phone: '' };
+  showCreate.value = true;
+}
+
+async function submitCreate() {
+  if (createForm.value.name.trim().length < 2) {
+    toast.error('Nama minimal 2 huruf');
+    return;
+  }
+  createBusy.value = true;
+  try {
+    await TutoringService.createStudent({
+      name: createForm.value.name.trim(),
+      guardian_name: createForm.value.guardian_name.trim() || null,
+      guardian_phone: createForm.value.guardian_phone.trim() || null,
+    });
+    toast.success('Siswa baru dibuat. Lanjut "Daftarkan siswa" untuk enroll ke program.');
+    showCreate.value = false;
+    await load();
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Gagal membuat siswa.');
+  } finally { createBusy.value = false; }
+}
+
 function exportCsv() {
   const headers = [
     'Nama', 'Program', 'Paket', 'Kelompok',
@@ -162,10 +191,17 @@ function exportCsv() {
         </button>
         <button
           type="button"
+          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white hover:bg-white/25"
+          @click="openCreate"
+        >
+          <NavIcon name="user-plus" :size="13" class="inline -mt-0.5" /> Tambah siswa
+        </button>
+        <button
+          type="button"
           class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold hover:opacity-90"
           @click="goEnroll"
         >
-          <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> Daftarkan siswa
+          <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> Daftarkan ke program
         </button>
       </template>
     </TutorBerandaHero>
@@ -263,6 +299,29 @@ function exportCsv() {
 
     <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
       Tidak ada siswa sesuai filter.
+    </div>
+
+    <div v-if="showCreate" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="showCreate = false">
+      <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
+        <h3 class="text-[16px] font-bold text-bimbel-text-hi">Tambah siswa baru</h3>
+        <p class="text-[12px] text-bimbel-text-mid">Buat data siswa dulu. Setelah selesai, klik "Daftarkan ke program" untuk enroll.</p>
+        <label class="block">
+          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama <span class="text-rose-500">*</span></span>
+          <input v-model="createForm.name" type="text" required placeholder="Nama lengkap siswa" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+        </label>
+        <label class="block">
+          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali (opsional)</span>
+          <input v-model="createForm.guardian_name" type="text" placeholder="Ibu / Bapak" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+        </label>
+        <label class="block">
+          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">No. WA wali (opsional)</span>
+          <input v-model="createForm.guardian_phone" type="tel" placeholder="08xxxxxxxxxx" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+        </label>
+        <div class="flex gap-2 pt-1">
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="showCreate = false">Batal</button>
+          <button type="button" :disabled="createBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitCreate">{{ createBusy ? 'Menyimpan…' : 'Simpan' }}</button>
+        </div>
+      </div>
     </div>
 
     <div v-if="editTarget" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="editTarget = null">
