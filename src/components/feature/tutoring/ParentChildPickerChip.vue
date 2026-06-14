@@ -9,10 +9,11 @@
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useChildPicker } from '@/composables/useChildPicker';
 
 const router = useRouter();
+const route = useRoute();
 const { children, activeChildId, setActive } = useChildPicker();
 const open = ref(false);
 
@@ -28,6 +29,19 @@ function initial(name?: string | null): string {
 function pick(id: string) {
   setActive(id);
   open.value = false;
+  // When the current route is pinned to a specific child via :studentId,
+  // route.params.studentId always wins over activeChildId in the page
+  // computeds — so swapping activeChildId alone leaves the data frozen
+  // on the old child. Push the same route with the new studentId so the
+  // page reloads. Routes without :studentId (profile, appearance, etc.)
+  // pick up activeChildId directly and don't need a navigation.
+  if (route.params.studentId && route.params.studentId !== id) {
+    router.push({
+      name: route.name as string,
+      params: { ...route.params, studentId: id },
+      query: route.query,
+    });
+  }
 }
 
 function onChipClick() {
