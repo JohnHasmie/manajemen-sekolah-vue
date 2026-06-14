@@ -14,14 +14,57 @@ import type { TutoringTutorRow } from '@/types/tutoring';
 import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import InviteTutorModal from '@/views/admin/tutoring/InviteTutorModal.vue';
+import AdminActionMenu from '@/components/feature/tutoring/AdminActionMenu.vue';
+import AdminConfirmDialog from '@/components/feature/tutoring/AdminConfirmDialog.vue';
+import { useToast } from '@/composables/useToast';
 
 const router = useRouter();
+const toast = useToast();
 
 const loading = ref(true);
 const rows = ref<TutoringTutorRow[]>([]);
 const query = ref('');
 const status = ref<'all' | 'ACTIVE' | 'PENDING'>('all');
 const showInvite = ref(false);
+
+const editTarget = ref<TutoringTutorRow | null>(null);
+const editName = ref('');
+const editBusy = ref(false);
+const deactivateTarget = ref<TutoringTutorRow | null>(null);
+const deactivateBusy = ref(false);
+
+function pickAction(r: TutoringTutorRow, key: string) {
+  if (key === 'open') goDetail(r);
+  else if (key === 'edit') { editTarget.value = r; editName.value = r.name; }
+  else if (key === 'deactivate') deactivateTarget.value = r;
+}
+
+async function submitEdit() {
+  if (!editTarget.value) return;
+  if (editName.value.trim().length < 2) { toast.error('Nama minimal 2 huruf'); return; }
+  editBusy.value = true;
+  try {
+    await TutoringService.updateTutor(editTarget.value.user_id, { name: editName.value.trim() });
+    toast.success('Profil tutor diperbarui.');
+    editTarget.value = null;
+    await load();
+  } catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.'); }
+  finally { editBusy.value = false; }
+}
+
+async function confirmDeactivate() {
+  if (!deactivateTarget.value) return;
+  deactivateBusy.value = true;
+  try {
+    const r = await TutoringService.deactivateTutor(deactivateTarget.value.user_id);
+    toast.success(r.groups_unassigned > 0
+      ? `Tutor nonaktif. ${r.groups_unassigned} kelompok perlu tutor baru.`
+      : 'Tutor nonaktif.');
+    deactivateTarget.value = null;
+    await load();
+  } catch (e) { toast.error(e instanceof Error ? e.message : 'Gagal menonaktifkan.'); }
+  finally { deactivateBusy.value = false; }
+}
 
 async function load() {
   loading.value = true;
@@ -111,25 +154,34 @@ function onInvited() {
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
     <div v-else-if="filtered.length" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      <button
+      <div
         v-for="r in filtered"
         :key="r.user_id"
-        type="button"
-        class="rounded-2xl border bg-bimbel-panel p-3.5 text-left transition hover:border-bimbel-accent/40"
+        class="rounded-2xl border bg-bimbel-panel p-3.5 transition hover:border-bimbel-accent/40"
         :class="r.status === 'PENDING' ? 'border-dashed border-amber-500/40 opacity-90' : 'border-bimbel-border-soft'"
-        @click="goDetail(r)"
       >
         <div class="flex items-center gap-2.5 mb-2">
-          <span
-            class="grid h-9 w-9 place-items-center rounded-full text-[13px] font-bold"
-            :class="r.status === 'PENDING' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-bimbel-accent-dim text-bimbel-accent'"
-          >{{ initials(r.name) }}</span>
-          <div class="min-w-0">
-            <p class="text-[14px] font-bold text-bimbel-text-hi truncate">{{ r.name }}</p>
-            <p class="text-[12px] text-bimbel-text-mid truncate">
-              {{ r.groups[0]?.program ?? '—' }}<template v-if="r.groups.length"> · {{ r.groups.length }} kelompok</template>
-            </p>
-          </div>
+          <button type="button" class="flex items-center gap-2.5 text-left min-w-0 flex-1" @click="goDetail(r)">
+            <span
+              class="grid h-9 w-9 place-items-center rounded-full text-[13px] font-bold shrink-0"
+              :class="r.status === 'PENDING' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-bimbel-accent-dim text-bimbel-accent'"
+            >{{ initials(r.name) }}</span>
+            <div class="min-w-0">
+              <p class="text-[14px] font-bold text-bimbel-text-hi truncate">{{ r.name }}</p>
+              <p class="text-[12px] text-bimbel-text-mid truncate">
+                {{ r.groups[0]?.program ?? '—' }}<template v-if="r.groups.length"> · {{ r.groups.length }} kelompok</template>
+              </p>
+            </div>
+          </button>
+          <AdminActionMenu
+            :items="[
+              { key: 'open', label: 'Lihat detail', icon: 'chevron-right' },
+              { key: 'edit', label: 'Ubah profil', icon: 'edit' },
+              { key: 'deactivate', label: 'Nonaktifkan tutor', icon: 'user-x', danger: true },
+            ]"
+            aria-label="Aksi tutor"
+            @pick="(k) => pickAction(r, k)"
+          />
         </div>
         <template v-if="r.status === 'ACTIVE'">
           <div class="grid grid-cols-3 gap-1.5 mt-2">
@@ -160,7 +212,7 @@ function onInvited() {
             </span>
           </div>
         </template>
-      </button>
+      </div>
     </div>
 
     <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
@@ -168,5 +220,31 @@ function onInvited() {
     </div>
 
     <InviteTutorModal v-if="showInvite" @close="showInvite = false" @done="onInvited" />
+
+    <div v-if="editTarget" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="editTarget = null">
+      <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
+        <h3 class="text-[16px] font-bold text-bimbel-text-hi">Ubah profil tutor</h3>
+        <p class="text-[13px] text-bimbel-text-mid">{{ editTarget.email }}</p>
+        <label class="block">
+          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama</span>
+          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+        </label>
+        <div class="flex gap-2 pt-1">
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">Batal</button>
+          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? 'Menyimpan…' : 'Simpan' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <AdminConfirmDialog
+      :open="!!deactivateTarget"
+      title="Nonaktifkan tutor?"
+      :message="`${deactivateTarget?.name ?? ''} akan dikeluarkan dari semua kelompok yang dia ajar dan kehilangan akses bimbel. Akun-nya tetap ada — admin bisa undang ulang nanti.`"
+      confirm-label="Nonaktifkan"
+      danger
+      :busy="deactivateBusy"
+      @cancel="deactivateTarget = null"
+      @confirm="confirmDeactivate"
+    />
   </div>
 </template>
