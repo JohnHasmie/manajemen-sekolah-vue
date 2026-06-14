@@ -194,13 +194,13 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
       { to: '/admin/tutoring/leads', labelKey: 'tutoring.nav.leads', icon: 'users' },
       { to: '/admin/tutoring/vouchers', labelKey: 'tutoring.nav.vouchers', icon: 'wallet' },
       { to: '/admin/tutoring/group-announcements', labelKey: 'tutoring.nav.groupAnnouncements', icon: 'megaphone' },
-      { to: '/admin/tutoring/leaderboard', labelKey: 'tutoring.nav.leaderboard', icon: 'bar-chart-2' },
+      { to: '/admin/tutoring/leaderboard', labelKey: 'tutoring.nav.leaderboard', icon: 'bar-chart' },
     ],
   },
   {
     titleKey: 'tutoring.nav.sectionExtra',
     items: [
-      { to: '/admin/tutoring/reports/activity', labelKey: 'tutoring.nav.activities', icon: 'chart-bar' },
+      { to: '/admin/tutoring/reports/activity', labelKey: 'tutoring.nav.activities', icon: 'bar-chart' },
       { to: '/admin/tutoring/reports/attendance', labelKey: 'tutoring.nav.attendance', icon: 'check-square' },
     ],
   },
@@ -245,7 +245,7 @@ const TEACHER_TUTORING_NAV: NavSection[] = [
       { to: '/teacher/tutoring/activities', labelKey: 'tutoring.nav.activities', icon: 'check-circle' },
       { to: '/teacher/tutoring/ratings', labelKey: 'tutoring.nav.rating', icon: 'star' },
       { to: '/teacher/tutoring/announcements', labelKey: 'nav.announcements', icon: 'megaphone' },
-      { to: '/teacher/tutoring/leaderboard', labelKey: 'tutoring.nav.leaderboard', icon: 'bar-chart-2' },
+      { to: '/teacher/tutoring/leaderboard', labelKey: 'tutoring.nav.leaderboard', icon: 'bar-chart' },
     ],
   },
   {

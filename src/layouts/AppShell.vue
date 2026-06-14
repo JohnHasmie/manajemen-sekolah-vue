@@ -236,132 +236,140 @@ const schoolInitial = computed(() => {
 <template>
   <div class="min-h-screen flex bg-slate-50">
     <!-- Sidebar (desktop) -->
+    <!--
+      Sidebar — Option A "Lifted panel".
+
+      Surface:
+        bg-bimbel-panel sits one tier above the page bg, so the page
+        feels recessed below it. Border-right on bimbel-border-soft
+        gives a subtle seam. Tokens flip via .bimbel-light /
+        .bimbel-dark so the same markup serves both modes.
+
+      Brand header:
+        Compact 60px row with the role-tinted square logo + school
+        name + sub label (role tier). The whole row condenses to just
+        the logo when collapsed.
+
+      Nav:
+        - Section labels (titleKey) render as compact uppercase
+          captions in text-bimbel-text-lo.
+        - Each item is a rounded pill with the icon + label.
+        - Hover: subtle accent-tinted tint + brighter text.
+        - Active: accent-tinted bg + accent text + a 3px left rail
+          with role-color glow. The rail uses the role hex via
+          inline style so it matches admin navy / tutor cyan / wali
+          azure precisely.
+        - Collapsed: items become 44px squares centered on the icon,
+          with the label as a tooltip on hover.
+    -->
     <aside
-      class="hidden md:flex md:flex-col bg-white border-r border-slate-200 flex-shrink-0 transition-all duration-500 ease-in-out relative z-40 sticky top-0 h-screen"
-      :class="isCollapsed ? 'w-20' : 'w-72'"
+      class="hidden md:flex md:flex-col bg-bimbel-panel border-r border-bimbel-border-soft flex-shrink-0 transition-[width] duration-300 ease-out relative z-40 sticky top-0 h-screen"
+      :class="isCollapsed ? 'w-20' : 'w-64'"
     >
-      <!-- School / Brand Logo Section -->
-      <div class="h-20 flex items-center px-6 gap-4 border-b border-slate-100 bg-slate-50/50 backdrop-blur-md">
-        <!-- Super-admins: platform shield instead of a school logo -->
+      <!-- Brand header -->
+      <div class="h-[60px] flex items-center px-4 gap-3 border-b border-bimbel-border-soft flex-shrink-0">
         <template v-if="isSuperAdmin">
-          <div class="flex-shrink-0 w-10 h-10 rounded-xl shadow-md shadow-brand-cobalt/10 flex items-center justify-center bg-gradient-to-br from-brand-cobalt to-brand-azure text-white">
-            <NavIcon name="shield" :size="20" />
+          <div
+            class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white"
+            :style="{ background: color.hex }"
+          >
+            <NavIcon name="shield" :size="18" />
           </div>
-          <div v-if="!isCollapsed" class="min-w-0 animate-in fade-in slide-in-from-left-4 duration-500">
-            <p class="font-bold text-slate-900 text-sm leading-tight truncate">
-              {{ t('superAdmin.platformName') }}
-            </p>
-            <p class="text-[10px] font-bold uppercase tracking-widest text-brand-cobalt">
-              {{ t('superAdmin.kicker') }}
-            </p>
+          <div v-if="!isCollapsed" class="min-w-0">
+            <p class="text-[13px] font-extrabold text-bimbel-text-hi leading-tight truncate">{{ t('superAdmin.platformName') }}</p>
+            <p class="text-[11px] text-bimbel-text-lo">{{ t('superAdmin.kicker') }}</p>
           </div>
         </template>
-        <!-- Regular roles: school logo or fallback initial -->
         <template v-else>
-          <div class="flex-shrink-0 w-10 h-10 rounded-xl shadow-md shadow-brand-cobalt/10 flex items-center justify-center overflow-hidden"
-               :class="activeSchoolLogo ? 'bg-white p-0.5' : 'bg-gradient-to-br from-brand-cobalt to-brand-azure'"
+          <div
+            class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden"
+            :style="!activeSchoolLogo ? { background: color.hex } : undefined"
+            :class="activeSchoolLogo ? 'bg-bimbel-bg' : ''"
           >
-            <img
-              v-if="activeSchoolLogo"
-              :src="activeSchoolLogo"
-              :alt="activeSchoolName"
-              class="w-full h-full object-cover rounded-lg"
-            />
-            <span
-              v-else
-              class="text-white font-black text-lg leading-none"
-            >{{ schoolInitial }}</span>
+            <img v-if="activeSchoolLogo" :src="activeSchoolLogo" :alt="activeSchoolName" class="w-full h-full object-cover" />
+            <span v-else class="text-white font-extrabold text-[15px]">{{ schoolInitial }}</span>
           </div>
-          <span
-            v-if="!isCollapsed"
-            class="font-bold text-slate-900 text-sm leading-tight truncate animate-in fade-in slide-in-from-left-4 duration-500"
-            :title="activeSchoolName"
-          >
-            {{ activeSchoolName }}
-          </span>
+          <div v-if="!isCollapsed" class="min-w-0">
+            <p class="text-[13px] font-extrabold text-bimbel-text-hi leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</p>
+            <p class="text-[11px] text-bimbel-text-lo capitalize">{{ auth.activeRole || 'role' }}</p>
+          </div>
         </template>
       </div>
 
-      <!-- Navigation with Brand Styling -->
-      <nav class="flex-1 overflow-y-auto px-4 py-8 space-y-10 no-scrollbar">
-        <div v-for="(section, idx) in menu" :key="idx">
+      <!-- Nav -->
+      <nav class="flex-1 overflow-y-auto px-3 py-4 no-scrollbar">
+        <div v-for="(section, idx) in menu" :key="idx" class="mb-4 last:mb-0">
           <p
             v-if="section.titleKey && !isCollapsed"
-            class="px-4 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4"
+            class="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-bimbel-text-lo"
           >
             {{ t(section.titleKey) }}
           </p>
-          <ul class="space-y-2">
+          <ul class="space-y-0.5">
             <li v-for="item in section.items" :key="item.to">
               <RouterLink
                 :to="item.to"
-                class="group flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all relative overflow-hidden"
-                :class="
+                class="group relative flex items-center gap-3 rounded-lg text-[13px] font-semibold transition-colors"
+                :class="[
+                  isCollapsed ? 'justify-center px-0 py-2.5 h-11' : 'px-3 py-2.5',
                   isActive(item.to)
-                    ? `${color.bgSoft} ${color.text}`
-                    : 'text-slate-500 hover:bg-slate-50'
-                "
+                    ? 'text-bimbel-text-hi'
+                    : 'text-bimbel-text-mid hover:text-bimbel-text-hi hover:bg-bimbel-border-soft/60',
+                ]"
                 :style="
                   isActive(item.to)
-                    ? {}
-                    : { '--hover-color': color.hex }
+                    ? { background: `color-mix(in srgb, ${color.hex} 14%, transparent)` }
+                    : undefined
                 "
               >
-                <!-- Active accent rail — picks up the role color so admin
-                     pages glow navy, parent pages glow azure, etc. -->
-                <div
-                  v-if="isActive(item.to)"
-                  class="absolute left-0 top-3 bottom-3 w-1 rounded-r-full"
-                  :style="{
-                    backgroundColor: color.hex,
-                    boxShadow: `0 0 12px ${color.hex}4D`,
-                  }"
-                ></div>
-
-                <div class="relative z-10 flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
-                  <NavIcon :name="item.icon" :size="20" />
-                </div>
-                
-                <span v-if="!isCollapsed" class="flex-1 truncate tracking-tight relative z-10">{{ t(item.labelKey) }}</span>
-                
                 <span
-                  v-if="item.badge"
-                  class="min-w-[20px] h-[20px] px-1.5 rounded-full text-white text-[10px] font-black flex items-center justify-center shadow-lg relative z-10"
-                  :class="{ 'absolute top-2 right-2': isCollapsed }"
-                  :style="{
-                    backgroundColor: color.hex,
-                    boxShadow: `0 4px 12px ${color.hex}33`,
-                  }"
-                >
-                  {{ item.badge }}
-                </span>
-
-                <!-- Tooltip for collapsed state -->
-                <div v-if="isCollapsed" class="absolute left-[calc(100%+12px)] px-3 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl opacity-0 translate-x-4 pointer-events-none group-hover:opacity-100 group-hover:translate-x-0 transition-all z-50 whitespace-nowrap shadow-2xl">
-                  {{ t(item.labelKey) }}
-                </div>
+                  v-if="isActive(item.to)"
+                  class="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r"
+                  :style="{ background: color.hex, boxShadow: `0 0 12px ${color.hex}66` }"
+                />
+                <NavIcon
+                  :name="item.icon"
+                  :size="18"
+                  :style="isActive(item.to) ? { color: color.hex } : undefined"
+                  class="flex-shrink-0"
+                />
+                <span v-if="!isCollapsed" class="flex-1 truncate">{{ t(item.labelKey) }}</span>
+                <span
+                  v-if="item.badge && !isCollapsed"
+                  class="min-w-[18px] h-[18px] px-1 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                  :style="{ background: color.hex }"
+                >{{ item.badge }}</span>
+                <span
+                  v-if="item.badge && isCollapsed"
+                  class="absolute top-1 right-1 w-2 h-2 rounded-full"
+                  :style="{ background: color.hex }"
+                />
+                <span
+                  v-if="isCollapsed"
+                  class="pointer-events-none absolute left-[calc(100%+12px)] px-2.5 py-1.5 bg-bimbel-panel border border-bimbel-border-soft rounded-md text-[12px] font-semibold text-bimbel-text-hi opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition z-50 whitespace-nowrap shadow-xl"
+                >{{ t(item.labelKey) }}</span>
               </RouterLink>
             </li>
           </ul>
         </div>
       </nav>
 
-      <!-- Sidebar Toggle (Clean Style) -->
-      <div class="p-4 border-t border-slate-100 bg-slate-50/50">
-        <button 
-          type="button" 
-          class="w-full h-12 bg-white border border-slate-200 text-slate-400 hover:text-brand-cobalt hover:border-brand-cobalt/30 flex items-center justify-center transition-all group shadow-sm"
-          :class="isCollapsed ? 'rounded-full' : 'rounded-2xl'"
+      <!-- Collapse toggle -->
+      <div class="px-3 py-3 border-t border-bimbel-border-soft flex-shrink-0">
+        <button
+          type="button"
+          class="w-full h-9 rounded-lg bg-bimbel-bg/60 border border-bimbel-border-soft text-bimbel-text-mid hover:text-bimbel-text-hi hover:bg-bimbel-border-soft flex items-center justify-center transition"
           @click="toggleSidebar"
         >
-          <div class="transition-transform duration-500 group-hover:scale-125" :class="isCollapsed ? 'rotate-180' : ''">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-            >
-              <path d="m15 18-6-6 6-6"/>
-            </svg>
-          </div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="transition-transform"
+            :class="isCollapsed ? 'rotate-180' : ''"
+          >
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
         </button>
       </div>
     </aside>
@@ -389,66 +397,71 @@ const schoolInitial = computed(() => {
       leave-from-class="translate-x-0"
       leave-to-class="-translate-x-full"
     >
+      <!-- Mobile drawer — same Option A treatment as the desktop
+           sidebar (panel-lifted surface, role-tinted active pill +
+           left rail, bimbel-* tokens so light/dark adapts). -->
       <aside
         v-if="drawerOpen"
-        class="fixed inset-y-0 left-0 w-72 bg-white z-50 md:hidden flex flex-col"
+        class="fixed inset-y-0 left-0 w-64 bg-bimbel-panel border-r border-bimbel-border-soft z-50 md:hidden flex flex-col"
       >
-        <div class="h-16 flex items-center justify-between px-lg border-b border-slate-100">
+        <div class="h-[60px] flex items-center justify-between px-4 border-b border-bimbel-border-soft">
           <div class="flex items-center gap-3 min-w-0">
             <template v-if="isSuperAdmin">
-              <div class="flex-shrink-0 w-9 h-9 rounded-xl shadow-md shadow-brand-cobalt/10 flex items-center justify-center bg-gradient-to-br from-brand-cobalt to-brand-azure text-white">
+              <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white" :style="{ background: color.hex }">
                 <NavIcon name="shield" :size="18" />
               </div>
-              <span class="font-bold text-slate-900 text-sm leading-tight truncate">{{ t('superAdmin.platformName') }}</span>
+              <span class="text-[13px] font-extrabold text-bimbel-text-hi truncate">{{ t('superAdmin.platformName') }}</span>
             </template>
             <template v-else>
-              <div class="flex-shrink-0 w-9 h-9 rounded-xl shadow-md shadow-brand-cobalt/10 flex items-center justify-center overflow-hidden"
-                   :class="activeSchoolLogo ? 'bg-white p-0.5' : 'bg-gradient-to-br from-brand-cobalt to-brand-azure'"
+              <div
+                class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden"
+                :style="!activeSchoolLogo ? { background: color.hex } : undefined"
               >
-                <img
-                  v-if="activeSchoolLogo"
-                  :src="activeSchoolLogo"
-                  :alt="activeSchoolName"
-                  class="w-full h-full object-cover rounded-lg"
-                />
-                <span
-                  v-else
-                  class="text-white font-black text-base leading-none"
-                >{{ schoolInitial }}</span>
+                <img v-if="activeSchoolLogo" :src="activeSchoolLogo" :alt="activeSchoolName" class="w-full h-full object-cover" />
+                <span v-else class="text-white font-extrabold text-[15px]">{{ schoolInitial }}</span>
               </div>
-              <span class="font-bold text-slate-900 text-sm leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</span>
+              <div class="min-w-0">
+                <p class="text-[13px] font-extrabold text-bimbel-text-hi leading-tight truncate" :title="activeSchoolName">{{ activeSchoolName }}</p>
+                <p class="text-[11px] text-bimbel-text-lo capitalize">{{ auth.activeRole || 'role' }}</p>
+              </div>
             </template>
           </div>
           <button
             type="button"
-            class="p-1 rounded-full hover:bg-slate-100"
+            class="p-1 rounded-md text-bimbel-text-mid hover:text-bimbel-text-hi hover:bg-bimbel-border-soft"
             aria-label="Tutup menu"
             @click="drawerOpen = false"
           >
-            <NavIcon name="x" :size="20" />
+            <NavIcon name="x" :size="18" />
           </button>
         </div>
-        <nav class="flex-1 overflow-y-auto px-sm py-md space-y-md">
-          <div v-for="(section, idx) in menu" :key="idx">
+        <nav class="flex-1 overflow-y-auto px-3 py-4">
+          <div v-for="(section, idx) in menu" :key="idx" class="mb-4 last:mb-0">
             <p
               v-if="section.titleKey"
-              class="px-md py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400"
-            >
-              {{ t(section.titleKey) }}
-            </p>
+              class="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-bimbel-text-lo"
+            >{{ t(section.titleKey) }}</p>
             <ul class="space-y-0.5">
               <li v-for="item in section.items" :key="item.to">
                 <RouterLink
                   :to="item.to"
-                  class="flex items-center gap-2.5 px-md py-2 rounded-lg text-sm font-medium"
-                  :class="
-                    isActive(item.to)
-                      ? `${color.bgSoft} ${color.text}`
-                      : 'text-slate-600 hover:bg-slate-50'
-                  "
+                  class="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-semibold transition-colors"
+                  :class="isActive(item.to) ? 'text-bimbel-text-hi' : 'text-bimbel-text-mid hover:text-bimbel-text-hi hover:bg-bimbel-border-soft/60'"
+                  :style="isActive(item.to) ? { background: `color-mix(in srgb, ${color.hex} 14%, transparent)` } : undefined"
+                  @click="drawerOpen = false"
                 >
-                  <NavIcon :name="item.icon" />
-                  {{ t(item.labelKey) }}
+                  <span
+                    v-if="isActive(item.to)"
+                    class="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r"
+                    :style="{ background: color.hex, boxShadow: `0 0 12px ${color.hex}66` }"
+                  />
+                  <NavIcon
+                    :name="item.icon"
+                    :size="18"
+                    :style="isActive(item.to) ? { color: color.hex } : undefined"
+                    class="flex-shrink-0"
+                  />
+                  <span class="flex-1 truncate">{{ t(item.labelKey) }}</span>
                 </RouterLink>
               </li>
             </ul>
