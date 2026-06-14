@@ -28,11 +28,18 @@ withDefaults(
     class="rounded-3xl px-5 pt-4 pb-5 text-white shadow-lg"
     style="background: linear-gradient(135deg, var(--bimbel-hero), color-mix(in srgb, var(--bimbel-hero) 72%, black))"
   >
-    <p class="text-[13px] font-semibold tracking-wide text-white/75">{{ greeting }}</p>
-    <h1 class="mt-0.5 text-[22px] sm:text-2xl font-extrabold tracking-tight">
-      {{ title }}
-    </h1>
-    <p v-if="subtitle" class="mt-1 text-[14px] text-white/85">{{ subtitle }}</p>
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0 flex-1">
+        <p class="text-[13px] font-semibold tracking-wide text-white/75">{{ greeting }}</p>
+        <h1 class="mt-0.5 text-[22px] sm:text-2xl font-extrabold tracking-tight">
+          {{ title }}
+        </h1>
+        <p v-if="subtitle" class="mt-1 text-[14px] text-white/85">{{ subtitle }}</p>
+      </div>
+      <div v-if="$slots.actions" class="flex flex-wrap items-center gap-2 shrink-0">
+        <slot name="actions" />
+      </div>
+    </div>
 
     <div
       v-if="stats.length"
