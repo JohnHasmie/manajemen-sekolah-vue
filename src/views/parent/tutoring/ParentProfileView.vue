@@ -43,7 +43,7 @@ function goToUbahSandi() {
       <template #actions>
         <button
           type="button"
-          class="rounded-lg bg-white text-[#0c447c] px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          class="rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
         >Simpan perubahan</button>
       </template>
     </ParentBerandaHero>

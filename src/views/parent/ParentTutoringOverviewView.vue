@@ -217,7 +217,7 @@ function goToTagihan() {
         <ParentChildPickerChip />
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-[#0c447c] px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
           @click="router.push({ name: 'parent.tutoring.enroll-new' })"
         >
           <NavIcon name="plus" :size="13" />

@@ -81,7 +81,7 @@ function rel(iso: string): string {
         <button
           v-if="unreadCount > 0"
           type="button"
-          class="rounded-lg bg-white text-[#0c447c] px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
+          class="rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
           @click="markAll"
         >Tandai semua dibaca</button>
       </template>
