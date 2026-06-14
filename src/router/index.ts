@@ -1067,6 +1067,54 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        path: 'admin/tutoring/groups',
+        name: 'admin.tutoring.groups',
+        component: () => import('@/views/admin/tutoring/AdminTutoringGroupsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/groups/:groupId',
+        name: 'admin.tutoring.group-detail',
+        component: () => import('@/views/admin/tutoring/AdminTutoringGroupDetailView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/reports/activity',
+        name: 'admin.tutoring.report-activity',
+        component: () => import('@/views/admin/tutoring/AdminTutoringActivityReportView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/reports/attendance',
+        name: 'admin.tutoring.report-attendance',
+        component: () => import('@/views/admin/tutoring/AdminTutoringAttendanceReportView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/profile',
+        name: 'admin.tutoring.profile',
+        component: () => import('@/views/admin/tutoring/AdminTutoringProfileView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/profile/change-password',
+        name: 'admin.tutoring.change-password',
+        component: () => import('@/views/admin/tutoring/AdminTutoringChangePasswordView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/appearance',
+        name: 'admin.tutoring.appearance',
+        component: () => import('@/views/admin/tutoring/AdminTutoringAppearanceView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
+        path: 'admin/tutoring/notifications',
+        name: 'admin.tutoring.notifications',
+        component: () => import('@/views/admin/tutoring/AdminTutoringNotificationsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'teacher/tutoring/kelas',
         name: 'teacher.tutoring.classes',
         component: () =>

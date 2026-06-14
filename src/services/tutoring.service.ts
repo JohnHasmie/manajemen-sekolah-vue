@@ -933,6 +933,28 @@ export const TutoringService = {
     return extractData(res) ?? [];
   },
 
+  /** Admin: activity/tasks report — per-group counts + KPIs. */
+  async getAdminActivityReport(
+    opts: { type?: string } = {},
+  ): Promise<import('@/types/tutoring').AdminActivityReport> {
+    const res = await api.get<ApiResponse<import('@/types/tutoring').AdminActivityReport>>(
+      '/tutoring/admin/reports/activity',
+      { params: { ...(opts.type ? { type: opts.type } : {}) } },
+    );
+    return extractData(res);
+  },
+
+  /** Admin: attendance report — 4-pill + per-group + low-attendance watch. */
+  async getAdminAttendanceReport(
+    opts: { from?: string; to?: string } = {},
+  ): Promise<import('@/types/tutoring').AdminAttendanceReport> {
+    const res = await api.get<ApiResponse<import('@/types/tutoring').AdminAttendanceReport>>(
+      '/tutoring/admin/reports/attendance',
+      { params: opts },
+    );
+    return extractData(res);
+  },
+
   /** Tutor's own rating summary — overall avg + per-group + recent
    *  comments. Backed by GetTutorRatingsSummaryAction. */
   async getTutorRatingsSummary(

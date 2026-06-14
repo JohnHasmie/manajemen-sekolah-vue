@@ -525,6 +525,50 @@ export interface TutoringWaliClassMeta {
   new_announcements_count_7d: number;
 }
 
+/** Admin activity report — per-group activity creation + submission +
+ *  graded counts. Backs AdminActivityReportView. */
+export interface AdminActivityReport {
+  kpi: {
+    total_activities: number;
+    submitted_pct: number | null;
+    graded_pct: number | null;
+    avg_score: number | null;
+  };
+  rows: Array<{
+    group_id: string;
+    group_name: string;
+    program_name?: string | null;
+    tutor_name?: string | null;
+    type: string;
+    created: number;
+    submitted: number;
+    avg_score: number | null;
+    status: string;
+  }>;
+}
+
+/** Admin attendance report — 4-pill breakdown + per-group rates +
+ *  watch-list of low-attendance students. */
+export interface AdminAttendanceReport {
+  pills: { hadir: number; izin: number; sakit: number; alpha: number };
+  rows: Array<{
+    group_id: string;
+    group_name: string;
+    students: number;
+    sessions: number;
+    hadir_pct: number | null;
+    tutor_name?: string | null;
+  }>;
+  watch: Array<{
+    student_id: string;
+    student_name: string;
+    group_name: string;
+    sessions_done: number;
+    hadir: number;
+    hadir_pct: number | null;
+  }>;
+}
+
 /** Tutor's own rating summary — drives the Rating page.
  *  Mirrors GetTutorRatingsSummaryAction. */
 export interface TutorRatingsSummary {
