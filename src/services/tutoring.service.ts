@@ -375,6 +375,20 @@ export const TutoringService = {
     await api.post(`/tutoring/enrollments/${enrollmentId}/cancel`);
   },
 
+  /** Update a student's school-level fields (name, parent contact).
+   *  Goes via the shared `/students/:id` endpoint that the school
+   *  admin uses — bimbel admin reuses it through the tenant scope. */
+  async updateStudent(
+    studentId: string,
+    payload: {
+      name?: string;
+      parent_name?: string | null;
+      parent_phone?: string | null;
+    },
+  ): Promise<void> {
+    await api.put(`/students/${studentId}`, payload);
+  },
+
   // ── Admin: enrollment ───────────────────────────────────────────
 
   /** Tenant students (for the enroll picker) via the core /student. */
