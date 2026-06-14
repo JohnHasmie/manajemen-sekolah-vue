@@ -9,9 +9,10 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
+import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
 import { formatRupiah } from '@/lib/format';
-import type { TutorPayoutSummary } from '@/types/tutoring';
+import type { TutorPayoutSummary, TutoringSession } from '@/types/tutoring';
 
 import TutorBerandaHero from '@/components/feature/tutoring/TutorBerandaHero.vue';
 import KpiStripCards, {
@@ -21,9 +22,11 @@ import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 
 const { t } = useI18n();
 const toast = useToast();
+const auth = useAuthStore();
 
 const loading = ref(true);
 const summary = ref<TutorPayoutSummary | null>(null);
+const sessions = ref<TutoringSession[]>([]);
 const month = ref<string>(''); // YYYY-MM; '' = current
 
 // Payslip PDF URL — same query the page is currently viewing.
@@ -33,12 +36,38 @@ const payslipUrl = computed(() => {
   return month.value ? `${base}?month=${month.value}` : base;
 });
 
+// Resolve the period window we're showing — for month='' use the
+// current calendar month, otherwise the picked YYYY-MM.
+function periodRange(): { from: Date; to: Date } {
+  const now = new Date();
+  let y: number, m: number;
+  if (month.value) {
+    [y, m] = month.value.split('-').map(Number);
+    m -= 1;
+  } else {
+    y = now.getFullYear();
+    m = now.getMonth();
+  }
+  return { from: new Date(y, m, 1), to: new Date(y, m + 1, 0, 23, 59, 59) };
+}
+
 async function load() {
   loading.value = true;
   try {
-    summary.value = await TutoringService.getPayoutSummary({
-      month: month.value || undefined,
-    });
+    const tutorId = String(auth.user?.id ?? '');
+    const { from, to } = periodRange();
+    const [s, ss] = await Promise.all([
+      TutoringService.getPayoutSummary({
+        month: month.value || undefined,
+      }),
+      tutorId
+        ? TutoringService.getTutorSessions(tutorId, from, to).catch(
+            () => [] as TutoringSession[],
+          )
+        : Promise.resolve([] as TutoringSession[]),
+    ]);
+    summary.value = s;
+    sessions.value = ss;
   } catch (e) {
     toast.error(e instanceof Error ? e.message : 'Gagal memuat penghasilan.');
   } finally {
@@ -47,6 +76,39 @@ async function load() {
 }
 onMounted(load);
 watch(month, load);
+
+// ── RITME — sessions per week bars (mirrors mobile tutor_earnings_screen) ──
+// Buckets DONE sessions in the period by Monday-start week, returns
+// 4-6 columns depending on month length.
+type RitmeBar = { label: string; count: number };
+
+const ritme = computed<RitmeBar[]>(() => {
+  const { from, to } = periodRange();
+  const bars: RitmeBar[] = [];
+  // Walk Monday-start weeks from the first Monday on/before `from`.
+  const start = new Date(from);
+  const lead = (start.getDay() + 6) % 7;
+  start.setDate(start.getDate() - lead);
+  let w = 1;
+  for (let cursor = new Date(start); cursor <= to; cursor.setDate(cursor.getDate() + 7)) {
+    const weekStart = new Date(cursor);
+    const weekEnd = new Date(cursor);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+    const count = sessions.value.filter((s) => {
+      if (s.status !== 'DONE') return false;
+      if (!s.scheduled_at) return false;
+      const t = new Date(s.scheduled_at).valueOf();
+      return t >= weekStart.valueOf() && t <= weekEnd.valueOf();
+    }).length;
+    bars.push({ label: `M${w}`, count });
+    w++;
+    if (w > 6) break;
+  }
+  return bars;
+});
+
+const ritmeMax = computed(() => Math.max(1, ...ritme.value.map((b) => b.count)));
 
 function basisLabel(b: string) {
   return b === 'PER_HOUR' ? 'per jam' : 'per sesi';
@@ -129,6 +191,31 @@ const monthOptions = computed(() => {
 
     <template v-else-if="summary">
       <KpiStripCards :cards="kpiCards" />
+
+      <!-- RITME — sessions per week bars (mobile parity) -->
+      <div
+        v-if="ritme.length"
+        class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5"
+      >
+        <div class="flex justify-between items-baseline mb-3">
+          <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">RITME MENGAJAR</p>
+          <p class="text-[11px] text-bimbel-text-lo">Sesi selesai per minggu</p>
+        </div>
+        <div class="flex items-end justify-between gap-2 h-24">
+          <div
+            v-for="b in ritme"
+            :key="b.label"
+            class="flex-1 flex flex-col items-center justify-end gap-1.5"
+          >
+            <span class="text-[11px] font-bold text-bimbel-text-hi">{{ b.count }}</span>
+            <div
+              class="w-full rounded-t-md bg-bimbel-accent transition-all"
+              :style="{ height: `${(b.count / ritmeMax) * 70}px`, minHeight: b.count > 0 ? '4px' : '0' }"
+            ></div>
+            <span class="text-[10px] text-bimbel-text-lo">{{ b.label }}</span>
+          </div>
+        </div>
+      </div>
 
       <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5">
         <label class="block">

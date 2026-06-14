@@ -69,7 +69,7 @@ function rel(iso: string): string {
       <template #actions>
         <button
           v-if="unread > 0"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold"
+          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"
           @click="markAll"
         >Tandai dibaca</button>
       </template>
@@ -85,7 +85,7 @@ function rel(iso: string): string {
         ]"
         :key="opt.id"
         type="button"
-        class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+        class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
         :class="filter === opt.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
         @click="filter = opt.id"
       >{{ opt.label }}</button>
@@ -105,9 +105,9 @@ function rel(iso: string): string {
         </span>
         <div class="min-w-0 flex-1">
           <p class="text-[14px] font-bold text-bimbel-text-hi">{{ n.title }}</p>
-          <p v-if="n.body" class="text-[13px] text-bimbel-text-mid">{{ n.body }}</p>
+          <p v-if="n.body" class="text-[14px] text-bimbel-text-mid">{{ n.body }}</p>
         </div>
-        <span class="flex-shrink-0 text-[12px] text-bimbel-text-lo">{{ rel(n.created_at) }}</span>
+        <span class="flex-shrink-0 text-[13px] text-bimbel-text-lo">{{ rel(n.created_at) }}</span>
         <span v-if="!n.read_at" class="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-bimbel-accent" />
       </div>
     </div>

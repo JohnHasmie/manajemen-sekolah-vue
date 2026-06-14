@@ -27,7 +27,11 @@ import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import CreateActivityModal from './CreateActivityModal.vue';
 
-type TypeKey = 'all' | 'HOMEWORK' | 'EXAM' | 'QUIZ' | 'PROJECT';
+// Backend ActivityType enum (see app/Modules/Tutoring/Enums/ActivityType.php):
+// only ASSIGNMENT / EXAM / MATERIAL exist. The old chips (HOMEWORK / QUIZ
+// / PROJECT) silently filtered to nothing — backend never returned rows
+// with those types because the enum doesn't contain them.
+type TypeKey = 'all' | 'ASSIGNMENT' | 'EXAM' | 'MATERIAL';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -41,10 +45,9 @@ const showTypePicker = ref(false);
 
 const TYPE_OPTIONS: { key: TypeKey; label: string; icon: string }[] = [
   { key: 'all', label: 'Semua', icon: 'list' },
-  { key: 'HOMEWORK', label: 'PR', icon: 'book' },
+  { key: 'ASSIGNMENT', label: 'Tugas', icon: 'book' },
   { key: 'EXAM', label: 'Ujian', icon: 'file-text' },
-  { key: 'QUIZ', label: 'Quiz', icon: 'sparkles' },
-  { key: 'PROJECT', label: 'Proyek', icon: 'briefcase' },
+  { key: 'MATERIAL', label: 'Materi', icon: 'book-open' },
 ];
 
 const activeTypeLabel = computed(

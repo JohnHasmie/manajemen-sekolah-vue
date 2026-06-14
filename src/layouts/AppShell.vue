@@ -49,7 +49,7 @@ const isBimbelTenant = computed(() => {
 });
 
 // Bimbel routes render on the bimbel surface (dark by default, light
-// when the user picks it in Tutor → Tampilan). Two paths into this:
+// when the user picks it in Tutor → Tampilan). Three paths into this:
 //
 //  1. The dedicated tutor routes — their route names start with
 //     `teacher.tutoring` / contain `tutoring`, so the substring check
@@ -61,12 +61,18 @@ const isBimbelTenant = computed(() => {
 //     branch the wrapper class never lands, so those tokens fall
 //     through to their dark `:root` defaults and we get a half-light
 //     half-dark dashboard.
+//  3. Anything else under a tutoring-center tenant. The sidebar uses
+//     `bg-bimbel-panel` regardless of route, and even shared routes
+//     like `/admin/announcements` belong to the bimbel UX for these
+//     users — without this branch the sidebar stays dark while the
+//     page bg is light. School-tenant sessions never hit this branch.
 //
-// School pages keep the light chrome untouched (neither branch matches).
+// School pages keep the light chrome untouched (no branch matches).
 const isBimbelRoute = computed(() => {
   const name = String(route.name ?? '');
   if (name.includes('tutoring')) return true;
   if (name === 'teacher.home' && isBimbelTenant.value) return true;
+  if (isBimbelTenant.value) return true;
   return false;
 });
 const isTutorBimbelRoute = computed(() => {
@@ -168,9 +174,10 @@ watch(() => route.fullPath, () => {
 });
 
 const isActive = (to: string) => {
-  // The role home (e.g. /admin, /super-admin) is active only on exact
-  // match; everything else is active on prefix match.
+  // Exact match always wins.
   if (to === route.path) return true;
+  // Role-home roots are exact-match only — otherwise /admin would
+  // light up on every /admin/* page.
   if (
     to === '/admin' ||
     to === '/teacher' ||
@@ -178,6 +185,14 @@ const isActive = (to: string) => {
     to === '/staff' ||
     to === '/super-admin'
   ) {
+    return false;
+  }
+  // Bimbel parent's "Beranda" link is /parent/tutoring/:sid (with no
+  // further segments). Without this exception its prefix would match
+  // every sibling page like /parent/tutoring/:sid/announcements and
+  // both Beranda + that page would highlight. Same shape applies to
+  // any tutoring-home pattern (3 path segments under /parent/tutoring/).
+  if (/^\/parent\/tutoring\/[^/]+$/.test(to)) {
     return false;
   }
   return route.path.startsWith(`${to}/`) || route.path === to;

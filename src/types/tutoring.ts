@@ -446,7 +446,8 @@ export interface TutoringActivity {
   tutoring_group_id: string;
   group?: { id: string; name?: string; program?: { id: string; name?: string } | null } | null;
   subject?: { id: string; name?: string } | null;
-  type: 'HOMEWORK' | 'EXAM' | 'QUIZ' | 'PROJECT' | string;
+  // Backend ActivityType enum: ASSIGNMENT / EXAM / MATERIAL.
+  type: 'ASSIGNMENT' | 'EXAM' | 'MATERIAL' | string;
   type_label?: string | null;
   title: string;
   description?: string | null;

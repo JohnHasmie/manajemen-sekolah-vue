@@ -18,7 +18,10 @@ const emit = defineEmits<{
 
 const groups = ref<TutoringGroup[]>([]);
 const groupId = ref('');
-const type = ref<'HOMEWORK' | 'EXAM' | 'QUIZ' | 'PROJECT'>('HOMEWORK');
+// Backend ActivityType enum: ASSIGNMENT (Tugas) / EXAM (Ujian) /
+// MATERIAL (Materi). HOMEWORK/QUIZ/PROJECT never existed — those
+// payloads previously got rejected at the validator.
+const type = ref<'ASSIGNMENT' | 'EXAM' | 'MATERIAL'>('ASSIGNMENT');
 const title = ref('');
 const description = ref('');
 const dueDate = ref(''); // yyyy-mm-dd
@@ -98,10 +101,9 @@ async function submit() {
             v-model="type"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
-            <option value="HOMEWORK">PR</option>
+            <option value="ASSIGNMENT">Tugas</option>
             <option value="EXAM">Ujian</option>
-            <option value="QUIZ">Quiz</option>
-            <option value="PROJECT">Proyek</option>
+            <option value="MATERIAL">Materi</option>
           </select>
         </label>
         <label class="block">

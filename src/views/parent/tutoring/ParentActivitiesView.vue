@@ -1,13 +1,16 @@
 <!--
-  ParentActivitiesView — wali kegiatan/tugas list. Mockup parent_web_pages_browse
-  frame 3: hero + type filter + table.
+  ParentActivitiesView — wali tugas/ulangan list. Redesign: hero + type
+  filter chips + single-column rows (icon | title/subtitle | pill).
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
-import type { TutoringActivitySubmission } from '@/types/tutoring';
+import type {
+  TutoringActivity,
+  TutoringActivitySubmission,
+} from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
@@ -20,139 +23,284 @@ const studentId = computed(() =>
   String(route.params.studentId || activeChildId.value || ''),
 );
 
+// Backend ActivityType enum: ASSIGNMENT / EXAM / MATERIAL.
+// Filter chips map to those values (plus "all" / "pending").
+type FilterId = 'all' | 'pending' | 'ASSIGNMENT' | 'EXAM' | 'MATERIAL';
+
+// Web previously showed only submission rows — but mobile shows every
+// activity in the tenant from GET /tutoring/activities (scope is
+// tenant-only, no per-student filter), with the submission overlaid
+// when one exists. Match that: fetch both, merge on activity_id.
+//
+// Group-filtering removed deliberately. Mobile's parent_activities
+// screen at lib/features/tutoring/presentation/screens/parent_
+// activities_screen.dart:27 also just calls getActivities() with no
+// scope — the backend index isn't student-aware, and we'd otherwise
+// hide rows the wali expects to see (e.g. Try-out for a different
+// kelompok of the same child, or activities pre-enrollment).
+type Row = {
+  id: string;
+  activity: TutoringActivity;
+  submission: TutoringActivitySubmission | null;
+};
+
 const loading = ref(true);
+const activitiesAll = ref<TutoringActivity[]>([]);
 const submissions = ref<TutoringActivitySubmission[]>([]);
-const typeFilter = ref<'all' | 'HOMEWORK' | 'QUIZ' | 'EXAM' | 'PROJECT'>('all');
-const query = ref('');
+const typeFilter = ref<FilterId>('all');
 
 async function load() {
   const sid = studentId.value;
   if (!sid) { loading.value = false; return; }
   loading.value = true;
   try {
-    submissions.value = await TutoringService.getStudentActivitySubmissions(sid);
-  } catch {/* non-fatal */}
-  finally { loading.value = false; }
+    const [acts, subs] = await Promise.all([
+      TutoringService.getActivities().catch(() => [] as TutoringActivity[]),
+      TutoringService.getStudentActivitySubmissions(sid).catch(() => [] as TutoringActivitySubmission[]),
+    ]);
+    activitiesAll.value = acts;
+    submissions.value = subs;
+  } finally {
+    loading.value = false;
+  }
 }
 onMounted(load);
 watch(studentId, load);
 
-const filtered = computed(() => {
-  let list = submissions.value;
-  if (typeFilter.value !== 'all') {
-    list = list.filter((s) => {
-      const t = (s as TutoringActivitySubmission & { activity_type?: string }).activity_type;
-      return (t ?? '').toUpperCase() === typeFilter.value;
-    });
+// ── Merge: every tenant activity + matching submission overlay ──
+const rows = computed<Row[]>(() => {
+  // Pre-build submission lookup by activity id (handles backend's two
+  // field names: tutoring_activity_id is canonical, activity_id is the
+  // alias on some shapes).
+  const subByAct = new Map<string, TutoringActivitySubmission>();
+  for (const s of submissions.value) {
+    const k = s.tutoring_activity_id ?? s.activity_id;
+    if (k) subByAct.set(String(k), s);
   }
-  const q = query.value.trim().toLowerCase();
-  if (q) {
-    list = list.filter((s) => {
-      const title = (s as TutoringActivitySubmission & { activity_title?: string }).activity_title;
-      return (title ?? '').toLowerCase().includes(q);
-    });
-  }
+  const list: Row[] = activitiesAll.value.map((a) => ({
+    id: a.id,
+    activity: a,
+    submission: subByAct.get(a.id) ?? null,
+  }));
+  // Sort by due_at: overdue first (closest-past at top), then upcoming
+  // (closest-future at top), then no-due last.
+  list.sort((x, y) => {
+    const ax = x.activity.due_at ? new Date(x.activity.due_at).valueOf() : null;
+    const by = y.activity.due_at ? new Date(y.activity.due_at).valueOf() : null;
+    if (ax == null && by == null) return 0;
+    if (ax == null) return 1;
+    if (by == null) return -1;
+    const now = Date.now();
+    const xPast = ax < now, yPast = by < now;
+    if (xPast && !yPast) return -1;
+    if (!xPast && yPast) return 1;
+    return Math.abs(ax - now) - Math.abs(by - now);
+  });
   return list;
 });
 
-function statusChip(s: TutoringActivitySubmission) {
-  if (s.status === 'GRADED') return { cls: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', label: 'Selesai' };
-  if (s.status === 'SUBMITTED') return { cls: 'bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]', label: 'Dikumpul' };
-  if (s.status === 'LATE') return { cls: 'bg-rose-500/15 text-rose-700 dark:text-rose-300', label: 'Telat' };
-  if (s.status === 'MISSED') return { cls: 'bg-rose-500/15 text-rose-700 dark:text-rose-300', label: 'Lewat' };
-  return { cls: 'bg-amber-500/15 text-amber-800 dark:text-amber-300', label: 'Belum' };
+function isPending(r: Row): boolean {
+  if (!r.submission) return true; // no submission row → not done
+  const s = r.submission.status;
+  return s === 'ASSIGNED' || s === 'LATE' || s === 'MISSED';
+}
+function isDone(r: Row): boolean {
+  const s = r.submission?.status;
+  return s === 'GRADED' || s === 'SUBMITTED';
+}
+
+const childFirstName = computed(() => {
+  const name = activeChild()?.name ?? 'anak';
+  return name.trim().split(' ')[0] || name;
+});
+
+const pendingCount = computed(() => rows.value.filter(isPending).length);
+
+const doneThisMonth = computed(() => {
+  const now = new Date();
+  return rows.value.filter((r) => {
+    if (!isDone(r)) return false;
+    const subAt = r.submission?.submitted_at;
+    if (!subAt) return false;
+    const d = new Date(subAt);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).length;
+});
+
+const counts = computed(() => ({
+  ASSIGNMENT: rows.value.filter((r) => r.activity.type === 'ASSIGNMENT').length,
+  EXAM: rows.value.filter((r) => r.activity.type === 'EXAM').length,
+  MATERIAL: rows.value.filter((r) => r.activity.type === 'MATERIAL').length,
+}));
+
+const filters = computed(() => [
+  { id: 'all' as FilterId, label: `Semua (${rows.value.length})` },
+  { id: 'pending' as FilterId, label: `Belum (${pendingCount.value})` },
+  { id: 'ASSIGNMENT' as FilterId, label: `Tugas (${counts.value.ASSIGNMENT})` },
+  { id: 'EXAM' as FilterId, label: `Ujian (${counts.value.EXAM})` },
+  { id: 'MATERIAL' as FilterId, label: `Materi (${counts.value.MATERIAL})` },
+]);
+
+const visible = computed(() => {
+  if (typeFilter.value === 'all') return rows.value;
+  if (typeFilter.value === 'pending') return rows.value.filter(isPending);
+  return rows.value.filter((r) => r.activity.type === typeFilter.value);
+});
+
+// ── Icon + colour by activity type ─────────────────────────────
+function iconName(r: Row): string {
+  switch (r.activity.type) {
+    case 'EXAM': return 'check-circle';
+    case 'MATERIAL': return 'book-open';
+    default: return 'clipboard';
+  }
+}
+function iconStyle(r: Row): Record<string, string> {
+  // Done-state always reads green regardless of type.
+  if (isDone(r)) return { background: 'var(--bimbel-green-dim, rgba(22,163,74,.15))', color: '#15803d' };
+  switch (r.activity.type) {
+    case 'EXAM':
+      return { background: 'var(--bimbel-red-dim, rgba(220,38,38,.12))', color: '#b91c1c' };
+    case 'MATERIAL':
+      return { background: 'var(--bimbel-accent-dim, rgba(12,68,124,.12))', color: 'var(--bimbel-hero, #0c447c)' };
+    default:
+      return { background: 'var(--bimbel-accent-dim, rgba(12,68,124,.12))', color: 'var(--bimbel-hero, #0c447c)' };
+  }
+}
+
+// ── Subtitle / pill ────────────────────────────────────────────
+function fmtDate(iso?: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.valueOf())) return null;
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+}
+
+function daysUntilDue(r: Row): number | null {
+  const due = r.activity.due_at;
+  if (!due) return null;
+  const d = new Date(due);
+  if (Number.isNaN(d.valueOf())) return null;
+  return Math.ceil((d.valueOf() - Date.now()) / 86_400_000);
+}
+
+function title(r: Row): string {
+  return r.activity.title || '—';
+}
+
+// Subtitle: "Type · Kelompok · trailing fact"
+//   GRADED   → "Nilai X/Y"
+//   SUBMITTED→ "Dikumpul DD MMM"
+//   No sub + due → "Lewat N hari · DD MMM" or "N hari lagi · DD MMM"
+//   No sub + no due → "Tanpa tenggat"
+function subtitle(r: Row): string {
+  const parts: string[] = [];
+  const typeLabel = r.activity.type_label || r.activity.type;
+  if (typeLabel) parts.push(typeLabel);
+  const group = r.activity.group?.name;
+  if (group) parts.push(group);
+
+  const s = r.submission;
+  if (s?.status === 'GRADED' && s.score != null) {
+    parts.push(`Nilai ${s.score}${s.max_score ? `/${s.max_score}` : ''}`);
+  } else if (s?.status === 'SUBMITTED' && s.submitted_at) {
+    parts.push(`Dikumpul ${fmtDate(s.submitted_at)}`);
+  } else {
+    const due = r.activity.due_at;
+    if (due) {
+      const days = daysUntilDue(r);
+      const dueLabel = fmtDate(due);
+      if (days != null && days < 0) parts.push(`Lewat ${Math.abs(days)} hari · ${dueLabel}`);
+      else if (days != null) parts.push(`${days} hari lagi · ${dueLabel}`);
+    } else if (r.activity.type === 'MATERIAL') {
+      parts.push('Tanpa tenggat');
+    }
+  }
+  return parts.join(' · ');
+}
+
+const PILL_BASE = 'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide';
+
+function pillCls(r: Row): string {
+  const s = r.submission?.status;
+  if (s === 'GRADED') return `${PILL_BASE} bg-bimbel-green-dim text-green-700`;
+  if (s === 'SUBMITTED') return `${PILL_BASE} bg-bimbel-accent-dim text-bimbel-hero`;
+  if (s === 'LATE' || s === 'MISSED') return `${PILL_BASE} bg-bimbel-red-dim text-red-700`;
+  // No submission yet — pill colour follows urgency.
+  if (r.activity.type === 'MATERIAL' && !r.activity.due_at) {
+    return `${PILL_BASE} bg-bimbel-bg text-bimbel-text-mid`;
+  }
+  const days = daysUntilDue(r);
+  if (days != null && days < 0) return `${PILL_BASE} bg-bimbel-red-dim text-red-700`;
+  if (days != null && days <= 3) return `${PILL_BASE} bg-bimbel-amber-dim text-amber-700`;
+  return `${PILL_BASE} bg-bimbel-accent-dim text-bimbel-hero`;
+}
+
+function pillLabel(r: Row): string {
+  const s = r.submission?.status;
+  if (s === 'GRADED') return `Selesai · ${r.submission?.score ?? '–'}`;
+  if (s === 'SUBMITTED') return 'Dikumpul';
+  if (s === 'LATE' || s === 'MISSED') {
+    const days = daysUntilDue(r);
+    return days != null && days < 0 ? `Telat · ${Math.abs(days)} hari` : 'Telat';
+  }
+  if (r.activity.type === 'MATERIAL' && !r.activity.due_at) return 'Materi';
+  const days = daysUntilDue(r);
+  if (days != null && days < 0) return `Lewat · ${Math.abs(days)} hari`;
+  if (days != null) return `${days} hari lagi`;
+  return 'Belum';
 }
 </script>
 
 <template>
-  <div class="space-y-4 pb-12">
+  <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · KEGIATAN"
-      title="PR, Quiz & Try-out"
-      :subtitle="`${activeChild()?.name ?? 'Anak'} · ${submissions.length} kegiatan`"
+      kicker="BIMBEL · AKTIVITAS"
+      :title="`Tugas & ulangan ${childFirstName}`"
+      :subtitle="`${pendingCount} menunggu · ${doneThisMonth} selesai bulan ini`"
       :stats="[]"
     >
       <template #actions><ParentChildPickerChip /></template>
     </ParentBerandaHero>
 
-    <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 flex flex-wrap items-center gap-2">
-      <div class="relative min-w-[180px] flex-1">
-        <NavIcon name="search" :size="13" class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-bimbel-text-lo" />
-        <input
-          v-model="query"
-          type="text"
-          placeholder="Cari tugas…"
-          class="w-full rounded-lg border border-bimbel-border bg-bimbel-bg pl-8 pr-3 py-1.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-[#21afe6] focus:outline-none"
-        />
-      </div>
-      <div class="flex flex-wrap gap-1">
-        <button
-          v-for="opt in [
-            { id: 'all', label: 'Semua' },
-            { id: 'HOMEWORK', label: 'PR' },
-            { id: 'QUIZ', label: 'Quiz' },
-            { id: 'EXAM', label: 'Try-out' },
-            { id: 'PROJECT', label: 'Proyek' },
-          ] as const"
-          :key="opt.id"
-          type="button"
-          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
-          :class="
-            typeFilter === opt.id
-              ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
-              : 'border-bimbel-border text-bimbel-text-mid'
-          "
-          @click="typeFilter = opt.id"
-        >{{ opt.label }}</button>
-      </div>
+    <!-- Filter chips -->
+    <div class="flex gap-1.5 flex-wrap">
+      <button
+        v-for="opt in filters"
+        :key="opt.id"
+        type="button"
+        class="rounded-full px-2.5 py-1 text-[12px] transition-colors"
+        :class="
+          typeFilter === opt.id
+            ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold'
+            : 'bg-bimbel-bg text-bimbel-text-mid'
+        "
+        @click="typeFilter = opt.id"
+      >{{ opt.label }}</button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
-
-    <div v-else-if="filtered.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
-      <table class="w-full text-[13px]">
-        <thead class="bg-bimbel-bg/40">
-          <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
-            <th class="px-3 py-2">Tugas</th>
-            <th class="px-3 py-2 w-[100px]">Jenis</th>
-            <th class="px-3 py-2 w-[140px]">Kelas</th>
-            <th class="px-3 py-2 w-[140px]">Dikumpul</th>
-            <th class="px-3 py-2 w-[80px]">Nilai</th>
-            <th class="px-3 py-2 w-[100px]">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="s in filtered"
-            :key="s.id"
-            class="border-t border-bimbel-border-soft hover:bg-bimbel-border-soft/30"
-          >
-            <td class="px-3 py-2.5">
-              <p class="font-bold text-bimbel-text-hi">{{ (s as any).activity_title ?? 'Tugas' }}</p>
-              <p v-if="s.note" class="text-[13px] text-bimbel-text-mid line-clamp-1">{{ s.note }}</p>
-            </td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ (s as any).activity_type ?? '—' }}</td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ (s as any).group_name ?? '—' }}</td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">
-              {{
-                s.submitted_at
-                  ? new Date(s.submitted_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-                  : '—'
-              }}
-            </td>
-            <td class="px-3 py-2.5 font-bold" :class="s.score != null ? 'text-emerald-700 dark:text-emerald-300' : 'text-bimbel-text-mid'">
-              {{ s.score ?? '—' }}
-            </td>
-            <td class="px-3 py-2.5">
-              <span class="inline-flex rounded-full px-2 py-0.5 text-[13px] font-bold" :class="statusChip(s).cls">{{ statusChip(s).label }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
-      Belum ada kegiatan.
+    <div class="space-y-1.5">
+      <div
+        v-for="r in visible"
+        :key="r.id"
+        class="grid items-center gap-2.5 p-2.5 rounded-lg bg-bimbel-bg"
+        style="grid-template-columns: 32px 1fr auto;"
+      >
+        <div class="w-8 h-8 rounded-lg grid place-items-center" :style="iconStyle(r)">
+          <NavIcon :name="iconName(r)" :size="14" />
+        </div>
+        <div class="min-w-0">
+          <p class="text-[14px] font-bold text-bimbel-text-hi">
+            {{ title(r) }}
+          </p>
+          <p class="text-[12px] text-bimbel-text-mid">{{ subtitle(r) }}</p>
+        </div>
+        <span :class="pillCls(r)">{{ pillLabel(r) }}</span>
+      </div>
+      <p v-if="!visible.length && !loading" class="text-center text-[13px] text-bimbel-text-mid py-6">
+        Tidak ada aktivitas di kategori ini.
+      </p>
+      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">Memuat…</p>
     </div>
   </div>
 </template>

@@ -407,7 +407,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
       <template #actions>
         <button
           type="button"
-          class="relative inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition"
+          class="relative inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[12px] font-bold transition"
           @click="filterOpen = true"
         >
           <NavIcon name="filter" :size="12" />
@@ -456,7 +456,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
     >
       <button
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+        class="px-3 py-1.5 rounded-full text-[12px] font-bold transition border"
         :class="
           selectedChildKey === ALL_KEY
             ? 'bg-role-wali text-white border-role-wali shadow-sm'
@@ -480,7 +480,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
         v-for="c in summaryChildren"
         :key="c.student_id"
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border whitespace-nowrap"
+        class="px-3 py-1.5 rounded-full text-[12px] font-bold transition border whitespace-nowrap"
         :class="
           selectedChildKey === c.student_id
             ? 'bg-role-wali text-white border-role-wali shadow-sm'
@@ -550,7 +550,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
             />
             <div class="flex items-center gap-3">
               <div
-                class="w-11 h-11 rounded-full bg-role-wali/10 text-role-wali grid place-items-center text-[13px] font-black flex-shrink-0"
+                class="w-11 h-11 rounded-full bg-role-wali/10 text-role-wali grid place-items-center text-[14px] font-black flex-shrink-0"
               >
                 {{ initialsOf(c.student_name) }}
               </div>
@@ -558,7 +558,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                 <p class="text-[14px] font-black text-slate-900 truncate">
                   {{ c.student_name }}
                 </p>
-                <p class="text-[11px] font-bold text-slate-500 truncate mt-0.5">
+                <p class="text-[12px] font-bold text-slate-500 truncate mt-0.5">
                   {{ c.class_name }}
                 </p>
               </div>
@@ -623,7 +623,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
               </span>
             </div>
 
-            <div class="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-role-wali">
+            <div class="mt-3 inline-flex items-center gap-1 text-[12px] font-bold text-role-wali">
               Lihat rekomendasi
               <NavIcon name="chevron-right" :size="13" />
             </div>
@@ -639,7 +639,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
           >
             <div class="flex items-center gap-3">
               <div
-                class="w-12 h-12 rounded-full bg-role-wali/10 text-role-wali grid place-items-center text-[13px] font-black flex-shrink-0"
+                class="w-12 h-12 rounded-full bg-role-wali/10 text-role-wali grid place-items-center text-[14px] font-black flex-shrink-0"
               >
                 {{ initialsOf(selectedChild.student_name) }}
               </div>
@@ -647,7 +647,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
                 <p class="text-[15px] font-black text-slate-900 truncate">
                   {{ selectedChild.student_name }}
                 </p>
-                <p class="text-[11px] font-bold text-slate-500 truncate mt-0.5">
+                <p class="text-[12px] font-bold text-slate-500 truncate mt-0.5">
                   {{ selectedChild.class_name }} ·
                   <span class="text-role-wali">
                     {{ selectedChild.total_count }} rekomendasi
@@ -701,7 +701,7 @@ const SKELETON_ROWS = Array.from({ length: 4 });
               v-for="entry in statusChipEntries"
               :key="entry.key"
               type="button"
-              class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+              class="px-3 py-1.5 rounded-full text-[12px] font-bold transition border"
               :class="
                 filter.status === entry.key
                   ? 'bg-role-wali text-white border-role-wali shadow-sm'

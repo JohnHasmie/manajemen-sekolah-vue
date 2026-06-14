@@ -164,7 +164,7 @@ function dueLabel(iso?: string | null): string {
           <template #actions>
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-2 text-[13px] font-bold text-white hover:opacity-90"
+              class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-2 text-[14px] font-bold text-white hover:opacity-90"
               @click="goGroupDetail(attentionGroup)"
             >
               <NavIcon name="user-check" :size="13" /> Tugaskan tutor
@@ -186,7 +186,7 @@ function dueLabel(iso?: string | null): string {
         <div class="grid gap-3 sm:grid-cols-2">
           <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
             <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Kelompok perlu tutor</h4>
-            <div v-if="groupsNoTutor.length === 0" class="py-3 text-center text-[13px] text-bimbel-text-mid">
+            <div v-if="groupsNoTutor.length === 0" class="py-3 text-center text-[14px] text-bimbel-text-mid">
               Semua kelompok ada tutor.
             </div>
             <button
@@ -201,19 +201,19 @@ function dueLabel(iso?: string | null): string {
               </span>
               <div class="min-w-0 flex-1">
                 <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ g.name }}</p>
-                <p class="text-[13px] text-bimbel-text-mid">belum ada tutor</p>
+                <p class="text-[14px] text-bimbel-text-mid">belum ada tutor</p>
               </div>
             </button>
           </section>
 
           <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
             <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Tagihan tertunggak</h4>
-            <div v-if="unpaidBills.length === 0" class="py-3 text-center text-[13px] text-bimbel-text-mid">
+            <div v-if="unpaidBills.length === 0" class="py-3 text-center text-[14px] text-bimbel-text-mid">
               Tidak ada tagihan tertunggak.
             </div>
             <div v-else>
               <div class="flex items-center justify-between border-b border-bimbel-border-soft pb-2 mb-1">
-                <span class="text-[13px] text-bimbel-text-mid">Total</span>
+                <span class="text-[14px] text-bimbel-text-mid">Total</span>
                 <span class="text-[15px] font-extrabold text-bimbel-text-hi">{{ formatRupiah(unpaidTotal) }}</span>
               </div>
               <button
@@ -228,7 +228,7 @@ function dueLabel(iso?: string | null): string {
                 </span>
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-[14px] font-bold text-bimbel-text-hi">{{ formatRupiah(b.amount ?? 0) }}</p>
-                  <p class="truncate text-[13px] text-bimbel-text-mid">
+                  <p class="truncate text-[14px] text-bimbel-text-mid">
                     {{ [b.student_name, dueLabel(b.due_date)].filter(Boolean).join(' · ') }}
                   </p>
                 </div>
@@ -240,7 +240,7 @@ function dueLabel(iso?: string | null): string {
 
       <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
         <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Yang baru</h4>
-        <div v-if="feed.length === 0" class="py-6 text-center text-[13px] text-bimbel-text-mid">
+        <div v-if="feed.length === 0" class="py-6 text-center text-[14px] text-bimbel-text-mid">
           Belum ada aktivitas baru.
         </div>
         <TutorActivityRow

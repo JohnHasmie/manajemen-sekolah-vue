@@ -258,7 +258,7 @@ function basisLabel(b: string) {
           <div class="text-[10.5px] font-bold text-bimbel-text-mid uppercase tracking-wider mb-1.5">
             Rekening Tutor (opsional)
           </div>
-          <p class="text-[11px] text-bimbel-text-mid mb-2">
+          <p class="text-[12px] text-bimbel-text-mid mb-2">
             Tampil di slip honor PDF sebagai tujuan transfer dari bimbel.
           </p>
           <div class="grid grid-cols-2 gap-2">

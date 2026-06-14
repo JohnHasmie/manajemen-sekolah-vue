@@ -400,7 +400,7 @@ const SKELETON_ROWS = Array.from({ length: 5 });
               <NavIcon name="chevron-left" :size="12" />
             </button>
             <span
-              class="px-2.5 text-[11px] font-bold text-slate-800 cursor-pointer hover:text-role-wali"
+              class="px-2.5 text-[12px] font-bold text-slate-800 cursor-pointer hover:text-role-wali"
               @click="showPeriodPicker = true"
             >
               {{ periodLabel }}
@@ -452,7 +452,7 @@ const SKELETON_ROWS = Array.from({ length: 5 });
         class="flex items-center justify-between mb-2"
       >
         <h3 class="text-sm font-extrabold text-slate-900">{{ t('parent.attendance.sectionDaily') }}</h3>
-        <span class="text-[11px] font-bold text-slate-500">
+        <span class="text-[12px] font-bold text-slate-500">
           {{ t('parent.attendance.recordsCount', { count: filteredEntries.length }) }}
         </span>
       </header>

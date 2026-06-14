@@ -435,13 +435,13 @@ const activeSemesterLabel = computed(
             <!-- Subject section header — UPPERCASE name + letter+avg pill -->
             <header class="flex items-center justify-between px-1">
               <h3
-                class="text-[11px] font-bold uppercase tracking-widest text-slate-600 truncate"
+                class="text-[12px] font-bold uppercase tracking-widest text-slate-600 truncate"
               >
                 {{ g.subject_name }}
               </h3>
               <span
                 v-if="g.average > 0"
-                class="inline-flex items-center text-[11px] font-bold px-2.5 py-0.5 rounded-lg"
+                class="inline-flex items-center text-[12px] font-bold px-2.5 py-0.5 rounded-lg"
                 :class="`${letterBg(g.average)} ${letterFg(g.average)}`"
               >
                 {{ letterFor(g.average) }} · {{ Math.round(g.average) }}
@@ -473,10 +473,10 @@ const activeSemesterLabel = computed(
 
                 <!-- Title + type · date -->
                 <div class="flex-1 min-w-0">
-                  <p class="text-[13px] font-bold text-slate-900 truncate">
+                  <p class="text-[14px] font-bold text-slate-900 truncate">
                     {{ row.title || normalizeType(row.type) }}
                   </p>
-                  <p class="text-[11px] text-slate-500 truncate mt-0.5">
+                  <p class="text-[12px] text-slate-500 truncate mt-0.5">
                     {{ normalizeType(row.type) }} ·
                     {{ row.date ? fmtDate(row.date) : '—' }}
                   </p>

@@ -133,7 +133,7 @@ function whenLabel(iso?: string | null): string {
   <div class="space-y-4 pb-12">
     <button
       type="button"
-      class="inline-flex items-center gap-1 text-[13px] text-bimbel-text-mid hover:text-bimbel-text-hi"
+      class="inline-flex items-center gap-1 text-[14px] text-bimbel-text-mid hover:text-bimbel-text-hi"
       @click="router.push({ name: 'admin.tutoring.tutors' })"
     >
       <NavIcon name="chevron-left" :size="13" /> Kembali ke daftar tutor
@@ -148,21 +148,21 @@ function whenLabel(iso?: string | null): string {
       <template #actions>
         <button
           type="button"
-          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-white hover:bg-white/25"
+          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[14px] font-bold text-white hover:bg-white/25"
           @click="openEdit"
         >
           <NavIcon name="edit" :size="13" class="inline -mt-0.5" /> Edit
         </button>
         <button
           type="button"
-          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[13px] font-bold text-rose-200 hover:bg-rose-500/30"
+          class="rounded-lg bg-white/15 ring-1 ring-white/20 px-3 py-1.5 text-[14px] font-bold text-rose-200 hover:bg-rose-500/30"
           @click="showDeactivate = true"
         >
           <NavIcon name="user-x" :size="13" class="inline -mt-0.5" /> Nonaktifkan
         </button>
         <button
           type="button"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold"
+          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"
           @click="router.push({ name: 'admin.tutoring.payouts' })"
         >
           <NavIcon name="wallet" :size="13" class="inline -mt-0.5" /> Atur honor
@@ -173,14 +173,14 @@ function whenLabel(iso?: string | null): string {
     <div v-if="showEdit" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="showEdit = false">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
         <h3 class="text-[16px] font-bold text-bimbel-text-hi">Ubah profil tutor</h3>
-        <p class="text-[13px] text-bimbel-text-mid">{{ tutor?.email }}</p>
+        <p class="text-[14px] text-bimbel-text-mid">{{ tutor?.email }}</p>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama</span>
-          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama</span>
+          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="showEdit = false">Batal</button>
-          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="showEdit = false">Batal</button>
+          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? 'Menyimpan…' : 'Simpan' }}</button>
         </div>
       </div>
     </div>
@@ -201,7 +201,7 @@ function whenLabel(iso?: string | null): string {
     <div v-else class="grid gap-4 lg:grid-cols-3">
       <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 lg:col-span-2">
         <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Sesi mendatang & terakhir</h4>
-        <div v-if="sessionsSorted.length === 0" class="py-6 text-center text-[13px] text-bimbel-text-mid">
+        <div v-if="sessionsSorted.length === 0" class="py-6 text-center text-[14px] text-bimbel-text-mid">
           Belum ada sesi.
         </div>
         <div
@@ -214,10 +214,10 @@ function whenLabel(iso?: string | null): string {
               {{ s.topic ?? 'Sesi terjadwal' }}
               <span class="text-bimbel-text-mid font-normal">· {{ s.group?.name ?? '—' }}</span>
             </p>
-            <p class="text-[12px] text-bimbel-text-mid">{{ whenLabel(s.scheduled_at) }} · {{ s.duration_minutes }}m</p>
+            <p class="text-[13px] text-bimbel-text-mid">{{ whenLabel(s.scheduled_at) }} · {{ s.duration_minutes }}m</p>
           </div>
           <span
-            class="rounded-full px-2 py-0.5 text-[12px] font-bold"
+            class="rounded-full px-2 py-0.5 text-[13px] font-bold"
             :class="s.status === 'DONE' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : s.status === 'CANCELLED' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'bg-bimbel-accent-dim text-bimbel-accent'"
           >{{ s.status_label ?? s.status }}</span>
         </div>
@@ -226,12 +226,12 @@ function whenLabel(iso?: string | null): string {
       <div class="space-y-3">
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
           <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Honor & pencairan</h4>
-          <p class="text-[13px] text-bimbel-text-mid">
+          <p class="text-[14px] text-bimbel-text-mid">
             Basis: {{ payout?.rate.basis === 'PER_SESSION' ? 'per sesi' : 'per jam' }}
             <span class="font-bold text-bimbel-text-hi">· {{ payout ? formatRupiah(payout.rate.amount) : '—' }} / {{ payout?.rate.basis === 'PER_SESSION' ? 'sesi' : 'jam' }}</span>
           </p>
-          <p v-if="payout?.rate.note" class="text-[12px] text-bimbel-text-mid">{{ payout.rate.note }}</p>
-          <div v-if="payout" class="mt-2.5 flex items-center justify-between border-t border-bimbel-border-soft pt-2.5 text-[13px]">
+          <p v-if="payout?.rate.note" class="text-[13px] text-bimbel-text-mid">{{ payout.rate.note }}</p>
+          <div v-if="payout" class="mt-2.5 flex items-center justify-between border-t border-bimbel-border-soft pt-2.5 text-[14px]">
             <span class="text-bimbel-text-mid">{{ payout.period.label }}</span>
             <span class="font-bold text-bimbel-text-hi">{{ formatRupiah(payout.earnings) }}</span>
           </div>
@@ -239,7 +239,7 @@ function whenLabel(iso?: string | null): string {
 
         <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
           <h4 class="mb-2 text-[15px] font-bold tracking-tight text-bimbel-text-hi">Kelompok diajar</h4>
-          <div v-if="!tutor?.groups?.length" class="py-4 text-center text-[13px] text-bimbel-text-mid">
+          <div v-if="!tutor?.groups?.length" class="py-4 text-center text-[14px] text-bimbel-text-mid">
             Belum ada kelompok.
           </div>
           <div
@@ -247,8 +247,8 @@ function whenLabel(iso?: string | null): string {
             :key="g.id"
             class="border-b border-bimbel-border-soft py-2 last:border-b-0"
           >
-            <p class="text-[13px] font-bold text-bimbel-text-hi">{{ g.name }}</p>
-            <p v-if="g.program" class="text-[12px] text-bimbel-text-mid">{{ g.program }}</p>
+            <p class="text-[14px] font-bold text-bimbel-text-hi">{{ g.name }}</p>
+            <p v-if="g.program" class="text-[13px] text-bimbel-text-mid">{{ g.program }}</p>
           </div>
         </section>
       </div>

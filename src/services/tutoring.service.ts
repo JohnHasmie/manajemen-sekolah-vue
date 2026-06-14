@@ -375,21 +375,64 @@ export const TutoringService = {
     await api.post(`/tutoring/enrollments/${enrollmentId}/cancel`);
   },
 
+  /** Update a student's school-level fields (name, parent contact).
+   *  Goes via the shared `/students/:id` endpoint that the school
+   *  admin uses — bimbel admin reuses it through the tenant scope. */
+  async updateStudent(
+    studentId: string,
+    payload: {
+      name?: string;
+      guardian_name?: string | null;
+      guardian_phone?: string | null;
+    },
+  ): Promise<void> {
+    await api.put(`/students/${studentId}`, payload);
+  },
+
+  /** Create a brand-new student record in the tenant. Only `name` is
+   *  required by the backend (CreateStudentRequest); everything else
+   *  is optional. Returns the new student's id so the caller can
+   *  immediately enroll them into a program. */
+  async createStudent(payload: {
+    name: string;
+    guardian_name?: string | null;
+    guardian_phone?: string | null;
+    guardian_email?: string | null;
+  }): Promise<string> {
+    const res = await api.post<{ data?: { id?: string } }>(
+      '/students',
+      payload,
+    );
+    const id = res.data?.data?.id;
+    return id ? String(id) : '';
+  },
+
   // ── Admin: enrollment ───────────────────────────────────────────
 
-  /** Tenant students (for the enroll picker) via the core /student. */
+  /** Tenant students for the enroll picker.
+   *
+   *  Previously this hit /students (school endpoint) which kept coming
+   *  back empty in this tenant because of subtle response-envelope
+   *  differences between paginated and non-paginated branches.
+   *  Switch to the same /tutoring/students endpoint that the Siswa
+   *  list page uses (getAdminStudents) — that one is confirmed
+   *  working. It returns currently-enrolled students; freshly-created
+   *  students without enrollments yet won't appear here, but the
+   *  Siswa list also covers them once they're enrolled.
+   *
+   *  Dedup by student_id since one student with two enrollments comes
+   *  back as two rows. */
   async getTenantStudents(): Promise<{ id: string; name: string }[]> {
-    const res = await api.get('/student');
-    const body = res.data;
-    const list = Array.isArray(body?.data)
-      ? body.data
-      : Array.isArray(body)
-        ? body
-        : [];
-    return (list as Record<string, unknown>[]).map((m) => ({
-      id: String(m.id),
-      name: String(m.name ?? m.nama ?? '—'),
-    }));
+    const rows = await TutoringService.getAdminStudents();
+    const seen = new Set<string>();
+    const out: { id: string; name: string }[] = [];
+    for (const r of rows) {
+      const id = String(r.student_id);
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      out.push({ id, name: String(r.student_name ?? '—') });
+    }
+    return out;
   },
 
   async createEnrollment(payload: {
@@ -636,7 +679,10 @@ export const TutoringService = {
   /** List activities. Tutor + parent reads; optional group/type filter. */
   async getActivities(opts: {
     group_id?: string;
-    type?: 'HOMEWORK' | 'EXAM' | 'QUIZ' | 'PROJECT';
+    // Matches backend ActivityType enum (ASSIGNMENT / EXAM / MATERIAL).
+    // The earlier union (HOMEWORK / QUIZ / PROJECT) never matched any
+    // rows because those values don't exist in the database.
+    type?: 'ASSIGNMENT' | 'EXAM' | 'MATERIAL';
   } = {}): Promise<TutoringActivity[]> {
     const res = await api.get<ApiResponse<TutoringActivity[]>>(
       '/tutoring/activities',
@@ -653,7 +699,7 @@ export const TutoringService = {
 
   async createActivity(payload: {
     tutoring_group_id: string;
-    type: 'HOMEWORK' | 'EXAM' | 'QUIZ' | 'PROJECT';
+    type: 'ASSIGNMENT' | 'EXAM' | 'MATERIAL';
     title: string;
     description?: string;
     due_at?: string | null;

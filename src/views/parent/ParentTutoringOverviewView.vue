@@ -1,17 +1,12 @@
 <!--
   ParentTutoringOverviewView — wali Beranda.
 
-  Layout matches the approved mockup (parent_web_pages_main frame 1):
-
-    Hero  (azure, greeting + child-picker + 4 KPI stats)
-    Two-col body:
-      LEFT  : Hari ini (accent-stripe card) + Tagihan ribbon
-      RIGHT : Yang baru feed (panel)
+  Mockup-exact layout: hero + 3-cell KPI strip + "SESI HARI INI" tinted
+  card (with conditional red tagihan ribbon) + "YANG BARU" feed card.
 
   Reads:
-    - getChildOverview(studentId)         → bills + attendance + progress + upcoming
-    - getStudentFeed(studentId)           → "Yang baru" rows
-    - getPaymentAccount()                 → unused here, kept for ribbon CTA
+    - TutoringService.getChildOverview(studentId) → upcoming/attendance/bills/progress
+    - TutoringService.getStudentFeed(studentId)   → "Yang baru" rows
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -27,15 +22,12 @@ import type {
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
-import ParentPrimaryCard from '@/components/feature/tutoring/ParentPrimaryCard.vue';
-import ParentRibbon from '@/components/feature/tutoring/ParentRibbon.vue';
-import ParentActivityRow from '@/components/feature/tutoring/ParentActivityRow.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
-const { activeChildId, activeChild } = useChildPicker();
+const { children, activeChildId } = useChildPicker();
 
 const studentId = computed(() =>
   String(route.params.studentId || activeChildId.value || ''),
@@ -47,17 +39,14 @@ const feed = ref<TutoringFeedEvent[]>([]);
 
 async function load() {
   const sid = studentId.value;
-  if (!sid) {
-    loading.value = false;
-    return;
-  }
+  if (!sid) { loading.value = false; return; }
   loading.value = true;
   try {
     const [overview, f] = await Promise.all([
       TutoringService.getChildOverview(sid),
-      TutoringService.getStudentFeed(sid, { limit: 8, sinceDays: 30 }).catch(
-        () => [] as TutoringFeedEvent[],
-      ),
+      TutoringService
+        .getStudentFeed(sid, { limit: 8, sinceDays: 30 })
+        .catch(() => [] as TutoringFeedEvent[]),
     ]);
     data.value = overview;
     feed.value = f;
@@ -68,254 +57,325 @@ async function load() {
 onMounted(load);
 watch(studentId, load);
 
-// ── Greeting ─────────────────────────────────────────────────────
-function timeGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 11) return 'Selamat pagi';
-  if (h < 15) return 'Selamat siang';
-  if (h < 19) return 'Selamat sore';
-  return 'Selamat malam';
-}
-
+// ── Hero copy ─────────────────────────────────────────────────────
 const firstName = computed(() => {
   const n = auth.user?.name || 'Wali';
   return n.split(/\s+/)[0];
 });
+const childCount = computed(() => children.value.length || 1);
+const schoolName = computed(() => auth.user?.school_name || 'bimbel');
 
-const childName = computed(() => activeChild()?.name || 'anak');
+// ── KPI 1: kehadiran ─────────────────────────────────────────────
+function pct(n: number, d: number): number {
+  if (!d) return 0;
+  return Math.round((n / d) * 100);
+}
 
-// ── KPI strip (4 cells) ──────────────────────────────────────────
-const heroStats = computed(() => {
-  const d = data.value;
-  const upcoming = d?.upcomingSessions ?? [];
-  const sessionsThisWeek = upcoming.filter((s) => {
-    if (!s.scheduled_at) return false;
-    const t = new Date(s.scheduled_at).valueOf();
-    const week = Date.now() + 7 * 86_400_000;
-    return t <= week;
-  }).length;
-  const att = d?.attendance?.attendance_rate;
-  const avgScore = d?.progress?.summary?.overall?.average;
-  const unpaid = (d?.bills ?? []).filter((b) =>
-    /unpaid|pending|due|overdue|belum/i.test(b.status ?? ''),
-  );
-  const unpaidTotal = unpaid.reduce((s, b) => s + (b.amount ?? 0), 0);
-  const todayCount = upcoming.filter((s) => {
-    if (!s.scheduled_at) return false;
-    const d = new Date(s.scheduled_at);
-    const now = new Date();
-    return d.toDateString() === now.toDateString();
-  }).length;
-  return [
-    {
-      label: 'SESI MGG INI',
-      value: String(sessionsThisWeek),
-      hint: todayCount > 0 ? `${todayCount} hari ini` : 'tidak ada hari ini',
-    },
-    {
-      label: 'KEHADIRAN 30H',
-      value: att == null ? '–' : `${att}%`,
-      hint: d?.attendance?.total_recorded
-        ? `${d.attendance.attended} dari ${d.attendance.total_recorded} hadir`
-        : 'belum tercatat',
-    },
-    {
-      label: 'RATA-RATA NILAI',
-      value: avgScore == null ? '–' : String(Math.round(avgScore)),
-      hint: d?.progress?.summary?.overall?.count
-        ? `${d.progress.summary.overall.count} nilai`
-        : 'belum ada',
-    },
-    {
-      label: 'TAGIHAN AKTIF',
-      value: unpaid.length === 0 ? 'Lunas' : formatRupiah(unpaidTotal),
-      hint: unpaid.length === 0 ? 'tidak ada tagihan' : `${unpaid.length} tagihan`,
-    },
-  ];
+const attKpi = computed(() => {
+  const a = data.value?.attendance;
+  if (!a || !a.total_recorded) {
+    return { attended: 0, total: 0, meta: 'belum tercatat' };
+  }
+  const p = pct(a.attended, a.total_recorded);
+  return {
+    attended: a.attended,
+    total: a.total_recorded,
+    meta: `${p}% · target ≥80%`,
+  };
 });
 
-// ── Hari ini card ────────────────────────────────────────────────
-const heroNext = computed(() => data.value?.upcomingSessions?.[0] ?? null);
-
-const heroNextCountdown = computed(() => {
-  const ns = heroNext.value;
-  if (!ns?.scheduled_at) return null;
-  const d = new Date(ns.scheduled_at);
-  if (Number.isNaN(d.valueOf())) return null;
-  const diffMin = (d.valueOf() - Date.now()) / 60_000;
-  if (diffMin < 0) return 'mulai';
-  if (diffMin < 60) return `${Math.round(diffMin)} menit lagi`;
-  const h = diffMin / 60;
-  if (h < 24) return `${Math.round(h)} jam lagi`;
-  return `${Math.round(h / 24)} hari lagi`;
+// ── KPI 2: rata-rata nilai ───────────────────────────────────────
+const scoreKpi = computed(() => {
+  const s = data.value?.progress?.summary?.overall;
+  const avg = s?.average;
+  if (avg == null) return { value: '–', meta: 'belum ada nilai' };
+  const fmt = avg
+    .toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+    .replace('.', ',');
+  let meta = `${s?.count ?? 0} nilai tercatat`;
+  if (s?.latest != null) {
+    const diff = s.latest - avg;
+    if (Math.abs(diff) >= 1) {
+      meta = diff >= 0
+        ? `Naik ${Math.round(diff)} pts`
+        : `Turun ${Math.abs(Math.round(diff))} pts`;
+    }
+  }
+  return { value: fmt, meta };
 });
 
-const heroNextTone = computed<'success' | 'brand'>(() => {
-  const ns = heroNext.value;
-  if (!ns?.scheduled_at) return 'brand';
-  const d = new Date(ns.scheduled_at);
-  if (Number.isNaN(d.valueOf())) return 'brand';
-  const diffH = (d.valueOf() - Date.now()) / 3_600_000;
-  return diffH <= 24 ? 'success' : 'brand';
-});
-
-const heroNextWhen = computed(() => {
-  const ns = heroNext.value;
-  if (!ns?.scheduled_at) return '';
-  const d = new Date(ns.scheduled_at);
-  if (Number.isNaN(d.valueOf())) return '';
-  const isToday = d.toDateString() === new Date().toDateString();
-  return d.toLocaleString('id-ID', {
-    weekday: isToday ? undefined : 'short',
-    day: isToday ? undefined : 'numeric',
-    month: isToday ? undefined : 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-});
-
-// ── Tagihan ribbon ───────────────────────────────────────────────
+// ── KPI 3: tagihan jatuh tempo ───────────────────────────────────
 const unpaidBills = computed(() =>
   (data.value?.bills ?? []).filter((b) =>
     /unpaid|pending|due|overdue|belum/i.test(b.status ?? ''),
   ),
 );
-const unpaidTotal = computed(() =>
-  unpaidBills.value.reduce((s, b) => s + (b.amount ?? 0), 0),
-);
-const unpaidHint = computed(() => {
+
+const billKpi = computed(() => {
   const list = unpaidBills.value;
-  if (list.length === 0) return '';
-  const first = list[0];
-  const due = first.due_date ? new Date(first.due_date) : null;
-  const lbl = due
-    ? `Jatuh tempo ${due.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`
-    : 'Jatuh tempo segera';
-  return list.length > 1 ? `${lbl} · +${list.length - 1} lagi` : lbl;
+  if (list.length === 0) {
+    return { value: 'Lunas', meta: 'tidak ada tagihan aktif', unpaid: false };
+  }
+  const total = list.reduce((s, b) => s + (b.amount ?? 0), 0);
+  return {
+    value: formatRupiah(total),
+    meta: `${list.length} tagihan tertunggak`,
+    unpaid: true,
+  };
 });
 
-function goPayFirstBill() {
-  const first = unpaidBills.value[0];
-  if (!first) return;
-  router.push({ name: 'parent.tutoring.pay-bill', params: { billId: first.id } });
+// ── SESI HARI INI card ───────────────────────────────────────────
+const heroNext = computed(() => data.value?.upcomingSessions?.[0] ?? null);
+
+const heroNextTimeKicker = computed(() => {
+  const ns = heroNext.value;
+  if (!ns?.scheduled_at) return '';
+  const d = new Date(ns.scheduled_at);
+  if (Number.isNaN(d.valueOf())) return '';
+  const time = d.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const isToday = d.toDateString() === new Date().toDateString();
+  const day = isToday
+    ? 'HARI INI'
+    : d
+        .toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })
+        .toUpperCase();
+  return `${day} · ${time}`;
+});
+
+const heroNextTitle = computed(() => {
+  const ns = heroNext.value;
+  if (!ns) return 'Sesi terjadwal';
+  const program = ns.group?.program?.name;
+  const group = ns.group?.name;
+  if (ns.topic) return ns.topic;
+  if (program && group) return `${program} · ${group}`;
+  return group || program || 'Sesi terjadwal';
+});
+
+const heroNextSub = computed(() => {
+  const ns = heroNext.value;
+  if (!ns) return '';
+  return [
+    ns.tutor?.name,
+    ns.room ? `ruang ${ns.room}` : null,
+    ns.duration_minutes ? `${ns.duration_minutes} menit` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+});
+
+// ── Top unpaid bill ribbon ──────────────────────────────────────
+const topUnpaid = computed(() => {
+  const b = unpaidBills.value[0];
+  if (!b) return null;
+  const label = b.source_label ?? b.source_type ?? 'Tagihan';
+  const amountFmt = b.amount != null ? formatRupiah(b.amount) : '—';
+  let dueLine = 'belum dibayar';
+  if (b.due_date) {
+    const due = new Date(b.due_date);
+    if (!Number.isNaN(due.valueOf())) {
+      const fmt = due.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+      dueLine = `Jatuh tempo ${fmt} · belum dibayar`;
+    }
+  }
+  return { id: b.id, label, amountFmt, dueLine };
+});
+
+// ── Feed icon mapping (no fixed palette tokens, use inline style) ──
+type FeedStyle = { background: string; color: string };
+function feedIconName(ev: TutoringFeedEvent): string {
+  switch (ev.type) {
+    case 'note':
+    case 'score':
+      return 'star';
+    case 'announcement':
+    case 'announcement_posted':
+      return 'megaphone';
+    case 'bill':
+    case 'bill_paid':
+      return 'wallet';
+    case 'attendance':
+      return 'check-circle';
+    case 'session_done':
+      return 'calendar';
+    case 'new_submission':
+      return 'book';
+    default:
+      return 'bell';
+  }
+}
+function feedIconStyle(ev: TutoringFeedEvent): FeedStyle {
+  switch (ev.type) {
+    case 'note':
+    case 'score':
+    case 'new_submission':
+      return { background: 'rgba(245, 158, 11, 0.18)', color: '#b45309' };
+    case 'announcement':
+    case 'announcement_posted':
+      return { background: 'rgba(139, 92, 246, 0.18)', color: '#6d28d9' };
+    case 'bill':
+    case 'bill_paid':
+    case 'attendance':
+      return { background: 'rgba(16, 185, 129, 0.18)', color: '#047857' };
+    case 'session_done':
+      return { background: 'rgba(33, 175, 230, 0.18)', color: '#0c447c' };
+    default:
+      return { background: 'var(--bimbel-border-soft, rgba(0,0,0,0.06))', color: '#475569' };
+  }
 }
 
-function goToTagihan() {
-  router.push({ name: 'parent.tutoring.bills' });
+function relTime(iso?: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.valueOf())) return '';
+  const diffMin = (Date.now() - d.valueOf()) / 60_000;
+  if (diffMin < 1) return 'baru';
+  if (diffMin < 60) return `${Math.floor(diffMin)} menit lalu`;
+  const h = diffMin / 60;
+  if (h < 24) return `${Math.floor(h)} jam lalu`;
+  const days = Math.floor(h / 24);
+  if (days === 1) return 'Kemarin';
+  if (days < 7) return `${days} hari lalu`;
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+}
+
+// ── Navigation ───────────────────────────────────────────────────
+function goSesi() {
+  router.push({ name: 'parent.tutoring.sessions' });
+}
+function goEnroll() {
+  router.push({ name: 'parent.tutoring.enroll-new' });
+}
+function goPayBill() {
+  const id = topUnpaid.value?.id;
+  if (!id) return;
+  router.push({ name: 'parent.tutoring.pay-bill', params: { billId: id } });
 }
 </script>
 
 <template>
-  <div class="space-y-4 pb-12">
+  <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · BERANDA"
-      :title="`Halo, ${firstName}`"
-      :subtitle="`${timeGreeting()} · Wali dari ${childName}`"
-      :stats="heroStats"
+      kicker="BIMBEL · WALI"
+      :title="`Halo, Pak ${firstName}`"
+      :subtitle="`Pantau perkembangan ${childCount} anak di ${schoolName}`"
+      :stats="[]"
     >
       <template #actions>
         <ParentChildPickerChip />
         <button
           type="button"
-          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-[#0c447c] px-3 py-1.5 text-[13px] font-bold hover:bg-white/95"
-          @click="router.push({ name: 'parent.tutoring.enroll-new' })"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
+          @click="goEnroll"
         >
-          <NavIcon name="plus" :size="13" />
-          Daftar program
+          <NavIcon name="plus" :size="13" />Daftar program
         </button>
       </template>
     </ParentBerandaHero>
 
-    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">
-      Memuat…
-    </div>
+    <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">Memuat…</div>
 
     <template v-else>
-      <div class="grid gap-3 lg:grid-cols-3">
-        <div class="space-y-3 lg:col-span-2">
-          <ParentPrimaryCard
-            v-if="heroNext"
-            icon="calendar"
-            kicker="HARI INI"
-            :title="heroNext.topic || (heroNext.group as any)?.name || 'Sesi terjadwal'"
-            :subtitle="
-              [
-                (heroNext.group as any)?.program?.name,
-                heroNext.room ? `ruang ${heroNext.room}` : null,
-                heroNext.duration_minutes ? `${heroNext.duration_minutes} menit` : null,
-                heroNextWhen,
-              ].filter(Boolean).join(' · ') || undefined
-            "
-            :tone="heroNextTone"
-            :chip="heroNextCountdown ?? undefined"
-          >
-            <template #actions>
-              <a
-                v-if="heroNext.meeting_url"
-                :href="heroNext.meeting_url"
-                target="_blank"
-                rel="noopener"
-                class="inline-flex items-center gap-1.5 rounded-lg bg-[#21afe6] px-3.5 py-2 text-[13px] font-bold text-white hover:opacity-90"
-              >
-                <NavIcon name="link" :size="13" /> Buka Meet
-              </a>
-              <button
-                type="button"
-                class="inline-flex items-center gap-1.5 rounded-lg border border-bimbel-border px-3.5 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
-                @click="router.push({ name: 'parent.tutoring.sessions' })"
-              >
-                Lihat jadwal
-              </button>
-            </template>
-          </ParentPrimaryCard>
-
-          <div
-            v-else
-            class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-6 text-center text-sm text-bimbel-text-mid"
-          >
-            Tidak ada sesi hari ini.
-          </div>
-
-          <ParentRibbon
-            v-if="unpaidBills.length > 0"
-            icon="wallet"
-            label="TAGIHAN AKTIF"
-            :value="formatRupiah(unpaidTotal)"
-            :hint="unpaidHint"
-            tone="warning"
-            action-label="Bayar"
-            @action="goPayFirstBill"
-            @click="goToTagihan"
-          />
-          <ParentRibbon
-            v-else
-            icon="check-circle"
-            label="TAGIHAN"
-            value="Lunas semua"
-            hint="Belum ada tagihan aktif bulan ini"
-            tone="success"
-            clickable
-            @click="goToTagihan"
-          />
+      <!-- KPI strip (3 cells) -->
+      <div class="grid grid-cols-3 gap-2">
+        <div class="rounded-lg bg-bimbel-bg p-3">
+          <p class="text-[12px] text-bimbel-text-mid">Sesi hadir bulan ini</p>
+          <p class="text-[20px] font-extrabold text-bimbel-text-hi leading-none mt-0.5">
+            {{ attKpi.attended }}<span class="text-[14px] text-bimbel-text-mid font-normal">/{{ attKpi.total }}</span>
+          </p>
+          <p class="text-[12px] text-bimbel-text-lo mt-1">{{ attKpi.meta }}</p>
         </div>
+        <div class="rounded-lg bg-bimbel-bg p-3">
+          <p class="text-[12px] text-bimbel-text-mid">Rata-rata nilai</p>
+          <p class="text-[20px] font-extrabold text-bimbel-text-hi leading-none mt-0.5">{{ scoreKpi.value }}</p>
+          <p class="text-[12px] text-bimbel-text-lo mt-1">{{ scoreKpi.meta }}</p>
+        </div>
+        <div class="rounded-lg bg-bimbel-bg p-3">
+          <p class="text-[12px] text-bimbel-text-mid">Tagihan jatuh tempo</p>
+          <p
+            class="text-[20px] font-extrabold leading-none mt-0.5"
+            :class="billKpi.unpaid ? 'text-red-800' : 'text-bimbel-text-hi'"
+          >
+            {{ billKpi.value }}
+          </p>
+          <p class="text-[12px] text-bimbel-text-lo mt-1">{{ billKpi.meta }}</p>
+        </div>
+      </div>
 
-        <aside class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5">
-          <h4 class="mb-2 text-[13px] font-bold tracking-tight text-bimbel-text-hi">
-            Yang baru
-          </h4>
-          <div v-if="feed.length === 0" class="py-6 text-center text-[13px] text-bimbel-text-mid">
-            Belum ada aktivitas baru.
+      <!-- Sesi hari ini -->
+      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">SESI HARI INI</p>
+      <div
+        v-if="heroNext"
+        class="rounded-xl bg-bimbel-accent-dim border border-bimbel-accent/30 p-3.5 flex gap-3 items-center"
+      >
+        <div class="w-10 h-10 rounded-lg bg-bimbel-accent/30 text-bimbel-hero grid place-items-center flex-shrink-0">
+          <NavIcon name="school" :size="20" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[12px] text-bimbel-hero tracking-wider font-bold uppercase">{{ heroNextTimeKicker }}</p>
+          <p class="text-[14px] font-bold text-bimbel-hero">{{ heroNextTitle }}</p>
+          <p class="text-[13px] text-bimbel-hero/80">{{ heroNextSub }}</p>
+        </div>
+        <button
+          type="button"
+          class="bg-bimbel-hero text-white px-3 py-2 rounded-lg text-[13px] font-bold flex-shrink-0"
+          @click="goSesi"
+        >
+          Lihat detail
+        </button>
+      </div>
+      <div
+        v-else
+        class="rounded-xl bg-bimbel-bg border border-bimbel-border-soft p-4 text-center text-[13px] text-bimbel-text-mid"
+      >
+        Tidak ada sesi hari ini.
+      </div>
+
+      <!-- Tagihan ribbon -->
+      <div
+        v-if="topUnpaid"
+        class="rounded-lg bg-bimbel-red-dim border border-red-300 p-3 mt-2 flex items-center gap-2.5"
+      >
+        <div class="w-[30px] h-[30px] rounded-lg bg-red-200 text-red-900 grid place-items-center flex-shrink-0">
+          <NavIcon name="wallet" :size="16" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] font-bold text-red-900">{{ topUnpaid.label }} – {{ topUnpaid.amountFmt }}</p>
+          <p class="text-[12px] text-red-800">{{ topUnpaid.dueLine }}</p>
+        </div>
+        <button
+          type="button"
+          class="bg-red-900 text-white text-[12px] font-bold px-2.5 py-1.5 rounded-md flex-shrink-0"
+          @click="goPayBill"
+        >
+          Bayar sekarang
+        </button>
+      </div>
+
+      <!-- YANG BARU feed -->
+      <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">YANG BARU</p>
+      <div class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3.5">
+        <div
+          v-for="(ev, i) in feed"
+          :key="i"
+          class="flex gap-2.5 py-2.5 border-b border-bimbel-border-soft last:border-b-0"
+        >
+          <div
+            class="w-8 h-8 rounded-lg grid place-items-center flex-shrink-0"
+            :style="feedIconStyle(ev)"
+          >
+            <NavIcon :name="feedIconName(ev)" :size="14" />
           </div>
-          <ParentActivityRow
-            v-for="(e, i) in feed.slice(0, 8)"
-            :key="i"
-            compact
-            :type="e.type"
-            :title="e.title"
-            :subtitle="e.subtitle"
-            :occurred-at="e.occurred_at"
-          />
-        </aside>
+          <div class="flex-1 min-w-0">
+            <p class="text-[14px] font-bold text-bimbel-text-hi">{{ ev.title }}</p>
+            <p class="text-[12px] text-bimbel-text-mid">{{ ev.subtitle }}</p>
+          </div>
+          <span class="text-[12px] text-bimbel-text-lo flex-shrink-0">{{ relTime(ev.occurred_at) }}</span>
+        </div>
+        <p v-if="!feed.length" class="text-center text-[13px] text-bimbel-text-mid py-6">Belum ada aktivitas baru.</p>
       </div>
     </template>
   </div>

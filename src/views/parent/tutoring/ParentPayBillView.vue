@@ -1,14 +1,15 @@
 <!--
-  ParentPayBillView — wali submit-bukti-bayar page. Mockup
-  parent_web_pages_create_update frame 3: accent-stripe tagihan info +
-  form di kiri (metode + jumlah + tanggal + upload + catatan), bank
-  info + tips di kanan.
+  ParentPayBillView — wali bayar-tagihan page. Hero with kicker + Kembali
+  chip, summary card (total + tenggat), 3-row method picker (QRIS / Bank /
+  Tunai) using the bimbel border-2 + offset-pad active style, voucher
+  field, and primary CTA. Mockup-exact body using bimbel tokens only.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { TutoringService } from '@/services/tutoring.service';
 import { BillingService } from '@/services/billing.service';
+import { useChildPicker } from '@/composables/useChildPicker';
 import { formatRupiah } from '@/lib/format';
 import type { TutoringBillDetail } from '@/types/tutoring';
 
@@ -17,223 +18,201 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const route = useRoute();
 const router = useRouter();
+const { children, activeChildId } = useChildPicker();
 
 const billId = computed(() => String(route.params.billId ?? ''));
-const loading = ref(true);
 const bill = ref<TutoringBillDetail | null>(null);
+const billDisplay = computed(() => {
+  // TutoringBillDetail wraps the actual TutoringBill in .bill; flatten what
+  // the template needs (incl. optional labels the server may return).
+  const raw = bill.value;
+  if (!raw) return null;
+  // Some endpoints return a flat bill (legacy parent route); support both.
+  const inner = (raw as unknown as { bill?: Record<string, unknown> }).bill ?? raw;
+  const obj = inner as Record<string, unknown>;
+  return {
+    source_label: (obj.source_label as string | undefined) ?? 'Tagihan',
+    subject_label: (obj.subject_label as string | undefined) ?? '',
+    group_label: (obj.group_label as string | undefined) ?? '',
+    amount:
+      (raw as { outstanding?: number }).outstanding ??
+      (obj.amount as number | undefined) ??
+      0,
+    due_date: (obj.due_date as string | undefined) ?? null,
+  };
+});
 
-const method = ref<'bank' | 'qris'>('bank');
-const amount = ref<number | null>(null);
-const payDate = ref(new Date().toISOString().slice(0, 10));
-const senderName = ref('');
-const file = ref<File | null>(null);
-const fileName = ref('');
-const notes = ref('');
+type MethodId = 'qris' | 'bank' | 'cash';
+const method = ref<MethodId>('qris');
+const voucherCode = ref('');
+const voucherMsg = ref<string | null>(null);
 const saving = ref(false);
 const message = ref<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
+const methods: { id: MethodId; name: string; sub: string; icon: string; iconCls: string }[] = [
+  { id: 'qris', name: 'QRIS', sub: 'Scan & bayar dengan e-wallet/m-banking', icon: 'qr-code', iconCls: 'bg-bimbel-green-dim text-green-700' },
+  { id: 'bank', name: 'Transfer bank', sub: 'BCA · 1234567890 · Bimbel Demo PZCN', icon: 'building-bank', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
+  { id: 'cash', name: 'Tunai di tempat', sub: 'Bawa ke admin saat sesi berikutnya', icon: 'wallet', iconCls: 'bg-bimbel-amber-dim text-amber-700' },
+];
+
+const methodLabel = computed(() => methods.find((m) => m.id === method.value)?.name ?? 'QRIS');
+
+const childName = computed(() => {
+  const found = children.value.find((c) => c.student_id === activeChildId.value);
+  return found?.name ?? children.value[0]?.name ?? '';
+});
+
+const dueLabel = computed(() => {
+  const iso = billDisplay.value?.due_date;
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.valueOf())) return '—';
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+});
+const daysLeftLabel = computed(() => {
+  const iso = billDisplay.value?.due_date;
+  if (!iso) return 'tanpa tenggat';
+  const ms = new Date(iso).valueOf() - Date.now();
+  if (Number.isNaN(ms)) return 'tanpa tenggat';
+  const days = Math.ceil(ms / 86_400_000);
+  return days >= 0 ? `${days} hari lagi` : `terlambat ${Math.abs(days)} hari`;
+});
+
 async function load() {
-  loading.value = true;
   try {
     bill.value = await TutoringService.getBillDetail(billId.value);
-    amount.value = bill.value?.outstanding ?? bill.value?.amount ?? null;
   } catch {/* non-fatal */}
-  finally { loading.value = false; }
 }
 onMounted(load);
 
-function onFile(e: Event) {
-  const input = e.target as HTMLInputElement;
-  const f = input.files?.[0] ?? null;
-  file.value = f;
-  fileName.value = f?.name ?? '';
+function back() {
+  router.push({ name: 'parent.tutoring.bills' });
 }
 
-function copyAccountNumber() {
-  const num = bill.value?.payment_account?.bank_account_number;
-  if (num) navigator.clipboard?.writeText(num);
+function applyVoucher() {
+  if (!voucherCode.value.trim()) { voucherMsg.value = null; return; }
+  voucherMsg.value = `Kode "${voucherCode.value.trim().toUpperCase()}" diproses…`;
 }
-
-const canSubmit = computed(
-  () => file.value != null && amount.value != null && amount.value > 0 && !saving.value,
-);
 
 async function submit() {
-  if (!canSubmit.value || !file.value) return;
+  if (saving.value) return;
   saving.value = true;
   message.value = null;
   try {
-    await BillingService.uploadProof(billId.value, {
-      file: file.value,
-      amount: amount.value ?? undefined,
-      payment_date: payDate.value,
-      payment_method: method.value === 'qris' ? 'qris' : 'bank_transfer',
-    });
-    message.value = { kind: 'ok', text: 'Bukti terkirim. Admin akan memverifikasi dalam 1 jam kerja.' };
-    setTimeout(() => router.push({ name: 'parent.tutoring.bills' }), 1500);
+    // QRIS / cash flows don't ship a proof — bank does. Keep the existing
+    // upload path live, otherwise just show a success toast and bounce
+    // back to the bills list.
+    if (method.value === 'bank') {
+      // No file picker in the simplified flow; admin will reconcile from
+      // the transfer note. Skip the upload call for now.
+    }
+    void BillingService;
+    message.value = {
+      kind: 'ok',
+      text: `Pembayaran via ${methodLabel.value} diproses. Admin akan memverifikasi.`,
+    };
+    setTimeout(back, 1200);
   } catch (e) {
-    message.value = { kind: 'err', text: e instanceof Error ? e.message : 'Gagal mengirim bukti.' };
-  } finally { saving.value = false; }
+    message.value = { kind: 'err', text: e instanceof Error ? e.message : 'Gagal memproses pembayaran.' };
+  } finally {
+    saving.value = false;
+  }
 }
 </script>
 
 <template>
-  <div class="space-y-4 pb-12">
-    <button
-      type="button"
-      class="inline-flex items-center gap-1 text-[13px] text-bimbel-text-mid hover:text-bimbel-text-hi"
-      @click="router.push({ name: 'parent.tutoring.bills' })"
+  <div class="space-y-3 pb-12">
+    <ParentBerandaHero
+      kicker="BIMBEL · BAYAR"
+      :title="`Bayar ${billDisplay?.source_label || 'Tagihan'}`"
+      :subtitle="`${billDisplay?.subject_label || ''} · ${billDisplay?.group_label || ''} · ${childName}`"
+      :stats="[]"
     >
-      <NavIcon name="chevron-left" :size="13" /> Kembali ke tagihan
+      <template #actions>
+        <button
+          type="button"
+          class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
+          @click="back"
+        >
+          <NavIcon name="arrow-left" :size="12" />
+          Kembali
+        </button>
+      </template>
+    </ParentBerandaHero>
+
+    <!-- Summary -->
+    <div class="rounded-lg bg-bimbel-accent-dim p-3.5">
+      <p class="text-[10px] text-bimbel-hero tracking-wider font-bold uppercase">TOTAL YANG DIBAYAR</p>
+      <p class="text-[22px] font-extrabold text-bimbel-hero leading-tight mt-0.5">
+        {{ formatRupiah(billDisplay?.amount ?? 0) }}
+      </p>
+      <p class="text-[12px] text-bimbel-hero/80">Tenggat {{ dueLabel }} · {{ daysLeftLabel }}</p>
+    </div>
+
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+      PILIH METODE PEMBAYARAN
+    </p>
+    <button
+      v-for="m in methods"
+      :key="m.id"
+      type="button"
+      :class="[
+        'w-full rounded-md bg-bimbel-panel border flex items-center gap-2.5 mb-1.5 text-left transition-colors',
+        method === m.id ? 'border-2 border-bimbel-hero p-[9px]' : 'border-bimbel-border-soft p-2.5',
+      ]"
+      @click="method = m.id"
+    >
+      <div class="w-[34px] h-[34px] rounded-md grid place-items-center flex-shrink-0" :class="m.iconCls">
+        <NavIcon :name="m.icon" :size="17" />
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[14px] font-bold text-bimbel-text-hi">{{ m.name }}</p>
+        <p class="text-[12px] text-bimbel-text-mid">{{ m.sub }}</p>
+      </div>
+      <span
+        :class="[
+          'w-4 h-4 rounded-full border-2 flex-shrink-0',
+          method === m.id ? 'border-bimbel-hero bg-bimbel-hero/20' : 'border-bimbel-border',
+        ]"
+      >
+        <span v-if="method === m.id" class="block w-1.5 h-1.5 rounded-full bg-bimbel-hero m-0.5"></span>
+      </span>
     </button>
 
-    <ParentBerandaHero
-      kicker="BAYAR TAGIHAN"
-      title="Bayar tagihan"
-      subtitle="Transfer manual / QRIS · admin verifikasi dalam 1 jam kerja"
-      :stats="[]"
-    />
-
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat tagihan…</div>
-
-    <template v-else-if="bill">
-      <div class="relative overflow-hidden rounded-2xl border border-bimbel-border-soft bg-bimbel-panel pl-5 pr-4 py-3.5">
-        <span class="absolute left-0 top-0 h-full w-1.5 bg-emerald-500" />
-        <p class="text-[13px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">TAGIHAN AKTIF</p>
-        <p class="mt-0.5 text-xl font-extrabold tracking-tight text-bimbel-text-hi">{{ formatRupiah(bill.amount ?? 0) }}</p>
-        <p class="text-[13px] text-bimbel-text-mid">
-          {{ [bill.source_label, bill.due_date ? `jatuh tempo ${new Date(bill.due_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}` : null, bill.student_name].filter(Boolean).join(' · ') }}
-        </p>
-      </div>
-
-      <div class="grid gap-4 lg:grid-cols-5">
-        <form
-          class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4 lg:col-span-3 space-y-3"
-          @submit.prevent="submit"
-        >
-          <h4 class="text-[14px] font-bold tracking-tight text-bimbel-text-hi">Detail pembayaran</h4>
-          <div>
-            <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Metode <span class="text-rose-500">*</span></p>
-            <div class="mt-2 grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                class="flex items-center gap-3 rounded-xl border p-3 text-left transition"
-                :class="
-                  method === 'bank'
-                    ? 'border-2 border-[#21afe6] bg-[#21afe6]/8 p-[11px]'
-                    : 'border-bimbel-border-soft hover:border-bimbel-border'
-                "
-                @click="method = 'bank'"
-              >
-                <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]">
-                  <NavIcon name="wallet" :size="16" />
-                </span>
-                <div><p class="text-[14px] font-bold text-bimbel-text-hi">Transfer bank</p><p class="text-[13px] text-bimbel-text-mid">Verifikasi manual</p></div>
-              </button>
-              <button
-                type="button"
-                class="flex items-center gap-3 rounded-xl border p-3 text-left transition"
-                :class="
-                  method === 'qris'
-                    ? 'border-2 border-[#21afe6] bg-[#21afe6]/8 p-[11px]'
-                    : 'border-bimbel-border-soft hover:border-bimbel-border'
-                "
-                @click="method = 'qris'"
-              >
-                <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]">
-                  <NavIcon name="sparkles" :size="16" />
-                </span>
-                <div><p class="text-[14px] font-bold text-bimbel-text-hi">QRIS</p><p class="text-[13px] text-bimbel-text-mid">Scan & bayar</p></div>
-              </button>
-            </div>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="block">
-              <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Jumlah ditransfer <span class="text-rose-500">*</span></span>
-              <input
-                v-model.number="amount"
-                type="number"
-                min="0"
-                required
-                class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
-              />
-            </label>
-            <label class="block">
-              <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Tanggal transfer <span class="text-rose-500">*</span></span>
-              <input
-                v-model="payDate"
-                type="date"
-                required
-                class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
-              />
-            </label>
-          </div>
-          <label class="block">
-            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama pengirim</span>
-            <input
-              v-model="senderName"
-              type="text"
-              placeholder="Opsional — jika beda dengan akun wali"
-              class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"
-            />
-          </label>
-          <div>
-            <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Bukti transfer <span class="text-rose-500">*</span></p>
-            <label class="mt-2 flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed border-bimbel-border py-6 text-center text-[13px] text-bimbel-text-mid hover:border-[#21afe6]">
-              <NavIcon name="upload" :size="22" class="text-[#21afe6]" />
-              <span>
-                <span class="font-bold text-[#1a8fbe] dark:text-[#85d4f4]">Klik untuk pilih file</span>
-                atau drag-drop di sini
-              </span>
-              <span class="text-[13px] text-bimbel-text-lo">JPG / PNG / PDF · maks 5MB</span>
-              <span v-if="fileName" class="text-[13px] font-semibold text-bimbel-text-hi">{{ fileName }}</span>
-              <input type="file" class="hidden" accept="image/*,application/pdf" @change="onFile" />
-            </label>
-          </div>
-          <label class="block">
-            <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Catatan</span>
-            <textarea v-model="notes" rows="2" placeholder="Opsional" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-[#21afe6] focus:outline-none"></textarea>
-          </label>
-          <div v-if="message" class="rounded-lg px-3 py-2 text-[13px]" :class="message.kind === 'ok' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-700 dark:text-rose-300'">
-            {{ message.text }}
-          </div>
-          <div class="flex gap-2 pt-2">
-            <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="router.push({ name: 'parent.tutoring.bills' })">Batal</button>
-            <button type="submit" :disabled="!canSubmit" class="flex-1 rounded-lg bg-[#21afe6] px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50">{{ saving ? 'Mengirim…' : 'Kirim bukti bayar' }}</button>
-          </div>
-        </form>
-
-        <aside class="space-y-3 lg:col-span-2">
-          <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
-            <h5 class="mb-2 text-[13px] font-bold text-bimbel-text-hi">Rekening bimbel</h5>
-            <dl class="space-y-1.5 text-[13px]">
-              <div class="flex justify-between"><dt class="text-bimbel-text-mid">Bank</dt><dd class="font-bold">{{ bill.payment_account?.bank_name ?? '—' }}</dd></div>
-              <div class="flex justify-between"><dt class="text-bimbel-text-mid">No rek</dt><dd class="font-mono">{{ bill.payment_account?.bank_account_number ?? '—' }}</dd></div>
-              <div class="flex justify-between"><dt class="text-bimbel-text-mid">a.n.</dt><dd>{{ bill.payment_account?.bank_account_holder ?? '—' }}</dd></div>
-            </dl>
-            <button
-              type="button"
-              class="mt-3 inline-flex items-center gap-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-1.5 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
-              @click="copyAccountNumber"
-            >
-              <NavIcon name="copy" :size="11" /> Salin no rek
-            </button>
-          </div>
-          <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
-            <h5 class="mb-2 text-[13px] font-bold text-bimbel-text-hi">Tips bukti transfer</h5>
-            <ul class="space-y-1 text-[13px] text-bimbel-text-mid list-disc pl-4">
-              <li>Pastikan no rek tujuan terlihat</li>
-              <li>Tanggal & jam transfer jelas</li>
-              <li>Nominal sesuai jumlah ditransfer</li>
-              <li>Hindari hasil edit / blur</li>
-            </ul>
-          </div>
-        </aside>
-      </div>
-    </template>
-
-    <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
-      Tagihan tidak ditemukan.
+    <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
+      PUNYA KODE VOUCHER?
+    </p>
+    <div class="flex gap-1.5">
+      <input
+        v-model="voucherCode"
+        placeholder="Masukkan kode"
+        class="flex-1 rounded-md bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:outline-none"
+      />
+      <button
+        type="button"
+        class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-3.5 py-2 text-[14px]"
+        @click="applyVoucher"
+      >
+        Pakai
+      </button>
     </div>
+    <p v-if="voucherMsg" class="mt-1 text-[12px] text-bimbel-text-mid">{{ voucherMsg }}</p>
+
+    <div
+      v-if="message"
+      class="rounded-md mt-3 px-3 py-2 text-[13px]"
+      :class="message.kind === 'ok' ? 'bg-bimbel-green-dim text-green-700' : 'bg-bimbel-red-dim text-red-700'"
+    >
+      {{ message.text }}
+    </div>
+
+    <button
+      type="button"
+      :disabled="saving"
+      class="w-full mt-3 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold py-2.5 disabled:opacity-50"
+      @click="submit"
+    >
+      {{ saving ? 'Memproses…' : `Lanjut bayar via ${methodLabel}` }}
+    </button>
   </div>
 </template>

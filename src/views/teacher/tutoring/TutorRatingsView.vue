@@ -107,6 +107,28 @@ function stars(rating: number): string {
         </div>
       </div>
 
+      <!-- Per-group breakdown (mirrors mobile tutor_ratings_screen.dart). -->
+      <div v-if="data.groups.length" class="space-y-2">
+        <h4 class="text-[14px] font-bold text-bimbel-text-hi pt-2">Per kelompok</h4>
+        <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3.5 space-y-2">
+          <div
+            v-for="(g, i) in data.groups"
+            :key="g.group_id"
+            class="flex items-center gap-3 py-1.5"
+            :class="i < data.groups.length - 1 ? 'border-b border-bimbel-border-soft' : ''"
+          >
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-bold text-bimbel-text-hi truncate">{{ g.group_name }}</p>
+              <p class="text-[11px] text-bimbel-text-mid">{{ g.count }} ulasan</p>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <p class="text-[16px] font-extrabold text-bimbel-text-hi">{{ g.avg?.toFixed(1) ?? '–' }}</p>
+              <p class="text-amber-500 text-[12px] tracking-wider">{{ g.avg != null ? stars(g.avg) : '' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="space-y-2">
         <h4 class="text-[14px] font-bold text-bimbel-text-hi pt-2">Komentar siswa</h4>
         <div v-if="data.recent.length === 0" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">

@@ -414,6 +414,53 @@ defineProps<{
       <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
       <line x1="12" y1="18" x2="12.01" y2="18" />
     </template>
+    <template v-else-if="name === 'qr-code'">
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+      <line x1="14" y1="14" x2="14" y2="14.01" />
+      <line x1="17" y1="14" x2="17" y2="17" />
+      <line x1="14" y1="17" x2="17" y2="17" />
+      <line x1="20" y1="14" x2="20" y2="17" />
+      <line x1="20" y1="20" x2="20" y2="20.01" />
+      <line x1="14" y1="20" x2="17" y2="20" />
+    </template>
+    <template v-else-if="name === 'building-bank'">
+      <line x1="3" y1="21" x2="21" y2="21" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <polyline points="5 6 12 3 19 6" />
+      <line x1="4" y1="10" x2="4" y2="21" />
+      <line x1="20" y1="10" x2="20" y2="21" />
+      <line x1="8" y1="14" x2="8" y2="17" />
+      <line x1="12" y1="14" x2="12" y2="17" />
+      <line x1="16" y1="14" x2="16" y2="17" />
+    </template>
+    <template v-else-if="name === 'package'">
+      <line x1="16.5" y1="9.4" x2="7.5" y2="4.21" />
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </template>
+    <template v-else-if="name === 'chart-bar'">
+      <line x1="12" y1="20" x2="12" y2="10" />
+      <line x1="18" y1="20" x2="18" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="16" />
+    </template>
+    <template v-else-if="name === 'discount'">
+      <line x1="9" y1="15" x2="15" y2="9" />
+      <circle cx="9.5" cy="9.5" r="1.5" />
+      <circle cx="14.5" cy="14.5" r="1.5" />
+      <path d="M5 7.2A2 2 0 0 1 7.2 5h1a2 2 0 0 0 1.4-.6l.7-.7a2 2 0 0 1 2.82 0l.7.7A2 2 0 0 0 15.2 5h1a2 2 0 0 1 2.2 2.2v1a2 2 0 0 0 .6 1.4l.7.7a2 2 0 0 1 0 2.82l-.7.7a2 2 0 0 0-.6 1.4v1a2 2 0 0 1-2.2 2.2h-1a2 2 0 0 0-1.4.6l-.7.7a2 2 0 0 1-2.82 0l-.7-.7A2 2 0 0 0 8.2 19h-1A2 2 0 0 1 5 16.8v-1a2 2 0 0 0-.6-1.4l-.7-.7a2 2 0 0 1 0-2.82l.7-.7a2 2 0 0 0 .6-1.4v-1" />
+    </template>
+    <template v-else-if="name === 'info-circle'">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="16" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12.01" y2="8" />
+    </template>
+    <template v-else-if="name === 'eye-off'">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </template>
     <template v-else>
       <circle cx="12" cy="12" r="10" />
     </template>

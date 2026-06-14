@@ -117,7 +117,7 @@ function onInvited() {
       <template #actions>
         <button
           type="button"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold"
+          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"
           @click="showInvite = true"
         >
           <NavIcon name="mail" :size="13" class="inline -mt-0.5" /> Undang tutor
@@ -132,7 +132,7 @@ function onInvited() {
           v-model="query"
           type="text"
           placeholder="Cari nama / email tutor…"
-          class="w-full rounded-lg border border-bimbel-border bg-bimbel-bg pl-9 pr-3 py-1.5 text-[13px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
+          class="w-full rounded-lg border border-bimbel-border bg-bimbel-bg pl-9 pr-3 py-1.5 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:border-bimbel-accent focus:outline-none"
         />
       </div>
       <div class="flex gap-1.5">
@@ -144,7 +144,7 @@ function onInvited() {
           ]"
           :key="opt.id"
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+          class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
           :class="status === opt.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
           @click="status = opt.id"
         >{{ opt.label }}</button>
@@ -163,12 +163,12 @@ function onInvited() {
         <div class="flex items-center gap-2.5 mb-2">
           <button type="button" class="flex items-center gap-2.5 text-left min-w-0 flex-1" @click="goDetail(r)">
             <span
-              class="grid h-9 w-9 place-items-center rounded-full text-[13px] font-bold shrink-0"
+              class="grid h-9 w-9 place-items-center rounded-full text-[14px] font-bold shrink-0"
               :class="r.status === 'PENDING' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-bimbel-accent-dim text-bimbel-accent'"
             >{{ initials(r.name) }}</span>
             <div class="min-w-0">
               <p class="text-[14px] font-bold text-bimbel-text-hi truncate">{{ r.name }}</p>
-              <p class="text-[12px] text-bimbel-text-mid truncate">
+              <p class="text-[13px] text-bimbel-text-mid truncate">
                 {{ r.groups[0]?.program ?? '—' }}<template v-if="r.groups.length"> · {{ r.groups.length }} kelompok</template>
               </p>
             </div>
@@ -186,28 +186,28 @@ function onInvited() {
         <template v-if="r.status === 'ACTIVE'">
           <div class="grid grid-cols-3 gap-1.5 mt-2">
             <div class="rounded-lg bg-bimbel-bg/40 p-1.5 text-center">
-              <p class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">KELAS</p>
+              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">KELAS</p>
               <p class="text-[14px] font-bold">{{ r.group_count }}</p>
             </div>
             <div class="rounded-lg bg-bimbel-bg/40 p-1.5 text-center">
-              <p class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">SISWA</p>
+              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">SISWA</p>
               <p class="text-[14px] font-bold">{{ studentsCount(r) }}</p>
             </div>
             <div class="rounded-lg bg-bimbel-bg/40 p-1.5 text-center">
-              <p class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">SESI 30H</p>
+              <p class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">SESI 30H</p>
               <p class="text-[14px] font-bold">{{ r.sessions_30d }}</p>
             </div>
           </div>
-          <p v-if="r.attendance_rate != null" class="text-[12px] text-bimbel-text-mid mt-2">
+          <p v-if="r.attendance_rate != null" class="text-[13px] text-bimbel-text-mid mt-2">
             Kehadiran sesi: {{ r.attendance_rate }}%
           </p>
         </template>
         <template v-else>
-          <div class="mt-2 text-[13px] text-amber-700 dark:text-amber-300">
+          <div class="mt-2 text-[14px] text-amber-700 dark:text-amber-300">
             Menunggu approval — onboard sejak {{ r.joined_at ? new Date(r.joined_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '—' }}
           </div>
           <div class="mt-2">
-            <span class="inline-flex items-center gap-1 rounded-md bg-bimbel-accent text-white px-2.5 py-1 text-[12px] font-bold">
+            <span class="inline-flex items-center gap-1 rounded-md bg-bimbel-accent text-white px-2.5 py-1 text-[13px] font-bold">
               Review onboarding →
             </span>
           </div>
@@ -224,14 +224,14 @@ function onInvited() {
     <div v-if="editTarget" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="editTarget = null">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
         <h3 class="text-[16px] font-bold text-bimbel-text-hi">Ubah profil tutor</h3>
-        <p class="text-[13px] text-bimbel-text-mid">{{ editTarget.email }}</p>
+        <p class="text-[14px] text-bimbel-text-mid">{{ editTarget.email }}</p>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama</span>
-          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama</span>
+          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
-          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">Batal</button>
-          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? 'Menyimpan…' : 'Simpan' }}</button>
+          <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">Batal</button>
+          <button type="button" :disabled="editBusy" class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50" @click="submitEdit">{{ editBusy ? 'Menyimpan…' : 'Simpan' }}</button>
         </div>
       </div>
     </div>

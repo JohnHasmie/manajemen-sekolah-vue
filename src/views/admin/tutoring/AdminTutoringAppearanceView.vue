@@ -59,11 +59,11 @@ function toggle(key: string) {
             class="h-9 w-16 rounded-md border"
             :style="m.id === 'light' ? 'background:#f7faff;border-color:#e2e8f0;' : m.id === 'dark' ? 'background:#0a1428;border-color:#2a3147;' : 'background:linear-gradient(90deg,#f7faff 50%,#0a1428 50%);border-color:#94a3b8;'"
           />
-          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ m.label }}</p>
-          <p class="text-[12px] text-bimbel-text-mid">{{ m.sub }}</p>
+          <p class="text-[14px] font-bold text-bimbel-text-hi">{{ m.label }}</p>
+          <p class="text-[13px] text-bimbel-text-mid">{{ m.sub }}</p>
         </button>
       </div>
-      <p v-if="theme.autoHint" class="text-[13px] text-bimbel-text-mid">{{ theme.autoHint }}</p>
+      <p v-if="theme.autoHint" class="text-[14px] text-bimbel-text-mid">{{ theme.autoHint }}</p>
     </section>
 
     <section class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-4">
@@ -71,13 +71,13 @@ function toggle(key: string) {
       <div class="flex gap-2">
         <button
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+          class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
           :class="locale === 'id' ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
           @click="locale = 'id'"
         >Bahasa Indonesia</button>
         <button
           type="button"
-          class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+          class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
           :class="locale === 'en' ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
           @click="locale = 'en'"
         >English</button>
@@ -99,7 +99,7 @@ function toggle(key: string) {
       >
         <div>
           <p class="text-[14px] font-bold text-bimbel-text-hi">{{ row.name }}</p>
-          <p class="text-[13px] text-bimbel-text-mid">{{ row.sub }}</p>
+          <p class="text-[14px] text-bimbel-text-mid">{{ row.sub }}</p>
         </div>
         <button
           type="button"

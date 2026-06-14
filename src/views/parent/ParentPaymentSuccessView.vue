@@ -178,7 +178,7 @@ const timelineSteps = computed(() => {
     <div class="flex items-center gap-2">
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 text-[12px] font-bold text-slate-600 hover:text-role-wali"
+        class="inline-flex items-center gap-1.5 text-[13px] font-bold text-slate-600 hover:text-role-wali"
         @click="router.push({ name: 'parent.billing' })"
       >
         <NavIcon name="chevron-left" :size="14" />
@@ -215,7 +215,7 @@ const timelineSteps = computed(() => {
           >
             {{ PAYMENT_STATUS_LABELS[payment!.status] }}
           </span>
-          <p v-if="bill" class="text-[12px] text-white/80 mt-3">
+          <p v-if="bill" class="text-[13px] text-white/80 mt-3">
             {{ bill.title }}
           </p>
         </section>
@@ -225,7 +225,7 @@ const timelineSteps = computed(() => {
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             Tagihan
           </p>
-          <dl class="text-[12px] space-y-1.5">
+          <dl class="text-[13px] space-y-1.5">
             <div class="flex justify-between gap-2">
               <dt class="text-slate-500">Jenis</dt>
               <dd class="font-bold text-slate-900 text-right">
@@ -252,7 +252,7 @@ const timelineSteps = computed(() => {
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             Detail pembayaran
           </p>
-          <dl class="text-[12px] space-y-1.5">
+          <dl class="text-[13px] space-y-1.5">
             <div class="flex justify-between gap-2">
               <dt class="text-slate-500">Metode</dt>
               <dd class="font-bold text-slate-900 text-right">{{ payment!.payment_method ?? '—' }}</dd>
@@ -297,10 +297,10 @@ const timelineSteps = computed(() => {
               </div>
               <div class="flex-1 min-w-0">
                 <p
-                  class="text-[13px] font-bold"
+                  class="text-[14px] font-bold"
                   :class="step.done ? 'text-slate-900' : 'text-slate-400'"
                 >{{ step.label }}</p>
-                <p v-if="step.meta" class="text-[11px] text-slate-500 mt-0.5">
+                <p v-if="step.meta" class="text-[12px] text-slate-500 mt-0.5">
                   {{ step.meta }}
                 </p>
               </div>
@@ -330,7 +330,7 @@ const timelineSteps = computed(() => {
             :href="buktiBlobUrl"
             target="_blank"
             rel="noopener"
-            class="inline-flex items-center gap-2 text-[12px] font-bold text-role-wali hover:underline"
+            class="inline-flex items-center gap-2 text-[13px] font-bold text-role-wali hover:underline"
           >
             <NavIcon name="file-text" :size="14" />
             Buka bukti pembayaran (PDF)

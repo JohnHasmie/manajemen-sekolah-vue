@@ -242,7 +242,7 @@ function pickSemester(id: SemesterId) {
       <template #actions>
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold transition"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[12px] font-bold transition"
           @click="filterOpen = true"
         >
           <NavIcon name="filter" :size="12" />
@@ -266,7 +266,7 @@ function pickSemester(id: SemesterId) {
         ]"
         :key="opt.id"
         type="button"
-        class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border inline-flex items-center gap-1.5"
+        class="px-3 py-1.5 rounded-full text-[12px] font-bold transition border inline-flex items-center gap-1.5"
         :class="[
           semester === opt.id
             ? 'bg-role-wali text-white border-role-wali shadow-sm'
@@ -318,7 +318,7 @@ function pickSemester(id: SemesterId) {
               <p class="text-[14px] font-black text-slate-900 truncate">
                 {{ row.student.name }}
               </p>
-              <p class="text-[11px] text-slate-500 mt-0.5">
+              <p class="text-[12px] text-slate-500 mt-0.5">
                 <template v-if="row.student.student_number">
                   NIS {{ row.student.student_number }}
                 </template>
@@ -393,7 +393,7 @@ function pickSemester(id: SemesterId) {
     <!-- Filter sheet (Semester picker — mirrors mobile ShowFilterSheet) -->
     <Modal v-if="filterOpen" :title="t('parent.reportCards.modalTitle')" @close="filterOpen = false">
       <div class="space-y-3">
-        <p class="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+        <p class="text-[12px] font-bold uppercase tracking-widest text-slate-500">
           {{ t('parent.reportCards.semesterLabel') }}
         </p>
         <div class="flex flex-wrap gap-2">
@@ -404,7 +404,7 @@ function pickSemester(id: SemesterId) {
             ]"
             :key="opt.id"
             type="button"
-            class="px-3 py-1.5 rounded-full text-[11px] font-bold transition border"
+            class="px-3 py-1.5 rounded-full text-[12px] font-bold transition border"
             :class="
               semester === opt.id
                 ? 'bg-role-wali text-white border-role-wali'

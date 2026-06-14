@@ -248,7 +248,7 @@ const headerMeta = computed(() => {
             <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               {{ t('parent.billing.sectionUnpaidHeader', { count: unpaidBills.length }) }}
             </h3>
-            <span class="text-[11px] font-bold text-amber-700">
+            <span class="text-[12px] font-bold text-amber-700">
               {{ formatRupiah(outstanding) }}
             </span>
           </header>
@@ -272,7 +272,7 @@ const headerMeta = computed(() => {
             <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               {{ t('parent.billing.sectionPaidHeader') }}
             </h3>
-            <span class="text-[11px] font-bold text-emerald-700">
+            <span class="text-[12px] font-bold text-emerald-700">
               {{ formatRupiah(paidThisYear) }}
             </span>
           </header>
@@ -302,7 +302,7 @@ const headerMeta = computed(() => {
           v-for="opt in STATUS_OPTS"
           :key="opt.key"
           type="button"
-          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[14px] font-bold transition-colors"
           :class="
             statusFilter === opt.key
               ? 'bg-role-wali/10 text-role-wali'
@@ -331,7 +331,7 @@ const headerMeta = computed(() => {
           v-for="opt in PERIODE_OPTS"
           :key="opt.key"
           type="button"
-          class="w-full text-left px-3 py-2.5 rounded-xl text-[13px] font-bold transition-colors"
+          class="w-full text-left px-3 py-2.5 rounded-xl text-[14px] font-bold transition-colors"
           :class="
             periodeFilter === opt.key
               ? 'bg-role-wali/10 text-role-wali'

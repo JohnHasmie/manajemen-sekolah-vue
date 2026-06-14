@@ -106,7 +106,7 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
       <template #actions>
         <button
           type="button"
-          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[13px] font-bold"
+          class="rounded-lg bg-white text-bimbel-accent px-3 py-1.5 text-[14px] font-bold"
           @click="openCompose"
         >
           <NavIcon name="plus" :size="13" class="inline -mt-0.5" /> Tulis pengumuman
@@ -115,10 +115,10 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
     </TutorBerandaHero>
 
     <div class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-3 flex flex-wrap items-center gap-2">
-      <span class="text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Audiens:</span>
+      <span class="text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Audiens:</span>
       <button
         type="button"
-        class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+        class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
         :class="groupId === '' ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
         @click="groupId = ''; load()"
       >Semua kelompok</button>
@@ -126,7 +126,7 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
         v-for="g in groups"
         :key="g.id"
         type="button"
-        class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+        class="rounded-full border px-3 py-1.5 text-[14px] font-semibold"
         :class="groupId === g.id ? 'border-bimbel-accent bg-bimbel-accent-dim text-bimbel-accent' : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'"
         @click="groupId = g.id; load()"
       >{{ g.name }}</button>
@@ -139,7 +139,7 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0">
             <h3 class="text-[15px] font-bold tracking-tight text-bimbel-text-hi">{{ a.title }}</h3>
-            <p class="text-[12px] text-bimbel-text-mid mt-0.5">
+            <p class="text-[13px] text-bimbel-text-mid mt-0.5">
               {{ a.group_name ?? '—' }}
               <template v-if="a.author_name"> · oleh {{ a.author_name }}</template>
               <template v-if="a.created_at"> · {{ formatDateShort(a.created_at) }}</template>
@@ -154,8 +154,8 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
             <NavIcon name="trash-2" :size="13" />
           </button>
         </div>
-        <p class="text-[13px] text-bimbel-text-mid mt-2 whitespace-pre-wrap">{{ a.body }}</p>
-        <div class="mt-2.5 flex items-center gap-3 border-t border-bimbel-border-soft pt-2 text-[12px] text-bimbel-text-mid">
+        <p class="text-[14px] text-bimbel-text-mid mt-2 whitespace-pre-wrap">{{ a.body }}</p>
+        <div class="mt-2.5 flex items-center gap-3 border-t border-bimbel-border-soft pt-2 text-[13px] text-bimbel-text-mid">
           <span class="inline-flex items-center gap-1">
             <NavIcon name="users" :size="12" /> {{ recipientsFor(a) }} penerima
           </span>
@@ -181,12 +181,12 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
       <div class="w-full max-w-lg rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
         <h3 class="text-[16px] font-bold text-bimbel-text-hi">Pengumuman baru</h3>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
             Kelompok <span class="text-rose-500">*</span>
           </span>
           <select
             v-model="fGroupId"
-            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"
+            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"
           >
             <option value="" disabled>Pilih kelompok</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">
@@ -195,31 +195,31 @@ function recipientsFor(a: TutoringGroupAnnouncement): number {
           </select>
         </label>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Judul</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Judul</span>
           <input
             v-model="fTitle"
             type="text"
-            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"
+            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none"
           />
         </label>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Isi</span>
+          <span class="block text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">Isi</span>
           <textarea
             v-model="fBody"
             rows="6"
-            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none resize-none"
+            class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none resize-none"
           ></textarea>
         </label>
         <div class="flex gap-2 pt-1">
           <button
             type="button"
-            class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
+            class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[14px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft"
             @click="showCompose = false"
           >Batal</button>
           <button
             type="button"
             :disabled="saving"
-            class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50"
+            class="flex-1 rounded-lg bg-bimbel-accent px-3 py-2 text-[14px] font-bold text-white hover:opacity-90 disabled:opacity-50"
             @click="submitCompose"
           >{{ saving ? 'Mengirim…' : 'Terbitkan' }}</button>
         </div>

@@ -169,11 +169,17 @@ function goToClass(g: TutoringGroup) {
 }
 
 // ── 4 shortcuts ───────────────────────────────────────────────────
+// Synced with mobile (lib/.../tutor_home_screen.dart) after the
+// quick-action shuffle: Sesi Berulang slot replaced with Pengumuman so
+// the most common tutor task ("kirim info ke kelompok") is one tap
+// away. Sesi Berulang stays available from Lainnya → MENGAJAR.
+// Rating now goes to the actual ratings route (was mistakenly wired
+// to appearance).
 const shortcuts = [
   { icon: 'book', label: 'Bahan Ajar', hint: 'PDF / link', to: 'teacher.tutoring.materials' },
   { icon: 'sparkles', label: 'Soal AI', hint: 'Try-out generator', to: 'teacher.tutoring.tryout-generator' },
-  { icon: 'star', label: 'Rating', hint: 'Feedback siswa', to: 'teacher.tutoring.appearance' },
-  { icon: 'calendar', label: 'Sesi Berulang', hint: 'Generate mingguan', to: 'teacher.tutoring.recurring' },
+  { icon: 'star', label: 'Rating', hint: 'Feedback siswa', to: 'teacher.tutoring.ratings' },
+  { icon: 'megaphone', label: 'Pengumuman', hint: 'Broadcast kelompok', to: 'teacher.tutoring.announcements' },
 ] as const;
 
 function goToShortcut(name: string) {

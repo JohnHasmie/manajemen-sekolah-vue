@@ -1,6 +1,9 @@
 <!--
-  ParentBillsView — wali Tagihan list. Mockup parent_web_pages_browse
-  frame 2: hero + perlu-bayar ribbon + active/history seg + table.
+  ParentBillsView — wali Tagihan list.
+
+  Mockup-exact: hero + red "outstanding" banner (when unpaid) + 3-tab
+  row (Belum lunas / Sudah lunas / Semua) + bill cards. Data via
+  TutoringService.getBills.
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
@@ -12,11 +15,10 @@ import type { TutoringBill } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
-import ParentRibbon from '@/components/feature/tutoring/ParentRibbon.vue';
 
 const route = useRoute();
 const router = useRouter();
-const { activeChildId, activeChild } = useChildPicker();
+const { activeChildId } = useChildPicker();
 
 const studentId = computed(() =>
   String(route.params.studentId || activeChildId.value || ''),
@@ -24,145 +26,213 @@ const studentId = computed(() =>
 
 const loading = ref(true);
 const bills = ref<TutoringBill[]>([]);
-const view = ref<'all' | 'unpaid' | 'paid'>('all');
+type TabKey = 'unpaid' | 'paid' | 'all';
+const activeTab = ref<TabKey>('unpaid');
 
 async function load() {
   const sid = studentId.value;
   if (!sid) { loading.value = false; return; }
   loading.value = true;
   try { bills.value = await TutoringService.getBills(sid); }
-  catch {/* non-fatal */}
+  catch { /* non-fatal */ }
   finally { loading.value = false; }
 }
 onMounted(load);
 watch(studentId, load);
 
-function isUnpaid(b: TutoringBill): boolean {
-  return /unpaid|pending|due|overdue|belum/i.test(b.status ?? '');
-}
+// ── Status predicates ──────────────────────────────────────────
 function isPaid(b: TutoringBill): boolean {
-  return /paid|lunas/i.test(b.status ?? '');
+  return /lunas|paid|done/i.test(b.status ?? '');
+}
+function isPending(b: TutoringBill): boolean {
+  return /pending/i.test(b.status ?? '');
+}
+function isUnpaid(b: TutoringBill): boolean {
+  if (isPaid(b)) return false;
+  return /unpaid|due|overdue|belum|pending/i.test(b.status ?? '');
 }
 
-const unpaid = computed(() => bills.value.filter(isUnpaid));
-const unpaidTotal = computed(() => unpaid.value.reduce((s, b) => s + (b.amount ?? 0), 0));
-const filtered = computed(() => {
-  if (view.value === 'unpaid') return unpaid.value;
-  if (view.value === 'paid') return bills.value.filter(isPaid);
+// ── Aggregates ─────────────────────────────────────────────────
+const unpaidList = computed(() => bills.value.filter(isUnpaid));
+const paidList = computed(() => bills.value.filter(isPaid));
+const unpaidCount = computed(() => unpaidList.value.length);
+const paidCount = computed(() => paidList.value.length);
+
+const totalUnpaidFmt = computed(() =>
+  formatRupiah(unpaidList.value.reduce((s, b) => s + (b.amount ?? 0), 0)),
+);
+
+function daysUntil(iso?: string | null): number | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.valueOf())) return null;
+  return Math.ceil((d.valueOf() - Date.now()) / 86_400_000);
+}
+
+const urgentCount = computed(() =>
+  unpaidList.value.filter((b) => {
+    const days = daysUntil(b.due_date);
+    return days != null && days >= 0 && days <= 3;
+  }).length,
+);
+
+// ── Tabs ────────────────────────────────────────────────────────
+const tabs = computed<{ id: TabKey; label: string }[]>(() => [
+  { id: 'unpaid', label: `Belum lunas (${unpaidCount.value})` },
+  { id: 'paid', label: `Sudah lunas (${paidCount.value})` },
+  { id: 'all', label: 'Semua' },
+]);
+
+const visibleBills = computed(() => {
+  if (activeTab.value === 'unpaid') return unpaidList.value;
+  if (activeTab.value === 'paid') return paidList.value;
   return bills.value;
 });
 
-function statusChip(b: TutoringBill) {
-  if (isPaid(b))
-    return { cls: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', label: 'Lunas' };
-  if (isUnpaid(b))
-    return { cls: 'bg-rose-500/15 text-rose-700 dark:text-rose-300', label: 'Belum' };
-  return { cls: 'bg-bimbel-border-soft text-bimbel-text-mid', label: b.status ?? '—' };
+// ── Pill style + label per bill ────────────────────────────────
+function pillClass(b: TutoringBill): string {
+  const base = 'inline-flex flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide';
+  if (isPaid(b)) return `${base} bg-bimbel-green-dim text-green-700`;
+  if (isPending(b)) return `${base} bg-bimbel-amber-dim text-amber-700`;
+  if (isUnpaid(b)) {
+    const days = daysUntil(b.due_date);
+    if (days != null && days <= 3) return `${base} bg-bimbel-red-dim text-red-700`;
+    return `${base} bg-bimbel-accent-dim text-bimbel-hero`;
+  }
+  return `${base} bg-bimbel-accent-dim text-bimbel-hero`;
 }
 
-function dueLabel(iso?: string | null): string {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.valueOf())) return '—';
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+function pillLabel(b: TutoringBill): string {
+  if (isPaid(b)) return 'Lunas';
+  if (isPending(b)) return 'Pending konfirmasi';
+  if (isUnpaid(b)) {
+    const days = daysUntil(b.due_date);
+    if (days != null && days < 0) return `Telat ${Math.abs(days)} hari`;
+    if (days != null && days <= 3) return `Jatuh tempo ${days} hari`;
+    return 'Aktif';
+  }
+  return b.status ?? '—';
 }
 
-function goPay(b: TutoringBill) {
+function dueLine(b: TutoringBill): string {
+  if (isPaid(b)) return 'Bukti pembayaran tersedia';
+  if (!b.due_date) return 'Belum ada tenggat';
+  const d = new Date(b.due_date);
+  if (Number.isNaN(d.valueOf())) return 'Belum ada tenggat';
+  const fmt = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  return `Tenggat ${fmt}`;
+}
+
+function pay(b: TutoringBill) {
   router.push({ name: 'parent.tutoring.pay-bill', params: { billId: b.id } });
+}
+function payFirst() {
+  const first = unpaidList.value[0];
+  if (first) pay(first);
 }
 </script>
 
 <template>
-  <div class="space-y-4 pb-12">
+  <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · TAGIHAN"
-      title="Tagihan & riwayat"
-      :subtitle="`${activeChild()?.name ?? 'Anak'} · ${unpaid.length} aktif · ${bills.length - unpaid.length} lunas`"
+      kicker="BIMBEL · WALI"
+      title="Tagihan"
+      subtitle="SPP, paket prabayar, dan biaya lain"
       :stats="[]"
     >
-      <template #actions><ParentChildPickerChip /></template>
+      <template #actions>
+        <ParentChildPickerChip />
+      </template>
     </ParentBerandaHero>
 
-    <ParentRibbon
-      v-if="unpaid.length > 0"
-      icon="alert-triangle"
-      label="PERLU DIBAYAR"
-      :value="formatRupiah(unpaidTotal)"
-      :hint="`${unpaid.length} tagihan tertunggak`"
-      tone="warning"
-      action-label="Bayar sekarang"
-      @action="goPay(unpaid[0])"
-    />
-
-    <div class="flex gap-1">
+    <!-- Outstanding banner -->
+    <div
+      v-if="unpaidCount > 0"
+      class="rounded-xl bg-bimbel-red-dim border border-red-300 p-3.5 flex justify-between items-center"
+    >
+      <div>
+        <p class="text-[12px] text-red-800 tracking-wider font-bold">TOTAL BELUM DIBAYAR</p>
+        <p class="text-[22px] font-extrabold text-red-900 leading-tight mt-0.5">{{ totalUnpaidFmt }}</p>
+        <p class="text-[12px] text-red-800">
+          {{ unpaidCount }} tagihan{{ urgentCount ? ` · ${urgentCount} jatuh tempo dalam 3 hari` : '' }}
+        </p>
+      </div>
       <button
-        v-for="opt in [
-          { id: 'all', label: 'Semua' },
-          { id: 'unpaid', label: 'Belum bayar' },
-          { id: 'paid', label: 'Lunas' },
-        ] as const"
-        :key="opt.id"
         type="button"
-        class="rounded-full border px-3 py-1.5 text-[13px] font-semibold"
+        class="bg-red-900 text-white text-[13px] font-bold px-3 py-2 rounded-lg flex-shrink-0"
+        @click="payFirst"
+      >
+        Bayar semua
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-1 border-b border-bimbel-border-soft">
+      <button
+        v-for="t in tabs"
+        :key="t.id"
+        type="button"
+        class="px-3.5 py-2 text-[13px] border-b-2 -mb-px transition-colors"
         :class="
-          view === opt.id
-            ? 'border-[#21afe6] bg-[#21afe6]/15 text-[#1a8fbe] dark:text-[#85d4f4]'
-            : 'border-bimbel-border bg-bimbel-panel text-bimbel-text-mid'
+          activeTab === t.id
+            ? 'text-bimbel-hero border-bimbel-hero font-bold'
+            : 'text-bimbel-text-mid border-transparent'
         "
-        @click="view = opt.id"
-      >{{ opt.label }}</button>
+        @click="activeTab = t.id"
+      >
+        {{ t.label }}
+      </button>
     </div>
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
 
-    <div v-else-if="filtered.length" class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel overflow-hidden">
-      <table class="w-full text-[13px]">
-        <thead class="bg-bimbel-bg/40">
-          <tr class="text-left text-[13px] font-bold uppercase tracking-wider text-bimbel-text-mid">
-            <th class="px-3 py-2">Program</th>
-            <th class="px-3 py-2 w-[120px]">Bulan</th>
-            <th class="px-3 py-2 w-[140px]">Jatuh tempo</th>
-            <th class="px-3 py-2 w-[120px]">Jumlah</th>
-            <th class="px-3 py-2 w-[90px]">Status</th>
-            <th class="px-3 py-2 w-[110px]"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="b in filtered"
-            :key="b.id"
-            class="border-t border-bimbel-border-soft hover:bg-bimbel-border-soft/30"
+    <!-- Bill cards -->
+    <div v-else-if="visibleBills.length" class="space-y-2.5">
+      <div
+        v-for="b in visibleBills"
+        :key="b.id"
+        class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3.5"
+        :class="{ 'opacity-70': isPaid(b) }"
+      >
+        <div class="flex justify-between items-start gap-3">
+          <div class="min-w-0 flex-1">
+            <p class="text-[14px] font-bold text-bimbel-text-hi">
+              {{ b.source_label ?? b.source_type ?? 'Tagihan' }}
+            </p>
+            <p class="text-[12px] text-bimbel-text-mid mt-0.5">
+              {{ b.month ?? '—' }}
+              <template v-if="b.student_name"> · {{ b.student_name }}</template>
+            </p>
+          </div>
+          <span :class="pillClass(b)">{{ pillLabel(b) }}</span>
+        </div>
+        <div class="flex justify-between items-center mt-2.5 pt-2.5 border-t border-bimbel-border-soft">
+          <div>
+            <p class="text-[18px] font-extrabold text-bimbel-text-hi">
+              {{ b.amount != null ? formatRupiah(b.amount) : '—' }}
+            </p>
+            <p class="text-[12px] text-bimbel-text-mid">{{ dueLine(b) }}</p>
+          </div>
+          <button
+            v-if="!isPaid(b)"
+            type="button"
+            class="bg-bimbel-hero text-white text-[13px] font-bold px-3.5 py-2 rounded-lg"
+            @click="pay(b)"
           >
-            <td class="px-3 py-2.5">
-              <p class="font-bold text-bimbel-text-hi">{{ b.source_label ?? b.source_type ?? 'Tagihan' }}</p>
-              <p v-if="b.student_name" class="text-[13px] text-bimbel-text-mid">{{ b.student_name }}</p>
-            </td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ b.month ?? '—' }}</td>
-            <td class="px-3 py-2.5 text-bimbel-text-mid">{{ dueLabel(b.due_date) }}</td>
-            <td class="px-3 py-2.5 font-bold text-bimbel-text-hi">{{ b.amount != null ? formatRupiah(b.amount) : '—' }}</td>
-            <td class="px-3 py-2.5">
-              <span class="inline-flex rounded-full px-2 py-0.5 text-[13px] font-bold" :class="statusChip(b).cls">{{ statusChip(b).label }}</span>
-            </td>
-            <td class="px-3 py-2.5">
-              <button
-                v-if="isUnpaid(b)"
-                type="button"
-                class="rounded-lg bg-[#21afe6] px-3 py-1 text-[13px] font-bold text-white hover:opacity-90"
-                @click="goPay(b)"
-              >Bayar</button>
-              <button
-                v-else
-                type="button"
-                class="text-[13px] font-semibold text-[#1a8fbe] dark:text-[#85d4f4] hover:underline"
-              >Detail</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            Bayar
+          </button>
+          <button
+            v-else
+            type="button"
+            class="bg-bimbel-bg text-bimbel-text-mid text-[13px] px-3.5 py-2 rounded-lg"
+          >
+            Unduh bukti
+          </button>
+        </div>
+      </div>
     </div>
-
-    <div v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-8 text-center text-sm text-bimbel-text-mid">
-      Belum ada tagihan.
-    </div>
+    <p v-else class="text-center text-[14px] text-bimbel-text-mid py-8">
+      Belum ada tagihan di kategori ini.
+    </p>
   </div>
 </template>
