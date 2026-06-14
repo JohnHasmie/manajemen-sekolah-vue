@@ -679,7 +679,10 @@ export const TutoringService = {
   /** List activities. Tutor + parent reads; optional group/type filter. */
   async getActivities(opts: {
     group_id?: string;
-    type?: 'HOMEWORK' | 'EXAM' | 'QUIZ' | 'PROJECT';
+    // Matches backend ActivityType enum (ASSIGNMENT / EXAM / MATERIAL).
+    // The earlier union (HOMEWORK / QUIZ / PROJECT) never matched any
+    // rows because those values don't exist in the database.
+    type?: 'ASSIGNMENT' | 'EXAM' | 'MATERIAL';
   } = {}): Promise<TutoringActivity[]> {
     const res = await api.get<ApiResponse<TutoringActivity[]>>(
       '/tutoring/activities',
@@ -696,7 +699,7 @@ export const TutoringService = {
 
   async createActivity(payload: {
     tutoring_group_id: string;
-    type: 'HOMEWORK' | 'EXAM' | 'QUIZ' | 'PROJECT';
+    type: 'ASSIGNMENT' | 'EXAM' | 'MATERIAL';
     title: string;
     description?: string;
     due_at?: string | null;
