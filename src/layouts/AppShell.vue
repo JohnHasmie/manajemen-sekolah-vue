@@ -49,7 +49,7 @@ const isBimbelTenant = computed(() => {
 });
 
 // Bimbel routes render on the bimbel surface (dark by default, light
-// when the user picks it in Tutor → Tampilan). Two paths into this:
+// when the user picks it in Tutor → Tampilan). Three paths into this:
 //
 //  1. The dedicated tutor routes — their route names start with
 //     `teacher.tutoring` / contain `tutoring`, so the substring check
@@ -61,12 +61,18 @@ const isBimbelTenant = computed(() => {
 //     branch the wrapper class never lands, so those tokens fall
 //     through to their dark `:root` defaults and we get a half-light
 //     half-dark dashboard.
+//  3. Anything else under a tutoring-center tenant. The sidebar uses
+//     `bg-bimbel-panel` regardless of route, and even shared routes
+//     like `/admin/announcements` belong to the bimbel UX for these
+//     users — without this branch the sidebar stays dark while the
+//     page bg is light. School-tenant sessions never hit this branch.
 //
-// School pages keep the light chrome untouched (neither branch matches).
+// School pages keep the light chrome untouched (no branch matches).
 const isBimbelRoute = computed(() => {
   const name = String(route.name ?? '');
   if (name.includes('tutoring')) return true;
   if (name === 'teacher.home' && isBimbelTenant.value) return true;
+  if (isBimbelTenant.value) return true;
   return false;
 });
 const isTutorBimbelRoute = computed(() => {
