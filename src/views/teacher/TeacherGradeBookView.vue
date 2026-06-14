@@ -433,7 +433,7 @@ async function loadSummary() {
   try {
     summary.value = await GradeService.getTeacherSummary({
       teacher_id: teacherId,
-      view: isWaliMode.value ? 'wali_kelas' : 'mengajar',
+      view: isWaliMode.value ? 'homeroom_teacher' : 'teaching',
       class_id: activeHomeroomId.value || undefined,
     });
   } catch (e) {

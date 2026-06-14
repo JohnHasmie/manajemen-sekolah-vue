@@ -225,7 +225,7 @@ async function loadSummary() {
     // academic_year_id auto-injected by the axios interceptor.
     const resp = await GradeRecapService.getTeacherSummary({
       teacher_id: teacherId,
-      view: isWaliMode.value ? 'wali_kelas' : 'mengajar',
+      view: isWaliMode.value ? 'homeroom_teacher' : 'teaching',
       class_id: activeHomeroomId.value || undefined,
     });
     summary.value = resp.data;

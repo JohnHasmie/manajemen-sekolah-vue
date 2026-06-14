@@ -116,18 +116,21 @@ const isSaving = ref(false);
 const previewReach = ref<number | null>(null);
 const toast = ref<{ message: string; tone: 'success' | 'error' } | null>(null);
 
-// Audience matrix (mobile parity): roles guru / wali_kelas / wali_murid, each
-// targeting 'all' or specific class ids — replaces the old single dropdown.
-type MatrixRole = 'guru' | 'wali_kelas' | 'wali_murid';
+// Audience matrix (mobile parity): roles teacher / homeroom_teacher /
+// parent, each targeting 'all' or specific class ids — replaces the
+// old single dropdown. Keys mirror the backend's canonical English
+// audience_matrix shape; legacy Indonesian aliases are still accepted
+// server-side during the rollout window.
+type MatrixRole = 'teacher' | 'homeroom_teacher' | 'parent';
 const MATRIX_ROLES: { key: MatrixRole; label: string; perClass: boolean }[] = [
-  { key: 'guru', label: 'Guru', perClass: false },
-  { key: 'wali_kelas', label: 'Wali Kelas', perClass: true },
-  { key: 'wali_murid', label: 'Wali Murid', perClass: true },
+  { key: 'teacher', label: 'Guru', perClass: false },
+  { key: 'homeroom_teacher', label: 'Wali Kelas', perClass: true },
+  { key: 'parent', label: 'Wali Murid', perClass: true },
 ];
 const emptyMatrix = (): Record<MatrixRole, string[]> => ({
-  guru: [],
-  wali_kelas: [],
-  wali_murid: [],
+  teacher: [],
+  homeroom_teacher: [],
+  parent: [],
 });
 
 const form = reactive({
@@ -139,7 +142,7 @@ const form = reactive({
   audience: 'all' as AnnouncementAudience,
   target_ids: [] as string[],
   // Mobile-parity audience matrix. Each role holds 'all' or specific class ids.
-  audienceMatrix: { guru: [], wali_kelas: [], wali_murid: [] } as Record<
+  audienceMatrix: { teacher: [], homeroom_teacher: [], parent: [] } as Record<
     MatrixRole,
     (string)[]
   >,
@@ -309,10 +312,14 @@ function openEdit(a: Announcement) {
   const m = (a.audience_matrix ?? {}) as Record<string, unknown>;
   const cell = (k: string): string[] =>
     Array.isArray(m[k]) ? (m[k] as unknown[]).map((v) => String(v)) : [];
+  // Backend canonical is English; tolerate legacy Indonesian keys on
+  // older payloads so existing drafts still load correctly.
   form.audienceMatrix = {
-    guru: cell('guru'),
-    wali_kelas: cell('wali_kelas'),
-    wali_murid: cell('wali_murid'),
+    teacher: cell('teacher').length ? cell('teacher') : cell('guru'),
+    homeroom_teacher: cell('homeroom_teacher').length
+      ? cell('homeroom_teacher')
+      : cell('wali_kelas'),
+    parent: cell('parent').length ? cell('parent') : cell('wali_murid'),
   };
   // Both bind to `datetime-local` inputs (YYYY-MM-DDTHH:mm), so trim the
   // ISO value from the API — otherwise the picker stays empty on edit.

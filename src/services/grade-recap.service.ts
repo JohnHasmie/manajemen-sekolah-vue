@@ -63,7 +63,7 @@ export const GradeRecapService = {
    */
   async getTeacherSummary(args: {
     teacher_id: string;
-    view?: 'mengajar' | 'wali_kelas';
+    view?: 'teaching' | 'homeroom_teacher';
     academic_year_id?: number | string;
     class_id?: string;
     subject_id?: string;
@@ -71,7 +71,7 @@ export const GradeRecapService = {
     const res = await api.get('/grade-recaps/teacher-summary', {
       params: {
         teacher_id: args.teacher_id,
-        view: args.view ?? 'mengajar',
+        view: args.view ?? 'teaching',
         ...(args.academic_year_id
           ? { academic_year_id: args.academic_year_id }
           : {}),

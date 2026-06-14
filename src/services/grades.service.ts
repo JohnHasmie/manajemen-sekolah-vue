@@ -150,15 +150,15 @@ export const GradeService = {
    * second round-trip.
    *
    * Mirrors Flutter `getTeacherGradeSummary` →
-   * `GET /grades/teacher-summary?teacher_id=&view=mengajar|wali_kelas
+   * `GET /grades/teacher-summary?teacher_id=&view=teaching|homeroom_teacher
    *  [&academic_year_id&class_id&subject_id]`.
    *
-   * `view` defaults to `mengajar` (teacher's own classes); pass
-   * `wali_kelas` to fetch the homeroom's full subject grid.
+   * `view` defaults to `teaching` (teacher's own classes); pass
+   * `homeroom_teacher` to fetch the homeroom's full subject grid.
    */
   async getTeacherSummary(args: {
     teacher_id: string;
-    view?: 'mengajar' | 'wali_kelas';
+    view?: 'teaching' | 'homeroom_teacher';
     academic_year_id?: string;
     class_id?: string;
     subject_id?: string;
@@ -167,7 +167,7 @@ export const GradeService = {
       const res = await api.get('/grades/teacher-summary', {
         params: {
           teacher_id: args.teacher_id,
-          view: args.view ?? 'mengajar',
+          view: args.view ?? 'teaching',
           ...(args.academic_year_id
             ? { academic_year_id: args.academic_year_id }
             : {}),
