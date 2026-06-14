@@ -98,9 +98,17 @@ function clearVoucher() {
 const selectedPackage = computed(() =>
   packages.value.find((p) => p.id === packageId.value),
 );
-const allowedModes = computed(
-  () => selectedPackage.value?.billing_modes_allowed ?? [],
-);
+// Fall back to all three modes when the package doesn't restrict
+// them — older packages were created without `billing_modes_allowed`
+// in the seed and would otherwise leave Mode billing dropdown empty
+// with no recourse for the admin. Pick whichever modes the paket
+// declares; if it declares none, the admin can still pick any.
+const ALL_MODES = ['PREPAID', 'MONTHLY', 'PER_SESSION'] as const;
+const allowedModes = computed<readonly string[]>(() => {
+  if (!selectedPackage.value) return [];
+  const list = selectedPackage.value.billing_modes_allowed ?? [];
+  return list.length > 0 ? list : ALL_MODES;
+});
 
 async function loadProgramSlices(pid: string) {
   if (!pid) {
