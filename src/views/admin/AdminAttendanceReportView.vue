@@ -541,7 +541,7 @@ async function processExport() {
           >
             <div class="w-12 text-center flex-shrink-0">
               <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">JP</p>
-              <p class="text-[14px] font-black text-role-admin">{{ r.jam_ke ?? '?' }}</p>
+              <p class="text-[14px] font-black text-role-admin">{{ r.hour_number ?? r.jam_ke ?? '?' }}</p>
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">
@@ -600,7 +600,7 @@ async function processExport() {
                 <td class="px-3 py-2 tabular-nums">{{ formatDateShort(r.date) }}</td>
                 <td class="px-3 py-2 font-bold text-slate-900">{{ r.subject_name }}</td>
                 <td class="px-3 py-2">{{ r.class_name }}</td>
-                <td class="px-3 py-2 text-center font-bold text-role-admin">{{ r.jam_ke ?? '—' }}</td>
+                <td class="px-3 py-2 text-center font-bold text-role-admin">{{ r.hour_number ?? r.jam_ke ?? '—' }}</td>
                 <td class="px-3 py-2 text-center tabular-nums">{{ r.present }}</td>
                 <td class="px-3 py-2 text-center text-slate-500 tabular-nums">{{ r.total_students }}</td>
                 <td

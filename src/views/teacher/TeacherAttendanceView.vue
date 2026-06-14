@@ -582,10 +582,10 @@ function pickSubject(id: string) {
                       <span>{{ r.start_time }}<span v-if="r.end_time"> – {{ r.end_time }}</span></span>
                     </template>
                     <span
-                      v-if="r.jam_ke"
+                      v-if="r.hour_number ?? r.jam_ke"
                       class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                     >
-                      {{ t('teacher.attendance.hour') }} ke-{{ r.jam_ke }}
+                      {{ t('teacher.attendance.hour') }} ke-{{ r.hour_number ?? r.jam_ke }}
                     </span>
                     <span
                       v-if="r.total > 0"
