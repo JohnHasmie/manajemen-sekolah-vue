@@ -30,7 +30,7 @@ const cancelTarget = ref<TutoringStudentRow | null>(null);
 const cancelBusy = ref(false);
 
 const editTarget = ref<TutoringStudentRow | null>(null);
-const editName = ref('');
+const editForm = ref({ name: '', guardian_name: '', guardian_phone: '' });
 const editBusy = ref(false);
 
 async function load() {
@@ -45,21 +45,36 @@ function pickRow(r: TutoringStudentRow, key: string) {
   if (key === 'cancel') cancelTarget.value = r;
   else if (key === 'edit') {
     editTarget.value = r;
-    editName.value = r.student_name;
+    editForm.value = {
+      name: r.student_name,
+      guardian_name: '',
+      guardian_phone: '',
+    };
   }
 }
 
 async function submitEdit() {
   if (!editTarget.value) return;
-  if (editName.value.trim().length < 2) {
+  if (editForm.value.name.trim().length < 2) {
     toast.error('Nama minimal 2 huruf');
     return;
   }
   editBusy.value = true;
   try {
-    await TutoringService.updateStudent(editTarget.value.student_id, {
-      name: editName.value.trim(),
-    });
+    // Only send fields the admin actually filled in. Empty guardian
+    // inputs mean "tidak diubah" — we don't want to clobber an
+    // existing parent contact with null just because the field
+    // wasn't pre-populated.
+    const payload: {
+      name: string;
+      guardian_name?: string;
+      guardian_phone?: string;
+    } = { name: editForm.value.name.trim() };
+    const gn = editForm.value.guardian_name.trim();
+    const gp = editForm.value.guardian_phone.trim();
+    if (gn) payload.guardian_name = gn;
+    if (gp) payload.guardian_phone = gp;
+    await TutoringService.updateStudent(editTarget.value.student_id, payload);
     toast.success('Profil siswa diperbarui.');
     editTarget.value = null;
     await load();
@@ -327,10 +342,18 @@ function exportCsv() {
     <div v-if="editTarget" class="fixed inset-0 z-50 flex items-start justify-center bg-black/55 p-6" @click.self="editTarget = null">
       <div class="w-full max-w-md rounded-2xl bg-bimbel-panel p-5 shadow-xl space-y-3">
         <h3 class="text-[16px] font-bold text-bimbel-text-hi">Ubah siswa</h3>
-        <p class="text-[13px] text-bimbel-text-mid">{{ editTarget.program_name ?? '—' }}<template v-if="editTarget.group_name"> · {{ editTarget.group_name }}</template></p>
+        <p class="text-[12px] text-bimbel-text-mid">{{ editTarget.program_name ?? '—' }}<template v-if="editTarget.group_name"> · {{ editTarget.group_name }}</template></p>
         <label class="block">
-          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama</span>
-          <input v-model="editName" type="text" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama <span class="text-rose-500">*</span></span>
+          <input v-model="editForm.name" type="text" required class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+        </label>
+        <label class="block">
+          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">Nama wali (opsional)</span>
+          <input v-model="editForm.guardian_name" type="text" placeholder="Kosongkan jika tidak diubah" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
+        </label>
+        <label class="block">
+          <span class="block text-[12px] font-bold uppercase tracking-wider text-bimbel-text-mid">No. WA wali (opsional)</span>
+          <input v-model="editForm.guardian_phone" type="tel" placeholder="Kosongkan jika tidak diubah" class="mt-1 w-full rounded-lg border border-bimbel-border bg-bimbel-bg px-3 py-2 text-[13px] text-bimbel-text-hi focus:border-bimbel-accent focus:outline-none" />
         </label>
         <div class="flex gap-2 pt-1">
           <button type="button" class="flex-1 rounded-lg border border-bimbel-border bg-bimbel-panel px-3 py-2 text-[13px] font-bold text-bimbel-text-hi hover:bg-bimbel-border-soft" @click="editTarget = null">Batal</button>
