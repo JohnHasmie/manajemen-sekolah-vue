@@ -409,12 +409,25 @@ export const TutoringService = {
 
   // ── Admin: enrollment ───────────────────────────────────────────
 
-  /** Tenant students (for the enroll picker) via the core /student. */
+  /** Tenant students (for the enroll picker) via the school `/students`
+   *  endpoint. Pass `page=1` so the controller returns the predictable
+   *  paginated envelope `{ success, data: [...], pagination }` instead
+   *  of the non-paginated `StudentResource::collection(...)->response()`
+   *  shape which double-wraps via `JsonResource::collection`. */
   async getTenantStudents(): Promise<{ id: string; name: string }[]> {
-    const res = await api.get('/student');
+    const res = await api.get('/students', {
+      params: { page: 1, limit: 500 },
+    });
     const body = res.data;
-    const list = Array.isArray(body?.data)
-      ? body.data
+    // Two known shapes: paginated `{ data: [...] }`, or
+    // double-wrapped `{ data: { data: [...] } }` from
+    // ResourceCollection->response().
+    let raw: unknown = body?.data;
+    if (raw && !Array.isArray(raw) && typeof raw === 'object' && Array.isArray((raw as { data?: unknown }).data)) {
+      raw = (raw as { data: unknown[] }).data;
+    }
+    const list = Array.isArray(raw)
+      ? raw
       : Array.isArray(body)
         ? body
         : [];
