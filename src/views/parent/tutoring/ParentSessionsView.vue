@@ -13,6 +13,7 @@ import type { TutoringSession } from '@/types/tutoring';
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+import SessionsCalendar from '@/components/feature/tutoring/SessionsCalendar.vue';
 
 const route = useRoute();
 const { activeChildId } = useChildPicker();
@@ -25,25 +26,9 @@ const loading = ref(true);
 const sessions = ref<TutoringSession[]>([]);
 const subjectFilter = ref<string>('all');
 const view = ref<'list' | 'calendar'>('list');
-// Month being browsed in calendar view; selected day to render the
-// sessions list underneath the grid. Both default to today on first
-// switch into calendar view.
-const calMonth = ref<Date>(new Date());
-const calSelected = ref<Date>(new Date());
 
 function toggleView() {
   view.value = view.value === 'list' ? 'calendar' : 'list';
-  if (view.value === 'calendar') {
-    calMonth.value = new Date();
-    calSelected.value = new Date();
-  }
-}
-
-function shiftMonth(delta: number) {
-  const d = new Date(calMonth.value);
-  d.setDate(1);
-  d.setMonth(d.getMonth() + delta);
-  calMonth.value = d;
 }
 
 async function load() {
@@ -187,75 +172,6 @@ const grouped = computed(() => {
   return Array.from(map.values());
 });
 
-// ── Calendar view helpers ───────────────────────────────────────
-const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const DOW_SHORT = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
-
-function dayKey(d: Date): string {
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-}
-
-// Sessions bucketed by dayKey for fast lookups in the calendar grid.
-const sessionsByDay = computed(() => {
-  const map = new Map<string, TutoringSession[]>();
-  for (const s of visible.value) {
-    if (!s.scheduled_at) continue;
-    const d = new Date(s.scheduled_at);
-    const k = dayKey(d);
-    const list = map.get(k);
-    if (list) list.push(s);
-    else map.set(k, [s]);
-  }
-  return map;
-});
-
-const calMonthLabel = computed(() => {
-  const d = calMonth.value;
-  return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
-});
-
-// Build a 6×7 grid (42 cells) starting from the Monday on/before the
-// 1st of calMonth. Each cell knows its date + whether it's in the
-// current month + how many sessions land that day.
-const calCells = computed(() => {
-  const first = new Date(calMonth.value.getFullYear(), calMonth.value.getMonth(), 1);
-  // JS getDay: Sun=0..Sat=6 → we want Mon=0..Sun=6.
-  const lead = (first.getDay() + 6) % 7;
-  const start = new Date(first);
-  start.setDate(first.getDate() - lead);
-  const cells: { date: Date; inMonth: boolean; count: number; isToday: boolean; isSelected: boolean }[] = [];
-  const today = new Date();
-  const todayKey = dayKey(today);
-  for (let i = 0; i < 42; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    cells.push({
-      date: d,
-      inMonth: d.getMonth() === calMonth.value.getMonth(),
-      count: sessionsByDay.value.get(dayKey(d))?.length ?? 0,
-      isToday: dayKey(d) === todayKey,
-      isSelected: dayKey(d) === dayKey(calSelected.value),
-    });
-  }
-  return cells;
-});
-
-const calSelectedLabel = computed(() => {
-  const d = calSelected.value;
-  return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-});
-
-const calSelectedSessions = computed(() =>
-  (sessionsByDay.value.get(dayKey(calSelected.value)) ?? []).sort((a, b) => {
-    const ta = a.scheduled_at ? new Date(a.scheduled_at).valueOf() : 0;
-    const tb = b.scheduled_at ? new Date(b.scheduled_at).valueOf() : 0;
-    return ta - tb;
-  }),
-);
-
-function selectDay(d: Date) {
-  calSelected.value = new Date(d);
-}
 </script>
 
 <template>
@@ -331,101 +247,7 @@ function selectDay(d: Date) {
       </template>
     </template>
 
-    <!-- CALENDAR VIEW -->
-    <template v-else>
-      <div class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-3.5">
-        <!-- Month nav -->
-        <div class="flex items-center justify-between mb-3">
-          <button
-            type="button"
-            class="rounded-md p-1.5 text-bimbel-text-mid hover:bg-bimbel-bg"
-            aria-label="Bulan sebelumnya"
-            @click="shiftMonth(-1)"
-          ><NavIcon name="chevron-left" :size="16" /></button>
-          <p class="text-[14px] font-bold text-bimbel-text-hi">{{ calMonthLabel }}</p>
-          <button
-            type="button"
-            class="rounded-md p-1.5 text-bimbel-text-mid hover:bg-bimbel-bg"
-            aria-label="Bulan berikutnya"
-            @click="shiftMonth(1)"
-          ><NavIcon name="chevron-right" :size="16" /></button>
-        </div>
-
-        <!-- Day-of-week header -->
-        <div class="grid grid-cols-7 gap-1 mb-1">
-          <p
-            v-for="d in DOW_SHORT"
-            :key="d"
-            class="text-center text-[10px] font-bold uppercase tracking-wider text-bimbel-text-lo py-1"
-          >{{ d }}</p>
-        </div>
-
-        <!-- Date grid 6 × 7 -->
-        <div class="grid grid-cols-7 gap-1">
-          <button
-            v-for="(cell, i) in calCells"
-            :key="i"
-            type="button"
-            class="aspect-square rounded-md flex flex-col items-center justify-center gap-0.5 text-[12px] transition-colors relative"
-            :class="[
-              cell.isSelected
-                ? 'bg-bimbel-hero text-white font-bold'
-                : cell.isToday
-                  ? 'bg-bimbel-accent-dim text-bimbel-hero font-bold ring-1 ring-bimbel-hero'
-                  : cell.inMonth
-                    ? 'text-bimbel-text-hi hover:bg-bimbel-bg'
-                    : 'text-bimbel-text-lo hover:bg-bimbel-bg',
-            ]"
-            @click="selectDay(cell.date)"
-          >
-            <span>{{ cell.date.getDate() }}</span>
-            <span v-if="cell.count > 0" class="flex gap-0.5">
-              <span
-                v-for="n in Math.min(cell.count, 3)"
-                :key="n"
-                class="w-1 h-1 rounded-full"
-                :class="cell.isSelected ? 'bg-white' : 'bg-bimbel-hero'"
-              ></span>
-              <span
-                v-if="cell.count > 3"
-                class="text-[8px] leading-none"
-                :class="cell.isSelected ? 'text-white' : 'text-bimbel-hero'"
-              >+{{ cell.count - 3 }}</span>
-            </span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Selected-day session list -->
-      <p class="text-[10px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase pt-2.5 pb-1">
-        {{ calSelectedLabel }}
-      </p>
-      <div
-        v-if="!calSelectedSessions.length"
-        class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[12px] text-bimbel-text-mid"
-      >Tidak ada sesi di tanggal ini.</div>
-      <div
-        v-for="s in calSelectedSessions"
-        :key="s.id"
-        class="rounded-lg bg-bimbel-bg p-2.5 flex items-center gap-2.5"
-      >
-        <div class="w-16 flex-shrink-0">
-          <p class="text-[13px] font-bold text-bimbel-text-hi">{{ timeOnly(s.scheduled_at) }}</p>
-          <p class="text-[11px] text-bimbel-text-mid">{{ s.duration_minutes ?? 60 }} menit</p>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-[12px] font-bold text-bimbel-text-hi">
-            {{ (s as any).subject || s.group?.program?.name || '—' }}
-            <span class="text-bimbel-text-mid font-normal">
-              · {{ (s as any).group_code || s.group?.name || '' }}
-            </span>
-          </p>
-          <p class="text-[11px] text-bimbel-text-mid">
-            {{ [(s as any).tutor_name ?? s.tutor?.name, s.room, s.topic].filter(Boolean).join(' · ') || '—' }}
-          </p>
-        </div>
-        <span :class="statusPillCls(s)">{{ statusLabel(s) }}</span>
-      </div>
-    </template>
+    <!-- CALENDAR VIEW — shared SessionsCalendar (same as admin + tutor) -->
+    <SessionsCalendar v-else :sessions="visible" accent="wali" />
   </div>
 </template>
