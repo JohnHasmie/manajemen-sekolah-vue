@@ -31,7 +31,9 @@ function parentAttendanceFromJson(raw: any): ParentAttendanceEntry {
     lesson_hour_name:
       raw.lesson_hour_name ??
       lessonHour?.name ??
-      (raw.jam_ke ? `JP ${raw.jam_ke}` : null),
+      ((raw.hour_number ?? raw.jam_ke)
+        ? `JP ${raw.hour_number ?? raw.jam_ke}`
+        : null),
     lesson_hour_id: raw.lesson_hour_id ?? lessonHour?.id ?? null,
     subject_id: raw.subject_id ?? raw.subject?.id ?? null,
     session: raw.session ?? raw.sesi ?? null,

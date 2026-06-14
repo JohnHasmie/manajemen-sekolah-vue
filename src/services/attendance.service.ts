@@ -441,7 +441,9 @@ export const AttendanceService = {
           date: String(r.date ?? ''),
           lesson_hour_id: r.lesson_hour_id ?? lh?.id ?? null,
           lesson_hour_name: r.lesson_hour_name ?? lh?.name ?? null,
-          jam_ke: r.jam_ke ?? lh?.hour_number ?? null,
+          hour_number: r.hour_number ?? r.jam_ke ?? lh?.hour_number ?? null,
+          // Deprecated alias kept for views not yet migrated.
+          jam_ke: r.hour_number ?? r.jam_ke ?? lh?.hour_number ?? null,
           total_students: total,
           present,
           absent,
@@ -506,6 +508,8 @@ export const AttendanceService = {
     teacher_id?: string;
     teacher_name?: string;
     lesson_hour_id?: string;
+    hour_number?: number | null;
+    /** @deprecated Use `hour_number`. */
     jam_ke?: number | null;
   }): Promise<Blob> {
     const res = await api.post('/attendance/export', payload, {
@@ -783,7 +787,10 @@ function reportFromJson(raw: any): SessionReport {
     raw.subject_id ?? raw.subject?.id ?? raw.mata_pelajaran_id ?? '',
   );
   const date = String(raw.date ?? raw.tanggal ?? '');
-  const jamKe = raw.jam_ke ?? raw.lesson_hour?.hour_number ?? null;
+  // Backend now emits `hour_number` as the canonical key, with `jam_ke`
+  // kept as a deprecated alias. Prefer English first; fall back to
+  // Indonesian + nested `lesson_hour.hour_number` for older payloads.
+  const jamKe = raw.hour_number ?? raw.jam_ke ?? raw.lesson_hour?.hour_number ?? null;
   const lessonHourId = raw.lesson_hour_id ?? raw.lesson_hour?.id ?? null;
   const id = String(
     raw.id ?? `${classId}__${subjectId}__${date}__${jamKe ?? lessonHourId ?? '0'}`,
@@ -805,6 +812,8 @@ function reportFromJson(raw: any): SessionReport {
     date,
     start_time: raw.start_time ?? raw.lesson_hour?.start_time ?? null,
     end_time: raw.end_time ?? raw.lesson_hour?.end_time ?? null,
+    hour_number: typeof jamKe === 'number' ? jamKe : jamKe ? Number(jamKe) : null,
+    // Deprecated alias kept in sync for views not yet migrated.
     jam_ke: typeof jamKe === 'number' ? jamKe : jamKe ? Number(jamKe) : null,
     lesson_hour_id: lessonHourId ? String(lessonHourId) : null,
     total,
@@ -841,7 +850,9 @@ function reportFromGroup(parent: any, rec: any): SessionReport {
     date: String(rec.date ?? ''),
     start_time: rec.start_time ?? null,
     end_time: rec.end_time ?? null,
-    jam_ke: rec.jam_ke ?? null,
+    hour_number: rec.hour_number ?? rec.jam_ke ?? null,
+    // Deprecated alias.
+    jam_ke: rec.hour_number ?? rec.jam_ke ?? null,
     lesson_hour_id: rec.lesson_hour_id ?? null,
     total,
     hadir: present,
@@ -887,11 +898,12 @@ function historyFromJson(raw: any): AttendanceHistoryEntry {
   })();
   const subjectName =
     raw.subject_name ?? raw.subject?.name ?? raw.mata_pelajaran ?? null;
+  const hourNumber = raw.hour_number ?? raw.jam_ke;
   const sessionLabel =
     raw.lesson_hour_name ??
     raw.session_label ??
     raw.lesson_hour?.name ??
-    (raw.jam_ke ? `Jam ke-${raw.jam_ke}` : subjectName ?? null);
+    (hourNumber ? `Jam ke-${hourNumber}` : subjectName ?? null);
   return {
     id: String(raw.id ?? `${raw.date}-${raw.subject_id ?? ''}`),
     date: String(raw.date ?? raw.tanggal ?? ''),
