@@ -532,9 +532,9 @@ function pickAudience(k: AudienceFilter) {
           <section v-if="grouped.scheduled.length > 0" class="space-y-2.5">
             <header class="flex items-center gap-2 px-1">
               <NavIcon name="calendar" :size="13" class="text-amber-600" />
-              <span class="text-[11px] font-bold uppercase tracking-widest text-slate-500">{{ t('admin.announcement.scheduled') }}</span>
-              <div class="flex-1 h-px bg-slate-200"></div>
-              <span class="text-[10px] font-bold text-slate-500">{{ grouped.scheduled.length }}</span>
+              <span class="text-[11px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ t('admin.announcement.scheduled') }}</span>
+              <div class="flex-1 h-px bg-bimbel-border"></div>
+              <span class="text-[10px] font-bold text-bimbel-text-mid">{{ grouped.scheduled.length }}</span>
             </header>
             <AnnouncementCard
               v-for="a in grouped.scheduled"
@@ -551,9 +551,9 @@ function pickAudience(k: AudienceFilter) {
           <section v-if="grouped.published.length > 0" class="space-y-2.5">
             <header class="flex items-center gap-2 px-1">
               <NavIcon name="check-circle" :size="13" class="text-emerald-600" />
-              <span class="text-[11px] font-bold uppercase tracking-widest text-slate-500">{{ t('admin.announcement.sent') }}</span>
-              <div class="flex-1 h-px bg-slate-200"></div>
-              <span class="text-[10px] font-bold text-slate-500">{{ grouped.published.length }}</span>
+              <span class="text-[11px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ t('admin.announcement.sent') }}</span>
+              <div class="flex-1 h-px bg-bimbel-border"></div>
+              <span class="text-[10px] font-bold text-bimbel-text-mid">{{ grouped.published.length }}</span>
             </header>
             <AnnouncementCard
               v-for="a in grouped.published"
@@ -569,10 +569,10 @@ function pickAudience(k: AudienceFilter) {
           <!-- Draft -->
           <section v-if="grouped.draft.length > 0" class="space-y-2.5">
             <header class="flex items-center gap-2 px-1">
-              <NavIcon name="file-text" :size="13" class="text-slate-500" />
-              <span class="text-[11px] font-bold uppercase tracking-widest text-slate-500">{{ t('status.Draft') }}</span>
-              <div class="flex-1 h-px bg-slate-200"></div>
-              <span class="text-[10px] font-bold text-slate-500">{{ grouped.draft.length }}</span>
+              <NavIcon name="file-text" :size="13" class="text-bimbel-text-mid" />
+              <span class="text-[11px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ t('status.Draft') }}</span>
+              <div class="flex-1 h-px bg-bimbel-border"></div>
+              <span class="text-[10px] font-bold text-bimbel-text-mid">{{ grouped.draft.length }}</span>
             </header>
             <AnnouncementCard
               v-for="a in grouped.draft"
@@ -594,7 +594,7 @@ function pickAudience(k: AudienceFilter) {
         <li v-for="s in STATUS_OPTIONS" :key="s.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-border-soft/60"
             :class="{
               'bg-role-admin/5 text-role-admin font-bold':
                 s.key === statusFilter,
@@ -613,7 +613,7 @@ function pickAudience(k: AudienceFilter) {
         <li v-for="p in PRIORITY_OPTIONS" :key="p.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-border-soft/60"
             :class="{
               'bg-role-admin/5 text-role-admin font-bold':
                 p.key === priorityFilter,
@@ -632,7 +632,7 @@ function pickAudience(k: AudienceFilter) {
         <li v-for="a in AUDIENCE_OPTIONS" :key="a.key">
           <button
             type="button"
-            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-slate-50"
+            class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-bimbel-border-soft/60"
             :class="{
               'bg-role-admin/5 text-role-admin font-bold':
                 a.key === audienceFilter,
@@ -654,7 +654,7 @@ function pickAudience(k: AudienceFilter) {
     >
       <form class="space-y-md" @submit.prevent="publish">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.category') }}</label>
+          <label class="block text-sm font-medium text-bimbel-text-hi mb-1">{{ t('common.category') }}</label>
           <SegmentedControl
             :model-value="form.category"
             :options="[
@@ -669,7 +669,7 @@ function pickAudience(k: AudienceFilter) {
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.priority') }}</label>
+          <label class="block text-sm font-medium text-bimbel-text-hi mb-1">{{ t('common.priority') }}</label>
           <SegmentedControl
             :model-value="form.priority"
             :options="[
@@ -684,25 +684,25 @@ function pickAudience(k: AudienceFilter) {
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.audience') }}</label>
-          <p class="text-[11px] text-slate-500 mb-2">
+          <label class="block text-sm font-medium text-bimbel-text-hi mb-1">{{ t('common.audience') }}</label>
+          <p class="text-[11px] text-bimbel-text-mid mb-2">
             {{ t('admin.announcement.audienceHelp') }}
           </p>
-          <div class="space-y-3 border border-slate-200 rounded-xl p-3">
+          <div class="space-y-3 border border-bimbel-border-soft rounded-xl p-3">
             <div
               v-for="role in MATRIX_ROLES"
               :key="role.key"
-              class="border-b border-slate-100 last:border-0 pb-3 last:pb-0"
+              class="border-b border-bimbel-border-soft last:border-0 pb-3 last:pb-0"
             >
               <div class="flex items-center justify-between gap-2">
-                <span class="text-sm font-semibold text-slate-700">{{ role.label }}</span>
+                <span class="text-sm font-semibold text-bimbel-text-hi">{{ role.label }}</span>
                 <button
                   type="button"
                   class="text-[11px] font-bold px-2.5 py-1 rounded-full border"
                   :class="
                     cellHasAll(role.key)
                       ? 'bg-role-admin text-white border-role-admin'
-                      : 'bg-white text-slate-600 border-slate-200'
+                      : 'bg-bimbel-panel text-bimbel-text-mid border-bimbel-border-soft'
                   "
                   @click="toggleAll(role.key)"
                 >
@@ -721,13 +721,13 @@ function pickAudience(k: AudienceFilter) {
                   :class="
                     cellHasClass(role.key, c.id)
                       ? 'bg-role-admin text-white border-role-admin'
-                      : 'bg-white text-slate-600 border-slate-200'
+                      : 'bg-bimbel-panel text-bimbel-text-mid border-bimbel-border-soft'
                   "
                   @click="toggleClass(role.key, c.id)"
                 >
                   {{ c.name }}
                 </button>
-                <span v-if="classes.length === 0" class="text-[11px] text-slate-400">
+                <span v-if="classes.length === 0" class="text-[11px] text-bimbel-text-lo">
                   {{ t('admin.announcement.noClassesYet') }}
                 </span>
               </div>
@@ -735,31 +735,31 @@ function pickAudience(k: AudienceFilter) {
           </div>
           <p
             v-if="previewReach !== null"
-            class="text-[11px] text-slate-500 mt-2 inline-flex items-center gap-1.5"
+            class="text-[11px] text-bimbel-text-mid mt-2 inline-flex items-center gap-1.5"
           >
             <NavIcon name="users" :size="12" />
-            {{ t('admin.announcement.estimatedReach') }} <b class="text-slate-900">{{ previewReach }}</b> {{ t('admin.announcement.recipients') }}
+            {{ t('admin.announcement.estimatedReach') }} <b class="text-bimbel-text-hi">{{ previewReach }}</b> {{ t('admin.announcement.recipients') }}
           </p>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.title') }}</label>
+          <label class="block text-sm font-medium text-bimbel-text-hi mb-1">{{ t('common.title') }}</label>
           <input
             v-model="form.title"
             type="text"
             :placeholder="t('admin.announcement.titleExample')"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+            class="w-full rounded-xl border border-bimbel-border px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
             :disabled="isSaving"
           />
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('common.content') }}</label>
+          <label class="block text-sm font-medium text-bimbel-text-hi mb-1">{{ t('common.content') }}</label>
           <textarea
             v-model="form.body"
             rows="6"
             :placeholder="t('admin.announcement.contentPlaceholder')"
-            class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none resize-none"
+            class="w-full rounded-xl border border-bimbel-border px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none resize-none"
             :disabled="isSaving"
           ></textarea>
         </div>
@@ -769,22 +769,22 @@ function pickAudience(k: AudienceFilter) {
              event_at / event_location. -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">
+            <label class="block text-sm font-medium text-bimbel-text-hi mb-1">
               Tanggal &amp; jam acara (opsional)
             </label>
             <input
               v-model="form.event_at"
               type="datetime-local"
-              class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
+              class="w-full rounded-xl border border-bimbel-border px-md py-sm text-sm text-bimbel-text-hi focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-bimbel-bg"
               :disabled="isSaving"
             />
-            <p class="text-[10.5px] text-slate-400 mt-1">
+            <p class="text-[10.5px] text-bimbel-text-lo mt-1">
               Isi kalau ini pengumuman acara (mis. rapat 25 Des) — biar muncul di
               kalender + reminder.
             </p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">
+            <label class="block text-sm font-medium text-bimbel-text-hi mb-1">
               Lokasi acara (opsional)
             </label>
             <input
@@ -792,7 +792,7 @@ function pickAudience(k: AudienceFilter) {
               type="text"
               maxlength="160"
               placeholder="mis. Aula Lt. 2"
-              class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
+              class="w-full rounded-xl border border-bimbel-border px-md py-sm text-sm text-bimbel-text-hi focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-bimbel-bg"
               :disabled="isSaving"
             />
           </div>
@@ -801,28 +801,28 @@ function pickAudience(k: AudienceFilter) {
         <!-- Schedule + Pin row -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">
+            <label class="block text-sm font-medium text-bimbel-text-hi mb-1">
               {{ t('admin.announcement.scheduleSend') }}
             </label>
             <input
               v-model="form.scheduled_at"
               type="datetime-local"
-              class="w-full rounded-xl border border-slate-300 px-md py-sm text-sm focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-white"
+              class="w-full rounded-xl border border-bimbel-border px-md py-sm text-sm text-bimbel-text-hi focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none bg-bimbel-bg"
               :disabled="isSaving"
             />
-            <p class="text-[10.5px] text-slate-400 mt-1">
+            <p class="text-[10.5px] text-bimbel-text-lo mt-1">
               {{ t('admin.announcement.sendImmediately') }}
             </p>
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">{{ t('admin.announcement.pinLabel') }}</label>
+            <label class="block text-sm font-medium text-bimbel-text-hi mb-1">{{ t('admin.announcement.pinLabel') }}</label>
             <button
               type="button"
               class="w-full inline-flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-sm font-bold transition-colors"
               :class="
                 form.is_pinned
                   ? 'bg-amber-50 border-amber-300 text-amber-700'
-                  : 'bg-white border-slate-200 text-slate-600'
+                  : 'bg-bimbel-panel border-bimbel-border-soft text-bimbel-text-mid'
               "
               @click="form.is_pinned = !form.is_pinned"
             >
@@ -832,7 +832,7 @@ function pickAudience(k: AudienceFilter) {
               </span>
               <span
                 class="w-9 h-5 rounded-full p-0.5 transition-colors"
-                :class="form.is_pinned ? 'bg-amber-500' : 'bg-slate-300'"
+                :class="form.is_pinned ? 'bg-amber-500' : 'bg-bimbel-border'"
               >
                 <span
                   class="block w-4 h-4 rounded-full bg-white transition-transform"
