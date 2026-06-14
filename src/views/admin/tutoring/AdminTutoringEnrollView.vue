@@ -4,12 +4,12 @@
   components.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useToast } from '@/composables/useToast';
-import type { TutoringGroup, TutoringPackage } from '@/types/tutoring';
+import type { TutoringGroup, TutoringPackage, TutoringProgram } from '@/types/tutoring';
 
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 
@@ -25,11 +25,17 @@ const MODE_KEYS: Record<string, string> = {
 };
 const modeLabel = (m: string) => (MODE_KEYS[m] ? t(MODE_KEYS[m]) : m);
 
-const programId = String(route.params.programId ?? '');
+// When opened from a Program (route name `admin.tutoring.enroll`),
+// programId is the pinned program. From the Siswa list
+// (`admin.tutoring.enroll-any`) it's empty and the admin picks
+// inside the form.
+const initialProgramId = String(route.params.programId ?? '');
 const programName = String(route.query.name ?? 'Program');
 
 const loading = ref(true);
 const saving = ref(false);
+const programs = ref<TutoringProgram[]>([]);
+const programId = ref<string>(initialProgramId);
 const packages = ref<TutoringPackage[]>([]);
 const groups = ref<TutoringGroup[]>([]);
 const students = ref<{ id: string; name: string }[]>([]);
@@ -96,20 +102,50 @@ const allowedModes = computed(
   () => selectedPackage.value?.billing_modes_allowed ?? [],
 );
 
+async function loadProgramSlices(pid: string) {
+  if (!pid) {
+    packages.value = [];
+    groups.value = [];
+    return;
+  }
+  try {
+    [packages.value, groups.value] = await Promise.all([
+      TutoringService.getPackages(pid),
+      TutoringService.getGroups(pid),
+    ]);
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : t('tutoring.enroll.loadFailed'));
+  }
+}
+
 async function load() {
   loading.value = true;
   try {
-    [packages.value, groups.value, students.value] = await Promise.all([
-      TutoringService.getPackages(programId),
-      TutoringService.getGroups(programId),
+    [programs.value, students.value] = await Promise.all([
+      TutoringService.getPrograms(),
       TutoringService.getTenantStudents(),
     ]);
+    // If route pinned a program, load its slices. Otherwise wait for
+    // the admin to pick from the dropdown.
+    if (programId.value) {
+      await loadProgramSlices(programId.value);
+    }
   } catch (e) {
     toast.error(e instanceof Error ? e.message : t('tutoring.enroll.loadFailed'));
   } finally {
     loading.value = false;
   }
 }
+
+// Reactively re-fetch packages + groups whenever the admin picks a
+// different program inside the form. Resets dependent selections so
+// stale paket/kelompok don't survive a program switch.
+watch(programId, async (next) => {
+  packageId.value = null;
+  groupId.value = null;
+  mode.value = null;
+  await loadProgramSlices(next);
+});
 
 async function submit() {
   if (!studentId.value || !packageId.value || !mode.value) {
@@ -177,9 +213,11 @@ const inputCls =
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      :kicker="'Bimbel · ' + programName"
+      :kicker="initialProgramId ? ('Bimbel · ' + programName) : 'Bimbel · Daftarkan siswa'"
       :title="t('tutoring.enroll.title')"
-      meta="Pilih paket → kelompok → siswa → mode billing → Simpan"
+      :meta="initialProgramId
+        ? 'Pilih paket → kelompok → siswa → mode billing → Simpan'
+        : 'Pilih program → paket → siswa → mode billing → Simpan'"
     />
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
@@ -190,12 +228,28 @@ const inputCls =
       v-else
       class="space-y-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5"
     >
+      <label v-if="!initialProgramId" class="block">
+        <span :class="fieldLabel">Program</span>
+        <select v-model="programId" :class="inputCls">
+          <option value="" disabled>Pilih program</option>
+          <option v-for="p in programs" :key="p.id" :value="p.id">{{ p.name }}</option>
+        </select>
+        <p v-if="programs.length === 0" class="text-xs text-bimbel-text-mid mt-1">
+          Belum ada program. Buat program + paket dulu di menu Program.
+        </p>
+      </label>
+
       <label class="block">
         <span :class="fieldLabel">{{ t('tutoring.enroll.package') }}</span>
-        <select v-model="packageId" :class="inputCls" @change="mode = null">
-          <option :value="null" disabled>{{ t('tutoring.enroll.pickPackage') }}</option>
+        <select v-model="packageId" :class="inputCls" :disabled="!programId" @change="mode = null">
+          <option :value="null" disabled>
+            {{ programId ? t('tutoring.enroll.pickPackage') : 'Pilih program dulu' }}
+          </option>
           <option v-for="p in packages" :key="p.id" :value="p.id">{{ p.name }}</option>
         </select>
+        <p v-if="programId && packages.length === 0" class="text-xs text-bimbel-text-mid mt-1">
+          Program ini belum punya paket.
+        </p>
       </label>
 
       <label class="block">
@@ -212,6 +266,12 @@ const inputCls =
           <option :value="null" disabled>{{ t('tutoring.enroll.pickStudent') }}</option>
           <option v-for="s in students" :key="s.id" :value="s.id">{{ s.name }}</option>
         </select>
+        <p v-if="students.length === 0" class="text-xs text-bimbel-text-mid mt-1">
+          Belum ada siswa di tenant.
+          <button type="button" class="text-bimbel-accent font-bold underline" @click="router.push({ name: 'admin.tutoring.students' })">
+            Buat dulu di menu Siswa
+          </button>.
+        </p>
       </label>
 
       <label class="block">
