@@ -10,7 +10,6 @@ import { useChildPicker } from '@/composables/useChildPicker';
 import type {
   TutoringActivity,
   TutoringActivitySubmission,
-  TutoringWaliClassMeta,
 } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
@@ -29,14 +28,16 @@ const studentId = computed(() =>
 type FilterId = 'all' | 'pending' | 'ASSIGNMENT' | 'EXAM' | 'MATERIAL';
 
 // Web previously showed only submission rows — but mobile shows every
-// activity assigned to the student's groups, regardless of whether a
-// submission exists yet. Mirror that here: fetch BOTH activities +
-// submissions, then merge on activity_id so a row exists for every
-// activity (submission overlays only if present).
+// activity in the tenant from GET /tutoring/activities (scope is
+// tenant-only, no per-student filter), with the submission overlaid
+// when one exists. Match that: fetch both, merge on activity_id.
 //
-// Activities are also scoped to groups the student is enrolled in
-// (via getWaliClassMeta) — otherwise the tenant-wide /activities
-// endpoint would leak rows from siblings' or other students' groups.
+// Group-filtering removed deliberately. Mobile's parent_activities
+// screen at lib/features/tutoring/presentation/screens/parent_
+// activities_screen.dart:27 also just calls getActivities() with no
+// scope — the backend index isn't student-aware, and we'd otherwise
+// hide rows the wali expects to see (e.g. Try-out for a different
+// kelompok of the same child, or activities pre-enrollment).
 type Row = {
   id: string;
   activity: TutoringActivity;
@@ -46,7 +47,6 @@ type Row = {
 const loading = ref(true);
 const activitiesAll = ref<TutoringActivity[]>([]);
 const submissions = ref<TutoringActivitySubmission[]>([]);
-const groupMeta = ref<TutoringWaliClassMeta[]>([]);
 const typeFilter = ref<FilterId>('all');
 
 async function load() {
@@ -54,14 +54,12 @@ async function load() {
   if (!sid) { loading.value = false; return; }
   loading.value = true;
   try {
-    const [acts, subs, groups] = await Promise.all([
+    const [acts, subs] = await Promise.all([
       TutoringService.getActivities().catch(() => [] as TutoringActivity[]),
       TutoringService.getStudentActivitySubmissions(sid).catch(() => [] as TutoringActivitySubmission[]),
-      TutoringService.getWaliClassMeta(sid).catch(() => [] as TutoringWaliClassMeta[]),
     ]);
     activitiesAll.value = acts;
     submissions.value = subs;
-    groupMeta.value = groups;
   } finally {
     loading.value = false;
   }
@@ -69,9 +67,8 @@ async function load() {
 onMounted(load);
 watch(studentId, load);
 
-// ── Merge: activities scoped to student's groups + matching submission ──
+// ── Merge: every tenant activity + matching submission overlay ──
 const rows = computed<Row[]>(() => {
-  const groupIds = new Set(groupMeta.value.map((g) => g.group_id).filter(Boolean));
   // Pre-build submission lookup by activity id (handles backend's two
   // field names: tutoring_activity_id is canonical, activity_id is the
   // alias on some shapes).
@@ -80,12 +77,11 @@ const rows = computed<Row[]>(() => {
     const k = s.tutoring_activity_id ?? s.activity_id;
     if (k) subByAct.set(String(k), s);
   }
-  const list: Row[] = [];
-  for (const a of activitiesAll.value) {
-    // Only activities for groups the student is actually enrolled in.
-    if (groupIds.size > 0 && !groupIds.has(a.tutoring_group_id)) continue;
-    list.push({ id: a.id, activity: a, submission: subByAct.get(a.id) ?? null });
-  }
+  const list: Row[] = activitiesAll.value.map((a) => ({
+    id: a.id,
+    activity: a,
+    submission: subByAct.get(a.id) ?? null,
+  }));
   // Sort by due_at: overdue first (closest-past at top), then upcoming
   // (closest-future at top), then no-due last.
   list.sort((x, y) => {
