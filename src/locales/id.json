@@ -2014,5 +2014,47 @@
       "groupsAssigned": "Kelompok yang Diampu",
       "noGroups": "Belum di-assign ke kelompok. Assign dari Program → Kelompok."
     }
+  },
+  "wali": {
+    "sekolah": {
+      "common": {
+        "nisPrefix": "NIS",
+        "kelasPrefix": "Kelas"
+      },
+      "reportCard": {
+        "studentId": "NIS"
+      },
+      "reportCardDetail": {
+        "notFoundOrUnpublished": "Rapor tidak ditemukan atau belum diterbitkan.",
+        "semGenapShort": "Sem. Genap",
+        "semGanjilShort": "Sem. Ganjil",
+        "semesterFallback": "Semester",
+        "publishedPrefix": "Diterbitkan",
+        "kicker": "Akademik · Rapor",
+        "titleWithName": "Rapor {name}",
+        "metaFallback": "E-Raport siswa",
+        "tooltipPrintPdf": "Cetak PDF",
+        "tooltipNotPublished": "Rapor belum diterbitkan",
+        "kpiAverage": "Rata-rata",
+        "kpiRank": "Peringkat",
+        "kpiAttendance": "Kehadiran",
+        "sectionAttitude": "Sikap",
+        "homeroomTeacher": "Wali kelas",
+        "exportNoteSuffix": "yang dapat dicetak.",
+        "chooseSemesterNoteSuffix": "lalu ubah pilihan semester pada filter di atas.",
+        "monthShortJan": "Jan",
+        "monthShortFeb": "Feb",
+        "monthShortMar": "Mar",
+        "monthShortApr": "Apr",
+        "monthShortMay": "Mei",
+        "monthShortJun": "Jun",
+        "monthShortJul": "Jul",
+        "monthShortAug": "Agu",
+        "monthShortSep": "Sep",
+        "monthShortOct": "Okt",
+        "monthShortNov": "Nov",
+        "monthShortDec": "Des"
+      }
+    }
   }
 }

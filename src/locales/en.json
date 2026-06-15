@@ -2018,5 +2018,47 @@
       "groupsAssigned": "Groups Assigned",
       "noGroups": "No group assigned yet. Assign from Program → Groups."
     }
+  },
+  "wali": {
+    "sekolah": {
+      "common": {
+        "nisPrefix": "ID",
+        "kelasPrefix": "Class"
+      },
+      "reportCard": {
+        "studentId": "ID"
+      },
+      "reportCardDetail": {
+        "notFoundOrUnpublished": "Report card not found or not yet published.",
+        "semGenapShort": "Sem. Even",
+        "semGanjilShort": "Sem. Odd",
+        "semesterFallback": "Semester",
+        "publishedPrefix": "Published",
+        "kicker": "Academic · Report Card",
+        "titleWithName": "{name}'s Report Card",
+        "metaFallback": "Student e-report",
+        "tooltipPrintPdf": "Print PDF",
+        "tooltipNotPublished": "Report card not published yet",
+        "kpiAverage": "Average",
+        "kpiRank": "Rank",
+        "kpiAttendance": "Attendance",
+        "sectionAttitude": "Attitude",
+        "homeroomTeacher": "Homeroom teacher",
+        "exportNoteSuffix": "that can be printed.",
+        "chooseSemesterNoteSuffix": "then change the semester selection in the filter above.",
+        "monthShortJan": "Jan",
+        "monthShortFeb": "Feb",
+        "monthShortMar": "Mar",
+        "monthShortApr": "Apr",
+        "monthShortMay": "May",
+        "monthShortJun": "Jun",
+        "monthShortJul": "Jul",
+        "monthShortAug": "Aug",
+        "monthShortSep": "Sep",
+        "monthShortOct": "Oct",
+        "monthShortNov": "Nov",
+        "monthShortDec": "Dec"
+      }
+    }
   }
 }
