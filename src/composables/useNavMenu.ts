@@ -190,6 +190,7 @@ const ADMIN_TUTORING_NAV: NavSection[] = [
       { to: '/admin/tutoring/sessions', labelKey: 'tutoring.nav.sessions', icon: 'calendar' },
       { to: '/admin/tutoring/bills', labelKey: 'tutoring.nav.bills', icon: 'wallet' },
       { to: '/admin/tutoring/billing-settings', labelKey: 'tutoring.nav.billingSettings', icon: 'settings' },
+      { to: '/admin/tutoring/session-reminders', labelKey: 'tutoring.nav.sessionReminders', icon: 'bell' },
       { to: '/admin/tutoring/payouts', labelKey: 'tutoring.nav.payouts', icon: 'wallet' },
       { to: '/admin/tutoring/leads', labelKey: 'tutoring.nav.leads', icon: 'users' },
       { to: '/admin/tutoring/vouchers', labelKey: 'tutoring.nav.vouchers', icon: 'wallet' },

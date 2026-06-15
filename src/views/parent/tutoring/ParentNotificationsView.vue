@@ -34,18 +34,26 @@ onMounted(load);
 const unreadCount = computed(() => items.value.filter((n) => !n.read_at).length);
 
 // ── Icon + colour ramp per backend category ──────────────────────
-const ICON_BY_CATEGORY: Record<NotificationCategory, string> = {
+// Loosened from Record<NotificationCategory, string> → Record<string, string>
+// because finance-job types (bill_generated / payment_verified / etc.)
+// arrive as raw strings outside the canonical category enum but still
+// need an icon.
+const ICON_BY_CATEGORY: Record<string, string> = {
   billing: 'wallet',
   grade: 'star',
   attendance: 'check-circle',
   announcement: 'megaphone',
   class_activity: 'book',
+  bill_generated: 'wallet',
+  payment_verified: 'check-circle',
+  payment_rejected: 'x-circle',
+  payment_confirmed: 'check-circle',
   lesson_plan: 'file-text',
   system: 'info',
   other: 'circle',
 };
 
-const STYLE_BY_CATEGORY: Record<NotificationCategory, { bg: string; fg: string }> = {
+const STYLE_BY_CATEGORY: Record<string, { bg: string; fg: string }> = {
   billing: { bg: '#FEF3C7', fg: '#92400E' }, // amber
   grade: { bg: '#DCFCE7', fg: '#166534' }, // green
   attendance: { bg: '#DBEAFE', fg: '#1E40AF' }, // blue

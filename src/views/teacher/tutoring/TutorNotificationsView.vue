@@ -30,6 +30,10 @@ onMounted(load);
 const filtered = computed(() => filter.value === 'unread' ? items.value.filter((n) => !n.read_at) : items.value);
 const unread = computed(() => items.value.filter((n) => !n.read_at).length);
 
+// New tutor-specific types ship with the bimbel notification triggers
+// (NotifyTutorAction). They use Schedule::command-style snake_case
+// rather than the legacy SCREAMING_SNAKE because they're prefixed
+// with the module name ("tutoring_*") and read as ids in logs.
 const iconByCategory: Record<string, string> = {
   PERHATIAN_GRADE: 'star',
   PERHATIAN_ATTENDANCE: 'check-circle',
@@ -39,9 +43,26 @@ const iconByCategory: Record<string, string> = {
   KEGIATAN: 'calendar',
   KELAS: 'megaphone',
   LAIN: 'circle',
+  // Tutor-recipient (bimbel).
+  tutoring_enrollment_new: 'user-plus',
+  tutoring_group_assigned: 'users',
+  tutoring_rating_received: 'star',
+  tutoring_session_cancelled: 'x-circle',
+  // Finance (admin sees payment_submitted, wali sees the other three;
+  // tutor doesn't recipient on these but we map for completeness).
+  bill_generated: 'wallet',
+  payment_submitted: 'upload',
+  payment_verified: 'check-circle',
+  payment_rejected: 'x-circle',
+  payment_confirmed: 'check-circle',
 };
 function iconFor(n: AppNotification): string {
-  return iconByCategory[n.category] || 'circle';
+  if (iconByCategory[n.category]) return iconByCategory[n.category];
+  // Configurable session reminders all share the
+  // `tutoring_session_reminder_<N>m` shape — collapse to one icon.
+  if (n.category?.startsWith('tutoring_session_reminder_')) return 'bell';
+  if (n.category?.startsWith('tutoring_bill_reminder_')) return 'wallet';
+  return 'circle';
 }
 function rel(iso: string): string {
   const d = new Date(iso);

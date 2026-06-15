@@ -1042,6 +1042,13 @@ const routes: RouteRecordRaw[] = [
         meta: { role: 'admin' satisfies Role },
       },
       {
+        path: 'admin/tutoring/session-reminders',
+        name: 'admin.tutoring.session-reminders',
+        component: () =>
+          import('@/views/admin/tutoring/AdminTutoringSessionReminderSettingsView.vue'),
+        meta: { role: 'admin' satisfies Role },
+      },
+      {
         path: 'admin/tutoring/payouts',
         name: 'admin.tutoring.payouts',
         component: () =>
