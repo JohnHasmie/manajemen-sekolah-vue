@@ -44,9 +44,11 @@ import MaterialSectionEditorModal from '@/components/feature/MaterialSectionEdit
 import { formatDateShort, localISODate } from '@/lib/format';
 import { useQuickAction } from '@/composables/useQuickAction';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+import { useI18n } from 'vue-i18n';
 
 const auth = useAuthStore();
 const { fromQuickAction, queryString } = useQuickAction();
+const { t } = useI18n();
 
 // Filters
 const subjects = ref<Subject[]>([]);
@@ -894,18 +896,20 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
     <!-- HEADER (shared chrome) -->
     <BrandPageHeader
       role="guru"
-      kicker="Akademik · Materi"
-      :title="activeSubject?.name ? `Materi · ${activeSubject.name}` : 'Materi Ajar'"
+      :kicker="t('tutor.sekolah.material.kicker')"
+      :title="activeSubject?.name ? t('tutor.sekolah.material.titleWithSubject', { subject: activeSubject.name }) : t('tutor.sekolah.material.titleFallback')"
       :meta="
-        `${gradeLevel ? `Kelas ${gradeLevel} · ` : ''}${
-          semester === 'ganjil' ? 'Semester 1' : 'Semester 2'
-        } · ${tree.total_total} sub-bab`
+        t('tutor.sekolah.material.meta', {
+          gradePrefix: gradeLevel ? t('tutor.sekolah.material.classPrefix', { grade: gradeLevel }) + ' · ' : '',
+          semester: semester === 'ganjil' ? t('tutor.sekolah.material.semester1') : t('tutor.sekolah.material.semester2'),
+          subCount: tree.total_total,
+        })
       "
       :live-dot="false"
     >
       <Button variant="primary" size="sm" @click="showAiSheet = true">
         <NavIcon name="sparkles" :size="14" />
-        Generate AI
+        {{ t('tutor.sekolah.material.generateAi') }}
       </Button>
     </BrandPageHeader>
 
@@ -916,20 +920,20 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
     <PageFilterToolbar>
       <template #chips>
         <AppFilterChip
-          label="Tingkat"
-          :value="gradeLevel ? `Kelas ${gradeLevel}` : 'Semua tingkat'"
+          :label="t('tutor.sekolah.material.chipGrade')"
+          :value="gradeLevel ? t('tutor.sekolah.material.classPrefix', { grade: gradeLevel }) : t('tutor.sekolah.material.allGrades')"
           :is-active="!!gradeLevel"
           @click="showGradePicker = true"
         />
         <AppFilterChip
-          label="Mapel"
-          :value="activeSubject?.name ?? 'Pilih mapel'"
+          :label="t('tutor.sekolah.material.chipSubject')"
+          :value="activeSubject?.name ?? t('tutor.sekolah.material.pickSubject')"
           :is-active="!!subjectId"
           @click="showSubjectPicker = true"
         />
         <AppFilterChip
-          label="Semester"
-          :value="semester === 'ganjil' ? 'Semester 1' : 'Semester 2'"
+          :label="t('tutor.sekolah.material.chipSemester')"
+          :value="semester === 'ganjil' ? t('tutor.sekolah.material.semester1') : t('tutor.sekolah.material.semester2')"
           :is-active="true"
           @click="semester = semester === 'ganjil' ? 'genap' : 'ganjil'"
         />
@@ -950,21 +954,21 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
     >
       <span class="inline-flex items-center gap-1.5">
         <span class="w-2 h-2 rounded-full bg-emerald-700"></span>
-        <b class="text-slate-900 font-bold">{{ tree.done_total }}</b> selesai
+        <b class="text-slate-900 font-bold">{{ tree.done_total }}</b> {{ t('tutor.sekolah.material.legendDone') }}
       </span>
       <span class="inline-flex items-center gap-1.5">
         <span class="w-2 h-2 rounded-full bg-slate-300"></span>
         <b class="text-slate-900 font-bold">{{
           tree.total_total - tree.done_total
-        }}</b> belum diajar
+        }}</b> {{ t('tutor.sekolah.material.legendNotTaught') }}
       </span>
       <span class="inline-flex items-center gap-1.5">
         <span class="w-2 h-2 rounded-full bg-violet-500"></span>
-        <b class="text-slate-900 font-bold">{{ aiCount }}</b> dengan AI
+        <b class="text-slate-900 font-bold">{{ aiCount }}</b> {{ t('tutor.sekolah.material.legendWithAi') }}
       </span>
       <span class="flex-1"></span>
       <span>
-        Progres semester:
+        {{ t('tutor.sekolah.material.semesterProgress') }}
         <b class="text-emerald-700 font-bold">{{ progressPct }}%</b>
       </span>
     </div>
@@ -972,8 +976,8 @@ function difficultyConfig(d?: string): { bg: string; text: string; label: string
     <!-- Tree -->
     <AsyncView
       :state="state"
-      empty-title="Belum ada bab terdaftar"
-      empty-description="Pilih mata pelajaran untuk melihat daftar bab atau gunakan generate AI."
+      :empty-title="t('tutor.sekolah.material.emptyTitle')"
+      :empty-description="t('tutor.sekolah.material.emptyDescription')"
       @retry="reload()"
     >
       <template #default>

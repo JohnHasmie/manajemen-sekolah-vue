@@ -29,6 +29,7 @@ import {
   watch,
 } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
@@ -65,6 +66,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 const { fromQuickAction, queryString } = useQuickAction();
 const auth = useAuthStore();
 const route = useRoute();
+const { t } = useI18n();
 
 // ── Admin-view support ──
 // Admins can drill into a teacher's gradebook from
@@ -91,8 +93,8 @@ const roleOptions = computed<RoleOption[]>(() => {
   const out: RoleOption[] = [
     {
       id: 'mengajar',
-      shortName: 'Mengajar',
-      subLabel: 'Mapel saya',
+      shortName: t('tutor.sekolah.gradebook.roleTeachingShort'),
+      subLabel: t('tutor.sekolah.gradebook.roleTeachingSub'),
       avatarInitials: 'M',
     },
   ];
@@ -100,8 +102,8 @@ const roleOptions = computed<RoleOption[]>(() => {
     const name = hc.name || hc.id;
     out.push({
       id: `wali:${hc.id}`,
-      shortName: `Wali ${name}`,
-      subLabel: 'Kelas perwalian',
+      shortName: t('tutor.sekolah.gradebook.roleHomeroomShort', { name }),
+      subLabel: t('tutor.sekolah.gradebook.roleHomeroomSub'),
       avatarInitials:
         name.length <= 2
           ? name.toUpperCase()
@@ -1097,20 +1099,20 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
       role="guru"
       :kicker="
         mode === 'matrix'
-          ? 'Buku Nilai · Matrix'
+          ? t('tutor.sekolah.gradebook.kickerMatrix')
           : isWaliMode
-            ? 'Buku Nilai · Wali Kelas'
-            : 'Akademik · Buku Nilai'
+            ? t('tutor.sekolah.gradebook.kickerHomeroom')
+            : t('tutor.sekolah.gradebook.kickerDefault')
       "
       :title="
         mode === 'matrix' && matrixSubject && matrixClass
           ? `${matrixSubject.name} · ${matrixClass.name}`
-          : 'Nilai Siswa'
+          : t('tutor.sekolah.gradebook.titleSummary')
       "
       :meta="
         mode === 'matrix'
-          ? `KKM ${matrix.kkm} · ${matrix.rows.length} siswa · ${visibleAssessments.length} asesmen`
-          : `${flatCards.length} mapel·kelas · semester aktif`
+          ? t('tutor.sekolah.gradebook.metaMatrix', { kkm: matrix.kkm, students: matrix.rows.length, assessments: visibleAssessments.length })
+          : t('tutor.sekolah.gradebook.metaSummary', { count: flatCards.length })
       "
       :live-dot="false"
     >
@@ -1122,7 +1124,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
         @click="backToSummary"
       >
         <NavIcon name="chevron-left" :size="13" />
-        Kembali ke daftar
+        {{ t('tutor.sekolah.gradebook.backToList') }}
       </button>
 
       <template v-if="mode === 'summary'" #role-toggle>
@@ -1143,21 +1145,21 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
 
       <PageFilterToolbar
         :search="searchQuery"
-        search-placeholder="Cari mapel atau kelas…"
+        :search-placeholder="t('tutor.sekolah.gradebook.searchSummaryPlaceholder')"
         @update:search="(v) => (searchQuery = v)"
       >
         <template #chips>
           <AppFilterChip
             v-if="!isWaliMode"
-            label="Kelas"
-            :value="activeClass?.name ?? 'Semua kelas'"
+            :label="t('tutor.sekolah.gradebook.chipClass')"
+            :value="activeClass?.name ?? t('tutor.sekolah.gradebook.allClasses')"
             icon-name="layers"
             tone="brand"
             @click="showClassPicker = true"
           />
           <AppFilterChip
-            label="Mata pelajaran"
-            :value="activeSubject?.name ?? 'Semua mapel'"
+            :label="t('tutor.sekolah.gradebook.chipSubject')"
+            :value="activeSubject?.name ?? t('tutor.sekolah.gradebook.allSubjects')"
             icon-name="book"
             tone="amber"
             @click="showSubjectPicker = true"
@@ -1167,8 +1169,8 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
 
       <AsyncView
         :state="summaryState"
-        empty-title="Belum ada mapel terdaftar"
-        empty-description="Hubungi admin untuk mengatur kelas + mata pelajaran yang Anda ajar."
+        :empty-title="t('tutor.sekolah.gradebook.emptyTitle')"
+        :empty-description="t('tutor.sekolah.gradebook.emptyDescription')"
         @retry="loadSummary"
       >
         <template #default>

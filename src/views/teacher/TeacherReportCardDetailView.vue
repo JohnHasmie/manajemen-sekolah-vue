@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import { ReportCardService } from '@/services/report-card.service';
 import {
@@ -47,6 +48,7 @@ import Toast from '@/components/ui/Toast.vue';
 const route = useRoute();
 const router = useRouter();
 const academic = useAcademicYearStore();
+const { t } = useI18n();
 
 const classId = computed(() => String(route.params.classId ?? ''));
 const studentClassId = computed(() => String(route.params.studentClassId ?? ''));
@@ -54,10 +56,10 @@ const studentClassId = computed(() => String(route.params.studentClassId ?? ''))
 // Map canonical English predicate values to Indonesian display labels.
 function predicateLabel(p: string): string {
   switch (p) {
-    case 'very_good': return 'Sangat Baik';
-    case 'good':      return 'Baik';
-    case 'fair':      return 'Cukup';
-    case 'poor':      return 'Kurang';
+    case 'very_good': return t('tutor.sekolah.reportCardDetail.predVeryGood');
+    case 'good':      return t('tutor.sekolah.reportCardDetail.predGood');
+    case 'fair':      return t('tutor.sekolah.reportCardDetail.predFair');
+    case 'poor':      return t('tutor.sekolah.reportCardDetail.predPoor');
     default:          return p;
   }
 }
@@ -65,12 +67,12 @@ function predicateLabel(p: string): string {
 // ── Tab state ──
 type TabKey = 'sikap' | 'nilai' | 'tambahan' | 'info';
 const activeTab = ref<TabKey>('sikap');
-const tabs: { key: TabKey; label: string }[] = [
-  { key: 'sikap', label: 'Sikap' },
-  { key: 'nilai', label: 'Nilai' },
-  { key: 'tambahan', label: 'Tambahan' },
-  { key: 'info', label: 'Info' },
-];
+const tabs = computed<{ key: TabKey; label: string }[]>(() => [
+  { key: 'sikap', label: t('tutor.sekolah.reportCardDetail.tabAttitude') },
+  { key: 'nilai', label: t('tutor.sekolah.reportCardDetail.tabScores') },
+  { key: 'tambahan', label: t('tutor.sekolah.reportCardDetail.tabExtras') },
+  { key: 'info', label: t('tutor.sekolah.reportCardDetail.tabInfo') },
+]);
 
 // ── Data state ──
 const original = ref<ReportCardDetail | null>(null);
@@ -118,7 +120,7 @@ async function load() {
   // active semester when available.
   const semId = academic.activeYear?.id ?? '';
   if (!studentClassId.value || !ayId) {
-    loadError.value = 'Konteks rapor (siswa / TP) belum lengkap.';
+    loadError.value = t('tutor.sekolah.reportCardDetail.incompleteContext');
     isLoading.value = false;
     return;
   }
@@ -185,7 +187,7 @@ async function load() {
       };
     }
     if (!detail) {
-      loadError.value = 'Rapor tidak ditemukan dan tidak ada data awal.';
+      loadError.value = t('tutor.sekolah.reportCardDetail.notFoundNoSeed');
       return;
     }
     original.value = detail;
@@ -236,17 +238,15 @@ const statusLabel = computed(() => STATUS_LABELS[status.value]);
 
 const headerKicker = computed(() => {
   const cls = original.value?.class_name ?? '—';
-  const nis = original.value?.student_id ? '' : '';
-  void nis;
-  return `Kelas ${cls} · Rapor`;
+  return t('tutor.sekolah.reportCardDetail.headerKicker', { className: cls });
 });
 
 const headerMeta = computed(() => {
   const sem = original.value?.semester ?? '';
   const tp = original.value?.academic_year ?? '';
   const parts: string[] = [];
-  if (tp) parts.push(`TP ${tp}`);
-  if (sem) parts.push(`Sem ${sem}`);
+  if (tp) parts.push(t('tutor.sekolah.reportCardDetail.academicYear', { year: tp }));
+  if (sem) parts.push(t('tutor.sekolah.reportCardDetail.semester', { sem }));
   return parts.join(' · ');
 });
 
@@ -264,7 +264,7 @@ async function save(targetStatus: ReportCardStatus) {
   const semId = academic.activeYear?.id ?? '';
   if (!ayId) {
     toast.value = {
-      message: 'Tahun pelajaran aktif belum dipilih.',
+      message: t('tutor.sekolah.reportCardDetail.noActiveAyToast'),
       tone: 'error',
     };
     return;
@@ -294,13 +294,13 @@ async function save(targetStatus: ReportCardStatus) {
       toast.value = {
         message:
           targetStatus === 'final'
-            ? 'Rapor difinalisasi. Admin akan memeriksa & menerbitkan.'
-            : 'Draf rapor tersimpan.',
+            ? t('tutor.sekolah.reportCardDetail.finalizedToast')
+            : t('tutor.sekolah.reportCardDetail.draftSavedToast'),
         tone: 'success',
       };
     } else {
       toast.value = {
-        message: 'Tersimpan, tapi server tidak mengembalikan data terbaru.',
+        message: t('tutor.sekolah.reportCardDetail.savedNoDataToast'),
         tone: 'success',
       };
     }
@@ -351,18 +351,18 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Daftar Siswa
+        {{ t('tutor.sekolah.reportCardDetail.backToStudents') }}
       </button>
     </div>
 
-    <AsyncView :state="viewState" empty-title="Rapor tidak ditemukan" @retry="load">
+    <AsyncView :state="viewState" :empty-title="t('tutor.sekolah.reportCardDetail.notFound')" @retry="load">
       <template #default>
         <div v-if="original" class="space-y-4">
           <!-- HEADER -->
           <BrandPageHeader
             role="guru"
             :kicker="headerKicker"
-            :title="original.student_name ?? 'Siswa'"
+            :title="original.student_name ?? t('tutor.sekolah.reportCardDetail.studentFallback')"
             :meta="headerMeta"
             :live-dot="false"
           >
@@ -382,8 +382,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
           >
             <NavIcon name="check-circle" :size="14" class="text-amber-700 flex-shrink-0" />
             <span>
-              Rapor sudah <strong>{{ statusLabel }}</strong> — perubahan dinonaktifkan.
-              Hubungi admin sekolah jika perlu revisi.
+              {{ t('tutor.sekolah.reportCardDetail.lockedNoticePrefix') }}<strong>{{ statusLabel }}</strong>{{ t('tutor.sekolah.reportCardDetail.lockedNoticeSuffix') }}
             </span>
           </div>
 
@@ -412,7 +411,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
           >
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
               <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                Sikap Spiritual
+                {{ t('tutor.sekolah.reportCardDetail.attitudeSpiritual') }}
               </p>
               <div class="flex flex-wrap gap-1.5">
                 <button
@@ -434,14 +433,14 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
               <textarea
                 v-model="form.spiritual_description"
                 rows="3"
-                placeholder="Catatan sikap spiritual (rajin beribadah, dst.)"
+                :placeholder="t('tutor.sekolah.reportCardDetail.spiritualPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white resize-y disabled:bg-slate-50 disabled:text-slate-500"
                 :disabled="isLocked || isSaving"
               />
             </article>
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
               <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                Sikap Sosial
+                {{ t('tutor.sekolah.reportCardDetail.attitudeSocial') }}
               </p>
               <div class="flex flex-wrap gap-1.5">
                 <button
@@ -463,7 +462,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
               <textarea
                 v-model="form.social_description"
                 rows="3"
-                placeholder="Catatan sikap sosial (sopan, kerjasama, dst.)"
+                :placeholder="t('tutor.sekolah.reportCardDetail.socialPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white resize-y disabled:bg-slate-50 disabled:text-slate-500"
                 :disabled="isLocked || isSaving"
               />
@@ -473,7 +472,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
           <!-- TAB BODY: NILAI -->
           <section v-if="activeTab === 'nilai'" class="space-y-2.5">
             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">
-              {{ form.subjects.length }} Mata Pelajaran
+              {{ t('tutor.sekolah.reportCardDetail.subjectCount', { count: form.subjects.length }) }}
             </p>
             <article
               v-for="(s, idx) in form.subjects"
@@ -488,7 +487,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   v-if="s.kkm"
                   class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full"
                 >
-                  KKM {{ s.kkm }}
+                  {{ t('tutor.sekolah.reportCardDetail.kkmLabel', { kkm: s.kkm }) }}
                 </span>
                 <span
                   v-if="s.teacher_name"
@@ -503,7 +502,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   type="number"
                   min="0"
                   max="100"
-                  placeholder="Nilai"
+                  :placeholder="t('tutor.sekolah.reportCardDetail.scorePlaceholder')"
                   class="rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] tabular-nums focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white disabled:bg-slate-50"
                   :disabled="isLocked || isSaving"
                 />
@@ -519,7 +518,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                 <input
                   v-model="s.knowledge_description"
                   type="text"
-                  placeholder="Deskripsi (mis. menguasai SPLDV)"
+                  :placeholder="t('tutor.sekolah.reportCardDetail.descriptionPlaceholder')"
                   class="rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white disabled:bg-slate-50"
                   :disabled="isLocked || isSaving"
                 />
@@ -539,7 +538,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
               v-if="form.subjects.length === 0"
               class="bg-amber-50 border border-amber-200 rounded-xl px-3 py-3 text-[12px] text-amber-800"
             >
-              Belum ada mata pelajaran terdaftar untuk siswa ini. Pastikan kurikulum kelas sudah diisi.
+              {{ t('tutor.sekolah.reportCardDetail.noSubjectsWarning') }}
             </div>
           </section>
 
@@ -549,7 +548,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
               <div class="flex items-center gap-2">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex-1">
-                  Ekstrakurikuler
+                  {{ t('tutor.sekolah.reportCardDetail.extracurricular') }}
                 </p>
                 <Button
                   variant="secondary"
@@ -558,14 +557,14 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   @click="addExtra"
                 >
                   <NavIcon name="plus" :size="11" />
-                  Tambah
+                  {{ t('tutor.sekolah.reportCardDetail.add') }}
                 </Button>
               </div>
               <div
                 v-if="form.extras.length === 0"
                 class="text-[11.5px] text-slate-400 italic"
               >
-                Belum ada ekstrakurikuler.
+                {{ t('tutor.sekolah.reportCardDetail.noExtras') }}
               </div>
               <div
                 v-for="(e, idx) in form.extras"
@@ -575,28 +574,28 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                 <input
                   v-model="e.name"
                   type="text"
-                  placeholder="Nama (Pramuka)"
+                  :placeholder="t('tutor.sekolah.reportCardDetail.extraNamePlaceholder')"
                   class="rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white disabled:bg-slate-50"
                   :disabled="isLocked || isSaving"
                 />
                 <input
                   v-model="e.score"
                   type="text"
-                  placeholder="A / 85"
+                  :placeholder="t('tutor.sekolah.reportCardDetail.extraScorePlaceholder')"
                   class="rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] tabular-nums focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white disabled:bg-slate-50"
                   :disabled="isLocked || isSaving"
                 />
                 <input
                   v-model="e.description"
                   type="text"
-                  placeholder="Deskripsi opsional"
+                  :placeholder="t('tutor.sekolah.reportCardDetail.descOptionalPlaceholder')"
                   class="rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white disabled:bg-slate-50"
                   :disabled="isLocked || isSaving"
                 />
                 <button
                   type="button"
                   class="w-9 h-9 rounded-full grid place-items-center text-slate-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
-                  :aria-label="`Hapus ${e.name}`"
+                  :aria-label="t('tutor.sekolah.reportCardDetail.removeAria', { name: e.name })"
                   :disabled="isLocked || isSaving"
                   @click="removeExtra(idx)"
                 >
@@ -609,7 +608,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
               <div class="flex items-center gap-2">
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex-1">
-                  Prestasi
+                  {{ t('tutor.sekolah.reportCardDetail.achievements') }}
                 </p>
                 <Button
                   variant="secondary"
@@ -618,14 +617,14 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                   @click="addAchievement"
                 >
                   <NavIcon name="plus" :size="11" />
-                  Tambah
+                  {{ t('tutor.sekolah.reportCardDetail.add') }}
                 </Button>
               </div>
               <div
                 v-if="form.achievements.length === 0"
                 class="text-[11.5px] text-slate-400 italic"
               >
-                Belum ada prestasi.
+                {{ t('tutor.sekolah.reportCardDetail.noAchievements') }}
               </div>
               <div
                 v-for="(a, idx) in form.achievements"
@@ -635,28 +634,28 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                 <input
                   v-model="a.name"
                   type="text"
-                  placeholder="Nama prestasi"
+                  :placeholder="t('tutor.sekolah.reportCardDetail.achievementNamePlaceholder')"
                   class="rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white disabled:bg-slate-50"
                   :disabled="isLocked || isSaving"
                 />
                 <input
                   v-model="a.type"
                   type="text"
-                  placeholder="Akademik / Non"
+                  :placeholder="t('tutor.sekolah.reportCardDetail.achievementTypePlaceholder')"
                   class="rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white disabled:bg-slate-50"
                   :disabled="isLocked || isSaving"
                 />
                 <input
                   v-model="a.description"
                   type="text"
-                  placeholder="Deskripsi opsional"
+                  :placeholder="t('tutor.sekolah.reportCardDetail.descOptionalPlaceholder')"
                   class="rounded-lg border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white disabled:bg-slate-50"
                   :disabled="isLocked || isSaving"
                 />
                 <button
                   type="button"
                   class="w-9 h-9 rounded-full grid place-items-center text-slate-500 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
-                  :aria-label="`Hapus ${a.name}`"
+                  :aria-label="t('tutor.sekolah.reportCardDetail.removeAria', { name: a.name })"
                   :disabled="isLocked || isSaving"
                   @click="removeAchievement(idx)"
                 >
@@ -670,12 +669,12 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
           <section v-if="activeTab === 'info'" class="space-y-3">
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
               <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                Kehadiran
+                {{ t('tutor.sekolah.reportCardDetail.attendance') }}
               </p>
               <div class="grid grid-cols-3 gap-2">
                 <div>
                   <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                    Sakit
+                    {{ t('tutor.sekolah.reportCardDetail.attSick') }}
                   </label>
                   <input
                     v-model.number="form.attendance_sick"
@@ -687,7 +686,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                 </div>
                 <div>
                   <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                    Izin
+                    {{ t('tutor.sekolah.reportCardDetail.attPermit') }}
                   </label>
                   <input
                     v-model.number="form.attendance_permit"
@@ -699,7 +698,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                 </div>
                 <div>
                   <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                    Alpa
+                    {{ t('tutor.sekolah.reportCardDetail.attAbsent') }}
                   </label>
                   <input
                     v-model.number="form.attendance_absent"
@@ -711,18 +710,18 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                 </div>
               </div>
               <p class="text-[10.5px] text-slate-400 tabular-nums">
-                Total ketidakhadiran: {{ totalAttendance }} hari
+                {{ t('tutor.sekolah.reportCardDetail.totalAbsence', { days: totalAttendance }) }}
               </p>
             </article>
 
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
               <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                Catatan Wali Kelas
+                {{ t('tutor.sekolah.reportCardDetail.homeroomNotes') }}
               </label>
               <textarea
                 v-model="form.homeroom_notes"
                 rows="4"
-                placeholder="Catatan untuk siswa/wali murid"
+                :placeholder="t('tutor.sekolah.reportCardDetail.homeroomNotesPlaceholder')"
                 class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white resize-y disabled:bg-slate-50"
                 :disabled="isLocked || isSaving"
               />
@@ -730,7 +729,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
 
             <article class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
               <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                Keputusan Kenaikan
+                {{ t('tutor.sekolah.reportCardDetail.promotionDecision') }}
               </label>
               <div class="flex flex-wrap gap-1.5">
                 <button
@@ -750,13 +749,13 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
                 >
                   {{
                     d === 'promoted'
-                      ? 'Naik Kelas'
+                      ? t('tutor.sekolah.reportCardDetail.decisionPromoted')
                       : d === 'not_promoted'
-                        ? 'Tinggal di Kelas'
+                        ? t('tutor.sekolah.reportCardDetail.decisionNotPromoted')
                         : d === 'graduated'
-                          ? 'Lulus'
+                          ? t('tutor.sekolah.reportCardDetail.decisionGraduated')
                           : d === 'not_graduated'
-                            ? 'Tidak Lulus'
+                            ? t('tutor.sekolah.reportCardDetail.decisionNotGraduated')
                             : d
                   }}
                 </button>
@@ -777,7 +776,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
               @click="save('draft')"
             >
               <NavIcon name="file-text" :size="13" />
-              Simpan Draf
+              {{ t('tutor.sekolah.reportCardDetail.saveDraft') }}
             </Button>
             <Button
               variant="primary"
@@ -786,7 +785,7 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
               @click="confirmFinalize = true"
             >
               <NavIcon name="check" :size="13" />
-              Finalisasi
+              {{ t('tutor.sekolah.reportCardDetail.finalize') }}
             </Button>
           </div>
         </div>
@@ -796,9 +795,9 @@ const viewState = computed<AsyncState<ReportCardDetail>>(() => {
     <!-- FINALIZE CONFIRM -->
     <ConfirmationDialog
       v-if="confirmFinalize"
-      title="Finalisasi Rapor"
-      :message="`Setelah difinalisasi, rapor tidak bisa diedit lagi. Admin akan memeriksa & menerbitkan. Lanjutkan untuk ${original?.student_name ?? 'siswa ini'}?`"
-      confirm-label="Finalisasi"
+      :title="t('tutor.sekolah.reportCardDetail.finalizeTitle')"
+      :message="t('tutor.sekolah.reportCardDetail.finalizeMessage', { name: original?.student_name ?? t('tutor.sekolah.reportCardDetail.studentFallback') })"
+      :confirm-label="t('tutor.sekolah.reportCardDetail.finalize')"
       :loading="isSaving"
       @close="confirmFinalize = false"
       @confirm="save('final')"
