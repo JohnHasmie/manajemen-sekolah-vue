@@ -4604,7 +4604,8 @@
         "typeDailyTest": "Quiz",
         "typeFinalExam": "Final",
         "typeMidterm": "Midterm",
-        "typeOther": "Other"
+        "typeOther": "Other",
+        "typeQuiz": "Quiz"
       },
       "material": {
         "aiEmptyCta": "Generate with AI",

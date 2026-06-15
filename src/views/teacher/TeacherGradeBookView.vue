@@ -716,12 +716,12 @@ async function applyEditColumn() {
       target.type = f.type;
       target.date = f.date;
       target.raw_title = nextTitle;
-      target.name = nextTitle || ASSESSMENT_LABELS[f.type];
+      target.name = nextTitle || typeLabel(f.type);
     }
     columnEditFor.value = null;
     toast.value = {
       message: t('tutor.sekolah.gradebook.toastAssessmentUpdated', {
-        name: nextTitle || ASSESSMENT_LABELS[f.type],
+        name: nextTitle || typeLabel(f.type),
       }),
       tone: 'success',
     };
@@ -747,7 +747,7 @@ async function applyEditColumn() {
     });
     toast.value = {
       message: t('tutor.sekolah.gradebook.toastAssessmentUpdated', {
-        name: nextTitle || ASSESSMENT_LABELS[f.type],
+        name: nextTitle || typeLabel(f.type),
       }),
       tone: 'success',
     };
@@ -883,7 +883,7 @@ function applyAddAsesmen() {
   const syntheticId = `__new__${f.type}__${title || 'tanpa-judul'}__${f.date}__${Date.now()}`;
   const newAssessment: Assessment = {
     id: syntheticId,
-    name: title || ASSESSMENT_LABELS[f.type],
+    name: title || typeLabel(f.type),
     raw_title: title || null,
     type: f.type,
     date: f.date,
@@ -1093,6 +1093,29 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
     count: v ?? 0,
   }));
 }
+
+// Localized label for an assessment type. Mirrors `ASSESSMENT_LABELS`
+// from `@/types/grades` but routes through i18n so the headers,
+// modals, and toasts in this view follow the active locale instead of
+// surfacing the canonical Indonesian fallbacks.
+function typeLabel(type: AssessmentType): string {
+  switch (type) {
+    case 'assignment':
+      return t('tutor.sekolah.gradebook.typeAssignment');
+    case 'daily_test':
+      return t('tutor.sekolah.gradebook.typeDailyTest');
+    case 'midterm':
+      return t('tutor.sekolah.gradebook.typeMidterm');
+    case 'final_exam':
+      return t('tutor.sekolah.gradebook.typeFinalExam');
+    case 'quiz':
+      return t('tutor.sekolah.gradebook.typeQuiz');
+    case 'other':
+      return t('tutor.sekolah.gradebook.typeOther');
+    default:
+      return ASSESSMENT_LABELS[type];
+  }
+}
 </script>
 
 <template>
@@ -1273,7 +1296,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                   class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
                   :class="typePillClass(tc.type)"
                 >
-                  {{ ASSESSMENT_LABELS[tc.type] }} × {{ tc.count }}
+                  {{ typeLabel(tc.type) }} × {{ tc.count }}
                 </span>
               </div>
 
@@ -1447,7 +1470,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
                     >
                       <span>{{ a.name }}</span>
                       <span class="text-[9px] font-medium text-slate-400">
-                        {{ ASSESSMENT_LABELS[a.type] }}
+                        {{ typeLabel(a.type) }}
                       </span>
                     </button>
                   </th>
@@ -1619,7 +1642,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
     <Modal
       v-if="columnActionsFor"
       :title="columnActionsFor.name"
-      :subtitle="ASSESSMENT_LABELS[columnActionsFor.type]"
+      :subtitle="typeLabel(columnActionsFor.type)"
       @close="columnActionsFor = null"
     >
       <ul class="space-y-1">
@@ -1681,14 +1704,14 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
     <Modal
       v-if="columnDetail"
       :title="columnDetail.name"
-      :subtitle="t('tutor.sekolah.gradebook.detailSubtitle', { type: ASSESSMENT_LABELS[columnDetail.type] })"
+      :subtitle="t('tutor.sekolah.gradebook.detailSubtitle', { type: typeLabel(columnDetail.type) })"
       @close="columnDetail = null"
     >
       <div class="space-y-3">
         <div class="grid grid-cols-2 gap-2">
           <div class="bg-slate-50 rounded-xl p-3">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailType') }}</p>
-            <p class="text-[14px] font-bold text-slate-900 mt-1">{{ ASSESSMENT_LABELS[columnDetail.type] }}</p>
+            <p class="text-[14px] font-bold text-slate-900 mt-1">{{ typeLabel(columnDetail.type) }}</p>
           </div>
           <div class="bg-slate-50 rounded-xl p-3">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('tutor.sekolah.gradebook.detailDate') }}</p>
@@ -1727,7 +1750,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
           <p class="text-[12px] text-red-700 leading-relaxed">
             <strong>{{ columnDeleteConfirm.name }}</strong>
             ·
-            {{ ASSESSMENT_LABELS[columnDeleteConfirm.type] }}
+            {{ typeLabel(columnDeleteConfirm.type) }}
             ·
             {{ t('tutor.sekolah.gradebook.deleteSummary', { graded: columnStats(columnDeleteConfirm).graded, total: columnStats(columnDeleteConfirm).total }) }}
           </p>
@@ -1794,7 +1817,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             :placeholder="t('tutor.sekolah.gradebook.addTitlePlaceholder')"
           />
           <p class="text-[10.5px] text-slate-400 mt-1">
-            {{ t('tutor.sekolah.gradebook.addTitleHint', { label: ASSESSMENT_LABELS[addForm.type] }) }}
+            {{ t('tutor.sekolah.gradebook.addTitleHint', { label: typeLabel(addForm.type) }) }}
           </p>
         </div>
         <div>
@@ -1868,7 +1891,7 @@ function typeCountsFor(s: TeacherGradeSummarySubject) {
             :placeholder="t('tutor.sekolah.gradebook.addTitlePlaceholder')"
           />
           <p class="text-[10.5px] text-slate-400 mt-1">
-            {{ t('tutor.sekolah.gradebook.addTitleHint', { label: ASSESSMENT_LABELS[editForm.type] }) }}
+            {{ t('tutor.sekolah.gradebook.addTitleHint', { label: typeLabel(editForm.type) }) }}
           </p>
         </div>
         <div>

@@ -4600,7 +4600,8 @@
         "typeDailyTest": "UH",
         "typeFinalExam": "UAS",
         "typeMidterm": "UTS",
-        "typeOther": "Lainnya"
+        "typeOther": "Lainnya",
+        "typeQuiz": "Kuis"
       },
       "material": {
         "aiEmptyCta": "Generate dengan AI",
