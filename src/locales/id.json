@@ -2024,6 +2024,9 @@
       "reportCard": {
         "studentId": "NIS"
       },
+      "dashboard": {
+        "anakFallback": "Anak"
+      },
       "grade": {
         "btnReset": "Reset",
         "kkmPrefix": "KKM",

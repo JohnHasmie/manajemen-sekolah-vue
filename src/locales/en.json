@@ -2028,6 +2028,9 @@
       "reportCard": {
         "studentId": "ID"
       },
+      "dashboard": {
+        "anakFallback": "Child"
+      },
       "grade": {
         "btnReset": "Reset",
         "kkmPrefix": "Min",
