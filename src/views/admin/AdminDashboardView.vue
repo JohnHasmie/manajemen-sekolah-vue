@@ -217,7 +217,7 @@ const financePct = computed(() =>
               <div class="min-w-0">
                 <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">{{ greeting }}</p>
                 <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Halo, <span class="text-role-admin">{{ auth.user?.name }}</span>
+                  {{ t('admin.sekolah.dashboard.greeting_prefix') }} <span class="text-role-admin">{{ auth.user?.name }}</span>
                 </h1>
               </div>
             </div>
@@ -235,14 +235,14 @@ const financePct = computed(() =>
               />
               <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-widest">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Realtime
+                {{ t('admin.sekolah.dashboard.realtime') }}
               </span>
             </div>
           </section>
 
           <!-- Bimbel entry — only for tutoring-center tenants. -->
           <TutoringEntryBanner
-            subtitle="Kelola program, paket, kelompok & billing bimbel"
+            :subtitle="t('admin.sekolah.dashboard.tutoring_banner_subtitle')"
             @click="router.push({ name: 'admin.tutoring.programs' })"
           />
 

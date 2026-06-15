@@ -11,6 +11,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { FinanceService } from '@/services/finance.service';
 import { periodLabel, type PaymentType } from '@/types/billing';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
@@ -28,6 +29,8 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 defineProps<{ moneyFlow?: unknown }>();
 
+const { t } = useI18n();
+
 const paymentTypes = ref<PaymentType[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
@@ -38,11 +41,11 @@ const statusFilter = ref<StatusFilter>('all');
 const search = ref('');
 const showStatusSheet = ref(false);
 
-const STATUS_OPTS: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Semua status' },
-  { key: 'active', label: 'Aktif' },
-  { key: 'inactive', label: 'Nonaktif' },
-];
+const STATUS_OPTS = computed<{ key: StatusFilter; label: string }[]>(() => [
+  { key: 'all', label: t('admin.sekolah.finance_jenis.status_all') },
+  { key: 'active', label: t('admin.sekolah.finance_jenis.status_active') },
+  { key: 'inactive', label: t('admin.sekolah.finance_jenis.status_inactive') },
+]);
 
 // Form + generate modals
 const showForm = ref(false);
@@ -81,7 +84,7 @@ watch(search, () => {
 });
 
 const statusChipValue = computed(
-  () => STATUS_OPTS.find((o) => o.key === statusFilter.value)?.label ?? 'Semua',
+  () => STATUS_OPTS.value.find((o) => o.key === statusFilter.value)?.label ?? t('admin.sekolah.finance_jenis.status_all_short'),
 );
 
 const listState = computed<AsyncState<PaymentType[]>>(() => {
@@ -108,8 +111,8 @@ function onSaved(_pt: PaymentType, meta: { bills_generated?: number; bills_skipp
   const created = meta.bills_generated ?? 0;
   toast.value = {
     message: created > 0
-      ? `Jenis tersimpan · ${created} tagihan otomatis dibuat.`
-      : 'Jenis pembayaran tersimpan.',
+      ? t('admin.sekolah.finance_jenis.toast_saved_with_bills', { count: created })
+      : t('admin.sekolah.finance_jenis.toast_saved'),
     tone: 'success',
   };
   void load();
@@ -117,7 +120,9 @@ function onSaved(_pt: PaymentType, meta: { bills_generated?: number; bills_skipp
 
 function onGenerated(res: { created: number; skipped: number }) {
   toast.value = {
-    message: `${res.created} tagihan dibuat${res.skipped > 0 ? ` · ${res.skipped} dilewati` : ''}.`,
+    message: res.skipped > 0
+      ? t('admin.sekolah.finance_jenis.toast_generated_with_skipped', { created: res.created, skipped: res.skipped })
+      : t('admin.sekolah.finance_jenis.toast_generated', { created: res.created }),
     tone: 'success',
   };
 }
@@ -127,7 +132,7 @@ async function doDelete() {
   isDeleting.value = true;
   try {
     await FinanceService.destroyPaymentType(confirmDelete.value.id);
-    toast.value = { message: 'Jenis pembayaran dihapus.', tone: 'success' };
+    toast.value = { message: t('admin.sekolah.finance_jenis.toast_deleted'), tone: 'success' };
     await load();
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
@@ -144,8 +149,8 @@ async function toggleStatus(pt: PaymentType) {
     await FinanceService.setPaymentTypeStatus(pt.id, next);
     toast.value = {
       message: next === 'active'
-        ? `${pt.name} diaktifkan.`
-        : `${pt.name} dinonaktifkan.`,
+        ? t('admin.sekolah.finance_jenis.toast_activated', { name: pt.name })
+        : t('admin.sekolah.finance_jenis.toast_deactivated', { name: pt.name }),
       tone: 'success',
     };
     await load();
@@ -155,19 +160,25 @@ async function toggleStatus(pt: PaymentType) {
     togglingId.value = '';
   }
 }
+
+const deleteMessage = computed(() =>
+  confirmDelete.value
+    ? t('admin.sekolah.finance_jenis.delete_message', { name: confirmDelete.value.name })
+    : '',
+);
 </script>
 
 <template>
   <section class="space-y-md">
     <PageFilterToolbar
       v-model:search="search"
-      search-placeholder="Cari jenis..."
+      :search-placeholder="t('admin.sekolah.finance_jenis.search_placeholder')"
       :search-min-width="220"
     >
       <template #chips>
         <AppFilterChip
           icon-name="filter"
-          label="Status"
+          :label="t('admin.sekolah.finance_jenis.chip_status')"
           :value="statusChipValue"
           tone="amber"
           @click="showStatusSheet = true"
@@ -177,24 +188,24 @@ async function toggleStatus(pt: PaymentType) {
 
     <div class="flex items-center justify-between gap-2">
       <p class="text-[11px] font-bold text-slate-500">
-        {{ paymentTypes.length }} jenis pembayaran
+        {{ t('admin.sekolah.finance_jenis.count_label', { count: paymentTypes.length }) }}
       </p>
       <div class="flex gap-2">
         <Button variant="secondary" size="sm" @click="openGenerate()">
           <NavIcon name="zap" :size="13" />
-          Generate Tagihan
+          {{ t('admin.sekolah.finance_jenis.generate_bill') }}
         </Button>
         <Button variant="primary" size="sm" @click="openAdd">
           <NavIcon name="plus" :size="13" />
-          Tambah Jenis
+          {{ t('admin.sekolah.finance_jenis.add_type') }}
         </Button>
       </div>
     </div>
 
     <AsyncView
       :state="listState"
-      empty-title="Belum ada jenis pembayaran"
-      empty-description="Tambahkan jenis pembayaran (SPP, Uang Pangkal, dll) untuk mulai generate tagihan."
+      :empty-title="t('admin.sekolah.finance_jenis.empty_title')"
+      :empty-description="t('admin.sekolah.finance_jenis.empty_description')"
       empty-icon="layers"
       @retry="load"
     >
@@ -225,7 +236,7 @@ async function toggleStatus(pt: PaymentType) {
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'bg-slate-100 text-slate-600'
                 "
-              >{{ pt.status === 'active' ? 'Aktif' : 'Nonaktif' }}</span>
+              >{{ pt.status === 'active' ? t('admin.sekolah.finance_jenis.badge_active') : t('admin.sekolah.finance_jenis.badge_inactive') }}</span>
             </header>
 
             <p v-if="pt.description" class="text-[11px] text-slate-500 line-clamp-2">
@@ -235,7 +246,7 @@ async function toggleStatus(pt: PaymentType) {
             <div class="flex flex-wrap gap-1.5">
               <Button variant="secondary" size="sm" @click="openEdit(pt)">
                 <NavIcon name="edit" :size="12" />
-                Edit
+                {{ t('admin.sekolah.finance_jenis.edit') }}
               </Button>
               <Button
                 variant="ghost"
@@ -243,15 +254,15 @@ async function toggleStatus(pt: PaymentType) {
                 :loading="togglingId === pt.id"
                 @click="toggleStatus(pt)"
               >
-                {{ pt.status === 'active' ? 'Nonaktifkan' : 'Aktifkan' }}
+                {{ pt.status === 'active' ? t('admin.sekolah.finance_jenis.deactivate') : t('admin.sekolah.finance_jenis.activate') }}
               </Button>
               <Button variant="ghost" size="sm" @click="openGenerate(pt)">
                 <NavIcon name="zap" :size="12" />
-                Generate
+                {{ t('admin.sekolah.finance_jenis.generate') }}
               </Button>
               <Button variant="danger" size="sm" @click="confirmDelete = pt">
                 <NavIcon name="trash-2" :size="12" />
-                Hapus
+                {{ t('admin.sekolah.finance_jenis.delete') }}
               </Button>
             </div>
           </article>
@@ -262,7 +273,7 @@ async function toggleStatus(pt: PaymentType) {
     <!-- Status filter sheet -->
     <Modal
       v-if="showStatusSheet"
-      title="Filter Status"
+      :title="t('admin.sekolah.finance_jenis.status_modal_title')"
       size="sm"
       @close="showStatusSheet = false"
     >
@@ -296,7 +307,7 @@ async function toggleStatus(pt: PaymentType) {
 
     <GenerateBillModal
       v-if="showGenerate"
-      :payment-types="paymentTypes.filter((t) => t.status === 'active')"
+      :payment-types="paymentTypes.filter((pt) => pt.status === 'active')"
       :initial-payment-type-id="generateInitialId"
       @close="showGenerate = false"
       @done="onGenerated"
@@ -304,9 +315,9 @@ async function toggleStatus(pt: PaymentType) {
 
     <ConfirmationDialog
       v-if="confirmDelete"
-      title="Hapus Jenis Pembayaran"
-      :message="`Hapus '${confirmDelete.name}'? Tagihan yang sudah dibuat tetap ada — jenis ini hanya tidak bisa generate tagihan baru.`"
-      confirm-label="Hapus"
+      :title="t('admin.sekolah.finance_jenis.delete_title')"
+      :message="deleteMessage"
+      :confirm-label="t('admin.sekolah.finance_jenis.delete')"
       :loading="isDeleting"
       @close="confirmDelete = null"
       @confirm="doDelete"

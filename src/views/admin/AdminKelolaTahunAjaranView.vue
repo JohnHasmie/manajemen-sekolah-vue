@@ -23,6 +23,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import {
   AcademicYearService,
   type AcademicYearKpiSummary,
@@ -47,6 +48,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const router = useRouter();
 const ayStore = useAcademicYearStore();
+const { t } = useI18n();
 
 // ── Data ──────────────────────────────────────────────────────────
 const items = ref<AcademicYear[]>([]);
@@ -81,10 +83,10 @@ const groups = computed(() => {
   const inactive = items.value.filter((y) => !y.current && y.status === 'inactive');
   const archived = items.value.filter((y) => y.status === 'archived');
   return [
-    { title: 'Tahun Ajaran Aktif', tone: 'emerald' as const, rows: current },
-    { title: 'Aktif', tone: 'blue' as const, rows: active },
-    { title: 'Tidak Aktif', tone: 'slate' as const, rows: inactive },
-    { title: 'Arsip', tone: 'amber' as const, rows: archived },
+    { title: t('admin.sekolah.academic_year.group_current'), tone: 'emerald' as const, rows: current },
+    { title: t('admin.sekolah.academic_year.group_active'), tone: 'blue' as const, rows: active },
+    { title: t('admin.sekolah.academic_year.group_inactive'), tone: 'slate' as const, rows: inactive },
+    { title: t('admin.sekolah.academic_year.group_archived'), tone: 'amber' as const, rows: archived },
   ].filter((g) => g.rows.length > 0);
 });
 
@@ -92,20 +94,20 @@ const groups = computed(() => {
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'calendar',
-    label: 'Total',
+    label: t('admin.sekolah.academic_year.kpi_total'),
     value: kpi.value?.total ?? items.value.length,
     tone: 'brand',
   },
   {
     icon: 'check-circle',
-    label: 'Aktif',
+    label: t('admin.sekolah.academic_year.kpi_active'),
     value:
       (kpi.value?.active_count ?? 0) + (kpi.value?.current_count ?? 0),
     tone: 'green',
   },
   {
     icon: 'file-text',
-    label: 'Arsip',
+    label: t('admin.sekolah.academic_year.kpi_archived'),
     value: kpi.value?.archived_count ?? 0,
     tone: 'amber',
   },
@@ -151,7 +153,7 @@ function openEdit(y: AcademicYear) {
 
 async function saveForm() {
   if (!formYear.value.trim()) {
-    toast.value = { message: 'Tahun ajaran wajib diisi.', tone: 'error' };
+    toast.value = { message: t('admin.sekolah.academic_year.err_year_required'), tone: 'error' };
     return;
   }
   isSaving.value = true;
@@ -170,8 +172,8 @@ async function saveForm() {
     showFormModal.value = false;
     toast.value = {
       message: editingId.value
-        ? 'Tahun ajaran diperbarui.'
-        : 'Tahun ajaran ditambahkan.',
+        ? t('admin.sekolah.academic_year.toast_updated')
+        : t('admin.sekolah.academic_year.toast_created'),
       tone: 'success',
     };
     await load();
@@ -197,7 +199,7 @@ async function confirmSetCurrent() {
   isMutating.value = true;
   try {
     await AcademicYearService.setCurrent(y.id);
-    toast.value = { message: `Tahun ajaran ${y.year} ditetapkan aktif.`, tone: 'success' };
+    toast.value = { message: t('admin.sekolah.academic_year.toast_set_current', { year: y.year }), tone: 'success' };
     await load();
     await ayStore.fetchAll({ force: true });
   } catch (e) {
@@ -214,7 +216,7 @@ async function confirmArchive() {
   isMutating.value = true;
   try {
     await AcademicYearService.archive(y.id);
-    toast.value = { message: 'Tahun ajaran diarsipkan.', tone: 'success' };
+    toast.value = { message: t('admin.sekolah.academic_year.toast_archived'), tone: 'success' };
     await load();
     await ayStore.fetchAll({ force: true });
   } catch (e) {
@@ -231,7 +233,7 @@ async function confirmUnarchive() {
   isMutating.value = true;
   try {
     await AcademicYearService.unarchive(y.id);
-    toast.value = { message: 'Arsip dibatalkan.', tone: 'success' };
+    toast.value = { message: t('admin.sekolah.academic_year.toast_unarchived'), tone: 'success' };
     await load();
     await ayStore.fetchAll({ force: true });
   } catch (e) {
@@ -248,7 +250,7 @@ async function confirmDelete() {
   isMutating.value = true;
   try {
     await AcademicYearService.destroy(y.id);
-    toast.value = { message: 'Tahun ajaran dihapus.', tone: 'success' };
+    toast.value = { message: t('admin.sekolah.academic_year.toast_deleted'), tone: 'success' };
     await load();
     await ayStore.fetchAll({ force: true });
   } catch (e) {
@@ -263,16 +265,16 @@ function goBack() {
 }
 
 function semesterLabel(s: AcademicYearSemester): string {
-  if (s === 'ganjil') return 'Ganjil';
-  if (s === 'genap') return 'Genap';
+  if (s === 'ganjil') return t('admin.sekolah.academic_year.semester_odd');
+  if (s === 'genap') return t('admin.sekolah.academic_year.semester_even');
   return '—';
 }
 
 function statusBadge(y: AcademicYear): { label: string; class: string } {
-  if (y.current) return { label: 'AKTIF', class: 'bg-emerald-100 text-emerald-700' };
-  if (y.status === 'active') return { label: 'AKTIF', class: 'bg-blue-100 text-blue-700' };
-  if (y.status === 'archived') return { label: 'ARSIP', class: 'bg-amber-100 text-amber-700' };
-  return { label: 'TIDAK AKTIF', class: 'bg-slate-100 text-slate-600' };
+  if (y.current) return { label: t('admin.sekolah.academic_year.badge_active'), class: 'bg-emerald-100 text-emerald-700' };
+  if (y.status === 'active') return { label: t('admin.sekolah.academic_year.badge_active'), class: 'bg-blue-100 text-blue-700' };
+  if (y.status === 'archived') return { label: t('admin.sekolah.academic_year.badge_archived'), class: 'bg-amber-100 text-amber-700' };
+  return { label: t('admin.sekolah.academic_year.badge_inactive'), class: 'bg-slate-100 text-slate-600' };
 }
 </script>
 
@@ -284,14 +286,14 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Pengaturan Umum
+      {{ t('admin.sekolah.academic_year.back_to_general') }}
     </button>
 
     <BrandPageHeader
       role="admin"
-      kicker="Sistem · Konfigurasi"
-      title="Kelola Tahun Ajaran"
-      :meta="`${items.length} tahun ajaran tercatat`"
+      :kicker="t('admin.sekolah.academic_year.header_kicker')"
+      :title="t('admin.sekolah.academic_year.header_title')"
+      :meta="t('admin.sekolah.academic_year.header_meta', { count: items.length })"
       :live-dot="false"
     >
       <button
@@ -300,7 +302,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
-        Tambah
+        {{ t('admin.sekolah.academic_year.add') }}
       </button>
     </BrandPageHeader>
 
@@ -308,8 +310,8 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
 
     <AsyncView
       :state="listState"
-      empty-title="Belum ada tahun ajaran"
-      empty-description="Tap 'Tambah' untuk membuat tahun ajaran pertama."
+      :empty-title="t('admin.sekolah.academic_year.empty_title')"
+      :empty-description="t('admin.sekolah.academic_year.empty_description')"
       empty-icon="calendar"
       @retry="load"
     >
@@ -354,7 +356,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                   </span>
                 </div>
                 <p class="text-[11px] text-slate-500 mt-0.5">
-                  Semester {{ semesterLabel(y.semester) }}
+                  {{ t('admin.sekolah.academic_year.semester_label', { label: semesterLabel(y.semester) }) }}
                   <span v-if="y.start_date || y.end_date">
                     · {{ y.start_date || '?' }} → {{ y.end_date || '?' }}
                   </span>
@@ -366,7 +368,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                 <button
                   v-if="!y.current && y.status !== 'archived'"
                   type="button"
-                  title="Tetapkan aktif"
+                  :title="t('admin.sekolah.academic_year.action_set_active')"
                   class="w-8 h-8 rounded-full grid place-items-center text-emerald-700 hover:bg-emerald-50"
                   :disabled="isMutating"
                   @click="setCurrentTarget = y"
@@ -376,7 +378,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                 <button
                   v-if="y.status !== 'archived'"
                   type="button"
-                  title="Edit"
+                  :title="t('admin.sekolah.academic_year.action_edit')"
                   class="w-8 h-8 rounded-full grid place-items-center text-slate-600 hover:bg-slate-100"
                   :disabled="isMutating"
                   @click="openEdit(y)"
@@ -386,7 +388,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                 <button
                   v-if="!y.current && y.status !== 'archived'"
                   type="button"
-                  title="Arsipkan"
+                  :title="t('admin.sekolah.academic_year.action_archive')"
                   class="w-8 h-8 rounded-full grid place-items-center text-amber-700 hover:bg-amber-50"
                   :disabled="isMutating"
                   @click="archiveTarget = y"
@@ -396,7 +398,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                 <button
                   v-if="y.status === 'archived'"
                   type="button"
-                  title="Batalkan arsip"
+                  :title="t('admin.sekolah.academic_year.action_unarchive')"
                   class="w-8 h-8 rounded-full grid place-items-center text-blue-700 hover:bg-blue-50"
                   :disabled="isMutating"
                   @click="unarchiveTarget = y"
@@ -406,7 +408,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
                 <button
                   v-if="!y.current"
                   type="button"
-                  title="Hapus"
+                  :title="t('admin.sekolah.academic_year.action_delete')"
                   class="w-8 h-8 rounded-full grid place-items-center text-red-600 hover:bg-red-50"
                   :disabled="isMutating"
                   @click="deleteTarget = y"
@@ -423,15 +425,15 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
     <!-- Create / Edit form -->
     <Modal
       v-if="showFormModal"
-      :title="editingId ? 'Edit Tahun Ajaran' : 'Tahun Ajaran Baru'"
-      subtitle="Tetapkan label, semester, dan periode"
+      :title="editingId ? t('admin.sekolah.academic_year.modal_edit_title') : t('admin.sekolah.academic_year.modal_new_title')"
+      :subtitle="t('admin.sekolah.academic_year.modal_subtitle')"
       size="sm"
       @close="showFormModal = false"
     >
       <div class="space-y-3">
         <div>
           <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            Tahun Ajaran
+            {{ t('admin.sekolah.academic_year.field_year') }}
           </label>
           <input
             v-model="formYear"
@@ -439,18 +441,18 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
             placeholder="2025/2026"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin tabular-nums"
           />
-          <p class="text-[10.5px] text-slate-400 mt-1">Format YYYY/YYYY+1</p>
+          <p class="text-[10.5px] text-slate-400 mt-1">{{ t('admin.sekolah.academic_year.year_hint') }}</p>
         </div>
         <div>
           <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            Semester
+            {{ t('admin.sekolah.academic_year.field_semester') }}
           </label>
           <div class="mt-1 grid grid-cols-3 gap-2">
             <button
               v-for="opt in [
                 { v: '', l: '—' },
-                { v: 'ganjil', l: 'Ganjil' },
-                { v: 'genap', l: 'Genap' },
+                { v: 'ganjil', l: t('admin.sekolah.academic_year.semester_odd') },
+                { v: 'genap', l: t('admin.sekolah.academic_year.semester_even') },
               ]"
               :key="opt.v"
               type="button"
@@ -466,7 +468,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mulai</label>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.academic_year.field_start') }}</label>
             <input
               v-model="formStart"
               type="date"
@@ -474,7 +476,7 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
             />
           </div>
           <div>
-            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selesai</label>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.academic_year.field_end') }}</label>
             <input
               v-model="formEnd"
               type="date"
@@ -484,10 +486,10 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
         </div>
         <div class="grid grid-cols-2 gap-2 pt-2">
           <Button variant="secondary" block :disabled="isSaving" @click="showFormModal = false">
-            Batal
+            {{ t('admin.sekolah.academic_year.cancel') }}
           </Button>
           <Button variant="primary" block :disabled="isSaving" @click="saveForm">
-            {{ isSaving ? 'Menyimpan…' : 'Simpan' }}
+            {{ isSaving ? t('admin.sekolah.academic_year.saving') : t('admin.sekolah.academic_year.save') }}
           </Button>
         </div>
       </div>
@@ -495,34 +497,34 @@ function statusBadge(y: AcademicYear): { label: string; class: string } {
 
     <ConfirmationDialog
       v-if="setCurrentTarget"
-      title="Tetapkan sebagai tahun ajaran aktif?"
-      :message="`Tahun ajaran ${setCurrentTarget.year} akan menjadi tahun aktif untuk seluruh sistem.`"
-      confirm-label="Ya, tetapkan"
+      :title="t('admin.sekolah.academic_year.confirm_set_current_title')"
+      :message="t('admin.sekolah.academic_year.confirm_set_current_msg', { year: setCurrentTarget.year })"
+      :confirm-label="t('admin.sekolah.academic_year.confirm_set_current_ok')"
       @close="setCurrentTarget = null"
       @confirm="confirmSetCurrent"
     />
     <ConfirmationDialog
       v-if="archiveTarget"
-      title="Arsipkan tahun ajaran?"
-      :message="`${archiveTarget.year} akan dipindah ke arsip dan tidak bisa diedit.`"
-      confirm-label="Arsipkan"
+      :title="t('admin.sekolah.academic_year.confirm_archive_title')"
+      :message="t('admin.sekolah.academic_year.confirm_archive_msg', { year: archiveTarget.year })"
+      :confirm-label="t('admin.sekolah.academic_year.confirm_archive_ok')"
       danger
       @close="archiveTarget = null"
       @confirm="confirmArchive"
     />
     <ConfirmationDialog
       v-if="unarchiveTarget"
-      title="Batalkan arsip?"
-      :message="`${unarchiveTarget.year} akan dikembalikan ke status tidak aktif.`"
-      confirm-label="Batalkan arsip"
+      :title="t('admin.sekolah.academic_year.confirm_unarchive_title')"
+      :message="t('admin.sekolah.academic_year.confirm_unarchive_msg', { year: unarchiveTarget.year })"
+      :confirm-label="t('admin.sekolah.academic_year.confirm_unarchive_ok')"
       @close="unarchiveTarget = null"
       @confirm="confirmUnarchive"
     />
     <ConfirmationDialog
       v-if="deleteTarget"
-      title="Hapus tahun ajaran?"
-      :message="`${deleteTarget.year} akan dihapus permanen. Data terkait (kelas, presensi, nilai) tidak akan ikut terhapus tapi referensinya akan hilang.`"
-      confirm-label="Hapus"
+      :title="t('admin.sekolah.academic_year.confirm_delete_title')"
+      :message="t('admin.sekolah.academic_year.confirm_delete_msg', { year: deleteTarget.year })"
+      :confirm-label="t('admin.sekolah.academic_year.confirm_delete_ok')"
       danger
       @close="deleteTarget = null"
       @confirm="confirmDelete"

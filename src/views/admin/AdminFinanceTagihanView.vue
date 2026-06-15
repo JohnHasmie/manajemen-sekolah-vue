@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { FinanceService } from '@/services/finance.service';
 import type { BillGroup, BillTingkatBucket, PaymentType } from '@/types/billing';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
@@ -27,6 +28,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 defineProps<{ moneyFlow?: unknown }>();
 
 const router = useRouter();
+const { t } = useI18n();
 
 const groups = ref<BillGroup[]>([]);
 const isLoading = ref(true);
@@ -38,12 +40,12 @@ const statusFilter = ref<StatusFilter>('all');
 const paymentTypeFilter = ref<string>('');
 const search = ref('');
 
-const STATUS_OPTS: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Semua status' },
-  { key: 'unpaid', label: 'Belum lunas' },
-  { key: 'pending', label: 'Menunggu' },
-  { key: 'paid', label: 'Lunas' },
-];
+const STATUS_OPTS = computed<{ key: StatusFilter; label: string }[]>(() => [
+  { key: 'all', label: t('admin.sekolah.finance_tagihan.status_all') },
+  { key: 'unpaid', label: t('admin.sekolah.finance_tagihan.status_unpaid') },
+  { key: 'pending', label: t('admin.sekolah.finance_tagihan.status_pending') },
+  { key: 'paid', label: t('admin.sekolah.finance_tagihan.status_paid') },
+]);
 
 const showStatusSheet = ref(false);
 const showJenisSheet = ref(false);
@@ -115,7 +117,7 @@ const tingkatBuckets = computed<BillTingkatBucket[]>(() => {
     classes.sort((a, b) => a.name.localeCompare(b.name));
     buckets.push({
       grade_level: gradeLevel,
-      label: gradeLevel === '—' ? 'Tanpa tingkat' : `Tingkat ${gradeLevel}`,
+      label: gradeLevel === '—' ? t('admin.sekolah.finance_tagihan.no_tingkat') : t('admin.sekolah.finance_tagihan.tingkat_label', { tingkat: gradeLevel }),
       groups: list,
       classes,
       total_amount,
@@ -143,11 +145,11 @@ const listState = computed<AsyncState<BillTingkatBucket[]>>(() => {
 });
 
 const statusChipValue = computed(
-  () => STATUS_OPTS.find((o) => o.key === statusFilter.value)?.label ?? 'Semua',
+  () => STATUS_OPTS.value.find((o) => o.key === statusFilter.value)?.label ?? t('admin.sekolah.finance_tagihan.status_all_short'),
 );
 const jenisChipValue = computed(() => {
-  if (!paymentTypeFilter.value) return 'Semua jenis';
-  return paymentTypes.value.find((t) => t.id === paymentTypeFilter.value)?.name ?? '—';
+  if (!paymentTypeFilter.value) return t('admin.sekolah.finance_tagihan.all_types');
+  return paymentTypes.value.find((pt) => pt.id === paymentTypeFilter.value)?.name ?? '—';
 });
 
 function openGroup(g: BillGroup) {
@@ -163,20 +165,20 @@ function openGroup(g: BillGroup) {
   <section class="space-y-md">
     <PageFilterToolbar
       v-model:search="search"
-      search-placeholder="Cari jenis atau kelas..."
+      :search-placeholder="t('admin.sekolah.finance_tagihan.search_placeholder')"
       :search-min-width="240"
     >
       <template #chips>
         <AppFilterChip
           icon-name="filter"
-          label="Status"
+          :label="t('admin.sekolah.finance_tagihan.chip_status')"
           :value="statusChipValue"
           tone="amber"
           @click="showStatusSheet = true"
         />
         <AppFilterChip
           icon-name="layers"
-          label="Jenis"
+          :label="t('admin.sekolah.finance_tagihan.chip_type')"
           :value="jenisChipValue"
           tone="violet"
           @click="showJenisSheet = true"
@@ -186,8 +188,8 @@ function openGroup(g: BillGroup) {
 
     <AsyncView
       :state="listState"
-      empty-title="Belum ada tagihan"
-      empty-description="Generate tagihan dari tab Jenis Pembayaran."
+      :empty-title="t('admin.sekolah.finance_tagihan.empty_title')"
+      :empty-description="t('admin.sekolah.finance_tagihan.empty_description')"
       empty-icon="credit-card"
       @retry="loadGroups"
     >
@@ -201,10 +203,10 @@ function openGroup(g: BillGroup) {
             <header class="flex items-center justify-between px-1">
               <h3 class="text-[11px] font-black text-slate-700 uppercase tracking-widest">
                 {{ bucket.label }}
-                <span class="ml-1 text-slate-400">· {{ bucket.groups.length }} bucket</span>
+                <span class="ml-1 text-slate-400">{{ t('admin.sekolah.finance_tagihan.bucket_count', { count: bucket.groups.length }) }}</span>
               </h3>
               <span class="text-[10px] font-bold text-amber-700">
-                Sisa {{ formatRupiah(bucket.outstanding_amount) }}
+                {{ t('admin.sekolah.finance_tagihan.remaining', { amount: formatRupiah(bucket.outstanding_amount) }) }}
               </span>
             </header>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -224,7 +226,7 @@ function openGroup(g: BillGroup) {
               class="flex items-center gap-1.5 flex-wrap pt-1 px-1"
             >
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1">
-                Per kelas:
+                {{ t('admin.sekolah.finance_tagihan.per_class') }}
               </span>
               <button
                 v-for="c in bucket.classes"
@@ -249,7 +251,7 @@ function openGroup(g: BillGroup) {
     <!-- Status sheet -->
     <Modal
       v-if="showStatusSheet"
-      title="Filter Status"
+      :title="t('admin.sekolah.finance_tagihan.status_modal_title')"
       size="sm"
       @close="showStatusSheet = false"
     >
@@ -277,7 +279,7 @@ function openGroup(g: BillGroup) {
     <!-- Jenis sheet -->
     <Modal
       v-if="showJenisSheet"
-      title="Filter Jenis Pembayaran"
+      :title="t('admin.sekolah.finance_tagihan.jenis_modal_title')"
       size="sm"
       @close="showJenisSheet = false"
     >
@@ -295,7 +297,7 @@ function openGroup(g: BillGroup) {
             showJenisSheet = false;
           "
         >
-          Semua jenis
+          {{ t('admin.sekolah.finance_tagihan.all_types') }}
         </button>
         <button
           v-for="pt in paymentTypes"

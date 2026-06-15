@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { SettingsService, type SchoolSettings, type Semester } from '@/services/settings.service';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -28,6 +29,7 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 
 const router = useRouter();
 const ayStore = useAcademicYearStore();
+const { t } = useI18n();
 
 const settings = ref<SchoolSettings>({
   education_level: 'SMA',
@@ -42,10 +44,10 @@ const JENJANG_OPTIONS = ['SD', 'SMP', 'SMA', 'SMK'] as const;
 
 function jenjangFullLabel(code: string): string {
   switch (code) {
-    case 'SD': return 'SD · Sekolah Dasar';
-    case 'SMP': return 'SMP · Sekolah Menengah Pertama';
-    case 'SMA': return 'SMA · Sekolah Menengah Atas';
-    case 'SMK': return 'SMK · Sekolah Menengah Kejuruan';
+    case 'SD': return t('admin.sekolah.school_level_settings.jenjang_sd');
+    case 'SMP': return t('admin.sekolah.school_level_settings.jenjang_smp');
+    case 'SMA': return t('admin.sekolah.school_level_settings.jenjang_sma');
+    case 'SMK': return t('admin.sekolah.school_level_settings.jenjang_smk');
     default: return code || '—';
   }
 }
@@ -82,7 +84,7 @@ function openEdit() {
 
 async function saveEdit() {
   if (!formName.value.trim()) {
-    toast.value = { message: 'Nama sekolah wajib diisi.', tone: 'error' };
+    toast.value = { message: t('admin.sekolah.school_level_settings.toast_name_required'), tone: 'error' };
     return;
   }
   isSaving.value = true;
@@ -94,7 +96,7 @@ async function saveEdit() {
     });
     settings.value = updated;
     showEditModal.value = false;
-    toast.value = { message: 'Pengaturan sekolah tersimpan.', tone: 'success' };
+    toast.value = { message: t('admin.sekolah.school_level_settings.toast_saved'), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -113,8 +115,8 @@ const semesterLabel = computed(() => {
   // payloads. The `1` / `semester 1` matches handle the older
   // `academic_years.semester` numeric form returned by some legacy
   // endpoints.
-  if (raw === 'odd' || raw === 'ganjil' || raw === 'gasal' || raw === '1' || raw === 'semester 1') return 'Semester Ganjil';
-  if (raw === 'even' || raw === 'genap' || raw === '2' || raw === 'semester 2') return 'Semester Genap';
+  if (raw === 'odd' || raw === 'ganjil' || raw === 'gasal' || raw === '1' || raw === 'semester 1') return t('admin.sekolah.school_level_settings.semester_odd');
+  if (raw === 'even' || raw === 'genap' || raw === '2' || raw === 'semester 2') return t('admin.sekolah.school_level_settings.semester_even');
   return fromAY || fromSem || '—';
 });
 
@@ -126,7 +128,7 @@ function openKelolaTahunAjaran() {
     router.push({ name: 'admin.settings.kelola-tahun-ajaran' });
   } else {
     toast.value = {
-      message: 'Manajemen Tahun Ajaran sedang disiapkan.',
+      message: t('admin.sekolah.school_level_settings.toast_ay_coming'),
       tone: 'error',
     };
   }
@@ -145,14 +147,14 @@ function goBack() {
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Pengaturan
+      {{ t('admin.sekolah.school_level_settings.back_to_settings') }}
     </button>
 
     <BrandPageHeader
       role="admin"
-      kicker="Sistem · Konfigurasi"
-      title="Pengaturan Umum"
-      meta="Identitas sekolah & tahun ajaran aktif"
+      :kicker="t('admin.sekolah.school_level_settings.header_kicker')"
+      :title="t('admin.sekolah.school_level_settings.header_title')"
+      :meta="t('admin.sekolah.school_level_settings.header_meta')"
       :live-dot="false"
     />
 
@@ -169,8 +171,8 @@ function goBack() {
           <NavIcon name="home" :size="16" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13px] font-black text-slate-900">Informasi Sekolah</p>
-          <p class="text-[11px] text-slate-500">Identitas & profil sekolah Anda</p>
+          <p class="text-[13px] font-black text-slate-900">{{ t('admin.sekolah.school_level_settings.section_info_title') }}</p>
+          <p class="text-[11px] text-slate-500">{{ t('admin.sekolah.school_level_settings.section_info_desc') }}</p>
         </div>
         <button
           type="button"
@@ -178,7 +180,7 @@ function goBack() {
           @click="openEdit"
         >
           <NavIcon name="edit" :size="12" />
-          Edit
+          {{ t('admin.sekolah.school_level_settings.edit') }}
         </button>
       </div>
 
@@ -192,7 +194,7 @@ function goBack() {
             <NavIcon name="home" :size="16" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Sekolah</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_name') }}</p>
             <p class="text-[13.5px] font-bold text-slate-900 truncate">
               {{ settings.name || '—' }}
             </p>
@@ -209,7 +211,7 @@ function goBack() {
             <NavIcon name="flag" :size="16" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alamat Sekolah</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_address') }}</p>
             <p class="text-[13.5px] font-bold text-slate-900 leading-snug">
               {{ settings.address || '—' }}
             </p>
@@ -226,7 +228,7 @@ function goBack() {
             <NavIcon name="layers" :size="16" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jenjang Pendidikan</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_jenjang') }}</p>
             <p class="text-[13.5px] font-bold text-slate-900 truncate">
               {{ jenjangFullLabel(settings.education_level) }}
             </p>
@@ -241,15 +243,15 @@ function goBack() {
           <NavIcon name="calendar" :size="16" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13px] font-black text-slate-900">Tahun Ajaran</p>
-          <p class="text-[11px] text-slate-500">Periode aktif & arsip</p>
+          <p class="text-[13px] font-black text-slate-900">{{ t('admin.sekolah.school_level_settings.section_ay_title') }}</p>
+          <p class="text-[11px] text-slate-500">{{ t('admin.sekolah.school_level_settings.section_ay_desc') }}</p>
         </div>
         <button
           type="button"
           class="text-[12px] font-bold text-role-admin hover:underline inline-flex items-center gap-1"
           @click="openKelolaTahunAjaran"
         >
-          Kelola
+          {{ t('admin.sekolah.school_level_settings.manage') }}
           <NavIcon name="chevron-right" :size="12" />
         </button>
       </div>
@@ -262,7 +264,7 @@ function goBack() {
         @click="openKelolaTahunAjaran"
       >
         <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-100">
-          Tahun Ajaran Aktif
+          {{ t('admin.sekolah.school_level_settings.active_ay_label') }}
         </p>
         <p class="text-2xl font-black mt-1 tracking-tight">
           {{ activeYear.year }}
@@ -282,10 +284,10 @@ function goBack() {
         @click="openKelolaTahunAjaran"
       >
         <p class="text-[10px] font-bold uppercase tracking-widest text-amber-700">
-          Belum Ada Tahun Ajaran Aktif
+          {{ t('admin.sekolah.school_level_settings.no_active_ay') }}
         </p>
         <p class="text-[13px] font-bold text-amber-900 mt-1">
-          Tap untuk membuat tahun ajaran baru
+          {{ t('admin.sekolah.school_level_settings.tap_to_create_ay') }}
         </p>
       </button>
 
@@ -298,8 +300,8 @@ function goBack() {
           <NavIcon name="file-text" :size="16" />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-[13.5px] font-bold text-slate-900">Arsip & Kelola Tahun Ajaran</p>
-          <p class="text-[11px] text-slate-500">Buat, atur status, dan arsipkan tahun ajaran</p>
+          <p class="text-[13.5px] font-bold text-slate-900">{{ t('admin.sekolah.school_level_settings.archive_title') }}</p>
+          <p class="text-[11px] text-slate-500">{{ t('admin.sekolah.school_level_settings.archive_desc') }}</p>
         </div>
         <NavIcon name="chevron-right" :size="14" class="text-slate-300" />
       </button>
@@ -308,32 +310,32 @@ function goBack() {
     <!-- Edit modal -->
     <Modal
       v-if="showEditModal"
-      title="Edit Informasi Sekolah"
-      subtitle="Nama, alamat, dan jenjang"
+      :title="t('admin.sekolah.school_level_settings.edit_modal_title')"
+      :subtitle="t('admin.sekolah.school_level_settings.edit_modal_subtitle')"
       size="sm"
       @close="showEditModal = false"
     >
       <div class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Sekolah</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_name') }}</label>
           <input
             v-model="formName"
             type="text"
-            placeholder="SMA Negeri 1 …"
+            :placeholder="t('admin.sekolah.school_level_settings.name_placeholder')"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           />
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alamat</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_address_label') }}</label>
           <textarea
             v-model="formAddress"
             rows="2"
-            placeholder="Jl. …"
+            :placeholder="t('admin.sekolah.school_level_settings.address_placeholder')"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] text-slate-900 outline-none focus:border-role-admin resize-y"
           />
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jenjang</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.school_level_settings.field_jenjang_short') }}</label>
           <div class="mt-1 grid grid-cols-4 gap-2">
             <button
               v-for="opt in JENJANG_OPTIONS"
@@ -351,10 +353,10 @@ function goBack() {
         </div>
         <div class="grid grid-cols-2 gap-2 pt-2">
           <Button variant="secondary" block :disabled="isSaving" @click="showEditModal = false">
-            Batal
+            {{ t('admin.sekolah.school_level_settings.cancel') }}
           </Button>
           <Button variant="primary" block :disabled="isSaving" @click="saveEdit">
-            {{ isSaving ? 'Menyimpan…' : 'Simpan' }}
+            {{ isSaving ? t('admin.sekolah.school_level_settings.saving') : t('admin.sekolah.school_level_settings.save') }}
           </Button>
         </div>
       </div>

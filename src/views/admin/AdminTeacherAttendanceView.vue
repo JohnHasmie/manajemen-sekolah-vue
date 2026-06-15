@@ -18,6 +18,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TeacherAttendanceService } from '@/services/teacher-attendance.service';
 import GeofenceMapPicker from '@/components/feature/GeofenceMapPicker.vue';
 import { useToast } from '@/composables/useToast';
@@ -40,6 +41,7 @@ import Button from '@/components/ui/Button.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 
 const toast = useToast();
+const { t } = useI18n();
 
 type Tab = 'settings' | 'report';
 const tab = ref<Tab>('settings');
@@ -400,9 +402,9 @@ onMounted(loadSettings);
   <div class="space-y-md">
     <BrandPageHeader
       role="admin"
-      kicker="Presensi Guru · Konfigurasi & Laporan"
-      title="Presensi Guru"
-      meta="Atur metode presensi, geofence, dan lihat laporan harian guru"
+      :kicker="t('admin.sekolah.teacher_attendance.header_kicker')"
+      :title="t('admin.sekolah.teacher_attendance.header_title')"
+      :meta="t('admin.sekolah.teacher_attendance.header_meta')"
     >
       <div
         class="inline-flex gap-0.5 p-0.5 rounded-xl bg-white/20 border border-white/25 backdrop-blur-sm"
@@ -417,7 +419,7 @@ onMounted(loadSettings);
           "
           @click="switchTab('settings')"
         >
-          <NavIcon name="settings" :size="13" />Pengaturan
+          <NavIcon name="settings" :size="13" />{{ t('admin.sekolah.teacher_attendance.tab_settings') }}
         </button>
         <button
           type="button"
@@ -429,7 +431,7 @@ onMounted(loadSettings);
           "
           @click="switchTab('report')"
         >
-          <NavIcon name="bar-chart" :size="13" />Laporan
+          <NavIcon name="bar-chart" :size="13" />{{ t('admin.sekolah.teacher_attendance.tab_report') }}
         </button>
       </div>
     </BrandPageHeader>
@@ -751,8 +753,8 @@ onMounted(loadSettings);
 
         <AsyncView
           :state="summaryState"
-          empty-title="Belum ada rekap presensi"
-          empty-description="Tidak ada data presensi guru untuk periode ini."
+          :empty-title="t('admin.sekolah.teacher_attendance.empty_title')"
+          :empty-description="t('admin.sekolah.teacher_attendance.empty_description')"
           @retry="loadSummary"
         >
           <template #default>

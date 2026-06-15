@@ -389,28 +389,28 @@ const detailSections = computed<DetailSection[]>(() => {
   if (!s) return [];
   return [
     {
-      title: 'Identitas',
+      title: t('admin.sekolah.student_management.section_identity'),
       rows: [
-        { label: 'Nama lengkap', value: s.name },
-        { label: 'NIS', value: s.student_number ?? null },
+        { label: t('admin.sekolah.student_management.field_name'), value: s.name },
+        { label: t('admin.sekolah.student_management.field_nis'), value: s.student_number ?? null },
         {
-          label: 'Jenis kelamin',
-          value: s.gender === 'L' ? 'Laki-laki' : s.gender === 'P' ? 'Perempuan' : null,
+          label: t('admin.sekolah.student_management.field_gender'),
+          value: s.gender === 'L' ? t('admin.sekolah.student_management.gender_male') : s.gender === 'P' ? t('admin.sekolah.student_management.gender_female') : null,
         },
-        { label: 'Tanggal lahir', value: s.date_of_birth ?? null },
+        { label: t('admin.sekolah.student_management.field_dob'), value: s.date_of_birth ?? null },
       ],
     },
     {
-      title: 'Akademik',
-      rows: [{ label: 'Kelas', value: s.class_name ?? null }],
+      title: t('admin.sekolah.student_management.section_academic'),
+      rows: [{ label: t('admin.sekolah.student_management.field_class'), value: s.class_name ?? null }],
     },
     {
-      title: 'Wali / Kontak',
+      title: t('admin.sekolah.student_management.section_guardian'),
       rows: [
-        { label: 'Nama wali', value: s.guardian_name ?? null },
-        { label: 'Email wali', value: s.guardian_email ?? null },
-        { label: 'No. HP', value: s.phone_number ?? null },
-        { label: 'Alamat', value: s.address ?? null },
+        { label: t('admin.sekolah.student_management.field_guardian_name'), value: s.guardian_name ?? null },
+        { label: t('admin.sekolah.student_management.field_guardian_email'), value: s.guardian_email ?? null },
+        { label: t('admin.sekolah.student_management.field_phone'), value: s.phone_number ?? null },
+        { label: t('admin.sekolah.student_management.field_address'), value: s.address ?? null },
       ],
     },
   ];

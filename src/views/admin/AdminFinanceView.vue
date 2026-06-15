@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { FinanceService } from '@/services/finance.service';
 import type { MoneyFlowSummary } from '@/types/billing';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
@@ -29,6 +30,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const flow = ref<MoneyFlowSummary | null>(null);
 const isLoadingFlow = ref(true);
@@ -56,11 +58,11 @@ interface Tab {
   route: string;
 }
 
-const TABS: Tab[] = [
-  { key: 'tagihan', label: 'Tagihan', icon: 'credit-card', route: 'admin.finance.tagihan' },
-  { key: 'pembayaran', label: 'Pembayaran', icon: 'check-circle', route: 'admin.finance.pembayaran' },
-  { key: 'jenis', label: 'Jenis', icon: 'layers', route: 'admin.finance.jenis' },
-];
+const TABS = computed<Tab[]>(() => [
+  { key: 'tagihan', label: t('admin.sekolah.finance.tab_bills'), icon: 'credit-card', route: 'admin.finance.tagihan' },
+  { key: 'pembayaran', label: t('admin.sekolah.finance.tab_payments'), icon: 'check-circle', route: 'admin.finance.pembayaran' },
+  { key: 'jenis', label: t('admin.sekolah.finance.tab_types'), icon: 'layers', route: 'admin.finance.jenis' },
+]);
 
 const activeTab = computed<Tab['key']>(() => {
   const name = String(route.name ?? '');
@@ -74,8 +76,11 @@ function goTab(tab: Tab) {
 }
 
 const headerMeta = computed(() => {
-  if (!flow.value) return 'Memuat ringkasan keuangan...';
-  return `Periode ${flow.value.period.month} · ${flow.value.outstanding.count} tagihan menunggu`;
+  if (!flow.value) return t('admin.sekolah.finance.header_meta_loading');
+  return t('admin.sekolah.finance.header_meta', {
+    month: flow.value.period.month,
+    count: flow.value.outstanding.count,
+  });
 });
 </script>
 
@@ -83,8 +88,8 @@ const headerMeta = computed(() => {
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      kicker="Admin · Keuangan"
-      title="Operasional Keuangan"
+      :kicker="t('admin.sekolah.finance.header_kicker')"
+      :title="t('admin.sekolah.finance.header_title')"
       :meta="headerMeta"
     >
       <AcademicYearChip />
@@ -99,7 +104,7 @@ const headerMeta = computed(() => {
       class="bg-red-50 border border-red-200 rounded-2xl p-4 text-[12px] text-red-700"
     >
       {{ flowError }}
-      <button class="ml-2 font-bold underline" @click="loadFlow">Coba lagi</button>
+      <button class="ml-2 font-bold underline" @click="loadFlow">{{ t('admin.sekolah.finance.retry') }}</button>
     </div>
     <MoneyFlowStrip v-else-if="flow" :summary="flow" />
 

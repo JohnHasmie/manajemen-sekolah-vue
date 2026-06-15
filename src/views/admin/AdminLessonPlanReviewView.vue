@@ -22,6 +22,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { LessonPlanService } from '@/services/lesson-plans.service';
 import { SubjectService } from '@/services/subjects.service';
 import { ClassroomService } from '@/services/classrooms.service';
@@ -51,6 +52,7 @@ import Toast from '@/components/ui/Toast.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const router = useRouter();
+const { t } = useI18n();
 
 // ── Filter state ──
 const classes = ref<Classroom[]>([]);
@@ -152,26 +154,26 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'file-text',
-      label: 'Total RPP',
+      label: t('admin.sekolah.lesson_plan_review.kpi_total'),
       value: k.total,
       tone: 'brand',
     },
     {
       icon: 'bell',
-      label: 'Perlu Review',
+      label: t('admin.sekolah.lesson_plan_review.kpi_needs_review'),
       value: k.perlu_review,
       tone: k.perlu_review > 0 ? 'amber' : 'slate',
       accented: k.perlu_review > 0,
     },
     {
       icon: 'check-circle',
-      label: 'Disetujui',
+      label: t('admin.sekolah.lesson_plan_review.kpi_approved'),
       value: k.disetujui,
       tone: 'green',
     },
     {
       icon: 'x-circle',
-      label: 'Ditolak',
+      label: t('admin.sekolah.lesson_plan_review.kpi_rejected'),
       value: k.ditolak,
       tone: k.ditolak > 0 ? 'red' : 'slate',
     },
@@ -234,20 +236,20 @@ function pickFormat(f: LessonPlanFormat | '') {
 
 // ── Sheet callbacks ──
 function onApproved() {
-  toast.value = { message: 'RPP disetujui.', tone: 'success' };
+  toast.value = { message: t('admin.sekolah.lesson_plan_review.toast_approved'), tone: 'success' };
   reload();
 }
 function onRejected() {
-  toast.value = { message: 'RPP ditolak — catatan terkirim ke guru.', tone: 'success' };
+  toast.value = { message: t('admin.sekolah.lesson_plan_review.toast_rejected'), tone: 'success' };
   reload();
 }
 function onSentBack() {
-  toast.value = { message: 'RPP dikembalikan untuk revisi.', tone: 'success' };
+  toast.value = { message: t('admin.sekolah.lesson_plan_review.toast_sent_back'), tone: 'success' };
   reload();
 }
 function onBulkApproved() {
   toast.value = {
-    message: `${selectedCount.value} RPP disetujui.`,
+    message: t('admin.sekolah.lesson_plan_review.toast_bulk_approved', { count: selectedCount.value }),
     tone: 'success',
   };
   clearSelection();
@@ -255,7 +257,7 @@ function onBulkApproved() {
 }
 function onBulkRejected() {
   toast.value = {
-    message: `${selectedCount.value} RPP ditolak.`,
+    message: t('admin.sekolah.lesson_plan_review.toast_bulk_rejected', { count: selectedCount.value }),
     tone: 'success',
   };
   clearSelection();
@@ -275,13 +277,11 @@ function openDetail(plan: LessonPlan) {
     <!-- HEADER -->
     <BrandPageHeader
       role="admin"
-      kicker="Akademik · Review RPP"
-      title="Antrian Review RPP"
-      :meta="
-        queue
-          ? `${queue.kpi.total} RPP · ${queue.kpi.perlu_review} perlu ditinjau`
-          : 'Memuat antrian…'
-      "
+      :kicker="t('admin.sekolah.lesson_plan_review.header_kicker')"
+      :title="t('admin.sekolah.lesson_plan_review.header_title')"
+      :meta="queue
+        ? t('admin.sekolah.lesson_plan_review.header_meta', { total: queue.kpi.total, pending: queue.kpi.perlu_review })
+        : t('admin.sekolah.lesson_plan_review.header_meta_loading')"
     />
 
     <!-- KPI -->
@@ -290,26 +290,26 @@ function openDetail(plan: LessonPlan) {
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar
       v-model:search="searchQuery"
-      search-placeholder="Cari judul atau guru…"
+      :search-placeholder="t('admin.sekolah.lesson_plan_review.search_placeholder')"
     >
       <template #chips>
         <AppFilterChip
-          label="Kelas"
-          :value="activeClass?.name ?? 'Semua kelas'"
+          :label="t('admin.sekolah.lesson_plan_review.chip_class')"
+          :value="activeClass?.name ?? t('admin.sekolah.lesson_plan_review.all_classes')"
           icon-name="layers"
           tone="brand"
           @click="showClassPicker = true"
         />
         <AppFilterChip
-          label="Mapel"
-          :value="activeSubject?.name ?? 'Semua mapel'"
+          :label="t('admin.sekolah.lesson_plan_review.chip_subject')"
+          :value="activeSubject?.name ?? t('admin.sekolah.lesson_plan_review.all_subjects')"
           icon-name="book"
           tone="amber"
           @click="showSubjectPicker = true"
         />
         <AppFilterChip
-          label="Format"
-          :value="formatFilter ? FORMAT_LABELS[formatFilter] : 'Semua format'"
+          :label="t('admin.sekolah.lesson_plan_review.chip_format')"
+          :value="formatFilter ? FORMAT_LABELS[formatFilter] : t('admin.sekolah.lesson_plan_review.all_formats')"
           icon-name="file-text"
           tone="violet"
           @click="showFormatPicker = true"
@@ -320,8 +320,8 @@ function openDetail(plan: LessonPlan) {
     <!-- TIER QUEUE -->
     <AsyncView
       :state="listState"
-      empty-title="Antrian RPP kosong"
-      empty-description="Tidak ada RPP di filter saat ini. Coba longgarkan filter di atas."
+      :empty-title="t('admin.sekolah.lesson_plan_review.empty_title')"
+      :empty-description="t('admin.sekolah.lesson_plan_review.empty_description')"
       empty-icon="file-text"
       @retry="reload"
     >
@@ -359,7 +359,7 @@ function openDetail(plan: LessonPlan) {
                 :class="{
                   'bg-role-admin border-role-admin text-white': isSelected(plan.id),
                 }"
-                :aria-label="`Pilih ${plan.title}`"
+                :aria-label="t('admin.sekolah.lesson_plan_review.aria_select', { title: plan.title })"
                 @click.stop="toggleSelect(plan.id)"
               >
                 <NavIcon v-if="isSelected(plan.id)" name="check" :size="10" />
@@ -384,7 +384,7 @@ function openDetail(plan: LessonPlan) {
                     @click="approveTarget = plan"
                   >
                     <NavIcon name="check" :size="11" />
-                    Setujui
+                    {{ t('admin.sekolah.lesson_plan_review.approve') }}
                   </button>
                   <button
                     type="button"
@@ -392,7 +392,7 @@ function openDetail(plan: LessonPlan) {
                     @click="sendBackTarget = plan"
                   >
                     <NavIcon name="edit" :size="11" />
-                    Kembalikan
+                    {{ t('admin.sekolah.lesson_plan_review.send_back') }}
                   </button>
                   <button
                     type="button"
@@ -400,7 +400,7 @@ function openDetail(plan: LessonPlan) {
                     @click="rejectTarget = plan"
                   >
                     <NavIcon name="x" :size="11" />
-                    Tolak
+                    {{ t('admin.sekolah.lesson_plan_review.reject') }}
                   </button>
                 </div>
               </div>
@@ -416,26 +416,26 @@ function openDetail(plan: LessonPlan) {
       class="sticky bottom-4 z-30 flex items-center gap-3 px-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-lg"
     >
       <span class="text-[11px] text-slate-600">
-        <strong class="text-slate-900">{{ selectedCount }}</strong> dipilih
+        <strong class="text-slate-900">{{ selectedCount }}</strong> {{ t('admin.sekolah.lesson_plan_review.selected_suffix') }}
       </span>
       <button
         type="button"
         class="text-[11px] font-bold text-slate-500 hover:text-slate-900"
         @click="clearSelection"
       >
-        Batal
+        {{ t('admin.sekolah.lesson_plan_review.cancel') }}
       </button>
       <span class="flex-1"></span>
       <Button variant="danger" size="sm" @click="bulkRejectOpen = true">
-        Tolak terpilih
+        {{ t('admin.sekolah.lesson_plan_review.bulk_reject') }}
       </Button>
       <Button variant="success" size="sm" @click="bulkApproveOpen = true">
-        Setujui {{ selectedCount }}
+        {{ t('admin.sekolah.lesson_plan_review.bulk_approve', { count: selectedCount }) }}
       </Button>
     </section>
 
     <!-- ── PICKERS ── -->
-    <Modal v-if="showClassPicker" title="Pilih Kelas" @close="showClassPicker = false">
+    <Modal v-if="showClassPicker" :title="t('admin.sekolah.lesson_plan_review.pick_class')" @close="showClassPicker = false">
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
         <li>
           <button
@@ -444,7 +444,7 @@ function openDetail(plan: LessonPlan) {
             :class="{ 'bg-role-admin/5 text-role-admin font-bold': !classId }"
             @click="pickClass('')"
           >
-            Semua kelas
+            {{ t('admin.sekolah.lesson_plan_review.all_classes') }}
           </button>
         </li>
         <li v-for="c in classes" :key="c.id">
@@ -460,7 +460,7 @@ function openDetail(plan: LessonPlan) {
       </ul>
     </Modal>
 
-    <Modal v-if="showSubjectPicker" title="Pilih Mata Pelajaran" @close="showSubjectPicker = false">
+    <Modal v-if="showSubjectPicker" :title="t('admin.sekolah.lesson_plan_review.pick_subject')" @close="showSubjectPicker = false">
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
         <li>
           <button
@@ -469,7 +469,7 @@ function openDetail(plan: LessonPlan) {
             :class="{ 'bg-role-admin/5 text-role-admin font-bold': !subjectId }"
             @click="pickSubject('')"
           >
-            Semua mapel
+            {{ t('admin.sekolah.lesson_plan_review.all_subjects') }}
           </button>
         </li>
         <li v-for="s in subjects" :key="s.id">
@@ -485,7 +485,7 @@ function openDetail(plan: LessonPlan) {
       </ul>
     </Modal>
 
-    <Modal v-if="showFormatPicker" title="Pilih Format" @close="showFormatPicker = false">
+    <Modal v-if="showFormatPicker" :title="t('admin.sekolah.lesson_plan_review.pick_format')" @close="showFormatPicker = false">
       <ul class="space-y-1">
         <li>
           <button
@@ -494,7 +494,7 @@ function openDetail(plan: LessonPlan) {
             :class="{ 'bg-role-admin/5 text-role-admin font-bold': !formatFilter }"
             @click="pickFormat('')"
           >
-            Semua format
+            {{ t('admin.sekolah.lesson_plan_review.all_formats') }}
           </button>
         </li>
         <li v-for="f in (['k13', 'rpp_1_halaman', 'modul_ajar', 'file'] as LessonPlanFormat[])" :key="f">

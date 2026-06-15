@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import { ReportCardService } from '@/services/report-card.service';
 import {
@@ -26,6 +27,7 @@ import Toast from '@/components/ui/Toast.vue';
 const route = useRoute();
 const router = useRouter();
 const academic = useAcademicYearStore();
+const { t } = useI18n();
 
 const classId = computed(() => String(route.params.classId ?? ''));
 const studentClassId = computed(() => String(route.params.studentClassId ?? ''));
@@ -42,7 +44,7 @@ async function load() {
   loadError.value = null;
   const ayId = academic.selectedYearId ?? '';
   if (!studentClassId.value || !ayId) {
-    loadError.value = 'Konteks rapor (siswa / TP) belum lengkap.';
+    loadError.value = t('admin.sekolah.report_card_detail.err_context');
     isLoading.value = false;
     return;
   }
@@ -96,7 +98,7 @@ async function load() {
     }
     
     if (!res) {
-      loadError.value = 'Rapor tidak ditemukan dan tidak ada data awal.';
+      loadError.value = t('admin.sekolah.report_card_detail.err_no_data');
       return;
     }
     detail.value = res;
@@ -111,9 +113,9 @@ onMounted(load);
 watch(() => academic.selectedYearId, () => load());
 
 // ── Derived ──
-const studentName = computed(() => detail.value?.student_name ?? 'Siswa');
+const studentName = computed(() => detail.value?.student_name ?? t('admin.sekolah.report_card_detail.fallback_student'));
 const className = computed(() => detail.value?.class_name ?? '—');
-const kicker = computed(() => `Kelas ${className.value} · Rapor`);
+const kicker = computed(() => t('admin.sekolah.report_card_detail.kicker', { className: className.value }));
 const status = computed<ReportCardStatus>(() => detail.value?.status ?? 'draft');
 const isPublished = computed(() => status.value === 'published' || status.value === 'distributed');
 const statusTone = computed(() => STATUS_TONES[status.value]);
@@ -123,8 +125,8 @@ const headerMeta = computed(() => {
   const sem = detail.value?.semester ?? '';
   const tp = detail.value?.academic_year ?? '';
   const parts: string[] = [];
-  if (tp) parts.push(`TP ${tp}`);
-  if (sem) parts.push(`Sem ${sem}`);
+  if (tp) parts.push(t('admin.sekolah.report_card_detail.tp_label', { tp }));
+  if (sem) parts.push(t('admin.sekolah.report_card_detail.sem_label', { sem }));
   return parts.join(' · ');
 });
 
@@ -178,7 +180,7 @@ async function downloadFormatGuru() {
       student_class_id: studentClassId.value,
       filename: `rapor-${studentName.value}.pdf`
     });
-    toast.value = { message: 'PDF Rapor (Format Guru) terdownload.', tone: 'success' };
+    toast.value = { message: t('admin.sekolah.report_card_detail.toast_pdf_teacher'), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -195,7 +197,7 @@ async function downloadFormatWali() {
       student_class_id: studentClassId.value,
       filename: `sertifikat-${studentName.value}.pdf`
     });
-    toast.value = { message: 'PDF E-Rapor (Format Wali) terdownload.', tone: 'success' };
+    toast.value = { message: t('admin.sekolah.report_card_detail.toast_pdf_parent'), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -205,7 +207,7 @@ async function downloadFormatWali() {
 
 function handlePrintAction() {
   if (!isPublished.value) {
-    toast.value = { message: 'Rapor masih draft — cetak PDF belum tersedia.', tone: 'error' };
+    toast.value = { message: t('admin.sekolah.report_card_detail.toast_draft_unavailable'), tone: 'error' };
     return;
   }
   showPrintModal.value = true;
@@ -229,19 +231,19 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Daftar Rapor
+        {{ t('admin.sekolah.report_card_detail.back_to_list') }}
       </button>
     </div>
 
-    <AsyncView :state="state" empty-title="Rapor tidak ditemukan" @retry="load">
+    <AsyncView :state="state" :empty-title="t('admin.sekolah.report_card_detail.empty_title')" @retry="load">
       <template #default>
         <div v-if="detail" class="space-y-4">
           <!-- HEADER -->
           <BrandPageHeader
             role="admin"
             :kicker="kicker"
-            :title="`Rapor ${studentName}`"
-            :meta="detail.student_id ? `NIS ${detail.student_id}` : 'Tanpa NIS'"
+            :title="t('admin.sekolah.report_card_detail.header_title', { name: studentName })"
+            :meta="detail.student_id ? t('admin.sekolah.report_card_detail.nis_label', { nis: detail.student_id }) : t('admin.sekolah.report_card_detail.no_nis')"
             :live-dot="false"
           >
             <span
@@ -270,7 +272,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
           <section class="bg-white border border-slate-200 rounded-2xl shadow-sm grid grid-cols-3 divide-x divide-slate-100">
             <div class="px-3 py-3 text-center">
               <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                Rata-rata
+                {{ t('admin.sekolah.report_card_detail.kpi_average') }}
               </p>
               <p class="text-lg font-black mt-1 text-[#143068] tabular-nums">
                 {{ averageScore }}
@@ -535,7 +537,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
           <div class="grid grid-cols-2 gap-2 sticky bottom-2 bg-white/95 backdrop-blur rounded-2xl border border-slate-200 px-3 py-2 shadow-lg">
             <Button variant="secondary" block @click="goBack">
               <NavIcon name="chevron-left" :size="13" />
-              Kembali
+              {{ t('admin.sekolah.report_card_detail.back') }}
             </Button>
             <Button
               variant="primary"
@@ -546,7 +548,7 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
               @click="handlePrintAction"
             >
               <NavIcon name="download" :size="13" />
-              {{ isPublished ? 'Cetak PDF' : 'Belum Terbit' }}
+              {{ isPublished ? t('admin.sekolah.report_card_detail.print_pdf') : t('admin.sekolah.report_card_detail.not_published') }}
             </Button>
           </div>
         </div>
@@ -557,8 +559,8 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
     <Modal
       v-slot:default
       v-if="showPrintModal"
-      title="Pilih format PDF"
-      subtitle="Pilih format dokumen yang ingin dicetak"
+      :title="t('admin.sekolah.report_card_detail.pick_pdf_title')"
+      :subtitle="t('admin.sekolah.report_card_detail.pick_pdf_subtitle')"
       size="sm"
       @close="showPrintModal = false"
     >
@@ -573,9 +575,9 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
             <NavIcon name="file-text" :size="20" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[13.5px] font-black text-slate-900">Raport (Format Guru)</p>
+            <p class="text-[13.5px] font-black text-slate-900">{{ t('admin.sekolah.report_card_detail.format_teacher_title') }}</p>
             <p class="text-[11px] text-slate-500 mt-1 leading-normal">
-              Dokumen resmi lengkap — sikap, mata pelajaran, ekstrakurikuler, dan deskripsi capaian.
+              {{ t('admin.sekolah.report_card_detail.format_teacher_desc') }}
             </p>
           </div>
           <NavIcon name="chevron-right" :size="18" class="text-slate-400" />
@@ -591,9 +593,9 @@ const state = computed<AsyncState<ReportCardDetail>>(() => {
             <NavIcon name="sparkles" :size="20" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-[13.5px] font-black text-slate-900">E-Raport (Format Wali)</p>
+            <p class="text-[13.5px] font-black text-slate-900">{{ t('admin.sekolah.report_card_detail.format_parent_title') }}</p>
             <p class="text-[11px] text-slate-500 mt-1 leading-normal">
-              Sertifikat ringkas — rata-rata nilai, peringkat, dan visual modern untuk orang tua.
+              {{ t('admin.sekolah.report_card_detail.format_parent_desc') }}
             </p>
           </div>
           <NavIcon name="chevron-right" :size="18" class="text-slate-400" />

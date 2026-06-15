@@ -11,6 +11,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { FinanceService } from '@/services/finance.service';
 import type { Bill } from '@/types/billing';
 import AsyncView, { type AsyncState } from '@/components/data/AsyncView.vue';
@@ -25,6 +26,7 @@ import { formatRupiah } from '@/lib/format';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const classId = computed(() => String(route.params.classId ?? ''));
 const paymentTypeId = computed(() => String(route.params.paymentTypeId ?? ''));
@@ -62,7 +64,7 @@ async function load() {
 onMounted(load);
 
 const className = computed(() => bills.value[0]?.student?.class_name ?? '');
-const paymentTypeName = computed(() => bills.value[0]?.payment_type?.name ?? 'Tagihan');
+const paymentTypeName = computed(() => bills.value[0]?.payment_type?.name ?? t('admin.sekolah.bill_group_detail.fallback_payment_type'));
 
 const unpaid = computed(() => bills.value.filter((b) => b.status !== 'paid'));
 const paid = computed(() => bills.value.filter((b) => b.status === 'paid'));
@@ -75,25 +77,25 @@ const outstandingAmount = computed(() => Math.max(0, totalAmount.value - paidAmo
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'users',
-    label: 'Total siswa',
+    label: t('admin.sekolah.bill_group_detail.kpi_total_students'),
     value: bills.value.length,
     tone: 'brand',
   },
   {
     icon: 'check-circle',
-    label: 'Lunas',
+    label: t('admin.sekolah.bill_group_detail.kpi_paid'),
     value: paid.value.length,
     tone: 'green',
   },
   {
     icon: 'clock',
-    label: 'Berjalan',
+    label: t('admin.sekolah.bill_group_detail.kpi_in_progress'),
     value: unpaid.value.length - overdue.value.length,
     tone: 'amber',
   },
   {
     icon: 'alert-triangle',
-    label: 'Telat',
+    label: t('admin.sekolah.bill_group_detail.kpi_overdue'),
     value: overdue.value.length,
     tone: overdue.value.length > 0 ? 'red' : 'slate',
     accented: overdue.value.length > 0,
@@ -129,7 +131,10 @@ const selectedBills = computed(() =>
 
 function onReminderSent(payload: { count: number; channel: string }) {
   toast.value = {
-    message: `${payload.count} pengingat terkirim via ${payload.channel === 'whatsapp' ? 'WhatsApp' : 'email'}.`,
+    message: t('admin.sekolah.bill_group_detail.toast_reminder_sent', {
+      count: payload.count,
+      channel: payload.channel === 'whatsapp' ? 'WhatsApp' : t('admin.sekolah.bill_group_detail.channel_email'),
+    }),
     tone: 'success',
   };
   selectedIds.value = new Set();
@@ -142,7 +147,15 @@ function goBack() {
 
 const headerMeta = computed(
   () =>
-    `${className.value || 'Kelas'} · ${bills.value.length} tagihan · Sisa ${formatRupiah(outstandingAmount.value)}`,
+    t('admin.sekolah.bill_group_detail.header_meta', {
+      className: className.value || t('admin.sekolah.bill_group_detail.fallback_class'),
+      count: bills.value.length,
+      remaining: formatRupiah(outstandingAmount.value),
+    }),
+);
+
+const kicker = computed(() =>
+  t('admin.sekolah.bill_group_detail.header_kicker', { className: className.value || '—' }),
 );
 </script>
 
@@ -154,12 +167,12 @@ const headerMeta = computed(
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Hub Tagihan
+      {{ t('admin.sekolah.bill_group_detail.back_to_hub') }}
     </button>
 
     <BrandPageHeader
       role="admin"
-      :kicker="`Tagihan · ${className || '—'}`"
+      :kicker="kicker"
       :title="paymentTypeName"
       :meta="headerMeta"
     />
@@ -168,7 +181,7 @@ const headerMeta = computed(
 
     <AsyncView
       :state="listState"
-      empty-title="Belum ada tagihan di bucket ini"
+      :empty-title="t('admin.sekolah.bill_group_detail.empty_title')"
       empty-icon="credit-card"
       @retry="load"
     >
@@ -178,14 +191,14 @@ const headerMeta = computed(
           <section v-if="unpaid.length > 0" class="bg-white border border-slate-200 rounded-2xl p-2">
             <header class="flex items-center justify-between gap-2 px-3 pt-2 pb-1">
               <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                Belum lunas · {{ unpaid.length }}
+                {{ t('admin.sekolah.bill_group_detail.section_unpaid', { count: unpaid.length }) }}
               </h3>
               <button
                 type="button"
                 class="text-[11px] font-bold text-role-admin hover:underline"
                 @click="selectAllUnpaid"
               >
-                {{ selectedIds.size === unpaid.length ? 'Batal pilih' : 'Pilih semua' }}
+                {{ selectedIds.size === unpaid.length ? t('admin.sekolah.bill_group_detail.unselect_all') : t('admin.sekolah.bill_group_detail.select_all') }}
               </button>
             </header>
             <div class="divide-y divide-slate-100">
@@ -210,7 +223,7 @@ const headerMeta = computed(
           <!-- Lunas -->
           <section v-if="paid.length > 0" class="bg-white border border-slate-200 rounded-2xl p-2">
             <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 px-3 pt-2">
-              Lunas · {{ paid.length }}
+              {{ t('admin.sekolah.bill_group_detail.section_paid', { count: paid.length }) }}
             </h3>
             <div class="divide-y divide-slate-100">
               <BillCard
@@ -233,18 +246,18 @@ const headerMeta = computed(
     >
       <div class="flex-1 min-w-0">
         <p class="text-[11px] font-bold text-slate-700">
-          {{ selectedIds.size }} dipilih
+          {{ t('admin.sekolah.bill_group_detail.selected_count', { count: selectedIds.size }) }}
         </p>
         <p class="text-[10px] text-slate-500">
-          Total: {{ formatRupiah(selectedBills.reduce((s, b) => s + b.amount, 0)) }}
+          {{ t('admin.sekolah.bill_group_detail.total_label') }}: {{ formatRupiah(selectedBills.reduce((s, b) => s + b.amount, 0)) }}
         </p>
       </div>
       <Button variant="secondary" size="sm" @click="selectedIds = new Set()">
-        Batal
+        {{ t('admin.sekolah.bill_group_detail.cancel') }}
       </Button>
       <Button variant="primary" size="sm" @click="showReminder = true">
         <NavIcon name="bell" :size="13" />
-        Tagih ({{ selectedIds.size }})
+        {{ t('admin.sekolah.bill_group_detail.bulk_remind', { count: selectedIds.size }) }}
       </Button>
     </section>
 

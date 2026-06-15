@@ -15,6 +15,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { LessonHourService } from '@/services/lesson-hour.service';
 import { ScheduleService } from '@/services/schedule.service';
 import type {
@@ -30,6 +31,8 @@ import NavIcon from '@/components/feature/NavIcon.vue';
 import Toast from '@/components/ui/Toast.vue';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog.vue';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
+
+const { t } = useI18n();
 
 const hours = ref<LessonHour[]>([]);
 const filterOptions = ref<ScheduleFilterOptions | null>(null);
@@ -134,15 +137,15 @@ function addMinutes(hhmm: string, mins: number): string {
 
 async function save() {
   if (!editingDayId.value) {
-    formErr.value = 'Pilih hari terlebih dulu.';
+    formErr.value = t('admin.sekolah.lesson_hours.err_pick_day');
     return;
   }
   if (formHourNumber.value < 1) {
-    formErr.value = 'Jam ke- harus ≥ 1.';
+    formErr.value = t('admin.sekolah.lesson_hours.err_hour_min');
     return;
   }
   if (!formStart.value || !formEnd.value) {
-    formErr.value = 'Isi waktu mulai & selesai.';
+    formErr.value = t('admin.sekolah.lesson_hours.err_times_required');
     return;
   }
   isSaving.value = true;
@@ -157,10 +160,10 @@ async function save() {
     };
     if (editingHour.value) {
       await LessonHourService.update(editingHour.value.id, payload);
-      toast.value = { message: 'Jam pelajaran diperbarui.', tone: 'success' };
+      toast.value = { message: t('admin.sekolah.lesson_hours.toast_updated'), tone: 'success' };
     } else {
       await LessonHourService.create(payload);
-      toast.value = { message: 'Jam pelajaran ditambahkan.', tone: 'success' };
+      toast.value = { message: t('admin.sekolah.lesson_hours.toast_created'), tone: 'success' };
     }
     showForm.value = false;
     await load();
@@ -176,7 +179,7 @@ async function doDelete() {
   isDeleting.value = true;
   try {
     await LessonHourService.destroy(confirmDelete.value.id);
-    toast.value = { message: 'Jam pelajaran dihapus.', tone: 'success' };
+    toast.value = { message: t('admin.sekolah.lesson_hours.toast_deleted'), tone: 'success' };
     await load();
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
@@ -188,11 +191,11 @@ async function doDelete() {
 
 async function copyDay() {
   if (!copySourceDayId.value || !copyTargetDayId.value) {
-    copyErr.value = 'Pilih hari sumber & tujuan.';
+    copyErr.value = t('admin.sekolah.lesson_hours.err_pick_source_target');
     return;
   }
   if (copySourceDayId.value === copyTargetDayId.value) {
-    copyErr.value = 'Hari sumber tidak boleh sama dengan tujuan.';
+    copyErr.value = t('admin.sekolah.lesson_hours.err_same_day');
     return;
   }
   isCopying.value = true;
@@ -204,7 +207,7 @@ async function copyDay() {
       overwrite: copyOverwrite.value,
     });
     toast.value = {
-      message: `${res.copied_count} jam disalin.`,
+      message: t('admin.sekolah.lesson_hours.toast_copied', { count: res.copied_count }),
       tone: 'success',
     };
     showCopySheet.value = false;
@@ -228,20 +231,20 @@ function dayName(id: string): string {
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="admin"
-      kicker="Admin · Jadwal"
-      title="Pengaturan Jam Pelajaran"
-      :meta="`${hours.length} slot terdaftar untuk ${days.length} hari`"
+      :kicker="t('admin.sekolah.lesson_hours.header_kicker')"
+      :title="t('admin.sekolah.lesson_hours.header_title')"
+      :meta="t('admin.sekolah.lesson_hours.header_meta', { slots: hours.length, days: days.length })"
     >
       <Button variant="secondary" size="sm" @click="showCopySheet = true">
         <NavIcon name="copy" :size="12" />
-        Salin Hari
+        {{ t('admin.sekolah.lesson_hours.copy_day') }}
       </Button>
     </BrandPageHeader>
 
     <AsyncView
       :state="listState"
-      empty-title="Belum ada jam pelajaran"
-      empty-description="Tambah jam pelajaran per hari untuk membuka form jadwal."
+      :empty-title="t('admin.sekolah.lesson_hours.empty_title')"
+      :empty-description="t('admin.sekolah.lesson_hours.empty_description')"
       empty-icon="clock"
       @retry="load"
     >
@@ -256,17 +259,17 @@ function dayName(id: string): string {
               <div>
                 <h3 class="text-[13px] font-black text-slate-900">{{ d.name }}</h3>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  {{ hoursByDay[d.id]?.length ?? 0 }} jam
+                  {{ t('admin.sekolah.lesson_hours.hour_count', { count: hoursByDay[d.id]?.length ?? 0 }) }}
                 </p>
               </div>
               <Button variant="secondary" size="sm" @click="openAdd(d.id)">
                 <NavIcon name="plus" :size="11" />
-                Tambah
+                {{ t('admin.sekolah.lesson_hours.add') }}
               </Button>
             </header>
 
             <div v-if="(hoursByDay[d.id]?.length ?? 0) === 0" class="text-[11px] text-slate-400 text-center py-4">
-              Belum ada jam.
+              {{ t('admin.sekolah.lesson_hours.no_hours') }}
             </div>
             <div v-else class="divide-y divide-slate-100">
               <div
@@ -275,7 +278,7 @@ function dayName(id: string): string {
                 class="flex items-center gap-2 py-2"
               >
                 <div class="w-10 text-center flex-shrink-0">
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">JP</p>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.jp_short') }}</p>
                   <p class="text-[14px] font-black text-role-admin">{{ h.hour_number }}</p>
                 </div>
                 <div class="flex-1 min-w-0">
@@ -308,14 +311,14 @@ function dayName(id: string): string {
     <!-- Add/Edit form modal -->
     <Modal
       v-if="showForm"
-      :title="editingHour ? 'Edit Jam Pelajaran' : 'Tambah Jam Pelajaran'"
-      :subtitle="`Hari ${dayName(editingDayId)}`"
+      :title="editingHour ? t('admin.sekolah.lesson_hours.edit_title') : t('admin.sekolah.lesson_hours.add_title')"
+      :subtitle="t('admin.sekolah.lesson_hours.form_subtitle', { day: dayName(editingDayId) })"
       size="sm"
       @close="showForm = false"
     >
       <div class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jam ke-</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_hour_number') }}</label>
           <input
             v-model.number="formHourNumber"
             type="number"
@@ -325,7 +328,7 @@ function dayName(id: string): string {
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mulai</label>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_start') }}</label>
             <input
               v-model="formStart"
               type="time"
@@ -333,7 +336,7 @@ function dayName(id: string): string {
             />
           </div>
           <div>
-            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selesai</label>
+            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_end') }}</label>
             <input
               v-model="formEnd"
               type="time"
@@ -342,11 +345,11 @@ function dayName(id: string): string {
           </div>
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ruangan (opsional)</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.field_room') }}</label>
           <input
             v-model="formRoom"
             type="text"
-            placeholder="R-101"
+            :placeholder="t('admin.sekolah.lesson_hours.room_placeholder')"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           />
         </div>
@@ -356,9 +359,9 @@ function dayName(id: string): string {
         </p>
 
         <div class="grid grid-cols-2 gap-2 pt-2">
-          <Button variant="secondary" block @click="showForm = false">Batal</Button>
+          <Button variant="secondary" block @click="showForm = false">{{ t('admin.sekolah.lesson_hours.cancel') }}</Button>
           <Button variant="primary" block :loading="isSaving" @click="save">
-            {{ editingHour ? 'Simpan' : 'Tambah' }}
+            {{ editingHour ? t('admin.sekolah.lesson_hours.save') : t('admin.sekolah.lesson_hours.add') }}
           </Button>
         </div>
       </div>
@@ -367,35 +370,35 @@ function dayName(id: string): string {
     <!-- Copy-day sheet -->
     <Modal
       v-if="showCopySheet"
-      title="Salin Hari"
-      subtitle="Duplikat semua jam pelajaran dari satu hari ke hari lain"
+      :title="t('admin.sekolah.lesson_hours.copy_title')"
+      :subtitle="t('admin.sekolah.lesson_hours.copy_subtitle')"
       size="md"
       @close="showCopySheet = false"
     >
       <div class="space-y-3">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sumber</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.source') }}</label>
           <select
             v-model="copySourceDayId"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           >
-            <option value="">— pilih hari —</option>
+            <option value="">{{ t('admin.sekolah.lesson_hours.pick_day') }}</option>
             <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
           </select>
         </div>
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tujuan</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ t('admin.sekolah.lesson_hours.target') }}</label>
           <select
             v-model="copyTargetDayId"
             class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
           >
-            <option value="">— pilih hari —</option>
+            <option value="">{{ t('admin.sekolah.lesson_hours.pick_day') }}</option>
             <option v-for="d in days" :key="d.id" :value="d.id">{{ d.name }}</option>
           </select>
         </div>
         <label class="flex items-center gap-2 text-[11px] font-bold text-slate-700 cursor-pointer">
           <input v-model="copyOverwrite" type="checkbox" class="accent-role-admin" />
-          Timpa jam yang sudah ada di hari tujuan
+          {{ t('admin.sekolah.lesson_hours.overwrite') }}
         </label>
 
         <p v-if="copyErr" class="text-[11px] text-red-700 bg-red-50 border border-red-200 rounded-xl p-3">
@@ -403,9 +406,9 @@ function dayName(id: string): string {
         </p>
 
         <div class="grid grid-cols-2 gap-2 pt-2">
-          <Button variant="secondary" block @click="showCopySheet = false">Batal</Button>
+          <Button variant="secondary" block @click="showCopySheet = false">{{ t('admin.sekolah.lesson_hours.cancel') }}</Button>
           <Button variant="primary" block :loading="isCopying" @click="copyDay">
-            Salin
+            {{ t('admin.sekolah.lesson_hours.copy') }}
           </Button>
         </div>
       </div>
@@ -413,9 +416,9 @@ function dayName(id: string): string {
 
     <ConfirmationDialog
       v-if="confirmDelete"
-      title="Hapus Jam Pelajaran"
-      :message="`Hapus jam ke-${confirmDelete.hour_number} (${confirmDelete.start_time}–${confirmDelete.end_time})? Jadwal yang terikat ke jam ini akan gagal load.`"
-      confirm-label="Hapus"
+      :title="t('admin.sekolah.lesson_hours.delete_title')"
+      :message="t('admin.sekolah.lesson_hours.delete_message', { hour: confirmDelete.hour_number, start: confirmDelete.start_time, end: confirmDelete.end_time })"
+      :confirm-label="t('admin.sekolah.lesson_hours.delete')"
       danger
       :loading="isDeleting"
       @close="confirmDelete = null"

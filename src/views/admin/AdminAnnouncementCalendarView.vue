@@ -12,12 +12,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { AnnouncementService } from '@/services/announcements.service';
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import Spinner from '@/components/ui/Spinner.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 
 const today = new Date();
 const viewedMonth = ref(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -57,13 +59,13 @@ function shiftMonth(delta: number) {
 watch(viewedMonth, loadMonth);
 
 // ── Month label ────────────────────────────────────────────────────
-const MONTH_NAMES_ID = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-];
+const MONTH_KEYS = [
+  'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+  'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
+] as const;
 const monthLabel = computed(
   () =>
-    `${MONTH_NAMES_ID[viewedMonth.value.getMonth()]} ${viewedMonth.value.getFullYear()}`,
+    `${t(`admin.sekolah.announcement_calendar.month_${MONTH_KEYS[viewedMonth.value.getMonth()]}`)} ${viewedMonth.value.getFullYear()}`,
 );
 
 // ── Day-of-month → items lookup ────────────────────────────────────
@@ -149,7 +151,15 @@ const monthCells = computed<DayCell[]>(() => {
   return cells;
 });
 
-const DOW_LABELS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+const DOW_LABELS = computed(() => [
+  t('admin.sekolah.announcement_calendar.dow_mon'),
+  t('admin.sekolah.announcement_calendar.dow_tue'),
+  t('admin.sekolah.announcement_calendar.dow_wed'),
+  t('admin.sekolah.announcement_calendar.dow_thu'),
+  t('admin.sekolah.announcement_calendar.dow_fri'),
+  t('admin.sekolah.announcement_calendar.dow_sat'),
+  t('admin.sekolah.announcement_calendar.dow_sun'),
+]);
 
 function pickDay(cell: DayCell) {
   if (cell.day == null) return;
@@ -185,16 +195,23 @@ function eventTimeLabel(raw: unknown): string {
 
 function eventCategoryLabel(it: Record<string, unknown>): string {
   const blob = String(it.priority ?? it.category ?? it.type ?? '').toLowerCase();
-  if (blob.includes('urgent') || blob.includes('darurat')) return 'DARURAT';
+  if (blob.includes('urgent') || blob.includes('darurat')) return t('admin.sekolah.announcement_calendar.category_urgent');
   if (blob.includes('high') || blob.includes('penting') || blob.includes('peringatan'))
-    return 'PENTING';
-  return 'PENGUMUMAN';
+    return t('admin.sekolah.announcement_calendar.category_important');
+  return t('admin.sekolah.announcement_calendar.category_announcement');
+}
+
+function categorySeverity(it: Record<string, unknown>): 'urgent' | 'important' | 'announcement' {
+  const blob = String(it.priority ?? it.category ?? it.type ?? '').toLowerCase();
+  if (blob.includes('urgent') || blob.includes('darurat')) return 'urgent';
+  if (blob.includes('high') || blob.includes('penting') || blob.includes('peringatan')) return 'important';
+  return 'announcement';
 }
 
 function categoryChipCls(it: Record<string, unknown>): string {
-  const c = eventCategoryLabel(it);
-  if (c === 'DARURAT') return 'bg-red-100 text-red-700';
-  if (c === 'PENTING') return 'bg-amber-100 text-amber-700';
+  const c = categorySeverity(it);
+  if (c === 'urgent') return 'bg-red-100 text-red-700';
+  if (c === 'important') return 'bg-amber-100 text-amber-700';
   return 'bg-blue-100 text-blue-700';
 }
 
@@ -223,12 +240,12 @@ function goBack() {
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Pengumuman
+      {{ t('admin.sekolah.announcement_calendar.back_to_announcements') }}
     </button>
 
     <BrandPageHeader
       role="admin"
-      kicker="KALENDER ACARA"
+      :kicker="t('admin.sekolah.announcement_calendar.header_kicker')"
       :title="monthLabel"
       :live-dot="false"
     >
@@ -295,7 +312,7 @@ function goBack() {
     <section class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-md">
       <header class="border-b border-slate-100 pb-2">
         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-          {{ selectedDayItems.length }} acara
+          {{ t('admin.sekolah.announcement_calendar.events_count', { count: selectedDayItems.length }) }}
         </p>
         <p class="text-[14px] font-extrabold text-slate-900 mt-0.5">
           {{ selectedDayLabel() }}
@@ -309,7 +326,7 @@ function goBack() {
         v-else-if="selectedDayItems.length === 0"
         class="py-8 text-center text-[12px] text-slate-400"
       >
-        Tidak ada acara pada hari ini.
+        {{ t('admin.sekolah.announcement_calendar.no_events') }}
       </div>
       <ul v-else class="space-y-2">
         <li v-for="(it, i) in selectedDayItems" :key="String(it.id ?? i)">

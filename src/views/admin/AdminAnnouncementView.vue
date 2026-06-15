@@ -448,7 +448,7 @@ function pickAudience(k: AudienceFilter) {
     <!-- ── 1. Header ────────────────────────────────────────── -->
     <BrandPageHeader
       role="admin"
-      kicker="Komunikasi · Broadcast"
+      :kicker="t('admin.sekolah.announcement.kicker')"
       :title="t('admin.announcement.schoolAnnouncements')"
       :meta="t('admin.announcement.meta')"
       :live-dot="false"
@@ -484,21 +484,21 @@ function pickAudience(k: AudienceFilter) {
     >
       <template #chips>
         <AppFilterChip
-          label="Status"
+          :label="t('admin.sekolah.announcement.chip_status')"
           :value="activeStatus.label"
           icon-name="check-circle"
           tone="green"
           @click="showStatusPicker = true"
         />
         <AppFilterChip
-          label="Prioritas"
+          :label="t('admin.sekolah.announcement.chip_priority')"
           :value="activePriority.label"
           icon-name="bell"
           tone="amber"
           @click="showPriorityPicker = true"
         />
         <AppFilterChip
-          label="Audiens"
+          :label="t('admin.sekolah.announcement.chip_audience')"
           :value="activeAudience.label"
           icon-name="users"
           tone="violet"

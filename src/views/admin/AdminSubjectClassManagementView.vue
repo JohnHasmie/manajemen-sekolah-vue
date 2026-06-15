@@ -11,6 +11,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { SubjectService } from '@/services/subjects.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import type { Subject, Classroom } from '@/types/entities';
@@ -34,6 +35,7 @@ interface AttachedClassRow {
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const subjectId = computed(() => String(route.params.subjectId ?? ''));
 
@@ -101,19 +103,19 @@ const unattached = computed(() => {
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'layers',
-    label: 'Kelas Tertaut',
+    label: t('admin.sekolah.subject_class.kpi_attached'),
     value: attached.value.length,
     tone: 'brand',
   },
   {
     icon: 'users',
-    label: 'Total Siswa',
+    label: t('admin.sekolah.subject_class.kpi_total_students'),
     value: attached.value.reduce((s, c) => s + (c.student_count ?? 0), 0),
     tone: 'violet',
   },
   {
     icon: 'plus',
-    label: 'Kelas Belum Tertaut',
+    label: t('admin.sekolah.subject_class.kpi_unattached'),
     value: unattached.value.length,
     tone: unattached.value.length > 0 ? 'amber' : 'slate',
   },
@@ -141,7 +143,7 @@ async function detachOne(id: string) {
   isDetaching.value = true;
   try {
     await SubjectService.detachClass(subjectId.value, id);
-    toast.value = { message: 'Kelas dilepas.', tone: 'success' };
+    toast.value = { message: t('admin.sekolah.subject_class.toast_detached_single'), tone: 'success' };
     await load();
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
@@ -157,9 +159,10 @@ async function detachSelected() {
   isDetaching.value = true;
   try {
     const res = await SubjectService.bulkDetach(subjectId.value, ids);
-    const note = res.failed > 0 ? ` · ${res.failed} gagal` : '';
     toast.value = {
-      message: `${res.detached} kelas dilepas${note}.`,
+      message: res.failed > 0
+        ? t('admin.sekolah.subject_class.toast_detached_with_failed', { detached: res.detached, failed: res.failed })
+        : t('admin.sekolah.subject_class.toast_detached', { detached: res.detached }),
       tone: 'success',
     };
     clearSelection();
@@ -191,9 +194,10 @@ async function submitBulkAttach() {
   isAttaching.value = true;
   try {
     const res = await SubjectService.bulkAttach(subjectId.value, ids);
-    const note = res.failed > 0 ? ` · ${res.failed} gagal` : '';
     toast.value = {
-      message: `${res.attached} kelas ditambahkan${note}.`,
+      message: res.failed > 0
+        ? t('admin.sekolah.subject_class.toast_attached_with_failed', { attached: res.attached, failed: res.failed })
+        : t('admin.sekolah.subject_class.toast_attached', { attached: res.attached }),
       tone: 'success',
     };
     showBulkAttach.value = false;
@@ -211,10 +215,18 @@ function goBack() {
 
 const headerMeta = computed(() => {
   if (!subject.value) return '';
-  return `${attached.value.length} kelas tertaut${
-    subject.value.code ? ` · Kode ${subject.value.code}` : ''
-  }`;
+  return subject.value.code
+    ? t('admin.sekolah.subject_class.header_meta_with_code', { count: attached.value.length, code: subject.value.code })
+    : t('admin.sekolah.subject_class.header_meta', { count: attached.value.length });
 });
+
+const detachMessage = computed(() =>
+  t('admin.sekolah.subject_class.detach_message', { name: subject.value?.name ?? t('admin.sekolah.subject_class.fallback_subject') }),
+);
+
+const bulkAttachSubtitle = computed(() =>
+  t('admin.sekolah.subject_class.bulk_attach_subtitle', { name: subject.value?.name ?? '' }),
+);
 </script>
 
 <template>
@@ -225,18 +237,18 @@ const headerMeta = computed(() => {
       @click="goBack"
     >
       <NavIcon name="chevron-left" :size="14" />
-      Daftar Mata Pelajaran
+      {{ t('admin.sekolah.subject_class.back_to_subjects') }}
     </button>
 
     <BrandPageHeader
       role="admin"
-      kicker="Admin · Manajemen Mata Pelajaran"
-      :title="subject?.name ?? 'Memuat...'"
+      :kicker="t('admin.sekolah.subject_class.header_kicker')"
+      :title="subject?.name ?? t('admin.sekolah.subject_class.loading')"
       :meta="headerMeta"
     >
       <Button variant="primary" size="sm" @click="openBulkAttach">
         <NavIcon name="plus" :size="12" />
-        Tambah Kelas
+        {{ t('admin.sekolah.subject_class.add_class') }}
       </Button>
     </BrandPageHeader>
 
@@ -244,8 +256,8 @@ const headerMeta = computed(() => {
 
     <AsyncView
       :state="listState"
-      empty-title="Belum ada kelas yang menggunakan mata pelajaran ini"
-      empty-description="Tap Tambah Kelas untuk menautkan."
+      :empty-title="t('admin.sekolah.subject_class.empty_title')"
+      :empty-description="t('admin.sekolah.subject_class.empty_description')"
       empty-icon="layers"
       @retry="load"
     >
@@ -256,13 +268,13 @@ const headerMeta = computed(() => {
             class="text-[11px] font-bold text-role-admin hover:underline"
             @click="selectAll"
           >
-            {{ selectedIds.size === attached.length ? 'Batal pilih semua' : 'Pilih semua' }}
+            {{ selectedIds.size === attached.length ? t('admin.sekolah.subject_class.unselect_all') : t('admin.sekolah.subject_class.select_all') }}
           </button>
-          <span class="text-[11px] font-bold text-slate-700">{{ selectedIds.size }} dipilih</span>
+          <span class="text-[11px] font-bold text-slate-700">{{ t('admin.sekolah.subject_class.selected_count', { count: selectedIds.size }) }}</span>
           <div class="flex items-center gap-1">
-            <Button variant="secondary" size="sm" @click="clearSelection">Batal</Button>
+            <Button variant="secondary" size="sm" @click="clearSelection">{{ t('admin.sekolah.subject_class.cancel') }}</Button>
             <Button variant="danger" size="sm" :loading="isDetaching" @click="detachSelected">
-              Lepas ({{ selectedIds.size }})
+              {{ t('admin.sekolah.subject_class.detach_bulk', { count: selectedIds.size }) }}
             </Button>
           </div>
         </div>
@@ -287,9 +299,9 @@ const headerMeta = computed(() => {
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ c.name }}</p>
               <p class="text-[11px] text-slate-500 truncate">
-                <span v-if="c.grade_level">Tingkat {{ c.grade_level }} · </span>
-                <span>{{ c.student_count ?? 0 }} siswa</span>
-                <span v-if="c.homeroom_teacher_name"> · Wali: {{ c.homeroom_teacher_name }}</span>
+                <span v-if="c.grade_level">{{ t('admin.sekolah.subject_class.tingkat_label', { level: c.grade_level }) }} · </span>
+                <span>{{ t('admin.sekolah.subject_class.student_count', { count: c.student_count ?? 0 }) }}</span>
+                <span v-if="c.homeroom_teacher_name"> · {{ t('admin.sekolah.subject_class.homeroom_label', { name: c.homeroom_teacher_name }) }}</span>
               </p>
             </div>
             <button
@@ -297,7 +309,7 @@ const headerMeta = computed(() => {
               class="text-[11px] font-bold text-status-danger hover:underline px-2 py-1"
               @click.stop="detachConfirmId = c.id"
             >
-              Lepas
+              {{ t('admin.sekolah.subject_class.detach') }}
             </button>
           </li>
         </ul>
@@ -307,8 +319,8 @@ const headerMeta = computed(() => {
     <!-- Bulk attach modal -->
     <Modal
       v-if="showBulkAttach"
-      title="Tambah Kelas ke Mata Pelajaran"
-      :subtitle="`Pilih kelas yang akan menggunakan ${subject?.name ?? ''}`"
+      :title="t('admin.sekolah.subject_class.bulk_attach_title')"
+      :subtitle="bulkAttachSubtitle"
       size="lg"
       @close="showBulkAttach = false"
     >
@@ -316,19 +328,19 @@ const headerMeta = computed(() => {
         <input
           v-model="bulkAttachSearch"
           type="search"
-          placeholder="Cari nama kelas atau tingkat..."
+          :placeholder="t('admin.sekolah.subject_class.bulk_search_placeholder')"
           class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] font-bold text-slate-900 outline-none focus:border-role-admin"
         />
 
         <p class="text-[11px] font-bold text-slate-500">
-          {{ bulkAttachIds.size }} / {{ unattached.length }} kelas dipilih
+          {{ t('admin.sekolah.subject_class.bulk_selected_label', { selected: bulkAttachIds.size, total: unattached.length }) }}
         </p>
 
         <div
           v-if="unattached.length === 0"
           class="text-center text-[12px] text-slate-500 py-8"
         >
-          Semua kelas sudah tertaut.
+          {{ t('admin.sekolah.subject_class.all_attached') }}
         </div>
         <div
           v-else
@@ -348,14 +360,14 @@ const headerMeta = computed(() => {
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">{{ c.name }}</p>
               <p v-if="c.grade_level" class="text-[10px] text-slate-500">
-                Tingkat {{ c.grade_level }} · {{ c.student_count }} siswa
+                {{ t('admin.sekolah.subject_class.tingkat_with_count', { level: c.grade_level, count: c.student_count }) }}
               </p>
             </div>
           </label>
         </div>
 
         <div class="grid grid-cols-2 gap-2 pt-2">
-          <Button variant="secondary" block @click="showBulkAttach = false">Batal</Button>
+          <Button variant="secondary" block @click="showBulkAttach = false">{{ t('admin.sekolah.subject_class.cancel') }}</Button>
           <Button
             variant="primary"
             block
@@ -363,7 +375,7 @@ const headerMeta = computed(() => {
             :disabled="bulkAttachIds.size === 0 || isAttaching"
             @click="submitBulkAttach"
           >
-            Tambah ({{ bulkAttachIds.size }})
+            {{ t('admin.sekolah.subject_class.add_count', { count: bulkAttachIds.size }) }}
           </Button>
         </div>
       </div>
@@ -371,9 +383,9 @@ const headerMeta = computed(() => {
 
     <ConfirmationDialog
       v-if="detachConfirmId"
-      title="Lepas Kelas?"
-      :message="`Kelas ini tidak akan lagi terkait dengan ${subject?.name ?? 'mata pelajaran'}. Jadwal & nilai yang sudah ada tetap utuh.`"
-      confirm-label="Lepas"
+      :title="t('admin.sekolah.subject_class.detach_title')"
+      :message="detachMessage"
+      :confirm-label="t('admin.sekolah.subject_class.detach')"
       danger
       :loading="isDetaching"
       @close="detachConfirmId = null"

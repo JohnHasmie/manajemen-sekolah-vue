@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { ReportCardService } from '@/services/report-card.service';
 import { ClassroomService } from '@/services/classrooms.service';
 import {
@@ -43,6 +44,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const classId = computed(() => String(route.params.classId ?? ''));
 
@@ -101,23 +103,23 @@ const counts = computed(() => {
 });
 
 const kpiCards = computed<KpiCard[]>(() => [
-  { icon: 'users', label: 'Total Siswa', value: counts.value.total, tone: 'brand' },
+  { icon: 'users', label: t('admin.sekolah.report_card_class.kpi_total_students'), value: counts.value.total, tone: 'brand' },
   {
     icon: 'check-circle',
-    label: 'Terbit',
+    label: t('admin.sekolah.report_card_class.kpi_published'),
     value: counts.value.published + counts.value.distributed,
     tone: 'green',
   },
   {
     icon: 'edit',
-    label: 'Diperiksa',
+    label: t('admin.sekolah.report_card_class.kpi_reviewed'),
     value: counts.value.final,
     tone: counts.value.final > 0 ? 'amber' : 'slate',
     accented: counts.value.final > 0,
   },
   {
     icon: 'file-text',
-    label: 'Draf / Belum',
+    label: t('admin.sekolah.report_card_class.kpi_draft'),
     value: counts.value.draft + counts.value.belum,
     tone: counts.value.belum > 0 ? 'red' : 'slate',
   },
@@ -134,7 +136,7 @@ function statusPill(s: ReportCardStatus | null | undefined): {
   label: string;
   class: string;
 } {
-  if (!s) return { label: 'Belum diisi', class: 'bg-slate-100 text-slate-500' };
+  if (!s) return { label: t('admin.sekolah.report_card_class.status_not_filled'), class: 'bg-slate-100 text-slate-500' };
   const tone = STATUS_TONES[s];
   return { label: STATUS_LABELS[s], class: `${tone.bg} ${tone.text}` };
 }
@@ -151,7 +153,7 @@ async function exportExcel() {
         ? `rapor-kelas-${cls.value.name}.xlsx`
         : undefined,
     });
-    toast.value = { message: 'Excel terdownload.', tone: 'success' };
+    toast.value = { message: t('admin.sekolah.report_card_class.toast_excel_downloaded'), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -167,7 +169,7 @@ async function publishClass() {
       class_id: classId.value,
     });
     toast.value = {
-      message: `${res.published_count} rapor diterbitkan ke wali murid.`,
+      message: t('admin.sekolah.report_card_class.toast_published', { count: res.published_count }),
       tone: 'success',
     };
     await loadRoster();
@@ -203,7 +205,7 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
       student_class_id: s.student_class_id,
       filename: `rapor-${s.student_name}.pdf`
     });
-    toast.value = { message: `PDF rapor ${s.student_name} terdownload.`, tone: 'success' };
+    toast.value = { message: t('admin.sekolah.report_card_class.toast_pdf_downloaded', { name: s.student_name }), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   } finally {
@@ -222,16 +224,16 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Hub Rapor
+        {{ t('admin.sekolah.report_card_class.back_to_hub') }}
       </button>
     </div>
 
     <!-- HEADER -->
     <BrandPageHeader
       role="admin"
-      :kicker="`Kelas ${cls?.name ?? '—'} · Rapor`"
-      title="Daftar Rapor Siswa"
-      :meta="`${counts.total} siswa · ${counts.published + counts.distributed} terbit · ${counts.final} diperiksa`"
+      :kicker="t('admin.sekolah.report_card_class.header_kicker', { className: cls?.name ?? '—' })"
+      :title="t('admin.sekolah.report_card_class.header_title')"
+      :meta="t('admin.sekolah.report_card_class.header_meta', { total: counts.total, published: counts.published + counts.distributed, reviewed: counts.final })"
       :live-dot="false"
     />
 
@@ -241,8 +243,8 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
     <!-- LIST -->
     <AsyncView
       :state="listState"
-      empty-title="Belum ada siswa di kelas ini"
-      empty-description="Tambahkan siswa ke kelas via menu Data Siswa."
+      :empty-title="t('admin.sekolah.report_card_class.empty_title')"
+      :empty-description="t('admin.sekolah.report_card_class.empty_description')"
       empty-icon="users"
       @retry="loadRoster"
     >
@@ -266,10 +268,10 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
             </p>
             <p class="text-[11px] text-slate-500 truncate">
               <template v-if="s.student_number">
-                NIS {{ s.student_number }}
+                {{ t('admin.sekolah.report_card_class.nis_label', { nis: s.student_number }) }}
               </template>
-              <template v-else>Tanpa NIS</template>
-              · No {{ idx + 1 }}
+              <template v-else>{{ t('admin.sekolah.report_card_class.no_nis') }}</template>
+              {{ t('admin.sekolah.report_card_class.row_number', { index: idx + 1 }) }}
             </p>
           </div>
           
@@ -304,7 +306,7 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
         @click="exportExcel"
       >
         <NavIcon name="download" :size="13" />
-        Export Excel
+        {{ t('admin.sekolah.report_card_class.export_excel') }}
       </Button>
       <Button
         variant="success"
@@ -314,16 +316,16 @@ async function downloadStudentPdf(s: RaportSummaryRow) {
         @click="confirmPublish = true"
       >
         <NavIcon name="send" :size="13" />
-        Kirim ke Wali ({{ counts.final }})
+        {{ t('admin.sekolah.report_card_class.send_to_parents', { count: counts.final }) }}
       </Button>
     </section>
 
     <!-- CONFIRM PUBLISH -->
     <ConfirmationDialog
       v-if="confirmPublish"
-      title="Terbitkan Rapor"
-      :message="`${counts.final} rapor berstatus Diperiksa di kelas ${cls?.name ?? ''} akan diubah ke status Terbit. Wali murid akan dapat men-download PDF. Lanjut?`"
-      confirm-label="Terbitkan"
+      :title="t('admin.sekolah.report_card_class.publish_title')"
+      :message="t('admin.sekolah.report_card_class.publish_message', { count: counts.final, className: cls?.name ?? '' })"
+      :confirm-label="t('admin.sekolah.report_card_class.publish_confirm')"
       :loading="isPublishing"
       @close="confirmPublish = false"
       @confirm="publishClass"

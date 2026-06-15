@@ -99,13 +99,13 @@ const gradeLevelOptions = computed<FacetOption[]>(() => {
       if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
       return a.localeCompare(b);
     })
-    .map((g) => ({ key: g, label: `Tingkat ${g}` }));
+    .map((g) => ({ key: g, label: $t('admin.sekolah.classroom_management.tingkat', { grade: g }) }));
 });
 
-const HOMEROOM_OPTIONS: FacetOption[] = [
-  { key: 'yes', label: 'Sudah ada wali' },
-  { key: 'no', label: 'Belum ada wali' },
-];
+const HOMEROOM_OPTIONS = computed<FacetOption[]>(() => [
+  { key: 'yes', label: $t('admin.sekolah.classroom_management.has_homeroom') },
+  { key: 'no', label: $t('admin.sekolah.classroom_management.no_homeroom') },
+]);
 
 const gradeChipValue = computed(() => {
   if (!filters.grade_level) return $t('admin.shared.allFilter');
@@ -281,17 +281,17 @@ const detailSections = computed<DetailSection[]>(() => {
   if (!c) return [];
   return [
     {
-      title: 'Identitas',
+      title: $t('admin.sekolah.classroom_management.section_identity'),
       rows: [
-        { label: 'Nama kelas', value: c.name },
-        { label: 'Tingkat', value: c.grade_level ?? null },
-        { label: 'Jumlah siswa', value: `${c.student_count} siswa` },
+        { label: $t('admin.sekolah.classroom_management.field_name'), value: c.name },
+        { label: $t('admin.sekolah.classroom_management.field_tingkat'), value: c.grade_level ?? null },
+        { label: $t('admin.sekolah.classroom_management.field_student_count'), value: $t('admin.sekolah.classroom_management.student_count', { count: c.student_count }) },
       ],
     },
     {
-      title: 'Wali Kelas',
+      title: $t('admin.sekolah.classroom_management.section_homeroom'),
       rows: [
-        { label: 'Nama wali', value: c.homeroom_teacher_name ?? null },
+        { label: $t('admin.sekolah.classroom_management.field_homeroom_name'), value: c.homeroom_teacher_name ?? null },
       ],
     },
   ];
@@ -346,9 +346,10 @@ async function confirmDelete() {
 
 // ── Wizard ──
 function onPromoted(res: { promoted: number; failed: number }) {
-  const note = res.failed > 0 ? ` · ${res.failed} gagal` : '';
   toast.value = {
-    message: `${res.promoted} siswa dipromosikan${note}.`,
+    message: res.failed > 0
+      ? $t('admin.sekolah.classroom_management.toast_promoted_with_failed', { promoted: res.promoted, failed: res.failed })
+      : $t('admin.sekolah.classroom_management.toast_promoted', { promoted: res.promoted }),
     tone: 'success',
   };
   reload(pagination.value?.current_page ?? 1);
@@ -358,7 +359,7 @@ function onPromoted(res: { promoted: number; failed: number }) {
 async function exportExcel() {
   try {
     await AdminDataExcelService.exportExcel('class');
-    toast.value = { message: 'Excel terdownload.', tone: 'success' };
+    toast.value = { message: $t('admin.sekolah.classroom_management.toast_excel_downloaded'), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   }
@@ -366,15 +367,16 @@ async function exportExcel() {
 async function downloadTemplate() {
   try {
     await AdminDataExcelService.downloadTemplate('class');
-    toast.value = { message: 'Template terdownload.', tone: 'success' };
+    toast.value = { message: $t('admin.sekolah.classroom_management.toast_template_downloaded'), tone: 'success' };
   } catch (e) {
     toast.value = { message: (e as Error).message, tone: 'error' };
   }
 }
 function onImportDone(res: { imported: number; failed: number }) {
-  const note = res.failed > 0 ? ` · ${res.failed} gagal` : '';
   toast.value = {
-    message: `${res.imported} kelas diimpor${note}.`,
+    message: res.failed > 0
+      ? $t('admin.sekolah.classroom_management.toast_imported_with_failed', { imported: res.imported, failed: res.failed })
+      : $t('admin.sekolah.classroom_management.toast_imported', { imported: res.imported }),
     tone: 'success',
   };
   reload(1);
@@ -532,7 +534,7 @@ function statusFor(c: Classroom) {
   <!-- Per-facet pickers -->
   <FilterFacetPickerModal
     v-if="showGradePicker"
-    title="Filter Tingkat"
+    :title="$t('admin.sekolah.classroom_management.filter_tingkat_title')"
     :options="gradeLevelOptions"
     :selected="filters.grade_level ?? ''"
     @close="showGradePicker = false"
@@ -540,7 +542,7 @@ function statusFor(c: Classroom) {
   />
   <FilterFacetPickerModal
     v-if="showHomeroomPicker"
-    title="Filter Status Wali Kelas"
+    :title="$t('admin.sekolah.classroom_management.filter_homeroom_title')"
     :options="HOMEROOM_OPTIONS"
     :selected="filters.has_homeroom ?? ''"
     @close="showHomeroomPicker = false"
@@ -560,14 +562,14 @@ function statusFor(c: Classroom) {
   <AdminEntityDetailSheet
     v-if="detailTarget"
     :title="detailTarget.name"
-    :subtitle="detailTarget.grade_level ? `Tingkat ${detailTarget.grade_level}` : null"
+    :subtitle="detailTarget.grade_level ? $t('admin.sekolah.classroom_management.tingkat', { grade: detailTarget.grade_level }) : null"
     :avatar-name="detailTarget.name"
     :avatar-color="primaryColor"
     :sections="detailSections"
     :status-pill="
       detailTarget.homeroom_teacher_name
-        ? { label: 'Wali kelas terdaftar', tone: 'green' }
-        : { label: 'Belum ada wali', tone: 'amber' }
+        ? { label: $t('admin.sekolah.classroom_management.pill_homeroom_set'), tone: 'green' }
+        : { label: $t('admin.sekolah.classroom_management.pill_no_homeroom'), tone: 'amber' }
     "
     :read-only="ayReadOnly"
     @close="detailTarget = null"
@@ -583,9 +585,9 @@ function statusFor(c: Classroom) {
 
   <ConfirmationDialog
     v-if="deleteTarget"
-    :title="`Hapus kelas ${deleteTarget.name}?`"
-    message="Pastikan kelas ini tidak memiliki siswa atau jadwal aktif. Tindakan ini tidak dapat dibatalkan."
-    confirm-label="Hapus"
+    :title="$t('admin.sekolah.classroom_management.delete_one_title', { name: deleteTarget.name })"
+    :message="$t('admin.sekolah.classroom_management.delete_one_message')"
+    :confirm-label="$t('admin.sekolah.classroom_management.delete')"
     danger
     :loading="isSaving"
     @confirm="confirmDelete"
@@ -594,9 +596,9 @@ function statusFor(c: Classroom) {
 
   <ConfirmationDialog
     v-if="bulkDeleteOpen"
-    :title="`Hapus ${selectedIds.size} kelas?`"
-    message="Tindakan ini tidak dapat dibatalkan. Pastikan tidak ada siswa/jadwal aktif."
-    confirm-label="Hapus semua"
+    :title="$t('admin.sekolah.classroom_management.delete_bulk_title', { count: selectedIds.size })"
+    :message="$t('admin.sekolah.classroom_management.delete_bulk_message')"
+    :confirm-label="$t('admin.sekolah.classroom_management.delete_all')"
     danger
     :loading="isSaving"
     @confirm="performBulkDelete"
@@ -606,7 +608,7 @@ function statusFor(c: Classroom) {
   <AdminImportExcelModal
     v-if="showImport"
     entity="class"
-    title="Import Kelas dari Excel"
+    :title="$t('admin.sekolah.classroom_management.import_title')"
     @close="showImport = false"
     @done="onImportDone"
   />

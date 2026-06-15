@@ -48,13 +48,19 @@ const teachers = shallowRef<Teacher[]>([]);
 const classes = shallowRef<Classroom[]>([]);
 const subjects = shallowRef<Subject[]>([]);
 const filterOptions = shallowRef<TeacherFilterOptions>({
-  roles: [{ key: 'guru', label: 'Guru' }, { key: 'wali_kelas', label: 'Wali Kelas' }],
-  genders: [{ key: 'L', label: 'Laki-laki' }, { key: 'P', label: 'Perempuan' }],
+  roles: [
+    { key: 'guru', label: $t('admin.sekolah.teacher_management.role_teacher') },
+    { key: 'wali_kelas', label: $t('admin.sekolah.teacher_management.role_homeroom') },
+  ],
+  genders: [
+    { key: 'L', label: $t('admin.sekolah.teacher_management.gender_male') },
+    { key: 'P', label: $t('admin.sekolah.teacher_management.gender_female') },
+  ],
   employment_statuses: [
-    { key: 'tetap', label: 'Tetap' },
-    { key: 'tidak_tetap', label: 'Tidak Tetap' },
-    { key: 'kontrak', label: 'Kontrak' },
-    { key: 'honorer', label: 'Honorer' },
+    { key: 'tetap', label: $t('admin.sekolah.teacher_management.employ_permanent') },
+    { key: 'tidak_tetap', label: $t('admin.sekolah.teacher_management.employ_temporary') },
+    { key: 'kontrak', label: $t('admin.sekolah.teacher_management.employ_contract') },
+    { key: 'honorer', label: $t('admin.sekolah.teacher_management.employ_honorary') },
   ],
   classes: [],
   subjects: [],
@@ -320,38 +326,38 @@ async function openDetail(t: Teacher) {
 }
 
 const detailSections = computed<DetailSection[]>(() => {
-  const t = detailTarget.value;
-  if (!t) return [];
+  const teacher = detailTarget.value;
+  if (!teacher) return [];
   const employmentLabel =
     filterOptions.value.employment_statuses.find(
-      (es) => es.key === t.employment_status,
-    )?.label ?? t.employment_status ?? null;
+      (es) => es.key === teacher.employment_status,
+    )?.label ?? teacher.employment_status ?? null;
   return [
     {
-      title: 'Identitas',
+      title: $t('admin.sekolah.teacher_management.section_identity'),
       rows: [
-        { label: 'Nama lengkap', value: t.name },
-        { label: 'Email', value: t.email },
-        { label: 'NIP', value: t.employee_number ?? null },
+        { label: $t('admin.sekolah.teacher_management.field_name'), value: teacher.name },
+        { label: $t('admin.sekolah.teacher_management.field_email'), value: teacher.email },
+        { label: $t('admin.sekolah.teacher_management.field_nip'), value: teacher.employee_number ?? null },
         {
-          label: 'Jenis kelamin',
-          value: t.gender === 'L' ? 'Laki-laki' : t.gender === 'P' ? 'Perempuan' : null,
+          label: $t('admin.sekolah.teacher_management.field_gender'),
+          value: teacher.gender === 'L' ? $t('admin.sekolah.teacher_management.gender_male') : teacher.gender === 'P' ? $t('admin.sekolah.teacher_management.gender_female') : null,
         },
-        { label: 'No. HP', value: t.phone_number ?? null },
-        { label: 'Alamat', value: t.address ?? null },
+        { label: $t('admin.sekolah.teacher_management.field_phone'), value: teacher.phone_number ?? null },
+        { label: $t('admin.sekolah.teacher_management.field_address'), value: teacher.address ?? null },
       ],
     },
     {
-      title: 'Penugasan',
+      title: $t('admin.sekolah.teacher_management.section_assignment'),
       rows: [
-        { label: 'Peran', value: t.role === 'wali_kelas' ? 'Wali Kelas' : 'Guru' },
-        { label: 'Status kepegawaian', value: employmentLabel },
-        { label: 'Mata pelajaran', value: t.subject_names?.join(', ') || null },
+        { label: $t('admin.sekolah.teacher_management.field_role'), value: teacher.role === 'wali_kelas' ? $t('admin.sekolah.teacher_management.role_homeroom') : $t('admin.sekolah.teacher_management.role_teacher') },
+        { label: $t('admin.sekolah.teacher_management.field_employment'), value: employmentLabel },
+        { label: $t('admin.sekolah.teacher_management.field_subjects'), value: teacher.subject_names?.join(', ') || null },
         {
-          label: 'Wali kelas',
+          label: $t('admin.sekolah.teacher_management.field_homeroom_class'),
           value:
-            t.homeroom_class_names?.join(', ') ||
-            t.homeroom_class_name ||
+            teacher.homeroom_class_names?.join(', ') ||
+            teacher.homeroom_class_name ||
             null,
         },
       ],
@@ -418,16 +424,15 @@ async function handleSave(payload: Record<string, unknown>) {
       // existing user). The sheet's amber callout is the better surface.
       teacherEmailConflict.value = true;
       toast.value = {
-        message:
-          'Email sudah dipakai user lain. Aktifkan "Ganti akun terkait" lalu Simpan untuk migrasi.',
+        message: $t('admin.sekolah.teacher_management.toast_email_conflict_edit'),
         tone: 'error',
       };
     } else if (looksLikeConflict) {
       // Add mode — there's no migration path, so tell the admin plainly
       // to use a different email instead of the bare 422 / English text.
-      error.value = 'Email sudah dipakai user lain. Gunakan email yang berbeda.';
+      error.value = $t('admin.sekolah.teacher_management.err_email_conflict_add');
       toast.value = {
-        message: 'Email sudah dipakai user lain. Gunakan email lain.',
+        message: $t('admin.sekolah.teacher_management.toast_email_conflict_add'),
         tone: 'error',
       };
     } else {
@@ -619,7 +624,7 @@ function statusFor(t: Teacher) {
 
     <template #bulk-actions>
       <Button variant="danger" size="sm" @click="bulkDeleteOpen = true">
-        Hapus ({{ selectedIds.size }})
+        {{ $t('admin.sekolah.teacher_management.bulk_delete', { count: selectedIds.size }) }}
       </Button>
     </template>
   </AdminCrudScaffold>
@@ -627,7 +632,7 @@ function statusFor(t: Teacher) {
   <!-- Per-facet pickers -->
   <FilterFacetPickerModal
     v-if="showRolePicker"
-    title="Filter Peran"
+    :title="$t('admin.sekolah.teacher_management.filter_role_title')"
     :options="roleOptions"
     :selected="filters.role ?? ''"
     @close="showRolePicker = false"
@@ -635,7 +640,7 @@ function statusFor(t: Teacher) {
   />
   <FilterFacetPickerModal
     v-if="showClassPicker"
-    title="Filter Kelas Mengajar"
+    :title="$t('admin.sekolah.teacher_management.filter_class_title')"
     :options="classOptions"
     :selected="filters.class_id ?? ''"
     @close="showClassPicker = false"
@@ -643,7 +648,7 @@ function statusFor(t: Teacher) {
   />
   <FilterFacetPickerModal
     v-if="showGenderPicker"
-    title="Filter Jenis Kelamin"
+    :title="$t('admin.sekolah.teacher_management.filter_gender_title')"
     :options="genderOptions"
     :selected="filters.gender ?? ''"
     @close="showGenderPicker = false"
@@ -651,7 +656,7 @@ function statusFor(t: Teacher) {
   />
   <FilterFacetPickerModal
     v-if="showEmploymentPicker"
-    title="Filter Status Kepegawaian"
+    :title="$t('admin.sekolah.teacher_management.filter_employment_title')"
     :options="employmentOptions"
     :selected="filters.employment_status ?? ''"
     @close="showEmploymentPicker = false"
@@ -671,8 +676,8 @@ function statusFor(t: Teacher) {
 
   <AdminEntityDetailSheet
     v-if="detailTarget"
-    :title="detailTarget.name || 'Guru'"
-    :subtitle="detailTarget.role === 'wali_kelas' ? 'Wali Kelas' : 'Guru'"
+    :title="detailTarget.name || $t('admin.sekolah.teacher_management.fallback_name')"
+    :subtitle="detailTarget.role === 'wali_kelas' ? $t('admin.sekolah.teacher_management.role_homeroom') : $t('admin.sekolah.teacher_management.role_teacher')"
     :avatar-name="detailTarget.name"
     :avatar-color="primaryColor"
     :sections="detailSections"
@@ -684,9 +689,9 @@ function statusFor(t: Teacher) {
 
   <ConfirmationDialog
     v-if="deleteTarget"
-    :title="`Hapus ${deleteTarget.name}?`"
-    message="Tindakan ini tidak dapat dibatalkan. Akun guru akan dinonaktifkan dan tidak bisa masuk lagi."
-    confirm-label="Hapus"
+    :title="$t('admin.sekolah.teacher_management.delete_one_title', { name: deleteTarget.name })"
+    :message="$t('admin.sekolah.teacher_management.delete_one_message')"
+    :confirm-label="$t('admin.sekolah.teacher_management.delete')"
     danger
     :loading="isSaving"
     @confirm="confirmDelete"
@@ -695,9 +700,9 @@ function statusFor(t: Teacher) {
 
   <ConfirmationDialog
     v-if="bulkDeleteOpen"
-    :title="`Hapus ${selectedIds.size} guru?`"
-    message="Tindakan ini tidak dapat dibatalkan. Akun guru terpilih akan dinonaktifkan."
-    confirm-label="Hapus semua"
+    :title="$t('admin.sekolah.teacher_management.delete_bulk_title', { count: selectedIds.size })"
+    :message="$t('admin.sekolah.teacher_management.delete_bulk_message')"
+    :confirm-label="$t('admin.sekolah.teacher_management.delete_all')"
     danger
     :loading="isSaving"
     @confirm="performBulkDelete"
@@ -707,7 +712,7 @@ function statusFor(t: Teacher) {
   <AdminImportExcelModal
     v-if="showImport"
     entity="teacher"
-    title="Import Guru dari Excel"
+    :title="$t('admin.sekolah.teacher_management.import_title')"
     @close="showImport = false"
     @done="onImportDone"
   />

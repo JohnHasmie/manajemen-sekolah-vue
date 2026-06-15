@@ -7,6 +7,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { FinanceService } from '@/services/finance.service';
 import {
   PAYMENT_STATUS_LABELS,
@@ -26,6 +27,8 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 defineProps<{ moneyFlow?: unknown }>();
 
+const { t } = useI18n();
+
 const payments = ref<Payment[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
@@ -35,12 +38,12 @@ type StatusFilter = 'all' | 'pending' | 'verified' | 'rejected';
 const statusFilter = ref<StatusFilter>('pending');
 const search = ref('');
 
-const STATUS_OPTS: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Semua status' },
-  { key: 'pending', label: 'Menunggu verifikasi' },
-  { key: 'verified', label: 'Terverifikasi' },
-  { key: 'rejected', label: 'Ditolak' },
-];
+const STATUS_OPTS = computed<{ key: StatusFilter; label: string }[]>(() => [
+  { key: 'all', label: t('admin.sekolah.payments.status_all') },
+  { key: 'pending', label: t('admin.sekolah.payments.status_pending') },
+  { key: 'verified', label: t('admin.sekolah.payments.status_verified') },
+  { key: 'rejected', label: t('admin.sekolah.payments.status_rejected') },
+]);
 
 const showStatusSheet = ref(false);
 const activePayment = ref<Payment | null>(null);
@@ -78,7 +81,7 @@ const filtered = computed(() => {
 });
 
 const statusChipValue = computed(
-  () => STATUS_OPTS.find((o) => o.key === statusFilter.value)?.label ?? 'Semua',
+  () => STATUS_OPTS.value.find((o) => o.key === statusFilter.value)?.label ?? t('admin.sekolah.payments.status_all_short'),
 );
 
 const listState = computed<AsyncState<Payment[]>>(() => {
@@ -89,15 +92,15 @@ const listState = computed<AsyncState<Payment[]>>(() => {
 });
 
 function statusPill(p: Payment) {
-  const t = PAYMENT_STATUS_TONES[p.status];
-  return { label: PAYMENT_STATUS_LABELS[p.status], cls: `${t.bg} ${t.text}` };
+  const tone = PAYMENT_STATUS_TONES[p.status];
+  return { label: PAYMENT_STATUS_LABELS[p.status], cls: `${tone.bg} ${tone.text}` };
 }
 
 function onVerified(updated: Payment) {
   toast.value = {
     message: updated.status === 'verified'
-      ? 'Pembayaran disetujui.'
-      : 'Pembayaran ditolak.',
+      ? t('admin.sekolah.payments.toast_approved')
+      : t('admin.sekolah.payments.toast_rejected'),
     tone: 'success',
   };
   void load();
@@ -108,13 +111,13 @@ function onVerified(updated: Payment) {
   <section class="space-y-md">
     <PageFilterToolbar
       v-model:search="search"
-      search-placeholder="Cari siswa / metode..."
+      :search-placeholder="t('admin.sekolah.payments.search_placeholder')"
       :search-min-width="220"
     >
       <template #chips>
         <AppFilterChip
           icon-name="filter"
-          label="Status"
+          :label="t('admin.sekolah.payments.chip_status')"
           :value="statusChipValue"
           tone="amber"
           @click="showStatusSheet = true"
@@ -124,8 +127,8 @@ function onVerified(updated: Payment) {
 
     <AsyncView
       :state="listState"
-      empty-title="Tidak ada pembayaran"
-      empty-description="Belum ada pembayaran masuk dengan filter ini."
+      :empty-title="t('admin.sekolah.payments.empty_title')"
+      :empty-description="t('admin.sekolah.payments.empty_description')"
       empty-icon="check-circle"
       @retry="load"
     >
@@ -154,10 +157,10 @@ function onVerified(updated: Payment) {
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">
-                {{ p.bill?.student?.name ?? 'Siswa' }}
+                {{ p.bill?.student?.name ?? t('admin.sekolah.payments.fallback_student') }}
               </p>
               <p class="text-[11px] text-slate-500 truncate">
-                {{ p.bill?.title ?? 'Tagihan' }}
+                {{ p.bill?.title ?? t('admin.sekolah.payments.fallback_bill') }}
                 <span v-if="p.payment_method"> · {{ p.payment_method }}</span>
                 <span v-if="p.payment_date"> · {{ formatDateLong(p.payment_date) }}</span>
               </p>
@@ -175,7 +178,7 @@ function onVerified(updated: Payment) {
               size="sm"
               @click="activePayment = p"
             >
-              Verifikasi
+              {{ t('admin.sekolah.payments.verify') }}
             </Button>
             <Button
               v-else
@@ -183,7 +186,7 @@ function onVerified(updated: Payment) {
               size="sm"
               @click="activePayment = p"
             >
-              Detail
+              {{ t('admin.sekolah.payments.detail') }}
             </Button>
           </div>
         </div>
@@ -193,7 +196,7 @@ function onVerified(updated: Payment) {
     <!-- Status sheet -->
     <Modal
       v-if="showStatusSheet"
-      title="Filter Status Pembayaran"
+      :title="t('admin.sekolah.payments.status_modal_title')"
       size="sm"
       @close="showStatusSheet = false"
     >

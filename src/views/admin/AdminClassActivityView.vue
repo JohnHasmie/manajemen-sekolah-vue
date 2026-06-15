@@ -327,7 +327,7 @@ function exportCsv() {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-  toast.value = { message: 'CSV ter-download.', tone: 'success' };
+  toast.value = { message: $t('admin.sekolah.class_activity.toast_csv_downloaded'), tone: 'success' };
 }
 </script>
 
@@ -461,7 +461,7 @@ function exportCsv() {
     />
 
     <!-- CLASS PICKER -->
-    <Modal v-if="showClassPicker" title="Pilih Kelas" @close="showClassPicker = false">
+    <Modal v-if="showClassPicker" :title="$t('admin.sekolah.class_activity.pick_class')" @close="showClassPicker = false">
       <ul class="space-y-1 max-h-[60vh] overflow-y-auto">
         <li>
           <button
@@ -470,7 +470,7 @@ function exportCsv() {
             :class="!classFilter ? 'bg-role-admin/5 font-bold text-role-admin' : ''"
             @click="pickClass('')"
           >
-            Semua kelas
+            {{ $t('admin.sekolah.class_activity.all_classes') }}
           </button>
         </li>
         <li v-for="c in classes" :key="c.id">
@@ -489,7 +489,7 @@ function exportCsv() {
     <!-- SUBJECT PICKER -->
     <Modal
       v-if="showSubjectPicker"
-      title="Pilih Mapel"
+      :title="$t('admin.sekolah.class_activity.pick_subject')"
       @close="showSubjectPicker = false"
     >
       <ul class="space-y-1 max-h-[60vh] overflow-y-auto">
@@ -500,7 +500,7 @@ function exportCsv() {
             :class="!subjectFilter ? 'bg-role-admin/5 font-bold text-role-admin' : ''"
             @click="pickSubject('')"
           >
-            Semua mapel
+            {{ $t('admin.sekolah.class_activity.all_subjects') }}
           </button>
         </li>
         <li v-for="s in subjects" :key="s.id">
@@ -519,7 +519,7 @@ function exportCsv() {
     <!-- TEACHER PICKER -->
     <Modal
       v-if="showTeacherPicker"
-      title="Pilih Guru"
+      :title="$t('admin.sekolah.class_activity.pick_teacher')"
       @close="showTeacherPicker = false"
     >
       <ul class="space-y-1 max-h-[60vh] overflow-y-auto">
@@ -530,7 +530,7 @@ function exportCsv() {
             :class="!teacherFilter ? 'bg-role-admin/5 font-bold text-role-admin' : ''"
             @click="pickTeacher('')"
           >
-            Semua guru
+            {{ $t('admin.sekolah.class_activity.all_teachers') }}
           </button>
         </li>
         <li v-for="t in teachers" :key="t.id">

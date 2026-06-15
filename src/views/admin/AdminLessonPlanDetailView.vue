@@ -16,6 +16,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { LessonPlanService } from '@/services/lesson-plans.service';
 import {
   FORMAT_COLORS,
@@ -42,6 +43,7 @@ import { formatRelative } from '@/lib/format';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const plan = ref<LessonPlan | null>(null);
 const isLoading = ref(true);
@@ -61,7 +63,7 @@ async function load() {
   try {
     const res = await LessonPlanService.getById(planId.value);
     if (!res) {
-      loadError.value = 'RPP tidak ditemukan.';
+      loadError.value = t('admin.sekolah.lesson_plan_detail.err_not_found');
     } else {
       plan.value = res;
     }
@@ -74,7 +76,7 @@ async function load() {
 
 onMounted(() => {
   if (!planId.value) {
-    loadError.value = 'ID RPP tidak valid.';
+    loadError.value = t('admin.sekolah.lesson_plan_detail.err_invalid_id');
     isLoading.value = false;
     return;
   }
@@ -120,9 +122,9 @@ const statusLabel = computed(() =>
 );
 
 const kicker = computed(() => {
-  if (!plan.value) return 'RPP · REVIEW';
+  if (!plan.value) return t('admin.sekolah.lesson_plan_detail.kicker_default');
   const parts = [
-    `RPP · ${FORMAT_SHORT_LABELS[plan.value.format]}`,
+    `${t('admin.sekolah.lesson_plan_detail.kicker_format', { format: FORMAT_SHORT_LABELS[plan.value.format] })}`,
     plan.value.class_name?.trim().toUpperCase(),
     plan.value.subject_name?.trim().toUpperCase(),
   ].filter((p) => p && p.length > 0);
@@ -132,27 +134,27 @@ const kicker = computed(() => {
 const metaLine = computed(() => {
   if (!plan.value) return '';
   const parts: string[] = [];
-  parts.push(`Oleh ${plan.value.teacher_name || 'Guru'}`);
-  if (plan.value.academic_year) parts.push(`TP ${plan.value.academic_year}`);
-  if (plan.value.revision > 1) parts.push(`Revisi ${plan.value.revision}`);
+  parts.push(t('admin.sekolah.lesson_plan_detail.meta_author', { name: plan.value.teacher_name || t('admin.sekolah.lesson_plan_detail.fallback_teacher') }));
+  if (plan.value.academic_year) parts.push(t('admin.sekolah.lesson_plan_detail.meta_year', { year: plan.value.academic_year }));
+  if (plan.value.revision > 1) parts.push(t('admin.sekolah.lesson_plan_detail.meta_revision', { rev: plan.value.revision }));
   if (plan.value.submitted_at) {
-    parts.push(`dikirim ${formatRelative(plan.value.submitted_at)}`);
+    parts.push(t('admin.sekolah.lesson_plan_detail.meta_submitted', { time: formatRelative(plan.value.submitted_at) }));
   }
   return parts.join(' · ');
 });
 
 // ── Action callbacks ──
 function onApproved() {
-  toast.value = { message: 'RPP disetujui.', tone: 'success' };
+  toast.value = { message: t('admin.sekolah.lesson_plan_detail.toast_approved'), tone: 'success' };
   load();
 }
 function onRejected() {
-  toast.value = { message: 'RPP ditolak. Catatan terkirim ke guru.', tone: 'success' };
+  toast.value = { message: t('admin.sekolah.lesson_plan_detail.toast_rejected'), tone: 'success' };
   load();
 }
 function onSentBack() {
   toast.value = {
-    message: 'RPP dikembalikan untuk revisi.',
+    message: t('admin.sekolah.lesson_plan_detail.toast_sent_back'),
     tone: 'success',
   };
   load();
@@ -187,7 +189,7 @@ const canSendBack = computed(
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Antrian Review
+        {{ t('admin.sekolah.lesson_plan_detail.back_to_review') }}
       </button>
       <span class="flex-1"></span>
       <button
@@ -197,18 +199,18 @@ const canSendBack = computed(
         @click="showHistory = true"
       >
         <NavIcon name="list" :size="13" />
-        Riwayat
+        {{ t('admin.sekolah.lesson_plan_detail.history') }}
       </button>
     </div>
 
-    <AsyncView :state="state" empty-title="RPP tidak ditemukan" @retry="load">
+    <AsyncView :state="state" :empty-title="t('admin.sekolah.lesson_plan_detail.empty_title')" @retry="load">
       <template #default>
         <div v-if="plan" class="space-y-4">
           <!-- HEADER -->
           <BrandPageHeader
             role="admin"
             :kicker="kicker"
-            :title="plan.title || 'Tanpa judul'"
+            :title="plan.title || t('admin.sekolah.lesson_plan_detail.no_title')"
             :meta="metaLine"
             :live-dot="false"
           >
@@ -227,7 +229,7 @@ const canSendBack = computed(
           >
             <div class="px-3 py-3 text-center">
               <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                Bagian
+                {{ t('admin.sekolah.lesson_plan_detail.kpi_sections') }}
               </p>
               <p
                 class="text-lg font-black mt-1"
@@ -238,7 +240,7 @@ const canSendBack = computed(
             </div>
             <div class="px-3 py-3 text-center">
               <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                Format
+                {{ t('admin.sekolah.lesson_plan_detail.kpi_format') }}
               </p>
               <p
                 class="text-[12px] font-black mt-1"
@@ -249,7 +251,7 @@ const canSendBack = computed(
             </div>
             <div class="px-3 py-3 text-center">
               <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                Status
+                {{ t('admin.sekolah.lesson_plan_detail.kpi_status') }}
               </p>
               <span
                 class="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-md border text-[11px] font-bold"
@@ -279,7 +281,7 @@ const canSendBack = computed(
               class="text-[10px] font-bold uppercase tracking-widest mb-1.5"
               :class="plan.status === 'Rejected' ? 'text-red-700' : 'text-violet-700'"
             >
-              {{ plan.status === 'Rejected' ? 'Catatan Tolak Terakhir' : 'Catatan Revisi Terakhir' }}
+              {{ plan.status === 'Rejected' ? t('admin.sekolah.lesson_plan_detail.last_reject_note') : t('admin.sekolah.lesson_plan_detail.last_revision_note') }}
             </p>
             <p
               class="text-[12.5px] leading-relaxed whitespace-pre-wrap"
@@ -302,10 +304,10 @@ const canSendBack = computed(
             </span>
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">
-                {{ plan.file_name ?? 'File RPP' }}
+                {{ plan.file_name ?? t('admin.sekolah.lesson_plan_detail.file_default') }}
               </p>
               <p class="text-[11px] text-slate-500 mt-0.5">
-                {{ plan.file_mime ?? 'document' }}
+                {{ plan.file_mime ?? t('admin.sekolah.lesson_plan_detail.document') }}
                 <template v-if="plan.file_size_mb"> · {{ plan.file_size_mb }} MB</template>
               </p>
             </div>
@@ -316,7 +318,7 @@ const canSendBack = computed(
               @click="openFileUrl(plan.file_url!)"
             >
               <NavIcon name="download" :size="12" />
-              Unduh
+              {{ t('admin.sekolah.lesson_plan_detail.download') }}
             </Button>
           </div>
 
@@ -327,10 +329,10 @@ const canSendBack = computed(
                 class="text-[10px] font-bold uppercase tracking-widest"
                 :style="{ color: accent }"
               >
-                Bagian RPP
+                {{ t('admin.sekolah.lesson_plan_detail.sections_label') }}
               </span>
               <span class="text-[10px] text-slate-400 tabular-nums">
-                · {{ filledSections }}/{{ totalSections }} terisi
+                {{ t('admin.sekolah.lesson_plan_detail.sections_filled', { filled: filledSections, total: totalSections }) }}
               </span>
               <span class="flex-1 border-t border-dashed border-slate-200 ml-2"></span>
             </header>
@@ -354,7 +356,7 @@ const canSendBack = computed(
                 v-html="s.value"
               />
               <p v-else class="text-[11.5px] text-slate-400 italic mt-2">
-                Belum diisi oleh guru.
+                {{ t('admin.sekolah.lesson_plan_detail.section_empty') }}
               </p>
             </article>
           </section>
@@ -362,7 +364,7 @@ const canSendBack = computed(
           <!-- Notes -->
           <section v-if="plan.notes" class="bg-white border border-slate-200 rounded-2xl p-4">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-              Catatan Guru
+              {{ t('admin.sekolah.lesson_plan_detail.teacher_notes') }}
             </p>
             <p class="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-wrap">
               {{ plan.notes }}
@@ -379,15 +381,15 @@ const canSendBack = computed(
             >
               <Button variant="secondary" block @click="showSendBack = true">
                 <NavIcon name="edit" :size="14" />
-                Kembalikan
+                {{ t('admin.sekolah.lesson_plan_detail.send_back') }}
               </Button>
               <Button variant="danger" block @click="showReject = true">
                 <NavIcon name="x" :size="14" />
-                Tolak
+                {{ t('admin.sekolah.lesson_plan_detail.reject') }}
               </Button>
               <Button variant="success" block @click="showApprove = true">
                 <NavIcon name="check" :size="14" />
-                Setujui
+                {{ t('admin.sekolah.lesson_plan_detail.approve') }}
               </Button>
             </div>
             <div
@@ -395,15 +397,15 @@ const canSendBack = computed(
               class="text-center max-w-md mx-auto"
             >
               <p class="text-[11px] text-slate-500 mb-2">
-                Status saat ini: <strong class="text-slate-900">{{ statusLabel }}</strong>
+                {{ t('admin.sekolah.lesson_plan_detail.current_status') }} <strong class="text-slate-900">{{ statusLabel }}</strong>
               </p>
               <Button variant="secondary" block @click="showSendBack = true">
                 <NavIcon name="edit" :size="14" />
-                Minta revisi ulang
+                {{ t('admin.sekolah.lesson_plan_detail.request_revision') }}
               </Button>
             </div>
             <p v-else class="text-center text-[12px] text-slate-500 font-medium">
-              Status saat ini: <strong class="text-slate-900">{{ statusLabel }}</strong>
+              {{ t('admin.sekolah.lesson_plan_detail.current_status') }} <strong class="text-slate-900">{{ statusLabel }}</strong>
             </p>
             <!-- Hidden helper to keep canApprove/canReject referenced -->
             <span class="hidden">{{ canApprove }}{{ canReject }}</span>
