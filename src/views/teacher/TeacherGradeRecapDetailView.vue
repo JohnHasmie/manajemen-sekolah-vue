@@ -23,6 +23,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import { useAuthStore } from '@/stores/auth';
 import { GradeRecapService } from '@/services/grade-recap.service';
@@ -48,6 +49,7 @@ const route = useRoute();
 const router = useRouter();
 const ay = useAcademicYearStore();
 const auth = useAuthStore();
+const { t } = useI18n();
 
 const classId = computed(() => String(route.params.classId ?? ''));
 const subjectId = computed(() => String(route.params.subjectId ?? ''));
@@ -102,13 +104,13 @@ function openSourcePicker(
 // ── Loaders ──
 async function load() {
   if (!classId.value || !subjectId.value) {
-    loadError.value = 'Parameter kelas/mapel tidak lengkap';
+    loadError.value = t('tutor.sekolah.gradeRecapDetail.incompleteParams');
     isLoading.value = false;
     return;
   }
   const yearId = ay.selectedYearId;
   if (!yearId) {
-    loadError.value = 'Tahun ajaran belum dipilih';
+    loadError.value = t('tutor.sekolah.gradeRecapDetail.noAcademicYear');
     isLoading.value = false;
     return;
   }
@@ -161,7 +163,7 @@ function deriveChapters(matrix: GradeRecapRow[]): string[] {
   const out: string[] = [];
   for (let i = 0; i < maxLen; i++) {
     const name = referenceNames?.[i]?.trim();
-    out.push(name && name.length > 0 ? name : `Bab ${i + 1}`);
+    out.push(name && name.length > 0 ? name : t('tutor.sekolah.gradeRecapDetail.chapterFallback', { n: i + 1 }));
   }
   return out;
 }
@@ -227,19 +229,19 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'users',
-      label: 'Siswa',
+      label: t('tutor.sekolah.gradeRecapDetail.kpiStudents'),
       value: totalStudents,
       tone: 'brand',
     },
     {
       icon: 'book-open',
-      label: 'Bab',
+      label: t('tutor.sekolah.gradeRecapDetail.kpiChapters'),
       value: chapters.value.length,
       tone: 'violet',
     },
     {
       icon: 'bar-chart',
-      label: 'Rerata',
+      label: t('tutor.sekolah.gradeRecapDetail.kpiAverage'),
       value: scoreCount
         ? Math.round((scoreSum / scoreCount) * 10) / 10
         : '—',
@@ -248,7 +250,7 @@ const kpiCards = computed<KpiCard[]>(() => {
     },
     {
       icon: 'check-circle',
-      label: 'Kelengkapan',
+      label: t('tutor.sekolah.gradeRecapDetail.kpiCompleteness'),
       value: completion,
       suffix: '%',
       tone: completion >= 80 ? 'green' : completion >= 40 ? 'amber' : 'red',
@@ -337,7 +339,7 @@ function confirmAddChapter() {
     r.chapter_names.push(name);
   }
   showAddChapter.value = false;
-  toast.value = { message: 'Bab ditambahkan', tone: 'success' };
+  toast.value = { message: t('tutor.sekolah.gradeRecapDetail.chapterAddedToast'), tone: 'success' };
 }
 
 function openRenameChapter(index: number) {
@@ -360,13 +362,13 @@ function confirmRenameChapter() {
     markDirty(r.student_class_id);
   }
   renameChapter.value = null;
-  toast.value = { message: 'Nama bab diubah', tone: 'success' };
+  toast.value = { message: t('tutor.sekolah.gradeRecapDetail.chapterRenamedToast'), tone: 'success' };
 }
 
 function openDeleteChapter(index: number) {
   if (chapters.value.length <= 1) {
     toast.value = {
-      message: 'Minimal satu bab harus ada',
+      message: t('tutor.sekolah.gradeRecapDetail.minOneChapterToast'),
       tone: 'error',
     };
     return;
@@ -384,7 +386,7 @@ function confirmDeleteChapter() {
     markDirty(r.student_class_id);
   }
   deleteChapter.value = null;
-  toast.value = { message: 'Bab dihapus (simpan untuk konfirmasi)', tone: 'success' };
+  toast.value = { message: t('tutor.sekolah.gradeRecapDetail.chapterDeletedToast'), tone: 'success' };
 }
 
 // ── Source picker (pull column values from Buku Nilai) ──
@@ -429,8 +431,8 @@ function applySource(payload: {
   sourcePicker.value = null;
   toast.value = {
     message: map
-      ? `Nilai ${picker.label} diisi dari Buku Nilai (${filledCount} siswa)`
-      : `Kolom ${picker.label} dikosongkan`,
+      ? t('tutor.sekolah.gradeRecapDetail.sourceAppliedToast', { label: picker.label, count: filledCount })
+      : t('tutor.sekolah.gradeRecapDetail.sourceClearedToast', { label: picker.label }),
     tone: 'success',
   };
 }
@@ -440,7 +442,7 @@ async function save() {
   if (isSaving.value) return;
   const yearId = ay.selectedYearId;
   if (!yearId) {
-    toast.value = { message: 'Tahun ajaran belum dipilih', tone: 'error' };
+    toast.value = { message: t('tutor.sekolah.gradeRecapDetail.noAcademicYear'), tone: 'error' };
     return;
   }
   const dirtyIds = Array.from(dirtyByRow.value.keys());
@@ -466,14 +468,14 @@ async function save() {
     const resp = await GradeRecapService.saveBatch(payloads);
     if (resp.success === false) {
       toast.value = {
-        message: resp.error ?? 'Gagal menyimpan',
+        message: resp.error ?? t('tutor.sekolah.gradeRecapDetail.saveFailedToast'),
         tone: 'error',
       };
       return;
     }
     dirtyByRow.value = new Map();
     toast.value = {
-      message: `${resp.saved ?? payloads.length} baris tersimpan`,
+      message: t('tutor.sekolah.gradeRecapDetail.savedRowsToast', { count: resp.saved ?? payloads.length }),
       tone: 'success',
     };
     // Refresh from server so server-computed final_score (and any
@@ -533,7 +535,7 @@ async function exportExcel() {
     URL.revokeObjectURL(url);
   } catch (e) {
     toast.value = {
-      message: `Gagal ekspor: ${(e as Error).message}`,
+      message: t('tutor.sekolah.gradeRecapDetail.exportFailedToast', { error: (e as Error).message }),
       tone: 'error',
     };
   }
@@ -614,9 +616,9 @@ function onPredikatBlur(rowId: string) {
     <!-- HEADER -->
     <BrandPageHeader
       role="guru"
-      kicker="Akademik · Rekap Nilai"
+      :kicker="t('tutor.sekolah.gradeRecapDetail.kicker')"
       :title="`${subjectName} · ${className}`"
-      :meta="`${rows.length} siswa · ${chapters.length} bab`"
+      :meta="t('tutor.sekolah.gradeRecapDetail.meta', { students: rows.length, chapters: chapters.length })"
       :live-dot="false"
     >
       <button
@@ -625,7 +627,7 @@ function onPredikatBlur(rowId: string) {
         @click="backToOverview"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Kembali
+        {{ t('tutor.sekolah.gradeRecapDetail.back') }}
       </button>
     </BrandPageHeader>
 
@@ -641,7 +643,7 @@ function onPredikatBlur(rowId: string) {
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Cari nama siswa atau NIS…"
+          :placeholder="t('tutor.sekolah.gradeRecapDetail.searchPlaceholder')"
           class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-brand-cobalt"
         />
       </div>
@@ -651,7 +653,7 @@ function onPredikatBlur(rowId: string) {
         @click="openAddChapter"
       >
         <NavIcon name="plus" :size="14" />
-        Tambah Bab
+        {{ t('tutor.sekolah.gradeRecapDetail.addChapter') }}
       </button>
       <button
         type="button"
@@ -659,15 +661,15 @@ function onPredikatBlur(rowId: string) {
         @click="exportExcel"
       >
         <NavIcon name="download" :size="14" />
-        Ekspor
+        {{ t('tutor.sekolah.gradeRecapDetail.export') }}
       </button>
     </div>
 
     <!-- MATRIX -->
     <AsyncView
       :state="matrixState"
-      empty-title="Belum ada siswa"
-      empty-description="Belum ada siswa terdaftar di kelas ini untuk tahun ajaran aktif."
+      :empty-title="t('tutor.sekolah.gradeRecapDetail.emptyTitle')"
+      :empty-description="t('tutor.sekolah.gradeRecapDetail.emptyDescription')"
       empty-icon="users"
     >
       <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
@@ -678,7 +680,7 @@ function onPredikatBlur(rowId: string) {
                 <th
                   class="sticky left-0 z-20 bg-brand-cobalt text-left font-bold px-3 py-2.5 border-r border-white/10 min-w-[180px]"
                 >
-                  Siswa
+                  {{ t('tutor.sekolah.gradeRecapDetail.colStudent') }}
                 </th>
                 <th
                   v-for="(name, i) in chapters"
@@ -736,7 +738,7 @@ function onPredikatBlur(rowId: string) {
                   </div>
                 </th>
                 <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[70px] bg-brand-cobalt/90">
-                  Final
+                  {{ t('tutor.sekolah.gradeRecapDetail.colFinal') }}
                 </th>
                 <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[80px] group">
                   <div class="flex items-center justify-center gap-1">
@@ -752,10 +754,10 @@ function onPredikatBlur(rowId: string) {
                   </div>
                 </th>
                 <th class="px-2 py-2.5 text-center font-bold border-r border-white/10 min-w-[60px]">
-                  Pred.
+                  {{ t('tutor.sekolah.gradeRecapDetail.colPredicate') }}
                 </th>
                 <th class="px-2 py-2.5 text-center font-bold min-w-[150px]">
-                  Deskripsi
+                  {{ t('tutor.sekolah.gradeRecapDetail.colDescription') }}
                 </th>
               </tr>
             </thead>
@@ -913,7 +915,7 @@ function onPredikatBlur(rowId: string) {
                     :class="{ italic: !r.description, 'text-slate-400': !r.description }"
                     @click="openDescEditor(r)"
                   >
-                    {{ r.description || 'Tambah deskripsi…' }}
+                    {{ r.description || t('tutor.sekolah.gradeRecapDetail.addDescription') }}
                   </button>
                 </td>
               </tr>
@@ -929,14 +931,14 @@ function onPredikatBlur(rowId: string) {
       class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 bg-slate-900 text-white rounded-2xl shadow-2xl px-4 py-2.5 border border-slate-800"
     >
       <span class="text-[12px] font-bold">
-        {{ dirtyCount }} baris belum disimpan
+        {{ t('tutor.sekolah.gradeRecapDetail.unsavedRows', { count: dirtyCount }) }}
       </span>
       <Button
         variant="ghost"
         size="sm"
         @click="load"
       >
-        <span class="text-white">Batal</span>
+        <span class="text-white">{{ t('tutor.sekolah.gradeRecapDetail.cancel') }}</span>
       </Button>
       <Button
         variant="primary"
@@ -944,14 +946,14 @@ function onPredikatBlur(rowId: string) {
         :disabled="isSaving"
         @click="save"
       >
-        {{ isSaving ? 'Menyimpan…' : 'Simpan' }}
+        {{ isSaving ? t('tutor.sekolah.gradeRecapDetail.saving') : t('tutor.sekolah.gradeRecapDetail.save') }}
       </Button>
     </div>
 
     <!-- DESCRIPTION EDITOR MODAL -->
     <Modal
       v-if="editDesc !== null"
-      title="Edit Deskripsi"
+      :title="t('tutor.sekolah.gradeRecapDetail.editDescriptionTitle')"
       @close="editDesc = null"
     >
       <div v-if="editDesc" class="space-y-3">
@@ -961,12 +963,12 @@ function onPredikatBlur(rowId: string) {
         <textarea
           v-model="editDesc.draft"
           rows="5"
-          placeholder="Tuliskan deskripsi capaian siswa…"
+          :placeholder="t('tutor.sekolah.gradeRecapDetail.descriptionPlaceholder')"
           class="w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2"
         />
         <div class="flex justify-end gap-2">
-          <Button variant="ghost" @click="editDesc = null">Batal</Button>
-          <Button variant="primary" @click="saveDescEdit">Simpan</Button>
+          <Button variant="ghost" @click="editDesc = null">{{ t('tutor.sekolah.gradeRecapDetail.cancel') }}</Button>
+          <Button variant="primary" @click="saveDescEdit">{{ t('tutor.sekolah.gradeRecapDetail.save') }}</Button>
         </div>
       </div>
     </Modal>
@@ -974,28 +976,28 @@ function onPredikatBlur(rowId: string) {
     <!-- ADD CHAPTER MODAL -->
     <Modal
       v-if="showAddChapter"
-      title="Tambah Bab"
+      :title="t('tutor.sekolah.gradeRecapDetail.addChapterTitle')"
       @close="showAddChapter = false"
     >
       <div class="space-y-3">
         <label class="text-[12px] font-semibold text-slate-700">
-          Nama bab
+          {{ t('tutor.sekolah.gradeRecapDetail.chapterName') }}
         </label>
         <input
           v-model="addChapterDraft"
           type="text"
           class="w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2"
-          placeholder="contoh: Bab 5 · Energi"
+          :placeholder="t('tutor.sekolah.gradeRecapDetail.chapterNameExample')"
           @keyup.enter="confirmAddChapter"
         />
         <div class="flex justify-end gap-2">
-          <Button variant="ghost" @click="showAddChapter = false">Batal</Button>
+          <Button variant="ghost" @click="showAddChapter = false">{{ t('tutor.sekolah.gradeRecapDetail.cancel') }}</Button>
           <Button
             variant="primary"
             :disabled="!addChapterDraft.trim()"
             @click="confirmAddChapter"
           >
-            Tambah
+            {{ t('tutor.sekolah.gradeRecapDetail.add') }}
           </Button>
         </div>
       </div>
@@ -1004,7 +1006,7 @@ function onPredikatBlur(rowId: string) {
     <!-- RENAME CHAPTER MODAL -->
     <Modal
       v-if="renameChapter !== null"
-      title="Ubah Nama Bab"
+      :title="t('tutor.sekolah.gradeRecapDetail.renameChapterTitle')"
       @close="renameChapter = null"
     >
       <div v-if="renameChapter" class="space-y-3">
@@ -1012,17 +1014,17 @@ function onPredikatBlur(rowId: string) {
           v-model="renameChapter.draft"
           type="text"
           class="w-full text-sm rounded-xl border border-slate-200 focus:border-brand-cobalt focus:outline-none px-3 py-2"
-          placeholder="Nama bab"
+          :placeholder="t('tutor.sekolah.gradeRecapDetail.chapterName')"
           @keyup.enter="confirmRenameChapter"
         />
         <div class="flex justify-end gap-2">
-          <Button variant="ghost" @click="renameChapter = null">Batal</Button>
+          <Button variant="ghost" @click="renameChapter = null">{{ t('tutor.sekolah.gradeRecapDetail.cancel') }}</Button>
           <Button
             variant="primary"
             :disabled="!renameChapter.draft.trim()"
             @click="confirmRenameChapter"
           >
-            Simpan
+            {{ t('tutor.sekolah.gradeRecapDetail.save') }}
           </Button>
         </div>
       </div>
@@ -1031,23 +1033,21 @@ function onPredikatBlur(rowId: string) {
     <!-- DELETE CHAPTER CONFIRM -->
     <Modal
       v-if="deleteChapter !== null"
-      title="Hapus Bab"
+      :title="t('tutor.sekolah.gradeRecapDetail.deleteChapterTitle')"
       @close="deleteChapter = null"
     >
       <div v-if="deleteChapter" class="space-y-3">
         <p class="text-sm text-slate-700">
-          Hapus kolom
-          <strong>{{ chapters[deleteChapter.index] }}</strong>?
-          Semua nilai pada kolom ini akan hilang setelah disimpan.
+          {{ t('tutor.sekolah.gradeRecapDetail.deleteChapterMessage', { name: chapters[deleteChapter.index] }) }}
         </p>
         <div class="flex justify-end gap-2">
-          <Button variant="ghost" @click="deleteChapter = null">Batal</Button>
+          <Button variant="ghost" @click="deleteChapter = null">{{ t('tutor.sekolah.gradeRecapDetail.cancel') }}</Button>
           <Button
             variant="primary"
             class="!bg-red-600 hover:!bg-red-700"
             @click="confirmDeleteChapter"
           >
-            Hapus
+            {{ t('tutor.sekolah.gradeRecapDetail.delete') }}
           </Button>
         </div>
       </div>
@@ -1075,9 +1075,9 @@ function onPredikatBlur(rowId: string) {
 
     <ConfirmationDialog
       v-if="pendingNav.open"
-      title="Perubahan belum disimpan"
-      :message="`Ada ${dirtyCount} perubahan belum disimpan. Tinggalkan halaman dan buang perubahan?`"
-      confirm-label="Tinggalkan"
+      :title="t('tutor.sekolah.gradeRecapDetail.unsavedTitle')"
+      :message="t('tutor.sekolah.gradeRecapDetail.unsavedMessage', { count: dirtyCount })"
+      :confirm-label="t('tutor.sekolah.gradeRecapDetail.leave')"
       danger
       @close="cancelNavLeave"
       @confirm="confirmNavLeave"

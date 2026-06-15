@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { ClassroomService } from '@/services/classrooms.service';
 import { SubjectService } from '@/services/subjects.service';
@@ -44,6 +45,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const router = useRouter();
 const auth = useAuthStore();
+const { t } = useI18n();
 
 // ── Role toggle (Mengajar / Wali Kelas) ──
 const selectedRoleId = ref<string>('mengajar');
@@ -51,8 +53,8 @@ const roleOptions = computed<RoleOption[]>(() => {
   const out: RoleOption[] = [
     {
       id: 'mengajar',
-      shortName: 'Mengajar',
-      subLabel: 'Mapel saya',
+      shortName: t('tutor.sekolah.gradeRecap.roleTeachingShort'),
+      subLabel: t('tutor.sekolah.gradeRecap.roleTeachingSub'),
       avatarInitials: 'M',
     },
   ];
@@ -60,8 +62,8 @@ const roleOptions = computed<RoleOption[]>(() => {
     const name = hc.name || hc.id;
     out.push({
       id: `wali:${hc.id}`,
-      shortName: `Wali ${name}`,
-      subLabel: 'Kelas perwalian',
+      shortName: t('tutor.sekolah.gradeRecap.roleHomeroomShort', { name }),
+      subLabel: t('tutor.sekolah.gradeRecap.roleHomeroomSub'),
       avatarInitials:
         name.length <= 2
           ? name.toUpperCase()
@@ -165,27 +167,27 @@ const summaryKpi = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'layers',
-      label: 'Mapel · Kelas',
+      label: t('tutor.sekolah.gradeRecap.kpiSubjectClass'),
       value: totalCards,
       tone: 'brand',
     },
     {
       icon: 'book-open',
-      label: 'Total Bab',
+      label: t('tutor.sekolah.gradeRecap.kpiTotalChapters'),
       value: totalBab,
       tone: 'violet',
     },
     {
       icon: 'bar-chart',
-      label: 'Rerata',
+      label: t('tutor.sekolah.gradeRecap.kpiAverage'),
       value: typeof avg === 'number' ? Math.round(avg * 10) / 10 : '—',
-      suffix: 'gabungan',
+      suffix: t('tutor.sekolah.gradeRecap.kpiAverageSuffix'),
       tone: 'green',
       accented: true,
     },
     {
       icon: 'check-circle',
-      label: 'Kelengkapan',
+      label: t('tutor.sekolah.gradeRecap.kpiCompleteness'),
       value: completionPct,
       suffix: '%',
       tone:
@@ -216,7 +218,7 @@ async function loadSummary() {
   const teacherId = auth.teacherId ?? auth.user?.id ?? '';
   if (!teacherId) {
     isSummaryLoading.value = false;
-    summaryError.value = 'Profil guru belum termuat';
+    summaryError.value = t('tutor.sekolah.gradeRecap.teacherProfileMissing');
     return;
   }
   isSummaryLoading.value = true;
@@ -284,9 +286,9 @@ function progressBarTone(pct: number) {
     <!-- HEADER -->
     <BrandPageHeader
       role="guru"
-      kicker="Akademik · Rekap Nilai"
-      title="Rekap Nilai"
-      meta="Rekap akhir per kelas dan mata pelajaran"
+      :kicker="t('tutor.sekolah.gradeRecap.kicker')"
+      :title="t('tutor.sekolah.gradeRecap.title')"
+      :meta="t('tutor.sekolah.gradeRecap.meta')"
       :live-dot="false"
     >
       <template v-if="roleOptions.length > 1" #role-toggle>
@@ -304,19 +306,19 @@ function progressBarTone(pct: number) {
     <!-- FILTERS -->
     <PageFilterToolbar
       v-model:search="searchQuery"
-      search-placeholder="Cari kelas, mapel, atau guru…"
+      :search-placeholder="t('tutor.sekolah.gradeRecap.searchPlaceholder')"
     >
       <template #chips>
         <AppFilterChip
           v-if="!isWaliMode"
-          label="Kelas"
-          :value="activeClass?.name ?? 'Semua kelas'"
+          :label="t('tutor.sekolah.gradeRecap.chipClass')"
+          :value="activeClass?.name ?? t('tutor.sekolah.gradeRecap.allClasses')"
           :is-active="!!classFilter"
           @click="showClassPicker = true"
         />
         <AppFilterChip
-          label="Mapel"
-          :value="activeSubject?.name ?? 'Semua mapel'"
+          :label="t('tutor.sekolah.gradeRecap.chipSubject')"
+          :value="activeSubject?.name ?? t('tutor.sekolah.gradeRecap.allSubjects')"
           :is-active="!!subjectFilter"
           @click="showSubjectPicker = true"
         />
@@ -326,8 +328,8 @@ function progressBarTone(pct: number) {
     <!-- CARD LIST -->
     <AsyncView
       :state="summaryState"
-      empty-title="Belum ada rekap"
-      empty-description="Belum ada (kelas × mapel) yang siap di-rekap. Tambah nilai dulu di Buku Nilai."
+      :empty-title="t('tutor.sekolah.gradeRecap.emptyTitle')"
+      :empty-description="t('tutor.sekolah.gradeRecap.emptyDescription')"
       empty-icon="layers"
     >
       <div class="space-y-3">
@@ -356,7 +358,7 @@ function progressBarTone(pct: number) {
               <p
                 class="text-[10px] font-bold uppercase tracking-widest text-brand-cobalt/80"
               >
-                Kelas {{ row.class_name }}
+                {{ t('tutor.sekolah.gradeRecap.classLabel', { name: row.class_name }) }}
               </p>
               <h3 class="text-[15px] font-extrabold text-slate-900 mt-0.5 leading-tight truncate">
                 {{ row.subject.name }}
@@ -368,12 +370,12 @@ function progressBarTone(pct: number) {
                 <template v-if="row.subject.code">{{ row.subject.code }}</template>
                 <template v-if="row.subject.code && row.subject.teacher_name"> · </template>
                 <template v-if="row.subject.teacher_name && isWaliMode">
-                  Oleh {{ row.subject.teacher_name }}
+                  {{ t('tutor.sekolah.gradeRecap.byTeacher', { name: row.subject.teacher_name }) }}
                 </template>
               </p>
             </div>
             <div class="text-brand-cobalt/70 font-bold text-[12px] flex-shrink-0 inline-flex items-center gap-1">
-              Buka
+              {{ t('tutor.sekolah.gradeRecap.open') }}
               <NavIcon name="chevron-right" :size="14" />
             </div>
           </div>
@@ -384,7 +386,7 @@ function progressBarTone(pct: number) {
               <p
                 class="text-[9px] font-bold uppercase tracking-widest text-slate-500"
               >
-                Siswa
+                {{ t('tutor.sekolah.gradeRecap.cellStudents') }}
               </p>
               <p class="text-[12px] font-black text-slate-900 mt-0.5">
                 {{ row.subject.recap_count }} / {{ row.subject.total_students }}
@@ -394,7 +396,7 @@ function progressBarTone(pct: number) {
               <p
                 class="text-[9px] font-bold uppercase tracking-widest text-slate-500"
               >
-                Bab
+                {{ t('tutor.sekolah.gradeRecap.cellChapters') }}
               </p>
               <p class="text-[12px] font-black text-slate-900 mt-0.5">
                 {{ row.subject.chapter_count }}
@@ -404,7 +406,7 @@ function progressBarTone(pct: number) {
               <p
                 class="text-[9px] font-bold uppercase tracking-widest text-slate-500"
               >
-                Rerata
+                {{ t('tutor.sekolah.gradeRecap.cellAverage') }}
               </p>
               <p class="text-[12px] font-black text-slate-900 mt-0.5">
                 {{ row.subject.avg_final_score !== null
@@ -420,7 +422,7 @@ function progressBarTone(pct: number) {
               <span
                 class="text-[10px] font-bold uppercase tracking-widest text-slate-500"
               >
-                Kelengkapan
+                {{ t('tutor.sekolah.gradeRecap.completeness') }}
               </span>
               <span class="text-[11px] font-extrabold text-slate-700">
                 {{ row.subject.completion_pct }}%
@@ -441,7 +443,7 @@ function progressBarTone(pct: number) {
     <!-- CLASS PICKER MODAL -->
     <Modal
       v-if="showClassPicker"
-      title="Pilih Kelas"
+      :title="t('tutor.sekolah.gradeRecap.pickClassTitle')"
       @close="showClassPicker = false"
     >
       <div class="space-y-1.5 max-h-[60vh] overflow-y-auto">
@@ -458,7 +460,7 @@ function progressBarTone(pct: number) {
           "
         >
           <span class="text-sm font-semibold text-slate-900">
-            Semua kelas
+            {{ t('tutor.sekolah.gradeRecap.allClasses') }}
           </span>
         </button>
         <button
@@ -484,7 +486,7 @@ function progressBarTone(pct: number) {
     <!-- SUBJECT PICKER MODAL -->
     <Modal
       v-if="showSubjectPicker"
-      title="Pilih Mapel"
+      :title="t('tutor.sekolah.gradeRecap.pickSubjectTitle')"
       @close="showSubjectPicker = false"
     >
       <div class="space-y-1.5 max-h-[60vh] overflow-y-auto">
@@ -501,7 +503,7 @@ function progressBarTone(pct: number) {
           "
         >
           <span class="text-sm font-semibold text-slate-900">
-            Semua mapel
+            {{ t('tutor.sekolah.gradeRecap.allSubjects') }}
           </span>
         </button>
         <button

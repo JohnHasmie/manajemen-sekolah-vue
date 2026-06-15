@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { LessonPlanService } from '@/services/lesson-plans.service';
 import {
   FORMAT_COLORS,
@@ -48,6 +49,7 @@ import { semesterLabel } from '@/lib/labels';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const plan = ref<LessonPlan | null>(null);
 const isLoading = ref(true);
@@ -88,7 +90,7 @@ function pollRegen(jobId: string) {
       stopRegen();
       regenJob.value = null;
       toast.value = {
-        message: 'AI butuh waktu lebih lama dari biasanya. Coba refresh nanti.',
+        message: t('tutor.sekolah.lessonPlanDetail.regenTimeoutToast'),
         tone: 'error',
       };
       await load();
@@ -99,13 +101,13 @@ function pollRegen(jobId: string) {
       if (res.status === 'done') {
         stopRegen();
         regenJob.value = null;
-        toast.value = { message: 'Bagian berhasil diregenerasi.', tone: 'success' };
+        toast.value = { message: t('tutor.sekolah.lessonPlanDetail.regenSuccessToast'), tone: 'success' };
         await load();
       } else if (res.status === 'error') {
         stopRegen();
         regenJob.value = null;
         toast.value = {
-          message: res.error ?? 'AI gagal — coba lagi.',
+          message: res.error ?? t('tutor.sekolah.lessonPlanDetail.regenErrorToast'),
           tone: 'error',
         };
       }
@@ -119,7 +121,7 @@ function cancelRegen() {
   stopRegen();
   regenJob.value = null;
   toast.value = {
-    message: 'Polling dihentikan. Hasil regen akan muncul saat di-refresh.',
+    message: t('tutor.sekolah.lessonPlanDetail.regenPollingStoppedToast'),
     tone: 'success',
   };
 }
@@ -148,7 +150,7 @@ async function load() {
   try {
     const res = await LessonPlanService.getById(planId.value);
     if (!res) {
-      loadError.value = 'RPP tidak ditemukan.';
+      loadError.value = t('tutor.sekolah.lessonPlanDetail.notFound');
     } else {
       plan.value = res;
     }
@@ -161,7 +163,7 @@ async function load() {
 
 onMounted(() => {
   if (!planId.value) {
-    loadError.value = 'ID RPP tidak valid.';
+    loadError.value = t('tutor.sekolah.lessonPlanDetail.invalidId');
     isLoading.value = false;
     return;
   }
@@ -217,24 +219,24 @@ const statusContext = computed<string | null>(() => {
   if (!plan.value) return null;
   switch (plan.value.status) {
     case 'Draft':
-      return 'Edit dulu, lalu submit untuk review admin.';
+      return t('tutor.sekolah.lessonPlanDetail.statusContextDraft');
     case 'Pending':
-      return 'Sedang menunggu review admin.';
+      return t('tutor.sekolah.lessonPlanDetail.statusContextPending');
     case 'SentBack':
-      return 'Admin minta revisi — periksa catatan di bawah.';
+      return t('tutor.sekolah.lessonPlanDetail.statusContextSentBack');
     case 'Rejected':
-      return 'Ditolak admin — perbaiki & submit ulang.';
+      return t('tutor.sekolah.lessonPlanDetail.statusContextRejected');
     case 'Approved':
-      return 'Sudah disetujui admin — siap dipakai mengajar.';
+      return t('tutor.sekolah.lessonPlanDetail.statusContextApproved');
     default:
       return null;
   }
 });
 
 const kicker = computed(() => {
-  if (!plan.value) return 'RPP · DETAIL';
+  if (!plan.value) return t('tutor.sekolah.lessonPlanDetail.kickerFallback');
   const parts = [
-    `RPP · ${FORMAT_SHORT_LABELS[plan.value.format]}`,
+    `${t('tutor.sekolah.lessonPlanDetail.kickerPrefix')} · ${FORMAT_SHORT_LABELS[plan.value.format]}`,
     plan.value.class_name?.trim().toUpperCase(),
     plan.value.subject_name?.trim().toUpperCase(),
   ].filter((p) => p && p.length > 0);
@@ -244,13 +246,13 @@ const kicker = computed(() => {
 const metaLine = computed(() => {
   if (!plan.value) return '';
   const parts: string[] = [];
-  if (plan.value.academic_year) parts.push(`TP ${plan.value.academic_year}`);
-  if (plan.value.semester) parts.push(`Sem ${semesterLabel(plan.value.semester)}`);
-  if (plan.value.revision > 1) parts.push(`Revisi ${plan.value.revision}`);
+  if (plan.value.academic_year) parts.push(t('tutor.sekolah.lessonPlanDetail.academicYear', { year: plan.value.academic_year }));
+  if (plan.value.semester) parts.push(t('tutor.sekolah.lessonPlanDetail.semester', { sem: semesterLabel(plan.value.semester) }));
+  if (plan.value.revision > 1) parts.push(t('tutor.sekolah.lessonPlanDetail.revision', { n: plan.value.revision }));
   if (plan.value.submitted_at) {
-    parts.push(`dikirim ${formatRelative(plan.value.submitted_at)}`);
+    parts.push(t('tutor.sekolah.lessonPlanDetail.submittedRel', { rel: formatRelative(plan.value.submitted_at) }));
   } else if (plan.value.created_at) {
-    parts.push(`dibuat ${formatRelative(plan.value.created_at)}`);
+    parts.push(t('tutor.sekolah.lessonPlanDetail.createdRel', { rel: formatRelative(plan.value.created_at) }));
   }
   return parts.join(' · ');
 });
@@ -272,8 +274,8 @@ function openSectionEditor(s: { key: string; label: string; value: string }) {
     toast.value = {
       message:
         status === 'Approved'
-          ? 'RPP sudah disetujui — tidak dapat diedit.'
-          : 'RPP sedang menunggu review — tunggu admin selesai.',
+          ? t('tutor.sekolah.lessonPlanDetail.approvedLockedToast')
+          : t('tutor.sekolah.lessonPlanDetail.pendingLockedToast'),
       tone: 'error',
     };
     return;
@@ -288,7 +290,7 @@ function onSectionSaved(payload: { fieldKey: string; newValue: string }) {
   const fd = { ...(plan.value.format_data ?? {}) };
   fd[payload.fieldKey] = payload.newValue;
   plan.value = { ...plan.value, format_data: fd };
-  toast.value = { message: 'Bagian tersimpan.', tone: 'success' };
+  toast.value = { message: t('tutor.sekolah.lessonPlanDetail.sectionSavedToast'), tone: 'success' };
 }
 
 // ── Status actions (from action bar) ──
@@ -298,7 +300,7 @@ async function submitForReview() {
   try {
     await LessonPlanService.submitForReview(plan.value.id);
     toast.value = {
-      message: 'RPP terkirim untuk review admin.',
+      message: t('tutor.sekolah.lessonPlanDetail.submittedForReviewToast'),
       tone: 'success',
     };
     await load();
@@ -331,18 +333,18 @@ function onHistoryIntent() {
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Semua RPP
+        {{ t('tutor.sekolah.lessonPlanDetail.backToList') }}
       </button>
     </div>
 
-    <AsyncView :state="state" empty-title="RPP tidak ditemukan" @retry="load">
+    <AsyncView :state="state" :empty-title="t('tutor.sekolah.lessonPlanDetail.notFound')" @retry="load">
       <template #default>
         <div v-if="plan" class="space-y-4">
           <!-- HEADER -->
           <BrandPageHeader
             role="guru"
             :kicker="kicker"
-            :title="plan.title || 'Tanpa judul'"
+            :title="plan.title || t('tutor.sekolah.lessonPlanDetail.untitled')"
             :meta="metaLine"
             :live-dot="false"
           >
@@ -353,14 +355,14 @@ function onHistoryIntent() {
               @click="showRegen = true"
             >
               <NavIcon name="sparkles" :size="11" />
-              Regenerasi
+              {{ t('tutor.sekolah.lessonPlanDetail.regenerate') }}
             </button>
             <span
               v-if="plan.ai_generated"
               class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white/15 text-white text-[10px] font-bold uppercase tracking-wider"
             >
               <NavIcon name="sparkles" :size="10" />
-              AI
+              {{ t('tutor.sekolah.lessonPlanDetail.aiBadge') }}
             </span>
           </BrandPageHeader>
 
@@ -370,7 +372,7 @@ function onHistoryIntent() {
           >
             <div class="px-3 py-3 text-center">
               <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                Bagian
+                {{ t('tutor.sekolah.lessonPlanDetail.kpiSections') }}
               </p>
               <p
                 class="text-lg font-black mt-1"
@@ -381,7 +383,7 @@ function onHistoryIntent() {
             </div>
             <div class="px-3 py-3 text-center">
               <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                Format
+                {{ t('tutor.sekolah.lessonPlanDetail.kpiFormat') }}
               </p>
               <p
                 class="text-[12px] font-black mt-1"
@@ -392,7 +394,7 @@ function onHistoryIntent() {
             </div>
             <div class="px-3 py-3 text-center">
               <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                Status
+                {{ t('tutor.sekolah.lessonPlanDetail.kpiStatus') }}
               </p>
               <span
                 class="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-md border text-[11px] font-bold"
@@ -432,7 +434,9 @@ function onHistoryIntent() {
                 :size="12"
               />
               {{
-                plan.status === 'Rejected' ? 'Alasan Tolak Admin' : 'Catatan Revisi Admin'
+                plan.status === 'Rejected'
+                  ? t('tutor.sekolah.lessonPlanDetail.adminRejectReason')
+                  : t('tutor.sekolah.lessonPlanDetail.adminRevisionNote')
               }}
             </p>
             <p
@@ -446,7 +450,7 @@ function onHistoryIntent() {
               class="mt-2 text-[10px] font-semibold inline-flex items-center gap-1.5 flex-wrap"
               :class="plan.status === 'Rejected' ? 'text-red-800' : 'text-violet-800'"
             >
-              <span class="opacity-70">Bagian yang perlu diperbaiki:</span>
+              <span class="opacity-70">{{ t('tutor.sekolah.lessonPlanDetail.areasToFix') }}</span>
               <span
                 v-for="key in plan.revision_areas"
                 :key="key"
@@ -471,7 +475,7 @@ function onHistoryIntent() {
             </span>
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">
-                {{ plan.file_name ?? 'File RPP' }}
+                {{ plan.file_name ?? t('tutor.sekolah.lessonPlanDetail.fileFallback') }}
               </p>
               <p class="text-[11px] text-slate-500 mt-0.5">
                 {{ plan.file_mime ?? 'document' }}
@@ -485,7 +489,7 @@ function onHistoryIntent() {
               @click="openFileUrl(plan.file_url!)"
             >
               <NavIcon name="download" :size="12" />
-              Unduh
+              {{ t('tutor.sekolah.lessonPlanDetail.download') }}
             </Button>
           </div>
 
@@ -496,10 +500,10 @@ function onHistoryIntent() {
                 class="text-[10px] font-bold uppercase tracking-widest"
                 :style="{ color: accent }"
               >
-                Bagian RPP
+                {{ t('tutor.sekolah.lessonPlanDetail.sectionsHeader') }}
               </span>
               <span class="text-[10px] text-slate-400 tabular-nums">
-                · {{ filledSections }}/{{ totalSections }} terisi
+                · {{ t('tutor.sekolah.lessonPlanDetail.sectionsFilled', { filled: filledSections, total: totalSections }) }}
               </span>
               <span class="flex-1 border-t border-dashed border-slate-200 ml-2"></span>
             </header>
@@ -534,20 +538,20 @@ function onHistoryIntent() {
                     v-else
                     class="text-[11.5px] text-slate-400 italic mt-2"
                   >
-                    Belum diisi — ketuk untuk menambahkan.
+                    {{ t('tutor.sekolah.lessonPlanDetail.sectionEmptyHint') }}
                   </p>
                 </div>
                 <span
                   v-if="s.value"
                   class="w-6 h-6 rounded-full grid place-items-center flex-shrink-0 bg-emerald-100 text-emerald-700"
-                  title="Sudah diisi"
+                  :title="t('tutor.sekolah.lessonPlanDetail.sectionFilledTooltip')"
                 >
                   <NavIcon name="check" :size="12" />
                 </span>
                 <span
                   v-else
                   class="w-6 h-6 rounded-full grid place-items-center flex-shrink-0 bg-slate-100 text-slate-400"
-                  title="Belum diisi"
+                  :title="t('tutor.sekolah.lessonPlanDetail.sectionEmptyTooltip')"
                 >
                   <NavIcon name="plus" :size="12" />
                 </span>
@@ -558,7 +562,7 @@ function onHistoryIntent() {
           <!-- NOTES PANEL -->
           <section v-if="plan.notes" class="bg-white border border-slate-200 rounded-2xl p-4">
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-              Catatan / Deskripsi
+              {{ t('tutor.sekolah.lessonPlanDetail.notesHeader') }}
             </p>
             <p class="text-[12.5px] text-slate-700 leading-relaxed whitespace-pre-wrap">
               {{ plan.notes }}
@@ -608,7 +612,7 @@ function onHistoryIntent() {
     <!-- REGEN POLLING OVERLAY (reused from list-view AI generate) -->
     <LessonPlanAiPollingOverlay
       :visible="regenJob !== null"
-      title="Regenerasi RPP AI"
+      :title="t('tutor.sekolah.lessonPlanDetail.regenOverlayTitle')"
       :subtitle="regenJob?.subtitle ?? ''"
       :estimated-seconds="35"
       @cancel="cancelRegen"
