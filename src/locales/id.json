@@ -2024,6 +2024,14 @@
       "reportCard": {
         "studentId": "NIS"
       },
+      "classActivity": {
+        "headerKicker": "Akademik · Kegiatan Kelas",
+        "headerTitle": "Kegiatan Kelas",
+        "headerMeta": "Catatan kegiatan dari guru",
+        "chipJenis": "Jenis",
+        "btnReset": "Reset",
+        "modalJenisTitle": "Filter Jenis Kegiatan"
+      },
       "recommendation": {
         "siswaFallback": "Siswa",
         "badgeBaruSuffix": "baru",

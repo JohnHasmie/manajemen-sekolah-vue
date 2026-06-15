@@ -2028,6 +2028,14 @@
       "reportCard": {
         "studentId": "ID"
       },
+      "classActivity": {
+        "headerKicker": "Academic · Class Activity",
+        "headerTitle": "Class Activity",
+        "headerMeta": "Activity notes from teachers",
+        "chipJenis": "Type",
+        "btnReset": "Reset",
+        "modalJenisTitle": "Filter Activity Type"
+      },
       "recommendation": {
         "siswaFallback": "Student",
         "badgeBaruSuffix": "new",
