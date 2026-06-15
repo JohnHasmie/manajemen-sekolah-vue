@@ -101,7 +101,7 @@ function openTutoring() {
   router.push({
     name: 'parent.tutoring.overview',
     params: { studentId },
-    query: { name: (current.value.name as string | undefined) ?? 'Anak' },
+    query: { name: (current.value.name as string | undefined) ?? t('wali.sekolah.dashboard.anakFallback') },
   });
 }
 

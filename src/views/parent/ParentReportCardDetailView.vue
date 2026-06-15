@@ -89,7 +89,7 @@ async function load() {
     }
     row.value = found ?? null;
     if (!row.value) {
-      loadError.value = 'Rapor tidak ditemukan atau belum diterbitkan.';
+      loadError.value = t('wali.sekolah.reportCardDetail.notFoundOrUnpublished');
     }
   } catch (e) {
     loadError.value = (e as Error).message;
@@ -126,9 +126,9 @@ const semesterLabel = computed(() => {
   // Indonesian label (`Ganjil`/`Gasal`/`Genap`), or — when carried from
   // the list view's filter — a numeric id (`1`/`2`). Accept all three.
   const raw = (row.value?.reportCard.semester ?? '').toLowerCase();
-  if (raw === 'even' || raw === '2' || raw.includes('genap')) return 'Sem. Genap';
-  if (raw === 'odd' || raw === '1' || raw.includes('ganjil') || raw.includes('gasal')) return 'Sem. Ganjil';
-  return row.value?.reportCard.semester || 'Semester';
+  if (raw === 'even' || raw === '2' || raw.includes('genap')) return t('wali.sekolah.reportCardDetail.semGenapShort');
+  if (raw === 'odd' || raw === '1' || raw.includes('ganjil') || raw.includes('gasal')) return t('wali.sekolah.reportCardDetail.semGanjilShort');
+  return row.value?.reportCard.semester || t('wali.sekolah.reportCardDetail.semesterFallback');
 });
 const academicYear = computed(() => row.value?.reportCard.academic_year ?? '');
 
@@ -137,8 +137,21 @@ const publishedLabel = computed(() => {
   if (!publishedAt.value) return null;
   const d = new Date(publishedAt.value);
   if (!Number.isFinite(d.getTime())) return null;
-  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-  return `Diterbitkan · ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  const MONTHS = [
+    t('wali.sekolah.reportCardDetail.monthShortJan'),
+    t('wali.sekolah.reportCardDetail.monthShortFeb'),
+    t('wali.sekolah.reportCardDetail.monthShortMar'),
+    t('wali.sekolah.reportCardDetail.monthShortApr'),
+    t('wali.sekolah.reportCardDetail.monthShortMay'),
+    t('wali.sekolah.reportCardDetail.monthShortJun'),
+    t('wali.sekolah.reportCardDetail.monthShortJul'),
+    t('wali.sekolah.reportCardDetail.monthShortAug'),
+    t('wali.sekolah.reportCardDetail.monthShortSep'),
+    t('wali.sekolah.reportCardDetail.monthShortOct'),
+    t('wali.sekolah.reportCardDetail.monthShortNov'),
+    t('wali.sekolah.reportCardDetail.monthShortDec'),
+  ];
+  return `${t('wali.sekolah.reportCardDetail.publishedPrefix')} · ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 });
 
 const attendanceTotal = computed(() => {
@@ -229,7 +242,7 @@ const state = computed<AsyncState<ParentRaportRow>>(() => {
 const heroChipLabel = computed(() => {
   if (!row.value) return semesterLabel.value;
   return className.value
-    ? `Kelas ${className.value} · ${semesterLabel.value}${academicYear.value ? ' ' + academicYear.value : ''}`
+    ? `${t('wali.sekolah.common.kelasPrefix')} ${className.value} · ${semesterLabel.value}${academicYear.value ? ' ' + academicYear.value : ''}`
     : semesterLabel.value;
 });
 </script>
@@ -253,13 +266,13 @@ const heroChipLabel = computed(() => {
         <div v-if="row" class="space-y-4">
           <!-- HEADER -->
           <ParentPageHeader
-            kicker="Akademik · Rapor"
-            :title="`Rapor ${row.student.name}`"
+            :kicker="t('wali.sekolah.reportCardDetail.kicker')"
+            :title="t('wali.sekolah.reportCardDetail.titleWithName', { name: row.student.name })"
             :interpolate-child="false"
             :meta="
               publishedLabel ?? (row.student.student_number
-                ? `NIS ${row.student.student_number}`
-                : 'E-Raport siswa')
+                ? `${t('wali.sekolah.common.nisPrefix')} ${row.student.student_number}`
+                : t('wali.sekolah.reportCardDetail.metaFallback'))
             "
           >
             <template #actions>
@@ -276,7 +289,7 @@ const heroChipLabel = computed(() => {
                 type="button"
                 class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[12px] font-bold transition disabled:opacity-60"
                 :disabled="!isPublished || isPrinting"
-                :title="isPublished ? 'Cetak PDF' : 'Rapor belum diterbitkan'"
+                :title="isPublished ? t('wali.sekolah.reportCardDetail.tooltipPrintPdf') : t('wali.sekolah.reportCardDetail.tooltipNotPublished')"
                 @click="downloadPdf('certificate')"
               >
                 <NavIcon name="download" :size="12" />
@@ -329,7 +342,7 @@ const heroChipLabel = computed(() => {
               <p
                 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
               >
-                Rata-rata
+                {{ t('wali.sekolah.reportCardDetail.kpiAverage') }}
               </p>
               <p class="text-lg font-black mt-1 text-role-wali tabular-nums">
                 {{ row.average_score ?? '—' }}
@@ -339,7 +352,7 @@ const heroChipLabel = computed(() => {
               <p
                 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
               >
-                Peringkat
+                {{ t('wali.sekolah.reportCardDetail.kpiRank') }}
               </p>
               <p class="text-lg font-black mt-1 text-violet-700 tabular-nums">
                 <template
@@ -357,7 +370,7 @@ const heroChipLabel = computed(() => {
               <p
                 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
               >
-                Kehadiran
+                {{ t('wali.sekolah.reportCardDetail.kpiAttendance') }}
               </p>
               <p class="text-lg font-black mt-1 text-emerald-700 tabular-nums">
                 <template v-if="row.attendance_pct !== null">
@@ -375,9 +388,9 @@ const heroChipLabel = computed(() => {
               <p
                 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest"
               >
-                Sikap
+                {{ t('wali.sekolah.reportCardDetail.sectionAttitude') }}
               </p>
-              <p class="text-[10px] font-bold text-slate-400">Wali kelas</p>
+              <p class="text-[10px] font-bold text-slate-400">{{ t('wali.sekolah.reportCardDetail.homeroomTeacher') }}</p>
             </header>
             <div
               class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3"
@@ -645,7 +658,7 @@ const heroChipLabel = computed(() => {
           <!-- EXPORT NOTE -->
           <p class="text-[10.5px] text-slate-400 italic px-1 leading-relaxed">
             {{ t('reportCard.pdfExportNote') }}
-            <em>{{ t('common.published') }}</em> yang dapat dicetak.
+            <em>{{ t('common.published') }}</em> {{ t('wali.sekolah.reportCardDetail.exportNoteSuffix') }}
           </p>
 
           <!-- STICKY FOOTER -->
@@ -683,8 +696,7 @@ const heroChipLabel = computed(() => {
       <div class="space-y-3">
         <p class="text-[13px] text-slate-600 leading-relaxed">
           {{ t('reportCard.chooseOtherSemesterNote') }}
-          <strong>{{ t('reportCard.eReportList') }}</strong> lalu ubah pilihan semester pada
-          filter di atas.
+          <strong>{{ t('reportCard.eReportList') }}</strong> {{ t('wali.sekolah.reportCardDetail.chooseSemesterNoteSuffix') }}
         </p>
         <Button block @click="returnToList">{{ t('reportCard.backToList') }}</Button>
       </div>

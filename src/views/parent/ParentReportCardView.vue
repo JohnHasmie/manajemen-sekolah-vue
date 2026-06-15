@@ -320,7 +320,7 @@ function pickSemester(id: SemesterId) {
               </p>
               <p class="text-[12px] text-slate-500 mt-0.5">
                 <template v-if="row.student.student_number">
-                  NIS {{ row.student.student_number }}
+                  {{ t('wali.sekolah.reportCard.studentId') }} {{ row.student.student_number }}
                 </template>
                 <template v-if="row.student.class_name">
                   · {{ row.student.class_name }}

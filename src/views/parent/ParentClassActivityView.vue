@@ -280,10 +280,10 @@ function resetFilter() {
   <div class="space-y-md pb-12">
     <!-- HEADER -->
     <ParentPageHeader
-      kicker="Akademik · Kegiatan Kelas"
-      title="Kegiatan Kelas"
+      :kicker="t('wali.sekolah.classActivity.headerKicker')"
+      :title="t('wali.sekolah.classActivity.headerTitle')"
       :interpolate-child="false"
-      meta="Catatan kegiatan dari guru"
+      :meta="t('wali.sekolah.classActivity.headerMeta')"
     />
 
     <!-- FILTER TOOLBAR -->
@@ -291,7 +291,7 @@ function resetFilter() {
       <template #chips>
         <div class="flex items-center gap-2 flex-wrap">
           <AppFilterChip
-            label="Jenis"
+            :label="t('wali.sekolah.classActivity.chipJenis')"
             :value="jenisLabel"
             icon-name="filter"
             tone="violet"
@@ -304,7 +304,7 @@ function resetFilter() {
             @click="resetFilter"
           >
             <NavIcon name="x" :size="10" />
-            Reset
+            {{ t('wali.sekolah.classActivity.btnReset') }}
           </button>
         </div>
       </template>
@@ -355,7 +355,7 @@ function resetFilter() {
     <!-- JENIS PICKER -->
     <Modal
       v-if="showJenisPicker"
-      title="Filter Jenis Kegiatan"
+      :title="t('wali.sekolah.classActivity.modalJenisTitle')"
       @close="showJenisPicker = false"
     >
       <ul class="space-y-1">

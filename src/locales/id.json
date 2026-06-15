@@ -5264,6 +5264,107 @@
         "todaysSession": "SESI HARI INI",
         "viewDetail": "Lihat detail",
         "whatsNew": "YANG BARU"
+      },
+      "common": {
+        "nisPrefix": "NIS",
+        "kelasPrefix": "Kelas"
+      },
+      "reportCard": {
+        "studentId": "NIS"
+      },
+      "dashboard": {
+        "anakFallback": "Anak"
+      },
+      "grade": {
+        "btnReset": "Reset",
+        "kkmPrefix": "KKM",
+        "monthShortJan": "Jan",
+        "monthShortFeb": "Feb",
+        "monthShortMar": "Mar",
+        "monthShortApr": "Apr",
+        "monthShortMay": "Mei",
+        "monthShortJun": "Jun",
+        "monthShortJul": "Jul",
+        "monthShortAug": "Agu",
+        "monthShortSep": "Sep",
+        "monthShortOct": "Okt",
+        "monthShortNov": "Nov",
+        "monthShortDec": "Des"
+      },
+      "classActivity": {
+        "headerKicker": "Akademik · Kegiatan Kelas",
+        "headerTitle": "Kegiatan Kelas",
+        "headerMeta": "Catatan kegiatan dari guru",
+        "chipJenis": "Jenis",
+        "btnReset": "Reset",
+        "modalJenisTitle": "Filter Jenis Kegiatan"
+      },
+      "recommendation": {
+        "siswaFallback": "Siswa",
+        "badgeBaruSuffix": "baru",
+        "statTotal": "Total",
+        "statActive": "Aktif",
+        "statCompleted": "Selesai",
+        "seeRecommendations": "Lihat rekomendasi",
+        "rekomendasiSuffix": "rekomendasi",
+        "newBadge": "Baru",
+        "pillUnread": "belum dibaca",
+        "pillHighPriority": "prioritas tinggi",
+        "pillCompleted": "selesai"
+      },
+      "announcement": {
+        "eventDone": "Selesai",
+        "eventLiveNow": "BERLANGSUNG SEKARANG",
+        "eventToday": "HARI INI",
+        "eventTomorrow": "BESOK",
+        "eventDaysLeft": "{count} HARI LAGI",
+        "eventWeeksLeft": "{count} PEKAN LAGI",
+        "eventMonthsLeft": "{count} BULAN LAGI",
+        "allDay": "Sepanjang hari",
+        "monthOther": "Lainnya",
+        "monthJanuary": "Januari",
+        "monthFebruary": "Februari",
+        "monthMarch": "Maret",
+        "monthApril": "April",
+        "monthMay": "Mei",
+        "monthJune": "Juni",
+        "monthJuly": "Juli",
+        "monthAugust": "Agustus",
+        "monthSeptember": "September",
+        "monthOctober": "Oktober",
+        "monthNovember": "November",
+        "monthDecember": "Desember"
+      },
+      "reportCardDetail": {
+        "notFoundOrUnpublished": "Rapor tidak ditemukan atau belum diterbitkan.",
+        "semGenapShort": "Sem. Genap",
+        "semGanjilShort": "Sem. Ganjil",
+        "semesterFallback": "Semester",
+        "publishedPrefix": "Diterbitkan",
+        "kicker": "Akademik · Rapor",
+        "titleWithName": "Rapor {name}",
+        "metaFallback": "E-Raport siswa",
+        "tooltipPrintPdf": "Cetak PDF",
+        "tooltipNotPublished": "Rapor belum diterbitkan",
+        "kpiAverage": "Rata-rata",
+        "kpiRank": "Peringkat",
+        "kpiAttendance": "Kehadiran",
+        "sectionAttitude": "Sikap",
+        "homeroomTeacher": "Wali kelas",
+        "exportNoteSuffix": "yang dapat dicetak.",
+        "chooseSemesterNoteSuffix": "lalu ubah pilihan semester pada filter di atas.",
+        "monthShortJan": "Jan",
+        "monthShortFeb": "Feb",
+        "monthShortMar": "Mar",
+        "monthShortApr": "Apr",
+        "monthShortMay": "Mei",
+        "monthShortJun": "Jun",
+        "monthShortJul": "Jul",
+        "monthShortAug": "Agu",
+        "monthShortSep": "Sep",
+        "monthShortOct": "Okt",
+        "monthShortNov": "Nov",
+        "monthShortDec": "Des"
       }
     }
   }

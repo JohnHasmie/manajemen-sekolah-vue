@@ -119,8 +119,8 @@ function getEventState(ev: EventData) {
 
 function getEventCountdownLabel(ev: EventData) {
   const state = getEventState(ev);
-  if (state === 'past') return 'Selesai';
-  if (state === 'live') return 'BERLANGSUNG SEKARANG';
+  if (state === 'past') return t('wali.sekolah.announcement.eventDone');
+  if (state === 'live') return t('wali.sekolah.announcement.eventLiveNow');
 
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -130,11 +130,11 @@ function getEventCountdownLabel(ev: EventData) {
   const diffMs = eventDay.getTime() - today.getTime();
   const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
 
-  if (days === 0) return 'HARI INI';
-  if (days === 1) return 'BESOK';
-  if (days < 7) return `${days} HARI LAGI`;
-  if (days < 30) return `${Math.floor(days / 7)} PEKAN LAGI`;
-  return `${Math.floor(days / 30)} BULAN LAGI`;
+  if (days === 0) return t('wali.sekolah.announcement.eventToday');
+  if (days === 1) return t('wali.sekolah.announcement.eventTomorrow');
+  if (days < 7) return t('wali.sekolah.announcement.eventDaysLeft', { count: days });
+  if (days < 30) return t('wali.sekolah.announcement.eventWeeksLeft', { count: Math.floor(days / 7) });
+  return t('wali.sekolah.announcement.eventMonthsLeft', { count: Math.floor(days / 30) });
 }
 
 function formatEventTime(ev: EventData) {
@@ -142,7 +142,7 @@ function formatEventTime(ev: EventData) {
   if (isNaN(d.getTime())) return '';
   const hm = ev.event_has_time !== false
     ? `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-    : 'Sepanjang hari';
+    : t('wali.sekolah.announcement.allDay');
   const parts = [hm];
   if (ev.event_location) parts.push(ev.event_location);
   return parts.join(' · ');
@@ -197,18 +197,18 @@ interface MonthGroup {
 
 const grouped = computed<MonthGroup[]>(() => {
   const monthsId = [
-    'Januari',
-    'Februari',
-    'Maret',
-    'April',
-    'Mei',
-    'Juni',
-    'Juli',
-    'Agustus',
-    'September',
-    'Oktober',
-    'November',
-    'Desember',
+    t('wali.sekolah.announcement.monthJanuary'),
+    t('wali.sekolah.announcement.monthFebruary'),
+    t('wali.sekolah.announcement.monthMarch'),
+    t('wali.sekolah.announcement.monthApril'),
+    t('wali.sekolah.announcement.monthMay'),
+    t('wali.sekolah.announcement.monthJune'),
+    t('wali.sekolah.announcement.monthJuly'),
+    t('wali.sekolah.announcement.monthAugust'),
+    t('wali.sekolah.announcement.monthSeptember'),
+    t('wali.sekolah.announcement.monthOctober'),
+    t('wali.sekolah.announcement.monthNovember'),
+    t('wali.sekolah.announcement.monthDecember'),
   ];
 
   const groupsMap = new Map<string, Announcement[]>();
@@ -216,7 +216,7 @@ const grouped = computed<MonthGroup[]>(() => {
 
   for (const a of filtered.value) {
     const dateStr = a.published_at ?? a.created_at;
-    let key = 'Lainnya';
+    let key = t('wali.sekolah.announcement.monthOther');
     if (dateStr) {
       const dt = new Date(dateStr);
       if (!isNaN(dt.getTime())) {

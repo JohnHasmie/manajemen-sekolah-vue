@@ -203,26 +203,26 @@ function letterFg(score: number): string {
 }
 
 // ── Date formatter (mobile parity: "5 Mei 2026") ──
-const MONTHS = [
+const MONTHS = computed<string[]>(() => [
   '',
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'Mei',
-  'Jun',
-  'Jul',
-  'Agu',
-  'Sep',
-  'Okt',
-  'Nov',
-  'Des',
-];
+  t('wali.sekolah.grade.monthShortJan'),
+  t('wali.sekolah.grade.monthShortFeb'),
+  t('wali.sekolah.grade.monthShortMar'),
+  t('wali.sekolah.grade.monthShortApr'),
+  t('wali.sekolah.grade.monthShortMay'),
+  t('wali.sekolah.grade.monthShortJun'),
+  t('wali.sekolah.grade.monthShortJul'),
+  t('wali.sekolah.grade.monthShortAug'),
+  t('wali.sekolah.grade.monthShortSep'),
+  t('wali.sekolah.grade.monthShortOct'),
+  t('wali.sekolah.grade.monthShortNov'),
+  t('wali.sekolah.grade.monthShortDec'),
+]);
 function fmtDate(iso: string): string {
   if (!iso) return '';
   const d = new Date(iso);
   if (!Number.isFinite(d.getTime())) return iso;
-  return `${d.getDate()} ${MONTHS[d.getMonth() + 1]} ${d.getFullYear()}`;
+  return `${d.getDate()} ${MONTHS.value[d.getMonth() + 1]} ${d.getFullYear()}`;
 }
 
 // ── IntersectionObserver mark-as-read ──
@@ -411,7 +411,7 @@ const activeSemesterLabel = computed(
             @click="resetFilter"
           >
             <NavIcon name="x" :size="10" />
-            Reset
+            {{ t('wali.sekolah.grade.btnReset') }}
           </button>
         </div>
       </template>
@@ -488,7 +488,7 @@ const activeSemesterLabel = computed(
                     {{ row.score != null ? row.score.toFixed(0) : '—' }}
                   </p>
                   <p class="text-[10px] font-medium text-slate-500 mt-1">
-                    KKM {{ row.kkm }}
+                    {{ t('wali.sekolah.grade.kkmPrefix') }} {{ row.kkm }}
                   </p>
                 </div>
               </div>

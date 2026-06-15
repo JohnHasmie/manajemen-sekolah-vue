@@ -5268,6 +5268,107 @@
         "todaysSession": "TODAY'S SESSION",
         "viewDetail": "View detail",
         "whatsNew": "WHAT'S NEW"
+      },
+      "common": {
+        "nisPrefix": "ID",
+        "kelasPrefix": "Class"
+      },
+      "reportCard": {
+        "studentId": "ID"
+      },
+      "dashboard": {
+        "anakFallback": "Child"
+      },
+      "grade": {
+        "btnReset": "Reset",
+        "kkmPrefix": "Min",
+        "monthShortJan": "Jan",
+        "monthShortFeb": "Feb",
+        "monthShortMar": "Mar",
+        "monthShortApr": "Apr",
+        "monthShortMay": "May",
+        "monthShortJun": "Jun",
+        "monthShortJul": "Jul",
+        "monthShortAug": "Aug",
+        "monthShortSep": "Sep",
+        "monthShortOct": "Oct",
+        "monthShortNov": "Nov",
+        "monthShortDec": "Dec"
+      },
+      "classActivity": {
+        "headerKicker": "Academic · Class Activity",
+        "headerTitle": "Class Activity",
+        "headerMeta": "Activity notes from teachers",
+        "chipJenis": "Type",
+        "btnReset": "Reset",
+        "modalJenisTitle": "Filter Activity Type"
+      },
+      "recommendation": {
+        "siswaFallback": "Student",
+        "badgeBaruSuffix": "new",
+        "statTotal": "Total",
+        "statActive": "Active",
+        "statCompleted": "Completed",
+        "seeRecommendations": "See recommendations",
+        "rekomendasiSuffix": "recommendations",
+        "newBadge": "New",
+        "pillUnread": "unread",
+        "pillHighPriority": "high priority",
+        "pillCompleted": "completed"
+      },
+      "announcement": {
+        "eventDone": "Done",
+        "eventLiveNow": "HAPPENING NOW",
+        "eventToday": "TODAY",
+        "eventTomorrow": "TOMORROW",
+        "eventDaysLeft": "{count} DAYS LEFT",
+        "eventWeeksLeft": "{count} WEEKS LEFT",
+        "eventMonthsLeft": "{count} MONTHS LEFT",
+        "allDay": "All day",
+        "monthOther": "Other",
+        "monthJanuary": "January",
+        "monthFebruary": "February",
+        "monthMarch": "March",
+        "monthApril": "April",
+        "monthMay": "May",
+        "monthJune": "June",
+        "monthJuly": "July",
+        "monthAugust": "August",
+        "monthSeptember": "September",
+        "monthOctober": "October",
+        "monthNovember": "November",
+        "monthDecember": "December"
+      },
+      "reportCardDetail": {
+        "notFoundOrUnpublished": "Report card not found or not yet published.",
+        "semGenapShort": "Sem. Even",
+        "semGanjilShort": "Sem. Odd",
+        "semesterFallback": "Semester",
+        "publishedPrefix": "Published",
+        "kicker": "Academic · Report Card",
+        "titleWithName": "{name}'s Report Card",
+        "metaFallback": "Student e-report",
+        "tooltipPrintPdf": "Print PDF",
+        "tooltipNotPublished": "Report card not published yet",
+        "kpiAverage": "Average",
+        "kpiRank": "Rank",
+        "kpiAttendance": "Attendance",
+        "sectionAttitude": "Attitude",
+        "homeroomTeacher": "Homeroom teacher",
+        "exportNoteSuffix": "that can be printed.",
+        "chooseSemesterNoteSuffix": "then change the semester selection in the filter above.",
+        "monthShortJan": "Jan",
+        "monthShortFeb": "Feb",
+        "monthShortMar": "Mar",
+        "monthShortApr": "Apr",
+        "monthShortMay": "May",
+        "monthShortJun": "Jun",
+        "monthShortJul": "Jul",
+        "monthShortAug": "Aug",
+        "monthShortSep": "Sep",
+        "monthShortOct": "Oct",
+        "monthShortNov": "Nov",
+        "monthShortDec": "Dec"
       }
     }
   }
