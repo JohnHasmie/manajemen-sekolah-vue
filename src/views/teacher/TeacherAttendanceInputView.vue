@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { AttendanceService } from '@/services/attendance.service';
 import { ClassroomService } from '@/services/classrooms.service';
@@ -41,6 +42,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 const auth = useAuthStore();
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 // ── State seeded from query, but editable inline ──
 const classId = ref<string>(String(route.query.class_id ?? ''));
@@ -144,26 +146,26 @@ const summary = computed(() => {
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'check-circle',
-    label: 'Hadir',
+    label: t('tutor.sekolah.attendanceInput.statusHadir'),
     value: summary.value.hadir,
     tone: 'green',
     accented: true,
   },
   {
     icon: 'bell',
-    label: 'Sakit',
+    label: t('tutor.sekolah.attendanceInput.statusSakit'),
     value: summary.value.sakit,
     tone: 'amber',
   },
   {
     icon: 'edit-3',
-    label: 'Izin',
+    label: t('tutor.sekolah.attendanceInput.statusIzin'),
     value: summary.value.izin,
     tone: 'brand',
   },
   {
     icon: 'x',
-    label: 'Alpa',
+    label: t('tutor.sekolah.attendanceInput.statusAlpa'),
     value: summary.value.alpa,
     tone: 'red',
   },
@@ -339,7 +341,7 @@ async function copyFromLast() {
       status: map.get(r.student_id) ?? r.status,
     }));
     toast.value = {
-      message: 'Status disalin dari sesi sebelumnya.',
+      message: t('tutor.sekolah.attendanceInput.copyFromLastToast'),
       tone: 'success',
     };
   } catch (e) {
@@ -352,7 +354,7 @@ async function save() {
   const marked = rows.value.filter((r) => r.status !== null);
   if (marked.length === 0) {
     toast.value = {
-      message: 'Tandai minimal satu siswa terlebih dulu.',
+      message: t('tutor.sekolah.attendanceInput.markAtLeastOne'),
       tone: 'error',
     };
     return;
@@ -371,7 +373,7 @@ async function save() {
       })),
     });
     toast.value = {
-      message: `Presensi tersimpan: ${marked.length} siswa.`,
+      message: t('tutor.sekolah.attendanceInput.savedToast', { count: marked.length }),
       tone: 'success',
     };
     // After save, route to detail view so the teacher sees the saved
@@ -412,11 +414,11 @@ function pickSubject(id: string) {
     <!-- ── 1. Brand header ───────────────────────────────────── -->
     <BrandPageHeader
       role="guru"
-      kicker="Presensi · Input Sesi Baru"
+      :kicker="t('tutor.sekolah.attendanceInput.kicker')"
       :title="
         activeSubject && activeClass
-          ? `${activeSubject.name} · ${activeClass.name}`
-          : 'Pilih sesi untuk input'
+          ? t('tutor.sekolah.attendanceInput.titleWithCtx', { subject: activeSubject.name, className: activeClass.name })
+          : t('tutor.sekolah.attendanceInput.titleFallback')
       "
       :meta="dateLong"
       :live-dot="false"
@@ -427,7 +429,7 @@ function pickSubject(id: string) {
         @click="backToList"
       >
         <NavIcon name="chevron-left" :size="13" />
-        Kembali
+        {{ t('tutor.sekolah.attendanceInput.back') }}
       </button>
     </BrandPageHeader>
 
@@ -439,7 +441,7 @@ function pickSubject(id: string) {
         >
           <span
             class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"
-            >Tanggal</span
+            >{{ t('tutor.sekolah.attendanceInput.dateLabel') }}</span
           >
           <input
             v-model="date"
@@ -448,15 +450,15 @@ function pickSubject(id: string) {
           />
         </span>
         <AppFilterChip
-          label="Kelas"
-          :value="activeClass?.name ?? '— pilih kelas —'"
+          :label="t('tutor.sekolah.attendanceInput.classLabel')"
+          :value="activeClass?.name ?? t('tutor.sekolah.attendanceInput.classPlaceholder')"
           icon-name="layers"
           tone="violet"
           @click="showClassPicker = true"
         />
         <AppFilterChip
-          label="Mata Pelajaran"
-          :value="activeSubject?.name ?? '— pilih mapel —'"
+          :label="t('tutor.sekolah.attendanceInput.subjectLabel')"
+          :value="activeSubject?.name ?? t('tutor.sekolah.attendanceInput.subjectPlaceholder')"
           icon-name="book"
           tone="brand"
           @click="showSubjectPicker = true"
@@ -470,21 +472,21 @@ function pickSubject(id: string) {
           class="text-[11px] font-bold px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
           @click="markAll('hadir')"
         >
-          ✓ Semua Hadir
+          ✓ {{ t('tutor.sekolah.attendanceInput.allHadir') }}
         </button>
         <button
           type="button"
           class="text-[11px] font-bold px-3 py-2 rounded-xl bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
           @click="clearAll"
         >
-          ✕ Kosongkan
+          ✕ {{ t('tutor.sekolah.attendanceInput.clearAll') }}
         </button>
         <button
           type="button"
           class="text-[11px] font-bold px-3 py-2 rounded-xl bg-white text-slate-600 border border-slate-200 hover:border-slate-300"
           @click="copyFromLast"
         >
-          📋 Salin sesi sebelumnya
+          📋 {{ t('tutor.sekolah.attendanceInput.copyFromLast') }}
         </button>
       </div>
     </section>
@@ -495,7 +497,7 @@ function pickSubject(id: string) {
     <!-- ── 4. Roster toolbar ─────────────────────────────────── -->
     <PageFilterToolbar
       :search="searchQuery"
-      search-placeholder="Cari siswa atau NIS..."
+      :search-placeholder="t('tutor.sekolah.attendanceInput.searchPlaceholder')"
       @update:search="(v) => (searchQuery = v)"
     >
       <template #chips>
@@ -509,7 +511,7 @@ function pickSubject(id: string) {
           "
           @click="filterMode = 'all'"
         >
-          Semua siswa
+          {{ t('tutor.sekolah.attendanceInput.filterAll') }}
         </button>
         <button
           type="button"
@@ -521,7 +523,7 @@ function pickSubject(id: string) {
           "
           @click="filterMode = 'unmarked'"
         >
-          Belum ditandai
+          {{ t('tutor.sekolah.attendanceInput.filterUnmarked') }}
           <span class="ml-1 text-[10px] opacity-70">{{ summary.unmarked }}</span>
         </button>
       </template>
@@ -531,11 +533,11 @@ function pickSubject(id: string) {
     <div class="flex items-center gap-2 px-1 flex-wrap">
       <span
         class="text-[11px] font-bold text-slate-500 uppercase tracking-widest"
-        >Daftar Siswa · Default Hadir</span
+        >{{ t('tutor.sekolah.attendanceInput.studentListLabel') }}</span
       >
       <div class="flex-1 h-px bg-slate-200"></div>
       <span class="text-[11px] font-bold text-slate-500">
-        {{ filteredRows.length }} dari {{ summary.total }} siswa
+        {{ t('tutor.sekolah.attendanceInput.studentCount', { shown: filteredRows.length, total: summary.total }) }}
       </span>
     </div>
 
@@ -544,28 +546,28 @@ function pickSubject(id: string) {
       class="hidden md:flex items-center gap-3 flex-wrap text-[10.5px] text-slate-500 px-1 -mt-2"
     >
       <span class="font-bold text-slate-400 uppercase tracking-widest">
-        Pintasan:
+        {{ t('tutor.sekolah.attendanceInput.shortcutsLabel') }}
       </span>
       <span class="inline-flex items-center gap-1">
         <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↑</kbd>
         <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">↓</kbd>
-        pindah baris
+        {{ t('tutor.sekolah.attendanceInput.moveRow') }}
       </span>
       <span class="inline-flex items-center gap-1">
         <kbd class="px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold">H</kbd>
-        Hadir ·
+        {{ t('tutor.sekolah.attendanceInput.statusHadir') }} ·
         <kbd class="px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 font-bold">S</kbd>
-        Sakit ·
+        {{ t('tutor.sekolah.attendanceInput.statusSakit') }} ·
         <kbd class="px-1.5 py-0.5 rounded bg-sky-50 border border-sky-200 text-sky-700 font-bold">I</kbd>
-        Izin ·
+        {{ t('tutor.sekolah.attendanceInput.statusIzin') }} ·
         <kbd class="px-1.5 py-0.5 rounded bg-red-50 border border-red-200 text-red-700 font-bold">A</kbd>
-        Alpa
+        {{ t('tutor.sekolah.attendanceInput.statusAlpa') }}
       </span>
       <span class="inline-flex items-center gap-1">
         <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">Ctrl</kbd>
         +
         <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold">S</kbd>
-        simpan
+        {{ t('tutor.sekolah.attendanceInput.save') }}
       </span>
     </div>
 
@@ -574,10 +576,10 @@ function pickSubject(id: string) {
       :state="state"
       :empty-title="
         !classId || !subjectId
-          ? 'Pilih kelas dan mata pelajaran'
-          : 'Roster kosong'
+          ? t('tutor.sekolah.attendanceInput.pickClassSubject')
+          : t('tutor.sekolah.attendanceInput.emptyRoster')
       "
-      empty-description="Setelah kelas dan mapel terpilih, daftar siswa akan muncul."
+      :empty-description="t('tutor.sekolah.attendanceInput.emptyRosterDescription')"
       @retry="loadRoster"
     >
       <template #default>
@@ -610,10 +612,10 @@ function pickSubject(id: string) {
             />
             <div class="flex-1 min-w-0">
               <p class="text-[13px] font-bold text-slate-900 truncate">
-                {{ r.student_name || 'Tanpa nama' }}
+                {{ r.student_name || t('tutor.sekolah.attendanceInput.noName') }}
               </p>
               <p class="text-[11px] text-slate-400 truncate">
-                {{ activeClass?.name ? activeClass.name + ' · ' : '' }}NIS
+                {{ activeClass?.name ? activeClass.name + ' · ' : '' }}{{ t('tutor.sekolah.attendanceInput.nisLabel') }}
                 {{ r.student_number || '—' }}
               </p>
             </div>
@@ -643,16 +645,14 @@ function pickSubject(id: string) {
         </div>
         <div class="text-[11px]">
           <p class="font-bold text-slate-900">
-            Siap disimpan:
-            {{ summary.total - summary.unmarked }} dari {{ summary.total }} siswa
+            {{ t('tutor.sekolah.attendanceInput.readySummary', { marked: summary.total - summary.unmarked, total: summary.total }) }}
           </p>
           <p class="text-slate-500">
-            {{ summary.hadir }} Hadir · {{ summary.sakit }} Sakit ·
-            {{ summary.izin }} Izin · {{ summary.alpa }} Alpa
+            {{ t('tutor.sekolah.attendanceInput.statusLegend', { hadir: summary.hadir, sakit: summary.sakit, izin: summary.izin, alpa: summary.alpa }) }}
           </p>
         </div>
       </div>
-      <Button variant="secondary" size="sm" @click="backToList">Batal</Button>
+      <Button variant="secondary" size="sm" @click="backToList">{{ t('tutor.sekolah.attendanceInput.cancel') }}</Button>
       <Button
         variant="primary"
         size="sm"
@@ -660,7 +660,7 @@ function pickSubject(id: string) {
         :disabled="!isReadyToSave"
         @click="save"
       >
-        Simpan presensi
+        {{ t('tutor.sekolah.attendanceInput.saveAttendance') }}
       </Button>
     </section>
 
@@ -674,7 +674,7 @@ function pickSubject(id: string) {
     <!-- ── Class picker ──────────────────────────────────────── -->
     <Modal
       v-if="showClassPicker"
-      title="Pilih Kelas"
+      :title="t('tutor.sekolah.attendanceInput.pickClassTitle')"
       @close="showClassPicker = false"
     >
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
@@ -690,7 +690,7 @@ function pickSubject(id: string) {
           >
             <span>{{ c.name }}</span>
             <span v-if="c.student_count" class="text-[10px] text-slate-400">
-              {{ c.student_count }} siswa
+              {{ t('tutor.sekolah.attendanceInput.studentCountSuffix', { count: c.student_count }) }}
             </span>
           </button>
         </li>
@@ -700,7 +700,7 @@ function pickSubject(id: string) {
     <!-- ── Subject picker ────────────────────────────────────── -->
     <Modal
       v-if="showSubjectPicker"
-      title="Pilih Mata Pelajaran"
+      :title="t('tutor.sekolah.attendanceInput.pickSubjectTitle')"
       @close="showSubjectPicker = false"
     >
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">

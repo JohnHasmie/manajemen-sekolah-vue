@@ -11,6 +11,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import { AttendanceService } from '@/services/attendance.service';
@@ -39,6 +40,7 @@ const auth = useAuthStore();
 const academicYearStore = useAcademicYearStore();
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 // ── Query params (driven by the list page) ──
 const classId = computed(() => String(route.query.class_id ?? ''));
@@ -147,7 +149,7 @@ const summary = computed(() => {
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'check-circle',
-    label: 'Hadir',
+    label: t('tutor.sekolah.attendanceDetail.statusHadir'),
     value: summary.value.hadir,
     suffix: `· ${summary.value.total ? Math.round((summary.value.hadir / summary.value.total) * 100) : 0}%`,
     tone: 'green',
@@ -155,19 +157,19 @@ const kpiCards = computed<KpiCard[]>(() => [
   },
   {
     icon: 'bell',
-    label: 'Sakit',
+    label: t('tutor.sekolah.attendanceDetail.statusSakit'),
     value: summary.value.sakit,
     tone: 'amber',
   },
   {
     icon: 'edit-3',
-    label: 'Izin',
+    label: t('tutor.sekolah.attendanceDetail.statusIzin'),
     value: summary.value.izin,
     tone: 'brand',
   },
   {
     icon: 'x',
-    label: 'Alpa',
+    label: t('tutor.sekolah.attendanceDetail.statusAlpa'),
     value: summary.value.alpa,
     tone: 'red',
   },
@@ -196,13 +198,13 @@ const isDirty = computed(() => {
   return false;
 });
 
-const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'hadir', label: 'Hadir' },
-  { key: 'sakit', label: 'Sakit' },
-  { key: 'izin', label: 'Izin' },
-  { key: 'alpa', label: 'Alpa' },
-];
+const STATUS_FILTERS = computed<{ key: StatusFilter; label: string }[]>(() => [
+  { key: 'all', label: t('tutor.sekolah.attendanceDetail.filterAll') },
+  { key: 'hadir', label: t('tutor.sekolah.attendanceDetail.statusHadir') },
+  { key: 'sakit', label: t('tutor.sekolah.attendanceDetail.statusSakit') },
+  { key: 'izin', label: t('tutor.sekolah.attendanceDetail.statusIzin') },
+  { key: 'alpa', label: t('tutor.sekolah.attendanceDetail.statusAlpa') },
+]);
 
 // ── Data loaders ──
 async function loadContext() {
@@ -282,8 +284,7 @@ function onWindowKeydown(e: KeyboardEvent) {
 function openStatusPicker(r: AttendanceRow) {
   if (isReadOnly.value) {
     toast.value = {
-      message:
-        'Tahun ajaran ini sudah tidak aktif. Presensi tidak dapat diubah.',
+      message: t('tutor.sekolah.attendanceDetail.readOnlyToast'),
       tone: 'error',
     };
     return;
@@ -329,7 +330,7 @@ function statusPillClass(s: AttendanceStatus): string {
 }
 
 function statusPillLabel(s: AttendanceStatus): string {
-  if (!s) return 'Belum';
+  if (!s) return t('tutor.sekolah.attendanceDetail.statusEmpty');
   return ATTENDANCE_LABELS[s];
 }
 
@@ -345,7 +346,7 @@ async function save() {
   const marked = rows.value.filter((r) => r.status !== null);
   if (marked.length === 0) {
     toast.value = {
-      message: 'Tandai minimal satu siswa terlebih dulu.',
+      message: t('tutor.sekolah.attendanceDetail.markAtLeastOne'),
       tone: 'error',
     };
     return;
@@ -366,7 +367,7 @@ async function save() {
     });
     original.value = rows.value.map((r) => ({ ...r }));
     toast.value = {
-      message: `Perubahan tersimpan: ${marked.length} siswa.`,
+      message: t('tutor.sekolah.attendanceDetail.savedToast', { count: marked.length }),
       tone: 'success',
     };
   } catch (e) {
@@ -386,15 +387,15 @@ function backToList() {
     <!-- ── 1. Brand header with context ──────────────────────── -->
     <BrandPageHeader
       role="guru"
-      kicker="Presensi · Detail Sesi"
+      :kicker="t('tutor.sekolah.attendanceDetail.kicker')"
       :title="
         subjectName && className
-          ? `${subjectName} · Kelas ${className}`
-          : 'Detail Sesi'
+          ? t('tutor.sekolah.attendanceDetail.titleWithCtx', { subject: subjectName, className })
+          : t('tutor.sekolah.attendanceDetail.titleFallback')
       "
       :meta="
         recordingTeacher
-          ? `${dateLong} · Diisi oleh ${recordingTeacher}`
+          ? t('tutor.sekolah.attendanceDetail.metaWithTeacher', { date: dateLong, teacher: recordingTeacher })
           : dateLong
       "
       :live-dot="false"
@@ -407,7 +408,7 @@ function backToList() {
           @click="backToList"
         >
           <NavIcon name="chevron-left" :size="13" />
-          Kembali
+          {{ t('tutor.sekolah.attendanceDetail.back') }}
         </button>
       </div>
     </BrandPageHeader>
@@ -418,8 +419,7 @@ function backToList() {
       class="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-2.5 flex items-center gap-2.5 text-sky-700 text-[12px] font-bold"
     >
       <NavIcon name="lock" :size="14" />
-      Tahun ajaran ini sudah tidak aktif — presensi hanya dapat dilihat
-      (read-only). Ekspor ke Excel untuk arsip bila perlu.
+      {{ t('tutor.sekolah.attendanceDetail.readOnlyBanner') }}
     </section>
 
     <!-- ── 2. KPI HSIA strip ─────────────────────────────────── -->
@@ -428,7 +428,7 @@ function backToList() {
     <!-- ── 3. Toolbar: search + status filter chips ──────────── -->
     <PageFilterToolbar
       :search="searchQuery"
-      search-placeholder="Cari nama atau NIS siswa..."
+      :search-placeholder="t('tutor.sekolah.attendanceDetail.searchPlaceholder')"
       @update:search="(v) => (searchQuery = v)"
     >
       <template #chips>
@@ -477,19 +477,19 @@ function backToList() {
     <div class="flex items-center gap-2 px-1">
       <span
         class="text-[11px] font-bold text-slate-500 uppercase tracking-widest"
-        >Daftar Siswa</span
+        >{{ t('tutor.sekolah.attendanceDetail.studentListLabel') }}</span
       >
       <div class="flex-1 h-px bg-slate-200"></div>
       <span class="text-[11px] font-bold text-slate-500">
-        {{ filteredRows.length }} dari {{ summary.total }} siswa
+        {{ t('tutor.sekolah.attendanceDetail.studentCount', { shown: filteredRows.length, total: summary.total }) }}
       </span>
     </div>
 
     <!-- ── 5. Roster ─────────────────────────────────────────── -->
     <AsyncView
       :state="state"
-      empty-title="Roster kosong"
-      empty-description="Daftar siswa untuk sesi ini belum tersedia."
+      :empty-title="t('tutor.sekolah.attendanceDetail.emptyRosterTitle')"
+      :empty-description="t('tutor.sekolah.attendanceDetail.emptyRosterDescription')"
       @retry="loadRoster"
     >
       <template #default>
@@ -509,7 +509,7 @@ function backToList() {
             <button
               type="button"
               class="flex items-center gap-3 min-w-0 flex-1 text-left group"
-              :aria-label="`Lihat riwayat ${r.student_name}`"
+              :aria-label="t('tutor.sekolah.attendanceDetail.viewHistoryAria', { name: r.student_name })"
               @click="openHistory(r)"
             >
               <InitialsAvatar
@@ -528,10 +528,10 @@ function backToList() {
                 <p
                   class="text-[13px] font-bold text-slate-900 truncate group-hover:text-brand-cobalt transition-colors"
                 >
-                  {{ r.student_name || 'Tanpa nama' }}
+                  {{ r.student_name || t('tutor.sekolah.attendanceDetail.noName') }}
                 </p>
                 <p class="text-[11px] text-slate-400 truncate inline-flex items-center gap-1.5">
-                  <span>{{ className ? className + ' · ' : '' }}NIS {{ r.student_number || '—' }}</span>
+                  <span>{{ className ? className + ' · ' : '' }}{{ t('tutor.sekolah.attendanceDetail.nisLabel') }} {{ r.student_number || '—' }}</span>
                   <span
                     v-if="r.alert"
                     class="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
@@ -562,7 +562,7 @@ function backToList() {
                 isReadOnly ? 'cursor-not-allowed opacity-70' : 'hover:shadow-sm',
               ]"
               :disabled="isReadOnly"
-              :aria-label="`Ubah status ${r.student_name}`"
+              :aria-label="t('tutor.sekolah.attendanceDetail.changeStatusAria', { name: r.student_name })"
               @click="openStatusPicker(r)"
             >
               {{ statusPillLabel(r.status) }}
@@ -585,11 +585,10 @@ function backToList() {
     >
       <div class="text-[11px] text-slate-600">
         <p class="font-bold text-slate-900">
-          {{ summary.total - summary.unmarked }} dari {{ summary.total }} ditandai
+          {{ t('tutor.sekolah.attendanceDetail.markedSummary', { marked: summary.total - summary.unmarked, total: summary.total }) }}
         </p>
         <p class="text-slate-500">
-          {{ summary.hadir }} Hadir · {{ summary.sakit }} Sakit ·
-          {{ summary.izin }} Izin · {{ summary.alpa }} Alpa
+          {{ t('tutor.sekolah.attendanceDetail.statusLegend', { hadir: summary.hadir, sakit: summary.sakit, izin: summary.izin, alpa: summary.alpa }) }}
         </p>
       </div>
       <span class="flex-1"></span>
@@ -597,7 +596,7 @@ function backToList() {
         <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">Ctrl</kbd>
         <span>+</span>
         <kbd class="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">S</kbd>
-        untuk simpan
+        {{ t('tutor.sekolah.attendanceDetail.toSave') }}
       </span>
       <Button
         variant="secondary"
@@ -605,10 +604,10 @@ function backToList() {
         :disabled="!isDirty"
         @click="resetChanges"
       >
-        Reset
+        {{ t('tutor.sekolah.attendanceDetail.reset') }}
       </Button>
       <Button variant="secondary" size="sm" @click="markAllHadir">
-        Tandai semua Hadir
+        {{ t('tutor.sekolah.attendanceDetail.markAllHadir') }}
       </Button>
       <Button
         variant="primary"
@@ -617,7 +616,7 @@ function backToList() {
         :disabled="!isDirty"
         @click="save"
       >
-        Simpan perubahan
+        {{ t('tutor.sekolah.attendanceDetail.saveChanges') }}
       </Button>
     </section>
 
