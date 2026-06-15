@@ -5,12 +5,15 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { formatRupiah } from '@/lib/format';
 import type { TutoringVoucher } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+
+const { t } = useI18n();
 
 const loading = ref(true);
 const vouchers = ref<TutoringVoucher[]>([]);
@@ -91,7 +94,7 @@ function mapVoucher(v: TutoringVoucher): VoucherView {
   // yet, but if value === 0 and it's PERCENTAGE 100, show the friendlier
   // label per spec.
   if (v.type === 'PERCENTAGE' && v.value === 100) {
-    valueLabel = 'Gratis';
+    valueLabel = t('wali.bimbel.vouchers.free_label');
     valueCls = used ? 'text-bimbel-text-mid' : 'text-green-700';
   }
 
@@ -100,22 +103,22 @@ function mapVoucher(v: TutoringVoucher): VoucherView {
   let footerCls = 'text-bimbel-text-lo';
   if (used) {
     footerText = isExpired(v)
-      ? `Kedaluwarsa ${dateShort(v.valid_until)}`
-      : `Dipakai ${v.used_count}×`;
+      ? t('wali.bimbel.vouchers.expired_on', { date: dateShort(v.valid_until) })
+      : t('wali.bimbel.vouchers.used_count', { count: v.used_count });
   } else if (urgent && v.valid_until) {
-    footerText = `Berakhir ${dateShort(v.valid_until)}`;
+    footerText = t('wali.bimbel.vouchers.expires_on', { date: dateShort(v.valid_until) });
     footerCls = 'text-red-800 font-semibold';
   } else if (v.valid_until) {
-    footerText = `Berlaku sampai ${dateShort(v.valid_until)}`;
+    footerText = t('wali.bimbel.vouchers.valid_until', { date: dateShort(v.valid_until) });
   } else {
-    footerText = 'Tanpa batas waktu';
+    footerText = t('wali.bimbel.vouchers.no_expiry');
   }
 
   return {
     id: v.id,
     valueLabel,
     valueCls,
-    description: v.notes || 'Diskon biaya bimbel',
+    description: v.notes || t('wali.bimbel.vouchers.default_description'),
     code: v.code,
     urgent,
     used,
@@ -133,9 +136,9 @@ const visible = computed<VoucherView[]>(() => {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · VOUCHER"
-      title="Voucher & promo aktif"
-      :subtitle="`${activeCount} aktif · ${expiringCount} segera kedaluwarsa`"
+      :kicker="t('wali.bimbel.vouchers.kicker')"
+      :title="t('wali.bimbel.vouchers.title')"
+      :subtitle="t('wali.bimbel.vouchers.subtitle', { active: activeCount, expiring: expiringCount })"
       :stats="[]"
     >
       <template #actions>
@@ -143,15 +146,15 @@ const visible = computed<VoucherView[]>(() => {
           type="button"
           class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="view = view === 'history' ? 'active' : 'history'"
-        >{{ view === 'history' ? 'Aktif' : 'Riwayat' }}</button>
+        >{{ view === 'history' ? t('wali.bimbel.vouchers.toggle_active') : t('wali.bimbel.vouchers.toggle_history') }}</button>
       </template>
     </ParentBerandaHero>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.vouchers.loading') }}</div>
 
     <template v-else>
       <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
-        {{ view === 'history' ? 'VOUCHER TERPAKAI' : 'VOUCHER TERSEDIA' }}
+        {{ view === 'history' ? t('wali.bimbel.vouchers.heading_history') : t('wali.bimbel.vouchers.heading_active') }}
       </p>
 
       <div class="grid sm:grid-cols-2 gap-2">
@@ -175,7 +178,7 @@ const visible = computed<VoucherView[]>(() => {
         <p
           v-if="!visible.length"
           class="col-span-full text-center text-[13px] text-bimbel-text-mid py-6"
-        >{{ view === 'history' ? 'Belum ada voucher terpakai.' : 'Tidak ada voucher aktif.' }}</p>
+        >{{ view === 'history' ? t('wali.bimbel.vouchers.empty_history') : t('wali.bimbel.vouchers.empty_active') }}</p>
       </div>
     </template>
   </div>

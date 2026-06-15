@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { TutoringSession } from '@/types/tutoring';
@@ -15,6 +16,7 @@ import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPick
 import NavIcon from '@/components/feature/NavIcon.vue';
 import SessionsCalendar from '@/components/feature/tutoring/SessionsCalendar.vue';
 
+const { t } = useI18n();
 const route = useRoute();
 const { activeChildId } = useChildPicker();
 
@@ -70,11 +72,11 @@ function statusLabel(s: TutoringSession): string {
   const at = s.scheduled_at ? new Date(s.scheduled_at).valueOf() : 0;
   const isPast = at && at < Date.now();
   const attended = (s as WithMeta).attended;
-  if (s.status === 'DONE' || (isPast && attended === true)) return 'Hadir';
-  if (s.status === 'CANCELLED') return 'Batal';
-  if (isPast && attended === false) return 'Tidak hadir';
-  if (isPast) return s.status_label ?? 'Selesai';
-  return 'Akan datang';
+  if (s.status === 'DONE' || (isPast && attended === true)) return t('wali.bimbel.sessions.status_present');
+  if (s.status === 'CANCELLED') return t('wali.bimbel.sessions.status_cancelled');
+  if (isPast && attended === false) return t('wali.bimbel.sessions.status_absent');
+  if (isPast) return s.status_label ?? t('wali.bimbel.sessions.status_done');
+  return t('wali.bimbel.sessions.status_upcoming');
 }
 
 function statusPillCls(s: TutoringSession): string {
@@ -114,7 +116,7 @@ const monthCount = computed(() => {
 // ── Subject chips ───────────────────────────────────────────────
 const subjectChips = computed(() => {
   const seen = new Set<string>();
-  const out: { id: string; label: string }[] = [{ id: 'all', label: 'Semua' }];
+  const out: { id: string; label: string }[] = [{ id: 'all', label: t('wali.bimbel.sessions.subject_all') }];
   for (const s of sessions.value) {
     const name = sessionSubject(s);
     if (name && !seen.has(name)) {
@@ -151,8 +153,8 @@ function dayLabel(d: Date): string {
     day: 'numeric',
     month: 'short',
   }).toUpperCase();
-  if (dayStart.valueOf() === today.valueOf()) return `HARI INI · ${dateLabel}`;
-  if (dayStart.valueOf() === tomorrow.valueOf()) return `BESOK · ${dateLabel}`;
+  if (dayStart.valueOf() === today.valueOf()) return t('wali.bimbel.sessions.day_today', { date: dateLabel });
+  if (dayStart.valueOf() === tomorrow.valueOf()) return t('wali.bimbel.sessions.day_tomorrow', { date: dateLabel });
   return dateLabel;
 }
 
@@ -177,9 +179,9 @@ const grouped = computed(() => {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · JADWAL"
-      title="Sesi mendatang"
-      :subtitle="`${weekCount} sesi minggu ini · ${monthCount} bulan ini`"
+      :kicker="t('wali.bimbel.sessions.kicker')"
+      :title="t('wali.bimbel.sessions.title')"
+      :subtitle="t('wali.bimbel.sessions.subtitle', { week: weekCount, month: monthCount })"
       :stats="[]"
     >
       <template #actions>
@@ -190,7 +192,7 @@ const grouped = computed(() => {
           @click="toggleView"
         >
           <NavIcon :name="view === 'list' ? 'calendar' : 'list'" :size="13" />
-          {{ view === 'list' ? 'Kalender' : 'List' }}
+          {{ view === 'list' ? t('wali.bimbel.sessions.view_calendar') : t('wali.bimbel.sessions.view_list') }}
         </button>
       </template>
     </ParentBerandaHero>
@@ -216,7 +218,7 @@ const grouped = computed(() => {
       <div
         v-if="!grouped.length"
         class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-8 text-center text-[14px] text-bimbel-text-mid"
-      >Tidak ada sesi mendatang.</div>
+      >{{ t('wali.bimbel.sessions.empty') }}</div>
 
       <template v-for="g in grouped" :key="g.label">
         <p class="text-[10px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase pt-2.5 pb-1">
@@ -229,7 +231,7 @@ const grouped = computed(() => {
         >
           <div class="w-16 flex-shrink-0">
             <p class="text-[14px] font-bold text-bimbel-text-hi">{{ timeOnly(s.scheduled_at) }}</p>
-            <p class="text-[12px] text-bimbel-text-mid">{{ s.duration_minutes ?? 60 }} menit</p>
+            <p class="text-[12px] text-bimbel-text-mid">{{ t('wali.bimbel.sessions.duration_minutes', { count: s.duration_minutes ?? 60 }) }}</p>
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-[13px] font-bold text-bimbel-text-hi">

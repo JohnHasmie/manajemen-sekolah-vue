@@ -9,6 +9,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { TutoringWaliClassMeta } from '@/types/tutoring';
@@ -17,6 +18,7 @@ import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.v
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const { activeChildId, activeChild } = useChildPicker();
@@ -59,9 +61,9 @@ const statusChips = computed<{ id: StatusKey; label: string; count: number }[]>(
   const aktif = decorated.value.filter((c) => matchAktif(c.status)).length;
   const selesai = decorated.value.filter((c) => matchSelesai(c.status)).length;
   return [
-    { id: 'semua', label: 'Semua', count: total },
-    { id: 'aktif', label: 'Aktif', count: aktif },
-    { id: 'selesai', label: 'Selesai', count: selesai },
+    { id: 'semua', label: t('wali.bimbel.classes.status_all'), count: total },
+    { id: 'aktif', label: t('wali.bimbel.classes.status_active'), count: aktif },
+    { id: 'selesai', label: t('wali.bimbel.classes.status_completed'), count: selesai },
   ];
 });
 
@@ -96,7 +98,7 @@ const filteredClasses = computed<ClassRow[]>(() => {
 
 // ── Display helpers ──────────────────────────────────────────────
 const childFirstName = computed(() => {
-  const n = activeChild()?.name ?? 'Anak';
+  const n = activeChild()?.name ?? t('wali.bimbel.classes.default_child_name');
   return n.split(/\s+/)[0];
 });
 
@@ -123,9 +125,9 @@ function tutorChipClass(i: number): string {
 
 function scheduleLabel(c: TutoringWaliClassMeta): string {
   const ns = c.next_session;
-  if (!ns?.scheduled_at) return 'belum ada sesi';
+  if (!ns?.scheduled_at) return t('wali.bimbel.classes.empty_schedule');
   const d = new Date(ns.scheduled_at);
-  if (Number.isNaN(d.valueOf())) return 'belum ada sesi';
+  if (Number.isNaN(d.valueOf())) return t('wali.bimbel.classes.empty_schedule');
   return d.toLocaleString('id-ID', {
     weekday: 'short',
     hour: '2-digit',
@@ -154,9 +156,9 @@ function goEnroll() {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · WALI"
-      :title="`Kelas ${childFirstName}`"
-      :subtitle="`${classes.length} kelompok aktif semester ini`"
+      :kicker="t('wali.bimbel.classes.kicker')"
+      :title="t('wali.bimbel.classes.title', { name: childFirstName })"
+      :subtitle="t('wali.bimbel.classes.subtitle_active_group_count', { count: classes.length })"
       :stats="[]"
     >
       <template #actions>
@@ -169,7 +171,7 @@ function goEnroll() {
       <NavIcon name="search" :size="14" />
       <input
         v-model="q"
-        placeholder="Cari mata pelajaran atau tutor"
+        :placeholder="t('wali.bimbel.classes.search_placeholder')"
         class="bg-transparent flex-1 focus:outline-none text-bimbel-text-hi placeholder:text-bimbel-text-mid"
       />
     </div>
@@ -190,7 +192,7 @@ function goEnroll() {
       >{{ s.label }} ({{ s.count }})</button>
     </div>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.classes.loading') }}</div>
 
     <!-- Class grid 2-col -->
     <div v-else class="grid sm:grid-cols-2 gap-2.5">
@@ -221,7 +223,7 @@ function goEnroll() {
           </span>
         </div>
         <div class="text-[12px] flex justify-between items-center mt-1 pt-2 border-t border-bimbel-border-soft">
-          <span class="text-bimbel-text-mid">Kehadiran</span>
+          <span class="text-bimbel-text-mid">{{ t('wali.bimbel.classes.label_attendance') }}</span>
           <span class="flex-1 mx-2 h-1 bg-bimbel-bg rounded-full overflow-hidden max-w-[80px]">
             <span
               class="block h-full"
@@ -240,7 +242,7 @@ function goEnroll() {
         @click="goEnroll"
       >
         <NavIcon name="plus" :size="22" />
-        <p class="text-[13px] text-bimbel-text-mid mt-1">Daftarkan ke program baru</p>
+        <p class="text-[13px] text-bimbel-text-mid mt-1">{{ t('wali.bimbel.classes.enroll_new_tile') }}</p>
       </button>
     </div>
   </div>

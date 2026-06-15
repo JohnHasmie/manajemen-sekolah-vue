@@ -5,11 +5,14 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { NotificationService } from '@/services/notification.service';
 import type { AppNotification, NotificationCategory } from '@/types/notification';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
+
+const { t } = useI18n();
 
 const loading = ref(true);
 const items = ref<AppNotification[]>([]);
@@ -77,7 +80,7 @@ function relTime(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.valueOf())) return '';
   const diffMin = (Date.now() - d.valueOf()) / 60_000;
-  if (diffMin < 1) return 'baru';
+  if (diffMin < 1) return t('wali.bimbel.notifications.rel_just_now');
   if (diffMin < 60) return `${Math.floor(diffMin)}m`;
   const h = Math.floor(diffMin / 60);
   if (h < 24) return `${h}j`;
@@ -114,20 +117,20 @@ const grouped = computed<Record<GroupKey, AppNotification[]>>(() => {
 });
 
 const groupOrder: GroupKey[] = ['today', 'yesterday', 'week', 'older'];
-const groupLabels: Record<GroupKey, string> = {
-  today: 'HARI INI',
-  yesterday: 'KEMARIN',
-  week: 'MINGGU LALU',
-  older: 'LEBIH LAMA',
-};
+const groupLabels = computed<Record<GroupKey, string>>(() => ({
+  today: t('wali.bimbel.notifications.group_today'),
+  yesterday: t('wali.bimbel.notifications.group_yesterday'),
+  week: t('wali.bimbel.notifications.group_week'),
+  older: t('wali.bimbel.notifications.group_older'),
+}));
 </script>
 
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · NOTIFIKASI"
-      title="Notifikasi"
-      :subtitle="`${unreadCount} belum dibaca · ${items.length} total`"
+      :kicker="t('wali.bimbel.notifications.kicker')"
+      :title="t('wali.bimbel.notifications.title')"
+      :subtitle="t('wali.bimbel.notifications.subtitle', { unread: unreadCount, total: items.length })"
       :stats="[]"
     >
       <template #actions>
@@ -136,11 +139,11 @@ const groupLabels: Record<GroupKey, string> = {
           type="button"
           class="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-white text-bimbel-hero px-3 py-1.5 text-[14px] font-bold hover:bg-white/95"
           @click="markAll"
-        >Tandai semua dibaca</button>
+        >{{ t('wali.bimbel.notifications.mark_all_read') }}</button>
       </template>
     </ParentBerandaHero>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.notifications.loading') }}</div>
 
     <div
       v-else-if="items.length"
@@ -173,7 +176,7 @@ const groupLabels: Record<GroupKey, string> = {
             <span
               v-if="!n.read_at"
               class="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-red-900 text-white flex-shrink-0"
-            >BARU</span>
+            >{{ t('wali.bimbel.notifications.badge_new') }}</span>
             <span
               v-else
               class="text-[12px] text-bimbel-text-lo flex-shrink-0"
@@ -186,6 +189,6 @@ const groupLabels: Record<GroupKey, string> = {
     <div
       v-else
       class="rounded-xl bg-bimbel-panel border border-bimbel-border-soft p-8 text-center text-[14px] text-bimbel-text-mid"
-    >Belum ada notifikasi.</div>
+    >{{ t('wali.bimbel.notifications.empty') }}</div>
   </div>
 </template>

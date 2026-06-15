@@ -7,6 +7,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { BillingService } from '@/services/billing.service';
 import { useChildPicker } from '@/composables/useChildPicker';
@@ -16,6 +17,7 @@ import type { TutoringBillDetail } from '@/types/tutoring';
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const { children, activeChildId } = useChildPicker();
@@ -31,7 +33,7 @@ const billDisplay = computed(() => {
   const inner = (raw as unknown as { bill?: Record<string, unknown> }).bill ?? raw;
   const obj = inner as Record<string, unknown>;
   return {
-    source_label: (obj.source_label as string | undefined) ?? 'Tagihan',
+    source_label: (obj.source_label as string | undefined) ?? t('wali.bimbel.pay_bill.default_source'),
     subject_label: (obj.subject_label as string | undefined) ?? '',
     group_label: (obj.group_label as string | undefined) ?? '',
     amount:
@@ -49,13 +51,13 @@ const voucherMsg = ref<string | null>(null);
 const saving = ref(false);
 const message = ref<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
-const methods: { id: MethodId; name: string; sub: string; icon: string; iconCls: string }[] = [
-  { id: 'qris', name: 'QRIS', sub: 'Scan & bayar dengan e-wallet/m-banking', icon: 'qr-code', iconCls: 'bg-bimbel-green-dim text-green-700' },
-  { id: 'bank', name: 'Transfer bank', sub: 'BCA · 1234567890 · Bimbel Demo PZCN', icon: 'building-bank', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
-  { id: 'cash', name: 'Tunai di tempat', sub: 'Bawa ke admin saat sesi berikutnya', icon: 'wallet', iconCls: 'bg-bimbel-amber-dim text-amber-700' },
-];
+const methods = computed<{ id: MethodId; name: string; sub: string; icon: string; iconCls: string }[]>(() => [
+  { id: 'qris', name: t('wali.bimbel.pay_bill.qris_method_title'), sub: t('wali.bimbel.pay_bill.qris_method_sub'), icon: 'qr-code', iconCls: 'bg-bimbel-green-dim text-green-700' },
+  { id: 'bank', name: t('wali.bimbel.pay_bill.transfer_method_title'), sub: t('wali.bimbel.pay_bill.transfer_method_sub'), icon: 'building-bank', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
+  { id: 'cash', name: t('wali.bimbel.pay_bill.cash_method_title'), sub: t('wali.bimbel.pay_bill.cash_method_sub'), icon: 'wallet', iconCls: 'bg-bimbel-amber-dim text-amber-700' },
+]);
 
-const methodLabel = computed(() => methods.find((m) => m.id === method.value)?.name ?? 'QRIS');
+const methodLabel = computed(() => methods.value.find((m) => m.id === method.value)?.name ?? t('wali.bimbel.pay_bill.qris_method_title'));
 
 const childName = computed(() => {
   const found = children.value.find((c) => c.student_id === activeChildId.value);
@@ -71,11 +73,13 @@ const dueLabel = computed(() => {
 });
 const daysLeftLabel = computed(() => {
   const iso = billDisplay.value?.due_date;
-  if (!iso) return 'tanpa tenggat';
+  if (!iso) return t('wali.bimbel.pay_bill.no_due_date');
   const ms = new Date(iso).valueOf() - Date.now();
-  if (Number.isNaN(ms)) return 'tanpa tenggat';
+  if (Number.isNaN(ms)) return t('wali.bimbel.pay_bill.no_due_date');
   const days = Math.ceil(ms / 86_400_000);
-  return days >= 0 ? `${days} hari lagi` : `terlambat ${Math.abs(days)} hari`;
+  return days >= 0
+    ? t('wali.bimbel.pay_bill.days_left', { days })
+    : t('wali.bimbel.pay_bill.days_overdue', { days: Math.abs(days) });
 });
 
 async function load() {
@@ -91,7 +95,7 @@ function back() {
 
 function applyVoucher() {
   if (!voucherCode.value.trim()) { voucherMsg.value = null; return; }
-  voucherMsg.value = `Kode "${voucherCode.value.trim().toUpperCase()}" diproses…`;
+  voucherMsg.value = t('wali.bimbel.pay_bill.voucher_processing', { code: voucherCode.value.trim().toUpperCase() });
 }
 
 async function submit() {
@@ -109,11 +113,11 @@ async function submit() {
     void BillingService;
     message.value = {
       kind: 'ok',
-      text: `Pembayaran via ${methodLabel.value} diproses. Admin akan memverifikasi.`,
+      text: t('wali.bimbel.pay_bill.toast_success', { method: methodLabel.value }),
     };
     setTimeout(back, 1200);
   } catch (e) {
-    message.value = { kind: 'err', text: e instanceof Error ? e.message : 'Gagal memproses pembayaran.' };
+    message.value = { kind: 'err', text: e instanceof Error ? e.message : t('wali.bimbel.pay_bill.error_default') };
   } finally {
     saving.value = false;
   }
@@ -123,8 +127,8 @@ async function submit() {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · BAYAR"
-      :title="`Bayar ${billDisplay?.source_label || 'Tagihan'}`"
+      :kicker="t('wali.bimbel.pay_bill.kicker')"
+      :title="t('wali.bimbel.pay_bill.title', { source: billDisplay?.source_label || t('wali.bimbel.pay_bill.default_source') })"
       :subtitle="`${billDisplay?.subject_label || ''} · ${billDisplay?.group_label || ''} · ${childName}`"
       :stats="[]"
     >
@@ -135,22 +139,22 @@ async function submit() {
           @click="back"
         >
           <NavIcon name="arrow-left" :size="12" />
-          Kembali
+          {{ t('wali.bimbel.pay_bill.back') }}
         </button>
       </template>
     </ParentBerandaHero>
 
     <!-- Summary -->
     <div class="rounded-lg bg-bimbel-accent-dim p-3.5">
-      <p class="text-[10px] text-bimbel-hero tracking-wider font-bold uppercase">TOTAL YANG DIBAYAR</p>
+      <p class="text-[10px] text-bimbel-hero tracking-wider font-bold uppercase">{{ t('wali.bimbel.pay_bill.summary_label') }}</p>
       <p class="text-[22px] font-extrabold text-bimbel-hero leading-tight mt-0.5">
         {{ formatRupiah(billDisplay?.amount ?? 0) }}
       </p>
-      <p class="text-[12px] text-bimbel-hero/80">Tenggat {{ dueLabel }} · {{ daysLeftLabel }}</p>
+      <p class="text-[12px] text-bimbel-hero/80">{{ t('wali.bimbel.pay_bill.summary_due', { date: dueLabel, days_left: daysLeftLabel }) }}</p>
     </div>
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      PILIH METODE PEMBAYARAN
+      {{ t('wali.bimbel.pay_bill.method_heading') }}
     </p>
     <button
       v-for="m in methods"
@@ -180,12 +184,12 @@ async function submit() {
     </button>
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      PUNYA KODE VOUCHER?
+      {{ t('wali.bimbel.pay_bill.voucher_heading') }}
     </p>
     <div class="flex gap-1.5">
       <input
         v-model="voucherCode"
-        placeholder="Masukkan kode"
+        :placeholder="t('wali.bimbel.pay_bill.voucher_placeholder')"
         class="flex-1 rounded-md bg-bimbel-bg px-3 py-2 text-[14px] text-bimbel-text-hi placeholder:text-bimbel-text-lo focus:outline-none"
       />
       <button
@@ -193,7 +197,7 @@ async function submit() {
         class="rounded-md bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft px-3.5 py-2 text-[14px]"
         @click="applyVoucher"
       >
-        Pakai
+        {{ t('wali.bimbel.pay_bill.voucher_apply') }}
       </button>
     </div>
     <p v-if="voucherMsg" class="mt-1 text-[12px] text-bimbel-text-mid">{{ voucherMsg }}</p>
@@ -212,7 +216,7 @@ async function submit() {
       class="w-full mt-3 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold py-2.5 disabled:opacity-50"
       @click="submit"
     >
-      {{ saving ? 'Memproses…' : `Lanjut bayar via ${methodLabel}` }}
+      {{ saving ? t('wali.bimbel.pay_bill.processing') : t('wali.bimbel.pay_bill.continue_pay', { method: methodLabel }) }}
     </button>
   </div>
 </template>

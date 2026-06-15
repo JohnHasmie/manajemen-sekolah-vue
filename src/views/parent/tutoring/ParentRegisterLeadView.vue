@@ -7,12 +7,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import type { TutoringProgram } from '@/types/tutoring';
 
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const router = useRouter();
 
 interface LeadForm {
@@ -63,7 +65,7 @@ const canSubmit = computed(() =>
 function saveDraft() {
   try {
     localStorage.setItem('parent.registerLead.draft', JSON.stringify(form.value));
-    message.value = { kind: 'ok', text: 'Draft disimpan di perangkat ini.' };
+    message.value = { kind: 'ok', text: t('wali.bimbel.register_lead.draft_saved') };
   } catch {/* ignore */}
 }
 
@@ -85,11 +87,11 @@ async function submit() {
         form.value.notes && `Catatan: ${form.value.notes}`,
       ].filter(Boolean).join(' · '),
     });
-    message.value = { kind: 'ok', text: 'Pendaftaran terkirim. Admin akan menghubungi Anda dalam 1×24 jam.' };
+    message.value = { kind: 'ok', text: t('wali.bimbel.register_lead.submit_success') };
     form.value = { childName: '', grade: '', school: '', programId: '', notes: '' };
     try { localStorage.removeItem('parent.registerLead.draft'); } catch {/* ignore */}
   } catch (e) {
-    message.value = { kind: 'err', text: e instanceof Error ? e.message : 'Gagal mengirim pendaftaran.' };
+    message.value = { kind: 'err', text: e instanceof Error ? e.message : t('wali.bimbel.register_lead.error_default') };
   } finally { saving.value = false; }
 }
 </script>
@@ -97,9 +99,9 @@ async function submit() {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · DAFTAR ANAK"
-      title="Daftarkan anak baru"
-      subtitle="Anak akan dibuat akun siswa baru di bimbel ini"
+      :kicker="t('wali.bimbel.register_lead.kicker')"
+      :title="t('wali.bimbel.register_lead.title')"
+      :subtitle="t('wali.bimbel.register_lead.subtitle')"
       :stats="[]"
     >
       <template #actions>
@@ -109,15 +111,15 @@ async function submit() {
           @click="cancel"
         >
           <NavIcon name="x" :size="12" />
-          Batal
+          {{ t('wali.bimbel.register_lead.cancel') }}
         </button>
       </template>
     </ParentBerandaHero>
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3 first:mt-0">
-      DATA ANAK
+      {{ t('wali.bimbel.register_lead.child_data_heading') }}
     </p>
-    <label class="block text-[12px] text-bimbel-text-mid mb-1">Nama lengkap anak</label>
+    <label class="block text-[12px] text-bimbel-text-mid mb-1">{{ t('wali.bimbel.register_lead.child_name_label') }}</label>
     <input
       v-model="form.childName"
       type="text"
@@ -125,17 +127,17 @@ async function submit() {
     />
     <div class="grid grid-cols-2 gap-2">
       <div>
-        <label class="block text-[12px] text-bimbel-text-mid mb-1">Kelas</label>
+        <label class="block text-[12px] text-bimbel-text-mid mb-1">{{ t('wali.bimbel.register_lead.class_label') }}</label>
         <select
           v-model="form.grade"
           class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[14px] text-bimbel-text-hi block w-full focus:outline-none"
         >
-          <option value="">Pilih kelas</option>
+          <option value="">{{ t('wali.bimbel.register_lead.class_placeholder') }}</option>
           <option v-for="g in grades" :key="g" :value="g">{{ g }}</option>
         </select>
       </div>
       <div>
-        <label class="block text-[12px] text-bimbel-text-mid mb-1">Sekolah asal</label>
+        <label class="block text-[12px] text-bimbel-text-mid mb-1">{{ t('wali.bimbel.register_lead.school_label') }}</label>
         <input
           v-model="form.school"
           type="text"
@@ -145,13 +147,13 @@ async function submit() {
     </div>
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      PROGRAM YANG DIMINATI
+      {{ t('wali.bimbel.register_lead.program_heading') }}
     </p>
     <div
       v-if="!programs.length"
       class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[13px] text-bimbel-text-mid"
     >
-      Memuat daftar program…
+      {{ t('wali.bimbel.register_lead.loading_programs') }}
     </div>
     <button
       v-for="p in programs"
@@ -179,12 +181,12 @@ async function submit() {
     </button>
 
     <p class="text-[12px] tracking-[0.1em] text-bimbel-text-lo font-bold uppercase mb-2 mt-3">
-      CATATAN ORANG TUA (opsional)
+      {{ t('wali.bimbel.register_lead.notes_heading') }}
     </p>
     <textarea
       v-model="form.notes"
       rows="3"
-      placeholder="Misal: jadwal preferensi, kemampuan saat ini, materi yang ingin difokuskan…"
+      :placeholder="t('wali.bimbel.register_lead.notes_placeholder')"
       class="rounded-md bg-bimbel-bg px-3 py-2.5 text-[14px] text-bimbel-text-hi w-full focus:outline-none placeholder:text-bimbel-text-lo min-h-12"
     ></textarea>
 
@@ -199,13 +201,13 @@ async function submit() {
         type="button"
         class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[14px] px-3.5 py-2.5"
         @click="saveDraft"
-      >Simpan draft</button>
+      >{{ t('wali.bimbel.register_lead.save_draft') }}</button>
       <button
         type="button"
         :disabled="!canSubmit"
         class="flex-1 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-3.5 py-2.5 disabled:opacity-50"
         @click="submit"
-      >{{ saving ? 'Mengirim…' : 'Kirim — admin akan hubungi dalam 1×24 jam' }}</button>
+      >{{ saving ? t('wali.bimbel.register_lead.submitting') : t('wali.bimbel.register_lead.submit') }}</button>
     </div>
   </div>
 </template>

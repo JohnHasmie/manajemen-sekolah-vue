@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import { formatRupiah } from '@/lib/format';
@@ -20,6 +21,7 @@ import type {
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const router = useRouter();
 const { children, activeChildId } = useChildPicker();
 
@@ -76,11 +78,16 @@ const selectedChild = computed(() =>
 );
 
 const childFirstName = computed(
-  () => (selectedChild.value?.name ?? 'anak').split(' ')[0] ?? 'anak',
+  () => (selectedChild.value?.name ?? t('wali.bimbel.enroll_wizard.default_child_name')).split(' ')[0] ?? t('wali.bimbel.enroll_wizard.default_child_name'),
 );
 
 const steps = computed<StepMeta[]>(() => {
-  const labels = ['Program', 'Paket', 'Mode bayar', 'Konfirmasi'];
+  const labels = [
+    t('wali.bimbel.enroll_wizard.step_label_program'),
+    t('wali.bimbel.enroll_wizard.step_label_package'),
+    t('wali.bimbel.enroll_wizard.step_label_mode'),
+    t('wali.bimbel.enroll_wizard.step_label_confirm'),
+  ];
   return labels.map((label, idx) => {
     const id = (idx + 1) as 1 | 2 | 3 | 4;
     const state: StepMeta['state'] =
@@ -91,17 +98,19 @@ const steps = computed<StepMeta[]>(() => {
 
 const stepHeader = computed(() => {
   const ctx = selectedProgram.value?.name ?? '';
-  if (currentStep.value === 1) return 'PILIH PROGRAM';
-  if (currentStep.value === 2) return ctx ? `PILIH PAKET — ${ctx}` : 'PILIH PAKET';
-  if (currentStep.value === 3) return 'PILIH MODE BAYAR';
-  return 'KONFIRMASI PENDAFTARAN';
+  if (currentStep.value === 1) return t('wali.bimbel.enroll_wizard.step_header_program');
+  if (currentStep.value === 2) return ctx
+    ? t('wali.bimbel.enroll_wizard.step_header_package_with_program', { program: ctx })
+    : t('wali.bimbel.enroll_wizard.step_header_package');
+  if (currentStep.value === 3) return t('wali.bimbel.enroll_wizard.step_header_mode');
+  return t('wali.bimbel.enroll_wizard.step_header_confirm');
 });
 
-const billingModeOptions: StepOption[] = [
-  { id: 'PREPAID', title: 'Bayar di muka', subtitle: 'Diskon maksimal · 1× bayar', icon: 'wallet', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
-  { id: 'MONTHLY', title: 'Cicil bulanan', subtitle: 'Ringan per bulan', icon: 'wallet', iconCls: 'bg-bimbel-green-dim text-green-700' },
-  { id: 'PER_SESSION', title: 'Per sesi', subtitle: 'Bayar sesuai datang', icon: 'wallet', iconCls: 'bg-bimbel-amber-dim text-amber-700' },
-];
+const billingModeOptions = computed<StepOption[]>(() => [
+  { id: 'PREPAID', title: t('wali.bimbel.enroll_wizard.billing_prepaid_title'), subtitle: t('wali.bimbel.enroll_wizard.billing_prepaid_sub'), icon: 'wallet', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
+  { id: 'MONTHLY', title: t('wali.bimbel.enroll_wizard.billing_monthly_title'), subtitle: t('wali.bimbel.enroll_wizard.billing_monthly_sub'), icon: 'wallet', iconCls: 'bg-bimbel-green-dim text-green-700' },
+  { id: 'PER_SESSION', title: t('wali.bimbel.enroll_wizard.billing_per_session_title'), subtitle: t('wali.bimbel.enroll_wizard.billing_per_session_sub'), icon: 'wallet', iconCls: 'bg-bimbel-amber-dim text-amber-700' },
+]);
 
 const stepOptions = computed<StepOption[]>(() => {
   if (currentStep.value === 1) {
@@ -117,7 +126,7 @@ const stepOptions = computed<StepOption[]>(() => {
     return packages.value.map((p, idx) => ({
       id: p.id,
       title: p.name,
-      subtitle: `${p.total_sessions ?? '–'} sesi`,
+      subtitle: t('wali.bimbel.enroll_wizard.package_sessions', { count: p.total_sessions ?? '–' }),
       priceLabel: p.price != null ? formatRupiah(p.price) : undefined,
       icon: 'package',
       iconCls: ['bg-bimbel-accent-dim text-bimbel-hero', 'bg-bimbel-green-dim text-green-700', 'bg-bimbel-amber-dim text-amber-700'][idx % 3] ?? 'bg-bimbel-accent-dim text-bimbel-hero',
@@ -125,14 +134,14 @@ const stepOptions = computed<StepOption[]>(() => {
   }
   if (currentStep.value === 3) {
     const allowed = selectedPackage.value?.billing_modes_allowed ?? ['PREPAID', 'MONTHLY'];
-    return billingModeOptions.filter((m) => allowed.includes(m.id));
+    return billingModeOptions.value.filter((m) => allowed.includes(m.id));
   }
   // Step 4 — confirmation rows surfaced as readonly option-style cards.
   return [
-    { id: 'child', title: selectedChild.value?.name ?? '—', subtitle: 'Anak', icon: 'user', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
-    { id: 'program', title: selectedProgram.value?.name ?? '—', subtitle: 'Program', icon: 'school', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
-    { id: 'package', title: selectedPackage.value?.name ?? '—', subtitle: 'Paket', priceLabel: selectedPackage.value?.price != null ? formatRupiah(selectedPackage.value.price) : undefined, icon: 'package', iconCls: 'bg-bimbel-green-dim text-green-700' },
-    { id: 'mode', title: billingMode.value || '—', subtitle: 'Mode bayar', icon: 'wallet', iconCls: 'bg-bimbel-amber-dim text-amber-700' },
+    { id: 'child', title: selectedChild.value?.name ?? '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_child'), icon: 'user', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
+    { id: 'program', title: selectedProgram.value?.name ?? '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_program'), icon: 'school', iconCls: 'bg-bimbel-accent-dim text-bimbel-hero' },
+    { id: 'package', title: selectedPackage.value?.name ?? '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_package'), priceLabel: selectedPackage.value?.price != null ? formatRupiah(selectedPackage.value.price) : undefined, icon: 'package', iconCls: 'bg-bimbel-green-dim text-green-700' },
+    { id: 'mode', title: billingMode.value || '—', subtitle: t('wali.bimbel.enroll_wizard.confirmation_label_mode'), icon: 'wallet', iconCls: 'bg-bimbel-amber-dim text-amber-700' },
   ];
 });
 
@@ -157,8 +166,8 @@ const canAdvance = computed(() => {
 });
 
 const nextLabel = computed(() => {
-  if (currentStep.value === 4) return saving.value ? 'Memproses…' : 'Daftarkan sekarang';
-  return 'Lanjut';
+  if (currentStep.value === 4) return saving.value ? t('wali.bimbel.enroll_wizard.submitting') : t('wali.bimbel.enroll_wizard.submit');
+  return t('wali.bimbel.enroll_wizard.next');
 });
 
 function prev() {
@@ -186,7 +195,7 @@ async function next() {
     });
     successId.value = id;
   } catch (e) {
-    errorMsg.value = e instanceof Error ? e.message : 'Gagal mendaftarkan.';
+    errorMsg.value = e instanceof Error ? e.message : t('wali.bimbel.enroll_wizard.error_default');
   } finally {
     saving.value = false;
   }
@@ -200,9 +209,9 @@ function cancel() {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · DAFTAR PROGRAM"
-      :title="`Daftarkan ${childFirstName} ke program baru`"
-      :subtitle="`Langkah ${currentStep} dari 4`"
+      :kicker="t('wali.bimbel.enroll_wizard.kicker')"
+      :title="t('wali.bimbel.enroll_wizard.title', { name: childFirstName })"
+      :subtitle="t('wali.bimbel.enroll_wizard.subtitle_step', { current: currentStep, total: 4 })"
       :stats="[]"
     >
       <template #actions>
@@ -212,7 +221,7 @@ function cancel() {
           @click="cancel"
         >
           <NavIcon name="x" :size="12" />
-          Batalkan
+          {{ t('wali.bimbel.enroll_wizard.cancel') }}
         </button>
       </template>
     </ParentBerandaHero>
@@ -224,13 +233,13 @@ function cancel() {
       <div class="mx-auto mb-2 grid h-10 w-10 place-items-center rounded-full bg-green-700 text-white">
         <NavIcon name="check" :size="18" />
       </div>
-      <h3 class="text-[14px] font-bold text-bimbel-text-hi">Pendaftaran berhasil</h3>
-      <p class="mt-1 text-[13px] text-bimbel-text-mid">ID enrolment: {{ successId }}</p>
+      <h3 class="text-[14px] font-bold text-bimbel-text-hi">{{ t('wali.bimbel.enroll_wizard.success_title') }}</h3>
+      <p class="mt-1 text-[13px] text-bimbel-text-mid">{{ t('wali.bimbel.enroll_wizard.enrollment_id', { id: successId }) }}</p>
       <button
         type="button"
         class="mt-4 rounded-lg bg-bimbel-hero text-white text-[14px] font-bold px-4 py-2"
         @click="router.push({ name: 'parent.tutoring.bills' })"
-      >Lihat tagihan</button>
+      >{{ t('wali.bimbel.enroll_wizard.success_button') }}</button>
     </div>
 
     <template v-else>
@@ -281,7 +290,7 @@ function cancel() {
         v-if="!stepOptions.length"
         class="rounded-md bg-bimbel-panel border border-bimbel-border-soft p-6 text-center text-[13px] text-bimbel-text-mid"
       >
-        Belum ada pilihan tersedia untuk langkah ini.
+        {{ t('wali.bimbel.enroll_wizard.empty_options') }}
       </div>
 
       <button
@@ -319,7 +328,7 @@ function cancel() {
           type="button"
           class="rounded-lg bg-bimbel-bg text-bimbel-text-mid border border-bimbel-border-soft text-[14px] px-3.5 py-2.5"
           @click="prev"
-        >Kembali</button>
+        >{{ t('wali.bimbel.enroll_wizard.prev') }}</button>
         <button
           type="button"
           :disabled="!canAdvance"

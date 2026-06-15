@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type {
@@ -16,6 +17,7 @@ import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.v
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const route = useRoute();
 const { activeChildId, activeChild } = useChildPicker();
 
@@ -110,7 +112,7 @@ function isDone(r: Row): boolean {
 }
 
 const childFirstName = computed(() => {
-  const name = activeChild()?.name ?? 'anak';
+  const name = activeChild()?.name ?? t('wali.bimbel.activities.default_child_name');
   return name.trim().split(' ')[0] || name;
 });
 
@@ -134,11 +136,11 @@ const counts = computed(() => ({
 }));
 
 const filters = computed(() => [
-  { id: 'all' as FilterId, label: `Semua (${rows.value.length})` },
-  { id: 'pending' as FilterId, label: `Belum (${pendingCount.value})` },
-  { id: 'ASSIGNMENT' as FilterId, label: `Tugas (${counts.value.ASSIGNMENT})` },
-  { id: 'EXAM' as FilterId, label: `Ujian (${counts.value.EXAM})` },
-  { id: 'MATERIAL' as FilterId, label: `Materi (${counts.value.MATERIAL})` },
+  { id: 'all' as FilterId, label: t('wali.bimbel.activities.filter_all', { count: rows.value.length }) },
+  { id: 'pending' as FilterId, label: t('wali.bimbel.activities.filter_pending', { count: pendingCount.value }) },
+  { id: 'ASSIGNMENT' as FilterId, label: t('wali.bimbel.activities.filter_assignment', { count: counts.value.ASSIGNMENT }) },
+  { id: 'EXAM' as FilterId, label: t('wali.bimbel.activities.filter_exam', { count: counts.value.EXAM }) },
+  { id: 'MATERIAL' as FilterId, label: t('wali.bimbel.activities.filter_material', { count: counts.value.MATERIAL }) },
 ]);
 
 const visible = computed(() => {
@@ -202,18 +204,22 @@ function subtitle(r: Row): string {
 
   const s = r.submission;
   if (s?.status === 'GRADED' && s.score != null) {
-    parts.push(`Nilai ${s.score}${s.max_score ? `/${s.max_score}` : ''}`);
+    parts.push(
+      s.max_score
+        ? t('wali.bimbel.activities.score_label_with_max', { score: s.score, max: s.max_score })
+        : t('wali.bimbel.activities.score_label', { score: s.score }),
+    );
   } else if (s?.status === 'SUBMITTED' && s.submitted_at) {
-    parts.push(`Dikumpul ${fmtDate(s.submitted_at)}`);
+    parts.push(t('wali.bimbel.activities.subject_label_submitted', { date: fmtDate(s.submitted_at) ?? '' }));
   } else {
     const due = r.activity.due_at;
     if (due) {
       const days = daysUntilDue(r);
-      const dueLabel = fmtDate(due);
-      if (days != null && days < 0) parts.push(`Lewat ${Math.abs(days)} hari · ${dueLabel}`);
-      else if (days != null) parts.push(`${days} hari lagi · ${dueLabel}`);
+      const dueLabel = fmtDate(due) ?? '';
+      if (days != null && days < 0) parts.push(t('wali.bimbel.activities.subject_label_overdue', { days: Math.abs(days), date: dueLabel }));
+      else if (days != null) parts.push(t('wali.bimbel.activities.subject_label_upcoming', { days, date: dueLabel }));
     } else if (r.activity.type === 'MATERIAL') {
-      parts.push('Tanpa tenggat');
+      parts.push(t('wali.bimbel.activities.no_due'));
     }
   }
   return parts.join(' · ');
@@ -238,26 +244,28 @@ function pillCls(r: Row): string {
 
 function pillLabel(r: Row): string {
   const s = r.submission?.status;
-  if (s === 'GRADED') return `Selesai · ${r.submission?.score ?? '–'}`;
-  if (s === 'SUBMITTED') return 'Dikumpul';
+  if (s === 'GRADED') return t('wali.bimbel.activities.pill_done_score', { score: r.submission?.score ?? '–' });
+  if (s === 'SUBMITTED') return t('wali.bimbel.activities.pill_submitted');
   if (s === 'LATE' || s === 'MISSED') {
     const days = daysUntilDue(r);
-    return days != null && days < 0 ? `Telat · ${Math.abs(days)} hari` : 'Telat';
+    return days != null && days < 0
+      ? t('wali.bimbel.activities.pill_late_days', { days: Math.abs(days) })
+      : t('wali.bimbel.activities.pill_late');
   }
-  if (r.activity.type === 'MATERIAL' && !r.activity.due_at) return 'Materi';
+  if (r.activity.type === 'MATERIAL' && !r.activity.due_at) return t('wali.bimbel.activities.pill_material');
   const days = daysUntilDue(r);
-  if (days != null && days < 0) return `Lewat · ${Math.abs(days)} hari`;
-  if (days != null) return `${days} hari lagi`;
-  return 'Belum';
+  if (days != null && days < 0) return t('wali.bimbel.activities.pill_overdue_days', { days: Math.abs(days) });
+  if (days != null) return t('wali.bimbel.activities.pill_upcoming_days', { days });
+  return t('wali.bimbel.activities.pill_pending');
 }
 </script>
 
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · AKTIVITAS"
-      :title="`Tugas & ulangan ${childFirstName}`"
-      :subtitle="`${pendingCount} menunggu · ${doneThisMonth} selesai bulan ini`"
+      :kicker="t('wali.bimbel.activities.kicker')"
+      :title="t('wali.bimbel.activities.title', { name: childFirstName })"
+      :subtitle="t('wali.bimbel.activities.subtitle', { pending: pendingCount, done: doneThisMonth })"
       :stats="[]"
     >
       <template #actions><ParentChildPickerChip /></template>
@@ -298,9 +306,9 @@ function pillLabel(r: Row): string {
         <span :class="pillCls(r)">{{ pillLabel(r) }}</span>
       </div>
       <p v-if="!visible.length && !loading" class="text-center text-[13px] text-bimbel-text-mid py-6">
-        Tidak ada aktivitas di kategori ini.
+        {{ t('wali.bimbel.activities.empty_filter') }}
       </p>
-      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">Memuat…</p>
+      <p v-if="loading" class="text-center text-[13px] text-bimbel-text-mid py-6">{{ t('wali.bimbel.activities.loading') }}</p>
     </div>
   </div>
 </template>

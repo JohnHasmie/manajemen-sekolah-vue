@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type {
@@ -15,6 +16,7 @@ import type {
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
+const { t } = useI18n();
 const route = useRoute();
 const { activeChildId, activeChild } = useChildPicker();
 
@@ -59,7 +61,7 @@ watch(currentGroupId, loadBoard);
 const currentGroup = computed(
   () => groups.value.find((g) => g.group_id === currentGroupId.value) ?? null,
 );
-const currentGroupLabel = computed(() => currentGroup.value?.group_name ?? 'pilih kelompok');
+const currentGroupLabel = computed(() => currentGroup.value?.group_name ?? t('wali.bimbel.leaderboard.default_group_label'));
 const currentGroupShort = computed(() => {
   const n = currentGroupLabel.value;
   return n.length > 16 ? n.slice(0, 14) + '…' : n;
@@ -105,13 +107,15 @@ const rows = computed<Row[]>(() => {
       rank: idx + 1,
       name: r.name,
       score: r.avg_score != null ? r.avg_score.toFixed(1) : '—',
-      attendedLine: attended != null ? `${attended} dari ${total} sesi` : 'Belum ada catatan sesi',
+      attendedLine: attended != null
+        ? t('wali.bimbel.leaderboard.sessions_attended', { attended, total })
+        : t('wali.bimbel.leaderboard.no_session_record'),
       delta,
       deltaText: delta > 0
-        ? `Naik ${delta} peringkat minggu ini`
+        ? t('wali.bimbel.leaderboard.delta_up', { count: delta })
         : delta < 0
-          ? `Turun ${Math.abs(delta)} peringkat minggu ini`
-          : 'Tidak berubah minggu ini',
+          ? t('wali.bimbel.leaderboard.delta_down', { count: Math.abs(delta) })
+          : t('wali.bimbel.leaderboard.delta_same'),
       isMe,
       paletteIdx: idx,
     };
@@ -127,7 +131,7 @@ const myRow = computed<Row | null>(() => {
     const myRaw = rawRows.value[me.rank - 1];
     if (prev?.avg_score != null && myRaw?.avg_score != null) {
       const diff = prev.avg_score - myRaw.avg_score;
-      if (diff > 0) me.gapText = `Selisih ke #${me.rank - 1}: ${diff.toFixed(1)} pts`;
+      if (diff > 0) me.gapText = t('wali.bimbel.leaderboard.gap_text', { rank: me.rank - 1, diff: diff.toFixed(1) });
     }
   }
   return me;
@@ -187,9 +191,9 @@ function deltaLabel(d: number): string {
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · PERINGKAT"
-      title="Peringkat kelompok"
-      :subtitle="`${currentGroupLabel} · update mingguan`"
+      :kicker="t('wali.bimbel.leaderboard.kicker')"
+      :title="t('wali.bimbel.leaderboard.title')"
+      :subtitle="t('wali.bimbel.leaderboard.subtitle', { group: currentGroupLabel })"
       :stats="[]"
     >
       <template #actions>
@@ -204,7 +208,7 @@ function deltaLabel(d: number): string {
       </template>
     </ParentBerandaHero>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.leaderboard.loading') }}</div>
 
     <template v-else>
       <!-- Anak saya highlight -->
@@ -214,17 +218,17 @@ function deltaLabel(d: number): string {
       >
         <div class="flex-1 min-w-0">
           <p class="text-[10px] text-bimbel-hero tracking-wider font-bold uppercase">
-            Peringkat {{ myRow.name }}
+            {{ t('wali.bimbel.leaderboard.child_label', { name: myRow.name }) }}
           </p>
           <p class="text-[22px] font-extrabold text-bimbel-hero leading-tight">
-            #{{ myRow.rank }}<span class="text-[13px] font-normal text-bimbel-hero/80"> dari {{ rows.length }}</span>
+            #{{ myRow.rank }}<span class="text-[13px] font-normal text-bimbel-hero/80"> {{ t('wali.bimbel.leaderboard.of_total', { total: rows.length }) }}</span>
           </p>
           <p class="text-[12px] text-bimbel-hero/80">
-            {{ myRow.deltaText || 'Tidak berubah minggu ini' }}
+            {{ myRow.deltaText || t('wali.bimbel.leaderboard.delta_same') }}
           </p>
         </div>
         <div class="text-[12px] text-bimbel-hero text-right">
-          <p>Skor</p>
+          <p>{{ t('wali.bimbel.leaderboard.score_label') }}</p>
           <p class="text-[18px] font-extrabold leading-tight">{{ myRow.score }}</p>
           <p v-if="myRow.gapText" class="text-bimbel-hero/80">{{ myRow.gapText }}</p>
         </div>
@@ -260,7 +264,7 @@ function deltaLabel(d: number): string {
               <span
                 v-if="r.isMe"
                 class="text-[9px] bg-bimbel-hero text-white px-1.5 py-px rounded-full ml-1 align-middle"
-              >ANAK</span>
+              >{{ t('wali.bimbel.leaderboard.anak_badge') }}</span>
             </p>
             <p
               class="text-[10px]"
@@ -275,7 +279,7 @@ function deltaLabel(d: number): string {
         <p
           v-if="!rows.length"
           class="text-center text-[13px] text-bimbel-text-mid py-6"
-        >Belum ada data peringkat.</p>
+        >{{ t('wali.bimbel.leaderboard.empty') }}</p>
       </div>
     </template>
   </div>

@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useChildPicker } from '@/composables/useChildPicker';
 import type { TutoringProgress } from '@/types/tutoring';
@@ -13,6 +14,7 @@ import type { TutoringProgress } from '@/types/tutoring';
 import ParentBerandaHero from '@/components/feature/tutoring/ParentBerandaHero.vue';
 import ParentChildPickerChip from '@/components/feature/tutoring/ParentChildPickerChip.vue';
 
+const { t } = useI18n();
 const route = useRoute();
 const { activeChildId, activeChild } = useChildPicker();
 
@@ -42,7 +44,7 @@ const subjects = computed<Array<{ subject_id: string; subject_name: string }>>((
 );
 
 const childFirstName = computed(() => {
-  const n = activeChild()?.name ?? 'anak';
+  const n = activeChild()?.name ?? t('wali.bimbel.progress.default_child_name');
   return n.trim().split(/\s+/)[0] ?? n;
 });
 
@@ -51,14 +53,14 @@ const kpis = computed(() => {
   const avg = overall.value?.average;
   return [
     {
-      label: 'Rata-rata',
+      label: t('wali.bimbel.progress.kpi_average'),
       value: avg != null ? Math.round(avg).toString() : '—',
-      delta: avg != null ? 'A 4 pts' : '',
+      delta: avg != null ? t('wali.bimbel.progress.average_kpi_delta') : '',
       deltaCls: 'text-green-700',
     },
-    { label: 'Kehadiran', value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
-    { label: 'Tugas selesai', value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
-    { label: 'Sesi/bulan', value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
+    { label: t('wali.bimbel.progress.kpi_attendance'), value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
+    { label: t('wali.bimbel.progress.kpi_assignments'), value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
+    { label: t('wali.bimbel.progress.kpi_sessions_per_month'), value: '—', delta: '', deltaCls: 'text-bimbel-text-lo' },
   ];
 });
 
@@ -66,9 +68,9 @@ const kpis = computed(() => {
 const activeSubject = ref<string>('all');
 
 const subjectChips = computed(() => [
-  { id: 'all', label: 'Semua' },
+  { id: 'all', label: t('wali.bimbel.progress.subject_all') },
   ...subjects.value.map((s) => ({ id: s.subject_id, label: s.subject_name })),
-  { id: 'avg', label: '+ rata-rata' },
+  { id: 'avg', label: t('wali.bimbel.progress.subject_avg') },
 ]);
 
 // ── Chart series ──────────────────────────────────────────────────
@@ -111,15 +113,15 @@ const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
 <template>
   <div class="space-y-3 pb-12">
     <ParentBerandaHero
-      kicker="BIMBEL · PERKEMBANGAN"
-      :title="`Perkembangan ${childFirstName}`"
-      :subtitle="`${subjects.length} mata pelajaran · semester ini`"
+      :kicker="t('wali.bimbel.progress.kicker')"
+      :title="t('wali.bimbel.progress.title', { name: childFirstName })"
+      :subtitle="t('wali.bimbel.progress.subtitle', { count: subjects.length })"
       :stats="[]"
     >
       <template #actions><ParentChildPickerChip /></template>
     </ParentBerandaHero>
 
-    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">Memuat…</div>
+    <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">{{ t('wali.bimbel.progress.loading') }}</div>
 
     <template v-else>
       <!-- 4-KPI strip -->
@@ -184,11 +186,11 @@ const xLabels = ref(['Mar', 'Mei', 'Jul', 'Sep']);
       <div class="flex justify-between text-[10px] text-bimbel-text-lo">
         <span>
           <span class="inline-block w-2 h-0.5 bg-[#185FA5] align-middle mr-1"></span>
-          Nilai {{ childFirstName }}
+          {{ t('wali.bimbel.progress.chart_legend_child', { name: childFirstName }) }}
         </span>
         <span>
           <span class="inline-block w-2 h-0.5 bg-[#5F5E5A] align-middle mr-1"></span>
-          Rata-rata kelompok
+          {{ t('wali.bimbel.progress.chart_legend_avg') }}
         </span>
       </div>
     </template>
