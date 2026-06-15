@@ -23,6 +23,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useAcademicYearStore } from '@/stores/academic-year';
 import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
@@ -54,6 +55,7 @@ import Toast from '@/components/ui/Toast.vue';
 const auth = useAuthStore();
 const academicYear = useAcademicYearStore();
 const router = useRouter();
+const { t } = useI18n();
 
 // ── Mode toggle (Mengajar ↔ Wali Kelas) ──
 // `mengajar` = teacher_id scope; `wali:<classId>` = homeroom scope
@@ -65,16 +67,16 @@ const roleOptions = computed<RoleOption[]>(() => {
   const opts: RoleOption[] = [
     {
       id: 'mengajar',
-      shortName: 'Mengajar',
-      subLabel: 'Kelas yang Anda ajar',
+      shortName: t('tutor.sekolah.recommendationHub.roleTeachingShort'),
+      subLabel: t('tutor.sekolah.recommendationHub.roleTeachingSub'),
       avatarInitials: 'MG',
     },
   ];
   for (const h of auth.homeroomClasses ?? []) {
     opts.push({
       id: `wali:${h.id}`,
-      shortName: `Wali ${h.name}`,
-      subLabel: 'Kelas perwalian',
+      shortName: t('tutor.sekolah.recommendationHub.roleHomeroomShort', { name: h.name }),
+      subLabel: t('tutor.sekolah.recommendationHub.roleHomeroomSub'),
       avatarInitials: h.name.slice(0, 2).toUpperCase(),
     });
   }
@@ -239,26 +241,26 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'sparkles',
-      label: 'Total Rekomendasi',
+      label: t('tutor.sekolah.recommendationHub.kpiTotal'),
       value: total,
       tone: 'brand',
     },
     {
       icon: 'bell',
-      label: 'Pending',
+      label: t('tutor.sekolah.recommendationHub.kpiPending'),
       value: pending,
       tone: pending > 0 ? 'amber' : 'slate',
       accented: pending > 0,
     },
     {
       icon: 'edit',
-      label: 'Proses',
+      label: t('tutor.sekolah.recommendationHub.kpiInProgress'),
       value: in_progress,
       tone: 'violet',
     },
     {
       icon: 'check-circle',
-      label: 'Selesai',
+      label: t('tutor.sekolah.recommendationHub.kpiCompleted'),
       value: completed,
       tone: 'green',
     },
@@ -285,7 +287,7 @@ function openStudents(cls: { id: string; name: string }) {
   });
   if (target.matched.length === 0) {
     toast.value = {
-      message: `Daftar siswa ${cls.name} — tersedia di pembaruan berikutnya.`,
+      message: t('tutor.sekolah.recommendationHub.placeholderStudentsToast', { name: cls.name }),
       tone: 'success',
     };
     return;
@@ -323,14 +325,17 @@ async function runGenerate(cfg: GenerateConfig) {
   if (!generateTarget.value) return;
   if (!teacherId.value) {
     toast.value = {
-      message: 'Profil guru belum termuat — muat ulang halaman dan coba lagi.',
+      message: t('tutor.sekolah.recommendationHub.teacherProfileMissing'),
       tone: 'error',
     };
     return;
   }
   const tgt = generateTarget.value;
   isGenerating.value.add(tgt.classId);
-  progressMessage.value = `Mengirim ${cfg.subject_ids.length} permintaan AI untuk ${tgt.className}…`;
+  progressMessage.value = t('tutor.sekolah.recommendationHub.progressSending', {
+    count: cfg.subject_ids.length,
+    className: tgt.className,
+  });
   try {
     const results = await RecommendationService.dispatchGenerate({
       cfg,
@@ -350,7 +355,10 @@ async function runGenerate(cfg: GenerateConfig) {
     let polledDone = 0;
     const total = asyncJobs.length;
     if (total > 0) {
-      progressMessage.value = `AI memproses ${total} job (${syncDone} selesai)…`;
+      progressMessage.value = t('tutor.sekolah.recommendationHub.progressProcessing', {
+        total,
+        done: syncDone,
+      });
       await Promise.all(
         asyncJobs.map(async (r) => {
           try {
@@ -359,7 +367,11 @@ async function runGenerate(cfg: GenerateConfig) {
               { intervalMs: 3000, maxAttempts: 40 },
             );
             polledDone += 1;
-            progressMessage.value = `AI memproses ${total} job (${polledDone + syncDone}/${total + syncDone} selesai)…`;
+            progressMessage.value = t('tutor.sekolah.recommendationHub.progressProcessingProgress', {
+              total,
+              done: polledDone + syncDone,
+              grandTotal: total + syncDone,
+            });
           } catch (e) {
             failed.push({
               subject_id: r.subject_id,
@@ -375,12 +387,12 @@ async function runGenerate(cfg: GenerateConfig) {
     const okCount = syncDone + polledDone;
     if (failed.length === 0) {
       toast.value = {
-        message: `${okCount} rekomendasi AI berhasil dibuat untuk ${tgt.className}.`,
+        message: t('tutor.sekolah.recommendationHub.successAllToast', { count: okCount, className: tgt.className }),
         tone: 'success',
       };
     } else if (okCount > 0) {
       toast.value = {
-        message: `${okCount} berhasil, ${failed.length} gagal. Coba ulang yang gagal nanti.`,
+        message: t('tutor.sekolah.recommendationHub.partialToast', { ok: okCount, failed: failed.length }),
         tone: 'error',
       };
     } else {
@@ -389,7 +401,7 @@ async function runGenerate(cfg: GenerateConfig) {
       toast.value = {
         message:
           failed[0].error?.message ??
-          'Maaf, rekomendasi AI belum bisa dibuat saat ini. Coba lagi beberapa saat lagi ya.',
+          t('tutor.sekolah.recommendationHub.aiUnavailableToast'),
         tone: 'error',
       };
     }
@@ -401,8 +413,8 @@ async function runGenerate(cfg: GenerateConfig) {
       toast.value = {
         message:
           e.dailyLimit && e.dailyUsage !== undefined
-            ? `Batas harian AI tercapai (${e.dailyUsage}/${e.dailyLimit}). Coba lagi besok.`
-            : 'Batas harian AI tercapai. Coba lagi besok.',
+            ? t('tutor.sekolah.recommendationHub.rateLimitUsageToast', { usage: e.dailyUsage, limit: e.dailyLimit })
+            : t('tutor.sekolah.recommendationHub.rateLimitToast'),
         tone: 'error',
       };
     } else {
@@ -422,12 +434,12 @@ async function runGenerate(cfg: GenerateConfig) {
     <!-- HEADER -->
     <BrandPageHeader
       role="guru"
-      kicker="Akademik · Rekomendasi AI"
-      title="Rekomendasi Pembelajaran"
+      :kicker="t('tutor.sekolah.recommendationHub.kicker')"
+      :title="t('tutor.sekolah.recommendationHub.title')"
       :meta="
         isHomeroomMode
-          ? 'Mode Wali Kelas · cross-teacher untuk kelas perwalian'
-          : 'Mode Mengajar · rekomendasi yang Anda buat'
+          ? t('tutor.sekolah.recommendationHub.metaHomeroom')
+          : t('tutor.sekolah.recommendationHub.metaTeaching')
       "
       :live-dot="false"
     >
@@ -449,11 +461,11 @@ async function runGenerate(cfg: GenerateConfig) {
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar
       v-model:search="searchQuery"
-      search-placeholder="Cari nama kelas…"
+      :search-placeholder="t('tutor.sekolah.recommendationHub.searchPlaceholder')"
     >
       <template #chips>
         <span class="text-[11px] font-bold text-slate-500 px-1">
-          {{ visibleClasses.length }} kelas
+          {{ t('tutor.sekolah.recommendationHub.classCount', { count: visibleClasses.length }) }}
         </span>
       </template>
     </PageFilterToolbar>
@@ -463,12 +475,12 @@ async function runGenerate(cfg: GenerateConfig) {
       :state="listState"
       :empty-title="
         isHomeroomMode
-          ? 'Kelas perwalian tidak ditemukan'
+          ? t('tutor.sekolah.recommendationHub.emptyHomeroom')
           : searchQuery
-            ? 'Tidak ada kelas cocok'
-            : 'Belum ada kelas tersedia'
+            ? t('tutor.sekolah.recommendationHub.emptySearch')
+            : t('tutor.sekolah.recommendationHub.emptyClasses')
       "
-      empty-description="Pilih kelas untuk melihat rekomendasi siswa atau generate yang baru."
+      :empty-description="t('tutor.sekolah.recommendationHub.emptyDescription')"
       empty-icon="users"
       @retry="loadClasses"
     >

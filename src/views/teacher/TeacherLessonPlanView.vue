@@ -27,6 +27,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { LessonPlanService } from '@/services/lesson-plans.service';
 import { ClassroomService } from '@/services/classrooms.service';
@@ -59,6 +60,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 
 const { fromQuickAction, queryString } = useQuickAction();
 const router = useRouter();
+const { t } = useI18n();
 
 type TabKey = 'all' | 'Draft' | 'Pending' | 'Approved' | 'SentBack' | 'Rejected';
 
@@ -239,26 +241,26 @@ const aiCount = computed(
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'file-text',
-    label: 'Total RPP',
+    label: t('tutor.sekolah.lessonPlanList.kpiTotal'),
     value: totalCount.value,
     tone: 'brand',
   },
   {
     icon: 'bell',
-    label: 'Menunggu',
+    label: t('tutor.sekolah.lessonPlanList.kpiPending'),
     value: counts.value.pending,
     tone: counts.value.pending > 0 ? 'amber' : 'slate',
     accented: counts.value.pending > 0,
   },
   {
     icon: 'check-circle',
-    label: 'Disetujui',
+    label: t('tutor.sekolah.lessonPlanList.kpiApproved'),
     value: counts.value.approved,
     tone: 'green',
   },
   {
     icon: 'sparkles',
-    label: 'Hasil AI',
+    label: t('tutor.sekolah.lessonPlanList.kpiAi'),
     value: aiCount.value,
     tone: 'violet',
   },
@@ -266,12 +268,12 @@ const kpiCards = computed<KpiCard[]>(() => [
 
 // ── Status tabs ──
 const tabOptions = computed(() => [
-  { key: 'all' as TabKey, label: 'Semua', meta: totalCount.value },
-  { key: 'Draft' as TabKey, label: 'Draf', meta: draftCount.value },
-  { key: 'Pending' as TabKey, label: 'Menunggu', meta: counts.value.pending },
-  { key: 'Approved' as TabKey, label: 'Disetujui', meta: counts.value.approved },
-  { key: 'SentBack' as TabKey, label: 'Revisi', meta: sentBackCount.value },
-  { key: 'Rejected' as TabKey, label: 'Ditolak', meta: counts.value.rejected },
+  { key: 'all' as TabKey, label: t('tutor.sekolah.lessonPlanList.tabAll'), meta: totalCount.value },
+  { key: 'Draft' as TabKey, label: t('tutor.sekolah.lessonPlanList.tabDraft'), meta: draftCount.value },
+  { key: 'Pending' as TabKey, label: t('tutor.sekolah.lessonPlanList.tabPending'), meta: counts.value.pending },
+  { key: 'Approved' as TabKey, label: t('tutor.sekolah.lessonPlanList.tabApproved'), meta: counts.value.approved },
+  { key: 'SentBack' as TabKey, label: t('tutor.sekolah.lessonPlanList.tabSentBack'), meta: sentBackCount.value },
+  { key: 'Rejected' as TabKey, label: t('tutor.sekolah.lessonPlanList.tabRejected'), meta: counts.value.rejected },
 ]);
 
 // ── Date grouping (mirrors Kegiatan Kelas) ──
@@ -308,11 +310,11 @@ const groupedItems = computed<PlanGroup[]>(() => {
     else buckets.earlier.push(it);
   }
   const groups: PlanGroup[] = [
-    { key: 'today', label: 'Hari Ini', items: buckets.today },
-    { key: 'yesterday', label: 'Kemarin', items: buckets.yesterday },
-    { key: 'thisWeek', label: 'Minggu Ini', items: buckets.thisWeek },
-    { key: 'thisMonth', label: 'Bulan Ini', items: buckets.thisMonth },
-    { key: 'earlier', label: 'Lebih Lama', items: buckets.earlier },
+    { key: 'today', label: t('tutor.sekolah.lessonPlanList.groupToday'), items: buckets.today },
+    { key: 'yesterday', label: t('tutor.sekolah.lessonPlanList.groupYesterday'), items: buckets.yesterday },
+    { key: 'thisWeek', label: t('tutor.sekolah.lessonPlanList.groupThisWeek'), items: buckets.thisWeek },
+    { key: 'thisMonth', label: t('tutor.sekolah.lessonPlanList.groupThisMonth'), items: buckets.thisMonth },
+    { key: 'earlier', label: t('tutor.sekolah.lessonPlanList.groupEarlier'), items: buckets.earlier },
   ];
   return groups.filter((g) => g.items.length > 0);
 });
@@ -343,7 +345,7 @@ async function startAi(payload: {
   isGenerating.value = true;
   try {
     const { job_id } = await LessonPlanService.generateWithAi(payload);
-    if (!job_id) throw new Error('Server tidak mengembalikan job_id.');
+    if (!job_id) throw new Error(t('tutor.sekolah.lessonPlanList.noJobIdError'));
     const cls = classes.value.find((c) => c.id === payload.class_id)?.name ?? '';
     const sub =
       subjects.value.find((s) => s.id === payload.subject_id)?.name ?? '';
@@ -362,12 +364,12 @@ async function startAi(payload: {
     const status = (e as { response?: { status?: number } })?.response?.status;
     const message =
       status === 429
-        ? 'Kuota pembuatan RPP otomatis sudah habis untuk saat ini. Silakan coba lagi nanti.'
+        ? t('tutor.sekolah.lessonPlanList.errorRateLimit')
         : status === 422
-          ? 'Data belum lengkap untuk membuat RPP. Periksa kembali kelas, mata pelajaran, dan bab.'
+          ? t('tutor.sekolah.lessonPlanList.errorIncompleteData')
           : status && status >= 500
-            ? 'Layanan AI sedang bermasalah. Silakan coba lagi beberapa saat lagi.'
-            : 'Gagal membuat RPP otomatis. Silakan coba lagi; bila masih gagal, hubungi admin.';
+            ? t('tutor.sekolah.lessonPlanList.errorAiUnavailable')
+            : t('tutor.sekolah.lessonPlanList.errorGenerateFailed');
     toast.value = { message, tone: 'error' };
   } finally {
     isGenerating.value = false;
@@ -391,7 +393,7 @@ function pollJob(jobId: string) {
       stopPoll();
       activeJob.value = null;
       toast.value = {
-        message: 'AI butuh waktu lebih lama dari biasanya. Cek daftar Draf nanti.',
+        message: t('tutor.sekolah.lessonPlanList.aiTimeoutToast'),
         tone: 'error',
       };
       await reload();
@@ -402,7 +404,7 @@ function pollJob(jobId: string) {
       if (res.status === 'done') {
         stopPoll();
         activeJob.value = null;
-        toast.value = { message: 'RPP berhasil dibuat AI.', tone: 'success' };
+        toast.value = { message: t('tutor.sekolah.lessonPlanList.aiSuccessToast'), tone: 'success' };
         await reload();
         if (res.result_id) {
           // Jump straight to the new draft so the teacher can review +
@@ -416,7 +418,7 @@ function pollJob(jobId: string) {
         stopPoll();
         activeJob.value = null;
         toast.value = {
-          message: res.error ?? 'AI gagal — coba lagi.',
+          message: res.error ?? t('tutor.sekolah.lessonPlanList.aiErrorToast'),
           tone: 'error',
         };
       }
@@ -433,7 +435,7 @@ function cancelPolling() {
   stopPoll();
   activeJob.value = null;
   toast.value = {
-    message: 'Polling dihentikan. RPP akan muncul di Draf saat selesai.',
+    message: t('tutor.sekolah.lessonPlanList.pollingStoppedToast'),
     tone: 'success',
   };
 }
@@ -459,7 +461,7 @@ function openDetail(plan: LessonPlan) {
 // ── Upload flow (file-format RPP) ──
 function onUploaded(plan: LessonPlan) {
   toast.value = {
-    message: `"${plan.title}" tersimpan sebagai Draf.`,
+    message: t('tutor.sekolah.lessonPlanList.uploadedToast', { title: plan.title }),
     tone: 'success',
   };
   // Refetch in the background so the list reflects the new row when
@@ -477,17 +479,17 @@ function onUploaded(plan: LessonPlan) {
     <!-- HEADER -->
     <BrandPageHeader
       role="guru"
-      kicker="Akademik · Rencana Pembelajaran"
-      title="Rencana Pelaksanaan Pembelajaran"
-      :meta="`${totalCount} RPP · ${counts.pending} menunggu review`"
+      :kicker="t('tutor.sekolah.lessonPlanList.kicker')"
+      :title="t('tutor.sekolah.lessonPlanList.title')"
+      :meta="t('tutor.sekolah.lessonPlanList.headerMeta', { total: totalCount, pending: counts.pending })"
     >
       <Button variant="secondary" size="sm" @click="showUploadSheet = true">
         <NavIcon name="upload" :size="14" />
-        Upload File
+        {{ t('tutor.sekolah.lessonPlanList.uploadFile') }}
       </Button>
       <Button variant="primary" size="sm" @click="showAiSheet = true">
         <NavIcon name="sparkles" :size="14" />
-        Generate AI
+        {{ t('tutor.sekolah.lessonPlanList.generateAi') }}
       </Button>
     </BrandPageHeader>
 
@@ -497,26 +499,26 @@ function onUploaded(plan: LessonPlan) {
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar
       v-model:search="searchQuery"
-      search-placeholder="Cari judul RPP…"
+      :search-placeholder="t('tutor.sekolah.lessonPlanList.searchPlaceholder')"
     >
       <template #chips>
         <AppFilterChip
-          label="Kelas"
-          :value="activeClass?.name ?? 'Semua kelas'"
+          :label="t('tutor.sekolah.lessonPlanList.chipClass')"
+          :value="activeClass?.name ?? t('tutor.sekolah.lessonPlanList.allClasses')"
           icon-name="layers"
           tone="brand"
           @click="showClassPicker = true"
         />
         <AppFilterChip
-          label="Mapel"
-          :value="activeSubject?.name ?? 'Semua mapel'"
+          :label="t('tutor.sekolah.lessonPlanList.chipSubject')"
+          :value="activeSubject?.name ?? t('tutor.sekolah.lessonPlanList.allSubjects')"
           icon-name="book"
           tone="amber"
           @click="showSubjectPicker = true"
         />
         <AppFilterChip
-          label="Format"
-          :value="formatFilter ? FORMAT_LABELS[formatFilter] : 'Semua format'"
+          :label="t('tutor.sekolah.lessonPlanList.chipFormat')"
+          :value="formatFilter ? FORMAT_LABELS[formatFilter] : t('tutor.sekolah.lessonPlanList.allFormats')"
           icon-name="file-text"
           tone="violet"
           @click="showFormatPicker = true"
@@ -557,12 +559,12 @@ function onUploaded(plan: LessonPlan) {
       :state="listState"
       :empty-title="
         tabKey === 'Draft'
-          ? 'Belum ada draf RPP'
+          ? t('tutor.sekolah.lessonPlanList.emptyDraft')
           : tabKey === 'all'
-            ? 'Belum ada RPP'
-            : 'Tidak ada RPP di filter ini'
+            ? t('tutor.sekolah.lessonPlanList.emptyAll')
+            : t('tutor.sekolah.lessonPlanList.emptyFilter')
       "
-      empty-description="Mulai dari Generate AI atau tambah manual."
+      :empty-description="t('tutor.sekolah.lessonPlanList.emptyDescription')"
       empty-icon="file-text"
       @retry="reload"
     >
@@ -595,7 +597,7 @@ function onUploaded(plan: LessonPlan) {
     </AsyncView>
 
     <!-- CLASS PICKER -->
-    <Modal v-if="showClassPicker" title="Pilih Kelas" @close="showClassPicker = false">
+    <Modal v-if="showClassPicker" :title="t('tutor.sekolah.lessonPlanList.pickClassTitle')" @close="showClassPicker = false">
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
         <li>
           <button
@@ -604,7 +606,7 @@ function onUploaded(plan: LessonPlan) {
             :class="{ 'bg-brand-cobalt/5 text-brand-cobalt font-bold': !classId }"
             @click="pickClass('')"
           >
-            Semua kelas
+            {{ t('tutor.sekolah.lessonPlanList.allClasses') }}
           </button>
         </li>
         <li v-for="c in classes" :key="c.id">
@@ -621,7 +623,7 @@ function onUploaded(plan: LessonPlan) {
     </Modal>
 
     <!-- SUBJECT PICKER -->
-    <Modal v-if="showSubjectPicker" title="Pilih Mata Pelajaran" @close="showSubjectPicker = false">
+    <Modal v-if="showSubjectPicker" :title="t('tutor.sekolah.lessonPlanList.pickSubjectTitle')" @close="showSubjectPicker = false">
       <ul class="space-y-1 max-h-[400px] overflow-y-auto">
         <li>
           <button
@@ -630,7 +632,7 @@ function onUploaded(plan: LessonPlan) {
             :class="{ 'bg-brand-cobalt/5 text-brand-cobalt font-bold': !subjectId }"
             @click="pickSubject('')"
           >
-            Semua mapel
+            {{ t('tutor.sekolah.lessonPlanList.allSubjects') }}
           </button>
         </li>
         <li v-for="s in subjects" :key="s.id">
@@ -647,7 +649,7 @@ function onUploaded(plan: LessonPlan) {
     </Modal>
 
     <!-- FORMAT PICKER -->
-    <Modal v-if="showFormatPicker" title="Pilih Format RPP" @close="showFormatPicker = false">
+    <Modal v-if="showFormatPicker" :title="t('tutor.sekolah.lessonPlanList.pickFormatTitle')" @close="showFormatPicker = false">
       <ul class="space-y-1">
         <li>
           <button
@@ -656,7 +658,7 @@ function onUploaded(plan: LessonPlan) {
             :class="{ 'bg-brand-cobalt/5 text-brand-cobalt font-bold': !formatFilter }"
             @click="pickFormat('')"
           >
-            Semua format
+            {{ t('tutor.sekolah.lessonPlanList.allFormats') }}
           </button>
         </li>
         <li v-for="f in (['k13', 'rpp_1_halaman', 'modul_ajar', 'file'] as LessonPlanFormat[])" :key="f">
@@ -687,7 +689,7 @@ function onUploaded(plan: LessonPlan) {
     <!-- AI POLLING OVERLAY -->
     <LessonPlanAiPollingOverlay
       :visible="activeJob !== null"
-      title="Memproses RPP AI"
+      :title="t('tutor.sekolah.lessonPlanList.aiProcessingTitle')"
       :subtitle="activeJob?.subtitle ?? ''"
       :estimated-seconds="45"
       @cancel="cancelPolling"

@@ -27,6 +27,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import {
   RecommendationService,
@@ -57,6 +58,7 @@ import { useAcademicYearWatcher } from '@/composables/useAcademicYearWatcher';
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const { t } = useI18n();
 
 const classId = computed(() => String(route.params.classId ?? ''));
 const isHomeroomMode = computed(() => route.query.scope === 'wali');
@@ -182,12 +184,12 @@ const isSharing = ref(false);
 // Result summary dialog state (populated after the batch completes).
 const shareResult = ref<ShareAllResult | null>(null);
 
-const TONE_OPTIONS: { key: RecTone; emoji: string; label: string }[] = [
+const TONE_OPTIONS = computed<{ key: RecTone; emoji: string; label: string }[]>(() => [
   { key: 'warm', emoji: '😊', label: TONE_LABELS.warm },
   { key: 'formal', emoji: '📋', label: TONE_LABELS.formal },
   { key: 'concise', emoji: '⚡', label: TONE_LABELS.concise },
   { key: 'detailed', emoji: '🎯', label: TONE_LABELS.detailed },
-];
+]);
 
 function openShareDialog() {
   if (!canBulkShare.value) return;
@@ -203,11 +205,11 @@ async function submitBulkShare() {
   if (isSharing.value) return;
   bulkError.value = null;
   if (!bulkChannelPush.value && !bulkChannelWhatsapp.value) {
-    bulkError.value = 'Pilih minimal satu kanal pengiriman.';
+    bulkError.value = t('tutor.sekolah.recommendationStudents.channelRequired');
     return;
   }
   if (bulkMessage.value.length > 2000) {
-    bulkError.value = 'Pesan terlalu panjang (maks 2000 karakter).';
+    bulkError.value = t('tutor.sekolah.recommendationStudents.messageTooLong');
     return;
   }
   isSharing.value = true;
@@ -229,11 +231,11 @@ async function submitBulkShare() {
     if (e instanceof RateLimitError) {
       bulkError.value =
         e.dailyLimit && e.dailyUsage !== undefined
-          ? `Batas harian AI tercapai (${e.dailyUsage}/${e.dailyLimit}).`
-          : 'Batas harian AI tercapai. Coba lagi besok.';
+          ? t('tutor.sekolah.recommendationStudents.rateLimitReachedUsage', { usage: e.dailyUsage, limit: e.dailyLimit })
+          : t('tutor.sekolah.recommendationStudents.rateLimitReached');
     } else {
       bulkError.value =
-        (e as Error).message || 'Gagal mengirim rekomendasi ke wali.';
+        (e as Error).message || t('tutor.sekolah.recommendationStudents.sendFailed');
     }
   } finally {
     isSharing.value = false;
@@ -252,7 +254,7 @@ function resultRowTone(status: 'sent' | 'failed' | 'skipped'): {
       icon: 'check-circle',
       cls: 'text-emerald-600',
       badge: 'bg-emerald-100 text-emerald-700',
-      label: 'Terkirim',
+      label: t('tutor.sekolah.recommendationStudents.resultSent'),
     };
   }
   if (status === 'skipped') {
@@ -260,14 +262,14 @@ function resultRowTone(status: 'sent' | 'failed' | 'skipped'): {
       icon: 'alert-triangle',
       cls: 'text-amber-600',
       badge: 'bg-amber-100 text-amber-700',
-      label: 'Dilewati',
+      label: t('tutor.sekolah.recommendationStudents.resultSkipped'),
     };
   }
   return {
     icon: 'alert-circle',
     cls: 'text-red-600',
     badge: 'bg-red-100 text-red-700',
-    label: 'Gagal',
+    label: t('tutor.sekolah.recommendationStudents.resultFailed'),
   };
 }
 
@@ -351,26 +353,26 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'users',
-      label: 'Siswa',
+      label: t('tutor.sekolah.recommendationStudents.kpiStudents'),
       value: students.value.length,
       tone: 'brand',
     },
     {
       icon: 'sparkles',
-      label: 'Rekomendasi',
+      label: t('tutor.sekolah.recommendationStudents.kpiRecommendations'),
       value: total,
       tone: 'violet',
     },
     {
       icon: 'bell',
-      label: 'Pending',
+      label: t('tutor.sekolah.recommendationStudents.kpiPending'),
       value: pending,
       tone: pending > 0 ? 'amber' : 'slate',
       accented: pending > 0,
     },
     {
       icon: 'check-circle',
-      label: 'Selesai',
+      label: t('tutor.sekolah.recommendationStudents.kpiCompleted'),
       value: completed,
       tone: 'green',
     },
@@ -378,12 +380,12 @@ const kpiCards = computed<KpiCard[]>(() => {
 });
 
 // ── Status chip strip ──
-const statusOptions: { key: StatusFilter; label: string }[] = [
-  { key: 'all', label: 'Semua' },
-  { key: 'has_recs', label: 'Punya Rekomendasi' },
-  { key: 'has_pending', label: 'Ada Pending' },
-  { key: 'all_completed', label: 'Semua Selesai' },
-];
+const statusOptions = computed<{ key: StatusFilter; label: string }[]>(() => [
+  { key: 'all', label: t('tutor.sekolah.recommendationStudents.filterAll') },
+  { key: 'has_recs', label: t('tutor.sekolah.recommendationStudents.filterHasRecs') },
+  { key: 'has_pending', label: t('tutor.sekolah.recommendationStudents.filterHasPending') },
+  { key: 'all_completed', label: t('tutor.sekolah.recommendationStudents.filterAllCompleted') },
+]);
 
 // ── List state ──
 const listState = computed<AsyncState<Student[]>>(() => {
@@ -396,13 +398,20 @@ const listState = computed<AsyncState<Student[]>>(() => {
 
 // ── Header copy ──
 const headerKicker = computed(() => {
-  if (!cls.value) return 'Akademik · Rekomendasi AI';
-  return `Kelas ${cls.value.name} · ${isHomeroomMode.value ? 'Wali Kelas' : 'Mengajar'}`;
+  if (!cls.value) return t('tutor.sekolah.recommendationStudents.kickerFallback');
+  return t('tutor.sekolah.recommendationStudents.headerKicker', {
+    className: cls.value.name,
+    mode: isHomeroomMode.value
+      ? t('tutor.sekolah.recommendationStudents.modeHomeroom')
+      : t('tutor.sekolah.recommendationStudents.modeTeaching'),
+  });
 });
 
 const headerMeta = computed(() => {
-  const studentCount = students.value.length;
-  return `${studentCount} siswa · ${Object.keys(counts.value).length} dengan rekomendasi`;
+  return t('tutor.sekolah.recommendationStudents.meta', {
+    students: students.value.length,
+    withRecs: Object.keys(counts.value).length,
+  });
 });
 
 // ── Actions ──
@@ -420,7 +429,7 @@ function openStudent(s: Student) {
   });
   if (target.matched.length === 0) {
     toast.value = {
-      message: `Hasil rekomendasi ${s.name} — tersedia di pembaruan berikutnya.`,
+      message: t('tutor.sekolah.recommendationStudents.placeholderResultToast', { name: s.name }),
       tone: 'success',
     };
     return;
@@ -435,18 +444,18 @@ function studentStatusPills(
 ): { label: string; cls: string }[] {
   const c = countsFor(studentId);
   if (c.total === 0) {
-    return [{ label: 'Belum ada rec', cls: 'bg-slate-100 text-slate-500' }];
+    return [{ label: t('tutor.sekolah.recommendationStudents.pillNoRec'), cls: 'bg-slate-100 text-slate-500' }];
   }
   const out: { label: string; cls: string }[] = [];
   if (c.pending > 0) {
     out.push({
-      label: `${c.pending} Pending`,
+      label: t('tutor.sekolah.recommendationStudents.pillPending', { count: c.pending }),
       cls: 'bg-amber-100 text-amber-700',
     });
   }
   if (c.completed > 0) {
     out.push({
-      label: `${c.completed} Selesai`,
+      label: t('tutor.sekolah.recommendationStudents.pillCompleted', { count: c.completed }),
       cls: 'bg-emerald-100 text-emerald-700',
     });
   }
@@ -464,7 +473,7 @@ function studentStatusPills(
         @click="goBack"
       >
         <NavIcon name="chevron-left" :size="14" />
-        Semua Kelas
+        {{ t('tutor.sekolah.recommendationStudents.backToClasses') }}
       </button>
     </div>
 
@@ -472,7 +481,7 @@ function studentStatusPills(
     <BrandPageHeader
       role="guru"
       :kicker="headerKicker"
-      title="Daftar Siswa"
+      :title="t('tutor.sekolah.recommendationStudents.title')"
       :meta="headerMeta"
       :live-dot="false"
     />
@@ -483,11 +492,11 @@ function studentStatusPills(
     <!-- FILTER TOOLBAR -->
     <PageFilterToolbar
       v-model:search="searchQuery"
-      search-placeholder="Cari nama atau NIS…"
+      :search-placeholder="t('tutor.sekolah.recommendationStudents.searchPlaceholder')"
     >
       <template #chips>
         <span class="text-[11px] font-bold text-slate-500 px-1">
-          {{ visibleStudents.length }} siswa
+          {{ t('tutor.sekolah.recommendationStudents.visibleCount', { count: visibleStudents.length }) }}
         </span>
       </template>
     </PageFilterToolbar>
@@ -522,10 +531,10 @@ function studentStatusPills(
       </span>
       <div class="flex-1 min-w-0">
         <p class="text-[12.5px] font-black text-slate-900 leading-tight">
-          {{ unsharedCount }} rekomendasi belum dibagikan
+          {{ t('tutor.sekolah.recommendationStudents.unsharedCount', { count: unsharedCount }) }}
         </p>
         <p class="text-[11px] text-slate-500 mt-0.5">
-          Kirim sekaligus ke wali masing-masing siswa.
+          {{ t('tutor.sekolah.recommendationStudents.bulkSubtitle') }}
         </p>
       </div>
       <Button
@@ -536,7 +545,7 @@ function studentStatusPills(
         @click="openShareDialog"
       >
         <NavIcon v-if="!isSharing" name="send" :size="13" />
-        Kirim semua ke wali
+        {{ t('tutor.sekolah.recommendationStudents.sendAllToParents') }}
       </Button>
     </div>
 
@@ -545,12 +554,12 @@ function studentStatusPills(
       :state="listState"
       :empty-title="
         searchQuery
-          ? 'Tidak ada siswa cocok'
+          ? t('tutor.sekolah.recommendationStudents.emptySearch')
           : statusFilter === 'all'
-            ? 'Belum ada siswa di kelas ini'
-            : 'Tidak ada siswa di filter ini'
+            ? t('tutor.sekolah.recommendationStudents.emptyClass')
+            : t('tutor.sekolah.recommendationStudents.emptyFilter')
       "
-      empty-description="Coba longgarkan filter atau bersihkan kotak cari."
+      :empty-description="t('tutor.sekolah.recommendationStudents.emptyDescription')"
       empty-icon="users"
       @retry="loadStudents"
     >
@@ -578,8 +587,8 @@ function studentStatusPills(
               <template v-if="s.student_number">
                 {{ s.student_number }}
               </template>
-              <template v-else> Tanpa NIS </template>
-              · No {{ idx + 1 }}
+              <template v-else> {{ t('tutor.sekolah.recommendationStudents.noNis') }} </template>
+              · {{ t('tutor.sekolah.recommendationStudents.rowNumber', { n: idx + 1 }) }}
             </p>
             <!-- Status pills row -->
             <div class="flex items-center gap-1 flex-wrap mt-1.5">
@@ -606,7 +615,7 @@ function studentStatusPills(
             >
               {{ countsFor(s.id).total }}
               <span class="text-[9px] uppercase tracking-wider opacity-80">
-                REC
+                {{ t('tutor.sekolah.recommendationStudents.recBadge') }}
               </span>
             </span>
             <NavIcon name="chevron-right" :size="13" class="text-slate-400" />
@@ -617,17 +626,17 @@ function studentStatusPills(
         v-if="isLoadingCounts"
         class="text-center text-[11px] text-slate-400 mt-3 italic"
       >
-        Memuat jumlah rekomendasi…
+        {{ t('tutor.sekolah.recommendationStudents.loadingCounts') }}
       </p>
     </AsyncView>
 
     <!-- BULK SHARE OPTIONS DIALOG -->
     <Modal
       v-if="showShareDialog"
-      title="Kirim semua ke wali"
-      :subtitle="`${unsharedCount} rekomendasi belum dibagikan${
-        cls ? ' · Kelas ' + cls.name : ''
-      }`"
+      :title="t('tutor.sekolah.recommendationStudents.sendAllToParents')"
+      :subtitle="cls
+        ? t('tutor.sekolah.recommendationStudents.bulkSubtitleWithClass', { count: unsharedCount, className: cls.name })
+        : t('tutor.sekolah.recommendationStudents.unsharedCount', { count: unsharedCount })"
       size="lg"
       @close="showShareDialog = false"
     >
@@ -636,8 +645,7 @@ function studentStatusPills(
         <div
           class="bg-brand-cobalt/5 border border-brand-cobalt/20 rounded-xl px-3 py-3 text-[12px] text-slate-700"
         >
-          Setiap rekomendasi akan dikirim ke wali masing-masing siswa. Siswa
-          tanpa data wali yang dapat dihubungi otomatis dilewati.
+          {{ t('tutor.sekolah.recommendationStudents.intro') }}
         </div>
 
         <!-- NADA PESAN -->
@@ -645,7 +653,7 @@ function studentStatusPills(
           <label
             class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Nada Pesan
+            {{ t('tutor.sekolah.recommendationStudents.toneLabel') }}
           </label>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             <button
@@ -672,16 +680,16 @@ function studentStatusPills(
           <label
             class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Pesan Pengantar
+            {{ t('tutor.sekolah.recommendationStudents.coverMessageLabel') }}
             <span class="text-slate-400 normal-case font-normal"
-              >· opsional</span
+              >· {{ t('tutor.sekolah.recommendationStudents.optional') }}</span
             >
           </label>
           <textarea
             v-model="bulkMessage"
             rows="3"
             maxlength="2000"
-            placeholder="Misal: Mohon dampingi belajar di rumah ya, Bapak/Ibu."
+            :placeholder="t('tutor.sekolah.recommendationStudents.coverMessagePlaceholder')"
             class="w-full rounded-xl border border-slate-200 px-3 py-2 text-[12.5px] focus:border-brand-cobalt focus:ring-2 focus:ring-brand-cobalt/15 focus:outline-none bg-white resize-y"
             :disabled="isSharing"
           />
@@ -695,7 +703,7 @@ function studentStatusPills(
           <label
             class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5"
           >
-            Kanal Pengiriman
+            {{ t('tutor.sekolah.recommendationStudents.channelLabel') }}
           </label>
           <div class="grid grid-cols-2 gap-2">
             <label
@@ -715,9 +723,9 @@ function studentStatusPills(
               <span class="text-[14px]">📱</span>
               <div class="flex-1 min-w-0">
                 <p class="text-[12px] font-bold text-slate-900 leading-tight">
-                  Push App
+                  {{ t('tutor.sekolah.recommendationStudents.channelPushTitle') }}
                 </p>
-                <p class="text-[10px] text-slate-500 mt-0.5">Aplikasi wali</p>
+                <p class="text-[10px] text-slate-500 mt-0.5">{{ t('tutor.sekolah.recommendationStudents.channelPushSubtitle') }}</p>
               </div>
             </label>
             <label
@@ -737,9 +745,9 @@ function studentStatusPills(
               <span class="text-[14px]">💬</span>
               <div class="flex-1 min-w-0">
                 <p class="text-[12px] font-bold text-slate-900 leading-tight">
-                  WhatsApp
+                  {{ t('tutor.sekolah.recommendationStudents.channelWhatsappTitle') }}
                 </p>
-                <p class="text-[10px] text-slate-500 mt-0.5">Pesan langsung</p>
+                <p class="text-[10px] text-slate-500 mt-0.5">{{ t('tutor.sekolah.recommendationStudents.channelWhatsappSubtitle') }}</p>
               </div>
             </label>
           </div>
@@ -761,7 +769,7 @@ function studentStatusPills(
             :disabled="isSharing"
             @click="showShareDialog = false"
           >
-            Batal
+            {{ t('tutor.sekolah.recommendationStudents.cancel') }}
           </Button>
           <Button
             variant="primary"
@@ -771,7 +779,7 @@ function studentStatusPills(
             @click="submitBulkShare"
           >
             <NavIcon v-if="!isSharing" name="send" :size="14" />
-            Kirim ke {{ unsharedCount }} Wali
+            {{ t('tutor.sekolah.recommendationStudents.sendToNParents', { count: unsharedCount }) }}
           </Button>
         </div>
       </div>
@@ -780,8 +788,8 @@ function studentStatusPills(
     <!-- BULK SHARE RESULT SUMMARY DIALOG -->
     <Modal
       v-if="shareResult"
-      title="Ringkasan Pengiriman"
-      :subtitle="`${shareResult.sent} terkirim · ${shareResult.failed} gagal · ${shareResult.skipped_no_wali} dilewati`"
+      :title="t('tutor.sekolah.recommendationStudents.summaryTitle')"
+      :subtitle="t('tutor.sekolah.recommendationStudents.summarySubtitle', { sent: shareResult.sent, failed: shareResult.failed, skipped: shareResult.skipped_no_wali })"
       size="lg"
       @close="shareResult = null"
     >
@@ -797,7 +805,7 @@ function studentStatusPills(
             <p
               class="text-[9px] font-bold uppercase tracking-widest mt-1 text-slate-500"
             >
-              Terkirim
+              {{ t('tutor.sekolah.recommendationStudents.resultSent') }}
             </p>
           </div>
           <div class="rounded-xl bg-amber-50 px-2 py-3 text-center">
@@ -809,7 +817,7 @@ function studentStatusPills(
             <p
               class="text-[9px] font-bold uppercase tracking-widest mt-1 text-slate-500"
             >
-              Dilewati
+              {{ t('tutor.sekolah.recommendationStudents.resultSkipped') }}
             </p>
           </div>
           <div class="rounded-xl bg-red-50 px-2 py-3 text-center">
@@ -821,13 +829,13 @@ function studentStatusPills(
             <p
               class="text-[9px] font-bold uppercase tracking-widest mt-1 text-slate-500"
             >
-              Gagal
+              {{ t('tutor.sekolah.recommendationStudents.resultFailed') }}
             </p>
           </div>
         </div>
 
         <p class="text-[11.5px] text-slate-500">
-          Dari {{ shareResult.total }} rekomendasi yang belum dibagikan.
+          {{ t('tutor.sekolah.recommendationStudents.outOfTotal', { count: shareResult.total }) }}
         </p>
 
         <!-- Per-rec breakdown -->
@@ -870,7 +878,7 @@ function studentStatusPills(
         <!-- FOOTER -->
         <div class="pt-2 border-t border-slate-100">
           <Button variant="primary" block @click="shareResult = null">
-            Selesai
+            {{ t('tutor.sekolah.recommendationStudents.done') }}
           </Button>
         </div>
       </div>
