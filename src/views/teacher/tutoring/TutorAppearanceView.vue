@@ -13,11 +13,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { useBimbelThemeStore, type BimbelThemeMode } from '@/stores/bimbel-theme';
 
+const { t } = useI18n();
 const router = useRouter();
 const theme = useBimbelThemeStore();
 
@@ -28,31 +30,31 @@ interface ModeOption {
   subtitle: string;
 }
 
-const options: ModeOption[] = [
+const options = computed<ModeOption[]>(() => [
   {
     mode: 'auto',
     icon: 'smartphone',
-    title: 'Otomatis',
-    subtitle: 'Terang di pagi-sore, gelap di malam hari.',
+    title: t('tutor.bimbel.appearance.mode_auto_title'),
+    subtitle: t('tutor.bimbel.appearance.mode_auto_subtitle'),
   },
   {
     mode: 'light',
     icon: 'sun',
-    title: 'Selalu terang',
-    subtitle: 'Latar putih sepanjang hari.',
+    title: t('tutor.bimbel.appearance.mode_light_title'),
+    subtitle: t('tutor.bimbel.appearance.mode_light_subtitle'),
   },
   {
     mode: 'dark',
     icon: 'moon',
-    title: 'Selalu gelap',
-    subtitle: 'Latar gelap untuk hemat mata di malam.',
+    title: t('tutor.bimbel.appearance.mode_dark_title'),
+    subtitle: t('tutor.bimbel.appearance.mode_dark_subtitle'),
   },
-];
+]);
 
 const previewText = computed(() =>
   theme.isDark
-    ? 'Sekarang gelap · navy + accent terang'
-    : 'Sekarang terang · navy + accent dalam',
+    ? t('tutor.bimbel.appearance.preview_dark')
+    : t('tutor.bimbel.appearance.preview_light'),
 );
 
 function pick(m: BimbelThemeMode) {
@@ -72,9 +74,9 @@ function goBack() {
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="guru"
-      kicker="Bimbel · Tutor"
-      title="Tampilan"
-      meta="Pilih mode terang / gelap untuk seluruh surface bimbel"
+      :kicker="t('tutor.bimbel.appearance.kicker')"
+      :title="t('tutor.bimbel.appearance.title')"
+      :meta="t('tutor.bimbel.appearance.meta')"
     >
       <button
         type="button"
@@ -82,14 +84,14 @@ function goBack() {
         @click="goBack"
       >
         <NavIcon name="arrow-left" :size="14" />
-        Kembali
+        {{ t('tutor.bimbel.appearance.back_btn') }}
       </button>
     </BrandPageHeader>
 
     <!-- MODE TEMA ─────────────────────────────────────────────────── -->
     <div>
       <p class="px-1 pb-2 text-[12px] font-extrabold tracking-widest text-bimbel-text-mid">
-        MODE TEMA
+        {{ t('tutor.bimbel.appearance.section_mode') }}
       </p>
       <div class="space-y-2.5">
         <button
@@ -160,7 +162,7 @@ function goBack() {
           <div class="h-5 w-5 rounded-md" :style="{ backgroundColor: 'var(--bimbel-accent)' }" />
         </div>
         <div class="min-w-0 flex-1">
-          <div class="text-sm font-bold text-bimbel-text-hi">Tema role Tutor</div>
+          <div class="text-sm font-bold text-bimbel-text-hi">{{ t('tutor.bimbel.appearance.preview_title') }}</div>
           <div class="text-xs text-bimbel-text-mid">{{ previewText }}</div>
         </div>
       </div>

@@ -96,9 +96,9 @@ const inputCls =
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="guru"
-      kicker="Bimbel · Generator Soal"
+      :kicker="t('tutor.bimbel.tryout_generate.kicker')"
       :title="t('tutoring.ai.title')"
-      meta="Atur → Generate → Simpan sebagai try-out untuk kelompok"
+      :meta="t('tutor.bimbel.tryout_generate.meta')"
     />
 
     <div class="space-y-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4">

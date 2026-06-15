@@ -95,7 +95,7 @@ async function save() {
         await TutoringService.updateSession(sessionId, { notes: note });
       } catch (e) {
         toast.error(
-          'Catatan gagal tersimpan: ' +
+          t('tutor.bimbel.session_attendance.notes_save_failed_prefix') + ' ' +
             (e instanceof Error ? e.message : String(e)),
         );
       }
@@ -119,9 +119,9 @@ onMounted(load);
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="guru"
-      :kicker="'Bimbel · Sesi · ' + title"
+      :kicker="t('tutor.bimbel.session_attendance.kicker_prefix') + ' · ' + title"
       :title="t('tutoring.attendance.title')"
-      :meta="`${Object.keys(names).length} siswa`"
+      :meta="t('tutor.bimbel.activity_submissions.meta_students', { count: Object.keys(names).length })"
     />
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
@@ -164,20 +164,20 @@ onMounted(load);
         <div class="flex items-center gap-2 mb-1.5">
           <NavIcon name="edit" :size="14" class="text-bimbel-accent" />
           <h3 class="text-sm font-extrabold tracking-tight text-bimbel-text-hi">
-            Catatan Sesi
+            {{ t('tutor.bimbel.session_attendance.notes_label') }}
           </h3>
           <span class="rounded bg-role-parent/12 px-1.5 py-0.5 text-[12px] font-extrabold uppercase tracking-widest text-bimbel-accent">
-            Terbaca Wali
+            {{ t('tutor.bimbel.session_attendance.notes_badge') }}
           </span>
         </div>
         <p class="text-[12px] text-bimbel-text-mid mb-2">
-          Opsional. Akan tampil di "Yang Baru" wali.
+          {{ t('tutor.bimbel.session_attendance.notes_hint') }}
         </p>
         <textarea
           v-model="notes"
           rows="3"
           maxlength="1000"
-          placeholder='Mis. "Hari ini fokus latihan PG mat dasar. PR: 1.4 no 5–10."'
+          :placeholder="t('tutor.bimbel.session_attendance.notes_placeholder')"
           class="w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher resize-none"
         />
       </section>

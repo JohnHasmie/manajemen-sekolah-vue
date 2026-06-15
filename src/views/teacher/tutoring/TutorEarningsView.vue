@@ -69,7 +69,7 @@ async function load() {
     summary.value = s;
     sessions.value = ss;
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat penghasilan.');
+    toast.error(e instanceof Error ? e.message : t('tutor.bimbel.earnings.load_failed'));
   } finally {
     loading.value = false;
   }
@@ -111,7 +111,7 @@ const ritme = computed<RitmeBar[]>(() => {
 const ritmeMax = computed(() => Math.max(1, ...ritme.value.map((b) => b.count)));
 
 function basisLabel(b: string) {
-  return b === 'PER_HOUR' ? 'per jam' : 'per sesi';
+  return b === 'PER_HOUR' ? t('tutor.bimbel.earnings.rate_per_hour') : t('tutor.bimbel.earnings.rate_per_session');
 }
 
 const kpiCards = computed<KpiCard[]>(() => {
@@ -120,28 +120,28 @@ const kpiCards = computed<KpiCard[]>(() => {
   return [
     {
       icon: 'wallet',
-      label: 'Penghasilan',
+      label: t('tutor.bimbel.earnings.kpi_earnings'),
       value: formatRupiah(s.earnings),
       tone: 'brand',
       accented: true,
     },
     {
       icon: 'calendar',
-      label: 'Sesi selesai',
+      label: t('tutor.bimbel.earnings.kpi_sessions'),
       value: s.sessions_count,
       tone: 'violet',
     },
     {
       icon: 'clock',
-      label: 'Jam mengajar',
+      label: t('tutor.bimbel.earnings.kpi_hours'),
       value: `${s.hours}h`,
       tone: 'amber',
     },
     {
       icon: 'tag',
-      label: 'Rate',
+      label: t('tutor.bimbel.earnings.kpi_rate'),
       value: s.rate.configured ? formatRupiah(s.rate.amount) : '–',
-      suffix: s.rate.configured ? basisLabel(s.rate.basis) : 'belum diset',
+      suffix: s.rate.configured ? basisLabel(s.rate.basis) : t('tutor.bimbel.earnings.rate_unset'),
       tone: s.rate.configured ? 'green' : 'slate',
     },
   ];
@@ -150,7 +150,7 @@ const kpiCards = computed<KpiCard[]>(() => {
 // Build a small picker — last 6 months including current.
 const monthOptions = computed(() => {
   const out: { value: string; label: string }[] = [
-    { value: '', label: 'Bulan ini' },
+    { value: '', label: t('tutor.bimbel.earnings.month_current') },
   ];
   const now = new Date();
   for (let i = 1; i <= 5; i++) {
@@ -169,9 +169,9 @@ const monthOptions = computed(() => {
 <template>
   <div class="space-y-md pb-12">
     <TutorBerandaHero
-      greeting="Honor Saya"
-      title="Penghasilan"
-      :subtitle="summary ? `Periode ${summary.period.label}` : undefined"
+      :greeting="t('tutor.bimbel.earnings.greeting')"
+      :title="t('tutor.bimbel.earnings.title')"
+      :subtitle="summary ? `${t('tutor.bimbel.earnings.period_prefix')} ${summary.period.label}` : undefined"
       :stats="[]"
     />
     <div v-if="summary" class="flex justify-end -mt-2">
@@ -181,7 +181,7 @@ const monthOptions = computed(() => {
         rel="noopener"
         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-bimbel-accent text-white text-[13px] font-bold hover:opacity-90"
       >
-        Slip Honor (PDF)
+        {{ t('tutor.bimbel.earnings.payslip_btn') }}
       </a>
     </div>
 
@@ -198,8 +198,8 @@ const monthOptions = computed(() => {
         class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5"
       >
         <div class="flex justify-between items-baseline mb-3">
-          <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">RITME MENGAJAR</p>
-          <p class="text-[11px] text-bimbel-text-lo">Sesi selesai per minggu</p>
+          <p class="text-[12px] font-bold uppercase tracking-widest text-bimbel-text-mid">{{ t('tutor.bimbel.earnings.ritme_heading') }}</p>
+          <p class="text-[11px] text-bimbel-text-lo">{{ t('tutor.bimbel.earnings.ritme_subheading') }}</p>
         </div>
         <div class="flex items-end justify-between gap-2 h-24">
           <div
@@ -220,7 +220,7 @@ const monthOptions = computed(() => {
       <div class="bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5">
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Pilih bulan
+            {{ t('tutor.bimbel.earnings.month_label') }}
           </span>
           <select
             v-model="month"
@@ -240,29 +240,28 @@ const monthOptions = computed(() => {
           v-if="!summary.rate.configured"
           class="mt-4 rounded-xl bg-bimbel-amber-soft border border-status-warning/30 p-3 text-sm text-bimbel-amber"
         >
-          Rate honor Anda belum diset oleh admin. Hubungi admin bimbel
-          untuk konfirmasi tarif per-sesi / per-jam yang berlaku.
+          {{ t('tutor.bimbel.earnings.rate_unset_alert') }}
         </div>
 
         <div v-else class="mt-4 text-sm text-bimbel-text-mid leading-relaxed">
           <p>
-            Honor:
+            {{ t('tutor.bimbel.earnings.honor_prefix') }}
             <span class="font-bold text-bimbel-text-hi">
               {{ formatRupiah(summary.rate.amount) }}
             </span>
             {{ basisLabel(summary.rate.basis) }}
           </p>
           <p class="mt-1">
-            Dihitung dari {{ summary.sessions_count }} sesi yang sudah
-            <strong>selesai</strong> pada periode
+            {{ t('tutor.bimbel.earnings.computed_lead', { count: summary.sessions_count }) }}
+            <strong>{{ t('tutor.bimbel.earnings.computed_done') }}</strong> {{ t('tutor.bimbel.earnings.computed_period_prefix') }}
             <strong>{{ summary.period.label }}</strong>
-            ({{ summary.hours }} jam total).
+            ({{ summary.hours }} {{ t('tutor.bimbel.earnings.computed_hours_suffix') }}).
           </p>
           <p
             v-if="summary.rate.note"
             class="mt-2 text-xs text-bimbel-text-mid"
           >
-            Catatan admin: {{ summary.rate.note }}
+            {{ t('tutor.bimbel.earnings.admin_note_prefix') }} {{ summary.rate.note }}
           </p>
         </div>
       </div>
@@ -270,7 +269,7 @@ const monthOptions = computed(() => {
 
     <TutoringEmpty
       v-else
-      text="Gagal memuat penghasilan."
+      :text="t('tutor.bimbel.earnings.load_failed_short')"
       icon="alert-circle"
     />
   </div>

@@ -42,7 +42,7 @@ async function load() {
   try {
     rows.value = await TutoringService.getMaterials();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat bahan ajar.');
+    toast.error(e instanceof Error ? e.message : t('tutor.bimbel.materials.load_failed'));
   } finally {
     loading.value = false;
   }
@@ -70,11 +70,11 @@ function openCreate() {
 
 async function submit() {
   if (!fGroupId.value) {
-    toast.error('Pilih kelompok dulu.');
+    toast.error(t('tutor.bimbel.materials.err_pick_group'));
     return;
   }
   if (fTitle.value.trim().length < 3) {
-    toast.error('Judul minimal 3 karakter.');
+    toast.error(t('tutor.bimbel.materials.err_title_short'));
     return;
   }
   saving.value = true;
@@ -89,19 +89,19 @@ async function submit() {
     showCreate.value = false;
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menyimpan.');
+    toast.error(e instanceof Error ? e.message : t('tutor.bimbel.materials.err_save_failed'));
   } finally {
     saving.value = false;
   }
 }
 
 async function remove(m: TutoringMaterial) {
-  if (!window.confirm(`Hapus "${m.title}"?`)) return;
+  if (!window.confirm(t('tutor.bimbel.materials.delete_confirm', { title: m.title }))) return;
   try {
     await TutoringService.deleteMaterial(m.id);
     await load();
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal menghapus.');
+    toast.error(e instanceof Error ? e.message : t('tutor.bimbel.materials.err_delete_failed'));
   }
 }
 
@@ -113,20 +113,20 @@ const draftCount = computed(() => rows.value.length - publishedCount.value);
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'book',
-    label: 'Total materi',
+    label: t('tutor.bimbel.materials.kpi_total'),
     value: rows.value.length,
     tone: 'brand',
     accented: true,
   },
   {
     icon: 'check-circle',
-    label: 'Terbit',
+    label: t('tutor.bimbel.materials.kpi_published'),
     value: publishedCount.value,
     tone: 'green',
   },
   {
     icon: 'edit',
-    label: 'Draft',
+    label: t('tutor.bimbel.materials.kpi_draft'),
     value: draftCount.value,
     tone: draftCount.value > 0 ? 'amber' : 'slate',
   },
@@ -137,9 +137,9 @@ const kpiCards = computed<KpiCard[]>(() => [
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="guru"
-      kicker="Bimbel · Materi"
-      title="Bahan Ajar"
-      :meta="`${rows.length} materi · ${publishedCount} terbit`"
+      :kicker="t('tutor.bimbel.materials.kicker')"
+      :title="t('tutor.bimbel.materials.title')"
+      :meta="t('tutor.bimbel.materials.meta', { total: rows.length, published: publishedCount })"
     >
       <button
         type="button"
@@ -147,7 +147,7 @@ const kpiCards = computed<KpiCard[]>(() => [
         @click="openCreate"
       >
         <NavIcon name="plus" :size="13" />
-        Materi
+        {{ t('tutor.bimbel.materials.add_btn') }}
       </button>
     </BrandPageHeader>
 
@@ -158,7 +158,7 @@ const kpiCards = computed<KpiCard[]>(() => [
     </div>
     <TutoringEmpty
       v-else-if="rows.length === 0"
-      text="Belum ada bahan ajar. Klik &quot;+ Materi&quot; untuk menambahkan PDF / link."
+      :text="t('tutor.bimbel.materials.empty')"
       icon="book"
     />
     <div v-else class="space-y-2">
@@ -172,8 +172,8 @@ const kpiCards = computed<KpiCard[]>(() => [
           m.group?.name ?? m.program?.name,
           m.subject?.name,
           m.published_at
-            ? 'Terbit ' + formatDateShort(m.published_at)
-            : 'Draft',
+            ? t('tutor.bimbel.materials.row_published_prefix') + ' ' + formatDateShort(m.published_at)
+            : t('tutor.bimbel.materials.row_draft'),
           m.description,
         ].filter(Boolean).join(' · ')"
         :to="m.file_url ? () => window.open(m.file_url!, '_blank') : null"
@@ -186,7 +186,7 @@ const kpiCards = computed<KpiCard[]>(() => [
               target="_blank"
               rel="noopener"
               class="p-1.5 rounded-lg text-bimbel-accent hover:bg-status-info-soft"
-              title="Buka file"
+              :title="t('tutor.bimbel.materials.open_file_title')"
               @click.stop
             >
               <NavIcon name="external-link" :size="14" />
@@ -194,7 +194,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             <button
               type="button"
               class="p-1.5 rounded-lg text-bimbel-red hover:bg-bimbel-red-soft"
-              title="Hapus"
+              :title="t('tutor.bimbel.materials.delete_title')"
               @click.stop="remove(m)"
             >
               <NavIcon name="trash-2" :size="14" />
@@ -204,33 +204,33 @@ const kpiCards = computed<KpiCard[]>(() => [
       </TutoringListTile>
     </div>
 
-    <Modal v-if="showCreate" title="Bahan Ajar Baru" @close="showCreate = false">
+    <Modal v-if="showCreate" :title="t('tutor.bimbel.materials.modal_title')" @close="showCreate = false">
       <div class="space-y-3">
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Kelompok
+            {{ t('tutor.bimbel.materials.field_group') }}
           </span>
           <select
             v-model="fGroupId"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
-            <option value="" disabled>Pilih kelompok</option>
+            <option value="" disabled>{{ t('tutor.bimbel.materials.field_group_placeholder') }}</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
           </select>
         </label>
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Judul
+            {{ t('tutor.bimbel.materials.field_title') }}
           </span>
           <input
             v-model="fTitle"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
-            placeholder="cth. Ringkasan Trigonometri"
+            :placeholder="t('tutor.bimbel.materials.field_title_placeholder')"
           />
         </label>
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Deskripsi (opsional)
+            {{ t('tutor.bimbel.materials.field_description') }}
           </span>
           <textarea
             v-model="fDesc"
@@ -240,7 +240,7 @@ const kpiCards = computed<KpiCard[]>(() => [
         </label>
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            URL file / link (opsional)
+            {{ t('tutor.bimbel.materials.field_url') }}
           </span>
           <input
             v-model="fUrl"
@@ -256,7 +256,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             class="h-4 w-4 accent-role-teacher"
           />
           <span class="text-sm text-bimbel-text-mid">
-            Terbitkan sekarang (mati = draft)
+            {{ t('tutor.bimbel.materials.publish_label') }}
           </span>
         </label>
 
@@ -274,7 +274,7 @@ const kpiCards = computed<KpiCard[]>(() => [
             class="rounded-lg bg-role-teacher hover:bg-role-teacher/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             @click="submit"
           >
-            {{ saving ? t('tutoring.common.saving') : 'Simpan' }}
+            {{ saving ? t('tutoring.common.saving') : t('tutor.bimbel.materials.submit') }}
           </button>
         </div>
       </div>

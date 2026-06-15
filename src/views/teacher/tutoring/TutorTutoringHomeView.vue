@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
 import { useAuthStore } from '@/stores/auth';
 import type {
@@ -37,6 +38,7 @@ import TutoringSectionHeader from '@/components/feature/tutoring/TutoringSection
 import NavIcon from '@/components/feature/NavIcon.vue';
 import { formatRupiah } from '@/lib/format';
 
+const { t } = useI18n();
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -67,20 +69,22 @@ onMounted(load);
 // ── Greeting + first-name (no gender on User payload yet) ─────────
 function timeGreeting(): string {
   const h = new Date().getHours();
-  if (h < 11) return 'Selamat pagi';
-  if (h < 15) return 'Selamat siang';
-  if (h < 19) return 'Selamat sore';
-  return 'Selamat malam';
+  if (h < 11) return t('tutor.bimbel.home.greeting_morning');
+  if (h < 15) return t('tutor.bimbel.home.greeting_afternoon');
+  if (h < 19) return t('tutor.bimbel.home.greeting_evening');
+  return t('tutor.bimbel.home.greeting_night');
 }
 
 const firstName = computed(() => {
-  const n = auth.user?.name || 'Tutor';
+  const n = auth.user?.name || t('tutor.bimbel.home.tutor_fallback_name');
   return n.split(/\s+/)[0];
 });
 
 const subtitle = computed(() => {
   const kelas = myGroups.value.length;
-  return kelas > 0 ? `Tutor · ${kelas} kelas aktif` : 'Tutor';
+  return kelas > 0
+    ? t('tutor.bimbel.home.subtitle_tutor_active_classes', { count: kelas })
+    : t('tutor.bimbel.home.subtitle_tutor');
 });
 
 // ── 3-stat hero strip ─────────────────────────────────────────────
@@ -88,23 +92,25 @@ const heroStats = computed(() => {
   const s = stats.value;
   return [
     {
-      label: 'Kelas',
+      label: t('tutor.bimbel.home.stat_classes'),
       value: String(myGroups.value.length),
-      hint: 'aktif',
+      hint: t('tutor.bimbel.home.stat_classes_hint'),
     },
     {
-      label: 'Sesi mgg ini',
+      label: t('tutor.bimbel.home.stat_sessions_week'),
       value: String(s?.sessions_this_week ?? 0),
       hint:
         s && s.sessions_today > 0
-          ? `${s.sessions_today} hari ini`
+          ? `${s.sessions_today} ${t('tutor.bimbel.home.stat_sessions_today_suffix')}`
           : undefined,
     },
     {
-      label: 'Rating',
+      label: t('tutor.bimbel.home.stat_rating'),
       value: s?.rating_avg == null ? '–' : s.rating_avg.toFixed(1),
       hint:
-        s && s.rating_count > 0 ? `${s.rating_count} ulasan` : 'belum ada',
+        s && s.rating_count > 0
+          ? `${s.rating_count} ${t('tutor.bimbel.home.stat_rating_reviews_suffix')}`
+          : t('tutor.bimbel.home.stat_rating_none'),
     },
   ];
 });
@@ -139,11 +145,11 @@ const nextSessionCountdown = computed(() => {
   const d = new Date(ns.scheduled_at);
   if (Number.isNaN(d.valueOf())) return null;
   const diffMin = (d.valueOf() - Date.now()) / 60_000;
-  if (diffMin < 0) return 'mulai';
-  if (diffMin < 60) return `${Math.round(diffMin)} menit lagi`;
+  if (diffMin < 0) return t('tutor.bimbel.home.countdown_starting');
+  if (diffMin < 60) return t('tutor.bimbel.home.countdown_minutes', { n: Math.round(diffMin) });
   const h = diffMin / 60;
-  if (h < 24) return `${Math.round(h)} jam lagi`;
-  return `${Math.round(h / 24)} hari lagi`;
+  if (h < 24) return t('tutor.bimbel.home.countdown_hours', { n: Math.round(h) });
+  return t('tutor.bimbel.home.countdown_days', { n: Math.round(h / 24) });
 });
 
 const nextSessionTone = computed<'success' | 'brand'>(() => {
@@ -175,12 +181,12 @@ function goToClass(g: TutoringGroup) {
 // away. Sesi Berulang stays available from Lainnya → MENGAJAR.
 // Rating now goes to the actual ratings route (was mistakenly wired
 // to appearance).
-const shortcuts = [
-  { icon: 'book', label: 'Bahan Ajar', hint: 'PDF / link', to: 'teacher.tutoring.materials' },
-  { icon: 'sparkles', label: 'Soal AI', hint: 'Try-out generator', to: 'teacher.tutoring.tryout-generator' },
-  { icon: 'star', label: 'Rating', hint: 'Feedback siswa', to: 'teacher.tutoring.ratings' },
-  { icon: 'megaphone', label: 'Pengumuman', hint: 'Broadcast kelompok', to: 'teacher.tutoring.announcements' },
-] as const;
+const shortcuts = computed(() => [
+  { icon: 'book', label: t('tutor.bimbel.home.shortcut_materials_label'), hint: t('tutor.bimbel.home.shortcut_materials_hint'), to: 'teacher.tutoring.materials' },
+  { icon: 'sparkles', label: t('tutor.bimbel.home.shortcut_ai_label'), hint: t('tutor.bimbel.home.shortcut_ai_hint'), to: 'teacher.tutoring.tryout-generator' },
+  { icon: 'star', label: t('tutor.bimbel.home.shortcut_rating_label'), hint: t('tutor.bimbel.home.shortcut_rating_hint'), to: 'teacher.tutoring.ratings' },
+  { icon: 'megaphone', label: t('tutor.bimbel.home.shortcut_announcements_label'), hint: t('tutor.bimbel.home.shortcut_announcements_hint'), to: 'teacher.tutoring.announcements' },
+]);
 
 function goToShortcut(name: string) {
   router.push({ name });
@@ -190,14 +196,14 @@ function goToShortcut(name: string) {
 <template>
   <div class="space-y-4 pb-12">
     <div v-if="loading" class="py-16 text-center text-bimbel-text-mid">
-      Memuat…
+      {{ t('tutor.bimbel.home.loading') }}
     </div>
 
     <template v-else>
       <!-- 1. Hero -->
       <TutorBerandaHero
         :greeting="timeGreeting()"
-        :title="`Halo, ${firstName}`"
+        :title="t('tutor.bimbel.home.title_hello', { name: firstName })"
         :subtitle="subtitle"
         :stats="heroStats"
       />
@@ -206,13 +212,13 @@ function goToShortcut(name: string) {
       <TutorPrimaryCard
         v-if="nextSession"
         icon="calendar"
-        kicker="SESI BERIKUTNYA"
-        :title="nextSession.group_name || nextSession.topic || 'Sesi terjadwal'"
+        :kicker="t('tutor.bimbel.home.primary_kicker')"
+        :title="nextSession.group_name || nextSession.topic || t('tutor.bimbel.home.primary_title_fallback')"
         :subtitle="[
           nextSession.program_name,
-          nextSession.room ? `Ruang ${nextSession.room}` : null,
+          nextSession.room ? `${t('tutor.bimbel.home.primary_room_prefix')} ${nextSession.room}` : null,
           nextSession.duration_minutes
-            ? `${nextSession.duration_minutes} menit`
+            ? `${nextSession.duration_minutes} ${t('tutor.bimbel.home.primary_duration_suffix')}`
             : null,
         ].filter(Boolean).join(' · ') || undefined"
         :tone="nextSessionTone"
@@ -240,7 +246,7 @@ function goToShortcut(name: string) {
             @click="goToAttendance"
           >
             <NavIcon name="check-circle" :size="14" />
-            Catat Kehadiran
+            {{ t('tutor.bimbel.home.btn_attendance') }}
           </button>
           <a
             v-if="nextSession.meeting_url"
@@ -250,7 +256,7 @@ function goToShortcut(name: string) {
             class="inline-flex items-center gap-1.5 rounded-lg border border-bimbel-accent/40 px-3.5 py-2 text-sm font-bold text-bimbel-accent hover:bg-bimbel-accent-dim"
           >
             <NavIcon name="link" :size="14" />
-            Meet
+            {{ t('tutor.bimbel.home.btn_meet') }}
           </a>
         </template>
       </TutorPrimaryCard>
@@ -258,8 +264,8 @@ function goToShortcut(name: string) {
       <!-- 3. Kelas saya -->
       <div>
         <TutoringSectionHeader
-          title="Kelas saya"
-          :action-label="myGroups.length > 6 ? 'Lihat semua' : undefined"
+          :title="t('tutor.bimbel.home.section_classes')"
+          :action-label="myGroups.length > 6 ? t('tutor.bimbel.home.view_all') : undefined"
           @action="router.push({ name: 'teacher.tutoring.classes' })"
         />
         <div
@@ -271,19 +277,19 @@ function goToShortcut(name: string) {
             :key="g.id"
             :identity-key="g.id"
             :name="g.name"
-            :program="g.tutor?.name ? `Tutor: ${g.tutor.name}` : undefined"
-            :meta="g.enrollments_count != null ? `${g.enrollments_count} siswa` : undefined"
+            :program="g.tutor?.name ? `${t('tutor.bimbel.home.class_tutor_prefix')}: ${g.tutor.name}` : undefined"
+            :meta="g.enrollments_count != null ? `${g.enrollments_count} ${t('tutor.bimbel.home.class_students_suffix')}` : undefined"
             @click="goToClass(g)"
           />
         </div>
         <p v-else class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-6 text-center text-sm text-bimbel-text-mid">
-          Belum ada kelas — admin akan menugaskan Anda ke kelompok.
+          {{ t('tutor.bimbel.home.classes_empty') }}
         </p>
       </div>
 
       <!-- 4. Shortcuts -->
       <div>
-        <TutoringSectionHeader title="Akses cepat" />
+        <TutoringSectionHeader :title="t('tutor.bimbel.home.section_shortcuts')" />
         <div class="grid gap-2.5 grid-cols-2 lg:grid-cols-4">
           <TutorShortcutTile
             v-for="sc in shortcuts"
@@ -300,12 +306,12 @@ function goToShortcut(name: string) {
       <TutorRibbon
         v-if="stats"
         icon="wallet"
-        label="HONOR BULAN INI"
+        :label="t('tutor.bimbel.home.ribbon_label')"
         :value="formatRupiah(stats.month_earnings)"
         :hint="
           stats.month_sessions_done > 0
-            ? `${stats.month_sessions_done} sesi DONE`
-            : 'Belum ada sesi DONE'
+            ? t('tutor.bimbel.home.ribbon_hint_sessions', { count: stats.month_sessions_done })
+            : t('tutor.bimbel.home.ribbon_hint_empty')
         "
         tone="success"
         clickable
@@ -314,7 +320,7 @@ function goToShortcut(name: string) {
 
       <!-- 6. Yang baru -->
       <div>
-        <TutoringSectionHeader title="Yang baru" />
+        <TutoringSectionHeader :title="t('tutor.bimbel.home.section_feed')" />
         <div v-if="feed.length" class="space-y-2">
           <TutorActivityRow
             v-for="(e, i) in feed"
@@ -329,7 +335,7 @@ function goToShortcut(name: string) {
           v-else
           class="rounded-2xl border border-bimbel-border-soft bg-bimbel-panel p-6 text-center text-sm text-bimbel-text-mid"
         >
-          Belum ada aktivitas di 14 hari terakhir.
+          {{ t('tutor.bimbel.home.feed_empty') }}
         </p>
       </div>
     </template>

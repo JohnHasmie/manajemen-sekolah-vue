@@ -43,15 +43,15 @@ const type = ref<TypeKey>('all');
 const showCreate = ref(false);
 const showTypePicker = ref(false);
 
-const TYPE_OPTIONS: { key: TypeKey; label: string; icon: string }[] = [
-  { key: 'all', label: 'Semua', icon: 'list' },
-  { key: 'ASSIGNMENT', label: 'Tugas', icon: 'book' },
-  { key: 'EXAM', label: 'Ujian', icon: 'file-text' },
-  { key: 'MATERIAL', label: 'Materi', icon: 'book-open' },
-];
+const TYPE_OPTIONS = computed<{ key: TypeKey; label: string; icon: string }[]>(() => [
+  { key: 'all', label: t('tutor.bimbel.activities.type_all'), icon: 'list' },
+  { key: 'ASSIGNMENT', label: t('tutor.bimbel.activities.type_assignment'), icon: 'book' },
+  { key: 'EXAM', label: t('tutor.bimbel.activities.type_exam'), icon: 'file-text' },
+  { key: 'MATERIAL', label: t('tutor.bimbel.activities.type_material'), icon: 'book-open' },
+]);
 
 const activeTypeLabel = computed(
-  () => TYPE_OPTIONS.find((o) => o.key === type.value)?.label ?? 'Semua',
+  () => TYPE_OPTIONS.value.find((o) => o.key === type.value)?.label ?? t('tutor.bimbel.activities.type_all'),
 );
 
 async function load() {
@@ -61,7 +61,7 @@ async function load() {
       type: type.value === 'all' ? undefined : type.value,
     });
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal memuat aktivitas.');
+    toast.error(e instanceof Error ? e.message : t('tutor.bimbel.activities.load_failed'));
   } finally {
     loading.value = false;
   }
@@ -113,33 +113,33 @@ const overdueCount = computed(() => {
 const kpiCards = computed<KpiCard[]>(() => [
   {
     icon: 'book',
-    label: 'Aktivitas aktif',
+    label: t('tutor.bimbel.activities.kpi_active'),
     value: rows.value.length,
     tone: 'brand',
     accented: true,
   },
   {
     icon: 'clock',
-    label: 'Belum lewat tenggat',
+    label: t('tutor.bimbel.activities.kpi_pending'),
     value: pendingDue.value,
     tone: 'violet',
   },
   {
     icon: 'alert-circle',
-    label: 'Lewat tenggat',
+    label: t('tutor.bimbel.activities.kpi_overdue'),
     value: overdueCount.value,
     tone: overdueCount.value > 0 ? 'amber' : 'slate',
   },
   {
     icon: 'check-circle',
-    label: 'Total pengumpulan',
+    label: t('tutor.bimbel.activities.kpi_submissions'),
     value: totalSubmissions.value,
     tone: 'green',
   },
 ]);
 
-function iconFor(t: string): string {
-  const o = TYPE_OPTIONS.find((x) => x.key === t);
+function iconFor(tkey: string): string {
+  const o = TYPE_OPTIONS.value.find((x) => x.key === tkey);
   return o?.icon ?? 'book';
 }
 </script>
@@ -148,9 +148,9 @@ function iconFor(t: string): string {
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="guru"
-      kicker="Bimbel · Aktivitas"
-      title="Aktivitas & Tugas"
-      :meta="`${rows.length} aktivitas aktif`"
+      :kicker="t('tutor.bimbel.activities.kicker')"
+      :title="t('tutor.bimbel.activities.title')"
+      :meta="t('tutor.bimbel.activities.meta_active', { count: rows.length })"
     >
       <button
         type="button"
@@ -158,7 +158,7 @@ function iconFor(t: string): string {
         @click="showCreate = true"
       >
         <NavIcon name="plus" :size="13" />
-        Aktivitas
+        {{ t('tutor.bimbel.activities.add_btn') }}
       </button>
     </BrandPageHeader>
 
@@ -167,7 +167,7 @@ function iconFor(t: string): string {
     <PageFilterToolbar :hide-default-search="true">
       <template #chips>
         <AppFilterChip
-          label="Tipe"
+          :label="t('tutor.bimbel.activities.filter_type')"
           :value="activeTypeLabel"
           icon-name="book"
           tone="violet"
@@ -181,7 +181,7 @@ function iconFor(t: string): string {
     </div>
     <TutoringEmpty
       v-else-if="rows.length === 0"
-      text="Belum ada aktivitas. Klik &quot;+ Aktivitas&quot; untuk membuat tugas baru."
+      :text="t('tutor.bimbel.activities.empty')"
       icon="book"
     />
     <div v-else class="space-y-2">
@@ -195,8 +195,8 @@ function iconFor(t: string): string {
           a.type_label ?? a.type,
           a.group?.name,
           a.subject?.name,
-          a.due_at ? 'Tenggat ' + formatDateShort(a.due_at) : null,
-          (a.submissions_count ?? 0) + ' pengumpulan',
+          a.due_at ? t('tutor.bimbel.activities.row_due_prefix') + ' ' + formatDateShort(a.due_at) : null,
+          (a.submissions_count ?? 0) + ' ' + t('tutor.bimbel.activities.row_submissions_suffix'),
         ].filter(Boolean).join(' · ')"
         :to="() => openSubmissions(a)"
       />
@@ -204,7 +204,7 @@ function iconFor(t: string): string {
 
     <Modal
       v-if="showTypePicker"
-      title="Filter Tipe"
+      :title="t('tutor.bimbel.activities.modal_filter_title')"
       @close="showTypePicker = false"
     >
       <ul class="space-y-1">

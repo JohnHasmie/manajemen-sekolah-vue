@@ -281,13 +281,13 @@ const STATUS_OPTIONS = computed(() => [
   { value: 'CANCELLED' as string, label: t('tutoring.sessions.filterCancelled') },
 ]);
 const activeRangeLabel = computed(
-  () => RANGE_OPTIONS.value.find((o) => o.key === range.value)?.label ?? 'Semua',
+  () => RANGE_OPTIONS.value.find((o) => o.key === range.value)?.label ?? t('tutor.bimbel.sessions.filter_all_fallback'),
 );
 const activeStatusLabel = computed(
-  () => STATUS_OPTIONS.value.find((o) => o.value === statusFilter.value)?.label ?? 'Semua',
+  () => STATUS_OPTIONS.value.find((o) => o.value === statusFilter.value)?.label ?? t('tutor.bimbel.sessions.filter_all_fallback'),
 );
 const activeGroupLabel = computed(
-  () => groupOptions.value.find((o) => o.value === groupId.value)?.label ?? 'Semua kelompok',
+  () => groupOptions.value.find((o) => o.value === groupId.value)?.label ?? t('tutor.bimbel.sessions.filter_all_groups'),
 );
 const showRangePicker = ref(false);
 const showStatusPicker = ref(false);
@@ -351,9 +351,9 @@ const kpiCards = computed<KpiCard[]>(() => {
 <template>
   <div class="space-y-md pb-12">
     <TutorBerandaHero
-      greeting="Jadwal Sesi"
+      :greeting="t('tutor.bimbel.sessions.greeting')"
       :title="t('tutoring.sessions.title')"
-      :subtitle="auth.user?.name ? `Halo, ${auth.user.name}` : undefined"
+      :subtitle="auth.user?.name ? t('tutor.bimbel.sessions.subtitle_hello', { name: auth.user.name }) : undefined"
       :stats="[]"
     />
     <div class="flex justify-end -mt-2">
@@ -383,7 +383,7 @@ const kpiCards = computed<KpiCard[]>(() => {
       <PageFilterToolbar :hide-default-search="true">
         <template #chips>
           <AppFilterChip
-            label="Rentang"
+            :label="t('tutor.bimbel.sessions.filter_range_label')"
             :value="activeRangeLabel"
             icon-name="calendar"
             tone="violet"
@@ -391,14 +391,14 @@ const kpiCards = computed<KpiCard[]>(() => {
           />
           <AppFilterChip
             v-if="groupOptions.length > 2"
-            label="Kelompok"
+            :label="t('tutor.bimbel.sessions.filter_group_label')"
             :value="activeGroupLabel"
             icon-name="users"
             tone="brand"
             @click="showGroupPicker = true"
           />
           <AppFilterChip
-            label="Status"
+            :label="t('tutor.bimbel.sessions.filter_status_label')"
             :value="activeStatusLabel"
             icon-name="check-circle"
             tone="green"
@@ -465,7 +465,7 @@ const kpiCards = computed<KpiCard[]>(() => {
                   @click.stop
                 >
                   <NavIcon name="external-link" :size="11" />
-                  Join
+                  {{ t('tutor.bimbel.sessions.join_btn') }}
                 </a>
                 <TutoringStatusPill :session="s.status" />
               </span>
@@ -500,8 +500,16 @@ const kpiCards = computed<KpiCard[]>(() => {
           <!-- weekday header — Senin..Minggu, single letter -->
           <div class="grid grid-cols-7 mb-1">
             <div
-              v-for="d in ['S', 'S', 'R', 'K', 'J', 'S', 'M']"
-              :key="d + Math.random()"
+              v-for="(d, idx) in [
+                t('tutor.bimbel.sessions.calendar_weekday_sen'),
+                t('tutor.bimbel.sessions.calendar_weekday_sel'),
+                t('tutor.bimbel.sessions.calendar_weekday_rab'),
+                t('tutor.bimbel.sessions.calendar_weekday_kam'),
+                t('tutor.bimbel.sessions.calendar_weekday_jum'),
+                t('tutor.bimbel.sessions.calendar_weekday_sab'),
+                t('tutor.bimbel.sessions.calendar_weekday_min'),
+              ]"
+              :key="idx"
               class="text-center text-[12px] font-bold text-bimbel-text-mid tracking-widest py-1"
             >
               {{ d }}
@@ -575,7 +583,7 @@ const kpiCards = computed<KpiCard[]>(() => {
                   @click.stop
                 >
                   <NavIcon name="external-link" :size="11" />
-                  Join
+                  {{ t('tutor.bimbel.sessions.join_btn') }}
                 </a>
                 <TutoringStatusPill :session="s.status" />
               </span>
@@ -587,7 +595,7 @@ const kpiCards = computed<KpiCard[]>(() => {
 
     <Modal
       v-if="showRangePicker"
-      title="Filter Rentang"
+      :title="t('tutor.bimbel.sessions.modal_range_title')"
       @close="showRangePicker = false"
     >
       <ul class="space-y-1">
@@ -606,7 +614,7 @@ const kpiCards = computed<KpiCard[]>(() => {
 
     <Modal
       v-if="showStatusPicker"
-      title="Filter Status"
+      :title="t('tutor.bimbel.sessions.modal_status_title')"
       @close="showStatusPicker = false"
     >
       <ul class="space-y-1">
@@ -625,7 +633,7 @@ const kpiCards = computed<KpiCard[]>(() => {
 
     <Modal
       v-if="showGroupPicker"
-      title="Filter Kelompok"
+      :title="t('tutor.bimbel.sessions.modal_group_title')"
       @close="showGroupPicker = false"
     >
       <ul class="space-y-1">

@@ -6,7 +6,7 @@
   ASSIGNED), and bulk-saves on submit. Backend POST is idempotent.
 -->
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { TutoringService } from '@/services/tutoring.service';
@@ -16,22 +16,22 @@ import BrandPageHeader from '@/components/layout/BrandPageHeader.vue';
 import TutoringEmpty from '@/components/feature/tutoring/TutoringEmpty.vue';
 import NavIcon from '@/components/feature/NavIcon.vue';
 
-const STATUS_OPTIONS = [
-  { key: 'ASSIGNED', label: 'Diberikan' },
-  { key: 'SUBMITTED', label: 'Dikumpulkan' },
-  { key: 'LATE', label: 'Terlambat' },
-  { key: 'GRADED', label: 'Dinilai' },
-  { key: 'MISSED', label: 'Tidak mengumpulkan' },
-];
-
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
+const STATUS_OPTIONS = computed(() => [
+  { key: 'ASSIGNED', label: t('tutor.bimbel.activity_submissions.status_assigned') },
+  { key: 'SUBMITTED', label: t('tutor.bimbel.activity_submissions.status_submitted') },
+  { key: 'LATE', label: t('tutor.bimbel.activity_submissions.status_late') },
+  { key: 'GRADED', label: t('tutor.bimbel.activity_submissions.status_graded') },
+  { key: 'MISSED', label: t('tutor.bimbel.activity_submissions.status_missed') },
+]);
+
 const activityId = String(route.params.activityId ?? '');
 const groupId = String(route.query.groupId ?? '');
-const title = String(route.query.title ?? 'Aktivitas');
+const title = String(route.query.title ?? t('tutor.bimbel.activity_submissions.default_title'));
 const groupName = String(route.query.groupName ?? '');
 
 const loading = ref(true);
@@ -98,7 +98,7 @@ async function save() {
         : {}),
     }));
     await TutoringService.recordActivitySubmissions(activityId, items);
-    toast.success('Pengumpulan tersimpan.');
+    toast.success(t('tutor.bimbel.activity_submissions.saved_ok'));
     router.back();
   } catch (e) {
     toast.error(e instanceof Error ? e.message : String(e));
@@ -112,9 +112,9 @@ async function save() {
   <div class="space-y-md pb-32">
     <BrandPageHeader
       role="guru"
-      :kicker="'Bimbel · Aktivitas · ' + groupName"
+      :kicker="t('tutor.bimbel.activity_submissions.kicker_prefix') + ' · ' + groupName"
       :title="title"
-      :meta="`${rows.length} siswa`"
+      :meta="t('tutor.bimbel.activity_submissions.meta_students', { count: rows.length })"
     />
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
@@ -127,7 +127,7 @@ async function save() {
     />
     <TutoringEmpty
       v-else-if="rows.length === 0"
-      text="Belum ada siswa terdaftar di kelompok ini."
+      :text="t('tutor.bimbel.activity_submissions.no_students')"
       icon="user"
     />
     <template v-else>
@@ -156,7 +156,7 @@ async function save() {
               v-model="r.score"
               type="number"
               step="0.1"
-              placeholder="Nilai"
+              :placeholder="t('tutor.bimbel.activity_submissions.score_placeholder')"
               class="w-24 rounded-lg border border-bimbel-border px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
             />
           </div>
@@ -171,7 +171,7 @@ async function save() {
             class="w-full rounded-lg bg-role-teacher hover:bg-role-teacher/90 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
             @click="save"
           >
-            {{ saving ? t('tutoring.common.saving') : 'Simpan Pengumpulan' }}
+            {{ saving ? t('tutoring.common.saving') : t('tutor.bimbel.activity_submissions.save_btn') }}
           </button>
         </div>
       </div>

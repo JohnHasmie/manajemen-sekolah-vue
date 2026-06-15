@@ -76,11 +76,11 @@ const previewCount = computed(() => {
 
 async function submit() {
   if (!groupId.value) {
-    toast.error('Pilih kelompok dulu.');
+    toast.error(t('tutor.bimbel.recurring_sessions.err_pick_group'));
     return;
   }
   if (weekdays.value.size === 0) {
-    toast.error('Pilih minimal satu hari.');
+    toast.error(t('tutor.bimbel.recurring_sessions.err_pick_day'));
     return;
   }
   saving.value = true;
@@ -98,51 +98,51 @@ async function submit() {
       topic: topic.value.trim() || undefined,
     });
     result.value = res;
-    toast.success(`${res.created} sesi dibuat.`);
+    toast.success(t('tutor.bimbel.recurring_sessions.toast_created', { count: res.created }));
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Gagal generate sesi.');
+    toast.error(e instanceof Error ? e.message : t('tutor.bimbel.recurring_sessions.err_generate_failed'));
   } finally {
     saving.value = false;
   }
 }
 
-const DAYS: { iso: number; label: string }[] = [
-  { iso: 1, label: 'Sen' },
-  { iso: 2, label: 'Sel' },
-  { iso: 3, label: 'Rab' },
-  { iso: 4, label: 'Kam' },
-  { iso: 5, label: 'Jum' },
-  { iso: 6, label: 'Sab' },
-  { iso: 7, label: 'Min' },
-];
+const DAYS = computed<{ iso: number; label: string }[]>(() => [
+  { iso: 1, label: t('tutor.bimbel.recurring_sessions.day_mon') },
+  { iso: 2, label: t('tutor.bimbel.recurring_sessions.day_tue') },
+  { iso: 3, label: t('tutor.bimbel.recurring_sessions.day_wed') },
+  { iso: 4, label: t('tutor.bimbel.recurring_sessions.day_thu') },
+  { iso: 5, label: t('tutor.bimbel.recurring_sessions.day_fri') },
+  { iso: 6, label: t('tutor.bimbel.recurring_sessions.day_sat') },
+  { iso: 7, label: t('tutor.bimbel.recurring_sessions.day_sun') },
+]);
 </script>
 
 <template>
   <div class="space-y-md pb-12">
     <BrandPageHeader
       role="guru"
-      kicker="Bimbel · Sesi · Bulk"
-      title="Generate Sesi Berulang"
-      meta="Senin & Rabu jam 16:00 selama 2 bulan → satu kali submit"
+      :kicker="t('tutor.bimbel.recurring_sessions.kicker')"
+      :title="t('tutor.bimbel.recurring_sessions.title')"
+      :meta="t('tutor.bimbel.recurring_sessions.meta')"
     />
 
     <div class="space-y-3 bg-bimbel-panel border border-bimbel-border-soft rounded-2xl p-4 sm:p-5">
       <label class="block">
         <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-          Kelompok
+          {{ t('tutor.bimbel.recurring_sessions.field_group') }}
         </span>
         <select
           v-model="groupId"
           class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
         >
-          <option value="" disabled>Pilih kelompok</option>
+          <option value="" disabled>{{ t('tutor.bimbel.recurring_sessions.field_group_placeholder') }}</option>
           <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
         </select>
       </label>
 
       <div>
         <p class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider mb-2">
-          Hari
+          {{ t('tutor.bimbel.recurring_sessions.field_days') }}
         </p>
         <div class="flex flex-wrap gap-1.5">
           <button
@@ -163,7 +163,7 @@ const DAYS: { iso: number; label: string }[] = [
       <div class="grid grid-cols-2 gap-2">
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Mulai
+            {{ t('tutor.bimbel.recurring_sessions.field_start') }}
           </span>
           <input
             v-model="startDate"
@@ -173,7 +173,7 @@ const DAYS: { iso: number; label: string }[] = [
         </label>
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Sampai
+            {{ t('tutor.bimbel.recurring_sessions.field_end') }}
           </span>
           <input
             v-model="endDate"
@@ -187,7 +187,7 @@ const DAYS: { iso: number; label: string }[] = [
       <div class="grid grid-cols-2 gap-2">
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Jam
+            {{ t('tutor.bimbel.recurring_sessions.field_time') }}
           </span>
           <input
             v-model="time"
@@ -197,23 +197,23 @@ const DAYS: { iso: number; label: string }[] = [
         </label>
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Durasi
+            {{ t('tutor.bimbel.recurring_sessions.field_duration') }}
           </span>
           <select
             v-model.number="duration"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
-            <option :value="60">60 menit</option>
-            <option :value="90">90 menit</option>
-            <option :value="120">120 menit</option>
-            <option :value="150">150 menit</option>
+            <option :value="60">60 {{ t('tutor.bimbel.recurring_sessions.duration_minutes_suffix') }}</option>
+            <option :value="90">90 {{ t('tutor.bimbel.recurring_sessions.duration_minutes_suffix') }}</option>
+            <option :value="120">120 {{ t('tutor.bimbel.recurring_sessions.duration_minutes_suffix') }}</option>
+            <option :value="150">150 {{ t('tutor.bimbel.recurring_sessions.duration_minutes_suffix') }}</option>
           </select>
         </label>
       </div>
 
       <label class="block">
         <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-          Ruang (opsional)
+          {{ t('tutor.bimbel.recurring_sessions.field_room') }}
         </span>
         <input
           v-model="room"
@@ -223,7 +223,7 @@ const DAYS: { iso: number; label: string }[] = [
 
       <label class="block">
         <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-          Link meeting (opsional)
+          {{ t('tutor.bimbel.recurring_sessions.field_meeting_url') }}
         </span>
         <input
           v-model="meetingUrl"
@@ -235,7 +235,7 @@ const DAYS: { iso: number; label: string }[] = [
 
       <label class="block">
         <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-          Topik (opsional)
+          {{ t('tutor.bimbel.recurring_sessions.field_topic') }}
         </span>
         <input
           v-model="topic"
@@ -248,7 +248,7 @@ const DAYS: { iso: number; label: string }[] = [
         class="rounded-xl bg-bimbel-green-soft border border-status-success/30 p-3 text-sm font-bold text-bimbel-green flex items-center gap-2"
       >
         <NavIcon name="check-circle" :size="16" />
-        {{ result.created }} sesi dibuat<span v-if="result.skipped > 0">, {{ result.skipped }} dilewati (sudah ada)</span>.
+        {{ t('tutor.bimbel.recurring_sessions.result_sessions_created', { count: result.created }) }}<span v-if="result.skipped > 0">, {{ t('tutor.bimbel.recurring_sessions.result_skipped_suffix', { count: result.skipped }) }}</span>.
       </div>
 
       <div class="flex items-center gap-2 justify-end pt-2">
@@ -265,7 +265,7 @@ const DAYS: { iso: number; label: string }[] = [
           class="rounded-lg bg-role-teacher hover:bg-role-teacher/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           @click="submit"
         >
-          {{ saving ? t('tutoring.common.saving') : `Buat ${previewCount} sesi` }}
+          {{ saving ? t('tutoring.common.saving') : t('tutor.bimbel.recurring_sessions.submit_n', { count: previewCount }) }}
         </button>
       </div>
     </div>

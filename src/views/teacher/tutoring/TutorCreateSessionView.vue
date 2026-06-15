@@ -86,7 +86,7 @@ const inputCls =
       role="guru"
       kicker="Bimbel · Sesi · Buat"
       :title="t('tutoring.createSession.title')"
-      meta="Pilih kelompok → tanggal/jam → durasi → simpan"
+      :meta="t('tutor.bimbel.create_session.meta')"
     />
 
     <div v-if="loading" class="py-12 text-center text-bimbel-text-mid">
@@ -138,7 +138,7 @@ const inputCls =
       </label>
 
       <label class="block">
-        <span :class="fieldLabel">Link meeting (opsional)</span>
+        <span :class="fieldLabel">{{ t('tutor.bimbel.create_session.meeting_url_label') }}</span>
         <input
           v-model="meetingUrl"
           type="url"

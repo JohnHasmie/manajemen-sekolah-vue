@@ -38,11 +38,11 @@ onMounted(async () => {
 
 async function submit() {
   if (!groupId.value) {
-    errMsg.value = 'Pilih kelompok dulu.';
+    errMsg.value = t('tutor.bimbel.create_activity_modal.err_pick_group');
     return;
   }
   if (title.value.trim().length < 3) {
-    errMsg.value = 'Judul minimal 3 karakter.';
+    errMsg.value = t('tutor.bimbel.create_activity_modal.err_title_short');
     return;
   }
   saving.value = true;
@@ -74,51 +74,51 @@ async function submit() {
   >
     <div class="w-full max-w-md bg-bimbel-panel rounded-2xl p-5 sm:p-6">
       <h2 class="text-base font-bold text-bimbel-text-hi tracking-tight">
-        Aktivitas Baru
+        {{ t('tutor.bimbel.create_activity_modal.title') }}
       </h2>
       <p class="text-xs text-bimbel-text-mid mt-1">
-        Beri tugas / quiz / ujian untuk kelompok.
+        {{ t('tutor.bimbel.create_activity_modal.subtitle') }}
       </p>
 
       <div class="mt-4 space-y-3">
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Kelompok
+            {{ t('tutor.bimbel.create_activity_modal.field_group') }}
           </span>
           <select
             v-model="groupId"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
-            <option value="" disabled>Pilih kelompok</option>
+            <option value="" disabled>{{ t('tutor.bimbel.create_activity_modal.field_group_placeholder') }}</option>
             <option v-for="g in groups" :key="g.id" :value="g.id">{{ g.name }}</option>
           </select>
         </label>
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Tipe
+            {{ t('tutor.bimbel.create_activity_modal.field_type') }}
           </span>
           <select
             v-model="type"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
           >
-            <option value="ASSIGNMENT">Tugas</option>
-            <option value="EXAM">Ujian</option>
-            <option value="MATERIAL">Materi</option>
+            <option value="ASSIGNMENT">{{ t('tutor.bimbel.create_activity_modal.type_assignment') }}</option>
+            <option value="EXAM">{{ t('tutor.bimbel.create_activity_modal.type_exam') }}</option>
+            <option value="MATERIAL">{{ t('tutor.bimbel.create_activity_modal.type_material') }}</option>
           </select>
         </label>
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Judul
+            {{ t('tutor.bimbel.create_activity_modal.field_title') }}
           </span>
           <input
             v-model="title"
             class="mt-1.5 w-full rounded-lg border border-bimbel-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-role-teacher/20 focus:border-role-teacher"
-            placeholder="cth. Latihan Trigonometri Bab 3"
+            :placeholder="t('tutor.bimbel.create_activity_modal.field_title_placeholder')"
           />
         </label>
         <label class="block">
           <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-            Deskripsi / instruksi (opsional)
+            {{ t('tutor.bimbel.create_activity_modal.field_description') }}
           </span>
           <textarea
             v-model="description"
@@ -129,7 +129,7 @@ async function submit() {
         <div class="flex gap-2">
           <label class="block flex-1">
             <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-              Tenggat (opsional)
+              {{ t('tutor.bimbel.create_activity_modal.field_due_date') }}
             </span>
             <input
               v-model="dueDate"
@@ -139,7 +139,7 @@ async function submit() {
           </label>
           <label class="block w-32">
             <span class="text-[12px] font-bold text-bimbel-text-mid uppercase tracking-wider">
-              Jam
+              {{ t('tutor.bimbel.create_activity_modal.field_due_time') }}
             </span>
             <input
               v-model="dueTime"
@@ -165,7 +165,7 @@ async function submit() {
           class="rounded-lg bg-role-teacher hover:bg-role-teacher/90 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           @click="submit"
         >
-          {{ saving ? t('tutoring.common.saving') : 'Simpan Aktivitas' }}
+          {{ saving ? t('tutoring.common.saving') : t('tutor.bimbel.create_activity_modal.submit') }}
         </button>
       </div>
     </div>
